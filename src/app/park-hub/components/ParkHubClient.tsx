@@ -1,10 +1,11 @@
 'use client';
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import DailyCheckin from './DailyCheckin';
 import ThoughtCatcher from './ThoughtCatcher';
 import GoalLadder from './GoalLadder';
 import ResourceFlower from './ResourceFlower';
-import { Heart, Brain, Target, Flower2 } from 'lucide-react';
+import { Heart, Brain, Target, Flower2, LogOut } from 'lucide-react';
 
 const tabs = [
   { id: 'checkin', label: 'Daglig check-in', icon: Heart },
@@ -15,6 +16,12 @@ const tabs = [
 
 export default function ParkHubClient() {
   const [activeTab, setActiveTab] = useState('checkin');
+  const router = useRouter();
+
+  async function handleLogout() {
+    await fetch('/api/resident-session', { method: 'DELETE' });
+    router.replace('/login/unknown');
+  }
 
   return (
     <div className="max-w-md mx-auto px-4 pb-8">
@@ -26,10 +33,18 @@ export default function ParkHubClient() {
             <div className="text-xs text-gray-500">God morgen,</div>
             <div className="font-semibold text-gray-800 text-sm">Anders M.</div>
           </div>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
             <div className="flex items-center gap-1 bg-[#7F77DD]/10 rounded-full px-3 py-1">
               <span className="text-[#7F77DD] text-xs font-semibold">🔥 7 dage</span>
             </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center justify-center w-8 h-8 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+              aria-label="Log ud"
+              title="Log ud"
+            >
+              <LogOut size={15} />
+            </button>
           </div>
         </div>
         <div className="text-xs text-gray-500 mt-1">Torsdag 26. marts 2026 · Bosted Nordlys</div>
