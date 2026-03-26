@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+
+@layer base {
+  :root {
+    --budr-lavender: #F5F4FF;
+    --budr-purple: #7F77DD;
+    --budr-purple-dark: #5E56C0;
+    --budr-navy: #0F1B2D;
+    --budr-teal: #1D9E75;
+    --budr-teal-light: #E6F7F2;
+    --budr-groen: #22C55E;
+    --budr-gul: #EAB308;
+    --budr-roed: #EF4444;
+    --budr-sort: #1F2937;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .petal-fill {
+    transition: all 0.3s ease;
+  }
+
+  .animate-pulse-soft {
+    animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  .waveform-bar {
+    animation: waveform 0.8s ease-in-out infinite alternate;
+  }
+
+  @keyframes waveform {
+    from { height: 4px; }
+    to { height: 24px; }
+  }
+}
