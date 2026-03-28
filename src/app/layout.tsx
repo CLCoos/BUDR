@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Metadata, Viewport } from 'next';
+import SonnerToaster from '@/components/SonnerToaster';
 import '../styles/tailwind.css';
 
 export const viewport: Viewport = {
@@ -20,8 +21,10 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="da">
-      <body>{children}
-</body>
+      <body>
+        {children}
+        <SonnerToaster />
+      </body>
     </html>
   );
 }
