@@ -25,20 +25,10 @@ async function validateSession(token: string): Promise<string | null> {
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Only protect /park/* routes
-  if (!pathname.startsWith('/park')) {
-    return NextResponse.next();
-  }
-
   const token = req.cookies.get(COOKIE_NAME)?.value;
 
   if (!token) {
-    // No session cookie — redirect to login
-    // Extract resident_id from URL if present (/park/[resident_id]/...)
-    // Fallback: redirect to generic login
-    const residentIdMatch = pathname.match(/^\/park\/([^/]+)/);
-    const residentId = residentIdMatch?.[1] ?? 'unknown';
-    const loginUrl = new URL(`/login/${residentId}`, req.url);
+    const loginUrl = new URL('/login/unknown', req.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
   }
@@ -52,13 +42,10 @@ export async function middleware(req: NextRequest) {
     return response;
   }
 
-  // Valid session — inject resident_id header and continue
-  const requestHeaders = new Headers(req.headers);
-  requestHeaders.set('x-resident-id', residentId);
-
-  return NextResponse.next({ request: { headers: requestHeaders } });
+  // Valid session — continue
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/park/:path*'],
+  matcher: ['/park-hub', '/park-hub/:path*', '/park/:path*'],
 };

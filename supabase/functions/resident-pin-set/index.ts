@@ -1,5 +1,4 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
-import * as bcrypt from 'https://deno.land/x/bcrypt@v0.4.1/mod.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
@@ -26,7 +25,6 @@ serve(async (req) => {
       );
     }
 
-    // PIN must be exactly 4 digits
     if (!/^\d{4}$/.test(pin)) {
       return new Response(
         JSON.stringify({ error: 'PIN skal være præcis 4 cifre' }),
@@ -39,7 +37,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
-    // Validate staff JWT token via Supabase Auth
+    // Validate staff JWT
     const { data: { user }, error: authErr } = await supabase.auth.getUser(staff_token);
     if (authErr || !user) {
       return new Response(
@@ -48,18 +46,11 @@ serve(async (req) => {
       );
     }
 
-    // Hash PIN with bcrypt, 12 rounds
-    const pin_hash = await bcrypt.hash(pin, await bcrypt.genSalt(12));
+    // Hash and store via pgcrypto SQL function
+    const { error: rpcErr } = await supabase
+      .rpc('set_resident_pin', { p_resident_id: resident_id, p_pin: pin });
 
-    // Upsert pin
-    const { error: upsertErr } = await supabase
-      .from('resident_pins')
-      .upsert(
-        { resident_id, pin_hash, updated_at: new Date().toISOString() },
-        { onConflict: 'resident_id' },
-      );
-
-    if (upsertErr) {
+    if (rpcErr) {
       return new Response(
         JSON.stringify({ error: 'Kunne ikke gemme PIN' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },

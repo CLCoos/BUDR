@@ -14,13 +14,19 @@ const tabs = [
   { id: 'flower', label: 'Ressourceblomst', icon: Flower2 },
 ];
 
-export default function ParkHubClient() {
+interface Props {
+  residentName?: string;
+  residentInitials?: string;
+  residentId?: string;
+}
+
+export default function ParkHubClient({ residentName = 'Beboer', residentInitials = '?', residentId = '' }: Props) {
   const [activeTab, setActiveTab] = useState('checkin');
   const router = useRouter();
 
   async function handleLogout() {
     await fetch('/api/resident-session', { method: 'DELETE' });
-    router.replace('/login/unknown');
+    router.replace(`/login/${residentId || 'unknown'}`);
   }
 
   return (
@@ -28,10 +34,10 @@ export default function ParkHubClient() {
       {/* Header */}
       <div className="pt-6 pb-4">
         <div className="flex items-center gap-3 mb-1">
-          <div className="w-10 h-10 rounded-full bg-[#7F77DD] flex items-center justify-center text-white font-bold text-sm">AM</div>
+          <div className="w-10 h-10 rounded-full bg-[#7F77DD] flex items-center justify-center text-white font-bold text-sm">{residentInitials}</div>
           <div>
             <div className="text-xs text-gray-500">God morgen,</div>
-            <div className="font-semibold text-gray-800 text-sm">Anders M.</div>
+            <div className="font-semibold text-gray-800 text-sm">{residentName}</div>
           </div>
           <div className="ml-auto flex items-center gap-2">
             <div className="flex items-center gap-1 bg-[#7F77DD]/10 rounded-full px-3 py-1">

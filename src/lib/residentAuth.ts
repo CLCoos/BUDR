@@ -1,6 +1,6 @@
 'use server';
 
-import { cookies, headers } from 'next/headers';
+import { cookies } from 'next/headers';
 
 const COOKIE_NAME = 'budr_resident_session';
 const MAX_AGE = 60 * 60 * 12; // 12 hours in seconds
@@ -37,10 +37,37 @@ export async function getResidentSessionToken(): Promise<string | null> {
 }
 
 /**
- * Read the resident_id injected by middleware into request headers.
- * Use this in Server Components / Route Handlers within /park/*.
+ * Validate a session token against the edge function and return resident_id.
+ * Call this directly in server components — do not rely on middleware headers.
+ */
+export async function validateSessionToken(token: string): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/resident-session-validate`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
+        },
+        body: JSON.stringify({ session_token: token }),
+        cache: 'no-store',
+      },
+    );
+    if (!res.ok) return null;
+    const { data } = (await res.json()) as { data?: { resident_id: string } };
+    return data?.resident_id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Read cookie + validate session. Returns resident_id or null.
  */
 export async function getResidentId(): Promise<string | null> {
-  const headerStore = await headers();
-  return headerStore.get('x-resident-id');
+  const token = await getResidentSessionToken();
+  if (!token) return null;
+  return validateSessionToken(token);
 }

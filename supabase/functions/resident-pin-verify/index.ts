@@ -1,5 +1,4 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
-import * as bcrypt from 'https://deno.land/x/bcrypt@v0.4.1/mod.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
@@ -15,15 +14,7 @@ serve(async (req) => {
   try {
     const { resident_id, pin } = await req.json() as { resident_id: string; pin: string };
 
-    if (!resident_id || !pin) {
-      return new Response(
-        JSON.stringify({ error: 'Manglende felter' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
-    }
-
-    // PIN must be exactly 4 digits
-    if (!/^\d{4}$/.test(pin)) {
+    if (!resident_id || !pin || !/^\d{4}$/.test(pin)) {
       return new Response(
         JSON.stringify({ error: 'Ugyldig PIN' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
@@ -35,29 +26,18 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
-    // Fetch stored hash
-    const { data: pinRow, error: pinErr } = await supabase
-      .from('resident_pins')
-      .select('pin_hash')
-      .eq('resident_id', resident_id)
-      .single();
+    // Verify using pgcrypto via SQL function — no Deno bcrypt needed
+    const { data: valid, error: rpcErr } = await supabase
+      .rpc('verify_resident_pin', { p_resident_id: resident_id, p_pin: pin });
 
-    if (pinErr || !pinRow) {
+    if (rpcErr || !valid) {
       return new Response(
         JSON.stringify({ error: 'Ugyldig PIN' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
-    const valid = await bcrypt.compare(pin, pinRow.pin_hash);
-    if (!valid) {
-      return new Response(
-        JSON.stringify({ error: 'Ugyldig PIN' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
-    }
-
-    // Create session (12 hours)
+    // Create 12h session
     const { data: session, error: sessionErr } = await supabase
       .from('resident_sessions')
       .insert({
