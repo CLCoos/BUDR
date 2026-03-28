@@ -1,5 +1,6 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import ResidentHeader from './ResidentHeader';
 import MoodTrendChart from './MoodTrendChart';
 import GoalProgress from './GoalProgress';
@@ -16,7 +17,15 @@ const tabs = [
 ];
 
 export default function Resident360Client() {
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState('overview');
+
+  useEffect(() => {
+    const t = searchParams.get('tab');
+    if (t && tabs.some(tab => tab.id === t)) {
+      setActiveTab(t);
+    }
+  }, [searchParams]);
 
   return (
     <div className="p-6 max-w-screen-2xl">

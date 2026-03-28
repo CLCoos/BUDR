@@ -3,6 +3,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import AppLogo from '@/components/ui/AppLogo';
+import DokumentSøgning from '@/components/DokumentSøgning';
 
 const borgerRoutes = ['/park-hub'];
 const portalRoutes = ['/care-portal-dashboard', '/handover-workspace', '/resident-360-view'];
@@ -14,12 +15,12 @@ export default function TopNav() {
   const isPortal = portalRoutes?.some(r => pathname?.startsWith(r));
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 h-12 flex items-center px-4 gap-2">
-      <div className="flex items-center gap-2 mr-6">
+    <nav className="fixed top-0 left-0 right-0 z-50 flex h-12 items-center gap-2 border-b border-gray-200 bg-white px-4">
+      <div className="mr-4 flex shrink-0 items-center gap-2">
         <AppLogo size={28} />
-        <span className="font-bold text-gray-800 text-sm tracking-tight">BUDR</span>
+        <span className="text-sm font-bold tracking-tight text-gray-800">BUDR</span>
       </div>
-      <div className="flex gap-1">
+      <div className="flex shrink-0 gap-1">
         <Link href="/park-hub">
           <button
             className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${
@@ -43,7 +44,10 @@ export default function TopNav() {
           </button>
         </Link>
       </div>
-      <div className="ml-auto flex items-center gap-3">
+      <div className="mx-1 flex min-w-0 flex-1 justify-center px-1 sm:mx-2">
+        {isPortal ? <DokumentSøgning /> : null}
+      </div>
+      <div className="ml-auto flex shrink-0 items-center gap-3">
         <span className="text-xs text-gray-400">Demo · Bosted Nordlys</span>
         <div className="w-7 h-7 rounded-full bg-[#1D9E75] flex items-center justify-center text-white text-xs font-semibold">SK</div>
       </div>
