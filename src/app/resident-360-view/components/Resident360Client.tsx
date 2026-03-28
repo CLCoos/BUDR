@@ -7,6 +7,7 @@ import GoalProgress from './GoalProgress';
 import MedicationList from './MedicationList';
 import ShiftNotesFeed from './ShiftNotesFeed';
 import ParkSummary from './ParkSummary';
+import OpgaveWidget from '@/app/care-portal-dashboard/components/OpgaveWidget';
 
 const tabs = [
   { id: 'overview', label: 'Overblik' },
@@ -18,6 +19,7 @@ const tabs = [
 
 export default function Resident360Client() {
   const searchParams = useSearchParams();
+  const residentIdFromUrl = searchParams.get('id');
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
@@ -55,6 +57,7 @@ export default function Resident360Client() {
           <div className="space-y-5">
             <GoalProgress compact />
             <MedicationList compact />
+            <OpgaveWidget residentIdFilter={residentIdFromUrl ?? 'res-001'} />
           </div>
         </div>
       )}

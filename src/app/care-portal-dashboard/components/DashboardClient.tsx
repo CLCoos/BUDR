@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import AlertPanel from './AlertPanel';
 import BekymringsnotatWidget from './BekymringsnotatWidget';
 import KalenderWidget from './KalenderWidget';
+import OpgaveWidget from './OpgaveWidget';
 import ResidentList from './ResidentList';
 import StatCards from './StatCards';
 import { RefreshCw } from 'lucide-react';
@@ -39,6 +40,8 @@ export default function DashboardClient({ medicationWidget }: DashboardClientPro
       <BekymringsnotatWidget />
 
       <KalenderWidget />
+
+      <OpgaveWidget />
 
       {/* Stat cards */}
       <StatCards />
