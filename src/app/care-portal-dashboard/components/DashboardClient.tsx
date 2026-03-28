@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import AlertPanel from './AlertPanel';
+import BekymringsnotatWidget from './BekymringsnotatWidget';
 import ResidentList from './ResidentList';
 import StatCards from './StatCards';
 import { RefreshCw } from 'lucide-react';
@@ -33,6 +34,8 @@ export default function DashboardClient({ medicationWidget }: DashboardClientPro
       </div>
 
       {medicationWidget}
+
+      <BekymringsnotatWidget />
 
       {/* Stat cards */}
       <StatCards />
