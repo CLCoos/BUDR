@@ -34,4 +34,7 @@ jest-test-results.json
 .idea/
 
 # Optional: if using TurboRepo or monorepo
-turbo/
+turbo/linear-import.mjs
+linear-import_1.mjs
+linear-import.mjs
+linear-import_1.mjs

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, CheckCircle2, Clock, Pill } from 'lucide-react';
+import { CheckCircle2, Clock, Pill } from 'lucide-react';
 
 export interface MedicationTask {
   id: string;
@@ -20,6 +20,13 @@ function formatTime(d: Date): string {
     minute: '2-digit',
     hour12: false,
   });
+}
+
+/** Display-only: split `medicationName` into title line + dose line (data unchanged). */
+function splitMedicationDisplay(full: string): { title: string; dose: string | null } {
+  const m = full.match(/^(.+?)\s+([\d.,]+\s*(?:mg|g))$/i);
+  if (m) return { title: m[1].trim(), dose: m[2].trim() };
+  return { title: full, dose: null };
 }
 
 function createMockEntries(now: number): MedicationTask[] {
@@ -133,9 +140,9 @@ export default function MedicationWidget() {
 
   if (!hydrated) {
     return (
-      <div className="w-full max-w-2xl rounded-lg border border-gray-100 bg-white p-4 animate-pulse">
-        <div className="h-4 w-40 rounded bg-gray-100" />
-        <div className="mt-3 h-20 rounded-lg bg-gray-50" />
+      <div className="mb-5 w-full max-w-2xl rounded-xl border border-gray-100 bg-white p-5 shadow-sm animate-pulse">
+        <div className="h-4 w-44 rounded bg-gray-100" />
+        <div className="mt-4 h-24 rounded-lg bg-gray-50" />
       </div>
     );
   }
@@ -143,10 +150,13 @@ export default function MedicationWidget() {
   const overduePrimary = overdue.length > 0;
 
   return (
-    <section className="mb-5 w-full max-w-2xl space-y-4" aria-label="Medicinudleveringer">
-      <div className="flex items-center gap-2">
+    <section
+      className="mb-5 w-full max-w-2xl rounded-xl border border-gray-100 bg-white p-5 shadow-sm"
+      aria-label="Medicinudleveringer"
+    >
+      <div className="flex items-center gap-2 border-b border-gray-100 pb-4 mb-4">
         <div
-          className="flex h-9 w-9 items-center justify-center rounded-lg"
+          className="flex h-9 w-9 items-center justify-center rounded-lg flex-shrink-0"
           style={{ backgroundColor: '#F5F4FF' }}
         >
           <Pill className="h-4 w-4 text-budr-purple" aria-hidden />
@@ -157,108 +167,126 @@ export default function MedicationWidget() {
         </div>
       </div>
 
-      {overdue.length > 0 && (
-        <div className="rounded-lg border border-budr-roed/25 bg-red-50/80 p-3 shadow-sm">
-          <div className="mb-2 flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 shrink-0 text-budr-roed" aria-hidden />
-            <span className="text-sm font-semibold text-budr-roed">Forfaldne udleveringer</span>
-          </div>
-          <ul className="space-y-3">
-            {overdue.map(item => (
-              <li
-                key={item.id}
-                className={`rounded-lg border p-3 transition-all ${
-                  item.givenAt
-                    ? 'border-budr-groen/30 bg-emerald-50/50'
-                    : 'border-budr-roed/20 bg-white/90'
-                }`}
-              >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div
-                    className={`min-w-0 flex-1 ${item.givenAt ? 'line-through decoration-budr-groen decoration-2' : ''}`}
+      <div className="flex flex-col gap-3">
+        {overdue.length > 0 && (
+          <div>
+            <div className="mb-3 flex items-center gap-2">
+              <div className="h-2 w-2 shrink-0 rounded-full bg-budr-roed animate-pulse" aria-hidden />
+              <span className="text-sm font-bold text-budr-roed">⚠ Forfaldne udleveringer</span>
+            </div>
+            <ul className="flex flex-col gap-3">
+              {overdue.map(item => {
+                const { title, dose } = splitMedicationDisplay(item.medicationName);
+                const given = !!item.givenAt;
+                return (
+                  <li
+                    key={item.id}
+                    className={`rounded-lg border border-gray-100 p-4 shadow-sm transition-colors border-l-4 ${
+                      given ? 'border-l-budr-groen bg-green-50' : 'border-l-budr-roed bg-red-50'
+                    }`}
                   >
-                    <div className="flex flex-wrap items-baseline gap-2">
-                      <span className="text-base font-bold text-gray-900">{item.initials}</span>
-                      <span className="text-sm font-medium text-gray-800">{item.medicationName}</span>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex min-w-0 flex-1 gap-3">
+                        <div
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
+                          style={{ backgroundColor: '#7F77DD' }}
+                        >
+                          {item.initials}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          {given ? (
+                            <p className="text-base font-bold text-gray-500 line-through decoration-gray-400">
+                              {item.medicationName}
+                            </p>
+                          ) : (
+                            <>
+                              <p className="text-base font-bold text-gray-900">{title}</p>
+                              {dose ? <p className="mt-0.5 text-sm text-gray-500">{dose}</p> : null}
+                            </>
+                          )}
+                          <div
+                            className={`mt-2 flex items-center gap-1.5 text-xs font-medium ${
+                              given ? 'text-gray-400' : 'text-budr-roed'
+                            }`}
+                          >
+                            <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                            Planlagt {formatTime(item.scheduledAt)}
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        disabled={given}
+                        onClick={() => markGiven(item.id)}
+                        className={`w-full shrink-0 rounded-lg px-5 py-2.5 text-sm font-semibold sm:w-auto sm:self-center ${
+                          given
+                            ? 'cursor-default bg-budr-groen text-white disabled:opacity-100'
+                            : 'bg-budr-teal text-white hover:opacity-90 disabled:opacity-100'
+                        }`}
+                      >
+                        {given ? '✓ Givet' : 'Marker som givet'}
+                      </button>
                     </div>
-                    <div className="mt-1 flex items-center gap-1.5 text-xs text-gray-500">
-                      <Clock className="h-3.5 w-3.5 text-budr-gul" aria-hidden />
-                      Planlagt {formatTime(item.scheduledAt)}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    disabled={!!item.givenAt}
-                    onClick={() => markGiven(item.id)}
-                    className="flex w-full shrink-0 items-center justify-center gap-2 rounded-lg border-2 border-budr-teal bg-budr-teal-light px-4 py-3 text-sm font-semibold text-budr-teal shadow-sm transition hover:bg-budr-teal/10 disabled:cursor-default disabled:border-budr-groen/40 disabled:bg-emerald-50 sm:w-auto sm:min-w-[11rem]"
-                  >
-                    {item.givenAt ? (
-                      <>
-                        <CheckCircle2 className="h-5 w-5 text-budr-groen" aria-hidden />
-                        <span className="text-budr-groen">Givet</span>
-                      </>
-                    ) : (
-                      'Marker som givet'
-                    )}
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {upcoming.length > 0 && (
-        <div
-          className={`rounded-lg border border-gray-100 bg-white p-3 shadow-sm ${
-            !overduePrimary ? 'ring-1 ring-budr-teal/30' : ''
-          }`}
-        >
-          <div className="mb-2 flex items-center gap-2">
-            <Clock className="h-4 w-4 shrink-0 text-budr-purple" aria-hidden />
-            <span
-              className={`text-sm font-semibold ${!overduePrimary ? 'text-budr-teal' : 'text-gray-800'}`}
-            >
-              Kommende udleveringer (næste 2 timer)
-            </span>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
-          <ul className="space-y-1.5 text-sm text-gray-700">
-            {upcoming.map(row => (
-              <li key={row.id} className="font-mono text-xs sm:text-sm">
-                <span className="text-budr-navy tabular-nums">{formatTime(row.scheduledAt)}</span>{' '}
-                <span className="font-bold text-gray-900">{row.initials}</span>
-                <span className="text-gray-400"> — </span>
-                <span>{row.medicationName}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+        )}
 
-      {allClear && overdue.length === 0 && upcoming.length === 0 && (
-        <div className="rounded-lg border border-budr-groen/30 bg-gradient-to-br from-emerald-50 to-budr-teal-light p-4 shadow-sm">
-          <div className="flex items-start gap-3">
-            <CheckCircle2 className="h-6 w-6 shrink-0 text-budr-groen" aria-hidden />
-            <div>
-              <p className="text-sm font-semibold text-emerald-900">Ingen medicin forfaldne</p>
-              {nextFuture ? (
-                <p className="mt-1 text-sm text-emerald-800/90">
-                  Næste udlevering:{' '}
-                  <span className="font-semibold tabular-nums">{formatTime(nextFuture.scheduledAt)}</span>
-                  <span className="text-emerald-800/80">
-                    {' '}
-                    (<span className="font-bold">{nextFuture.initials}</span>)
+        {upcoming.length > 0 && (
+          <div
+            className={`rounded-lg border border-gray-100 bg-white p-4 shadow-sm ${
+              !overduePrimary ? 'border-l-4 border-l-budr-teal' : ''
+            }`}
+          >
+            <div className="mb-3 flex items-center gap-2">
+              <Clock className="h-4 w-4 shrink-0 text-budr-teal" aria-hidden />
+              <span className="text-sm font-semibold text-gray-800">Kommende udleveringer</span>
+            </div>
+            <ul className="flex flex-col gap-1">
+              {upcoming.map(row => (
+                <li
+                  key={row.id}
+                  className="flex items-center gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-gray-50"
+                >
+                  <span className="shrink-0 rounded-full bg-budr-teal-light px-2.5 py-1 text-xs font-semibold tabular-nums text-budr-teal">
+                    {formatTime(row.scheduledAt)}
                   </span>
-                </p>
-              ) : (
-                <p className="mt-1 text-sm text-emerald-800/90">
-                  Alle planlagte udleveringer i vinduet er registreret.
-                </p>
-              )}
+                  <div
+                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white"
+                    style={{ backgroundColor: '#7F77DD' }}
+                  >
+                    {row.initials}
+                  </div>
+                  <span className="min-w-0 truncate text-sm font-medium text-gray-800">{row.medicationName}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {allClear && overdue.length === 0 && upcoming.length === 0 && (
+          <div className="w-full rounded-lg border border-budr-groen/25 bg-gradient-to-br from-emerald-50 to-budr-teal-light p-4 shadow-sm">
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="h-7 w-7 shrink-0 text-budr-groen" aria-hidden />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-emerald-900">Alt medicin udleveret</p>
+                {nextFuture ? (
+                  <p className="mt-1.5 text-sm text-emerald-800/90">
+                    Næste udlevering: {formatTime(nextFuture.scheduledAt)} · {nextFuture.initials} —{' '}
+                    {nextFuture.medicationName}
+                  </p>
+                ) : (
+                  <p className="mt-1.5 text-sm text-emerald-800/90">
+                    Alle planlagte udleveringer i vinduet er registreret.
+                  </p>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/*
         Supabase (care_medication_logs) — wire later:
