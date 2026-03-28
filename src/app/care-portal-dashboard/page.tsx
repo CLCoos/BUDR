@@ -2,6 +2,7 @@ import React from 'react';
 import TopNav from '@/components/TopNav';
 import PortalSidebar from '@/components/PortalSidebar';
 import DashboardClient from './components/DashboardClient';
+import MedicationWidget from './components/MedicationWidget';
 
 export default function CarePortalDashboardPage() {
   return (
@@ -9,7 +10,9 @@ export default function CarePortalDashboardPage() {
       <TopNav />
       <PortalSidebar />
       <div className="pt-12 pl-[200px] transition-all duration-300">
-        <DashboardClient />
+        <div className="p-6 max-w-screen-2xl">
+          <DashboardClient medicationWidget={<MedicationWidget />} />
+        </div>
       </div>
     </div>
   );

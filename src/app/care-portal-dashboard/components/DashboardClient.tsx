@@ -5,11 +5,15 @@ import ResidentList from './ResidentList';
 import StatCards from './StatCards';
 import { RefreshCw } from 'lucide-react';
 
-export default function DashboardClient() {
+type DashboardClientProps = {
+  medicationWidget?: React.ReactNode;
+};
+
+export default function DashboardClient({ medicationWidget }: DashboardClientProps) {
   const [lastUpdated] = useState('26/03/2026 · 09:47');
 
   return (
-    <div className="p-6 max-w-screen-2xl">
+    <div>
       {/* Page header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -27,6 +31,8 @@ export default function DashboardClient() {
           </button>
         </div>
       </div>
+
+      {medicationWidget}
 
       {/* Stat cards */}
       <StatCards />
