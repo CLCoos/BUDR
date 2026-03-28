@@ -63,4 +63,19 @@
     from { height: 4px; }
     to { height: 24px; }
   }
+
+  @keyframes lys-confetti {
+    0% {
+      opacity: 1;
+      transform: translateY(0) scale(1) rotate(0deg);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-120px) scale(0.5) rotate(180deg);
+    }
+  }
+
+  .animate-lys-confetti {
+    animation: lys-confetti 2.2s ease-out forwards;
+  }
 }

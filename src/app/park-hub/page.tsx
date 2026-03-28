@@ -1,6 +1,5 @@
 import React from 'react';
 import { createClient } from '@supabase/supabase-js';
-import TopNav from '@/components/TopNav';
 import ParkHubClient from './components/ParkHubClient';
 import { getResidentId } from '@/lib/residentAuth';
 
@@ -31,15 +30,10 @@ export default async function ParkHubPage() {
   const resident = residentId ? await getResident(residentId) : null;
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#F5F4FF' }}>
-      <TopNav />
-      <div className="pt-12">
-        <ParkHubClient
-          residentName={resident?.name ?? 'Beboer'}
-          residentInitials={resident?.initials ?? '?'}
-          residentId={residentId ?? ''}
-        />
-      </div>
-    </div>
+    <ParkHubClient
+      residentName={resident?.name ?? 'Beboer'}
+      residentInitials={resident?.initials ?? '?'}
+      residentId={residentId ?? ''}
+    />
   );
 }
