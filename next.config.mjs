@@ -19,13 +19,7 @@ const nextConfig = {
   },
 
   async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/care-portal-dashboard',
-        permanent: false,
-      },
-    ];
+    return [];
   }
 };
 export default nextConfig;
