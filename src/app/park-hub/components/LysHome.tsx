@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { LogOut, Mic, Volume2 } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { LysChatMessage } from '@/app/api/lys-chat/route';
 import type { LysFlowOverlay } from '../lib/lysOverlay';
@@ -374,6 +375,36 @@ export default function LysHome({
             ) : null}
           </div>
         ) : null}
+        {/* ── Genveje til borger-features ─────────────────── */}
+        <section aria-label="Genveje">
+          <p className="mb-3 text-sm font-semibold uppercase tracking-wide opacity-50">
+            Genveje
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { emoji: '📓', label: 'Journal', href: '/journal' },
+              { emoji: '⚡', label: 'Udfordringer', href: '/daily-challenges' },
+              { emoji: '🤝', label: 'Støttecirklen', href: '/social' },
+              { emoji: '🌅', label: 'Morgentjek', href: '/morning-check-in' },
+              { emoji: '👤', label: 'Profil', href: '/profile' },
+              { emoji: '😮‍💨', label: 'Hviledag', href: '/hviledag' },
+            ].map(({ emoji, label, href }) => (
+              <Link
+                key={href}
+                href={href}
+                className="flex items-center gap-3 rounded-2xl border px-4 py-4 text-base font-medium transition-all duration-200 active:scale-95"
+                style={{
+                  borderColor: tokens.cardBorder,
+                  backgroundColor: tokens.cardBg,
+                  color: tokens.text,
+                }}
+              >
+                <span className="text-2xl leading-none">{emoji}</span>
+                <span className="opacity-90">{label}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
       </main>
     </div>
   );
