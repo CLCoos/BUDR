@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
+import AppLogo from '@/components/ui/AppLogo';
 import { createClient } from '@/lib/supabase/client';
 
 type NavItem = {
@@ -43,9 +44,11 @@ function navItemActive(pathname: string, searchParams: URLSearchParams, item: Na
 type InnerProps = {
   mobileOpen: boolean;
   onMobileClose: () => void;
+  orgName: string | null;
+  orgLogoUrl: string | null;
 };
 
-function PortalSidebarInner({ mobileOpen, onMobileClose }: InnerProps) {
+function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: InnerProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -86,6 +89,27 @@ function PortalSidebarInner({ mobileOpen, onMobileClose }: InnerProps) {
         mobileClosed ? 'pointer-events-none md:pointer-events-auto' : 'pointer-events-auto'
       }`}
     >
+      {/* Org branding header */}
+      <div className={`flex shrink-0 items-center border-b border-white/10 ${collapsed ? 'justify-center px-0 py-3' : 'gap-2.5 px-4 py-3'}`}>
+        {orgLogoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={orgLogoUrl}
+            alt={orgName ?? 'Organisation'}
+            className={collapsed ? 'h-6 w-6 object-contain' : 'h-8 w-auto max-w-[140px] object-contain'}
+          />
+        ) : (
+          <>
+            <AppLogo size={collapsed ? 22 : 26} />
+            {!collapsed && (
+              <span className="truncate text-sm font-bold text-white">
+                {orgName ?? 'BUDR'}
+              </span>
+            )}
+          </>
+        )}
+      </div>
+
       <div className="flex-1 overflow-y-auto py-4 scrollbar-hide">
         {navItems.map(item => {
           const active = navItemActive(pathname, searchParams, item);
@@ -117,6 +141,7 @@ function PortalSidebarInner({ mobileOpen, onMobileClose }: InnerProps) {
           );
         })}
       </div>
+
       <div className="border-t border-white/10 p-3">
         {!collapsed && displayName && (
           <div className="mb-3 flex items-center gap-2 px-1">
@@ -145,6 +170,7 @@ function PortalSidebarInner({ mobileOpen, onMobileClose }: InnerProps) {
           )}
         </div>
       </div>
+
       <button
         type="button"
         onClick={() => setCollapsed(!collapsed)}
@@ -160,11 +186,15 @@ function PortalSidebarInner({ mobileOpen, onMobileClose }: InnerProps) {
 type PortalSidebarProps = {
   mobileOpen?: boolean;
   onMobileClose?: () => void;
+  orgName?: string | null;
+  orgLogoUrl?: string | null;
 };
 
 export default function PortalSidebar({
   mobileOpen = false,
   onMobileClose = () => {},
+  orgName = null,
+  orgLogoUrl = null,
 }: PortalSidebarProps) {
   return (
     <Suspense
@@ -175,7 +205,12 @@ export default function PortalSidebar({
         />
       }
     >
-      <PortalSidebarInner mobileOpen={mobileOpen} onMobileClose={onMobileClose} />
+      <PortalSidebarInner
+        mobileOpen={mobileOpen}
+        onMobileClose={onMobileClose}
+        orgName={orgName}
+        orgLogoUrl={orgLogoUrl}
+      />
     </Suspense>
   );
 }

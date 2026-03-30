@@ -1,6 +1,8 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, AreaChart } from 'recharts';
+import type { TooltipProps } from 'recharts';
+import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
 import { createClient } from '@/lib/supabase/client';
 
 type TrafficUi = 'groen' | 'gul' | 'roed';
@@ -102,17 +104,9 @@ export default function MoodTrendChart({ residentId }: Props) {
       : '—';
 
   // Tooltip defined as render function — closes over chartData
-  const renderTooltip = ({
-    active,
-    payload,
-    label,
-  }: {
-    active?: boolean;
-    payload?: { value: number }[];
-    label?: string;
-  }) => {
+  const renderTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
     if (!active || !payload?.length) return null;
-    const score = payload[0].value;
+    const score = payload[0].value as number;
     const item = chartData.find(d => d.day === label);
     const tc = item ? TRAFFIC_COLORS[item.traffic] : '#6B7280';
     return (
