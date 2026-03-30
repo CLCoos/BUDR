@@ -8,9 +8,10 @@ import { useLysConversation } from '../hooks/useLysConversation';
 import { useSpeech } from '../hooks/useSpeech';
 import LysBottomNav, { type LysNavTab } from './LysBottomNav';
 import LysHome from './LysHome';
-import LysDagensProgram from './LysDagensProgram';
 import LysMigScreen from './LysMigScreen';
-import LysChat from './LysChat';
+import LysDagTab from './LysDagTab';
+import LysJournalTab from './LysJournalTab';
+import LysSocialTab from './LysSocialTab';
 import LysStemningskort from './LysStemningskort';
 import LysBlomst from './LysBlomst';
 import LysTankefanger from './LysTankefanger';
@@ -32,7 +33,6 @@ export default function LysShell({ firstName, initials, residentId }: Props) {
   const [moodLabel, setMoodLabel] = useState<string | null>(null);
   const [moodTraffic, setMoodTraffic] = useState<'groen' | 'gul' | 'roed' | null>(null);
   const [moodRegisteredToday, setMoodRegisteredToday] = useState(false);
-  const [programTabVisited, setProgramTabVisited] = useState(false);
   const [moodTick, setMoodTick] = useState(0);
 
   const phase = useMemo(() => getLysPhase(now), [now]);
@@ -60,10 +60,6 @@ export default function LysShell({ firstName, initials, residentId }: Props) {
     return () => mq.removeEventListener('change', fn);
   }, []);
 
-  useEffect(() => {
-    if (tab === 'minDag') setProgramTabVisited(true);
-  }, [tab]);
-
   const speakSafe = useCallback((t: string) => speak(t, reducedMotion), [speak, reducedMotion]);
 
   const handleMoodComplete = async (payload: {
@@ -75,13 +71,9 @@ export default function LysShell({ firstName, initials, residentId }: Props) {
     setMoodTraffic(payload.traffic);
     setMoodRegisteredToday(true);
 
-    // INSERT into park_daily_checkin (resident_id, mood_score, traffic_light, note)
-    // → realtime opdatering af trafiklys i Care Portal
-
     toast.success(`📋 Sendt til portalen: Stemning registreret for ${firstName}`);
 
     if (payload.label === 'Meget svært' || payload.traffic === 'roed') {
-      // INSERT into care_portal_notifications (resident_id, type: 'krise', severity: 'rød')
       toast.success('📋 Sendt til portalen: Personalet ser, at du har haft det svært');
       setOverlay('crisis');
       return;
@@ -92,9 +84,7 @@ export default function LysShell({ firstName, initials, residentId }: Props) {
     setMoodTick(t => t + 1);
   };
 
-  const closeCrisis = () => {
-    setOverlay(null);
-  };
+  const closeCrisis = () => setOverlay(null);
 
   const lightBar = phase === 'morning' || phase === 'afternoon';
 
@@ -106,12 +96,9 @@ export default function LysShell({ firstName, initials, residentId }: Props) {
       >
         <div
           key={tab}
-          className="motion-safe:opacity-100"
-          style={{
-            animation: reducedMotion ? undefined : 'lysTabIn 0.22s ease-out',
-          }}
+          style={{ animation: reducedMotion ? undefined : 'lysTabIn 0.22s ease-out' }}
         >
-          {tab === 'hjem' ? (
+          {tab === 'hjem' && (
             <LysHome
               firstName={firstName}
               initials={initials}
@@ -130,20 +117,21 @@ export default function LysShell({ firstName, initials, residentId }: Props) {
               moodTraffic={moodTraffic}
               moodTick={moodTick}
             />
-          ) : null}
-          {tab === 'minDag' ? (
-            <div className="px-4 pt-4">
-              <LysDagensProgram
-                mode="focus"
-                tokens={tokens}
-                accent={accent}
-                now={now}
-                firstName={firstName}
-                residentId={residentId}
-              />
-            </div>
-          ) : null}
-          {tab === 'mig' ? (
+          )}
+
+          {tab === 'dag' && (
+            <LysDagTab tokens={tokens} accent={accent} />
+          )}
+
+          {tab === 'journal' && (
+            <LysJournalTab tokens={tokens} accent={accent} />
+          )}
+
+          {tab === 'social' && (
+            <LysSocialTab tokens={tokens} accent={accent} />
+          )}
+
+          {tab === 'mig' && (
             <LysMigScreen
               tokens={tokens}
               accent={accent}
@@ -152,20 +140,7 @@ export default function LysShell({ firstName, initials, residentId }: Props) {
               flowerFilledThisWeek={false}
               onOpenBlomst={() => setOverlay('flower')}
             />
-          ) : null}
-          {tab === 'lys' ? (
-            <LysChat
-              tokens={tokens}
-              accent={accent}
-              firstName={firstName}
-              initials={initials}
-              reducedMotion={reducedMotion}
-              messages={messages}
-              loading={loading}
-              sendToLys={(text, opts) => sendToLys(text, { historyLimit: opts?.historyLimit })}
-              speak={speakSafe}
-            />
-          ) : null}
+          )}
         </div>
       </div>
 
@@ -176,7 +151,7 @@ export default function LysShell({ firstName, initials, residentId }: Props) {
         }
       `}</style>
 
-      {overlay === 'mood' ? (
+      {overlay === 'mood' && (
         <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: tokens.bg }}>
           <LysStemningskort
             tokens={tokens}
@@ -187,9 +162,9 @@ export default function LysShell({ firstName, initials, residentId }: Props) {
             onComplete={handleMoodComplete}
           />
         </div>
-      ) : null}
+      )}
 
-      {overlay === 'flower' ? (
+      {overlay === 'flower' && (
         <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: tokens.bg }}>
           <LysBlomst
             tokens={tokens}
@@ -200,9 +175,9 @@ export default function LysShell({ firstName, initials, residentId }: Props) {
             onDone={() => setOverlay(null)}
           />
         </div>
-      ) : null}
+      )}
 
-      {overlay === 'thought' ? (
+      {overlay === 'thought' && (
         <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: tokens.bg }}>
           <LysTankefanger
             tokens={tokens}
@@ -214,9 +189,9 @@ export default function LysShell({ firstName, initials, residentId }: Props) {
             onBack={() => setOverlay(null)}
           />
         </div>
-      ) : null}
+      )}
 
-      {overlay === 'goals' ? (
+      {overlay === 'goals' && (
         <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: tokens.bg }}>
           <LysMaaltrappe
             tokens={tokens}
@@ -226,27 +201,26 @@ export default function LysShell({ firstName, initials, residentId }: Props) {
             onBack={() => setOverlay(null)}
           />
         </div>
-      ) : null}
+      )}
 
-      {overlay === 'dailyWin' ? (
+      {overlay === 'dailyWin' && (
         <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: tokens.bg }}>
           <LysDagligSejr tokens={tokens} accent={accent} firstName={firstName} onBack={() => setOverlay(null)} />
         </div>
-      ) : null}
+      )}
 
-      {overlay === 'crisis' ? (
+      {overlay === 'crisis' && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/90 p-6 pt-12">
           <LysKrisekort firstName={firstName} onClose={closeCrisis} />
         </div>
-      ) : null}
+      )}
 
       <LysBottomNav
         active={tab}
         onChange={setTab}
         tokens={tokens}
         accent={accent}
-        showLysReminderDot={!moodRegisteredToday}
-        showMinDagReminderDot={!programTabVisited}
+        showDagReminderDot={!moodRegisteredToday}
         hidden={!!overlay}
         lightBar={lightBar}
       />

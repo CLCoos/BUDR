@@ -1,18 +1,17 @@
 'use client';
 
 import React from 'react';
-import { CalendarDays, Flower2, Home, MessageCircle } from 'lucide-react';
+import { BookOpen, Flower2, Home, Users, Zap } from 'lucide-react';
 import type { LysThemeTokens } from '../lib/lysTheme';
 
-export type LysNavTab = 'hjem' | 'minDag' | 'mig' | 'lys';
+export type LysNavTab = 'hjem' | 'dag' | 'journal' | 'social' | 'mig';
 
 type Props = {
   active: LysNavTab;
   onChange: (tab: LysNavTab) => void;
   tokens: LysThemeTokens;
   accent: string;
-  showLysReminderDot: boolean;
-  showMinDagReminderDot: boolean;
+  showDagReminderDot: boolean;
   hidden?: boolean;
   /** Light theme nav bar → inactive labels use dark muted color */
   lightBar?: boolean;
@@ -20,9 +19,10 @@ type Props = {
 
 const TABS: { id: LysNavTab; label: string; Icon: typeof Home }[] = [
   { id: 'hjem', label: 'Hjem', Icon: Home },
-  { id: 'minDag', label: 'Min dag', Icon: CalendarDays },
+  { id: 'dag', label: 'Dag', Icon: Zap },
+  { id: 'journal', label: 'Journal', Icon: BookOpen },
+  { id: 'social', label: 'Social', Icon: Users },
   { id: 'mig', label: 'Mig', Icon: Flower2 },
-  { id: 'lys', label: 'Lys', Icon: MessageCircle },
 ];
 
 export default function LysBottomNav({
@@ -30,8 +30,7 @@ export default function LysBottomNav({
   onChange,
   tokens,
   accent,
-  showLysReminderDot,
-  showMinDagReminderDot,
+  showDagReminderDot,
   hidden,
   lightBar,
 }: Props) {
@@ -52,8 +51,7 @@ export default function LysBottomNav({
         {TABS.map(tab => {
           const isOn = active === tab.id;
           const Icon = tab.Icon;
-          const showDot =
-            (tab.id === 'lys' && showLysReminderDot) || (tab.id === 'minDag' && showMinDagReminderDot);
+          const showDot = tab.id === 'dag' && showDagReminderDot;
           return (
             <button
               key={tab.id}
@@ -76,9 +74,7 @@ export default function LysBottomNav({
                 <Icon className="h-6 w-6" strokeWidth={isOn ? 2.25 : 1.75} aria-hidden />
                 {showDot ? (
                   <span
-                    className={`absolute -right-1 top-1 h-1.5 w-1.5 rounded-full ${
-                      tab.id === 'lys' ? 'animate-pulse bg-red-500' : 'bg-amber-400'
-                    }`}
+                    className="absolute -right-1 top-1 h-1.5 w-1.5 rounded-full bg-amber-400"
                     aria-hidden
                   />
                 ) : null}
