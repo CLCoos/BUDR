@@ -55,7 +55,11 @@ async function validateResidentSession(token: string): Promise<boolean> {
   try {
     const res = await fetch(`${SUPABASE_URL}/functions/v1/resident-session-validate`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      },
       body: JSON.stringify({ session_token: token }),
     });
     if (!res.ok) return false;

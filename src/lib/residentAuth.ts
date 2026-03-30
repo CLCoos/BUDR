@@ -71,3 +71,10 @@ export async function getResidentId(): Promise<string | null> {
   if (!token) return null;
   return validateSessionToken(token);
 }
+
+/**
+ * Alias for getResidentId() — reads budr_resident_session cookie directly
+ * (not from middleware headers — Next.js 15 server actions require cookies()
+ * from next/headers, not forwarded request headers).
+ */
+export const getResidentIdFromSession = getResidentId;

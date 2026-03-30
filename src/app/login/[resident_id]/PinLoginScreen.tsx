@@ -64,7 +64,11 @@ export default function PinLoginScreen({
         `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/resident-pin-verify`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
+            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''}`,
+          },
           body: JSON.stringify({ resident_id: residentId, pin }),
         },
       );
