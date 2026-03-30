@@ -5,20 +5,49 @@ import { toast } from 'sonner';
 
 const moodEmojis = ['😔','😟','😕','😐','🙂','😊','😄','😃','🤩','🥳'];
 
+type TrafficUi = 'groen' | 'gul' | 'roed';
+
+const TRAFFIC_LABELS: Record<TrafficUi, string> = {
+  groen: 'Grøn',
+  gul: 'Gul',
+  roed: 'Rød',
+};
+
 export default function DailyCheckin() {
   const [mood, setMood] = useState(6);
-  const [traffic, setTraffic] = useState<'groen' | 'gul' | 'roed' | null>(null);
+  const [traffic, setTraffic] = useState<TrafficUi | null>(null);
   const [note, setNote] = useState('');
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!traffic) {
       toast.error('Vælg venligst en trafiklys-farve');
       return;
     }
-    setSaved(true);
-    // Backend: INSERT INTO park_daily_checkin (user_id, score, traffic_light, note, created_at)
-    toast.success('Check-in gemt! Godt klaret 🌟');
+    setLoading(true);
+    try {
+      const res = await fetch('/api/park/daily-checkin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mood_score: mood,
+          traffic_light: traffic,
+          note: note.trim() || undefined,
+        }),
+      });
+      if (!res.ok) {
+        const data = (await res.json()) as { error?: string };
+        toast.error(data.error ?? 'Noget gik galt — prøv igen');
+        return;
+      }
+      setSaved(true);
+      toast.success('Check-in gemt! Godt klaret 🌟');
+    } catch {
+      toast.error('Netværksfejl — kunne ikke gemme check-in');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (saved) {
@@ -26,18 +55,25 @@ export default function DailyCheckin() {
       <div className="bg-white rounded-lg p-6 text-center border border-gray-100">
         <div className="text-4xl mb-3">✅</div>
         <div className="font-semibold text-gray-800 mb-1">Check-in registreret!</div>
-        <div className="text-sm text-gray-500 mb-4">Du har det {moodEmojis[mood - 1]} i dag — stemning {mood}/10</div>
-        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${
-          traffic === 'groen' ? 'bg-green-100 text-green-700' :
-          traffic === 'gul'? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
-        }`}>
-          <div className={`w-2 h-2 rounded-full ${
-            traffic === 'groen' ? 'bg-green-500' :
-            traffic === 'gul'? 'bg-yellow-500' : 'bg-red-500'
-          }`} />
-          {traffic === 'groen' ? 'Grøn' : traffic === 'gul' ? 'Gul' : 'Rød'}
+        <div className="text-sm text-gray-500 mb-4">
+          Du har det {moodEmojis[mood - 1]} i dag — stemning {mood}/10
         </div>
+        {traffic && (
+          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${
+            traffic === 'groen' ? 'bg-green-100 text-green-700' :
+            traffic === 'gul'   ? 'bg-yellow-100 text-yellow-700' :
+                                  'bg-red-100 text-red-700'
+          }`}>
+            <div className={`w-2 h-2 rounded-full ${
+              traffic === 'groen' ? 'bg-green-500' :
+              traffic === 'gul'   ? 'bg-yellow-500' :
+                                    'bg-red-500'
+            }`} />
+            {TRAFFIC_LABELS[traffic]}
+          </div>
+        )}
         <button
+          type="button"
           onClick={() => setSaved(false)}
           className="mt-4 block w-full text-sm text-[#7F77DD] hover:underline"
         >
@@ -73,6 +109,7 @@ export default function DailyCheckin() {
           {[1,2,3,4,5,6,7,8,9,10].map(n => (
             <button
               key={`mood-${n}`}
+              type="button"
               onClick={() => setMood(n)}
               className={`w-7 h-7 rounded-full text-xs font-medium transition-all ${
                 mood === n
@@ -94,18 +131,19 @@ export default function DailyCheckin() {
         <div className="text-xs text-gray-500 mb-4">Hvordan vil du beskrive din dag overordnet?</div>
 
         <div className="grid grid-cols-3 gap-3">
-          {[
-            { key: 'groen', label: 'Grøn', sublabel: 'Det går godt', color: '#22C55E', bg: '#F0FDF4', border: '#86EFAC' },
-            { key: 'gul', label: 'Gul', sublabel: 'Lidt udfordret', color: '#EAB308', bg: '#FEFCE8', border: '#FDE047' },
-            { key: 'roed', label: 'Rød', sublabel: 'Har det svært', color: '#EF4444', bg: '#FEF2F2', border: '#FECACA' },
-          ].map(opt => (
+          {([
+            { key: 'groen' as TrafficUi, label: 'Grøn', sublabel: 'Det går godt',    color: '#22C55E', bg: '#F0FDF4', border: '#86EFAC' },
+            { key: 'gul'   as TrafficUi, label: 'Gul',  sublabel: 'Lidt udfordret',  color: '#EAB308', bg: '#FEFCE8', border: '#FDE047' },
+            { key: 'roed'  as TrafficUi, label: 'Rød',  sublabel: 'Har det svært',   color: '#EF4444', bg: '#FEF2F2', border: '#FECACA' },
+          ]).map(opt => (
             <button
               key={`traffic-${opt.key}`}
-              onClick={() => setTraffic(opt.key as 'groen' | 'gul' | 'roed')}
+              type="button"
+              onClick={() => setTraffic(opt.key)}
               className={`flex flex-col items-center gap-2 py-4 px-2 rounded-lg border-2 transition-all ${
                 traffic === opt.key
                   ? 'scale-105 shadow-sm'
-                  : 'hover:scale-102 opacity-70 hover:opacity-100'
+                  : 'opacity-70 hover:opacity-100'
               }`}
               style={{
                 borderColor: traffic === opt.key ? opt.color : opt.border,
@@ -134,11 +172,13 @@ export default function DailyCheckin() {
       </div>
 
       <button
-        onClick={handleSave}
-        className="w-full py-3.5 rounded-lg font-semibold text-white text-sm transition-all active:scale-95"
+        type="button"
+        onClick={() => void handleSave()}
+        disabled={loading}
+        className="w-full py-3.5 rounded-lg font-semibold text-white text-sm transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
         style={{ backgroundColor: '#7F77DD' }}
       >
-        Gem check-in
+        {loading ? 'Gemmer…' : 'Gem check-in'}
       </button>
     </div>
   );

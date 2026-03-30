@@ -15,7 +15,17 @@ type DashboardClientProps = {
 };
 
 function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
-  const [lastUpdated] = useState('26/03/2026 · 09:47');
+  const [lastUpdated, setLastUpdated] = useState(() =>
+    new Date().toLocaleString('da-DK', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', ' ·'),
+  );
+  useEffect(() => {
+    const t = window.setInterval(() => {
+      setLastUpdated(
+        new Date().toLocaleString('da-DK', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', ' ·'),
+      );
+    }, 60_000);
+    return () => window.clearInterval(t);
+  }, []);
   const [journalOpen, setJournalOpen] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();

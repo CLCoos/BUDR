@@ -51,7 +51,7 @@ export default function Resident360Client() {
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
           <div className="xl:col-span-2 space-y-5">
-            <MoodTrendChart />
+            <MoodTrendChart residentId={residentIdFromUrl ?? ''} />
             <ParkSummary />
           </div>
           <div className="space-y-5">
@@ -63,7 +63,7 @@ export default function Resident360Client() {
       )}
       {activeTab === 'park' && (
         <div className="space-y-5">
-          <MoodTrendChart />
+          <MoodTrendChart residentId={residentIdFromUrl ?? ''} />
           <ParkSummary />
         </div>
       )}
