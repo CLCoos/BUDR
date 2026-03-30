@@ -1,5 +1,6 @@
 'use client';
-import React, { useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import AlertPanel from './AlertPanel';
 import BekymringsnotatWidget from './BekymringsnotatWidget';
 import KalenderWidget from './KalenderWidget';
@@ -13,9 +14,34 @@ type DashboardClientProps = {
   medicationWidget?: React.ReactNode;
 };
 
-export default function DashboardClient({ medicationWidget }: DashboardClientProps) {
+function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
   const [lastUpdated] = useState('26/03/2026 · 09:47');
   const [journalOpen, setJournalOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const tab = searchParams.get('tab');
+
+  useEffect(() => {
+    if (tab === 'journal') {
+      setJournalOpen(true);
+    }
+  }, [tab]);
+
+  useEffect(() => {
+    if (tab !== 'planner' && tab !== 'alerts') return;
+    const id = tab === 'planner' ? 'budr-planlaegger' : 'budr-advarsler';
+    const frame = requestAnimationFrame(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [tab]);
+
+  const closeJournal = () => {
+    setJournalOpen(false);
+    if (searchParams.get('tab') === 'journal') {
+      router.replace('/care-portal-dashboard', { scroll: false });
+    }
+  };
 
   return (
     <div className="relative">
@@ -30,7 +56,10 @@ export default function DashboardClient({ medicationWidget }: DashboardClientPro
             <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
             Live · Opdateret {lastUpdated}
           </div>
-          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-600 hover:bg-gray-100 transition-colors">
+          <button
+            type="button"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-600 hover:bg-gray-100 transition-colors"
+          >
             <RefreshCw size={12} />
             Opdater
           </button>
@@ -68,7 +97,19 @@ export default function DashboardClient({ medicationWidget }: DashboardClientPro
         <span>Hurtignotat</span>
       </button>
 
-      <HurtigJournalModal open={journalOpen} onClose={() => setJournalOpen(false)} />
+      <HurtigJournalModal open={journalOpen} onClose={closeJournal} />
     </div>
+  );
+}
+
+export default function DashboardClient({ medicationWidget }: DashboardClientProps) {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-[40vh] animate-pulse rounded-xl bg-gray-100" aria-busy aria-label="Indlæser overblik" />
+      }
+    >
+      <DashboardClientInner medicationWidget={medicationWidget} />
+    </Suspense>
   );
 }

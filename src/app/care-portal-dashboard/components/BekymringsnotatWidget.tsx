@@ -307,7 +307,7 @@ export default function BekymringsnotatWidget() {
                   </div>
                   <p className="mt-1.5 text-sm text-gray-600">{n.note}</p>
                   <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-400">
-                    <time dateTime={n.createdAt.toISOString()}>{formatNoteDate(n.createdAt)}</time>
+                    <time dateTime={n.createdAt.toISOString()} suppressHydrationWarning>{formatNoteDate(n.createdAt)}</time>
                     <span aria-hidden>·</span>
                     <span>{n.staffInitials}</span>
                   </div>

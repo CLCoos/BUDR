@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import LysHome from './LysHome';
+import LysShell from './LysShell';
 
 interface Props {
   residentName?: string;
@@ -16,5 +16,5 @@ export default function ParkHubClient({
 }: Props) {
   const firstName = residentName.trim().split(/\s+/)[0] || residentName;
 
-  return <LysHome firstName={firstName} initials={residentInitials} residentId={residentId} />;
+  return <LysShell firstName={firstName} initials={residentInitials} residentId={residentId} />;
 }

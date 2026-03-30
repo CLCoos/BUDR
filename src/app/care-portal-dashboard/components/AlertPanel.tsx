@@ -68,7 +68,10 @@ export default function AlertPanel() {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-100 overflow-hidden h-full">
+    <div
+      id="budr-advarsler"
+      className="scroll-mt-24 bg-white rounded-lg border border-gray-100 overflow-hidden h-full"
+    >
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
         <div className="flex items-center gap-2">
           <AlertTriangle size={16} className="text-red-500" />

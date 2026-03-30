@@ -4,7 +4,12 @@ import { useCallback, useState } from 'react';
 import type { LysChatMessage } from '@/app/api/lys-chat/route';
 import { phaseDaLabel, type LysPhase } from '../lib/lysTheme';
 
-const MOCK_SNIPPETS = `• Anders fortalte at en gåtur hjalp i går.
+const MOCK_SNIPPETS = `Seneste fra Lys (tidligere samtaler):
+- "Hvordan sov du i nat?"
+- "Det er okay at gå langsomt."
+
+Ældre noter:
+• Anders fortalte at en gåtur hjalp i går.
 • Lys spurgte ind til søvn — kort svar om urolig nat.
 • Lille sejr: hjalp med at sætte vasketøj over.`;
 
@@ -25,6 +30,7 @@ export function useLysConversation({ firstName, phase, moodLabel }: UseLysConver
       userText: string,
       extra?: Partial<{
         messagesOverride: LysChatMessage[];
+        historyLimit: number;
       }>,
     ) => {
       const trimmed = userText.trim();
@@ -33,7 +39,8 @@ export function useLysConversation({ firstName, phase, moodLabel }: UseLysConver
       const nextUser: LysChatMessage = { role: 'user', content: trimmed };
       const base = extra?.messagesOverride ?? messages;
       const updated = [...base, nextUser];
-      const history = updated.slice(-12);
+      const limit = extra?.historyLimit ?? 12;
+      const history = updated.slice(-limit);
 
       setMessages(updated);
       setLoading(true);

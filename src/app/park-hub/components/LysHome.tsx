@@ -3,32 +3,35 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { LogOut, Mic, Volume2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { getLysPhase, lysTheme, type LysPhase } from '../lib/lysTheme';
-import { useLysConversation } from '../hooks/useLysConversation';
-import { useSpeech } from '../hooks/useSpeech';
+import type { LysChatMessage } from '@/app/api/lys-chat/route';
+import type { LysFlowOverlay } from '../lib/lysOverlay';
+import type { LysPhase, LysThemeTokens } from '../lib/lysTheme';
 import LysDagensProgram from './LysDagensProgram';
 import LysVagtplan from './LysVagtplan';
-import LysStemningskort from './LysStemningskort';
-import LysBlomst from './LysBlomst';
-import LysTankefanger from './LysTankefanger';
-import LysMaaltrappe from './LysMaaltrappe';
-import LysKrisekort from './LysKrisekort';
-import LysDagligSejr from './LysDagligSejr';
 import LysUgeTilbageblik from './LysUgeTilbageblik';
-
-type View =
-  | 'home'
-  | 'mood'
-  | 'flower'
-  | 'thought'
-  | 'goals'
-  | 'dailyWin'
-  | 'crisis';
+import LysBeskedTilPersonale from './LysBeskedTilPersonale';
 
 type Props = {
   firstName: string;
   initials: string;
   residentId: string;
+  tokens: LysThemeTokens;
+  accent: string;
+  phase: LysPhase;
+  now: Date;
+  reducedMotion: boolean;
+  messages: LysChatMessage[];
+  loading: boolean;
+  sendToLys: (
+    text: string,
+    extra?: { messagesOverride?: LysChatMessage[]; historyLimit?: number },
+  ) => Promise<string | null>;
+  speakSafe: (text: string) => void;
+  onOpenFlow: (flow: LysFlowOverlay) => void;
+  moodLabel: string | null;
+  moodTraffic: 'groen' | 'gul' | 'roed' | null;
+  /** Incremented after stemning gemt (ikke-krise) så hjem kan foreslå næste skridt */
+  moodTick: number;
 };
 
 function greetingCopy(phase: LysPhase, name: string): { title: string; question: string } {
@@ -56,40 +59,41 @@ function greetingCopy(phase: LysPhase, name: string): { title: string; question:
   }
 }
 
-export default function LysHome({ firstName, initials, residentId }: Props) {
+export default function LysHome({
+  firstName,
+  initials,
+  residentId,
+  tokens,
+  accent,
+  phase,
+  now,
+  reducedMotion,
+  messages,
+  loading,
+  sendToLys,
+  speakSafe,
+  onOpenFlow,
+  moodLabel,
+  moodTraffic,
+  moodTick,
+}: Props) {
   const router = useRouter();
-  const [now, setNow] = useState(() => new Date());
-  const [reducedMotion, setReducedMotion] = useState(false);
-  const [view, setView] = useState<View>('home');
-  const [moodLabel, setMoodLabel] = useState<string | null>(null);
-  const [moodTraffic, setMoodTraffic] = useState<'groen' | 'gul' | 'roed' | null>(null);
   const [showLysCard, setShowLysCard] = useState(false);
-  const [nextStep, setNextStep] = useState<{ label: string; target: View } | null>(null);
+  const [nextStep, setNextStep] = useState<{ label: string; target: LysFlowOverlay } | null>(null);
 
-  const phase = useMemo(() => getLysPhase(now), [now]);
-  const tokens = useMemo(() => lysTheme(phase), [phase]);
-  const accent = tokens.accent;
-
-  const { messages, loading, sendToLys, sendCounterThought } = useLysConversation({
-    firstName,
-    phase,
-    moodLabel,
-  });
-
-  const { isListening, liveTranscript, startListening, stopListening, clearTranscript, speak } = useSpeech();
-
-  useEffect(() => {
-    const t = window.setInterval(() => setNow(new Date()), 60_000);
-    return () => window.clearInterval(t);
-  }, []);
-
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const fn = () => setReducedMotion(mq.matches);
-    fn();
-    mq.addEventListener('change', fn);
-    return () => mq.removeEventListener('change', fn);
-  }, []);
+  const [isListening, setIsListening] = useState(false);
+  const [liveTranscript, setLiveTranscript] = useState('');
+  const recRef = React.useRef<{
+    lang: string;
+    continuous: boolean;
+    interimResults: boolean;
+    start: () => void;
+    stop: () => void;
+    abort: () => void;
+    onresult: ((ev: Event) => void) | null;
+    onend: (() => void) | null;
+  } | null>(null);
+  const accRef = React.useRef('');
 
   const isSundayEvening = now.getDay() === 0 && now.getHours() >= 17;
   const { title: greetTitle, question: greetQ } = greetingCopy(phase, firstName);
@@ -111,7 +115,7 @@ export default function LysHome({ firstName, initials, residentId }: Props) {
         setNextStep({ label: 'Hvad gik godt i dag?', target: 'dailyWin' });
         return;
       }
-      const pool: { label: string; target: View }[] = [
+      const pool: { label: string; target: LysFlowOverlay }[] = [
         { label: 'Lad os se på din blomst.', target: 'flower' },
         { label: 'Skal vi tage en tanke roligt sammen?', target: 'thought' },
         { label: 'Vil du arbejde på et af dine mål?', target: 'goals' },
@@ -127,6 +131,21 @@ export default function LysHome({ firstName, initials, residentId }: Props) {
     'Svært 😔': 'Jeg har det svært.',
   };
 
+  const stopMic = useCallback(() => {
+    try {
+      recRef.current?.stop();
+    } catch {
+      /* ignore */
+    }
+    recRef.current = null;
+    setIsListening(false);
+  }, []);
+
+  const clearTranscript = useCallback(() => {
+    accRef.current = '';
+    setLiveTranscript('');
+  }, []);
+
   const handlePill = async (pill: string) => {
     setShowLysCard(true);
     setNextStep(null);
@@ -141,111 +160,75 @@ export default function LysHome({ firstName, initials, residentId }: Props) {
     suggestNextStep({});
   };
 
+  const startMic = useCallback(() => {
+    const w = window as unknown as {
+      SpeechRecognition?: new () => NonNullable<typeof recRef.current>;
+      webkitSpeechRecognition?: new () => NonNullable<typeof recRef.current>;
+    };
+    const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+    if (!Ctor) return;
+    stopMic();
+    clearTranscript();
+    const rec = new Ctor();
+    rec.lang = 'da-DK';
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.onresult = (event: Event) => {
+      const ev = event as unknown as {
+        resultIndex: number;
+        results: { length: number; [i: number]: { isFinal: boolean; 0: { transcript: string } } };
+      };
+      let interim = '';
+      let add = '';
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        const r = ev.results[i];
+        const t = r[0]?.transcript ?? '';
+        if (r.isFinal) add += t;
+        else interim += t;
+      }
+      accRef.current += add;
+      setLiveTranscript((accRef.current + interim).trimStart());
+    };
+    rec.onend = () => {
+      setIsListening(false);
+      recRef.current = null;
+    };
+    recRef.current = rec;
+    try {
+      rec.start();
+      setIsListening(true);
+    } catch {
+      setIsListening(false);
+    }
+  }, [stopMic, clearTranscript]);
+
   const handleMicToggle = () => {
     if (isListening) {
       const t = liveTranscript.trim();
-      stopListening();
+      stopMic();
       if (t) void handleVoiceSend(t);
       clearTranscript();
       return;
     }
-    clearTranscript();
-    startListening();
+    startMic();
   };
 
-  const handleMoodComplete = async (payload: { label: string; traffic: 'groen' | 'gul' | 'roed'; note: string }) => {
-    setMoodLabel(payload.label);
-    setMoodTraffic(payload.traffic);
-    if (payload.label === 'Meget svært' || payload.traffic === 'roed') {
-      setView('crisis');
-      return;
+  useEffect(() => () => stopMic(), [stopMic]);
+
+  useEffect(() => {
+    if (moodTick > 0) {
+      setShowLysCard(true);
+      suggestNextStep({ moodJustCaptured: true, traffic: moodTraffic });
     }
-    setView('home');
-    setShowLysCard(true);
-    setNextStep(null);
-    const note = payload.note ? ` Jeg skrev også: ${payload.note}` : '';
-    await sendToLys(`Jeg har det sådan her: ${payload.label}.${note}`);
-    suggestNextStep({ moodJustCaptured: true, traffic: payload.traffic });
-  };
+  }, [moodTick, moodTraffic, suggestNextStep]);
 
   const handleLogout = async () => {
     await fetch('/api/resident-session', { method: 'DELETE' });
     router.replace(`/login/${residentId || 'unknown'}`);
   };
 
-  const goHome = () => {
-    window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
-    setView('home');
-  };
-
-  const speakSafe = (t: string) => speak(t, reducedMotion);
-
-  if (view !== 'home') {
-    return (
-      <div
-        className="relative min-h-screen font-sans transition-colors duration-500"
-        style={{ backgroundColor: tokens.bg, color: tokens.text }}
-      >
-        <div className="mx-auto max-w-lg pb-28">
-          {view === 'mood' ? (
-            <LysStemningskort
-              tokens={tokens}
-              accent={accent}
-              firstName={firstName}
-              reducedMotion={reducedMotion}
-              onBack={() => setView('home')}
-              onComplete={handleMoodComplete}
-            />
-          ) : null}
-          {view === 'flower' ? (
-            <LysBlomst
-              tokens={tokens}
-              accent={accent}
-              firstName={firstName}
-              reducedMotion={reducedMotion}
-              onBack={() => setView('home')}
-              onDone={() => setView('home')}
-            />
-          ) : null}
-          {view === 'thought' ? (
-            <LysTankefanger
-              tokens={tokens}
-              accent={accent}
-              firstName={firstName}
-              reducedMotion={reducedMotion}
-              speak={speakSafe}
-              sendCounterThought={sendCounterThought}
-              onBack={() => setView('home')}
-            />
-          ) : null}
-          {view === 'goals' ? (
-            <LysMaaltrappe
-              tokens={tokens}
-              accent={accent}
-              firstName={firstName}
-              reducedMotion={reducedMotion}
-              onBack={() => setView('home')}
-            />
-          ) : null}
-          {view === 'dailyWin' ? (
-            <LysDagligSejr tokens={tokens} accent={accent} firstName={firstName} onBack={() => setView('home')} />
-          ) : null}
-          {view === 'crisis' ? (
-            <div className="p-6 pt-12">
-              <LysKrisekort firstName={firstName} onClose={() => setView('home')} />
-            </div>
-          ) : null}
-        </div>
-        <FloatingLys accent={accent} reducedMotion={reducedMotion} onClick={goHome} />
-      </div>
-    );
-  }
-
   return (
-    <div
-      className="relative min-h-screen font-sans transition-colors duration-500"
-      style={{ backgroundColor: tokens.bg, color: tokens.text }}
-    >
+    <div className="relative min-h-0 font-sans transition-colors duration-500" style={{ color: tokens.text }}>
       <header className="flex items-center justify-between p-6">
         <span className="text-xl font-bold" style={{ color: accent }}>
           Lys
@@ -264,7 +247,7 @@ export default function LysHome({ firstName, initials, residentId }: Props) {
           <button
             type="button"
             onClick={handleLogout}
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors duration-200"
             style={{ color: tokens.textMuted }}
             aria-label="Log ud"
           >
@@ -273,7 +256,7 @@ export default function LysHome({ firstName, initials, residentId }: Props) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg space-y-6 px-6 pb-32">
+      <main className="mx-auto max-w-lg space-y-6 px-6">
         {isSundayEvening ? (
           <LysUgeTilbageblik tokens={tokens} accent={accent} firstName={firstName} phase={phase} reducedMotion={reducedMotion} />
         ) : (
@@ -295,11 +278,10 @@ export default function LysHome({ firstName, initials, residentId }: Props) {
                   type="button"
                   onClick={() => void handlePill(pill)}
                   disabled={loading}
-                  className="w-full rounded-full py-4 text-lg font-semibold transition-transform disabled:opacity-50"
+                  className="w-full rounded-full py-4 text-lg font-semibold transition-all duration-200 disabled:opacity-50"
                   style={{
                     backgroundColor: tokens.accentSoft,
                     color: tokens.accentSoftText,
-                    transform: reducedMotion ? undefined : undefined,
                   }}
                 >
                   {pill}
@@ -309,14 +291,16 @@ export default function LysHome({ firstName, initials, residentId }: Props) {
           </section>
         )}
 
-        <LysDagensProgram tokens={tokens} accent={accent} now={now} />
+        <LysDagensProgram tokens={tokens} accent={accent} now={now} firstName={firstName} residentId={residentId} />
         <LysVagtplan tokens={tokens} accent={accent} reducedMotion={reducedMotion} />
+
+        <LysBeskedTilPersonale tokens={tokens} accent={accent} firstName={firstName} />
 
         <section className="flex flex-col items-center gap-2 py-2">
           <button
             type="button"
             onClick={handleMicToggle}
-            className={`relative flex h-16 w-16 items-center justify-center rounded-full text-white shadow-lg transition-transform ${
+            className={`relative flex h-16 w-16 items-center justify-center rounded-full text-white shadow-lg transition-all duration-200 ${
               isListening && !reducedMotion ? 'animate-pulse' : ''
             }`}
             style={{
@@ -339,7 +323,7 @@ export default function LysHome({ firstName, initials, residentId }: Props) {
 
         {showLysCard && (lastAssistant || loading) ? (
           <div
-            className="rounded-2xl border p-6 shadow-md transition-opacity duration-500"
+            className="rounded-2xl border p-6 shadow-md transition-all duration-200"
             style={{
               borderColor: tokens.cardBorder,
               backgroundColor: tokens.cardBg,
@@ -361,7 +345,7 @@ export default function LysHome({ firstName, initials, residentId }: Props) {
                     <button
                       type="button"
                       onClick={() => speakSafe(lastAssistant)}
-                      className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full"
+                      className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-all duration-200"
                       style={{ backgroundColor: tokens.accentSoft, color: accent }}
                       aria-label="Læs højt"
                     >
@@ -379,10 +363,10 @@ export default function LysHome({ firstName, initials, residentId }: Props) {
               <button
                 type="button"
                 onClick={() => {
-                  setView(nextStep.target);
+                  onOpenFlow(nextStep.target);
                   setNextStep(null);
                 }}
-                className="mt-6 w-full rounded-full py-4 text-lg font-semibold text-white transition-opacity"
+                className="mt-6 w-full rounded-full py-4 text-lg font-semibold text-white transition-all duration-200"
                 style={{ backgroundColor: accent }}
               >
                 {nextStep.label}
@@ -391,33 +375,6 @@ export default function LysHome({ firstName, initials, residentId }: Props) {
           </div>
         ) : null}
       </main>
-
-      <FloatingLys accent={accent} reducedMotion={reducedMotion} onClick={goHome} />
-    </div>
-  );
-}
-
-function FloatingLys({
-  accent,
-  reducedMotion,
-  onClick,
-}: {
-  accent: string;
-  reducedMotion: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <div className="pointer-events-none fixed bottom-0 left-0 right-0 z-30 flex justify-center pb-6 pt-4">
-      <button
-        type="button"
-        onClick={onClick}
-        style={{ backgroundColor: accent }}
-        className={`pointer-events-auto rounded-full px-6 py-3 text-lg font-semibold text-white shadow-lg transition-transform ${
-          reducedMotion ? '' : 'hover:scale-[1.02] active:scale-[0.98]'
-        }`}
-      >
-        💬 Tal med Lys
-      </button>
     </div>
   );
 }

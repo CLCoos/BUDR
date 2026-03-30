@@ -247,7 +247,8 @@ export default function KalenderWidget() {
 
   return (
     <section
-      className="mb-6 w-full max-w-2xl rounded-xl border border-gray-100 bg-white p-5 shadow-sm"
+      id="budr-planlaegger"
+      className="mb-6 w-full max-w-2xl scroll-mt-24 rounded-xl border border-gray-100 bg-white p-5 shadow-sm"
       aria-label="Dagens aftaler"
     >
       <div className="mb-4 flex flex-col gap-4 border-b border-gray-100 pb-4 sm:flex-row sm:items-start sm:justify-between">

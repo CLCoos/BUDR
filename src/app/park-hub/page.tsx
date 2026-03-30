@@ -1,6 +1,6 @@
 import React from 'react';
 import { createClient } from '@supabase/supabase-js';
-import ParkHubClient from './components/ParkHubClient';
+import LysShell from './components/LysShell';
 import { getResidentId } from '@/lib/residentAuth';
 
 async function getResident(residentId: string) {
@@ -29,10 +29,13 @@ export default async function ParkHubPage() {
 
   const resident = residentId ? await getResident(residentId) : null;
 
+  const displayName = resident?.name ?? 'Beboer';
+  const firstName = displayName.trim().split(/\s+/)[0] || displayName;
+
   return (
-    <ParkHubClient
-      residentName={resident?.name ?? 'Beboer'}
-      residentInitials={resident?.initials ?? '?'}
+    <LysShell
+      firstName={firstName}
+      initials={resident?.initials ?? '?'}
       residentId={residentId ?? ''}
     />
   );
