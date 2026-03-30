@@ -1,0 +1,609 @@
+/* ═══════════════════════════════════════════════
+   BUDR – PARK Flow Styles
+   Tilføjes til / importeres fra budrCare.css
+   ═══════════════════════════════════════════════ */
+
+/* ── Variabler ────────────────────────────────── */
+:root {
+  --park-primary:    #6366f1;
+  --park-primary-lt: #e0e7ff;
+  --park-green:      #22c55e;
+  --park-yellow:     #eab308;
+  --park-red:        #ef4444;
+  --park-surface:    #ffffff;
+  --park-bg:         #f8fafc;
+  --park-border:     #e2e8f0;
+  --park-text:       #1e293b;
+  --park-muted:      #64748b;
+  --park-radius:     16px;
+  --park-radius-sm:  10px;
+  --park-shadow:     0 4px 24px rgba(0,0,0,.07);
+}
+
+/* ── Layout ───────────────────────────────────── */
+.park-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 16px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.park-card {
+  background: var(--park-surface);
+  border-radius: var(--park-radius);
+  padding: 24px;
+  box-shadow: var(--park-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.park-card--center {
+  text-align: center;
+  align-items: center;
+}
+
+/* ── Progress dots ────────────────────────────── */
+.park-flow__progress {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.park-flow__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--park-border);
+  transition: background 0.2s;
+}
+
+.park-flow__dot.active { background: var(--park-primary); }
+.park-flow__dot.done   { background: var(--park-green); }
+
+/* ── Typography ───────────────────────────────── */
+.park-card h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--park-text);
+  margin: 0;
+}
+
+.park-subtitle {
+  color: var(--park-muted);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.park-step-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--park-primary);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+/* ── Slider / Score ───────────────────────────── */
+.park-score-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.park-score-number {
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: var(--park-primary);
+  line-height: 1;
+}
+
+.park-score-label {
+  font-size: 1rem;
+  color: var(--park-muted);
+}
+
+.park-slider {
+  width: 100%;
+  accent-color: var(--park-primary);
+  height: 6px;
+}
+
+.park-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--park-muted);
+}
+
+/* ── Trafiklys ────────────────────────────────── */
+.park-traffic-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.park-traffic-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: var(--park-radius-sm);
+  border: 2px solid var(--park-border);
+  background: var(--park-bg);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.park-traffic-btn.selected {
+  border-color: var(--traffic-color, var(--park-primary));
+  background: color-mix(in srgb, var(--traffic-color, var(--park-primary)) 10%, white);
+}
+
+.park-traffic-label { font-weight: 600; font-size: 0.95rem; }
+.park-traffic-desc  { font-size: 0.82rem; color: var(--park-muted); }
+
+.park-alert-notice {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--park-radius-sm);
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  color: #dc2626;
+}
+
+/* ── Textarea ─────────────────────────────────── */
+.park-textarea {
+  width: 100%;
+  border: 1.5px solid var(--park-border);
+  border-radius: var(--park-radius-sm);
+  padding: 12px 14px;
+  font-size: 0.95rem;
+  resize: vertical;
+  font-family: inherit;
+  color: var(--park-text);
+  background: var(--park-bg);
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.park-textarea:focus {
+  outline: none;
+  border-color: var(--park-primary);
+}
+
+/* ── Buttons ──────────────────────────────────── */
+.park-btn {
+  padding: 12px 20px;
+  border-radius: var(--park-radius-sm);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.park-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.park-btn:active   { transform: scale(0.97); }
+
+.park-btn--primary   { background: var(--park-primary); color: #fff; }
+.park-btn--secondary { background: var(--park-border); color: var(--park-text); }
+.park-btn--ghost     { background: transparent; border: 1.5px solid var(--park-primary); color: var(--park-primary); }
+.park-btn--small     { padding: 8px 14px; font-size: 0.85rem; }
+
+.park-btn-row {
+  display: flex;
+  gap: 10px;
+}
+
+.park-btn-row .park-btn { flex: 1; }
+
+/* ── Tankefanger specifikke ───────────────────── */
+.park-emotion-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.park-emotion-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  border-radius: var(--park-radius-sm);
+  border: 2px solid var(--park-border);
+  background: var(--park-bg);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: border-color 0.15s;
+}
+
+.park-emotion-btn.selected {
+  border-color: var(--park-primary);
+  background: var(--park-primary-lt);
+}
+
+.park-context-box {
+  background: var(--park-bg);
+  border-left: 3px solid var(--park-primary);
+  padding: 10px 14px;
+  border-radius: 0 var(--park-radius-sm) var(--park-radius-sm) 0;
+  font-size: 0.88rem;
+  color: var(--park-muted);
+  font-style: italic;
+}
+
+.park-thought-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #fef9c3;
+  border-radius: var(--park-radius-sm);
+  padding: 12px 14px;
+}
+
+.park-thought-label { font-size: 0.75rem; font-weight: 600; color: var(--park-muted); }
+
+/* ── Ressourceblomst ──────────────────────────── */
+.park-flower {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto;
+}
+
+.park-flower__petal {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2px solid var(--park-border);
+  background: var(--park-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+/* Position 8 blades around circle */
+.park-flower__petal--0 { top: 0;   left: 70px; }
+.park-flower__petal--1 { top: 20px;  left: 130px; }
+.park-flower__petal--2 { top: 70px;  right: 0; }
+.park-flower__petal--3 { bottom: 20px; left: 130px; }
+.park-flower__petal--4 { bottom: 0;  left: 70px; }
+.park-flower__petal--5 { bottom: 20px; left: 10px; }
+.park-flower__petal--6 { top: 70px;  left: 0; }
+.park-flower__petal--7 { top: 20px;  left: 10px; }
+
+.park-flower__petal.filled  { background: var(--park-primary-lt); border-color: var(--park-primary); }
+.park-flower__petal.active  { transform: scale(1.15); border-color: var(--park-primary); box-shadow: 0 0 0 3px var(--park-primary-lt); }
+
+.park-flower__center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--park-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.park-petal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.park-petal-emoji { font-size: 1.8rem; }
+
+.park-skip-link {
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--park-muted);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* ── Måltrappe ────────────────────────────────── */
+.park-goal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 16px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.park-goal {
+  background: var(--park-surface);
+  border-radius: var(--park-radius);
+  padding: 20px;
+  box-shadow: var(--park-shadow);
+}
+
+.park-goal__header { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.park-goal__header h3 { margin: 0; font-size: 1.1rem; }
+.park-goal__header p  { margin: 0; font-size: 0.88rem; color: var(--park-muted); }
+
+.park-progress-bar {
+  height: 6px;
+  background: var(--park-border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.park-progress-bar__fill {
+  height: 100%;
+  background: var(--park-green);
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.park-progress-label { font-size: 0.78rem; color: var(--park-muted); }
+
+.park-ladder {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.park-ladder__step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--park-radius-sm);
+  background: var(--park-bg);
+  border: 1.5px solid var(--park-border);
+}
+
+.park-ladder__step.done { opacity: 0.6; }
+.park-ladder__step.next { border-color: var(--park-primary); background: var(--park-primary-lt); }
+
+.park-ladder__step-indicator {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--park-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.park-ladder__step.done .park-ladder__step-indicator { background: var(--park-green); color: white; }
+.park-ladder__step.next .park-ladder__step-indicator { background: var(--park-primary); color: white; }
+
+.park-ladder__step-content { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.park-ladder__step-title   { font-size: 0.9rem; font-weight: 600; }
+.park-ladder__step-desc    { font-size: 0.82rem; color: var(--park-muted); }
+.park-ladder__step-note    { font-size: 0.82rem; color: var(--park-primary); font-style: italic; }
+
+/* ── Modal ────────────────────────────────────── */
+.park-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+}
+
+.park-modal {
+  background: var(--park-surface);
+  border-radius: var(--park-radius) var(--park-radius) 0 0;
+  padding: 24px;
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.park-modal h3 { margin: 0; font-size: 1.1rem; }
+
+/* ── Done state ───────────────────────────────── */
+.park-done-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--park-green);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+}
+
+/* ── Loading ──────────────────────────────────── */
+.park-loading {
+  text-align: center;
+  color: var(--park-muted);
+  padding: 40px 16px;
+}
+
+.park-empty-icon { font-size: 3rem; }
+
+/* ══════════════════════════════════════════════
+   CARE PORTAL — Alert + Resident styles
+   ══════════════════════════════════════════════ */
+
+.portal-alert-panel {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--park-shadow);
+}
+
+.portal-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.portal-panel-header h2 { margin: 0; font-size: 1.1rem; }
+
+.portal-badge {
+  padding: 2px 10px;
+  border-radius: 99px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: white;
+}
+
+.portal-badge--red { background: var(--park-red); }
+
+.portal-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--park-muted);
+}
+
+.portal-alert-list { display: flex; flex-direction: column; gap: 10px; }
+
+.portal-alert {
+  padding: 14px 16px;
+  border-radius: 10px;
+  border-left: 4px solid;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.portal-alert--red    { background: #fef2f2; border-color: var(--park-red); }
+.portal-alert--yellow { background: #fefce8; border-color: var(--park-yellow); }
+.portal-alert--green  { background: #f0fdf4; border-color: var(--park-green); }
+
+.portal-alert__meta { display: flex; gap: 10px; font-size: 0.8rem; color: var(--park-muted); }
+.portal-alert__note { margin: 0; font-size: 0.88rem; font-style: italic; }
+
+.portal-btn--ack {
+  background: var(--park-text);
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+/* Resident overview */
+.portal-resident {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--park-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.portal-resident__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.portal-resident__avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--park-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.portal-resident__header h3 { margin: 0; font-size: 1rem; }
+.portal-resident__traffic   { font-size: 0.82rem; font-weight: 600; }
+
+.portal-resident__stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.portal-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--park-bg);
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.portal-stat__label { font-size: 0.72rem; color: var(--park-muted); }
+.portal-stat__value { font-size: 1rem; font-weight: 700; }
+
+.portal-minichart {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 48px;
+  background: var(--park-bg);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.portal-minichart__bar {
+  flex: 1;
+  border-radius: 3px 3px 0 0;
+  min-height: 4px;
+  transition: height 0.3s;
+}
+
+.portal-goal-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.portal-goal-row__title {
+  font-size: 0.85rem;
+  min-width: 120px;
+  flex: 1;
+}
+
+.portal-goal-row .portal-progress-bar { flex: 2; }
+.portal-progress-label { font-size: 0.78rem; color: var(--park-muted); white-space: nowrap; }
+
+.portal-resident__note {
+  font-size: 0.85rem;
+  color: var(--park-muted);
+  background: var(--park-bg);
+  padding: 10px 14px;
+  border-radius: 8px;
+}
+
+.portal-resident__note p { margin: 4px 0 0; font-style: italic; color: var(--park-text); }
+
+.portal-loading {
+  text-align: center;
+  color: var(--park-muted);
+  padding: 32px;
+}
