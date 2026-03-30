@@ -1,7 +1,7 @@
 'use client';
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   LayoutDashboard,
   ClipboardList,
@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 type NavItem = {
   icon: typeof LayoutDashboard;
@@ -47,7 +48,33 @@ type InnerProps = {
 function PortalSidebarInner({ mobileOpen, onMobileClose }: InnerProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+  const [displayName, setDisplayName] = useState<string>('');
+  const [initials, setInitials] = useState<string>('');
+
+  useEffect(() => {
+    const supabase = createClient();
+    if (!supabase) return;
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      const full = user.user_metadata?.full_name as string | undefined;
+      const name = full ?? user.email ?? '';
+      setDisplayName(full ?? user.email ?? '');
+      const parts = name.split(/[\s@]/);
+      setInitials(
+        parts.length >= 2
+          ? (parts[0][0] + parts[1][0]).toUpperCase()
+          : name.slice(0, 2).toUpperCase(),
+      );
+    });
+  }, []);
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    if (supabase) await supabase.auth.signOut();
+    router.push('/care-portal-login');
+  };
 
   const mobileClosed = !mobileOpen;
 
@@ -91,19 +118,24 @@ function PortalSidebarInner({ mobileOpen, onMobileClose }: InnerProps) {
         })}
       </div>
       <div className="border-t border-white/10 p-3">
-        {!collapsed && (
+        {!collapsed && displayName && (
           <div className="mb-3 flex items-center gap-2 px-1">
             <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#1D9E75] text-xs font-semibold text-white">
-              SK
+              {initials}
             </div>
             <div className="min-w-0">
-              <div className="truncate text-xs font-medium text-white">Sara K.</div>
-              <div className="truncate text-xs text-gray-500">Dagvagt</div>
+              <div className="truncate text-xs font-medium text-white">{displayName}</div>
+              <div className="truncate text-xs text-gray-500">Personale</div>
             </div>
           </div>
         )}
         <div className="mx-1 flex items-center gap-2">
-          <button type="button" className="rounded p-1 text-gray-500 transition-colors hover:text-gray-300">
+          <button
+            type="button"
+            onClick={() => void handleLogout()}
+            className="rounded p-1 text-gray-500 transition-colors hover:text-gray-300"
+            aria-label="Log ud"
+          >
             <LogOut size={16} />
           </button>
           {!collapsed && (
