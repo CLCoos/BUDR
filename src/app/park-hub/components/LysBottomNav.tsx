@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import { BookOpen, Flower2, Home, Users, Zap } from 'lucide-react';
+import { BookOpen, Flower2, Home, Zap } from 'lucide-react';
 import type { LysThemeTokens } from '../lib/lysTheme';
 
-export type LysNavTab = 'hjem' | 'dag' | 'journal' | 'social' | 'mig';
+export type LysNavTab = 'hjem' | 'dag' | 'journal' | 'mig';
 
 type Props = {
   active: LysNavTab;
@@ -21,7 +21,6 @@ const TABS: { id: LysNavTab; label: string; Icon: typeof Home }[] = [
   { id: 'hjem', label: 'Hjem', Icon: Home },
   { id: 'dag', label: 'Dag', Icon: Zap },
   { id: 'journal', label: 'Journal', Icon: BookOpen },
-  { id: 'social', label: 'Social', Icon: Users },
   { id: 'mig', label: 'Mig', Icon: Flower2 },
 ];
 
@@ -40,7 +39,7 @@ export default function LysBottomNav({
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-black/30 backdrop-blur-md transition-all duration-200"
+      className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 backdrop-blur-md transition-all duration-200"
       style={{
         backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.22) 0%, color-mix(in srgb, ${tokens.bg} 75%, black) 100%)`,
         paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',

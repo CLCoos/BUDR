@@ -11,7 +11,6 @@ import LysHome from './LysHome';
 import LysMigScreen from './LysMigScreen';
 import LysDagTab from './LysDagTab';
 import LysJournalTab from './LysJournalTab';
-import LysSocialTab from './LysSocialTab';
 import LysStemningskort from './LysStemningskort';
 import LysBlomst from './LysBlomst';
 import LysTankefanger from './LysTankefanger';
@@ -125,10 +124,6 @@ export default function LysShell({ firstName, initials, residentId }: Props) {
 
           {tab === 'journal' && (
             <LysJournalTab tokens={tokens} accent={accent} />
-          )}
-
-          {tab === 'social' && (
-            <LysSocialTab tokens={tokens} accent={accent} />
           )}
 
           {tab === 'mig' && (

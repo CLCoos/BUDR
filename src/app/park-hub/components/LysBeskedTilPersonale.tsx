@@ -3,17 +3,14 @@
 import React, { useEffect, useState } from 'react';
 import { MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { createClient } from '@/lib/supabase/client';
 import type { LysThemeTokens } from '../lib/lysTheme';
-
-/*
- * Supabase (demo): INSERT into care_staff_messages (resident_id, message, preset_type, created_at)
- * → push til vagthavende + klokke i Care Portal
- */
 
 type Props = {
   tokens: LysThemeTokens;
   accent: string;
   firstName: string;
+  residentId?: string;
   contactOnDutyName?: string;
 };
 
@@ -27,10 +24,12 @@ export default function LysBeskedTilPersonale({
   tokens,
   accent,
   firstName,
+  residentId,
   contactOnDutyName = 'Sara K.',
 }: Props) {
   const [custom, setCustom] = useState('');
   const [sent, setSent] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!sent) return;
@@ -38,18 +37,48 @@ export default function LysBeskedTilPersonale({
     return () => window.clearTimeout(t);
   }, [sent]);
 
-  const sendMessage = (message: string, presetType?: string) => {
+  const sendMessage = async (message: string, presetType?: string) => {
     const trimmed = message.trim();
-    if (!trimmed) return;
+    if (!trimmed || saving) return;
 
-    // INSERT into care_staff_messages (resident_id, message, preset_type, created_at)
+    setSaving(true);
+    try {
+      // Insert into plan_proposals so staff can review the resident's request
+      if (residentId) {
+        const supabase = createClient();
+        if (supabase) {
+          // Fetch the resident's org_id for multi-tenant scoping
+          const { data: residentRow } = await supabase
+            .from('care_residents')
+            .select('org_id')
+            .eq('user_id', residentId)
+            .maybeSingle();
+
+          const today = new Date().toISOString().slice(0, 10);
+          const { error } = await supabase.from('plan_proposals').insert({
+            resident_id: residentId,
+            org_id: residentRow?.org_id ?? null,
+            plan_date: today,
+            user_message: trimmed,
+            // Parse the free-text wish as a minimal proposed item array
+            proposed_items: [{ title: trimmed, preset_type: presetType ?? null }],
+            ai_reasoning: null, // AI will populate in a follow-up step
+            status: 'pending',
+          });
+          if (error) console.error('plan_proposals insert error', error);
+        }
+      }
+    } catch (err) {
+      console.error('LysBeskedTilPersonale save failed', err);
+    } finally {
+      setSaving(false);
+    }
 
     toast.success(
       `📋 Sendt til portalen. Personalet er besked ✓ — "${trimmed.slice(0, 72)}${trimmed.length > 72 ? '…' : ''}"`,
     );
     setSent(true);
     setCustom('');
-    void presetType;
     void firstName;
   };
 
@@ -69,7 +98,7 @@ export default function LysBeskedTilPersonale({
         aria-live="polite"
       >
         <p className="text-center text-lg font-medium leading-relaxed">
-          ✓ Beskeden er sendt — {contactOnDutyName} vil se den snart.
+          ✓ Din besked er sendt til personalet — {contactOnDutyName} vil se den snart.
         </p>
       </section>
     );
@@ -93,8 +122,9 @@ export default function LysBeskedTilPersonale({
           <button
             key={p.key}
             type="button"
-            onClick={() => sendMessage(p.text, p.key)}
-            className="min-h-[48px] rounded-2xl border px-4 py-3 text-left text-base font-medium transition-all duration-200"
+            disabled={saving}
+            onClick={() => void sendMessage(p.text, p.key)}
+            className="min-h-[48px] rounded-2xl border px-4 py-3 text-left text-base font-medium transition-all duration-200 disabled:opacity-50"
             style={{ borderColor: borderCol, backgroundColor: inputBg }}
           >
             {p.text}
@@ -110,21 +140,16 @@ export default function LysBeskedTilPersonale({
           maxLength={200}
           placeholder="Eller skriv selv …"
           className="min-h-[48px] flex-1 rounded-xl border px-4 text-base outline-none transition-all duration-200"
-          style={{
-            borderColor: borderCol,
-            backgroundColor: inputBg,
-            color: tokens.text,
-            caretColor: accent,
-          }}
+          style={{ borderColor: borderCol, backgroundColor: inputBg, color: tokens.text, caretColor: accent }}
         />
         <button
           type="button"
-          disabled={!custom.trim()}
-          onClick={() => sendMessage(custom, 'custom')}
+          disabled={!custom.trim() || saving}
+          onClick={() => void sendMessage(custom, 'custom')}
           className="min-h-[48px] shrink-0 rounded-full px-6 text-base font-semibold text-white transition-all duration-200 disabled:opacity-40"
           style={{ backgroundColor: accent }}
         >
-          Send
+          {saving ? '…' : 'Send'}
         </button>
       </div>
       <p className="mt-2 text-base" style={{ color: secondary }}>

@@ -9,6 +9,7 @@ import CheckInStepIntention from './CheckInStepIntention';
 import CheckInComplete from './CheckInComplete';
 import Lys from '@/components/Lys';
 import CompanionAvatar, { CompanionReaction } from '@/components/CompanionAvatar';
+import { createClient } from '@/lib/supabase/client';
 
 export interface CheckInData {
   energy: number;
@@ -17,7 +18,20 @@ export interface CheckInData {
   companion: string;
 }
 
-export default function MorningCheckInFlow() {
+// Map energy level (1–5) to a 1–10 mood score and derive traffic light
+function energyToMoodScore(energy: number): number {
+  return Math.min(10, Math.max(1, energy * 2));
+}
+
+function moodScoreToTrafficLight(score: number): 'rød' | 'gul' | 'grøn' {
+  if (score <= 4) return 'rød';
+  if (score <= 7) return 'gul';
+  return 'grøn';
+}
+
+type Props = { residentId: string };
+
+export default function MorningCheckInFlow({ residentId }: Props) {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [data, setData] = useState<CheckInData>({
@@ -31,7 +45,6 @@ export default function MorningCheckInFlow() {
   const prevEnergyRef = useRef<number>(0);
   const prevMoodRef = useRef<string>('');
 
-  // Trigger energySwing reaction when energy changes
   useEffect(() => {
     if (data.energy && data.energy !== prevEnergyRef.current) {
       prevEnergyRef.current = data.energy;
@@ -39,7 +52,6 @@ export default function MorningCheckInFlow() {
     }
   }, [data.energy]);
 
-  // Trigger moodChange reaction when mood changes
   useEffect(() => {
     if (data.mood && data.mood !== prevMoodRef.current) {
       prevMoodRef.current = data.mood;
@@ -65,24 +77,40 @@ export default function MorningCheckInFlow() {
     }
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    // Persist to localStorage for same-session components (e.g. LysDagTab energy picker)
     try {
       const today = new Date().toISOString().slice(0, 10);
       localStorage.setItem(
         'budr_today_checkin',
-        JSON.stringify({
-          date: today,
-          energy: data.energy,
-          mood: data.mood,
-          intention: data.intention,
-        }),
+        JSON.stringify({ date: today, energy: data.energy, mood: data.mood, intention: data.intention }),
       );
-    } catch {
-      /* ignore */
+    } catch { /* ignore */ }
+
+    // Save to Supabase — park_daily_checkin
+    if (residentId) {
+      const moodScore = energyToMoodScore(data.energy);
+      const trafficLight = moodScoreToTrafficLight(moodScore);
+
+      try {
+        const supabase = createClient();
+        if (supabase) {
+          const { error } = await supabase.from('park_daily_checkin').insert({
+            resident_id: residentId,
+            mood_score: moodScore,
+            traffic_light: trafficLight,
+            note: data.intention.trim() || null,
+          });
+          if (error) console.error('check-in insert error', error);
+        }
+      } catch (err) {
+        console.error('check-in save failed', err);
+      }
     }
+
     setCompanionReaction('celebrate');
     toast.success('God morgen! Din dag er klar 🌅');
-    setTimeout(() => router.push('/daily-structure'), 1800);
+    setTimeout(() => router.push('/park-hub'), 1800);
   };
 
   const steps = [
@@ -158,7 +186,7 @@ export default function MorningCheckInFlow() {
         </div>
       </div>
 
-      {/* Companion strip — shows animated companion reacting to energy/mood */}
+      {/* Companion strip */}
       {step < 4 && (
         <div className="flex flex-col items-center py-4">
           <div className="flex justify-center items-center gap-4">

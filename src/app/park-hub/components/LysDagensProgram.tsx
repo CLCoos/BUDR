@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { CalendarDays, Check, Stethoscope } from 'lucide-react';
 import { toast } from 'sonner';
+import { createClient } from '@/lib/supabase/client';
 import type { LysThemeTokens } from '../lib/lysTheme';
 
 export type ProgramItemType = 'struktur' | 'aftale' | 'aktivitet' | 'andet';
@@ -31,6 +32,36 @@ const TYPE_LABEL: Record<ProgramItemType, string> = {
   andet: 'Andet',
 };
 
+// daily_plans.plan_items row shape (from DailyPlanView / propose-plan)
+type RawPlanItem = {
+  id?: string;
+  time: string;
+  title: string;
+  description?: string;
+  category?: string;
+};
+
+function categoryToType(cat?: string): ProgramItemType {
+  switch (cat) {
+    case 'aktivitet': return 'aktivitet';
+    case 'social':    return 'aktivitet';
+    case 'mad':       return 'struktur';
+    case 'medicin':   return 'struktur';
+    case 'hvile':     return 'andet';
+    default:          return 'struktur';
+  }
+}
+
+function rawToProgramItem(raw: RawPlanItem, idx: number): ProgramItem {
+  return {
+    id: raw.id ?? `plan-item-${idx}`,
+    time: raw.time,
+    title: raw.title,
+    type: categoryToType(raw.category),
+    subtitle: raw.description,
+  };
+}
+
 function parseTime(t: string): number {
   const [h, m] = t.split(':').map(Number);
   return (h ?? 0) * 60 + (m ?? 0);
@@ -42,40 +73,6 @@ export function isSpecialScheduleItem(item: ProgramItem): boolean {
   if (item.type === 'aftale') return true;
   return false;
 }
-
-function mockTodayItems(): ProgramItem[] {
-  return [
-    { id: 'sched-0730', time: '07:30', title: 'Morgenmad', type: 'struktur' },
-    { id: 'sched-0800', time: '08:00', title: 'Morgenmedicin', type: 'struktur' },
-    {
-      id: 'sched-laege-0900',
-      time: '09:00',
-      title: 'Lægebesøg',
-      type: 'aftale',
-      subtitle: 'Aalborg Universitetshospital',
-      elevated: true,
-      nyIDag: true,
-    },
-    { id: 'sched-1200', time: '12:00', title: 'Frokost', type: 'struktur' },
-    { id: 'sched-vaerksted', time: '14:00', title: 'Kreativ værksted', type: 'aktivitet' },
-    { id: 'sched-1730', time: '17:30', title: 'Middagsmedicin', type: 'struktur' },
-    { id: 'sched-1800', time: '18:00', title: 'Aftensmad', type: 'struktur' },
-    { id: 'sched-2100', time: '21:00', title: 'Aftenmedicin', type: 'struktur' },
-    { id: 'sched-2200', time: '22:00', title: 'Sengetid', type: 'struktur' },
-  ];
-}
-
-/*
- * Supabase (demo):
- * Bekræftelse (klar): INSERT INTO care_resident_schedule_responses
- *   (resident_id, schedule_item_id, response, created_at) VALUES (..., 'klar', now())
- *
- * Nervøs: INSERT INTO care_resident_responses
- *   (resident_id, schedule_item_id, response_type, note) + care_portal_notifications (type 'bekymring', severity 'gul')
- *
- * Afmelding: INSERT INTO care_resident_responses (..., 'afmelding', note)
- *   + care_portal_notifications (type 'afmelding', severity 'gul')
- */
 
 type ResponseState =
   | { kind: 'klar' }
@@ -98,29 +95,58 @@ export default function LysDagensProgram({
   now = new Date(),
   mode = 'embedded',
   firstName = 'Beboeren',
+  residentId,
 }: Props) {
-  const items = useMemo(() => mockTodayItems(), []);
+  const [items, setItems] = useState<ProgramItem[] | null>(null); // null = loading
   const nowMin = now.getHours() * 60 + now.getMinutes();
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [responses, setResponses] = useState<Record<string, ResponseState>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
 
+  // Fetch today's approved daily plan from Supabase
+  useEffect(() => {
+    if (!residentId) {
+      setItems([]);
+      return;
+    }
+    const supabase = createClient();
+    if (!supabase) {
+      setItems([]);
+      return;
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    supabase
+      .from('daily_plans')
+      .select('plan_items')
+      .eq('resident_id', residentId)
+      .eq('plan_date', today)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (error) console.error('LysDagensProgram fetch error', error);
+        if (data?.plan_items && Array.isArray(data.plan_items) && data.plan_items.length > 0) {
+          const mapped = (data.plan_items as RawPlanItem[])
+            .map((raw, idx) => rawToProgramItem(raw, idx))
+            .sort((a, b) => parseTime(a.time) - parseTime(b.time));
+          setItems(mapped);
+        } else {
+          setItems([]); // empty — show friendly state
+        }
+      });
+  }, [residentId]);
+
   const formatter = useMemo(
-    () =>
-      new Intl.DateTimeFormat('da-DK', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-      }),
+    () => new Intl.DateTimeFormat('da-DK', { weekday: 'long', day: 'numeric', month: 'long' }),
     [],
   );
   const dateLine = formatter.format(now);
   const dateLineCap = dateLine.charAt(0).toUpperCase() + dateLine.slice(1);
 
-  const allPast = items.every(i => parseTime(i.time) < nowMin);
-  const nextIdx = items.findIndex(i => parseTime(i.time) >= nowMin);
-  const placeholders = nextIdx >= 0 ? Math.min(2, items.length - nextIdx - 1) : 0;
+  const displayItems = items ?? [];
+  const allPast = displayItems.every(i => parseTime(i.time) < nowMin);
+  const nextIdx = displayItems.findIndex(i => parseTime(i.time) >= nowMin);
+  const placeholders = nextIdx >= 0 ? Math.min(2, displayItems.length - nextIdx - 1) : 0;
 
   const isDarkish =
     tokens.bg === '#0F1B2D' || tokens.bg === '#0A1220' || tokens.text.toLowerCase().includes('e2e8f0');
@@ -137,7 +163,6 @@ export default function LysDagensProgram({
     (item: ProgramItem) => {
       setResponses(r => ({ ...r, [item.id]: { kind: 'bekræftet' } }));
       setExpandedId(null);
-      // INSERT care_resident_schedule_responses (resident_id, item_id, response: 'klar', created_at)
       toast.success(`📋 Sendt til portalen: "${firstName} har bekræftet ${item.title} kl. ${item.time}"`);
     },
     [firstName],
@@ -150,13 +175,10 @@ export default function LysDagensProgram({
       const tid = item.time;
       const tit = item.title;
       if (kind === 'klar') {
-        // INSERT care_resident_schedule_responses + grøn status i portal
         toast.success(`📋 Sendt til portalen: "${firstName} er klar til ${tit} kl. ${tid}"`);
       } else if (kind === 'nervøs') {
-        // INSERT care_resident_responses (response_type: 'nervøs') + notification bekymring gul
         toast.success(`📋 Sendt til portalen: "${firstName} er nervøs for ${tit} kl. ${tid}"`);
       } else {
-        // INSERT care_resident_responses (afmelding) + care_portal_notifications afmelding gul
         toast.success(`📋 Sendt til portalen: "${firstName} vil afmelde ${tit} kl. ${tid}"`);
       }
     },
@@ -167,7 +189,6 @@ export default function LysDagensProgram({
     (item: ProgramItem) => {
       const n = (notes[item.id] ?? '').trim();
       if (!n) return;
-      // INSERT note til personale knyttet til schedule_item
       toast.success(
         `Sendt til personalet ✓ — 📋 Portal: note om "${item.title}" (${n.slice(0, 40)}${n.length > 40 ? '…' : ''})`,
       );
@@ -272,11 +293,7 @@ export default function LysDagensProgram({
                     className="mt-1 w-full rounded-xl border border-white/20 bg-white/10 p-3 text-sm text-white placeholder:text-white/40 outline-none transition-all duration-200"
                     style={
                       !isDarkish
-                        ? {
-                            borderColor: tokens.cardBorder,
-                            backgroundColor: 'rgba(255,255,255,0.85)',
-                            color: tokens.text,
-                          }
+                        ? { borderColor: tokens.cardBorder, backgroundColor: 'rgba(255,255,255,0.85)', color: tokens.text }
                         : undefined
                     }
                   />
@@ -303,11 +320,7 @@ export default function LysDagensProgram({
   return (
     <section
       className={`rounded-2xl border shadow-sm transition-all duration-200 ${wrap} ${mode === 'focus' ? 'min-h-[calc(100dvh-8rem)] p-6' : 'p-6'}`}
-      style={{
-        backgroundColor: tokens.cardBg,
-        borderColor: tokens.cardBorder,
-        color: tokens.text,
-      }}
+      style={{ backgroundColor: tokens.cardBg, borderColor: tokens.cardBorder, color: tokens.text }}
       aria-labelledby="lys-dagens-program-heading"
     >
       <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
@@ -322,124 +335,151 @@ export default function LysDagensProgram({
         </p>
       </div>
 
-      <ol className="relative space-y-0 border-s-2 ps-6" style={{ borderColor: `${accent}40` }}>
-        {items.map((item, idx) => {
-          const past = parseTime(item.time) < nowMin;
-          const isNext = idx === nextIdx && !past;
-
-          if (item.elevated) {
-            return (
-              <li key={item.id} className="relative mb-4 ms-2 list-none">
-                <span
-                  className="absolute -start-[1.6rem] top-3 h-3 w-3 rounded-full border-2"
-                  style={{ borderColor: accent, backgroundColor: tokens.cardBg }}
-                  aria-hidden
-                />
-                <button
-                  type="button"
-                  onClick={() => toggleExpand(item.id)}
-                  className="relative w-full overflow-hidden rounded-2xl border-2 bg-white p-4 text-left shadow-sm transition-all duration-200"
-                  style={{
-                    borderColor: accent,
-                    opacity: past ? 0.55 : 1,
-                    transform: isNext && !past ? 'scale(1.01)' : undefined,
-                  }}
-                >
-                  {item.nyIDag ? (
-                    <span className="absolute end-3 top-3 rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700">
-                      Ny i dag
-                    </span>
-                  ) : null}
-                  <div className="flex flex-wrap items-start gap-3 pe-14">
-                    <div
-                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl"
-                      style={{ backgroundColor: tokens.accentSoft }}
-                    >
-                      <Stethoscope className="h-6 w-6" style={{ color: accent }} aria-hidden />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="mb-1 font-mono text-base font-semibold" style={{ color: accent }}>
-                          {item.time}
-                        </p>
-                        {badgeFor(item.id)}
-                      </div>
-                      <p className="text-lg font-bold" style={{ color: tokens.text }}>
-                        {item.title}
-                      </p>
-                      {item.subtitle ? (
-                        <p className="mt-1 text-base opacity-60" style={{ color: tokens.text }}>
-                          {item.subtitle}
-                        </p>
-                      ) : null}
-                      <p className="mt-2 text-base">
-                        <span aria-hidden>{TYPE_DOT[item.type]}</span>{' '}
-                        <span className="opacity-80">{TYPE_LABEL[item.type]}</span>
-                      </p>
-                      <p className="mt-1 text-sm opacity-60">Tryk for at svare</p>
-                    </div>
-                  </div>
-                </button>
-                {interactionPanel(item, past)}
-              </li>
-            );
-          }
-
-          return (
-            <li
-              key={item.id}
-              className="relative mb-4 ms-2 list-none last:mb-0"
-              style={{ opacity: past ? 0.5 : 1 }}
-            >
-              <span
-                className="absolute -start-[1.45rem] top-2 h-2.5 w-2.5 rounded-full"
-                style={{ backgroundColor: accent }}
-                aria-hidden
+      {/* Loading state */}
+      {items === null && (
+        <div className="flex justify-center py-8">
+          <div className="flex gap-1.5">
+            {[0, 150, 300].map(delay => (
+              <div
+                key={delay}
+                className="w-2 h-2 rounded-full animate-bounce"
+                style={{ backgroundColor: accent, animationDelay: `${delay}ms` }}
               />
-              <button
-                type="button"
-                onClick={() => toggleExpand(item.id)}
-                className="w-full rounded-xl py-1 text-left transition-all duration-200"
-              >
-                <div className="flex flex-wrap items-baseline gap-2 gap-y-1">
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Empty state — no approved plan for today */}
+      {items !== null && items.length === 0 && (
+        <div className="py-8 text-center space-y-2">
+          <p className="text-3xl">📋</p>
+          <p className="font-semibold" style={{ color: tokens.text }}>
+            Ingen godkendt plan for i dag
+          </p>
+          <p className="text-sm opacity-60" style={{ color: tokens.text }}>
+            Spørg dit personale om din dagsplan.
+          </p>
+        </div>
+      )}
+
+      {/* Timeline */}
+      {items !== null && items.length > 0 && (
+        <>
+          <ol className="relative space-y-0 border-s-2 ps-6" style={{ borderColor: `${accent}40` }}>
+            {displayItems.map((item, idx) => {
+              const past = parseTime(item.time) < nowMin;
+              const isNext = idx === nextIdx && !past;
+
+              if (item.elevated) {
+                return (
+                  <li key={item.id} className="relative mb-4 ms-2 list-none">
+                    <span
+                      className="absolute -start-[1.6rem] top-3 h-3 w-3 rounded-full border-2"
+                      style={{ borderColor: accent, backgroundColor: tokens.cardBg }}
+                      aria-hidden
+                    />
+                    <button
+                      type="button"
+                      onClick={() => toggleExpand(item.id)}
+                      className="relative w-full overflow-hidden rounded-2xl border-2 bg-white p-4 text-left shadow-sm transition-all duration-200"
+                      style={{
+                        borderColor: accent,
+                        opacity: past ? 0.55 : 1,
+                        transform: isNext && !past ? 'scale(1.01)' : undefined,
+                      }}
+                    >
+                      {item.nyIDag ? (
+                        <span className="absolute end-3 top-3 rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700">
+                          Ny i dag
+                        </span>
+                      ) : null}
+                      <div className="flex flex-wrap items-start gap-3 pe-14">
+                        <div
+                          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl"
+                          style={{ backgroundColor: tokens.accentSoft }}
+                        >
+                          <Stethoscope className="h-6 w-6" style={{ color: accent }} aria-hidden />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="mb-1 font-mono text-base font-semibold" style={{ color: accent }}>
+                              {item.time}
+                            </p>
+                            {badgeFor(item.id)}
+                          </div>
+                          <p className="text-lg font-bold" style={{ color: tokens.text }}>{item.title}</p>
+                          {item.subtitle ? (
+                            <p className="mt-1 text-base opacity-60" style={{ color: tokens.text }}>{item.subtitle}</p>
+                          ) : null}
+                          <p className="mt-2 text-base">
+                            <span aria-hidden>{TYPE_DOT[item.type]}</span>{' '}
+                            <span className="opacity-80">{TYPE_LABEL[item.type]}</span>
+                          </p>
+                          <p className="mt-1 text-sm opacity-60">Tryk for at svare</p>
+                        </div>
+                      </div>
+                    </button>
+                    {interactionPanel(item, past)}
+                  </li>
+                );
+              }
+
+              return (
+                <li
+                  key={item.id}
+                  className="relative mb-4 ms-2 list-none last:mb-0"
+                  style={{ opacity: past ? 0.5 : 1 }}
+                >
                   <span
-                    className="inline-flex rounded-full px-3 py-1 font-mono text-base font-semibold"
-                    style={{ backgroundColor: tokens.accentSoft, color: tokens.accentSoftText }}
+                    className="absolute -start-[1.45rem] top-2 h-2.5 w-2.5 rounded-full"
+                    style={{ backgroundColor: accent }}
+                    aria-hidden
+                  />
+                  <button
+                    type="button"
+                    onClick={() => toggleExpand(item.id)}
+                    className="w-full rounded-xl py-1 text-left transition-all duration-200"
                   >
-                    {item.time}
-                  </span>
-                  <span className="text-lg font-semibold" style={{ color: tokens.text }}>
-                    {item.title}
-                  </span>
-                  <span className="text-base" aria-label={TYPE_LABEL[item.type]}>
-                    <span aria-hidden>{TYPE_DOT[item.type]}</span>
-                  </span>
-                  {badgeFor(item.id)}
-                </div>
-                <span className="mt-1 block text-sm opacity-50">Tryk for at svare</span>
-              </button>
-              {interactionPanel(item, past)}
-            </li>
-          );
-        })}
+                    <div className="flex flex-wrap items-baseline gap-2 gap-y-1">
+                      <span
+                        className="inline-flex rounded-full px-3 py-1 font-mono text-base font-semibold"
+                        style={{ backgroundColor: tokens.accentSoft, color: tokens.accentSoftText }}
+                      >
+                        {item.time}
+                      </span>
+                      <span className="text-lg font-semibold" style={{ color: tokens.text }}>{item.title}</span>
+                      <span className="text-base" aria-label={TYPE_LABEL[item.type]}>
+                        <span aria-hidden>{TYPE_DOT[item.type]}</span>
+                      </span>
+                      {badgeFor(item.id)}
+                    </div>
+                    <span className="mt-1 block text-sm opacity-50">Tryk for at svare</span>
+                  </button>
+                  {interactionPanel(item, past)}
+                </li>
+              );
+            })}
 
-        {!allPast &&
-          Array.from({ length: placeholders }).map((_, i) => (
-            <li
-              key={`placeholder-${i}`}
-              className="relative mb-3 ms-2 list-none rounded-xl border border-dashed ps-2"
-              style={{ borderColor: `${accent}35`, minHeight: 48 }}
-            >
-              <span className="sr-only">Ledig tid senere på dagen</span>
-            </li>
-          ))}
-      </ol>
+            {!allPast &&
+              Array.from({ length: placeholders }).map((_, i) => (
+                <li
+                  key={`placeholder-${i}`}
+                  className="relative mb-3 ms-2 list-none rounded-xl border border-dashed ps-2"
+                  style={{ borderColor: `${accent}35`, minHeight: 48 }}
+                >
+                  <span className="sr-only">Ledig tid senere på dagen</span>
+                </li>
+              ))}
+          </ol>
 
-      {allPast ? (
-        <p className="mt-6 text-center text-lg opacity-80" style={{ color: tokens.text }}>
-          Det er alt for i dag 🌙
-        </p>
-      ) : null}
+          {allPast ? (
+            <p className="mt-6 text-center text-lg opacity-80" style={{ color: tokens.text }}>
+              Det er alt for i dag 🌙
+            </p>
+          ) : null}
+        </>
+      )}
     </section>
   );
 }

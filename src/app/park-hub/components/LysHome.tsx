@@ -294,7 +294,7 @@ export default function LysHome({
         <LysDagensProgram tokens={tokens} accent={accent} now={now} firstName={firstName} residentId={residentId} />
         <LysVagtplan tokens={tokens} accent={accent} reducedMotion={reducedMotion} />
 
-        <LysBeskedTilPersonale tokens={tokens} accent={accent} firstName={firstName} />
+        <LysBeskedTilPersonale tokens={tokens} accent={accent} firstName={firstName} residentId={residentId} />
 
         <section className="flex flex-col items-center gap-2 py-2">
           <button
