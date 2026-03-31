@@ -25,6 +25,7 @@ interface Resident {
   lastCheckin: string;
   notePreview: string;
   checkinToday: boolean;
+  pendingProposals: number;
 }
 
 interface CheckinRow {
@@ -114,15 +115,23 @@ export default function ResidentList() {
         return;
       }
 
-      // 2. Latest check-in per resident for today
+      // 2. Latest check-in per resident for today + pending proposals (parallel)
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
 
-      const { data: checkins } = await supabase
-        .from('park_daily_checkin')
-        .select('resident_id, mood_score, traffic_light, note, created_at')
-        .gte('created_at', todayStart.toISOString())
-        .order('created_at', { ascending: false });
+      const [checkinsResult, proposalsResult] = await Promise.all([
+        supabase
+          .from('park_daily_checkin')
+          .select('resident_id, mood_score, traffic_light, note, created_at')
+          .gte('created_at', todayStart.toISOString())
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('plan_proposals')
+          .select('resident_id')
+          .eq('status', 'pending'),
+      ]);
+
+      const checkins = checkinsResult.data;
 
       // Keep only the most recent check-in per resident
       const latestByResident = new Map<string, CheckinRow>();
@@ -130,6 +139,12 @@ export default function ResidentList() {
         if (!latestByResident.has(c.resident_id)) {
           latestByResident.set(c.resident_id, c);
         }
+      }
+
+      // Count pending proposals per resident
+      const pendingByResident = new Map<string, number>();
+      for (const p of (proposalsResult.data ?? []) as { resident_id: string }[]) {
+        pendingByResident.set(p.resident_id, (pendingByResident.get(p.resident_id) ?? 0) + 1);
       }
 
       // 3. Merge
@@ -145,6 +160,7 @@ export default function ResidentList() {
           lastCheckin: 'Ingen check-in',
           notePreview: 'Ingen check-in i dag',
           checkinToday: false,
+          pendingProposals: pendingByResident.get(r.user_id) ?? 0,
         };
         const checkin = latestByResident.get(r.user_id);
         return checkin ? applyCheckin(base, checkin) : base;
@@ -268,7 +284,15 @@ export default function ResidentList() {
                         >
                           {r.initials}
                         </div>
-                        <span className="text-sm font-medium text-gray-800">{r.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-gray-800">{r.name}</span>
+                          {r.pendingProposals > 0 && (
+                            <span className="flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse inline-block" />
+                              ⏳ {r.pendingProposals} forslag
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="px-3 py-3 text-sm text-gray-600">{r.room}</td>
@@ -302,7 +326,7 @@ export default function ResidentList() {
                       <span className="text-xs text-gray-500 truncate block">{r.notePreview}</span>
                     </td>
                     <td className="px-3 py-3">
-                      <Link href={`/resident-360-view?id=${r.id}`}>
+                      <Link href={`/resident-360-view/${r.id}`}>
                         <button
                           type="button"
                           className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:text-[#1D9E75] hover:border-[#1D9E75] transition-all"
