@@ -141,6 +141,24 @@ export default function LysBeskedTilPersonale({
     );
   }
 
+  // ── Guest mode — not linked to a facility ────────────────────────────────
+  if (!residentId) {
+    return (
+      <section
+        className="rounded-2xl p-5"
+        style={{ backgroundColor: cardBg, border: `1px solid ${borderCol}`, color: tokens.text }}
+      >
+        <div className="mb-3 flex items-center gap-2">
+          <MessageCircle className="h-5 w-5 shrink-0" style={{ color: accent }} aria-hidden />
+          <h2 className="text-sm font-bold">Skriv til personalet</h2>
+        </div>
+        <p className="text-sm leading-relaxed" style={{ color: tokens.textMuted }}>
+          Denne funktion kræver tilknytning til et bosted. Er du beboer? Spørg personalet om at oprette dig.
+        </p>
+      </section>
+    );
+  }
+
   // ── Idle form ─────────────────────────────────────────────────────────────
   return (
     <section

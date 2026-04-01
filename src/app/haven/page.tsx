@@ -3,7 +3,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Plus, X, Droplets, ChevronLeft } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { useResidentSession } from '@/hooks/useResidentSession';
+import * as dataService from '@/lib/dataService';
 import TreePlant from '@/components/haven/plants/TreePlant';
 import FlowerPlant from '@/components/haven/plants/FlowerPlant';
 import HerbPlant from '@/components/haven/plants/HerbPlant';
@@ -129,11 +130,6 @@ function PlantSvg({ type, stage }: { type: PlantType; stage: 0 | 1 | 2 | 3 | 4 }
 const STAGE_LABELS = ['Frø 🌱', 'Spire 🌿', 'Ung 🌾', 'Moden 🌸', 'Fuld 🌳'];
 const WATER_THRESHOLDS = [0, 20, 60, 120, 200];
 
-function getResidentId(): string | null {
-  if (typeof document === 'undefined') return null;
-  return document.cookie.match(/budr_resident_id=([^;]+)/)?.[1] ?? null;
-}
-
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function HavenPage() {
@@ -145,15 +141,16 @@ export default function HavenPage() {
 }
 
 function HavenView() {
-  const router = useRouter();
+  const router      = useRouter();
   const searchParams = useSearchParams();
+  const session     = useResidentSession();
+
   const [plots, setPlots] = useState<GardenPlot[]>([]);
   const [ambient, setAmbient] = useState<AmbientPeriod>(() => getAmbientPeriod(new Date().getHours()));
   const [selected, setSelected] = useState<GardenPlot | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [addSlot, setAddSlot] = useState<number>(0);
   const [watering, setWatering] = useState(false);
-  const [residentId, setResidentId] = useState<string | null>(null);
 
   // Add modal state
   const [newType, setNewType] = useState<PlantType>('flower');
@@ -161,6 +158,13 @@ function HavenView() {
   const [newGoal, setNewGoal] = useState('');
   const [saving, setSaving] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
+
+  // Resolve activeId: URL param wins (passed from LysHome), then session
+  const paramId  = searchParams.get('r');
+  const activeId = paramId ?? session.activeId;
+  const mode     = paramId
+    ? (document.cookie.includes('budr_resident_id') ? 'supabase' as const : 'local' as const)
+    : session.storageMode;
 
   // Ambient timer
   const ambientRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -171,50 +175,31 @@ function HavenView() {
     return () => { if (ambientRef.current) clearInterval(ambientRef.current); };
   }, []);
 
-  useEffect(() => {
-    // URL param (?r=) takes priority — passed explicitly from LysHome
-    const fromParam = searchParams.get('r');
-    setResidentId(fromParam ?? getResidentId());
-  }, [searchParams]);
-
-  const load = useCallback(async (id: string) => {
-    const supabase = createClient();
-    if (!supabase) return;
-    const { data } = await supabase
-      .from('garden_plots')
-      .select('id, resident_id, slot_index, plant_type, plant_name, goal_text, growth_stage, total_water, last_watered_at')
-      .eq('resident_id', id)
-      .order('slot_index');
-    setPlots((data ?? []) as GardenPlot[]);
-  }, []);
+  const load = useCallback(async () => {
+    if (!activeId) return;
+    const data = await dataService.getGardenPlots(mode, activeId);
+    setPlots(data as GardenPlot[]);
+  }, [activeId, mode]);
 
   useEffect(() => {
-    if (residentId) void load(residentId);
-  }, [residentId, load]);
+    if (activeId) void load();
+  }, [activeId, load]);
 
   const handleWater = async () => {
-    if (!selected || !residentId || watering) return;
+    if (!selected || !activeId || watering) return;
     setWatering(true);
-    const supabase = createClient();
-    if (!supabase) { setWatering(false); return; }
 
     const newTotal = selected.total_water + 10;
     const newStage = stageFromWater(newTotal);
 
-    await supabase
-      .from('garden_plots')
-      .update({
-        total_water: newTotal,
-        growth_stage: newStage,
-        last_watered_at: new Date().toISOString(),
-      })
-      .eq('id', selected.id);
-
-    // Award XP
-    void supabase.rpc('award_xp', { p_resident_id: residentId, p_activity: 'haven_water', p_xp: 10 });
+    await dataService.updatePlot(mode, activeId, selected.id, {
+      total_water: newTotal,
+      growth_stage: newStage,
+      last_watered_at: new Date().toISOString(),
+    });
+    await dataService.addXp(mode, activeId, 'haven_water', 10);
 
     setWatering(false);
-    // Update local state
     const updated = { ...selected, total_water: newTotal, growth_stage: newStage as GardenPlot['growth_stage'] };
     setSelected(updated);
     setPlots(prev => prev.map(p => p.id === updated.id ? updated : p));
@@ -222,28 +207,24 @@ function HavenView() {
 
   const handleAddPlant = async () => {
     if (!newName.trim() || saving) return;
-    if (!residentId) {
+    if (!activeId) {
       setAddError('Kunne ikke finde din profil. Prøv at gå tilbage og åbne haven igen.');
       return;
     }
     setSaving(true);
     setAddError(null);
-    const supabase = createClient();
-    if (!supabase) {
-      setAddError('Ingen forbindelse. Prøv igen.');
-      setSaving(false);
-      return;
-    }
-    const { error } = await supabase.from('garden_plots').upsert({
-      resident_id: residentId,
-      slot_index: addSlot,
-      plant_type: newType,
-      plant_name: newName.trim(),
-      goal_text: newGoal.trim(),
-      growth_stage: 0,
-      total_water: 0,
-    }, { onConflict: 'resident_id,slot_index' });
-    if (error) {
+    try {
+      await dataService.savePlot(mode, activeId, {
+        slot_index:  addSlot,
+        plant_type:  newType,
+        plant_name:  newName.trim(),
+        goal_text:   newGoal.trim(),
+        growth_stage: 0,
+        total_water: 0,
+        last_watered_at: null,
+        is_park_linked:  false,
+      });
+    } catch {
       setAddError('Noget gik galt. Prøv igen.');
       setSaving(false);
       return;
@@ -253,14 +234,14 @@ function HavenView() {
     setNewName('');
     setNewGoal('');
     setAddError(null);
-    await load(residentId);
+    await load();
   };
 
   const handleDeletePlot = async (id: string) => {
-    const supabase = createClient();
-    await supabase?.from('garden_plots').delete().eq('id', id);
+    if (!activeId) return;
+    await dataService.deletePlot(mode, activeId, id);
     setSelected(null);
-    if (residentId) await load(residentId);
+    await load();
   };
 
   const openAdd = (slot: number) => {

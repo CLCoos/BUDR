@@ -6,6 +6,10 @@ import {
 } from 'recharts';
 import { createClient } from '@/lib/supabase/client';
 import { useResident } from '../context/ResidentContext';
+import { useResidentSession } from '@/hooks/useResidentSession';
+import * as dataService from '@/lib/dataService';
+import { getItem, setItem } from '@/lib/localStore';
+import { LOCAL_KEYS } from '@/types/local';
 import type { LysThemeTokens } from '../lib/lysTheme';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -62,6 +66,9 @@ export default function LysMigScreen({
   onOpenCrisis,
 }: Props) {
   const { residentId } = useResident();
+  const session = useResidentSession();
+  const mode    = session.storageMode;
+  const activeId = session.activeId || residentId;
 
   const [xpData, setXpData] = useState<XPData>({ total_xp: 0, level: 1 });
   const [badges, setBadges] = useState<BadgeRow[]>([]);
@@ -75,92 +82,62 @@ export default function LysMigScreen({
   const [trendOpen, setTrendOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Load XP from Supabase
+  // Load XP, badges, profile via dataService
   useEffect(() => {
-    if (!residentId) return;
-    const supabase = createClient();
-    if (!supabase) return;
-    supabase
-      .from('resident_xp')
-      .select('total_xp, level')
-      .eq('resident_id', residentId)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) setXpData(data as XPData);
-        else {
-          // Fall back to localStorage
-          try {
-            const raw = localStorage.getItem('budr_xp_v1');
-            if (raw) {
-              const d = JSON.parse(raw) as { total: number };
-              setXpData({ total_xp: d.total, level: getLevelInfo(d.total).level });
-            }
-          } catch { /* ignore */ }
-        }
-      });
-    // Load badges
-    supabase
-      .from('resident_badges')
-      .select('badge_key, earned_at')
-      .eq('resident_id', residentId)
-      .then(({ data }) => setBadges((data ?? []) as BadgeRow[]));
-    // Load profile
-    supabase
-      .from('care_residents')
-      .select('nickname, color_theme, avatar_url')
-      .eq('user_id', residentId)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!data) return;
-        const d = data as { nickname: string | null; color_theme: string | null; avatar_url: string | null };
-        if (d.nickname) setNickname(d.nickname);
-        if (d.color_theme) setColorTheme(d.color_theme);
-        if (d.avatar_url) setAvatarUrl(d.avatar_url);
-      });
-  }, [residentId]);
+    if (!activeId) return;
+    void dataService.getXp(mode, activeId).then(d => setXpData(d));
+    void dataService.getBadges(mode, activeId).then(d => setBadges(d as BadgeRow[]));
+    void dataService.getProfile(mode, activeId).then(p => {
+      if (p.nickname) setNickname(p.nickname);
+      if (p.theme)    setColorTheme(p.theme);
+    });
+  }, [activeId, mode]);
 
   // Load 14-day mood history
   useEffect(() => {
-    if (!residentId) return;
-    const supabase = createClient();
-    if (!supabase) return;
+    if (!activeId) return;
     const today = new Date();
-    const from = new Date(today);
-    from.setDate(today.getDate() - 13);
-    const fromStr = from.toISOString().slice(0, 10);
+    const buildHistory = (checkins: Array<{ check_in_date: string; energy_level: number }>) => {
+      const map = new Map<string, number>();
+      for (const row of checkins) map.set(row.check_in_date, row.energy_level);
+      const result: MoodPoint[] = [];
+      for (let i = 13; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        const key = d.toISOString().slice(0, 10);
+        result.push({
+          date:  key,
+          label: d.toLocaleDateString('da-DK', { day: 'numeric', month: 'short' }),
+          value: map.get(key) ?? null,
+        });
+      }
+      setMoodHistory(result);
+    };
 
-    supabase
-      .from('park_daily_checkin')
-      .select('check_in_date, energy_level')
-      .eq('resident_id', residentId)
-      .gte('check_in_date', fromStr)
-      .order('check_in_date')
-      .then(({ data }) => {
-        const map = new Map<string, number>();
-        for (const row of data ?? []) {
-          // keep latest entry per day
-          const d = row as { check_in_date: string; energy_level: number };
-          map.set(d.check_in_date, d.energy_level);
-        }
-        const result: MoodPoint[] = [];
-        for (let i = 13; i >= 0; i--) {
-          const d = new Date(today);
-          d.setDate(today.getDate() - i);
-          const key = d.toISOString().slice(0, 10);
-          result.push({
-            date: key,
-            label: d.toLocaleDateString('da-DK', { day: 'numeric', month: 'short' }),
-            value: map.get(key) ?? null,
-          });
-        }
-        setMoodHistory(result);
-      });
-  }, [residentId]);
+    if (mode === 'supabase') {
+      const supabase = createClient();
+      if (!supabase) return;
+      const from = new Date(today);
+      from.setDate(today.getDate() - 13);
+      supabase
+        .from('park_daily_checkin')
+        .select('check_in_date, energy_level')
+        .eq('resident_id', activeId)
+        .gte('check_in_date', from.toISOString().slice(0, 10))
+        .order('check_in_date')
+        .then(({ data }) => buildHistory((data ?? []) as Array<{ check_in_date: string; energy_level: number }>));
+    } else {
+      // Build from local checkins
+      void dataService.getCheckins(mode, activeId).then(checkins =>
+        buildHistory(checkins.map(c => ({ check_in_date: c.check_in_date, energy_level: c.energy_level }))),
+      );
+    }
+  }, [activeId, mode]);
 
   // ── Avatar upload ─────────────────────────────────────────────────────────
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !residentId) return;
+    if (!file || !residentId || mode !== 'supabase') return;
     setUploadingAvatar(true);
     const supabase = createClient();
     if (!supabase) { setUploadingAvatar(false); return; }
@@ -178,10 +155,9 @@ export default function LysMigScreen({
 
   // ── Nickname save ─────────────────────────────────────────────────────────
   const saveNickname = async () => {
-    if (!residentId) return;
+    if (!activeId) return;
     setSavingNick(true);
-    const supabase = createClient();
-    await supabase?.from('care_residents').update({ nickname }).eq('user_id', residentId);
+    await dataService.saveProfile(mode, activeId, { nickname });
     setSavingNick(false);
     setEditingNick(false);
   };
@@ -189,9 +165,8 @@ export default function LysMigScreen({
   // ── Theme change ──────────────────────────────────────────────────────────
   const handleThemeChange = async (key: string) => {
     setColorTheme(key);
-    if (!residentId) return;
-    const supabase = createClient();
-    await supabase?.from('care_residents').update({ color_theme: key }).eq('user_id', residentId);
+    if (!activeId) return;
+    await dataService.saveProfile(mode, activeId, { theme: key });
   };
 
   const levelInfo = getLevelInfo(xpData.total_xp);
@@ -230,17 +205,29 @@ export default function LysMigScreen({
                 initials
               )}
             </div>
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              disabled={uploadingAvatar}
-              className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full flex items-center justify-center text-white text-xs transition-all active:scale-90"
-              style={{ backgroundColor: accent }}
-              aria-label="Skift profilbillede"
-            >
-              {uploadingAvatar ? '…' : '📷'}
-            </button>
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={e => void handleAvatarUpload(e)} />
+            {mode === 'supabase' ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploadingAvatar}
+                  className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full flex items-center justify-center text-white text-xs transition-all active:scale-90"
+                  style={{ backgroundColor: accent }}
+                  aria-label="Skift profilbillede"
+                >
+                  {uploadingAvatar ? '…' : '📷'}
+                </button>
+                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={e => void handleAvatarUpload(e)} />
+              </>
+            ) : (
+              <div
+                className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full flex items-center justify-center text-white text-[9px]"
+                style={{ backgroundColor: `${accent}88` }}
+                title="Log ind for at tilføje billede"
+              >
+                🔒
+              </div>
+            )}
           </div>
           <div className="flex-1 min-w-0">
             {editingNick ? (

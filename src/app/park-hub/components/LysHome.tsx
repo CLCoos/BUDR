@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Volume2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { useResidentSession } from '@/hooks/useResidentSession';
+import * as dataService from '@/lib/dataService';
 import type { LysChatMessage } from '@/app/api/lys-chat/route';
 import type { LysFlowOverlay } from '../lib/lysOverlay';
 import type { LysPhase, LysThemeTokens } from '../lib/lysTheme';
@@ -164,7 +166,8 @@ export default function LysHome({
   moodLabel,
   moodTick,
 }: Props) {
-  const router = useRouter();
+  const router  = useRouter();
+  const session = useResidentSession();
 
   const [companionIdx, setCompanionIdx] = useState(0);
   const [lastCheckIn, setLastCheckIn] = useState<CheckIn | null>(null);
@@ -196,7 +199,7 @@ export default function LysHome({
 
   // Fetch plan item count
   useEffect(() => {
-    if (!residentId) return;
+    if (!residentId) { setPlanStats({ total: 0 }); return; }
     const supabase = createClient();
     if (!supabase) return;
     const today = new Date().toISOString().slice(0, 10);
@@ -226,22 +229,9 @@ export default function LysHome({
       localStorage.setItem('budr_last_checkin', JSON.stringify(entry));
     } catch { /* ignore */ }
 
-    // Save to Supabase (allow multiple per day — use insert not upsert)
-    const supabase = createClient();
-    if (supabase && residentId) {
-      const today = new Date().toISOString().slice(0, 10);
-      await supabase.from('park_daily_checkin').insert({
-        resident_id: residentId,
-        check_in_date: today,
-        energy_level: level,
-        label,
-      });
-      void supabase.rpc('award_xp', {
-        p_resident_id: residentId,
-        p_activity: 'hum_check',
-        p_xp: 10,
-      });
-    }
+    // Save via dual-mode dataService
+    await dataService.saveCheckin(session.storageMode, session.activeId || residentId, { energy_level: level, label });
+    await dataService.addXp(session.storageMode, session.activeId || residentId, 'hum_check', 10);
     setCheckInSaving(false);
     void sendToLys(`Jeg har det sådan her: ${label}.`).then(() => setShowLysCard(true));
   }, [checkInSaving, residentId, sendToLys]);
