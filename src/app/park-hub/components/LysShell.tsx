@@ -230,26 +230,6 @@ export default function LysShell({ firstName, initials, residentId, facilityId }
         </div>
       )}
 
-      {/* Floating crisis button */}
-      {!overlay && (
-        <button
-          type="button"
-          onClick={() => setOverlay('crisis')}
-          className="fixed z-30 flex items-center justify-center rounded-full text-white transition-all duration-200 active:scale-90"
-          style={{
-            bottom: 'calc(5rem + max(1.25rem, env(safe-area-inset-bottom, 0px)))',
-            right: '20px',
-            width: '44px',
-            height: '44px',
-            backgroundColor: '#E11D48',
-            boxShadow: '0 4px 16px rgba(225,29,72,0.35)',
-          }}
-          aria-label="Krise-støtte"
-          title="Krise-støtte"
-        >
-          🆘
-        </button>
-      )}
 
       <LysBottomNav
         active={tab}

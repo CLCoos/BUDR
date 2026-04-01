@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useResident } from '../context/ResidentContext';
+import { useResidentSession } from '@/hooks/useResidentSession';
+import * as dataService from '@/lib/dataService';
 import type { LysThemeTokens } from '../lib/lysTheme';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -96,7 +98,11 @@ type Props = {
 };
 
 export default function LysDagTab({ tokens, accent }: Props) {
-  const { residentId } = useResident();
+  const { residentId: ctxResidentId } = useResident();
+  const session = useResidentSession();
+  // Use real residentId if logged in, otherwise fall back to guest activeId
+  const residentId = ctxResidentId || session.activeId;
+  const storageMode = ctxResidentId ? 'supabase' as const : session.storageMode;
 
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [items, setItems] = useState<PlanItem[] | null>(null);
@@ -119,6 +125,29 @@ export default function LysDagTab({ tokens, accent }: Props) {
   // ── Load items for selected date ────────────────────────────────────────
   const loadItems = useCallback(async () => {
     if (!residentId) { setItems([]); return; }
+
+    // Guest mode — read from localStorage via dataService
+    if (storageMode === 'local') {
+      const all = await dataService.getPlanItems('local', residentId);
+      const filtered = all
+        .filter(p => {
+          if (p.recurrence === 'none') return p.active_from === dateStr;
+          if (p.recurrence === 'daily') return p.active_from <= dateStr;
+          return p.active_from <= dateStr;
+        })
+        .map(p => ({
+          id: p.id,
+          time: p.time_of_day.slice(0, 5),
+          title: p.title,
+          category: p.category,
+          emoji: p.emoji ?? undefined,
+          source: 'resident' as const,
+        }))
+        .sort((a, b) => timeToMin(a.time) - timeToMin(b.time));
+      setItems(filtered);
+      return;
+    }
+
     const supabase = createClient();
     if (!supabase) { setItems([]); return; }
 
@@ -170,7 +199,7 @@ export default function LysDagTab({ tokens, accent }: Props) {
 
     const all = [...fromPlan, ...fromResident].sort((a, b) => timeToMin(a.time) - timeToMin(b.time));
     setItems(all);
-  }, [residentId, dateStr, selectedDate]);
+  }, [residentId, dateStr, selectedDate, storageMode]);
 
   useEffect(() => { void loadItems(); }, [loadItems]);
 
@@ -230,10 +259,10 @@ export default function LysDagTab({ tokens, accent }: Props) {
   const handleCreateItem = async () => {
     if (!form.title.trim() || !residentId) return;
     setSaving(true);
-    const supabase = createClient();
-    if (supabase) {
-      await supabase.from('resident_plan_items').insert({
-        resident_id: residentId,
+
+    if (storageMode === 'local') {
+      // Guest mode — save to localStorage
+      await dataService.savePlanItem('local', residentId, {
         title: form.title.trim(),
         category: form.category,
         emoji: CATEGORY_EMOJI[form.category] ?? '📌',
@@ -243,9 +272,29 @@ export default function LysDagTab({ tokens, accent }: Props) {
         notify: form.notify,
         notify_minutes_before: form.notify_minutes_before,
         created_by: 'resident',
+        staff_suggestion: false,
+        approved_by_resident: true,
         active_from: dateStr,
       });
+    } else {
+      const supabase = createClient();
+      if (supabase) {
+        await supabase.from('resident_plan_items').insert({
+          resident_id: residentId,
+          title: form.title.trim(),
+          category: form.category,
+          emoji: CATEGORY_EMOJI[form.category] ?? '📌',
+          time_of_day: form.time,
+          recurrence: form.recurrence,
+          recurrence_days: form.recurrence === 'daily' ? [0,1,2,3,4,5,6] : [],
+          notify: form.notify,
+          notify_minutes_before: form.notify_minutes_before,
+          created_by: 'resident',
+          active_from: dateStr,
+        });
+      }
     }
+
     setSaving(false);
     setShowFab(false);
     setForm({ title: '', time: '09:00', category: 'aktivitet', recurrence: 'none', notify: false, notify_minutes_before: 10 });

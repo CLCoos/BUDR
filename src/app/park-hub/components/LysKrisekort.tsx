@@ -256,27 +256,48 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
         onCancel={() => setConfirm(null)}
       />
 
-      <div className="flex flex-col min-h-full" style={{ color: TEXT }}>
+      <div
+        className="mx-auto flex w-full max-w-lg flex-col"
+        style={{ minHeight: '100dvh', color: TEXT, paddingBottom: 'max(2rem, env(safe-area-inset-bottom, 0px))' }}
+      >
+        {/* Top bar with back button */}
+        <div
+          className="flex items-center justify-between px-5 pt-12 pb-4 shrink-0"
+          style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.30) 0%, transparent 100%)' }}
+        >
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold transition-colors hover:bg-white/10 active:scale-95"
+            style={{ color: 'rgba(255,255,255,0.75)' }}
+          >
+            ← Tilbage
+          </button>
+          <p className="text-xs font-bold uppercase tracking-widest" style={{ color: MUTED }}>
+            Krise-støtte
+          </p>
+          <div className="w-20" />
+        </div>
 
         {/* Breathing */}
-        <div className="flex flex-col items-center justify-center py-8 gap-6">
+        <div className="flex flex-col items-center justify-center py-5 gap-5">
           <p className="text-xs font-bold tracking-widest uppercase" style={{ color: MUTED }}>
             Åndedrætsøvelse
           </p>
 
-          <div className="relative flex items-center justify-center">
-            {[40, 16, 0].map((offset, i) => (
+          <div className="relative flex items-center justify-center" style={{ width: 200, height: 200 }}>
+            {[32, 12, 0].map((offset, i) => (
               <div
                 key={i}
                 className="absolute rounded-full transition-all"
                 style={{
-                  width:  `${current.scale * 160 + offset}px`,
-                  height: `${current.scale * 160 + offset}px`,
+                  width:  `${current.scale * 120 + offset}px`,
+                  height: `${current.scale * 120 + offset}px`,
                   backgroundColor: i === 0 ? 'rgba(99,102,241,0.08)' : i === 1 ? 'rgba(99,102,241,0.14)' : undefined,
                   background: i === 2
                     ? 'linear-gradient(135deg,rgba(99,102,241,0.7) 0%,rgba(139,92,246,0.7) 100%)'
                     : undefined,
-                  boxShadow: i === 2 ? '0 0 40px rgba(99,102,241,0.4)' : undefined,
+                  boxShadow: i === 2 ? '0 0 32px rgba(99,102,241,0.4)' : undefined,
                   transitionDuration: `${current.duration}ms`,
                   transitionTimingFunction: 'cubic-bezier(0.4,0,0.2,1)',
                 }}
