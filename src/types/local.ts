@@ -17,6 +17,12 @@ export type JournalEntry = {
   mode: 'write' | 'voice';
   text: string;
   mood?: number;
+  /** Feeling words the resident selected (e.g. ['Glad', 'Urolig']) */
+  feelings?: string[];
+  /** Whether the entry is visible to staff */
+  privacy?: 'private' | 'shared';
+  /** The reflective prompt the resident was responding to */
+  prompt?: string;
 };
 
 export type PlanItem = {
@@ -96,7 +102,7 @@ export type LocalProfile = {
 export const LOCAL_KEYS = {
   guestId:          'budr_guest_id',
   checkins:         'budr_checkins',
-  journal:          'budr_journal',
+  journal:          'budr_journal_entries_v1',
   planItems:        'budr_plan_items',
   planCompletions:  'budr_plan_completions',
   xp:               'budr_xp',
