@@ -94,7 +94,7 @@ export default function LysDagensProgram({
   accent,
   now = new Date(),
   mode = 'embedded',
-  firstName = 'Beboeren',
+  firstName = '',
   residentId,
 }: Props) {
   const [items, setItems] = useState<ProgramItem[] | null>(null); // null = loading

@@ -7,6 +7,7 @@ import type { LysFlowOverlay } from '../lib/lysOverlay';
 import { useLysConversation } from '../hooks/useLysConversation';
 import { useSpeech } from '../hooks/useSpeech';
 import LysBottomNav, { type LysNavTab } from './LysBottomNav';
+import { ResidentProvider } from '../context/ResidentContext';
 import LysHome from './LysHome';
 import LysMigScreen from './LysMigScreen';
 import LysDagTab from './LysDagTab';
@@ -88,6 +89,7 @@ export default function LysShell({ firstName, initials, residentId }: Props) {
   const lightBar = phase === 'morning' || phase === 'afternoon';
 
   return (
+    <ResidentProvider firstName={firstName} initials={initials} residentId={residentId}>
     <div className="min-h-dvh font-sans transition-colors duration-300" style={{ backgroundColor: tokens.bg, color: tokens.text }}>
       <div
         className="mx-auto max-w-lg transition-all duration-200"
@@ -232,5 +234,6 @@ export default function LysShell({ firstName, initials, residentId }: Props) {
         lightBar={lightBar}
       />
     </div>
+    </ResidentProvider>
   );
 }

@@ -10,11 +10,11 @@ interface Props {
 }
 
 export default function ParkHubClient({
-  residentName = 'Beboer',
-  residentInitials = '?',
+  residentName = '',
+  residentInitials = '',
   residentId = '',
 }: Props) {
-  const firstName = residentName.trim().split(/\s+/)[0] || residentName;
+  const firstName = residentName.trim().split(/\s+/)[0] || '';
 
   return <LysShell firstName={firstName} initials={residentInitials} residentId={residentId} />;
 }

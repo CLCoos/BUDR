@@ -352,19 +352,20 @@ export default function DailyPlanView({ residentId, plan, pendingProposal }: Pro
         {/* Empty state */}
         {items.length === 0 ? (
           <div
-            className="rounded-3xl px-8 py-12 text-center"
+            className="rounded-3xl px-8 py-14 text-center"
             style={{
-              background: `linear-gradient(160deg, ${accent}10 0%, ${accent}04 100%)`,
-              border: `1px solid ${accent}1E`,
+              background: `linear-gradient(160deg, ${accent}12 0%, ${accent}04 100%)`,
+              border: `1px solid ${accent}20`,
+              boxShadow: tokens.glowShadow,
             }}
           >
-            <p className="text-6xl mb-5 leading-none">🌿</p>
-            <p className="text-xl font-black mb-2">Din dag er fri</p>
+            <p className="text-6xl mb-5 leading-none select-none">🌿</p>
+            <p className="text-xl font-black mb-3">Din dag er fri</p>
             <p
-              className="text-sm leading-relaxed max-w-[240px] mx-auto"
+              className="text-sm leading-relaxed max-w-[220px] mx-auto"
               style={{ color: tokens.textMuted }}
             >
-              Ingen fast plan endnu. God tid til at trække vejret eller foreslå noget til personalet.
+              Personalet arbejder på din plan — den dukker op her
             </p>
           </div>
         ) : (
