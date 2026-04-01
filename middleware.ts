@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextRequest, NextResponse } from 'next/server';
 
-const RESIDENT_COOKIE = 'budr_resident_session';
+const RESIDENT_COOKIE = 'budr_resident_id';
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
@@ -41,33 +41,11 @@ async function checkStaffAuth(
     },
   });
 
-  // getUser() validates the JWT server-side — never trust getSession() alone
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   return { response: supabaseResponse, authenticated: !!user };
-}
-
-// ── Resident auth (custom HttpOnly cookie) ────────────────────
-
-async function validateResidentSession(token: string): Promise<boolean> {
-  try {
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/resident-session-validate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-      },
-      body: JSON.stringify({ session_token: token }),
-    });
-    if (!res.ok) return false;
-    const json = (await res.json()) as { data?: { resident_id: string } };
-    return !!json.data?.resident_id;
-  } catch {
-    return false;
-  }
 }
 
 // ── Middleware ────────────────────────────────────────────────
@@ -84,17 +62,10 @@ export async function middleware(req: NextRequest) {
   }
 
   if (isResidentRoute(pathname)) {
-    const token = req.cookies.get(RESIDENT_COOKIE)?.value;
-    if (!token) {
-      const loginUrl = new URL('/login/unknown', req.url);
-      loginUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(loginUrl);
-    }
-    const valid = await validateResidentSession(token);
-    if (!valid) {
-      const response = NextResponse.redirect(new URL('/login/unknown', req.url));
-      response.cookies.delete(RESIDENT_COOKIE);
-      return response;
+    const residentId = req.cookies.get(RESIDENT_COOKIE)?.value;
+    if (!residentId) {
+      // No resident identified — send to root where QR/URL entry sets the cookie
+      return NextResponse.redirect(new URL('/', req.url));
     }
     return NextResponse.next();
   }

@@ -42,7 +42,7 @@ async function fetchDayData(residentId: string): Promise<{
 
 export default async function DagPage() {
   const residentId = await getResidentId();
-  if (!residentId) redirect('/login');
+  if (!residentId) redirect('/');
 
   const { plan, pendingProposal } = await fetchDayData(residentId);
 

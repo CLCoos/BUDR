@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import * as bcrypt from 'https://deno.land/x/bcrypt/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -93,13 +94,20 @@ serve(async (req) => {
 
   try {
     // ── 3. PIN verification ────────────────────────────────────────────────
-    // verify_resident_pin() delegates to pgcrypto's crypt() for comparison.
-    // pgcrypto uses a constant-time bcrypt implementation, making this
-    // inherently resistant to timing attacks — no additional wrapper needed.
-    const { data: valid, error: rpcErr } = await supabase
-      .rpc('verify_resident_pin', { p_resident_id: residentId, p_pin: pin });
+    // Fetch the bcrypt hash from resident_pins, then compare with
+    // bcrypt.compare() from deno.land/x/bcrypt — handles $2a$ hashes created
+    // by Postgres pgcrypto crypt() correctly.
+    const { data: pinRow, error: fetchErr } = await supabase
+      .from('resident_pins')
+      .select('pin_hash')
+      .eq('resident_id', residentId)
+      .maybeSingle();
 
-    if (rpcErr || !valid) {
+    const valid = !fetchErr && pinRow?.pin_hash
+      ? await bcrypt.compare(pin, pinRow.pin_hash)
+      : false;
+
+    if (!valid) {
       // ── Audit: failed login attempt (best-effort, never blocks response) ──
       await supabase.rpc('create_audit_log', {
         p_actor_type: 'resident',

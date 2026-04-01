@@ -222,9 +222,9 @@ export default function LysHome({
     }
   }, [moodTick, moodTraffic, suggestNextStep]);
 
-  const handleLogout = async () => {
-    await fetch('/api/resident-session', { method: 'DELETE' });
-    router.replace(`/login/${residentId || 'unknown'}`);
+  const handleLogout = () => {
+    document.cookie = 'budr_resident_id=; path=/; max-age=0';
+    router.replace('/');
   };
 
   return (
