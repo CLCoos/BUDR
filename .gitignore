@@ -38,3 +38,4 @@ turbo/linear-import.mjs
 linear-import_1.mjs
 linear-import.mjs
 linear-import_1.mjs
+.env.local
