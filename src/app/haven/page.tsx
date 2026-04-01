@@ -151,6 +151,7 @@ export default function HavenPage() {
   const [newName, setNewName] = useState('');
   const [newGoal, setNewGoal] = useState('');
   const [saving, setSaving] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
 
   // Ambient timer
   const ambientRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -209,10 +210,20 @@ export default function HavenPage() {
   };
 
   const handleAddPlant = async () => {
-    if (!residentId || !newName.trim() || saving) return;
+    if (!newName.trim() || saving) return;
+    if (!residentId) {
+      setAddError('Kunne ikke finde din profil. Prøv at gå tilbage og åbne haven igen.');
+      return;
+    }
     setSaving(true);
+    setAddError(null);
     const supabase = createClient();
-    await supabase?.from('garden_plots').upsert({
+    if (!supabase) {
+      setAddError('Ingen forbindelse. Prøv igen.');
+      setSaving(false);
+      return;
+    }
+    const { error } = await supabase.from('garden_plots').upsert({
       resident_id: residentId,
       slot_index: addSlot,
       plant_type: newType,
@@ -221,11 +232,17 @@ export default function HavenPage() {
       growth_stage: 0,
       total_water: 0,
     }, { onConflict: 'resident_id,slot_index' });
+    if (error) {
+      setAddError('Noget gik galt. Prøv igen.');
+      setSaving(false);
+      return;
+    }
     setSaving(false);
     setShowAdd(false);
     setNewName('');
     setNewGoal('');
-    if (residentId) await load(residentId);
+    setAddError(null);
+    await load(residentId);
   };
 
   const handleDeletePlot = async (id: string) => {
@@ -240,6 +257,7 @@ export default function HavenPage() {
     setNewType('flower');
     setNewName('');
     setNewGoal('');
+    setAddError(null);
     setShowAdd(true);
   };
 
@@ -264,19 +282,21 @@ export default function HavenPage() {
       style={{ background: ambient.sky, transition: 'background 2s ease', color: ambient.textColor }}
     >
       {/* Header */}
-      <div className="relative z-10 flex items-center justify-between px-5 pt-12 pb-4">
+      <div
+        className="relative z-10 flex items-center justify-between px-5 pt-12 pb-4"
+        style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.35) 0%, transparent 100%)' }}
+      >
         <button
           type="button"
           onClick={() => router.back()}
-          className="flex items-center gap-1.5 text-sm font-semibold opacity-80 hover:opacity-100 transition-opacity"
-          style={{ color: ambient.textColor }}
+          className="flex items-center gap-1.5 text-sm font-semibold text-white drop-shadow hover:opacity-80 transition-opacity"
         >
           <ChevronLeft className="h-5 w-5" />
           Tilbage
         </button>
         <div className="text-center">
-          <h1 className="text-xl font-black tracking-tight">Min Have 🌿</h1>
-          <p className="text-xs opacity-60 capitalize">{ambient.label}</p>
+          <h1 className="text-xl font-black tracking-tight text-white drop-shadow">Min Have 🌿</h1>
+          <p className="text-xs text-white/70 capitalize">{ambient.label}</p>
         </div>
         <div className="w-16" />
       </div>
@@ -374,7 +394,7 @@ export default function HavenPage() {
 
             {/* Type picker */}
             <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">Type</p>
+              <p className="text-xs font-bold uppercase tracking-wide text-gray-700 mb-2">Type</p>
               <div className="grid grid-cols-5 gap-2">
                 {(Object.keys(PLANT_LABELS) as PlantType[]).map(t => (
                   <button
@@ -397,7 +417,7 @@ export default function HavenPage() {
             </div>
 
             <div>
-              <label className="text-xs font-bold uppercase tracking-wide text-gray-500 block mb-1">Navn på din plante</label>
+              <label className="text-xs font-bold uppercase tracking-wide text-gray-700 block mb-1">Navn på din plante</label>
               <input
                 type="text"
                 value={newName}
@@ -409,8 +429,8 @@ export default function HavenPage() {
             </div>
 
             <div>
-              <label className="text-xs font-bold uppercase tracking-wide text-gray-500 block mb-1">
-                Hvad vil du arbejde på? <span className="normal-case text-gray-400">(valgfri)</span>
+              <label className="text-xs font-bold uppercase tracking-wide text-gray-700 block mb-1">
+                Hvad vil du arbejde på? <span className="normal-case text-gray-500">(valgfri)</span>
               </label>
               <input
                 type="text"
@@ -421,9 +441,15 @@ export default function HavenPage() {
               />
             </div>
 
-            <p className="text-xs text-gray-400 bg-green-50 border border-green-100 rounded-xl p-3">
+            <p className="text-xs text-gray-600 bg-green-50 border border-green-200 rounded-xl p-3">
               Vand din plante for at se den vokse. Hvert vand giver 10 XP og rykker din plante nærmere fuld blomstring.
             </p>
+
+            {addError && (
+              <p className="text-sm font-semibold text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                {addError}
+              </p>
+            )}
 
             <div className="flex gap-2 pt-1">
               <button
@@ -490,13 +516,9 @@ function PlotSlot({
           </>
         ) : (
           <div
-            className="w-full h-full rounded-2xl flex items-center justify-center border-2 border-dashed"
-            style={{
-              borderColor: `${ambient.textColor}30`,
-              backgroundColor: `${ambient.textColor}08`,
-            }}
+            className="w-full h-full rounded-2xl flex items-center justify-center border-2 border-dashed border-white/40 bg-white/10"
           >
-            <Plus className="h-5 w-5 opacity-40" style={{ color: ambient.textColor }} />
+            <Plus className="h-5 w-5 text-white/60" />
           </div>
         )}
       </button>
@@ -515,10 +537,7 @@ function PlotSlot({
           fill={`${ambient.ground}88`} />
       </svg>
       {plot && (
-        <p
-          className="text-[10px] font-semibold mt-0.5 max-w-[80px] text-center truncate opacity-80"
-          style={{ color: ambient.textColor }}
-        >
+        <p className="text-[10px] font-bold mt-0.5 max-w-[80px] text-center truncate text-white drop-shadow">
           {plot.plant_name}
         </p>
       )}
@@ -575,7 +594,7 @@ function PlotDetailPanel({
             </div>
             <div>
               <h2 className="text-xl font-black text-gray-900">{plot.plant_name}</h2>
-              <p className="text-sm text-gray-500">{PLANT_LABELS[plot.plant_type]} · {stageLabel}</p>
+              <p className="text-sm font-medium text-gray-600">{PLANT_LABELS[plot.plant_type]} · {stageLabel}</p>
             </div>
           </div>
           <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 mt-1">
@@ -597,9 +616,9 @@ function PlotDetailPanel({
         {/* Growth progress */}
         <div className="mb-5">
           <div className="flex items-center justify-between mb-1.5">
-            <p className="text-xs font-bold text-gray-500">Vækst mod næste trin</p>
+            <p className="text-xs font-bold text-gray-700">Vækst mod næste trin</p>
             {!isFull && (
-              <p className="text-xs text-gray-400">{waterNeeded} vand tilbage</p>
+              <p className="text-xs text-gray-600">{waterNeeded} vand tilbage</p>
             )}
           </div>
           {isFull ? (
@@ -628,11 +647,11 @@ function PlotDetailPanel({
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3 mb-5">
           <div className="rounded-2xl bg-gray-50 px-4 py-3">
-            <p className="text-xs text-gray-400 mb-0.5">Vand i alt</p>
+            <p className="text-xs text-gray-600 font-medium mb-0.5">Vand i alt</p>
             <p className="text-xl font-black text-gray-800">{plot.total_water} 💧</p>
           </div>
           <div className="rounded-2xl bg-gray-50 px-4 py-3">
-            <p className="text-xs text-gray-400 mb-0.5">Sidst vandet</p>
+            <p className="text-xs text-gray-600 font-medium mb-0.5">Sidst vandet</p>
             <p className="text-sm font-bold text-gray-800">
               {plot.last_watered_at
                 ? new Date(plot.last_watered_at).toLocaleDateString('da-DK', { day: 'numeric', month: 'short' })
@@ -659,7 +678,7 @@ function PlotDetailPanel({
         <button
           type="button"
           onClick={() => void onDelete(plot.id)}
-          className="w-full py-3 text-sm font-medium text-red-400 hover:text-red-600 transition-colors"
+          className="w-full py-3 text-sm font-semibold text-red-500 hover:text-red-700 transition-colors"
         >
           Fjern plante
         </button>
