@@ -159,11 +159,13 @@ function HavenView() {
   const [saving, setSaving] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
 
-  // Resolve activeId: URL param wins (passed from LysHome), then session
-  const paramId  = searchParams.get('r');
+  // Resolve activeId: URL param wins (passed from LysHome), then session.
+  // Treat empty-string param (?r=) the same as no param — it means guest mode.
+  const rawParam = searchParams.get('r');
+  const paramId  = rawParam || null;                // '' → null
   const activeId = paramId ?? session.activeId;
-  const mode     = paramId
-    ? (document.cookie.includes('budr_resident_id') ? 'supabase' as const : 'local' as const)
+  const mode: 'supabase' | 'local' = paramId
+    ? (typeof document !== 'undefined' && document.cookie.includes('budr_resident_id') ? 'supabase' : 'local')
     : session.storageMode;
 
   // Ambient timer
@@ -344,7 +346,7 @@ function HavenView() {
       <button
         type="button"
         onClick={() => openAdd(slots.findIndex(s => s === null))}
-        disabled={slots.every(s => s !== null)}
+        disabled={slots.every(s => s !== null) || !activeId}
         className="fixed right-5 z-20 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-2xl transition-all duration-200 active:scale-90 disabled:opacity-30"
         style={{
           bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))',

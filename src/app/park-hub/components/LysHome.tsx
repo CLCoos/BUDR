@@ -385,7 +385,7 @@ export default function LysHome({
         )}
 
         {/* Haven widget */}
-        <HavenWidget tokens={tokens} accent={accent} residentId={residentId} onNavigate={() => router.push(`/haven?r=${residentId}`)} />
+        <HavenWidget tokens={tokens} accent={accent} residentId={residentId} onNavigate={() => router.push(residentId ? `/haven?r=${residentId}` : '/haven')} />
 
         {/* Besked til personalet */}
         <LysBeskedTilPersonale tokens={tokens} accent={accent} firstName={firstName} residentId={residentId} />
