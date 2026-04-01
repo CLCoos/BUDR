@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { MessageCircle } from 'lucide-react';
-import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import type { LysThemeTokens } from '../lib/lysTheme';
 
@@ -11,61 +10,64 @@ type Props = {
   accent: string;
   firstName: string;
   residentId?: string;
-  contactOnDutyName?: string;
 };
 
 const PRESETS = [
-  { key: 'hjælp', text: 'Jeg har brug for hjælp til noget 🙋' },
-  { key: 'tale', text: 'Jeg vil gerne tale med nogen 💬' },
+  { key: 'hjælp',    text: 'Jeg har brug for hjælp til noget 🙋' },
+  { key: 'tale',     text: 'Jeg vil gerne tale med nogen 💬' },
   { key: 'praktisk', text: 'Jeg mangler noget praktisk 🏠' },
 ] as const;
+
+type UIState = 'idle' | 'confirm' | 'sent';
 
 export default function LysBeskedTilPersonale({
   tokens,
   accent,
   firstName,
   residentId,
-  contactOnDutyName = 'Sara K.',
 }: Props) {
   const [custom, setCustom] = useState('');
-  const [sent, setSent] = useState(false);
+  const [pending, setPending] = useState<string | null>(null); // message awaiting confirm
+  const [pendingKey, setPendingKey] = useState<string | null>(null);
+  const [uiState, setUiState] = useState<UIState>('idle');
   const [saving, setSaving] = useState(false);
 
+  // Auto-hide sent confirmation after 4 seconds
   useEffect(() => {
-    if (!sent) return;
-    const t = window.setTimeout(() => setSent(false), 10_000);
+    if (uiState !== 'sent') return;
+    const t = window.setTimeout(() => setUiState('idle'), 4000);
     return () => window.clearTimeout(t);
-  }, [sent]);
+  }, [uiState]);
 
-  const sendMessage = async (message: string, presetType?: string) => {
-    const trimmed = message.trim();
-    if (!trimmed || saving) return;
+  const requestSend = (message: string, key?: string) => {
+    if (!message.trim()) return;
+    setPending(message.trim());
+    setPendingKey(key ?? null);
+    setUiState('confirm');
+  };
 
+  const confirmSend = async () => {
+    if (!pending || saving) return;
     setSaving(true);
     try {
-      // Insert into plan_proposals so staff can review the resident's request
       if (residentId) {
         const supabase = createClient();
         if (supabase) {
-          // Fetch the resident's org_id for multi-tenant scoping
           const { data: residentRow } = await supabase
             .from('care_residents')
             .select('org_id')
             .eq('user_id', residentId)
             .maybeSingle();
-
           const today = new Date().toISOString().slice(0, 10);
-          const { error } = await supabase.from('plan_proposals').insert({
+          await supabase.from('plan_proposals').insert({
             resident_id: residentId,
             org_id: residentRow?.org_id ?? null,
             plan_date: today,
-            user_message: trimmed,
-            // Parse the free-text wish as a minimal proposed item array
-            proposed_items: [{ title: trimmed, preset_type: presetType ?? null }],
-            ai_reasoning: null, // AI will populate in a follow-up step
+            user_message: pending,
+            proposed_items: [{ title: pending, preset_type: pendingKey ?? null }],
+            ai_reasoning: null,
             status: 'pending',
           });
-          if (error) console.error('plan_proposals insert error', error);
         }
       }
     } catch (err) {
@@ -73,86 +75,120 @@ export default function LysBeskedTilPersonale({
     } finally {
       setSaving(false);
     }
-
-    toast.success(
-      `📋 Sendt til portalen. Personalet er besked ✓ — "${trimmed.slice(0, 72)}${trimmed.length > 72 ? '…' : ''}"`,
-    );
-    setSent(true);
     setCustom('');
-    void firstName;
+    setPending(null);
+    setPendingKey(null);
+    setUiState('sent');
+    void firstName; // satisfy lint
   };
 
-  const isDarkish =
-    tokens.bg === '#0F1B2D' || tokens.bg === '#0A1220' || tokens.text.toLowerCase().includes('f5f4ff');
+  const cancelSend = () => {
+    setPending(null);
+    setPendingKey(null);
+    setUiState('idle');
+  };
 
-  const cardBg = isDarkish ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.65)';
-  const borderCol = isDarkish ? 'rgba(255,255,255,0.1)' : tokens.cardBorder;
-  const inputBg = isDarkish ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.9)';
-  const secondary = isDarkish ? 'rgba(255,255,255,0.55)' : tokens.textMuted;
+  const isDarkish = tokens.bg.startsWith('#0');
+  const cardBg = isDarkish ? 'rgba(255,255,255,0.08)' : tokens.cardBg;
+  const borderCol = isDarkish ? 'rgba(255,255,255,0.12)' : tokens.cardBorder;
+  const inputBg = isDarkish ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.92)';
 
-  if (sent) {
+  // ── Confirmation dialog ───────────────────────────────────────────────────
+  if (uiState === 'confirm' && pending) {
     return (
       <section
-        className="rounded-2xl border p-4 transition-all duration-200"
-        style={{ backgroundColor: cardBg, borderColor: borderCol, color: tokens.text }}
-        aria-live="polite"
+        className="rounded-2xl p-5 transition-all duration-200"
+        style={{ backgroundColor: cardBg, border: `1.5px solid ${accent}44`, color: tokens.text }}
+        aria-live="assertive"
       >
-        <p className="text-center text-lg font-medium leading-relaxed">
-          ✓ Din besked er sendt til personalet — {contactOnDutyName} vil se den snart.
+        <p className="text-sm font-bold mb-1">Send denne besked til personalet?</p>
+        <p className="text-sm rounded-xl px-3 py-2.5 mb-4 leading-relaxed" style={{ backgroundColor: inputBg, border: `1px solid ${borderCol}` }}>
+          {pending}
         </p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={cancelSend}
+            className="flex-1 rounded-2xl py-3 text-sm font-semibold transition-all duration-150 active:scale-[0.97]"
+            style={{ backgroundColor: isDarkish ? 'rgba(255,255,255,0.08)' : tokens.cardBg, border: `1px solid ${borderCol}`, color: tokens.textMuted }}
+          >
+            Annuller
+          </button>
+          <button
+            type="button"
+            onClick={() => void confirmSend()}
+            disabled={saving}
+            className="flex-1 rounded-2xl py-3 text-sm font-bold text-white transition-all duration-150 active:scale-[0.97] disabled:opacity-50"
+            style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)` }}
+          >
+            {saving ? '…' : 'Ja, send'}
+          </button>
+        </div>
       </section>
     );
   }
 
+  // ── Sent confirmation ─────────────────────────────────────────────────────
+  if (uiState === 'sent') {
+    return (
+      <section
+        className="rounded-2xl px-5 py-4 text-center transition-all duration-300"
+        style={{ backgroundColor: `${accent}14`, border: `1.5px solid ${accent}33`, color: tokens.text }}
+        aria-live="polite"
+      >
+        <p className="text-base font-semibold">✓ Personalet har nu modtaget din besked</p>
+      </section>
+    );
+  }
+
+  // ── Idle form ─────────────────────────────────────────────────────────────
   return (
     <section
-      className="rounded-2xl border p-4 transition-all duration-200"
-      style={{ backgroundColor: cardBg, borderColor: borderCol, color: tokens.text }}
+      className="rounded-2xl p-5 transition-all duration-200"
+      style={{ backgroundColor: cardBg, border: `1px solid ${borderCol}`, color: tokens.text }}
       aria-labelledby="lys-besked-heading"
     >
       <div className="mb-3 flex items-center gap-2">
         <MessageCircle className="h-5 w-5 shrink-0" style={{ color: accent }} aria-hidden />
-        <h2 id="lys-besked-heading" className="text-lg font-semibold">
-          Skriv til personalet
-        </h2>
+        <h2 id="lys-besked-heading" className="text-sm font-bold">Skriv til personalet</h2>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 mb-4">
         {PRESETS.map(p => (
           <button
             key={p.key}
             type="button"
-            disabled={saving}
-            onClick={() => void sendMessage(p.text, p.key)}
-            className="min-h-[48px] rounded-2xl border px-4 py-3 text-left text-base font-medium transition-all duration-200 disabled:opacity-50"
-            style={{ borderColor: borderCol, backgroundColor: inputBg }}
+            onClick={() => requestSend(p.text, p.key)}
+            className="min-h-[44px] rounded-xl px-4 py-2.5 text-left text-sm font-medium transition-all duration-150 active:scale-[0.98]"
+            style={{ border: `1px solid ${borderCol}`, backgroundColor: inputBg, color: tokens.text }}
           >
             {p.text}
           </button>
         ))}
       </div>
 
-      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div className="flex gap-2">
         <input
           type="text"
           value={custom}
           onChange={e => setCustom(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter' && custom.trim()) requestSend(custom); }}
           maxLength={200}
           placeholder="Eller skriv selv …"
-          className="min-h-[48px] flex-1 rounded-xl border px-4 text-base outline-none transition-all duration-200"
-          style={{ borderColor: borderCol, backgroundColor: inputBg, color: tokens.text, caretColor: accent }}
+          className="min-h-[44px] flex-1 rounded-xl px-4 text-sm outline-none transition-all duration-200"
+          style={{ border: `1px solid ${borderCol}`, backgroundColor: inputBg, color: tokens.text, caretColor: accent }}
         />
         <button
           type="button"
-          disabled={!custom.trim() || saving}
-          onClick={() => void sendMessage(custom, 'custom')}
-          className="min-h-[48px] shrink-0 rounded-full px-6 text-base font-semibold text-white transition-all duration-200 disabled:opacity-40"
+          disabled={!custom.trim()}
+          onClick={() => requestSend(custom, 'custom')}
+          className="min-h-[44px] shrink-0 rounded-full px-5 text-sm font-bold text-white transition-all duration-150 disabled:opacity-40 active:scale-95"
           style={{ backgroundColor: accent }}
         >
-          {saving ? '…' : 'Send'}
+          Send
         </button>
       </div>
-      <p className="mt-2 text-base" style={{ color: secondary }}>
+      <p className="mt-2 text-xs" style={{ color: tokens.textMuted }}>
         Din besked går kun til personalet på dit bosted.
       </p>
     </section>

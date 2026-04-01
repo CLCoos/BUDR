@@ -1,149 +1,522 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
-import { ArrowLeft, Send } from 'lucide-react';
-import BottomNav from '@/components/BottomNav';
-import { useChat } from '@/lib/hooks/useChat';
-import { ANTHROPIC_CHAT_MODEL } from '@/lib/ai/anthropicModel';
-import { toast } from 'sonner';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowLeft, Mic, MicOff, Send } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { getLysPhase, lysTheme, phaseDaLabel } from '@/app/park-hub/lib/lysTheme';
+import type { LysChatMessage } from '@/app/api/lys-chat/route';
 
-const SYSTEM_PROMPT =
-  'Du er Lys — en varm, empatisk ledsager i en dansk mental sundhedsapp (BUDR2.0). Du svarer kort og konkret (oftest 1–3 afsnit), på dansk, uden at moralisere eller diagnosticere. Hvis brugeren er i akut fare, opfordrer du til at kontakte 112 eller lægevagten. Brug et enkelt, blødt emoji når det føles naturligt.';
+// ── Types ────────────────────────────────────────────────────────────────────
 
-type ChatMsg = { role: 'user' | 'assistant'; content: string };
+type SavedConversation = {
+  id: string;
+  title: string | null;
+  messages: LysChatMessage[];
+  updated_at: string;
+};
+
+// ── Hooks ────────────────────────────────────────────────────────────────────
+
+function useResidentId(): string | null {
+  const [id, setId] = useState<string | null>(null);
+  useEffect(() => {
+    const match = document.cookie.match(/budr_resident_id=([^;]+)/);
+    setId(match?.[1] ?? null);
+  }, []);
+  return id;
+}
+
+// ── Component ────────────────────────────────────────────────────────────────
 
 export default function LysChatView() {
-  const [messages, setMessages] = useState<ChatMsg[]>([]);
+  const router = useRouter();
+  const residentId = useResidentId();
+
+  const [now] = useState(() => new Date());
+  const phase = useMemo(() => getLysPhase(now), [now]);
+  const tokens = useMemo(() => lysTheme(phase), [phase]);
+  const accent = tokens.accent;
+
+  const [messages, setMessages] = useState<LysChatMessage[]>([]);
   const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [convId, setConvId] = useState<string | null>(null);
+
+  // History panel
+  const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState<SavedConversation[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  // Voice
+  const [voiceMode, setVoiceMode] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const recRef = useRef<{
+    lang: string; continuous: boolean; interimResults: boolean;
+    start: () => void; stop: () => void;
+    onresult: ((ev: Event) => void) | null;
+    onend: (() => void) | null;
+  } | null>(null);
+  const accRef = useRef('');
+
   const bottomRef = useRef<HTMLDivElement>(null);
-  const assistantPending = useRef(false);
 
-  const { sendMessage, response, isLoading, error } = useChat(
-    'ANTHROPIC',
-    ANTHROPIC_CHAT_MODEL,
-    false
-  );
-
-  useEffect(() => {
-    if (error) {
-      assistantPending.current = false;
-      toast.error(error.message);
-    }
-  }, [error]);
-
-  useEffect(() => {
-    if (!isLoading && assistantPending.current && response.trim()) {
-      setMessages((m) => [...m, { role: 'assistant', content: response.trim() }]);
-      assistantPending.current = false;
-    }
-  }, [isLoading, response]);
-
+  // Scroll to bottom on new messages
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoading]);
+  }, [messages, loading]);
 
-  const handleSend = async () => {
-    const text = input.trim();
-    if (!text || isLoading) return;
+  // ── Save conversation to Supabase ─────────────────────────────────────────
+  const saveConversation = useCallback(async (msgs: LysChatMessage[], existingId: string | null) => {
+    if (!residentId || msgs.length < 2) return existingId;
+    const supabase = createClient();
+    if (!supabase) return existingId;
+    const title = msgs.find(m => m.role === 'user')?.content.slice(0, 60) ?? null;
+    if (existingId) {
+      await supabase
+        .from('lys_conversations')
+        .update({ messages: msgs, title, updated_at: new Date().toISOString() })
+        .eq('id', existingId);
+      return existingId;
+    } else {
+      const { data } = await supabase
+        .from('lys_conversations')
+        .insert({ resident_id: residentId, messages: msgs, title })
+        .select('id')
+        .single();
+      return (data as { id: string } | null)?.id ?? null;
+    }
+  }, [residentId]);
 
-    const userMsg: ChatMsg = { role: 'user', content: text };
+  // ── Send message ──────────────────────────────────────────────────────────
+  const handleSend = useCallback(async (text?: string) => {
+    const trimmed = (text ?? input).trim();
+    if (!trimmed || loading) return;
+    setInput('');
+    accRef.current = '';
+
+    const userMsg: LysChatMessage = { role: 'user', content: trimmed };
     const next = [...messages, userMsg];
     setMessages(next);
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/lys-chat', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          messages: next.slice(-12),
+          residentFirstName: '',
+          timeOfDay: phaseDaLabel(phase),
+          mood: null,
+          sessionContext: '',
+        }),
+      });
+      const data = (await res.json()) as { text?: string };
+      const reply = data.text ?? 'Jeg hørte dig. Fortæl mig gerne mere.';
+      const final = [...next, { role: 'assistant' as const, content: reply }];
+      setMessages(final);
+
+      // Award XP if 3+ messages (anti-spam: 1/hour)
+      if (residentId && final.filter(m => m.role === 'user').length >= 3) {
+        const supabase = createClient();
+        void supabase?.rpc('award_xp', { p_resident_id: residentId, p_activity: 'lys_chat', p_xp: 10 });
+      }
+
+      // Save to Supabase
+      const newId = await saveConversation(final, convId);
+      if (newId && !convId) setConvId(newId);
+    } finally {
+      setLoading(false);
+    }
+  }, [input, loading, messages, phase, residentId, convId, saveConversation]);
+
+  // ── Voice ─────────────────────────────────────────────────────────────────
+  const stopMic = useCallback(() => {
+    try { recRef.current?.stop(); } catch { /* ignore */ }
+    recRef.current = null;
+    setIsListening(false);
+  }, []);
+
+  const startMic = useCallback(() => {
+    const w = window as unknown as {
+      SpeechRecognition?: new () => NonNullable<typeof recRef.current>;
+      webkitSpeechRecognition?: new () => NonNullable<typeof recRef.current>;
+    };
+    const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+    if (!Ctor) return;
+    stopMic();
+    accRef.current = '';
     setInput('');
-    assistantPending.current = true;
+    const rec = new Ctor();
+    rec.lang = 'da-DK';
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.onresult = (event: Event) => {
+      const ev = event as unknown as {
+        resultIndex: number;
+        results: { length: number; [i: number]: { isFinal: boolean; 0: { transcript: string } } };
+      };
+      let interim = '';
+      let add = '';
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        const r = ev.results[i];
+        const t = r[0]?.transcript ?? '';
+        if (r.isFinal) add += t;
+        else interim += t;
+      }
+      accRef.current += add;
+      setInput((accRef.current + interim).trimStart());
+    };
+    rec.onend = () => { setIsListening(false); recRef.current = null; };
+    recRef.current = rec;
+    try { rec.start(); setIsListening(true); } catch { setIsListening(false); }
+  }, [stopMic]);
 
-    const apiMessages = [
-      { role: 'system' as const, content: SYSTEM_PROMPT },
-      ...next.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
-    ];
-
-    await sendMessage(apiMessages, { max_tokens: 600, temperature: 0.75 });
+  const toggleMic = () => {
+    if (isListening) {
+      const t = input.trim();
+      stopMic();
+      if (t) void handleSend(t);
+    } else {
+      startMic();
+    }
   };
 
+  useEffect(() => () => stopMic(), [stopMic]);
+
+  // ── History ───────────────────────────────────────────────────────────────
+  const loadHistory = async () => {
+    if (!residentId) return;
+    const supabase = createClient();
+    if (!supabase) return;
+    setHistoryLoading(true);
+    const { data } = await supabase
+      .from('lys_conversations')
+      .select('id, title, messages, updated_at')
+      .eq('resident_id', residentId)
+      .order('updated_at', { ascending: false })
+      .limit(20);
+    setHistory((data ?? []) as SavedConversation[]);
+    setHistoryLoading(false);
+  };
+
+  const openHistory = () => {
+    setShowHistory(true);
+    void loadHistory();
+  };
+
+  const loadConversation = (conv: SavedConversation) => {
+    setMessages(conv.messages);
+    setConvId(conv.id);
+    setShowHistory(false);
+  };
+
+  const startNew = () => {
+    setMessages([]);
+    setConvId(null);
+    setShowHistory(false);
+  };
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen gradient-midnight flex flex-col pb-[5.5rem]">
-      <header className="sticky top-0 z-20 bg-midnight-900/95 backdrop-blur-xl border-b border-midnight-700/50">
-        <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
-          <Link
-            href="/daily-structure"
-            className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-xl text-sunrise-400 hover:bg-midnight-800 transition-colors"
-            aria-label="Tilbage"
+    <div
+      className="min-h-dvh flex flex-col font-sans"
+      style={{
+        backgroundColor: tokens.bg,
+        color: tokens.text,
+        animation: 'lysChatIn 0.3s ease-out',
+      }}
+    >
+      <style>{`
+        @keyframes lysChatIn {
+          from { opacity: 0; transform: translateY(18px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+
+      {/* Header */}
+      <header
+        className="sticky top-0 z-20 flex items-center gap-3 px-4 py-3 backdrop-blur-xl"
+        style={{
+          backgroundColor: `${tokens.bg}E8`,
+          borderBottom: `1px solid ${accent}14`,
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="flex h-10 w-10 items-center justify-center rounded-full transition-opacity hover:opacity-70"
+          style={{ backgroundColor: tokens.cardBg, color: tokens.textMuted }}
+          aria-label="Tilbage"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <div className="flex-1 min-w-0">
+          <p className="text-base font-black" style={{ color: accent }}>Lys</p>
+          <p className="text-xs" style={{ color: tokens.textMuted }}>Din ledsager</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setVoiceMode(v => !v)}
+            className="flex h-9 w-9 items-center justify-center rounded-full transition-all duration-150 active:scale-90"
+            style={{
+              backgroundColor: voiceMode ? `${accent}22` : tokens.cardBg,
+              color: voiceMode ? accent : tokens.textMuted,
+            }}
+            aria-label="Skift inputtilstand"
+            title={voiceMode ? 'Skift til tekst' : 'Skift til tale'}
           >
-            <ArrowLeft className="w-6 h-6" />
-          </Link>
-          <div className="min-w-0 flex-1">
-            <h1 className="font-display font-bold text-midnight-50 text-lg">Tal med Lys</h1>
-            <p className="text-xs text-midnight-400 truncate">Din ledsager — skriv som du taler</p>
-          </div>
+            <Mic className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={openHistory}
+            className="rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150 active:scale-95"
+            style={{ backgroundColor: tokens.cardBg, color: tokens.textMuted }}
+          >
+            Tidligere
+          </button>
+          {messages.length > 0 && (
+            <button
+              type="button"
+              onClick={startNew}
+              className="rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150 active:scale-95"
+              style={{ backgroundColor: `${accent}18`, color: accent }}
+            >
+              Ny
+            </button>
+          )}
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto max-w-lg mx-auto w-full px-4 pt-4 pb-[7.5rem]">
-        {messages.length === 0 && !isLoading && (
-          <div className="rounded-2xl border border-aurora-violet/25 bg-midnight-800/50 px-4 py-5 text-center text-sm text-midnight-300 leading-relaxed">
-            Hej. Jeg er Lys. Hvad har du på hjerte i dag? Du kan skrive kort eller langt — jeg læser med ro.
+      {/* Messages */}
+      <div
+        className="flex-1 overflow-y-auto px-4 pt-4 pb-4"
+        style={{ paddingBottom: 'calc(5rem + max(1rem, env(safe-area-inset-bottom, 0px)))' }}
+      >
+        {messages.length === 0 && !loading && (
+          <div
+            className="rounded-3xl px-6 py-8 text-center mt-4"
+            style={{
+              background: `linear-gradient(150deg, ${tokens.gradientFrom} 0%, ${tokens.gradientTo} 100%)`,
+              boxShadow: tokens.glowShadow,
+            }}
+          >
+            <div
+              className="h-14 w-14 rounded-full flex items-center justify-center text-2xl font-black text-white mx-auto mb-4"
+              style={{ background: `linear-gradient(135deg, ${accent}, ${accent}99)` }}
+              aria-hidden
+            >
+              ✦
+            </div>
+            <p className="text-base font-semibold mb-1">Hej. Jeg er Lys.</p>
+            <p className="text-sm" style={{ color: tokens.textMuted }}>
+              Hvad har du på hjerte? Du kan skrive eller tale frit — jeg lytter.
+            </p>
           </div>
         )}
 
-        <div className="space-y-3 mt-4">
+        <div className="space-y-3 mt-4 max-w-lg mx-auto">
           {messages.map((m, i) => (
             <div
-              key={`${m.role}-${i}-${m.content.slice(0, 12)}`}
+              key={`${m.role}-${i}`}
               className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
+              {m.role === 'assistant' && (
+                <div
+                  className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-sm font-black text-white mr-2 mt-0.5"
+                  style={{ background: `linear-gradient(135deg, ${accent}, ${accent}99)` }}
+                  aria-hidden
+                >
+                  ✦
+                </div>
+              )}
               <div
-                className={`max-w-[88%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                className="max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed"
+                style={
                   m.role === 'user'
-                    ? 'bg-sunrise-400/20 text-midnight-50 border border-sunrise-400/25'
-                    : 'bg-midnight-800/90 text-midnight-100 border border-midnight-600/60'
-                }`}
+                    ? { backgroundColor: `${accent}22`, color: tokens.text, border: `1px solid ${accent}33` }
+                    : { backgroundColor: tokens.cardBg, color: tokens.text, boxShadow: tokens.shadow }
+                }
               >
                 {m.content}
               </div>
             </div>
           ))}
-          {isLoading && (
+
+          {loading && (
             <div className="flex justify-start">
-              <div className="rounded-2xl px-4 py-3 bg-midnight-800/90 border border-midnight-600/60 text-sm text-midnight-400">
-                Lys tænker…
+              <div
+                className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-sm font-black text-white mr-2 mt-0.5"
+                style={{ background: `linear-gradient(135deg, ${accent}, ${accent}99)` }}
+                aria-hidden
+              >
+                ✦
+              </div>
+              <div
+                className="rounded-2xl px-4 py-3 flex items-center gap-1.5"
+                style={{ backgroundColor: tokens.cardBg, boxShadow: tokens.shadow }}
+              >
+                {[0, 120, 240].map(d => (
+                  <span key={d} className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: accent, animationDelay: `${d}ms` }} />
+                ))}
               </div>
             </div>
           )}
+
           <div ref={bottomRef} />
         </div>
       </div>
 
-      <div className="fixed left-0 right-0 z-40 bottom-0 max-w-lg mx-auto bg-midnight-900/98 backdrop-blur-xl border-t border-midnight-700/60 px-3 pt-2 pb-[calc(4.25rem+env(safe-area-inset-bottom))]">
-        <div className="flex gap-2 items-end">
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-            placeholder="Skriv til Lys…"
-            rows={1}
-            className="flex-1 min-h-[48px] max-h-32 rounded-2xl border border-midnight-600 bg-midnight-800 px-4 py-3 text-sm text-midnight-50 placeholder-midnight-500 outline-none focus:border-sunrise-400 resize-none"
-            disabled={isLoading}
-            aria-label="Besked til Lys"
-          />
+      {/* Input bar */}
+      <div
+        className="fixed bottom-0 left-0 right-0 z-30 px-4 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] backdrop-blur-xl"
+        style={{ backgroundColor: `${tokens.bg}F0`, borderTop: `1px solid ${accent}14` }}
+      >
+        <div className="max-w-lg mx-auto flex gap-2 items-end">
+          {voiceMode ? (
+            /* Voice mode: big mic button + live transcript */
+            <div className="flex-1 flex flex-col gap-2">
+              {input && (
+                <div
+                  className="rounded-2xl px-4 py-3 text-sm leading-relaxed"
+                  style={{ backgroundColor: tokens.cardBg, color: tokens.text, boxShadow: tokens.shadow }}
+                >
+                  {input}
+                </div>
+              )}
+              <div className="flex gap-2 items-center">
+                <button
+                  type="button"
+                  onClick={toggleMic}
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white transition-all duration-200 active:scale-90"
+                  style={{
+                    background: isListening
+                      ? `linear-gradient(135deg, ${accent}, ${accent}bb)`
+                      : `linear-gradient(135deg, ${accent}cc, ${accent}88)`,
+                    boxShadow: isListening ? `0 0 0 6px ${accent}28` : 'none',
+                  }}
+                  aria-label={isListening ? 'Stop og send' : 'Start tale'}
+                >
+                  {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                </button>
+                <p className="text-xs" style={{ color: tokens.textMuted }}>
+                  {isListening ? 'Taler… tryk for at sende' : 'Tryk for at tale'}
+                </p>
+              </div>
+            </div>
+          ) : (
+            /* Text mode */
+            <textarea
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  void handleSend();
+                }
+              }}
+              placeholder="Skriv til Lys…"
+              rows={1}
+              className="flex-1 min-h-[48px] max-h-32 rounded-2xl px-4 py-3 text-sm resize-none outline-none transition-all duration-200"
+              style={{
+                backgroundColor: tokens.cardBg,
+                border: `1.5px solid ${accent}22`,
+                color: tokens.text,
+                caretColor: accent,
+              }}
+              disabled={loading}
+              aria-label="Besked til Lys"
+            />
+          )}
+
           <button
             type="button"
             onClick={() => void handleSend()}
-            disabled={isLoading || !input.trim()}
-            className="flex-shrink-0 min-h-[48px] min-w-[48px] rounded-2xl bg-gradient-to-br from-sunrise-400 to-sunrise-500 text-midnight-950 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-transform"
+            disabled={loading || !input.trim()}
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-white transition-all duration-150 active:scale-90 disabled:opacity-40"
+            style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)` }}
             aria-label="Send"
           >
-            <Send className="w-5 h-5" aria-hidden />
+            <Send className="h-5 w-5" />
           </button>
         </div>
       </div>
 
-      <BottomNav />
+      {/* History panel */}
+      {showHistory && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col"
+          style={{ backgroundColor: tokens.bg }}
+        >
+          <div
+            className="flex items-center gap-3 px-4 py-3 border-b"
+            style={{ borderColor: `${accent}14` }}
+          >
+            <button
+              type="button"
+              onClick={() => setShowHistory(false)}
+              className="flex h-10 w-10 items-center justify-center rounded-full"
+              style={{ backgroundColor: tokens.cardBg, color: tokens.textMuted }}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <p className="text-base font-bold">Tidligere samtaler</p>
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-4 pt-4 space-y-2">
+            <button
+              type="button"
+              onClick={startNew}
+              className="w-full rounded-2xl px-4 py-4 text-left text-sm font-bold transition-all duration-150 active:scale-[0.98]"
+              style={{
+                background: `linear-gradient(135deg, ${accent}18, ${accent}08)`,
+                border: `1.5px solid ${accent}30`,
+                color: accent,
+              }}
+            >
+              + Ny samtale
+            </button>
+
+            {historyLoading && (
+              <div className="flex justify-center py-8">
+                <div className="flex gap-1.5">
+                  {[0, 150, 300].map(d => (
+                    <div key={d} className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: accent, animationDelay: `${d}ms` }} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!historyLoading && history.length === 0 && (
+              <p className="text-center text-sm py-8" style={{ color: tokens.textMuted }}>
+                Ingen tidligere samtaler
+              </p>
+            )}
+
+            {history.map(conv => (
+              <button
+                key={conv.id}
+                type="button"
+                onClick={() => loadConversation(conv)}
+                className="w-full rounded-2xl px-4 py-4 text-left transition-all duration-150 active:scale-[0.98]"
+                style={{ backgroundColor: tokens.cardBg, boxShadow: tokens.shadow }}
+              >
+                <p className="text-sm font-semibold mb-1 truncate" style={{ color: tokens.text }}>
+                  {conv.title ?? 'Samtale'}
+                </p>
+                <p className="text-xs" style={{ color: tokens.textMuted }}>
+                  {new Date(conv.updated_at).toLocaleDateString('da-DK', { day: 'numeric', month: 'short' })}
+                  {' · '}
+                  {(conv.messages as LysChatMessage[]).length} beskeder
+                </p>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

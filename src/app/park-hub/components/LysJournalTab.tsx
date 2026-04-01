@@ -1,8 +1,12 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Mic, Pen } from 'lucide-react';
+import { Mic, MicOff, Pen } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import { useResident } from '../context/ResidentContext';
+import { getLysPhase, phaseDaLabel } from '../lib/lysTheme';
 import type { LysThemeTokens } from '../lib/lysTheme';
+import { ANTHROPIC_CHAT_MODEL } from '@/lib/ai/anthropicModel';
 
 type Mode = 'write' | 'voice';
 
@@ -15,11 +19,11 @@ type JournalEntry = {
 };
 
 const MOOD_OPTIONS = [
-  { value: 1, emoji: '😞', label: 'Svært' },
-  { value: 2, emoji: '😔', label: 'Tungt' },
+  { value: 1, emoji: '😴', label: 'Svært' },
+  { value: 2, emoji: '😔', label: 'Dårligt' },
   { value: 3, emoji: '😐', label: 'OK' },
   { value: 4, emoji: '🙂', label: 'Godt' },
-  { value: 5, emoji: '😄', label: 'Dejligt' },
+  { value: 5, emoji: '😁', label: 'Fantastisk' },
 ];
 
 const STORAGE_KEY = 'budr_journal_entries_v1';
@@ -31,7 +35,7 @@ function loadEntries(): JournalEntry[] {
   } catch { return []; }
 }
 
-function saveEntry(entry: JournalEntry): void {
+function saveLocalEntry(entry: JournalEntry): void {
   try {
     const entries = loadEntries();
     entries.unshift(entry);
@@ -45,54 +49,35 @@ type Props = {
 };
 
 export default function LysJournalTab({ tokens, accent }: Props) {
+  const { residentId } = useResident();
   const [mode, setMode] = useState<Mode>('write');
   const [text, setText] = useState('');
   const [mood, setMood] = useState(3);
-  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [entries, setEntries] = useState<JournalEntry[]>([]);
+  const [lysMsg, setLysMsg] = useState<string | null>(null);
+  const [lysMsgLoading, setLysMsgLoading] = useState(false);
 
   // Voice state
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const recRef = useRef<{
-    lang: string;
-    continuous: boolean;
-    interimResults: boolean;
-    start: () => void;
-    stop: () => void;
+    lang: string; continuous: boolean; interimResults: boolean;
+    start: () => void; stop: () => void;
     onresult: ((ev: Event) => void) | null;
     onend: (() => void) | null;
   } | null>(null);
   const accRef = useRef('');
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   useEffect(() => {
     setEntries(loadEntries());
   }, []);
-
-  const handleSave = () => {
-    const content = mode === 'write' ? text.trim() : transcript.trim();
-    if (!content) return;
-    const entry: JournalEntry = {
-      id: `${Date.now()}`,
-      date: new Date().toISOString(),
-      mode,
-      text: content,
-      mood: mode === 'write' ? mood : undefined,
-    };
-    saveEntry(entry);
-    setEntries(loadEntries());
-    // Award XP
-    try {
-      const raw = localStorage.getItem('budr_xp_v1');
-      const xpData = raw ? (JSON.parse(raw) as { total: number }) : { total: 0 };
-      localStorage.setItem('budr_xp_v1', JSON.stringify({ total: xpData.total + 15 }));
-    } catch { /* ignore */ }
-    setSaved(true);
-    setText('');
-    setTranscript('');
-    accRef.current = '';
-    setTimeout(() => setSaved(false), 2200);
-  };
 
   const stopMic = useCallback(() => {
     try { recRef.current?.stop(); } catch { /* ignore */ }
@@ -130,25 +115,78 @@ export default function LysJournalTab({ tokens, accent }: Props) {
       accRef.current += add;
       setTranscript((accRef.current + interim).trimStart());
     };
-    rec.onend = () => {
-      setIsListening(false);
-      recRef.current = null;
-    };
+    rec.onend = () => { setIsListening(false); recRef.current = null; };
     recRef.current = rec;
-    try {
-      rec.start();
-      setIsListening(true);
-    } catch { setIsListening(false); }
+    try { rec.start(); setIsListening(true); } catch { setIsListening(false); }
   }, [stopMic]);
 
-  const toggleMic = () => {
-    if (isListening) stopMic();
-    else startMic();
-  };
-
+  const toggleMic = () => { if (isListening) stopMic(); else startMic(); };
   useEffect(() => () => stopMic(), [stopMic]);
 
+  const fetchLysMessage = async (content: string, moodVal: number) => {
+    setLysMsgLoading(true);
+    try {
+      const phase = getLysPhase(new Date());
+      const res = await fetch('/api/ai/chat-completion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider: 'ANTHROPIC',
+          model: ANTHROPIC_CHAT_MODEL,
+          messages: [
+            {
+              role: 'system',
+              content: 'Du er Lys — en varm, empatisk ledsager i en dansk mental sundhedsapp. Skriv én kort, oprigtig motiverende kommentar (maks 2 sætninger, maks 30 ord) til hvad borgeren netop har skrevet i sin journal. Vær personlig og varm. Slut med ét roligt emoji.',
+            },
+            {
+              role: 'user',
+              content: `Stemning: ${MOOD_OPTIONS.find(o => o.value === moodVal)?.label ?? 'OK'}. Tidspunkt: ${phaseDaLabel(phase)}.\n\nJournal: "${content.slice(0, 400)}"`,
+            },
+          ],
+          stream: false,
+          parameters: { max_tokens: 80, temperature: 0.75 },
+        }),
+      });
+      const d = (await res.json()) as { choices?: [{ message: { content: string } }] };
+      const msg = d.choices?.[0]?.message?.content?.trim();
+      if (msg && mountedRef.current) setLysMsg(msg);
+    } catch { /* silently fail */ }
+    finally { if (mountedRef.current) setLysMsgLoading(false); }
+  };
+
+  const handleSave = async () => {
+    const content = mode === 'write' ? text.trim() : transcript.trim();
+    if (!content || saving) return;
+    setSaving(true);
+    setLysMsg(null);
+
+    const entry: JournalEntry = {
+      id: `${Date.now()}`,
+      date: new Date().toISOString(),
+      mode,
+      text: content,
+      mood: mood,
+    };
+    saveLocalEntry(entry);
+    setEntries(loadEntries());
+
+    // Award XP via Supabase
+    if (residentId) {
+      const supabase = createClient();
+      void supabase?.rpc('award_xp', { p_resident_id: residentId, p_activity: 'journal', p_xp: 15 });
+    }
+
+    setSaving(false);
+    setText('');
+    setTranscript('');
+    accRef.current = '';
+
+    // Get Lys motivational message
+    void fetchLysMessage(content, mood);
+  };
+
   const today = new Date().toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long' });
+  const content = mode === 'write' ? text : transcript;
 
   return (
     <div className="font-sans" style={{ color: tokens.text }}>
@@ -183,56 +221,59 @@ export default function LysJournalTab({ tokens, accent }: Props) {
           ))}
         </div>
 
+        {/* Mood selector — on BOTH tabs */}
+        <div
+          className="rounded-2xl px-4 py-4"
+          style={{ backgroundColor: tokens.cardBg, boxShadow: tokens.shadow }}
+        >
+          <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: tokens.textMuted }}>
+            Stemning lige nu
+          </p>
+          <div className="flex justify-between gap-1.5">
+            {MOOD_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setMood(opt.value)}
+                className="flex flex-1 flex-col items-center gap-1 rounded-xl py-2.5 transition-all duration-150 active:scale-95"
+                style={{
+                  backgroundColor: mood === opt.value ? `${accent}22` : 'transparent',
+                  border: `1.5px solid ${mood === opt.value ? accent : `${accent}18`}`,
+                }}
+                aria-pressed={mood === opt.value}
+                title={opt.label}
+              >
+                <span className="text-xl leading-none">{opt.emoji}</span>
+                <span className="text-[9px] font-bold" style={{ color: mood === opt.value ? accent : tokens.textMuted }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Write mode */}
         {mode === 'write' && (
           <div
-            className="rounded-3xl p-5 space-y-4"
+            className="rounded-3xl p-5"
             style={{ backgroundColor: tokens.cardBg, boxShadow: tokens.shadow }}
           >
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: tokens.textMuted }}>
-                Hvad vil du gerne huske om i dag?
-              </p>
-              <textarea
-                value={text}
-                onChange={e => setText(e.target.value)}
-                rows={5}
-                placeholder="Skriv frit her — ét afsnit er rigeligt…"
-                className="w-full rounded-2xl px-4 py-3.5 text-sm leading-relaxed resize-none outline-none transition-all duration-200"
-                style={{
-                  backgroundColor: `${accent}08`,
-                  border: `1.5px solid ${accent}20`,
-                  color: tokens.text,
-                }}
-              />
-            </div>
-            {/* Mood */}
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wide mb-2.5" style={{ color: tokens.textMuted }}>
-                Stemning
-              </p>
-              <div className="flex justify-between gap-1.5">
-                {MOOD_OPTIONS.map(opt => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setMood(opt.value)}
-                    className="flex flex-1 flex-col items-center gap-1 rounded-xl py-2.5 transition-all duration-150 active:scale-95"
-                    style={{
-                      backgroundColor: mood === opt.value ? `${accent}22` : 'transparent',
-                      border: `1.5px solid ${mood === opt.value ? accent : `${accent}20`}`,
-                    }}
-                    aria-pressed={mood === opt.value}
-                    title={opt.label}
-                  >
-                    <span className="text-xl leading-none">{opt.emoji}</span>
-                    <span className="text-[9px] font-bold" style={{ color: mood === opt.value ? accent : tokens.textMuted }}>
-                      {opt.label}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
+            <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: tokens.textMuted }}>
+              Hvad vil du gerne huske om i dag?
+            </p>
+            <textarea
+              value={text}
+              onChange={e => setText(e.target.value)}
+              rows={5}
+              placeholder="Skriv frit her — ét afsnit er rigeligt…"
+              className="w-full rounded-2xl px-4 py-3.5 text-sm leading-relaxed resize-none outline-none"
+              style={{
+                backgroundColor: `${accent}08`,
+                border: `1.5px solid ${accent}20`,
+                color: tokens.text,
+                caretColor: accent,
+              }}
+            />
           </div>
         )}
 
@@ -245,17 +286,16 @@ export default function LysJournalTab({ tokens, accent }: Props) {
             <button
               type="button"
               onClick={toggleMic}
-              className="relative h-20 w-20 rounded-full flex items-center justify-center text-white transition-all duration-200 active:scale-95"
+              className="h-20 w-20 rounded-full flex items-center justify-center text-white transition-all duration-200 active:scale-95"
               style={{
                 background: isListening
                   ? `linear-gradient(135deg, ${accent}, ${accent}bb)`
                   : `linear-gradient(135deg, ${accent}cc, ${accent}88)`,
                 boxShadow: isListening ? `0 0 0 10px ${accent}20` : 'none',
               }}
-              aria-pressed={isListening}
               aria-label={isListening ? 'Stop optagelse' : 'Start optagelse'}
             >
-              <Mic className="h-8 w-8" />
+              {isListening ? <MicOff className="h-8 w-8" /> : <Mic className="h-8 w-8" />}
             </button>
             <p className="text-sm font-medium" style={{ color: tokens.textMuted }}>
               {isListening ? 'Taler… tryk igen for at stoppe' : 'Tryk for at tale'}
@@ -263,11 +303,7 @@ export default function LysJournalTab({ tokens, accent }: Props) {
             {transcript ? (
               <div
                 className="w-full rounded-2xl px-4 py-3.5 text-sm leading-relaxed"
-                style={{
-                  backgroundColor: `${accent}08`,
-                  border: `1.5px solid ${accent}20`,
-                  color: tokens.text,
-                }}
+                style={{ backgroundColor: `${accent}08`, border: `1.5px solid ${accent}20`, color: tokens.text }}
               >
                 {transcript}
               </div>
@@ -278,16 +314,51 @@ export default function LysJournalTab({ tokens, accent }: Props) {
         {/* Save button */}
         <button
           type="button"
-          onClick={handleSave}
-          disabled={!(mode === 'write' ? text.trim() : transcript.trim())}
+          onClick={() => void handleSave()}
+          disabled={!content || saving}
           className="w-full rounded-2xl py-4 text-sm font-bold text-white transition-all duration-200 active:scale-[0.98] disabled:opacity-40"
           style={{
             background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
             boxShadow: `0 4px 16px ${accent}30`,
           }}
         >
-          {saved ? '✓ Gemt!' : 'Gem i journal'}
+          {saving ? 'Gemmer…' : 'Gem i journal'}
         </button>
+
+        {/* Lys motivational message after save */}
+        {(lysMsg || lysMsgLoading) && (
+          <div
+            className="rounded-3xl p-5 transition-all duration-300"
+            style={{
+              backgroundColor: tokens.cardBg,
+              boxShadow: tokens.shadow,
+              border: `1px solid ${accent}18`,
+              animation: 'lysTabIn 0.35s ease-out',
+            }}
+          >
+            <div className="flex items-start gap-3">
+              <div
+                className="h-9 w-9 shrink-0 rounded-full flex items-center justify-center text-sm font-black text-white mt-0.5"
+                style={{ background: `linear-gradient(135deg, ${accent}, ${accent}99)` }}
+                aria-hidden
+              >
+                ✦
+              </div>
+              <div className="flex-1">
+                <p className="text-xs font-bold uppercase tracking-wide mb-1.5" style={{ color: accent }}>Lys</p>
+                {lysMsgLoading ? (
+                  <span className="flex gap-1">
+                    {[0, 120, 240].map(d => (
+                      <span key={d} className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: accent, animationDelay: `${d}ms` }} />
+                    ))}
+                  </span>
+                ) : (
+                  <p className="text-sm leading-relaxed" style={{ color: tokens.text }}>{lysMsg}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Previous entries */}
         {entries.length > 0 && (
@@ -304,15 +375,10 @@ export default function LysJournalTab({ tokens, accent }: Props) {
                   <div
                     key={entry.id}
                     className="rounded-2xl px-4 py-3.5"
-                    style={{
-                      backgroundColor: tokens.cardBg,
-                      boxShadow: tokens.shadow,
-                    }}
+                    style={{ backgroundColor: tokens.cardBg, boxShadow: tokens.shadow }}
                   >
                     <div className="flex items-center justify-between mb-1.5">
-                      <p className="text-xs font-semibold capitalize" style={{ color: tokens.textMuted }}>
-                        {dateStr}
-                      </p>
+                      <p className="text-xs font-semibold capitalize" style={{ color: tokens.textMuted }}>{dateStr}</p>
                       <div className="flex items-center gap-1.5">
                         {entry.mood !== undefined && (
                           <span className="text-sm">{MOOD_OPTIONS.find(o => o.value === entry.mood)?.emoji}</span>
@@ -322,9 +388,7 @@ export default function LysJournalTab({ tokens, accent }: Props) {
                         </span>
                       </div>
                     </div>
-                    <p className="text-sm leading-relaxed line-clamp-3" style={{ color: tokens.text }}>
-                      {entry.text}
-                    </p>
+                    <p className="text-sm leading-relaxed line-clamp-3" style={{ color: tokens.text }}>{entry.text}</p>
                   </div>
                 );
               })}

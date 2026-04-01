@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Mic, Volume2 } from 'lucide-react';
+import { Volume2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import type { LysChatMessage } from '@/app/api/lys-chat/route';
@@ -21,11 +21,11 @@ const COMPANION_MESSAGES = [
 ];
 
 const ENERGY_OPTIONS = [
-  { level: 1, emoji: '😴', label: 'Meget træt', color: '#EF4444' },
-  { level: 2, emoji: '😔', label: 'Lidt træt',  color: '#F97316' },
-  { level: 3, emoji: '😐', label: 'OK',          color: '#EAB308' },
-  { level: 4, emoji: '🙂', label: 'God energi', color: '#84CC16' },
-  { level: 5, emoji: '😄', label: 'Fuld energi', color: '#22C55E' },
+  { level: 1, emoji: '😴', label: 'Svært',       sub: 'Har ikke energi til meget',     color: '#EF4444' },
+  { level: 2, emoji: '😔', label: 'Dårligt',     sub: 'Det kræver lidt mere i dag',    color: '#F97316' },
+  { level: 3, emoji: '😐', label: 'OK',           sub: 'Hverken godt eller skidt',      color: '#EAB308' },
+  { level: 4, emoji: '🙂', label: 'Godt',         sub: 'Klar til dagen',                color: '#84CC16' },
+  { level: 5, emoji: '😁', label: 'Fantastisk',  sub: 'Fuld energi',                   color: '#22C55E' },
 ];
 
 type Props = {
@@ -60,6 +60,8 @@ function greetingLine(phase: LysPhase, name: string): string {
   }
 }
 
+type CheckIn = { level: number; label: string; ts: number };
+
 export default function LysHome({
   firstName,
   initials,
@@ -76,31 +78,15 @@ export default function LysHome({
   onOpenFlow,
   onSwitchTab,
   moodLabel,
-  moodTraffic,
   moodTick,
 }: Props) {
   const router = useRouter();
-  const chatRef = useRef<HTMLDivElement>(null);
 
   const [companionIdx, setCompanionIdx] = useState(0);
-  const [checkInDone, setCheckInDone] = useState(false);
-  const [checkInLabel, setCheckInLabel] = useState<string | null>(null);
+  const [lastCheckIn, setLastCheckIn] = useState<CheckIn | null>(null);
   const [planStats, setPlanStats] = useState<{ total: number } | null>(null);
   const [showLysCard, setShowLysCard] = useState(false);
-
-  const [isListening, setIsListening] = useState(false);
-  const [liveTranscript, setLiveTranscript] = useState('');
-  const recRef = useRef<{
-    lang: string;
-    continuous: boolean;
-    interimResults: boolean;
-    start: () => void;
-    stop: () => void;
-    abort: () => void;
-    onresult: ((ev: Event) => void) | null;
-    onend: (() => void) | null;
-  } | null>(null);
-  const accRef = useRef('');
+  const [checkInSaving, setCheckInSaving] = useState(false);
 
   const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant')?.content ?? null;
 
@@ -112,15 +98,14 @@ export default function LysHome({
     return () => window.clearInterval(t);
   }, []);
 
-  // Load today's check-in from localStorage
+  // Load latest check-in from localStorage
   useEffect(() => {
     try {
-      const today = new Date().toISOString().slice(0, 10);
-      const raw = localStorage.getItem(`budr_checkin_${today}`);
+      const raw = localStorage.getItem('budr_last_checkin');
       if (raw) {
-        const d = JSON.parse(raw) as { label?: string };
-        setCheckInDone(true);
-        setCheckInLabel(d.label ?? null);
+        const d = JSON.parse(raw) as CheckIn;
+        // Show last check-in if it was within the last 2 hours
+        if (Date.now() - d.ts < 2 * 60 * 60 * 1000) setLastCheckIn(d);
       }
     } catch { /* ignore */ }
   }, []);
@@ -138,115 +123,44 @@ export default function LysHome({
       .eq('plan_date', today)
       .maybeSingle()
       .then(({ data }) => {
-        if (data?.plan_items && Array.isArray(data.plan_items)) {
-          setPlanStats({ total: (data.plan_items as unknown[]).length });
-        } else {
-          setPlanStats({ total: 0 });
-        }
-      })
-      .catch(() => setPlanStats({ total: 0 }));
+        const cnt = Array.isArray(data?.plan_items) ? (data!.plan_items as unknown[]).length : 0;
+        setPlanStats({ total: cnt });
+      }, () => setPlanStats({ total: 0 }));
   }, [residentId]);
 
-  // moodTick effect: show Lys card
+  // moodTick effect
   useEffect(() => {
     if (moodTick > 0) setShowLysCard(true);
   }, [moodTick]);
 
-  const handleCheckIn = async (level: number, label: string) => {
-    const today = new Date().toISOString().slice(0, 10);
-    // Optimistic UI
-    setCheckInDone(true);
-    setCheckInLabel(label);
-    // Persist to localStorage
+  const handleCheckIn = useCallback(async (level: number, label: string) => {
+    if (checkInSaving) return;
+    setCheckInSaving(true);
+    const entry: CheckIn = { level, label, ts: Date.now() };
+    setLastCheckIn(entry);
     try {
-      localStorage.setItem(`budr_checkin_${today}`, JSON.stringify({ level, label, ts: Date.now() }));
-      // Award XP
-      const raw = localStorage.getItem('budr_xp_v1');
-      const xpData = raw ? (JSON.parse(raw) as { total: number }) : { total: 0 };
-      localStorage.setItem('budr_xp_v1', JSON.stringify({ total: xpData.total + 10 }));
+      localStorage.setItem('budr_last_checkin', JSON.stringify(entry));
     } catch { /* ignore */ }
-    // Save to Supabase
+
+    // Save to Supabase (allow multiple per day — use insert not upsert)
     const supabase = createClient();
     if (supabase && residentId) {
-      await supabase.from('park_daily_checkin').upsert(
-        { resident_id: residentId, check_in_date: today, energy_level: level, label },
-        { onConflict: 'resident_id,check_in_date' },
-      );
+      const today = new Date().toISOString().slice(0, 10);
+      await supabase.from('park_daily_checkin').insert({
+        resident_id: residentId,
+        check_in_date: today,
+        energy_level: level,
+        label,
+      });
+      void supabase.rpc('award_xp', {
+        p_resident_id: residentId,
+        p_activity: 'hum_check',
+        p_xp: 10,
+      });
     }
-    // Background AI response
+    setCheckInSaving(false);
     void sendToLys(`Jeg har det sådan her: ${label}.`).then(() => setShowLysCard(true));
-  };
-
-  const stopMic = useCallback(() => {
-    try { recRef.current?.stop(); } catch { /* ignore */ }
-    recRef.current = null;
-    setIsListening(false);
-  }, []);
-
-  const clearTranscript = useCallback(() => {
-    accRef.current = '';
-    setLiveTranscript('');
-  }, []);
-
-  const handleVoiceSend = useCallback(async (text: string) => {
-    setShowLysCard(true);
-    await sendToLys(text);
-  }, [sendToLys]);
-
-  const startMic = useCallback(() => {
-    const w = window as unknown as {
-      SpeechRecognition?: new () => NonNullable<typeof recRef.current>;
-      webkitSpeechRecognition?: new () => NonNullable<typeof recRef.current>;
-    };
-    const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
-    if (!Ctor) return;
-    stopMic();
-    clearTranscript();
-    const rec = new Ctor();
-    rec.lang = 'da-DK';
-    rec.continuous = true;
-    rec.interimResults = true;
-    rec.onresult = (event: Event) => {
-      const ev = event as unknown as {
-        resultIndex: number;
-        results: { length: number; [i: number]: { isFinal: boolean; 0: { transcript: string } } };
-      };
-      let interim = '';
-      let add = '';
-      for (let i = ev.resultIndex; i < ev.results.length; i++) {
-        const r = ev.results[i];
-        const t = r[0]?.transcript ?? '';
-        if (r.isFinal) add += t;
-        else interim += t;
-      }
-      accRef.current += add;
-      setLiveTranscript((accRef.current + interim).trimStart());
-    };
-    rec.onend = () => {
-      setIsListening(false);
-      recRef.current = null;
-    };
-    recRef.current = rec;
-    try {
-      rec.start();
-      setIsListening(true);
-    } catch {
-      setIsListening(false);
-    }
-  }, [stopMic, clearTranscript]);
-
-  const handleMicToggle = () => {
-    if (isListening) {
-      const t = liveTranscript.trim();
-      stopMic();
-      if (t) void handleVoiceSend(t);
-      clearTranscript();
-      return;
-    }
-    startMic();
-  };
-
-  useEffect(() => () => stopMic(), [stopMic]);
+  }, [checkInSaving, residentId, sendToLys]);
 
   const handleLogout = () => {
     document.cookie = 'budr_resident_id=; path=/; max-age=0';
@@ -278,7 +192,7 @@ export default function LysHome({
           <button
             type="button"
             onClick={handleLogout}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-xs font-medium transition-opacity hover:opacity-70"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium transition-opacity hover:opacity-70"
             style={{ color: tokens.textMuted }}
             aria-label="Log ud"
           >
@@ -299,15 +213,11 @@ export default function LysHome({
         >
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold tracking-widest uppercase mb-2" style={{ color: `${accent}` }}>
-                Lys
-              </p>
+              <p className="text-xs font-bold tracking-widest uppercase mb-2" style={{ color: accent }}>Lys</p>
               <p
                 key={companionIdx}
                 className="text-base font-semibold leading-snug"
-                style={{
-                  animation: reducedMotion ? undefined : 'lysTabIn 0.4s ease-out',
-                }}
+                style={{ animation: reducedMotion ? undefined : 'lysTabIn 0.4s ease-out' }}
               >
                 {COMPANION_MESSAGES[companionIdx]}
               </p>
@@ -325,10 +235,7 @@ export default function LysHome({
           </div>
           <button
             type="button"
-            onClick={() => {
-              chatRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              if (!isListening) startMic();
-            }}
+            onClick={() => router.push('/lys-chat')}
             className="mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold text-white transition-all duration-150 active:scale-95"
             style={{
               background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
@@ -339,52 +246,49 @@ export default function LysHome({
           </button>
         </section>
 
-        {/* Morning check-in */}
-        {!checkInDone ? (
-          <section
-            className="rounded-3xl px-6 py-5 transition-all duration-300"
-            style={{
-              backgroundColor: tokens.cardBg,
-              boxShadow: tokens.shadow,
-            }}
-          >
-            <p className="text-sm font-bold mb-1">Morgentjek ☀️</p>
-            <p className="text-sm mb-4" style={{ color: tokens.textMuted }}>
-              Hvad er dit energiniveau lige nu?
-            </p>
-            <div className="flex gap-2">
-              {ENERGY_OPTIONS.map(opt => (
-                <button
-                  key={opt.level}
-                  type="button"
-                  onClick={() => void handleCheckIn(opt.level, opt.label)}
-                  disabled={loading}
-                  className="flex flex-1 flex-col items-center gap-1.5 rounded-2xl py-3.5 transition-all duration-150 active:scale-[0.94] disabled:opacity-40"
-                  style={{
-                    backgroundColor: `${opt.color}18`,
-                    border: `1.5px solid ${opt.color}30`,
-                  }}
-                  title={opt.label}
-                >
-                  <span className="text-2xl leading-none">{opt.emoji}</span>
-                  <span className="text-[9px] font-bold uppercase tracking-wide" style={{ color: opt.color }}>
-                    {opt.level}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </section>
-        ) : (
-          <div
-            className="rounded-2xl px-5 py-3.5 flex items-center gap-3 transition-all duration-300"
-            style={{ backgroundColor: `${accent}14`, border: `1px solid ${accent}30` }}
-          >
-            <span className="text-xl">✓</span>
-            <p className="text-sm font-semibold" style={{ color: accent }}>
-              Tjekket ind — {checkInLabel}
-            </p>
+        {/* Humørtjek */}
+        <section
+          className="rounded-3xl px-6 py-5"
+          style={{ backgroundColor: tokens.cardBg, boxShadow: tokens.shadow }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm font-bold">Humørtjek</p>
+            {lastCheckIn && (
+              <span
+                className="text-xs font-semibold rounded-full px-2.5 py-1"
+                style={{ backgroundColor: `${accent}18`, color: accent }}
+              >
+                Sidst: {lastCheckIn.label}
+              </span>
+            )}
           </div>
-        )}
+          <div className="flex gap-2">
+            {ENERGY_OPTIONS.map(opt => (
+              <button
+                key={opt.level}
+                type="button"
+                onClick={() => void handleCheckIn(opt.level, opt.label)}
+                disabled={checkInSaving}
+                className="flex flex-1 flex-col items-center gap-1.5 rounded-2xl py-3.5 transition-all duration-150 active:scale-[0.93] disabled:opacity-40"
+                style={{
+                  backgroundColor: lastCheckIn?.level === opt.level ? `${opt.color}28` : `${opt.color}12`,
+                  border: `1.5px solid ${lastCheckIn?.level === opt.level ? opt.color : `${opt.color}28`}`,
+                }}
+                title={opt.sub}
+              >
+                <span className="text-2xl leading-none">{opt.emoji}</span>
+                <span className="text-[9px] font-bold uppercase tracking-wide" style={{ color: opt.color }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+          {lastCheckIn && (
+            <p className="text-xs mt-3 text-center" style={{ color: tokens.textMuted }}>
+              Du kan tjekke ind igen når som helst
+            </p>
+          )}
+        </section>
 
         {/* Today summary */}
         {planStats !== null && (
@@ -397,59 +301,35 @@ export default function LysHome({
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold mb-1">Din dag</p>
               {planStats.total > 0 ? (
-                <>
-                  <p className="text-sm" style={{ color: tokens.textMuted }}>
-                    {planStats.total} aktiviteter i din plan
-                  </p>
-                  <div
-                    className="mt-2 h-1.5 w-full rounded-full overflow-hidden"
-                    style={{ backgroundColor: `${accent}22` }}
-                  >
-                    <div className="h-full w-0 rounded-full" style={{ backgroundColor: accent }} />
-                  </div>
-                </>
+                <p className="text-sm" style={{ color: tokens.textMuted }}>{planStats.total} aktiviteter i din plan</p>
               ) : (
-                <p className="text-sm" style={{ color: tokens.textMuted }}>
-                  🌿 Din dag er fri
-                </p>
+                <p className="text-sm" style={{ color: tokens.textMuted }}>🌿 Din dag er fri</p>
               )}
             </div>
             <span className="text-lg" style={{ color: accent }}>→</span>
           </button>
         )}
 
-        {/* Besked til personale */}
+        {/* Besked til personalet */}
         <LysBeskedTilPersonale tokens={tokens} accent={accent} firstName={firstName} residentId={residentId} />
 
-        {/* Mic section */}
-        <section ref={chatRef} className="flex flex-col items-center gap-3 py-2">
-          <button
-            type="button"
-            onClick={handleMicToggle}
-            className="relative flex h-16 w-16 items-center justify-center rounded-full text-white transition-all duration-200 active:scale-95"
-            style={{
-              background: isListening
-                ? `linear-gradient(135deg, ${accent}, ${accent}bb)`
-                : `linear-gradient(135deg, ${accent}cc, ${accent}88)`,
-              boxShadow: isListening
-                ? `0 0 0 8px ${accent}28, ${tokens.glowShadow}`
-                : tokens.shadow,
-            }}
-            aria-pressed={isListening}
-            aria-label={isListening ? 'Stop optagelse' : 'Tal med Lys'}
-          >
-            <Mic className="h-6 w-6" />
-          </button>
-          <span className="text-sm font-medium" style={{ color: tokens.textMuted }}>
-            {isListening ? 'Tryk igen når du er færdig' : 'Tal med Lys'}
-          </span>
-          {liveTranscript ? (
-            <p className="max-w-xs text-center text-base leading-relaxed">{liveTranscript}</p>
-          ) : null}
-        </section>
+        {/* Tal med Lys — link to dedicated chat */}
+        <button
+          type="button"
+          onClick={() => router.push('/lys-chat')}
+          className="w-full flex items-center justify-center gap-3 rounded-2xl py-4 text-sm font-bold transition-all duration-150 active:scale-[0.98]"
+          style={{
+            backgroundColor: tokens.cardBg,
+            boxShadow: tokens.shadow,
+            color: accent,
+          }}
+        >
+          <span className="text-xl">🎙️</span>
+          Tal med Lys
+        </button>
 
-        {/* Lys AI response */}
-        {showLysCard && (lastAssistant || loading) ? (
+        {/* Lys AI response (after mood/check-in) */}
+        {showLysCard && (lastAssistant || loading) && (
           <div
             className="rounded-3xl p-6 transition-all duration-300"
             style={{
@@ -468,10 +348,8 @@ export default function LysHome({
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2 mb-2">
-                  <p className="text-xs font-bold tracking-widest uppercase" style={{ color: accent }}>
-                    Lys
-                  </p>
-                  {lastAssistant && !loading ? (
+                  <p className="text-xs font-bold tracking-widest uppercase" style={{ color: accent }}>Lys</p>
+                  {lastAssistant && !loading && (
                     <button
                       type="button"
                       onClick={() => speakSafe(lastAssistant)}
@@ -481,15 +359,15 @@ export default function LysHome({
                     >
                       <Volume2 className="h-4 w-4" />
                     </button>
-                  ) : null}
+                  )}
                 </div>
                 <p className="text-base leading-relaxed" style={{ color: tokens.text }}>
                   {loading ? (
                     <span className="flex items-center gap-2" style={{ color: tokens.textMuted }}>
                       <span className="inline-flex gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: accent, animationDelay: '0ms' }} />
-                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: accent, animationDelay: '120ms' }} />
-                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: accent, animationDelay: '240ms' }} />
+                        {[0, 120, 240].map(d => (
+                          <span key={d} className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: accent, animationDelay: `${d}ms` }} />
+                        ))}
                       </span>
                     </span>
                   ) : lastAssistant}
@@ -497,7 +375,7 @@ export default function LysHome({
               </div>
             </div>
           </div>
-        ) : null}
+        )}
 
       </main>
     </div>

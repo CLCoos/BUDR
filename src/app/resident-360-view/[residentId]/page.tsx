@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
 import PortalShell from '@/components/PortalShell';
 import DagsPlanPortal from './components/DagsPlanPortal';
+import ResidentPlanTab from './components/ResidentPlanTab';
 import type { DailyPlan, PendingProposal } from './components/DagsPlanPortal';
 
 // ── Data fetching ─────────────────────────────────────────────────────────────
@@ -63,10 +64,15 @@ async function fetchTodayData(residentId: string): Promise<{
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-type Props = { params: Promise<{ residentId: string }> };
+type Props = {
+  params: Promise<{ residentId: string }>;
+  searchParams: Promise<{ tab?: string }>;
+};
 
-export default async function ResidentDagPage({ params }: Props) {
+export default async function ResidentDagPage({ params, searchParams }: Props) {
   const { residentId } = await params;
+  const { tab = 'dagsplan' } = await searchParams;
+
   const [resident, dayData] = await Promise.all([
     fetchResident(residentId),
     fetchTodayData(residentId),
@@ -99,8 +105,7 @@ export default async function ResidentDagPage({ params }: Props) {
               <div>
                 <h1 className="text-lg font-bold text-gray-900">{resident.name}</h1>
                 <p className="text-sm text-gray-500">
-                  Værelse {resident.room} · Dagsplan &amp; forslag ·{' '}
-                  <span className="capitalize">{todayLabel}</span>
+                  Værelse {resident.room} · <span className="capitalize">{todayLabel}</span>
                 </p>
               </div>
             </div>
@@ -113,13 +118,42 @@ export default async function ResidentDagPage({ params }: Props) {
           )}
         </div>
 
-        {/* Main content */}
-        <DagsPlanPortal
-          residentId={residentId}
-          residentName={resident.name}
-          initialPlan={dayData.plan}
-          initialProposals={dayData.proposals}
-        />
+        {/* Tabs */}
+        <div className="flex gap-1 mb-6 border-b border-gray-200">
+          {[
+            { key: 'dagsplan', label: 'Dagsplan' },
+            { key: 'plan',     label: 'Plan' },
+          ].map(t => (
+            <Link
+              key={t.key}
+              href={`/resident-360-view/${residentId}?tab=${t.key}`}
+              className={`px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors ${
+                tab === t.key
+                  ? 'border-[#0F1B2D] text-[#0F1B2D]'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {t.label}
+            </Link>
+          ))}
+        </div>
+
+        {/* Tab content */}
+        {tab === 'dagsplan' && (
+          <DagsPlanPortal
+            residentId={residentId}
+            residentName={resident.name}
+            initialPlan={dayData.plan}
+            initialProposals={dayData.proposals}
+          />
+        )}
+
+        {tab === 'plan' && (
+          <ResidentPlanTab
+            residentId={residentId}
+            residentName={resident.name}
+          />
+        )}
       </div>
     </PortalShell>
   );
