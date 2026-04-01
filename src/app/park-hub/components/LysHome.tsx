@@ -9,6 +9,8 @@ import type { LysFlowOverlay } from '../lib/lysOverlay';
 import type { LysPhase, LysThemeTokens } from '../lib/lysTheme';
 import type { LysNavTab } from './LysBottomNav';
 import LysBeskedTilPersonale from './LysBeskedTilPersonale';
+import FlowerPlant from '@/components/haven/plants/FlowerPlant';
+import TreePlant from '@/components/haven/plants/TreePlant';
 
 const COMPANION_MESSAGES = [
   'Hvad bærer du på i dag?',
@@ -50,6 +52,88 @@ type Props = {
   moodTraffic: 'groen' | 'gul' | 'roed' | null;
   moodTick: number;
 };
+
+// ── Haven widget ─────────────────────────────────────────────────────────────
+
+type GardenPlotMini = {
+  id: string;
+  plant_type: 'tree' | 'flower' | 'herb' | 'bush' | 'vegetable';
+  plant_name: string;
+  growth_stage: 0 | 1 | 2 | 3 | 4;
+};
+
+const MINI_ACCENTS: Record<string, string> = {
+  tree: '#1D9E75', flower: '#F59E0B', herb: '#10B981', bush: '#7F77DD', vegetable: '#EF4444',
+};
+
+function HavenWidget({
+  tokens,
+  accent,
+  residentId,
+  onNavigate,
+}: {
+  tokens: LysThemeTokens;
+  accent: string;
+  residentId: string;
+  onNavigate: () => void;
+}) {
+  const [plots, setPlots] = useState<GardenPlotMini[]>([]);
+  useEffect(() => {
+    if (!residentId) return;
+    const supabase = createClient();
+    if (!supabase) return;
+    supabase
+      .from('garden_plots')
+      .select('id, plant_type, plant_name, growth_stage')
+      .eq('resident_id', residentId)
+      .order('slot_index')
+      .limit(2)
+      .then(({ data }) => setPlots((data ?? []) as GardenPlotMini[]), () => {});
+  }, [residentId]);
+
+  return (
+    <button
+      type="button"
+      onClick={onNavigate}
+      className="w-full rounded-3xl px-5 py-4 text-left flex items-center gap-4 transition-all duration-150 active:scale-[0.98]"
+      style={{
+        background: `linear-gradient(135deg, ${tokens.gradientFrom} 0%, ${tokens.gradientTo} 100%)`,
+        boxShadow: tokens.glowShadow,
+      }}
+    >
+      {/* Mini plant previews */}
+      <div className="flex gap-2 shrink-0">
+        {plots.length === 0 ? (
+          <div className="h-14 w-14 rounded-2xl flex items-center justify-center text-2xl"
+            style={{ backgroundColor: `${accent}18` }}>
+            🌱
+          </div>
+        ) : plots.slice(0, 2).map(p => (
+          <div
+            key={p.id}
+            className="h-14 w-14 rounded-2xl flex items-end justify-center overflow-hidden pb-1"
+            style={{ backgroundColor: `${MINI_ACCENTS[p.plant_type] ?? accent}14` }}
+          >
+            {(p.plant_type === 'tree' || p.plant_type === 'herb' || p.plant_type === 'bush' || p.plant_type === 'vegetable')
+              ? <TreePlant stage={p.growth_stage} accent={MINI_ACCENTS[p.plant_type] ?? accent} />
+              : <FlowerPlant stage={p.growth_stage} accent={MINI_ACCENTS[p.plant_type] ?? accent} />
+            }
+          </div>
+        ))}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-bold tracking-widest uppercase mb-0.5" style={{ color: accent }}>Min Have</p>
+        {plots.length === 0 ? (
+          <p className="text-sm font-semibold">Plant din første blomst 🌱</p>
+        ) : (
+          <p className="text-sm font-semibold">{plots.length} {plots.length === 1 ? 'plante' : 'planter'} vokser</p>
+        )}
+        <p className="text-xs mt-0.5" style={{ color: tokens.textMuted }}>Tryk for at vande og se vækst</p>
+      </div>
+      <span className="text-base" style={{ color: accent }}>→</span>
+    </button>
+  );
+}
 
 function greetingLine(phase: LysPhase, name: string): string {
   switch (phase) {
@@ -309,6 +393,9 @@ export default function LysHome({
             <span className="text-lg" style={{ color: accent }}>→</span>
           </button>
         )}
+
+        {/* Haven widget */}
+        <HavenWidget tokens={tokens} accent={accent} residentId={residentId} onNavigate={() => router.push('/haven')} />
 
         {/* Besked til personalet */}
         <LysBeskedTilPersonale tokens={tokens} accent={accent} firstName={firstName} residentId={residentId} />

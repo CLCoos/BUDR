@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import PortalShell from '@/components/PortalShell';
 import DagsPlanPortal from './components/DagsPlanPortal';
 import ResidentPlanTab from './components/ResidentPlanTab';
+import ResidentHavenTab from './components/ResidentHavenTab';
 import type { DailyPlan, PendingProposal } from './components/DagsPlanPortal';
 
 // ── Data fetching ─────────────────────────────────────────────────────────────
@@ -71,7 +72,7 @@ type Props = {
 
 export default async function ResidentDagPage({ params, searchParams }: Props) {
   const { residentId } = await params;
-  const { tab = 'dagsplan' } = await searchParams;
+  const { tab = 'dagsplan' } = await searchParams as { tab?: string };
 
   const [resident, dayData] = await Promise.all([
     fetchResident(residentId),
@@ -123,6 +124,7 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
           {[
             { key: 'dagsplan', label: 'Dagsplan' },
             { key: 'plan',     label: 'Plan' },
+            { key: 'haven',    label: 'Haven 🌿' },
           ].map(t => (
             <Link
               key={t.key}
@@ -150,6 +152,13 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
 
         {tab === 'plan' && (
           <ResidentPlanTab
+            residentId={residentId}
+            residentName={resident.name}
+          />
+        )}
+
+        {tab === 'haven' && (
+          <ResidentHavenTab
             residentId={residentId}
             residentName={resident.name}
           />
