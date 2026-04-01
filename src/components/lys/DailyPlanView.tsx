@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { getLysPhase, lysTheme } from '@/app/park-hub/lib/lysTheme';
 import type { LysThemeTokens } from '@/app/park-hub/lib/lysTheme';
+import { createClient } from '@/lib/supabase/client';
 
 export type PlanItem = {
   id: string;
@@ -198,6 +199,8 @@ export default function DailyPlanView({ residentId, plan, pendingProposal }: Pro
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
   const [hasPending, setHasPending] = useState(!!pendingProposal);
+  // Live plan — updated via Realtime when staff approves a proposal
+  const [activePlan, setActivePlan] = useState<DailyPlan | null>(plan);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -208,8 +211,38 @@ export default function DailyPlanView({ residentId, plan, pendingProposal }: Pro
     return () => window.clearInterval(interval);
   }, []);
 
+  // ── Realtime: watch daily_plans for this resident ─────────────────────────
+  useEffect(() => {
+    const supabase = createClient();
+    if (!supabase) return;
+
+    const today = new Date().toISOString().slice(0, 10);
+
+    const channel = supabase
+      .channel(`lys-daily-plan-${residentId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'daily_plans',
+          filter: `resident_id=eq.${residentId}`,
+        },
+        (payload) => {
+          const row = payload.new as DailyPlan & { plan_date: string };
+          if (row.plan_date !== today) return;
+          setActivePlan(row);
+          // Clear pending banner once the approved plan arrives
+          setHasPending(false);
+        },
+      )
+      .subscribe();
+
+    return () => { void supabase.removeChannel(channel); };
+  }, [residentId]);
+
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
-  const items: PlanItem[] = (plan?.plan_items ?? []).slice().sort((a, b) =>
+  const items: PlanItem[] = (activePlan?.plan_items ?? []).slice().sort((a, b) =>
     timeToMinutes(a.time) - timeToMinutes(b.time),
   );
 

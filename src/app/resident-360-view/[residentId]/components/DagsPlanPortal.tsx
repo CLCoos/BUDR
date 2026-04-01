@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CheckCircle, XCircle, Loader2, CalendarDays, Clock, Inbox } from 'lucide-react';
+import { Toaster, toast } from 'sonner';
 import MoodTrendChart from '@/app/resident-360-view/components/MoodTrendChart';
 import { createClient } from '@/lib/supabase/client';
 
@@ -30,6 +31,7 @@ export type PendingProposal = {
   proposed_items: PlanItem[];
   ai_reasoning: string | null;
   created_at: string;
+  status?: string;
 };
 
 type Props = {
@@ -188,6 +190,37 @@ export default function DagsPlanPortal({
   const [rejectedIds, setRejectedIds] = useState<Set<string>>(new Set());
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // ── Realtime: watch plan_proposals for this resident ──────────────────────
+  useEffect(() => {
+    const supabase = createClient();
+    if (!supabase) return;
+
+    const channel = supabase
+      .channel(`portal-proposals-${residentId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'plan_proposals',
+          filter: `resident_id=eq.${residentId}`,
+        },
+        (payload) => {
+          const row = payload.new as PendingProposal;
+          if (row.status !== 'pending') return; // ignore non-pending inserts
+          setProposals(prev => {
+            // Deduplicate by id
+            if (prev.some(p => p.id === row.id)) return prev;
+            return [row, ...prev];
+          });
+          toast.info(`Nyt forslag fra ${residentName}`);
+        },
+      )
+      .subscribe();
+
+    return () => { void supabase.removeChannel(channel); };
+  }, [residentId, residentName]);
+
   const todayLabel = new Date().toLocaleDateString('da-DK', {
     weekday: 'long',
     day: 'numeric',
@@ -217,6 +250,7 @@ export default function DagsPlanPortal({
       // Optimistic update: activate new plan, remove proposal
       setActivePlan(updatedPlan);
       setProposals(prev => prev.filter(p => p.id !== proposal.id));
+      toast.success('Dagsplan godkendt og aktiveret i Lys-appen ✓');
     } catch (e) {
       setErrors(prev => ({
         ...prev,
@@ -242,6 +276,7 @@ export default function DagsPlanPortal({
 
       if (!res.ok) throw new Error();
 
+      toast.success('Forslag afvist');
       // Show "afvist" feedback, then remove after delay
       setRejectedIds(prev => new Set([...prev, proposalId]));
       setTimeout(() => {
@@ -261,6 +296,7 @@ export default function DagsPlanPortal({
 
   return (
     <div className="space-y-6">
+      <Toaster position="top-right" richColors />
       {/* ── Section A: Active daily plan ──────────────────────────────────── */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
