@@ -29,6 +29,7 @@ type Props = {
   tokens: LysThemeTokens;
   accent: string;
   firstName: string;
+  initials: string;
   reducedMotion: boolean;
   flowerFilledThisWeek?: boolean;
   onOpenBlomst: () => void;
@@ -38,6 +39,7 @@ export default function LysMigScreen({
   tokens,
   accent,
   firstName,
+  initials,
   reducedMotion,
   flowerFilledThisWeek = false,
   onOpenBlomst,
@@ -67,16 +69,55 @@ export default function LysMigScreen({
 
   return (
     <div
-      className="space-y-6 px-4 pb-8 pt-4 transition-all duration-200"
+      className="space-y-5 px-4 pb-8 pt-4 transition-all duration-200"
       style={{ color: titleColor }}
     >
-      <h1 className="text-2xl font-bold">Hej {firstName}</h1>
-      <p className="text-lg opacity-80">Her er dit rum — blomst, mål og små sejre.</p>
+      {/* ── Profile hero ─────────────────────────────────────────────────── */}
+      <section
+        className="rounded-3xl p-6 transition-all duration-200"
+        style={{
+          background: `linear-gradient(155deg, ${accent}20 0%, ${accent}06 100%)`,
+          border: `1px solid ${accent}20`,
+        }}
+      >
+        <div className="flex items-center gap-4 mb-6">
+          <div
+            className="h-20 w-20 shrink-0 rounded-full flex items-center justify-center text-xl font-black text-white"
+            style={{
+              background: `linear-gradient(135deg, ${accent}, ${accent}99)`,
+              boxShadow: `0 6px 24px ${accent}40`,
+            }}
+          >
+            {initials}
+          </div>
+          <div>
+            <h1 className="text-2xl font-black leading-tight">{firstName}</h1>
+            <p className="text-sm mt-0.5" style={{ color: subtext }}>Dit rum i Lys</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-0">
+          <div className="flex-1 text-center">
+            <p className="text-2xl font-black" style={{ color: accent }}>{MOCK_WINS.length * 20}</p>
+            <p className="text-xs mt-0.5" style={{ color: subtext }}>XP denne uge</p>
+          </div>
+          <div className="w-px h-10 self-center" style={{ backgroundColor: `${accent}25` }} />
+          <div className="flex-1 text-center">
+            <p className="text-2xl font-black">🔥 5</p>
+            <p className="text-xs mt-0.5" style={{ color: subtext }}>dages streak</p>
+          </div>
+          <div className="w-px h-10 self-center" style={{ backgroundColor: `${accent}25` }} />
+          <div className="flex-1 text-center">
+            <p className="text-2xl font-black" style={{ color: accent }}>{MOCK_WINS.length}</p>
+            <p className="text-xs mt-0.5" style={{ color: subtext }}>sejre</p>
+          </div>
+        </div>
+      </section>
 
       {/* Ressourceblomst */}
       <section
-        className="rounded-2xl border p-4 transition-all duration-200"
-        style={{ backgroundColor: cardBg, borderColor: borderCol }}
+        className="rounded-3xl p-5 transition-all duration-200"
+        style={{ backgroundColor: cardBg, boxShadow: isDarkish ? 'none' : '0 2px 16px rgba(0,0,0,0.06)' }}
       >
         <h2 className="mb-3 text-lg font-bold">Ressourceblomst</h2>
         <div className="overflow-hidden rounded-xl">
@@ -100,11 +141,12 @@ export default function LysMigScreen({
 
       {/* Måltrappe */}
       <section
-        className="rounded-2xl border p-4 transition-all duration-200"
+        className="rounded-3xl p-5 transition-all duration-200"
         style={{
           backgroundColor: cardBg,
-          borderColor: borderCol,
-          boxShadow: stepCompletedToday ? `0 0 24px rgba(34, 197, 94, 0.25)` : undefined,
+          boxShadow: stepCompletedToday
+            ? `0 0 32px rgba(34,197,94,0.22)`
+            : (isDarkish ? 'none' : '0 2px 16px rgba(0,0,0,0.06)'),
         }}
       >
         <h2 className="mb-2 text-lg font-bold">Måltrappe</h2>
@@ -132,7 +174,7 @@ export default function LysMigScreen({
       </section>
 
       {/* Sejrsdagbog */}
-      <section className="rounded-2xl border p-4 transition-all duration-200" style={{ backgroundColor: cardBg, borderColor: borderCol }}>
+      <section className="rounded-3xl p-5 transition-all duration-200" style={{ backgroundColor: cardBg, boxShadow: isDarkish ? 'none' : '0 2px 16px rgba(0,0,0,0.06)' }}>
         <h2 className="mb-4 text-lg font-bold">Dine sejre 🌟</h2>
         {MOCK_WINS.length === 0 ? (
           <div className="text-center">
@@ -166,7 +208,7 @@ export default function LysMigScreen({
       </section>
 
       {/* Stemningshistorik */}
-      <section className="rounded-2xl border p-4 transition-all duration-200" style={{ backgroundColor: cardBg, borderColor: borderCol }}>
+      <section className="rounded-3xl p-5 transition-all duration-200" style={{ backgroundColor: cardBg, boxShadow: isDarkish ? 'none' : '0 2px 16px rgba(0,0,0,0.06)' }}>
         <h2 className="mb-4 text-lg font-bold">Din stemning den seneste uge</h2>
         <div className="flex flex-wrap justify-between gap-2">
           {MOOD_WEEK.map((d, i) => {

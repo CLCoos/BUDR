@@ -11,6 +11,8 @@ export type LysThemeTokens = {
   gradientTo: string;
   accentSoft: string;
   accentSoftText: string;
+  shadow: string;
+  glowShadow: string;
 };
 
 export function getLysPhase(date: Date): LysPhase {
@@ -28,65 +30,69 @@ export function lysTheme(phase: LysPhase): LysThemeTokens {
         bg: '#FDFAF5',
         accent: '#F59E0B',
         text: '#1C1917',
-        textMuted: 'rgba(28, 25, 23, 0.65)',
-        cardBg: 'rgba(255, 255, 255, 0.85)',
-        cardBorder: 'rgba(245, 158, 11, 0.2)',
-        gradientFrom: 'rgba(253, 250, 245, 1)',
-        gradientTo: 'rgba(254, 243, 199, 0.6)',
-        accentSoft: 'rgba(254, 243, 199, 0.9)',
-        accentSoftText: '#B45309',
+        textMuted: 'rgba(28, 25, 23, 0.55)',
+        cardBg: 'rgba(255, 255, 255, 0.80)',
+        cardBorder: 'rgba(245, 158, 11, 0.15)',
+        gradientFrom: '#FDFAF5',
+        gradientTo: 'rgba(254, 243, 199, 0.7)',
+        accentSoft: 'rgba(254, 243, 199, 0.95)',
+        accentSoftText: '#92400E',
+        shadow: '0 4px 24px rgba(245,158,11,0.10), 0 1px 8px rgba(0,0,0,0.04)',
+        glowShadow: '0 8px 40px rgba(245,158,11,0.22)',
       };
     case 'afternoon':
       return {
         bg: '#F5F4FF',
         accent: '#7F77DD',
         text: '#0F1B2D',
-        textMuted: 'rgba(15, 27, 45, 0.65)',
-        cardBg: 'rgba(255, 255, 255, 0.9)',
-        cardBorder: 'rgba(127, 119, 221, 0.25)',
-        gradientFrom: 'rgba(245, 244, 255, 1)',
-        gradientTo: 'rgba(199, 210, 254, 0.5)',
+        textMuted: 'rgba(15, 27, 45, 0.55)',
+        cardBg: 'rgba(255, 255, 255, 0.85)',
+        cardBorder: 'rgba(127, 119, 221, 0.18)',
+        gradientFrom: '#F5F4FF',
+        gradientTo: 'rgba(199, 210, 254, 0.55)',
         accentSoft: 'rgba(229, 231, 255, 0.95)',
-        accentSoftText: '#5E56C0',
+        accentSoftText: '#4338CA',
+        shadow: '0 4px 24px rgba(127,119,221,0.12), 0 1px 8px rgba(0,0,0,0.04)',
+        glowShadow: '0 8px 40px rgba(127,119,221,0.28)',
       };
     case 'evening':
       return {
-        bg: '#0F1B2D',
+        bg: '#0C1829',
         accent: '#1D9E75',
-        text: '#F5F4FF',
-        textMuted: 'rgba(245, 244, 255, 0.7)',
-        cardBg: 'rgba(255, 255, 255, 0.08)',
-        cardBorder: 'rgba(29, 158, 117, 0.35)',
-        gradientFrom: 'rgba(15, 27, 45, 1)',
-        gradientTo: 'rgba(29, 158, 117, 0.25)',
-        accentSoft: 'rgba(29, 158, 117, 0.2)',
+        text: '#F0EEF8',
+        textMuted: 'rgba(240, 238, 248, 0.55)',
+        cardBg: 'rgba(255, 255, 255, 0.07)',
+        cardBorder: 'rgba(29, 158, 117, 0.28)',
+        gradientFrom: '#0C1829',
+        gradientTo: 'rgba(29, 158, 117, 0.22)',
+        accentSoft: 'rgba(29, 158, 117, 0.18)',
         accentSoftText: '#6EE7B7',
+        shadow: '0 4px 24px rgba(0,0,0,0.30), 0 1px 8px rgba(0,0,0,0.10)',
+        glowShadow: '0 8px 40px rgba(29,158,117,0.32)',
       };
-    default:
+    default: // night
       return {
-        bg: '#0A1220',
+        bg: '#080E1C',
         accent: '#7F77DD',
-        text: '#E2E8F0',
-        textMuted: 'rgba(226, 232, 240, 0.65)',
-        cardBg: 'rgba(255, 255, 255, 0.06)',
-        cardBorder: 'rgba(127, 119, 221, 0.3)',
-        gradientFrom: 'rgba(10, 18, 32, 1)',
-        gradientTo: 'rgba(79, 70, 229, 0.2)',
-        accentSoft: 'rgba(127, 119, 221, 0.18)',
+        text: '#E2E0F5',
+        textMuted: 'rgba(226, 224, 245, 0.50)',
+        cardBg: 'rgba(255, 255, 255, 0.055)',
+        cardBorder: 'rgba(127, 119, 221, 0.22)',
+        gradientFrom: '#080E1C',
+        gradientTo: 'rgba(79, 70, 229, 0.18)',
+        accentSoft: 'rgba(127, 119, 221, 0.16)',
         accentSoftText: '#C4B5FD',
+        shadow: '0 4px 24px rgba(0,0,0,0.40), 0 1px 8px rgba(0,0,0,0.15)',
+        glowShadow: '0 8px 40px rgba(127,119,221,0.30)',
       };
   }
 }
 
 export function phaseDaLabel(phase: LysPhase): string {
   switch (phase) {
-    case 'morning':
-      return 'morgen';
-    case 'afternoon':
-      return 'eftermiddag';
-    case 'evening':
-      return 'aften';
-    default:
-      return 'nat';
+    case 'morning':   return 'morgen';
+    case 'afternoon': return 'eftermiddag';
+    case 'evening':   return 'aften';
+    default:          return 'nat';
   }
 }

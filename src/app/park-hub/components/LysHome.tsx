@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { LogOut, Mic, Volume2 } from 'lucide-react';
+import { ChevronRight, LogOut, Mic, Volume2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { LysChatMessage } from '@/app/api/lys-chat/route';
 import type { LysFlowOverlay } from '../lib/lysOverlay';
@@ -131,6 +131,12 @@ export default function LysHome({
     'Svært 😔': 'Jeg har det svært.',
   };
 
+  const checkInOptions = [
+    { key: 'Godt 😊' as const,  emoji: '😊', label: 'Godt',   sub: 'Jeg har det godt' },
+    { key: 'Okay 😐' as const,  emoji: '😐', label: 'Okay',   sub: 'Jeg klarer mig' },
+    { key: 'Svært 😔' as const, emoji: '😔', label: 'Svært',  sub: 'Det er svært i dag' },
+  ];
+
   const stopMic = useCallback(() => {
     try {
       recRef.current?.stop();
@@ -229,20 +235,23 @@ export default function LysHome({
 
   return (
     <div className="relative min-h-0 font-sans transition-colors duration-500" style={{ color: tokens.text }}>
-      <header className="flex items-center justify-between p-6">
-        <span className="text-xl font-bold" style={{ color: accent }}>
+      <header className="flex items-center justify-between px-5 py-4">
+        <span
+          className="text-2xl font-black tracking-tight"
+          style={{ color: accent }}
+        >
           Lys
         </span>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <div
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
-              style={{ backgroundColor: 'var(--budr-purple, #7F77DD)' }}
-              aria-hidden
-            >
-              {initials}
-            </div>
-            <span className="text-base font-medium opacity-90">{firstName}</span>
+        <div className="flex items-center gap-2">
+          <div
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-black text-white"
+            style={{
+              background: `linear-gradient(135deg, ${accent}, ${accent}99)`,
+              boxShadow: `0 2px 8px ${accent}44`,
+            }}
+            aria-hidden
+          >
+            {initials}
           </div>
           <button
             type="button"
@@ -251,40 +260,45 @@ export default function LysHome({
             style={{ color: tokens.textMuted }}
             aria-label="Log ud"
           >
-            <LogOut className="h-5 w-5" />
+            <LogOut className="h-4 w-4" />
           </button>
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg space-y-6 px-6">
+      <main className="mx-auto max-w-lg space-y-5 px-5">
         {isSundayEvening ? (
           <LysUgeTilbageblik tokens={tokens} accent={accent} firstName={firstName} phase={phase} reducedMotion={reducedMotion} />
         ) : (
           <section
-            className="rounded-2xl border p-6 shadow-sm transition-all duration-500"
+            className="rounded-3xl px-7 py-8 transition-all duration-500"
             style={{
-              borderColor: tokens.cardBorder,
-              background: `linear-gradient(160deg, ${tokens.gradientFrom}, ${tokens.gradientTo})`,
-              color: tokens.text,
+              background: `linear-gradient(155deg, ${tokens.gradientFrom} 0%, ${tokens.gradientTo} 100%)`,
+              boxShadow: tokens.glowShadow,
             }}
           >
-            <h1 className="text-center text-2xl font-bold leading-snug">{greetTitle}</h1>
-            <p className="mt-3 text-center text-lg opacity-80">{greetQ}</p>
+            <h1 className="text-3xl font-black leading-tight tracking-tight">{greetTitle}</h1>
+            <p className="mt-2 text-base" style={{ color: tokens.textMuted }}>{greetQ}</p>
 
-            <div className="mt-8 flex flex-col gap-3">
-              {(['Godt 😊', 'Okay 😐', 'Svært 😔'] as const).map(pill => (
+            <div className="mt-7 flex flex-col gap-3">
+              {checkInOptions.map(opt => (
                 <button
-                  key={pill}
+                  key={opt.key}
                   type="button"
-                  onClick={() => void handlePill(pill)}
+                  onClick={() => void handlePill(opt.key)}
                   disabled={loading}
-                  className="w-full rounded-full py-4 text-lg font-semibold transition-all duration-200 disabled:opacity-50"
+                  className="flex w-full items-center gap-4 rounded-2xl px-5 py-4 text-left transition-all duration-150 active:scale-[0.97] disabled:opacity-50"
                   style={{
                     backgroundColor: tokens.accentSoft,
                     color: tokens.accentSoftText,
+                    boxShadow: `0 2px 14px ${accent}14`,
                   }}
                 >
-                  {pill}
+                  <span className="text-3xl leading-none" aria-hidden>{opt.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-base font-bold leading-tight">{opt.label}</p>
+                    <p className="text-sm opacity-60 leading-tight mt-0.5">{opt.sub}</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 shrink-0 opacity-35" aria-hidden />
                 </button>
               ))}
             </div>
@@ -296,65 +310,79 @@ export default function LysHome({
 
         <LysBeskedTilPersonale tokens={tokens} accent={accent} firstName={firstName} residentId={residentId} />
 
-        <section className="flex flex-col items-center gap-2 py-2">
+        {/* Mic */}
+        <section className="flex flex-col items-center gap-3 py-2">
           <button
             type="button"
             onClick={handleMicToggle}
-            className={`relative flex h-16 w-16 items-center justify-center rounded-full text-white shadow-lg transition-all duration-200 ${
-              isListening && !reducedMotion ? 'animate-pulse' : ''
-            }`}
+            className="relative flex h-16 w-16 items-center justify-center rounded-full text-white transition-all duration-200 active:scale-95"
             style={{
-              backgroundColor: accent,
-              boxShadow: isListening ? `0 0 0 6px ${accent}44` : undefined,
+              background: isListening
+                ? `linear-gradient(135deg, ${accent}, ${accent}bb)`
+                : `linear-gradient(135deg, ${accent}cc, ${accent}88)`,
+              boxShadow: isListening
+                ? `0 0 0 8px ${accent}28, ${tokens.glowShadow}`
+                : tokens.shadow,
             }}
             aria-pressed={isListening}
             aria-label={isListening ? 'Stop optagelse' : 'Tal med Lys'}
           >
-            <Mic className="h-7 w-7" />
+            <Mic className="h-6 w-6" />
           </button>
-          <span className="text-base opacity-60">Tal med Lys</span>
+          <span className="text-sm font-medium" style={{ color: tokens.textMuted }}>
+            {isListening ? 'Tryk igen når du er færdig' : 'Tal med Lys'}
+          </span>
           {liveTranscript ? (
-            <p className="max-w-full text-center text-lg opacity-90">{liveTranscript}</p>
-          ) : null}
-          {isListening ? (
-            <p className="text-base opacity-70">{reducedMotion ? 'Lytter …' : 'Lytter … Tryk igen når du er færdig'}</p>
+            <p className="max-w-xs text-center text-base leading-relaxed">{liveTranscript}</p>
           ) : null}
         </section>
 
+        {/* Lys AI response */}
         {showLysCard && (lastAssistant || loading) ? (
           <div
-            className="rounded-2xl border p-6 shadow-md transition-all duration-200"
+            className="rounded-3xl p-6 transition-all duration-300"
             style={{
-              borderColor: tokens.cardBorder,
               backgroundColor: tokens.cardBg,
-              opacity: loading ? 0.85 : 1,
+              boxShadow: tokens.shadow,
+              border: `1px solid ${accent}18`,
+              opacity: loading ? 0.80 : 1,
             }}
           >
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-4">
               <div
-                className={`mt-1 h-10 w-10 shrink-0 rounded-full ${reducedMotion ? '' : 'animate-pulse-soft'}`}
-                style={{ backgroundColor: `${accent}55` }}
+                className="mt-0.5 h-10 w-10 shrink-0 rounded-full flex items-center justify-center text-lg font-black text-white"
+                style={{ background: `linear-gradient(135deg, ${accent}, ${accent}99)` }}
                 aria-hidden
-              />
+              >
+                ✦
+              </div>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-lg font-semibold" style={{ color: accent }}>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <p className="text-sm font-bold tracking-wide uppercase" style={{ color: accent }}>
                     Lys
                   </p>
                   {lastAssistant && !loading ? (
                     <button
                       type="button"
                       onClick={() => speakSafe(lastAssistant)}
-                      className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-all duration-200"
+                      className="flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 active:scale-90"
                       style={{ backgroundColor: tokens.accentSoft, color: accent }}
                       aria-label="Læs højt"
                     >
-                      <Volume2 className="h-5 w-5" />
+                      <Volume2 className="h-4 w-4" />
                     </button>
                   ) : null}
                 </div>
-                <p className="mt-2 text-lg leading-relaxed opacity-95">
-                  {loading ? 'Lys lytter …' : lastAssistant}
+                <p className="text-base leading-relaxed" style={{ color: tokens.text }}>
+                  {loading ? (
+                    <span className="flex items-center gap-2" style={{ color: tokens.textMuted }}>
+                      <span className="inline-flex gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: accent, animationDelay: '0ms' }} />
+                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: accent, animationDelay: '120ms' }} />
+                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: accent, animationDelay: '240ms' }} />
+                      </span>
+                    </span>
+                  ) : lastAssistant}
                 </p>
               </div>
             </div>
@@ -366,8 +394,11 @@ export default function LysHome({
                   onOpenFlow(nextStep.target);
                   setNextStep(null);
                 }}
-                className="mt-6 w-full rounded-full py-4 text-lg font-semibold text-white transition-all duration-200"
-                style={{ backgroundColor: accent }}
+                className="mt-5 w-full rounded-2xl py-4 text-base font-bold text-white transition-all duration-200 active:scale-[0.97]"
+                style={{
+                  background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
+                  boxShadow: `0 4px 16px ${accent}30`,
+                }}
               >
                 {nextStep.label}
               </button>
