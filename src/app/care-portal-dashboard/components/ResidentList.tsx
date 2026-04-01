@@ -1,6 +1,6 @@
 'use client';
 import React, { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Search, ChevronRight, Clock, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -81,6 +81,7 @@ function applyCheckin(resident: Resident, row: CheckinRow): Resident {
 // ── Component ────────────────────────────────────────────────
 
 export default function ResidentList() {
+  const router = useRouter();
   const [residents, setResidents] = useState<Resident[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -274,7 +275,8 @@ export default function ResidentList() {
                 return (
                   <tr
                     key={r.id}
-                    className="border-b border-gray-50 hover:bg-gray-50 transition-colors group"
+                    onClick={() => router.push(`/resident-360-view/${r.id}`)}
+                    className="border-b border-gray-50 hover:bg-gray-50 transition-colors group cursor-pointer"
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
@@ -326,14 +328,9 @@ export default function ResidentList() {
                       <span className="text-xs text-gray-500 truncate block">{r.notePreview}</span>
                     </td>
                     <td className="px-3 py-3">
-                      <Link href={`/resident-360-view/${r.id}`}>
-                        <button
-                          type="button"
-                          className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:text-[#1D9E75] hover:border-[#1D9E75] transition-all"
-                        >
-                          <ChevronRight size={14} />
-                        </button>
-                      </Link>
+                      <span className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 group-hover:text-[#1D9E75] group-hover:border-[#1D9E75] transition-all">
+                        <ChevronRight size={14} />
+                      </span>
                     </td>
                   </tr>
                 );
