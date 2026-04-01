@@ -1,22 +1,43 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Mic, Pen } from 'lucide-react';
 import type { LysThemeTokens } from '../lib/lysTheme';
-import MoodScale from '@/app/journal/components/MoodScale';
-import ResourceCheckIn from '@/app/journal/components/ResourceCheckIn';
-import GoalReview from '@/app/journal/components/GoalReview';
-import KrapNotes from '@/app/journal/components/KrapNotes';
-import JournalSaveButton from '@/app/journal/components/JournalSaveButton';
-import { ANTHROPIC_CHAT_MODEL } from '@/lib/ai/anthropicModel';
-import type { ResourceState, GoalItem, KrapState } from '@/app/journal/components/JournalView';
 
-const today = new Date().toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long' });
+type Mode = 'write' | 'voice';
 
-const defaultGoals: GoalItem[] = [
-  { id: 'g1', text: 'Drik 2 liter vand', done: false },
-  { id: 'g2', text: 'Gå en tur', done: false },
-  { id: 'g3', text: 'Skriv i journalen', done: false },
+type JournalEntry = {
+  id: string;
+  date: string;
+  mode: Mode;
+  text: string;
+  mood?: number;
+};
+
+const MOOD_OPTIONS = [
+  { value: 1, emoji: '😞', label: 'Svært' },
+  { value: 2, emoji: '😔', label: 'Tungt' },
+  { value: 3, emoji: '😐', label: 'OK' },
+  { value: 4, emoji: '🙂', label: 'Godt' },
+  { value: 5, emoji: '😄', label: 'Dejligt' },
 ];
+
+const STORAGE_KEY = 'budr_journal_entries_v1';
+
+function loadEntries(): JournalEntry[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as JournalEntry[]) : [];
+  } catch { return []; }
+}
+
+function saveEntry(entry: JournalEntry): void {
+  try {
+    const entries = loadEntries();
+    entries.unshift(entry);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries.slice(0, 50)));
+  } catch { /* ignore */ }
+}
 
 type Props = {
   tokens: LysThemeTokens;
@@ -24,160 +45,293 @@ type Props = {
 };
 
 export default function LysJournalTab({ tokens, accent }: Props) {
-  const [mood, setMood] = useState(5);
-  const [resources, setResources] = useState<ResourceState>({ sleep: 3, food: 3, movement: 3, social: 3, stress: 3 });
-  const [goals, setGoals] = useState<GoalItem[]>(defaultGoals);
-  const [krap, setKrap] = useState<KrapState>({ krop: '', rolle: '', affekt: '', plan: '' });
+  const [mode, setMode] = useState<Mode>('write');
+  const [text, setText] = useState('');
+  const [mood, setMood] = useState(3);
   const [saved, setSaved] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-  const [miniReflection, setMiniReflection] = useState('');
-  const [eveningSummary, setEveningSummary] = useState('');
-  const [summaryLoading, setSummaryLoading] = useState(false);
-  const mountedRef = useRef(true);
+  const [entries, setEntries] = useState<JournalEntry[]>([]);
+
+  // Voice state
+  const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const recRef = useRef<{
+    lang: string;
+    continuous: boolean;
+    interimResults: boolean;
+    start: () => void;
+    stop: () => void;
+    onresult: ((ev: Event) => void) | null;
+    onend: (() => void) | null;
+  } | null>(null);
+  const accRef = useRef('');
 
   useEffect(() => {
-    mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    setEntries(loadEntries());
   }, []);
 
   const handleSave = () => {
+    const content = mode === 'write' ? text.trim() : transcript.trim();
+    if (!content) return;
+    const entry: JournalEntry = {
+      id: `${Date.now()}`,
+      date: new Date().toISOString(),
+      mode,
+      text: content,
+      mood: mode === 'write' ? mood : undefined,
+    };
+    saveEntry(entry);
+    setEntries(loadEntries());
+    // Award XP
+    try {
+      const raw = localStorage.getItem('budr_xp_v1');
+      const xpData = raw ? (JSON.parse(raw) as { total: number }) : { total: 0 };
+      localStorage.setItem('budr_xp_v1', JSON.stringify({ total: xpData.total + 15 }));
+    } catch { /* ignore */ }
     setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
-
-    const mergedKrap = !expanded && miniReflection.trim()
-      ? { ...krap, plan: miniReflection.trim() }
-      : krap;
-    const goalsCompleted = goals.filter(g => g.done).length;
-    const krapFilled = Object.values(mergedKrap).filter(v => v.trim().length > 0).length;
-    const resourceAvg = Math.round((resources.sleep + resources.food + resources.movement + resources.social) / 4);
-
-    setSummaryLoading(true);
-    fetch('/api/ai/chat-completion', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        provider: 'ANTHROPIC',
-        model: ANTHROPIC_CHAT_MODEL,
-        messages: [
-          {
-            role: 'system',
-            content: 'Du er Lys — en varm, empatisk ledsager i en dansk mental sundhedsapp. Du skriver en personlig aftenopsummering til brugeren baseret på deres dagbog. Max 3 sætninger, max 40 ord. Vær varm, anerkendende og konkret. Afslut med ét beroligende emoji.',
-          },
-          {
-            role: 'user',
-            content: `Brugerens dagbog:\n- Humørscore: ${mood}/10\n- Gennemsnitlige ressourcer: ${resourceAvg}/5\n- Mål gennemført: ${goalsCompleted}/${goals.length}\n- KRAP-noter: ${krapFilled}/4\n- Krop: ${mergedKrap.krop || 'ikke udfyldt'}\n- Affekt: ${mergedKrap.affekt || 'ikke udfyldt'}\n- Plan: ${mergedKrap.plan || 'ikke udfyldt'}\nSkriv en personlig, varm aftenopsummering.`,
-          },
-        ],
-        stream: false,
-        parameters: { max_tokens: 100, temperature: 0.8 },
-      }),
-    })
-      .then(r => r.ok ? r.json() : null)
-      .then(d => {
-        const text = d?.choices?.[0]?.message?.content;
-        if (text && mountedRef.current) setEveningSummary(text.trim());
-      })
-      .catch(() => { /* silently fail */ })
-      .finally(() => { if (mountedRef.current) setSummaryLoading(false); });
+    setText('');
+    setTranscript('');
+    accRef.current = '';
+    setTimeout(() => setSaved(false), 2200);
   };
 
+  const stopMic = useCallback(() => {
+    try { recRef.current?.stop(); } catch { /* ignore */ }
+    recRef.current = null;
+    setIsListening(false);
+  }, []);
+
+  const startMic = useCallback(() => {
+    const w = window as unknown as {
+      SpeechRecognition?: new () => NonNullable<typeof recRef.current>;
+      webkitSpeechRecognition?: new () => NonNullable<typeof recRef.current>;
+    };
+    const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+    if (!Ctor) return;
+    stopMic();
+    accRef.current = '';
+    setTranscript('');
+    const rec = new Ctor();
+    rec.lang = 'da-DK';
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.onresult = (event: Event) => {
+      const ev = event as unknown as {
+        resultIndex: number;
+        results: { length: number; [i: number]: { isFinal: boolean; 0: { transcript: string } } };
+      };
+      let interim = '';
+      let add = '';
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        const r = ev.results[i];
+        const t = r[0]?.transcript ?? '';
+        if (r.isFinal) add += t;
+        else interim += t;
+      }
+      accRef.current += add;
+      setTranscript((accRef.current + interim).trimStart());
+    };
+    rec.onend = () => {
+      setIsListening(false);
+      recRef.current = null;
+    };
+    recRef.current = rec;
+    try {
+      rec.start();
+      setIsListening(true);
+    } catch { setIsListening(false); }
+  }, [stopMic]);
+
+  const toggleMic = () => {
+    if (isListening) stopMic();
+    else startMic();
+  };
+
+  useEffect(() => () => stopMic(), [stopMic]);
+
+  const today = new Date().toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long' });
+
   return (
-    <div
-      className="min-h-full pb-8"
-      style={{ backgroundColor: tokens.bg }}
-    >
-      {/* Header — token-themed */}
-      <div
-        className="sticky top-0 z-10 border-b px-4 py-3"
-        style={{ backgroundColor: tokens.bg, borderColor: tokens.cardBorder }}
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-bold" style={{ color: tokens.text }}>Journal</h1>
-            <p className="text-xs capitalize mt-0.5" style={{ color: tokens.textMuted }}>{today}</p>
-          </div>
-          <div
-            className="flex items-center gap-2 rounded-full border px-3 py-1"
-            style={{ borderColor: tokens.cardBorder, backgroundColor: tokens.cardBg }}
-          >
-            <span className="text-sm font-bold" style={{ color: accent }}>{mood}/10</span>
-          </div>
-        </div>
+    <div className="font-sans" style={{ color: tokens.text }}>
+
+      {/* Header */}
+      <div className="px-5 pt-5 pb-3">
+        <h1 className="text-2xl font-black tracking-tight">Journal ✍️</h1>
+        <p className="text-sm capitalize mt-0.5" style={{ color: tokens.textMuted }}>{today}</p>
       </div>
 
-      {/* Dark content area — journal sub-components use midnight classes */}
-      <div className="bg-midnight-900 space-y-4 px-4 pt-4">
-        <MoodScale mood={mood} onChange={setMood} />
+      <div className="px-5 space-y-4 pb-8">
 
-        {!expanded ? (
-          <>
-            <div className="rounded-2xl border border-sunrise-400/25 bg-midnight-800/50 p-4 space-y-3">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-sunrise-400/90">Mini-journal</p>
-              <p className="text-sm text-midnight-100 font-medium leading-relaxed">
-                Hvad vil du gerne huske om i dag, når du ser tilbage om en uge?
+        {/* Mode switcher */}
+        <div
+          className="flex rounded-2xl p-1"
+          style={{ backgroundColor: tokens.cardBg, boxShadow: tokens.shadow }}
+        >
+          {([['write', 'Skriv', Pen], ['voice', 'Tal i stedet', Mic]] as const).map(([m, label, Icon]) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => { setMode(m); stopMic(); }}
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all duration-200"
+              style={{
+                backgroundColor: mode === m ? accent : 'transparent',
+                color: mode === m ? '#fff' : tokens.textMuted,
+              }}
+            >
+              <Icon className="h-4 w-4" aria-hidden />
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Write mode */}
+        {mode === 'write' && (
+          <div
+            className="rounded-3xl p-5 space-y-4"
+            style={{ backgroundColor: tokens.cardBg, boxShadow: tokens.shadow }}
+          >
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: tokens.textMuted }}>
+                Hvad vil du gerne huske om i dag?
               </p>
-              <label htmlFor="lys-mini-journal" className="sr-only">Dit svar</label>
               <textarea
-                id="lys-mini-journal"
-                value={miniReflection}
-                onChange={e => setMiniReflection(e.target.value)}
-                rows={4}
-                placeholder="Skriv kort her — ét eller to afsnit er rigeligt…"
-                className="w-full rounded-xl border border-midnight-600 bg-midnight-900 px-3 py-2.5 text-sm text-midnight-100 placeholder-midnight-600 outline-none focus:border-sunrise-400/80 resize-none"
+                value={text}
+                onChange={e => setText(e.target.value)}
+                rows={5}
+                placeholder="Skriv frit her — ét afsnit er rigeligt…"
+                className="w-full rounded-2xl px-4 py-3.5 text-sm leading-relaxed resize-none outline-none transition-all duration-200"
+                style={{
+                  backgroundColor: `${accent}08`,
+                  border: `1.5px solid ${accent}20`,
+                  color: tokens.text,
+                }}
               />
             </div>
-            <button
-              type="button"
-              onClick={() => setExpanded(true)}
-              className="w-full py-3 rounded-2xl text-sm font-semibold border border-midnight-600 bg-midnight-800/40 text-midnight-200 hover:bg-midnight-800/70 transition-colors min-h-[48px]"
-            >
-              Se mere — ressourcer, mål og KRAP
-            </button>
-          </>
-        ) : (
-          <>
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-midnight-500">Fuld journal</p>
-              <button
-                type="button"
-                onClick={() => setExpanded(false)}
-                className="text-xs font-semibold text-sunrise-400 hover:text-sunrise-300 min-h-[44px] px-2"
-              >
-                Skjul ekstra
-              </button>
-            </div>
-            <ResourceCheckIn resources={resources} onChange={setResources} />
-            <GoalReview goals={goals} onChange={setGoals} />
-            <KrapNotes krap={krap} onChange={setKrap} />
-          </>
-        )}
-
-        <JournalSaveButton onSave={handleSave} saved={saved} />
-
-        {(eveningSummary || summaryLoading) && (
-          <div className="bg-midnight-800/60 border border-aurora-violet/20 rounded-3xl p-5 pb-6">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-aurora-violet/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-base">🌙</span>
-              </div>
-              <div className="flex-1">
-                <p className="text-xs text-purple-400 font-semibold mb-1.5">Lys&apos; refleksion:</p>
-                {summaryLoading && !eveningSummary ? (
-                  <div className="flex items-center gap-1.5 py-1">
-                    <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
-                ) : (
-                  <p className="text-sm text-midnight-100 leading-relaxed">{eveningSummary}</p>
-                )}
+            {/* Mood */}
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide mb-2.5" style={{ color: tokens.textMuted }}>
+                Stemning
+              </p>
+              <div className="flex justify-between gap-1.5">
+                {MOOD_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setMood(opt.value)}
+                    className="flex flex-1 flex-col items-center gap-1 rounded-xl py-2.5 transition-all duration-150 active:scale-95"
+                    style={{
+                      backgroundColor: mood === opt.value ? `${accent}22` : 'transparent',
+                      border: `1.5px solid ${mood === opt.value ? accent : `${accent}20`}`,
+                    }}
+                    aria-pressed={mood === opt.value}
+                    title={opt.label}
+                  >
+                    <span className="text-xl leading-none">{opt.emoji}</span>
+                    <span className="text-[9px] font-bold" style={{ color: mood === opt.value ? accent : tokens.textMuted }}>
+                      {opt.label}
+                    </span>
+                  </button>
+                ))}
               </div>
             </div>
           </div>
         )}
 
-        {/* bottom padding for nav */}
-        <div className="h-4" />
+        {/* Voice mode */}
+        {mode === 'voice' && (
+          <div
+            className="rounded-3xl p-5 flex flex-col items-center gap-4"
+            style={{ backgroundColor: tokens.cardBg, boxShadow: tokens.shadow }}
+          >
+            <button
+              type="button"
+              onClick={toggleMic}
+              className="relative h-20 w-20 rounded-full flex items-center justify-center text-white transition-all duration-200 active:scale-95"
+              style={{
+                background: isListening
+                  ? `linear-gradient(135deg, ${accent}, ${accent}bb)`
+                  : `linear-gradient(135deg, ${accent}cc, ${accent}88)`,
+                boxShadow: isListening ? `0 0 0 10px ${accent}20` : 'none',
+              }}
+              aria-pressed={isListening}
+              aria-label={isListening ? 'Stop optagelse' : 'Start optagelse'}
+            >
+              <Mic className="h-8 w-8" />
+            </button>
+            <p className="text-sm font-medium" style={{ color: tokens.textMuted }}>
+              {isListening ? 'Taler… tryk igen for at stoppe' : 'Tryk for at tale'}
+            </p>
+            {transcript ? (
+              <div
+                className="w-full rounded-2xl px-4 py-3.5 text-sm leading-relaxed"
+                style={{
+                  backgroundColor: `${accent}08`,
+                  border: `1.5px solid ${accent}20`,
+                  color: tokens.text,
+                }}
+              >
+                {transcript}
+              </div>
+            ) : null}
+          </div>
+        )}
+
+        {/* Save button */}
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={!(mode === 'write' ? text.trim() : transcript.trim())}
+          className="w-full rounded-2xl py-4 text-sm font-bold text-white transition-all duration-200 active:scale-[0.98] disabled:opacity-40"
+          style={{
+            background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
+            boxShadow: `0 4px 16px ${accent}30`,
+          }}
+        >
+          {saved ? '✓ Gemt!' : 'Gem i journal'}
+        </button>
+
+        {/* Previous entries */}
+        {entries.length > 0 && (
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide mb-3 mt-2" style={{ color: tokens.textMuted }}>
+              Tidligere noter
+            </p>
+            <div className="space-y-2">
+              {entries.map(entry => {
+                const dateStr = new Date(entry.date).toLocaleDateString('da-DK', {
+                  weekday: 'short', day: 'numeric', month: 'short',
+                });
+                return (
+                  <div
+                    key={entry.id}
+                    className="rounded-2xl px-4 py-3.5"
+                    style={{
+                      backgroundColor: tokens.cardBg,
+                      boxShadow: tokens.shadow,
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <p className="text-xs font-semibold capitalize" style={{ color: tokens.textMuted }}>
+                        {dateStr}
+                      </p>
+                      <div className="flex items-center gap-1.5">
+                        {entry.mood !== undefined && (
+                          <span className="text-sm">{MOOD_OPTIONS.find(o => o.value === entry.mood)?.emoji}</span>
+                        )}
+                        <span className="text-xs" style={{ color: tokens.textMuted }}>
+                          {entry.mode === 'voice' ? '🎙️' : '✍️'}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-sm leading-relaxed line-clamp-3" style={{ color: tokens.text }}>
+                      {entry.text}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

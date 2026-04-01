@@ -114,6 +114,7 @@ export default function LysShell({ firstName, initials, residentId }: Props) {
               sendToLys={sendToLys}
               speakSafe={speakSafe}
               onOpenFlow={setOverlay}
+              onSwitchTab={setTab}
               moodLabel={moodLabel}
               moodTraffic={moodTraffic}
               moodTick={moodTick}
@@ -137,6 +138,7 @@ export default function LysShell({ firstName, initials, residentId }: Props) {
               reducedMotion={reducedMotion}
               flowerFilledThisWeek={false}
               onOpenBlomst={() => setOverlay('flower')}
+              onOpenCrisis={() => setOverlay('crisis')}
             />
           )}
         </div>
@@ -219,9 +221,33 @@ export default function LysShell({ firstName, initials, residentId }: Props) {
       )}
 
       {overlay === 'crisis' && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/90 p-6 pt-12">
+        <div
+          className="fixed inset-0 z-50 overflow-y-auto"
+          style={{ backgroundColor: '#0B1220' }}
+        >
           <LysKrisekort firstName={firstName} onClose={closeCrisis} />
         </div>
+      )}
+
+      {/* Floating crisis button */}
+      {!overlay && (
+        <button
+          type="button"
+          onClick={() => setOverlay('crisis')}
+          className="fixed z-30 flex items-center justify-center rounded-full text-white transition-all duration-200 active:scale-90"
+          style={{
+            bottom: 'calc(5rem + max(1.25rem, env(safe-area-inset-bottom, 0px)))',
+            right: '20px',
+            width: '44px',
+            height: '44px',
+            backgroundColor: '#E11D48',
+            boxShadow: '0 4px 16px rgba(225,29,72,0.35)',
+          }}
+          aria-label="Krise-støtte"
+          title="Krise-støtte"
+        >
+          🆘
+        </button>
       )}
 
       <LysBottomNav
