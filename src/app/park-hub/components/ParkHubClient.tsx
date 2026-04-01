@@ -16,5 +16,5 @@ export default function ParkHubClient({
 }: Props) {
   const firstName = residentName.trim().split(/\s+/)[0] || '';
 
-  return <LysShell firstName={firstName} initials={residentInitials} residentId={residentId} />;
+  return <LysShell firstName={firstName} initials={residentInitials} residentId={residentId} facilityId={null} />;
 }

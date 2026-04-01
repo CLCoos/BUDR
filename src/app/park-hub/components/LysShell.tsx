@@ -23,9 +23,10 @@ type Props = {
   firstName: string;
   initials: string;
   residentId: string;
+  facilityId: string | null;
 };
 
-export default function LysShell({ firstName, initials, residentId }: Props) {
+export default function LysShell({ firstName, initials, residentId, facilityId }: Props) {
   const [now, setNow] = useState(() => new Date());
   const [reducedMotion, setReducedMotion] = useState(false);
   const [tab, setTab] = useState<LysNavTab>('hjem');
@@ -225,7 +226,7 @@ export default function LysShell({ firstName, initials, residentId }: Props) {
           className="fixed inset-0 z-50 overflow-y-auto"
           style={{ backgroundColor: '#0B1220' }}
         >
-          <LysKrisekort firstName={firstName} onClose={closeCrisis} />
+          <LysKrisekort firstName={firstName} facilityId={facilityId} onClose={closeCrisis} />
         </div>
       )}
 

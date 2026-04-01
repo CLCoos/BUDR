@@ -1,160 +1,391 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { Phone } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Phone, ChevronDown, PhoneCall } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 type BreathPhase = 'inhale' | 'hold-in' | 'exhale' | 'hold-out';
 
+type FacilityContact = {
+  id: string;
+  label: string;
+  phone: string;
+  available_hours: string | null;
+};
+
+type ConfirmState = { label: string; phone: string } | null;
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
 const PHASES: { phase: BreathPhase; label: string; duration: number; scale: number }[] = [
-  { phase: 'inhale',   label: 'Træk vejret ind',  duration: 4000, scale: 1.5 },
-  { phase: 'hold-in',  label: 'Hold vejret',       duration: 4000, scale: 1.5 },
-  { phase: 'exhale',   label: 'Pust ud',            duration: 6000, scale: 1.0 },
-  { phase: 'hold-out', label: 'Pause',              duration: 2000, scale: 1.0 },
+  { phase: 'inhale',   label: 'Træk vejret ind', duration: 4000, scale: 1.5 },
+  { phase: 'hold-in',  label: 'Hold vejret',      duration: 4000, scale: 1.5 },
+  { phase: 'exhale',   label: 'Pust ud',           duration: 6000, scale: 1.0 },
+  { phase: 'hold-out', label: 'Pause',             duration: 2000, scale: 1.0 },
 ];
 
 const HOTLINES = [
-  { name: 'Livslinien',        number: '70 201 201' },
-  { name: 'BørneTelefonen',    number: '116 111' },
-  { name: 'Seniortelefonerne', number: '70 278 278' },
+  { name: 'Livslinien',                 number: '70 201 201', desc: 'Anonym rådgivning døgnet rundt' },
+  { name: 'BørneTelefonen (Røde Kors)', number: '116 111',   desc: 'Til dig under 18 — fortrolig linje' },
+  { name: 'Seniortelefonerne',          number: '70 278 278', desc: 'Støtte til ældre og ensomme' },
+  { name: 'Selvmordsforebyggelse',      number: '70 201 201', desc: 'Specialiseret krisehjælp' },
+  { name: 'Angstlinjen',                number: '70 200 120', desc: 'Rådgivning om angst og bekymring' },
 ];
+
+const CARD_BG  = 'rgba(255,255,255,0.07)';
+const CARD_BRD = '1px solid rgba(255,255,255,0.10)';
+const MUTED    = 'rgba(255,255,255,0.50)';
+const TEXT     = '#F0EEF8';
+
+// ── Accordion section ─────────────────────────────────────────────────────────
+
+function Section({
+  icon,
+  title,
+  open,
+  onToggle,
+  children,
+}: {
+  icon: string;
+  title: string;
+  open: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  const innerRef = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState<number | undefined>(open ? undefined : 0);
+
+  useEffect(() => {
+    const el = innerRef.current;
+    if (!el) return;
+    if (open) {
+      setHeight(el.scrollHeight);
+      const t = setTimeout(() => setHeight(undefined), 320);
+      return () => clearTimeout(t);
+    } else {
+      setHeight(el.scrollHeight);
+      requestAnimationFrame(() => requestAnimationFrame(() => setHeight(0)));
+    }
+  }, [open]);
+
+  return (
+    <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: CARD_BG, border: CARD_BRD }}>
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center justify-between px-5 py-4 text-left transition-colors hover:bg-white/5"
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-xl">{icon}</span>
+          <span className="text-base font-bold" style={{ color: TEXT }}>{title}</span>
+        </div>
+        <ChevronDown
+          className="h-5 w-5 shrink-0 transition-transform duration-300"
+          style={{ color: MUTED, transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
+        />
+      </button>
+      <div
+        style={{
+          height: height === undefined ? 'auto' : height,
+          overflow: 'hidden',
+          transition: 'height 0.3s cubic-bezier(0.4,0,0.2,1)',
+        }}
+      >
+        <div ref={innerRef} className="px-5 pb-5 space-y-3">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Call row ──────────────────────────────────────────────────────────────────
+
+function CallRow({
+  label,
+  sub,
+  phone,
+  emergency,
+  onConfirm,
+}: {
+  label: string;
+  sub?: string;
+  phone: string;
+  emergency?: boolean;
+  onConfirm: (label: string, phone: string) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onConfirm(label, phone)}
+      className="w-full flex items-center justify-between rounded-2xl px-4 py-4 text-left transition-all duration-150 active:scale-[0.98]"
+      style={{
+        backgroundColor: emergency ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.06)',
+        border: `1px solid ${emergency ? 'rgba(239,68,68,0.35)' : 'rgba(255,255,255,0.10)'}`,
+        minHeight: 56,
+      }}
+    >
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold leading-snug" style={{ color: TEXT }}>{label}</p>
+        {sub && <p className="text-xs mt-0.5" style={{ color: MUTED }}>{sub}</p>}
+      </div>
+      <div
+        className="ml-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+        style={{
+          background: emergency
+            ? 'linear-gradient(135deg, #EF4444, #DC2626)'
+            : 'rgba(255,255,255,0.12)',
+        }}
+      >
+        <Phone className="h-5 w-5 text-white" aria-hidden />
+      </div>
+    </button>
+  );
+}
+
+// ── Confirm dialog ────────────────────────────────────────────────────────────
+
+function ConfirmDialog({
+  state,
+  onConfirm,
+  onCancel,
+}: {
+  state: ConfirmState;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  if (!state) return null;
+  return (
+    <div
+      className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4"
+      style={{ backgroundColor: 'rgba(0,0,0,0.70)' }}
+    >
+      <div
+        className="w-full max-w-sm rounded-3xl p-6 space-y-4"
+        style={{ backgroundColor: '#0F1B2D', border: '1px solid rgba(255,255,255,0.15)' }}
+      >
+        <div className="text-center space-y-2">
+          <div className="flex justify-center mb-3">
+            <div
+              className="h-14 w-14 rounded-full flex items-center justify-center"
+              style={{ background: 'linear-gradient(135deg, #EF4444, #DC2626)' }}
+            >
+              <PhoneCall className="h-7 w-7 text-white" />
+            </div>
+          </div>
+          <p className="text-lg font-black" style={{ color: TEXT }}>
+            Ring til {state.label}?
+          </p>
+          <p className="text-base font-semibold" style={{ color: MUTED }}>
+            {state.phone}
+          </p>
+        </div>
+        <a
+          href={`tel:${state.phone.replace(/\s/g, '')}`}
+          onClick={onConfirm}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-base font-black text-white transition-all duration-150 active:scale-[0.97]"
+          style={{
+            background: 'linear-gradient(135deg, #EF4444, #DC2626)',
+            boxShadow: '0 8px 24px rgba(239,68,68,0.40)',
+          }}
+        >
+          <Phone className="h-5 w-5" /> Ring op
+        </a>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="w-full rounded-2xl py-3.5 text-sm font-semibold transition-all duration-150"
+          style={{ backgroundColor: 'rgba(255,255,255,0.08)', color: TEXT }}
+        >
+          Annuller
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 
 type Props = {
   firstName: string;
+  facilityId: string | null;
   onClose: () => void;
 };
 
-export default function LysKrisekort({ firstName, onClose }: Props) {
-  const [phaseIdx, setPhaseIdx] = useState(0);
+export default function LysKrisekort({ firstName, facilityId, onClose }: Props) {
+  const [phaseIdx, setPhaseIdx]     = useState(0);
   const [secondsLeft, setSecondsLeft] = useState(PHASES[0]!.duration / 1000);
+  const [openSection, setOpenSection] = useState<'bosted' | 'kriselinjer' | 'noed' | null>('bosted');
+  const [contacts, setContacts]     = useState<FacilityContact[] | null>(null);
+  const [confirm, setConfirm]       = useState<ConfirmState>(null);
 
+  // Breathing
   useEffect(() => {
     const phase = PHASES[phaseIdx]!;
     setSecondsLeft(phase.duration / 1000);
-    const tick = window.setInterval(() => {
-      setSecondsLeft(s => Math.max(0, s - 1));
-    }, 1000);
-    const advance = window.setTimeout(() => {
-      setPhaseIdx(i => (i + 1) % PHASES.length);
-    }, phase.duration);
-    return () => {
-      window.clearInterval(tick);
-      window.clearTimeout(advance);
-    };
+    const tick    = window.setInterval(() => setSecondsLeft(s => Math.max(0, s - 1)), 1000);
+    const advance = window.setTimeout(() => setPhaseIdx(i => (i + 1) % PHASES.length), phase.duration);
+    return () => { window.clearInterval(tick); window.clearTimeout(advance); };
   }, [phaseIdx]);
+
+  // Load facility contacts
+  useEffect(() => {
+    if (!facilityId) { setContacts([]); return; }
+    const supabase = createClient();
+    if (!supabase) { setContacts([]); return; }
+    supabase
+      .from('facility_contacts')
+      .select('id, label, phone, available_hours')
+      .eq('facility_id', facilityId)
+      .order('sort_order')
+      .then(({ data }) => setContacts((data ?? []) as FacilityContact[]), () => setContacts([]));
+  }, [facilityId]);
+
+  const toggle = (s: 'bosted' | 'kriselinjer' | 'noed') =>
+    setOpenSection(prev => (prev === s ? null : s));
 
   const current = PHASES[phaseIdx]!;
 
   return (
-    <div className="flex flex-col min-h-full" style={{ color: '#E2E8F0' }}>
+    <>
+      <ConfirmDialog
+        state={confirm}
+        onConfirm={() => setConfirm(null)}
+        onCancel={() => setConfirm(null)}
+      />
 
-      {/* Top: breathing */}
-      <div className="flex flex-col items-center justify-center py-10 gap-8">
-        <p className="text-sm font-bold tracking-widest uppercase opacity-50">Åndedrætsøvelse</p>
+      <div className="flex flex-col min-h-full" style={{ color: TEXT }}>
 
-        {/* Breathing circle */}
-        <div className="relative flex items-center justify-center">
-          {/* Outer glow rings */}
-          <div
-            className="absolute rounded-full transition-all"
-            style={{
-              width: `${current.scale * 160 + 40}px`,
-              height: `${current.scale * 160 + 40}px`,
-              backgroundColor: 'rgba(99,102,241,0.08)',
-              transitionDuration: `${current.duration}ms`,
-              transitionTimingFunction: current.phase === 'inhale'
-                ? 'cubic-bezier(0.4, 0, 0.2, 1)'
-                : current.phase === 'exhale'
-                ? 'cubic-bezier(0.4, 0, 0.2, 1)'
-                : 'linear',
-            }}
-          />
-          <div
-            className="absolute rounded-full transition-all"
-            style={{
-              width: `${current.scale * 160 + 16}px`,
-              height: `${current.scale * 160 + 16}px`,
-              backgroundColor: 'rgba(99,102,241,0.14)',
-              transitionDuration: `${current.duration}ms`,
-              transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
-            }}
-          />
-          {/* Main circle */}
-          <div
-            className="relative flex items-center justify-center rounded-full transition-all"
-            style={{
-              width: `${current.scale * 160}px`,
-              height: `${current.scale * 160}px`,
-              background: 'linear-gradient(135deg, rgba(99,102,241,0.7) 0%, rgba(139,92,246,0.7) 100%)',
-              boxShadow: '0 0 40px rgba(99,102,241,0.4)',
-              transitionDuration: `${current.duration}ms`,
-              transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
-            }}
-          >
-            <div className="text-center">
-              <p className="text-3xl font-black text-white">{secondsLeft}</p>
-            </div>
+        {/* Breathing */}
+        <div className="flex flex-col items-center justify-center py-8 gap-6">
+          <p className="text-xs font-bold tracking-widest uppercase" style={{ color: MUTED }}>
+            Åndedrætsøvelse
+          </p>
+
+          <div className="relative flex items-center justify-center">
+            {[40, 16, 0].map((offset, i) => (
+              <div
+                key={i}
+                className="absolute rounded-full transition-all"
+                style={{
+                  width:  `${current.scale * 160 + offset}px`,
+                  height: `${current.scale * 160 + offset}px`,
+                  backgroundColor: i === 0 ? 'rgba(99,102,241,0.08)' : i === 1 ? 'rgba(99,102,241,0.14)' : undefined,
+                  background: i === 2
+                    ? 'linear-gradient(135deg,rgba(99,102,241,0.7) 0%,rgba(139,92,246,0.7) 100%)'
+                    : undefined,
+                  boxShadow: i === 2 ? '0 0 40px rgba(99,102,241,0.4)' : undefined,
+                  transitionDuration: `${current.duration}ms`,
+                  transitionTimingFunction: 'cubic-bezier(0.4,0,0.2,1)',
+                }}
+              >
+                {i === 2 && (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <p className="text-3xl font-black text-white">{secondsLeft}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <p className="text-xl font-bold text-white">{current.label}</p>
+            <p className="text-sm mt-0.5" style={{ color: MUTED }}>{phaseIdx + 1} / {PHASES.length}</p>
           </div>
         </div>
 
-        <div className="text-center space-y-1">
-          <p className="text-xl font-bold text-white">{current.label}</p>
-          <p className="text-sm opacity-50">
-            {phaseIdx + 1} / {PHASES.length}
+        {/* Message */}
+        <div className="mx-5 rounded-2xl px-5 py-4 text-center mb-5" style={{ backgroundColor: CARD_BG }}>
+          <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.80)' }}>
+            Det lyder som en hård stund, {firstName}.{' '}
+            Tag det i dit eget tempo — der er ingen forventninger.
           </p>
         </div>
-      </div>
 
-      {/* Message */}
-      <div className="mx-5 rounded-2xl px-5 py-4 text-center mb-6" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
-        <p className="text-sm leading-relaxed opacity-80">
-          Det lyder som en hård stund, {firstName}.{' '}
-          Tag det i dit eget tempo — der er ingen forventninger.
-        </p>
-      </div>
+        {/* Accordion */}
+        <div className="mx-5 space-y-3 mb-5">
 
-      {/* Hotlines */}
-      <div className="mx-5 space-y-2 mb-6">
-        <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.4)' }}>
-          Åbne telefonlinjer
-        </p>
-        {HOTLINES.map(line => (
-          <a
-            key={line.name}
-            href={`tel:${line.number.replace(/\s/g, '')}`}
-            className="flex items-center justify-between rounded-2xl px-4 py-3.5 transition-all duration-150 active:scale-[0.98]"
-            style={{ backgroundColor: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)' }}
-          >
-            <div>
-              <p className="text-sm font-semibold text-white">{line.name}</p>
-              <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{line.number}</p>
-            </div>
-            <Phone className="h-5 w-5 shrink-0" style={{ color: 'rgba(255,255,255,0.5)' }} aria-hidden />
-          </a>
-        ))}
-      </div>
+          {/* A — Bostedet */}
+          <Section icon="🏠" title="Bostedet" open={openSection === 'bosted'} onToggle={() => toggle('bosted')}>
+            {contacts === null ? (
+              <p className="text-sm py-2" style={{ color: MUTED }}>Indlæser…</p>
+            ) : contacts.length === 0 ? (
+              <div className="rounded-xl px-4 py-4 text-center" style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
+                <p className="text-sm" style={{ color: MUTED }}>
+                  Personalet har endnu ikke tilføjet kontakter — spørg en medarbejder
+                </p>
+              </div>
+            ) : (
+              contacts.map(c => (
+                <CallRow
+                  key={c.id}
+                  label={c.label}
+                  sub={c.available_hours ?? undefined}
+                  phone={c.phone}
+                  onConfirm={(l, p) => setConfirm({ label: l, phone: p })}
+                />
+              ))
+            )}
+          </Section>
 
-      {/* Staff note */}
-      <div className="mx-5 rounded-2xl px-5 py-3.5 mb-6" style={{ backgroundColor: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)' }}>
-        <p className="text-xs leading-relaxed" style={{ color: 'rgba(199,210,254,0.85)' }}>
-          Personalet kan se, at du har haft det svært i dag — de vil gerne støtte dig.
-        </p>
-      </div>
+          {/* B — Kriselinjer */}
+          <Section icon="📞" title="Kriselinjer" open={openSection === 'kriselinjer'} onToggle={() => toggle('kriselinjer')}>
+            {HOTLINES.map(h => (
+              <CallRow
+                key={h.name}
+                label={h.name}
+                sub={h.desc}
+                phone={h.number}
+                onConfirm={(l, p) => setConfirm({ label: l, phone: p })}
+              />
+            ))}
+          </Section>
 
-      {/* Back button */}
-      <div className="mx-5 mb-8">
-        <button
-          type="button"
-          onClick={onClose}
-          className="w-full rounded-2xl py-4 text-sm font-bold text-white transition-all duration-200 active:scale-[0.98]"
-          style={{
-            backgroundColor: 'rgba(255,255,255,0.12)',
-            border: '1px solid rgba(255,255,255,0.2)',
-          }}
+          {/* C — Nødopkald */}
+          <Section icon="🚨" title="Nødopkald" open={openSection === 'noed'} onToggle={() => toggle('noed')}>
+            <CallRow
+              label="112 — Ambulance / Brand / Politi"
+              sub="Akut livsfare"
+              phone="112"
+              emergency
+              onConfirm={(l, p) => setConfirm({ label: l, phone: p })}
+            />
+            <CallRow
+              label="114 — Politi"
+              sub="Ikke-akut henvendelse"
+              phone="114"
+              emergency
+              onConfirm={(l, p) => setConfirm({ label: l, phone: p })}
+            />
+          </Section>
+
+        </div>
+
+        {/* Staff note */}
+        <div
+          className="mx-5 rounded-2xl px-5 py-3.5 mb-5"
+          style={{ backgroundColor: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)' }}
         >
-          Tilbage til Lys
-        </button>
-      </div>
+          <p className="text-xs leading-relaxed" style={{ color: 'rgba(199,210,254,0.85)' }}>
+            Personalet kan se, at du har haft det svært i dag — de vil gerne støtte dig.
+          </p>
+        </div>
 
-    </div>
+        {/* Back */}
+        <div className="mx-5 mb-8">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full rounded-2xl py-4 text-sm font-bold text-white transition-all duration-200 active:scale-[0.98]"
+            style={{ backgroundColor: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)' }}
+          >
+            Tilbage til Lys
+          </button>
+        </div>
+
+      </div>
+    </>
   );
 }

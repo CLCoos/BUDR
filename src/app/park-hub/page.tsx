@@ -21,7 +21,7 @@ async function getResident(residentId: string) {
     );
     const { data } = await supabase
       .from('care_residents')
-      .select('display_name, onboarding_data')
+      .select('display_name, onboarding_data, org_id')
       .eq('user_id', residentId)
       .single();
     if (!data) return null;
@@ -30,6 +30,7 @@ async function getResident(residentId: string) {
     return {
       name,
       initials: od.avatar_initials || deriveInitials(name),
+      facilityId: (data.org_id as string | null) ?? null,
     };
   } catch {
     return null;
@@ -50,6 +51,7 @@ export default async function ParkHubPage() {
       firstName={firstName}
       initials={initials}
       residentId={residentId ?? ''}
+      facilityId={resident?.facilityId ?? null}
     />
   );
 }

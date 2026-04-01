@@ -32,6 +32,7 @@ const navItems: NavItem[] = [
   { icon: Bell, label: 'Advarsler', href: '/care-portal-dashboard?tab=alerts', badge: 3, cpActiveTab: 'alerts' },
   { icon: Calendar, label: 'Planlægger', href: '/care-portal-dashboard?tab=planner', badge: 0, cpActiveTab: 'planner' },
   { icon: BookOpen, label: 'Journal', href: '/care-portal-dashboard?tab=journal', badge: 0, cpActiveTab: 'journal' },
+  { icon: Settings, label: 'Indstillinger', href: '/care-portal-settings', badge: 0 },
 ];
 
 function navItemActive(pathname: string, searchParams: URLSearchParams, item: NavItem): boolean {
