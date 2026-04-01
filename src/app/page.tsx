@@ -292,11 +292,11 @@ export default function HomePage() {
                 BUDR App
               </button>
               <Link
-                href="/care-portal-dashboard"
+                href="/care-portal-demo"
                 className="rounded-full px-4 py-2 text-sm font-bold text-white transition-all hover:opacity-90 hover:scale-[1.02]"
-                style={{ background: 'linear-gradient(135deg, var(--budr-teal), #15876300)' , backgroundColor: 'var(--budr-teal)' }}
+                style={{ backgroundColor: 'var(--budr-teal)' }}
               >
-                Care Portal
+                Prøv Care Portal
               </Link>
               <a
                 href="mailto:hej@budrcare.dk?subject=Demo af BUDR"
@@ -487,11 +487,11 @@ export default function HomePage() {
                   ))}
                 </ul>
                 <Link
-                  href="/care-portal-dashboard"
+                  href="/care-portal-demo"
                   className="mt-7 inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:shadow-lg"
                   style={{ background: 'var(--budr-teal)' }}
                 >
-                  Åbn Care Portal <ArrowRight className="h-4 w-4" />
+                  Prøv Care Portal <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
 
@@ -652,14 +652,21 @@ export default function HomePage() {
               ))}
             </div>
 
-            <div className="mt-10 flex justify-center" data-reveal data-reveal-delay="200">
+            <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center" data-reveal data-reveal-delay="200">
               <Link
-                href="/care-portal-dashboard"
+                href="/care-portal-demo"
                 className="inline-flex items-center gap-2 rounded-full px-8 py-4 text-base font-bold text-white shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
                 style={{ background: 'var(--budr-teal)' }}
               >
-                Åbn Care Portal gratis
+                Prøv Care Portal interaktivt
                 <ArrowRight className="h-5 w-5" />
+              </Link>
+              <Link
+                href="/care-portal-dashboard"
+                className="inline-flex items-center gap-2 rounded-full border-2 px-8 py-4 text-base font-semibold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                style={{ borderColor: 'rgba(29,158,117,0.35)', color: 'var(--budr-teal)' }}
+              >
+                Åbn rigtig Care Portal
               </Link>
             </div>
           </div>
