@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Plus, X, Droplets, ChevronLeft } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import TreePlant from '@/components/haven/plants/TreePlant';
 import FlowerPlant from '@/components/haven/plants/FlowerPlant';
@@ -137,7 +137,16 @@ function getResidentId(): string | null {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function HavenPage() {
+  return (
+    <React.Suspense>
+      <HavenView />
+    </React.Suspense>
+  );
+}
+
+function HavenView() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [plots, setPlots] = useState<GardenPlot[]>([]);
   const [ambient, setAmbient] = useState<AmbientPeriod>(() => getAmbientPeriod(new Date().getHours()));
   const [selected, setSelected] = useState<GardenPlot | null>(null);
@@ -163,8 +172,10 @@ export default function HavenPage() {
   }, []);
 
   useEffect(() => {
-    setResidentId(getResidentId());
-  }, []);
+    // URL param (?r=) takes priority — passed explicitly from LysHome
+    const fromParam = searchParams.get('r');
+    setResidentId(fromParam ?? getResidentId());
+  }, [searchParams]);
 
   const load = useCallback(async (id: string) => {
     const supabase = createClient();
