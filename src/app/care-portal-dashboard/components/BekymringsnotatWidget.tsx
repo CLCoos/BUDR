@@ -3,17 +3,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { AlertTriangle, CheckCircle2, ChevronDown, Plus, X } from 'lucide-react';
 
-const CATEGORIES = [
-  'Trivsel',
-  'Økonomi',
-  'Relationer',
-  'Helbred',
-  'Misbrug',
-  'Adfærd',
-  'Bolig',
-  'Andet',
-] as const;
-
+const CATEGORIES = ['Trivsel','Økonomi','Relationer','Helbred','Misbrug','Adfærd','Bolig','Andet'] as const;
 export type BekymringsCategory = (typeof CATEGORIES)[number];
 
 export interface Bekymringsnotat {
@@ -46,62 +36,36 @@ function severityTone(score: number): 'green' | 'amber' | 'red' {
   return 'red';
 }
 
-function severityClasses(tone: 'green' | 'amber' | 'red'): string {
-  switch (tone) {
-    case 'green':
-      return 'bg-green-500 text-white';
-    case 'amber':
-      return 'bg-amber-500 text-white';
-    default:
-      return 'bg-red-500 text-white';
-  }
+function severityStyle(tone: 'green' | 'amber' | 'red'): React.CSSProperties {
+  if (tone === 'green')  return { backgroundColor: 'var(--cp-green)', color: '#fff' };
+  if (tone === 'amber')  return { backgroundColor: 'var(--cp-amber)', color: '#fff' };
+  return { backgroundColor: 'var(--cp-red)', color: '#fff' };
 }
 
 function formatNoteDate(d: Date): string {
-  return d.toLocaleDateString('da-DK', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return d.toLocaleDateString('da-DK', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 function createInitialMockNotes(): Bekymringsnotat[] {
   const now = Date.now();
   return [
-    {
-      id: 'bn-001',
-      residentId: 'res-002',
-      residentName: 'Finn L.',
-      note: 'Virker isoleret siden besøg fra pårørende blev aflyst i sidste uge.',
-      category: 'Relationer',
-      severity: 6,
-      createdAt: new Date(now - 2 * 24 * 60 * 60 * 1000),
-      staffInitials: 'SK',
-    },
-    {
-      id: 'bn-002',
-      residentId: 'res-005',
-      residentName: 'Thomas B.',
-      note: 'Mangler kontant til småting — skal afklares med socialrådgiver.',
-      category: 'Økonomi',
-      severity: 4,
-      createdAt: new Date(now - 4 * 24 * 60 * 60 * 1000),
-      staffInitials: 'SK',
-    },
-    {
-      id: 'bn-003',
-      residentId: 'res-003',
-      residentName: 'Kirsten R.',
-      note: 'Søvn og appetit stadig lav; læge er underrettet.',
-      category: 'Helbred',
-      severity: 8,
-      createdAt: new Date(now - 6 * 60 * 60 * 1000),
-      staffInitials: 'SK',
-    },
+    { id:'bn-001', residentId:'res-002', residentName:'Finn L.',    note:'Virker isoleret siden besøg fra pårørende blev aflyst i sidste uge.', category:'Relationer', severity:6, createdAt:new Date(now - 2*24*60*60*1000), staffInitials:'SK' },
+    { id:'bn-002', residentId:'res-005', residentName:'Thomas B.',  note:'Mangler kontant til småting — skal afklares med socialrådgiver.',    category:'Økonomi',    severity:4, createdAt:new Date(now - 4*24*60*60*1000), staffInitials:'SK' },
+    { id:'bn-003', residentId:'res-003', residentName:'Kirsten R.', note:'Søvn og appetit stadig lav; læge er underrettet.',                    category:'Helbred',    severity:8, createdAt:new Date(now - 6*60*60*1000),    staffInitials:'SK' },
   ];
 }
+
+const INPUT_STYLE: React.CSSProperties = {
+  backgroundColor: 'var(--cp-bg3)',
+  border: '1px solid var(--cp-border2)',
+  color: 'var(--cp-text)',
+  borderRadius: 8,
+  width: '100%',
+  padding: '0.625rem 0.75rem',
+  fontSize: '0.875rem',
+  outline: 'none',
+  colorScheme: 'dark',
+};
 
 export default function BekymringsnotatWidget() {
   const [notes, setNotes] = useState<Bekymringsnotat[]>(createInitialMockNotes);
@@ -117,97 +81,67 @@ export default function BekymringsnotatWidget() {
   );
 
   const sliderTone = severityTone(severity);
-  const sliderBadgeClass = severityClasses(sliderTone);
 
-  const removeNote = useCallback((id: string) => {
-    setNotes(prev => prev.filter(n => n.id !== id));
-  }, []);
+  const removeNote = useCallback((id: string) => { setNotes(prev => prev.filter(n => n.id !== id)); }, []);
 
-  const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!residentId || !category || !noteText.trim()) return;
-      const res = RESIDENTS.find(r => r.id === residentId);
-      if (!res) return;
-      const newNote: Bekymringsnotat = {
-        id: `bn-${Date.now()}`,
-        residentId,
-        residentName: res.name,
-        note: noteText.trim().slice(0, 120),
-        category,
-        severity,
-        createdAt: new Date(),
-        staffInitials: 'SK',
-      };
-      setNotes(prev => [newNote, ...prev]);
-      setNoteText('');
-      setCategory('');
-      setResidentId('');
-      setSeverity(5);
-      setShowForm(false);
-    },
-    [residentId, category, noteText, severity],
-  );
+  const handleSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    if (!residentId || !category || !noteText.trim()) return;
+    const res = RESIDENTS.find(r => r.id === residentId);
+    if (!res) return;
+    setNotes(prev => [{
+      id: `bn-${Date.now()}`, residentId, residentName: res.name,
+      note: noteText.trim().slice(0, 120), category: category as BekymringsCategory,
+      severity, createdAt: new Date(), staffInitials: 'SK',
+    }, ...prev]);
+    setNoteText(''); setCategory(''); setResidentId(''); setSeverity(5); setShowForm(false);
+  }, [residentId, category, noteText, severity]);
 
   return (
     <section
-      className="mb-6 w-full max-w-2xl rounded-xl border border-gray-100 bg-white p-5 shadow-sm"
+      className="w-full rounded-xl p-5"
+      style={{ backgroundColor: 'var(--cp-bg2)', border: '1px solid var(--cp-border)' }}
       aria-label="Bekymringsnotater"
     >
-      <div className="mb-4 flex items-start justify-between gap-3 border-b border-gray-100 pb-4">
+      <div className="mb-4 flex items-start justify-between gap-3 pb-4" style={{ borderBottom: '1px solid var(--cp-border)' }}>
         <div className="flex min-w-0 items-start gap-2.5">
-          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" aria-hidden />
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" style={{ color: 'var(--cp-amber)' }} aria-hidden />
           <div>
-            <h2 className="text-sm font-semibold text-gray-900">Bekymringsnotater</h2>
-            <p className="text-sm text-gray-500">Hurtig registrering af bekymringer</p>
+            <h2 className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>Bekymringsnotater</h2>
+            <p className="text-xs" style={{ color: 'var(--cp-muted)' }}>Hurtig registrering af bekymringer</p>
           </div>
         </div>
         <button
           type="button"
           onClick={() => setShowForm(s => !s)}
           aria-expanded={showForm}
-          className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-budr-purple px-3 py-1.5 text-sm font-medium text-white transition-all duration-200 hover:opacity-90"
+          className="inline-flex shrink-0 items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-all duration-200 hover:opacity-90"
+          style={{ backgroundColor: 'var(--cp-green)' }}
         >
           <Plus className="h-3.5 w-3.5" aria-hidden />
           Tilføj
         </button>
       </div>
 
-      <div
-        className={`grid transition-all duration-200 ease-out ${showForm ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
-      >
+      <div className={`grid transition-all duration-200 ease-out ${showForm ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
         <div className="min-h-0 overflow-hidden">
-          <form
-            onSubmit={handleSubmit}
-            className="mb-4 space-y-4 rounded-xl border border-gray-100 bg-gray-50/50 p-4 transition-all duration-200"
-          >
+          <form onSubmit={handleSubmit} className="mb-4 space-y-4 rounded-xl p-4" style={{ backgroundColor: 'var(--cp-bg3)', border: '1px solid var(--cp-border)' }}>
             <div className="relative">
-              <label htmlFor="bek-resident" className="sr-only">
-                Beboer
-              </label>
+              <label htmlFor="bek-resident" className="sr-only">Beboer</label>
               <select
                 id="bek-resident"
                 value={residentId}
                 onChange={e => setResidentId(e.target.value)}
-                className="w-full appearance-none rounded-lg border border-gray-200 bg-white py-2.5 pl-3 pr-10 text-sm text-gray-900 transition-all duration-200 focus:border-budr-teal focus:outline-none focus:ring-1 focus:ring-budr-teal"
+                style={{ ...INPUT_STYLE, paddingRight: '2.5rem', appearance: 'none' }}
               >
                 <option value="">Vælg beboer</option>
-                {RESIDENTS.map(r => (
-                  <option key={r.id} value={r.id}>
-                    {r.name}
-                  </option>
-                ))}
+                {RESIDENTS.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
               </select>
-              <ChevronDown
-                className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
-                aria-hidden
-              />
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2" style={{ color: 'var(--cp-muted2)' }} aria-hidden />
             </div>
 
             <div>
-              <label htmlFor="bek-note" className="sr-only">
-                Beskrivelse
-              </label>
+              <label htmlFor="bek-note" className="sr-only">Beskrivelse</label>
               <input
                 id="bek-note"
                 type="text"
@@ -215,13 +149,13 @@ export default function BekymringsnotatWidget() {
                 onChange={e => setNoteText(e.target.value)}
                 maxLength={120}
                 placeholder="Beskriv bekymringen kort..."
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-all duration-200 focus:border-budr-teal focus:outline-none focus:ring-1 focus:ring-budr-teal"
+                style={{ ...INPUT_STYLE }}
               />
-              <div className="mt-1 text-right text-xs text-gray-400">{noteText.length}/120</div>
+              <div className="mt-1 text-right text-xs" style={{ color: 'var(--cp-muted2)' }}>{noteText.length}/120</div>
             </div>
 
             <div>
-              <p className="mb-2 text-xs font-medium text-gray-500">Kategori</p>
+              <p className="mb-2 text-xs font-medium" style={{ color: 'var(--cp-muted)' }}>Kategori</p>
               <div className="-mx-1 flex gap-2 overflow-x-auto pb-1">
                 {CATEGORIES.map(cat => {
                   const selected = category === cat;
@@ -230,11 +164,11 @@ export default function BekymringsnotatWidget() {
                       key={cat}
                       type="button"
                       onClick={() => setCategory(cat)}
-                      className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
-                        selected
-                          ? 'bg-budr-purple text-white shadow-sm'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
+                      className="shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-200"
+                      style={selected
+                        ? { backgroundColor: 'var(--cp-green)', color: '#fff' }
+                        : { backgroundColor: 'var(--cp-bg3)', border: '1px solid var(--cp-border2)', color: 'var(--cp-muted)' }
+                      }
                     >
                       {cat}
                     </button>
@@ -245,33 +179,29 @@ export default function BekymringsnotatWidget() {
 
             <div>
               <div className="mb-2 flex items-center justify-between gap-2">
-                <span className="text-xs font-medium text-gray-500">Alvor (1–10)</span>
-                <span
-                  className={`inline-flex min-w-[2rem] items-center justify-center rounded-full px-2 py-0.5 text-xs font-bold transition-all duration-200 ${sliderBadgeClass}`}
-                >
+                <span className="text-xs font-medium" style={{ color: 'var(--cp-muted)' }}>Alvor (1–10)</span>
+                <span className="inline-flex min-w-[2rem] items-center justify-center rounded-full px-2 py-0.5 text-xs font-bold" style={severityStyle(sliderTone)}>
                   {severity}
                 </span>
               </div>
               <input
-                type="range"
-                min={1}
-                max={10}
-                step={1}
+                type="range" min={1} max={10} step={1}
                 value={severity}
                 onChange={e => setSeverity(Number(e.target.value))}
-                className="h-2 w-full cursor-pointer appearance-none rounded-full bg-gradient-to-r from-green-400 via-amber-400 to-red-500 transition-all duration-200
+                className="h-2 w-full cursor-pointer appearance-none rounded-full bg-gradient-to-r from-green-400 via-amber-400 to-red-500
                   [&::-webkit-slider-thumb]:h-[18px] [&::-webkit-slider-thumb]:w-[18px] [&::-webkit-slider-thumb]:cursor-pointer
                   [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2
-                  [&::-webkit-slider-thumb]:border-gray-800 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-sm
-                  [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:duration-200 [&::-webkit-slider-thumb]:hover:scale-110
-                  [&::-moz-range-thumb]:h-[18px] [&::-moz-range-thumb]:w-[18px] [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:rounded-full
-                  [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-gray-800 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:shadow-sm"
+                  [&::-webkit-slider-thumb]:border-[var(--cp-bg2)] [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-sm
+                  [&::-moz-range-thumb]:h-[18px] [&::-moz-range-thumb]:w-[18px] [&::-moz-range-thumb]:cursor-pointer
+                  [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-[var(--cp-bg2)]
+                  [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:shadow-sm"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full rounded-lg bg-budr-teal py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:opacity-90"
+              className="w-full rounded-lg py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:opacity-90"
+              style={{ backgroundColor: 'var(--cp-green)' }}
             >
               Gem bekymring
             </button>
@@ -282,8 +212,8 @@ export default function BekymringsnotatWidget() {
       <div className="flex flex-col gap-3">
         {displayedNotes.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center">
-            <CheckCircle2 className="mb-2 h-8 w-8 text-green-500" aria-hidden />
-            <p className="text-sm text-gray-400">Ingen aktive bekymringer</p>
+            <CheckCircle2 className="mb-2 h-8 w-8" style={{ color: 'var(--cp-green)' }} aria-hidden />
+            <p className="text-sm" style={{ color: 'var(--cp-muted)' }}>Ingen aktive bekymringer</p>
           </div>
         ) : (
           displayedNotes.map(n => {
@@ -291,22 +221,23 @@ export default function BekymringsnotatWidget() {
             return (
               <article
                 key={n.id}
-                className="flex gap-3 rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md"
+                className="flex gap-3 rounded-xl p-4 transition-all duration-200"
+                style={{ backgroundColor: 'var(--cp-bg3)', border: '1px solid var(--cp-border)' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--cp-border2)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--cp-border)'; }}
               >
-                <div
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold leading-none ${severityClasses(tone)}`}
-                >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold leading-none" style={severityStyle(tone)}>
                   {n.severity}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-semibold text-gray-900">{n.residentName}</span>
-                    <span className="rounded-full bg-budr-lavender px-2 py-0.5 text-xs font-medium text-budr-purple">
+                    <span className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>{n.residentName}</span>
+                    <span className="rounded-full px-2 py-0.5 text-xs font-medium" style={{ backgroundColor: 'var(--cp-amber-dim)', color: 'var(--cp-amber)' }}>
                       {n.category}
                     </span>
                   </div>
-                  <p className="mt-1.5 text-sm text-gray-600">{n.note}</p>
-                  <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-400">
+                  <p className="mt-1.5 text-sm" style={{ color: 'var(--cp-muted)' }}>{n.note}</p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-xs" style={{ color: 'var(--cp-muted2)' }}>
                     <time dateTime={n.createdAt.toISOString()} suppressHydrationWarning>{formatNoteDate(n.createdAt)}</time>
                     <span aria-hidden>·</span>
                     <span>{n.staffInitials}</span>
@@ -315,7 +246,10 @@ export default function BekymringsnotatWidget() {
                 <button
                   type="button"
                   onClick={() => removeNote(n.id)}
-                  className="shrink-0 self-start rounded p-1 text-gray-300 transition-all duration-200 hover:text-red-400"
+                  className="shrink-0 self-start rounded p-1 transition-all duration-200"
+                  style={{ color: 'var(--cp-muted2)' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--cp-red)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--cp-muted2)'; }}
                   aria-label="Fjern note"
                 >
                   <X className="h-4 w-4" />
@@ -325,28 +259,6 @@ export default function BekymringsnotatWidget() {
           })
         )}
       </div>
-
-      {/*
-        Supabase — care_bekymringsnotater (wire later):
-
-        Columns: id, resident_id, staff_id, note, category, severity, created_at
-        (+ facility_id for tenancy / RLS as needed)
-
-        1) Fetch on mount (latest 5):
-           supabase.from('care_bekymringsnotater')
-             .select('id, resident_id, staff_id, note, category, severity, created_at')
-             .in('facility_id', care_visible_facility_ids())
-             .order('created_at', { ascending: false })
-             .limit(5)
-
-        2) Insert on submit:
-           supabase.from('care_bekymringsnotater').insert({
-             resident_id, staff_id, note, category, severity,
-           })
-
-        3) RLS: policies use care_visible_facility_ids() so staff only see/insert rows
-           for authorized facilities (join residents or denormalized facility_id).
-      */}
     </section>
   );
 }

@@ -133,13 +133,13 @@ function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
       {/* Action cards */}
       <ActionCards onOpenOverrapport={() => setOverrapportPanelOpen(true)} />
 
-      {medicationWidget}
-
-      <BekymringsnotatWidget />
-
-      <KalenderWidget />
-
-      <OpgaveWidget />
+      {/* 2-col fluid widget grid */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-6">
+        {medicationWidget}
+        <BekymringsnotatWidget />
+        <KalenderWidget />
+        <OpgaveWidget />
+      </div>
 
       {/* Stat cards */}
       <StatCards />
