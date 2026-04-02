@@ -84,7 +84,6 @@ export default function LysShell({ firstName, initials, residentId, facilityId }
     setMoodTick(t => t + 1);
   };
 
-  const lightBar = phase === 'morning' || phase === 'afternoon';
 
   return (
     <ResidentProvider firstName={firstName} initials={initials} residentId={residentId}>
@@ -233,11 +232,8 @@ export default function LysShell({ firstName, initials, residentId, facilityId }
       <LysBottomNav
         active={tab}
         onChange={setTab}
-        tokens={tokens}
-        accent={accent}
         showDagReminderDot={!moodRegisteredToday}
         hidden={!!overlay}
-        lightBar={lightBar}
       />
     </div>
     </ResidentProvider>

@@ -11,6 +11,8 @@ import type { LysFlowOverlay } from '../lib/lysOverlay';
 import type { LysPhase, LysThemeTokens } from '../lib/lysTheme';
 import type { LysNavTab } from './LysBottomNav';
 import LysBeskedTilPersonale from './LysBeskedTilPersonale';
+import LysKrisePlan from './LysKrisePlan';
+import LysKrisePlanCard from './LysKrisePlanCard';
 import FlowerPlant from '@/components/haven/plants/FlowerPlant';
 import TreePlant from '@/components/haven/plants/TreePlant';
 
@@ -25,11 +27,11 @@ const COMPANION_MESSAGES = [
 ];
 
 const ENERGY_OPTIONS = [
-  { level: 1, emoji: '😴', label: 'Svært',       sub: 'Har ikke energi til meget',     color: '#EF4444' },
-  { level: 2, emoji: '😔', label: 'Dårligt',     sub: 'Det kræver lidt mere i dag',    color: '#F97316' },
-  { level: 3, emoji: '😐', label: 'OK',           sub: 'Hverken godt eller skidt',      color: '#EAB308' },
-  { level: 4, emoji: '🙂', label: 'Godt',         sub: 'Klar til dagen',                color: '#84CC16' },
-  { level: 5, emoji: '😁', label: 'Fantastisk',  sub: 'Fuld energi',                   color: '#22C55E' },
+  { level: 1, emoji: '😴', label: 'Svært',      color: '#EF4444' },
+  { level: 2, emoji: '😔', label: 'Dårligt',    color: '#F97316' },
+  { level: 3, emoji: '😐', label: 'OK',          color: '#EAB308' },
+  { level: 4, emoji: '🙂', label: 'Godt',        color: '#84CC16' },
+  { level: 5, emoji: '😁', label: 'Fantastisk', color: '#22C55E' },
 ];
 
 type Props = {
@@ -68,18 +70,27 @@ const MINI_ACCENTS: Record<string, string> = {
   tree: '#1D9E75', flower: '#F59E0B', herb: '#10B981', bush: '#7F77DD', vegetable: '#EF4444',
 };
 
+// Simple SVG plant for empty state
+function PlantSvg() {
+  return (
+    <svg viewBox="0 0 40 48" fill="none" className="h-10 w-10">
+      <path d="M20 42 C20 42 20 22 20 16" stroke="var(--lys-green)" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M20 26 C15 21 8 23 8 16 C8 16 18 16 20 26" fill="var(--lys-green)" opacity="0.55" />
+      <path d="M20 31 C25 25 33 27 33 20 C33 20 23 20 20 31" fill="var(--lys-green)" opacity="0.8" />
+      <circle cx="20" cy="44" r="2.5" fill="var(--lys-green)" opacity="0.25" />
+    </svg>
+  );
+}
+
 function HavenWidget({
-  tokens,
-  accent,
   residentId,
   onNavigate,
 }: {
-  tokens: LysThemeTokens;
-  accent: string;
   residentId: string;
   onNavigate: () => void;
 }) {
   const [plots, setPlots] = useState<GardenPlotMini[]>([]);
+
   useEffect(() => {
     if (!residentId) return;
     const supabase = createClient();
@@ -97,52 +108,57 @@ function HavenWidget({
     <button
       type="button"
       onClick={onNavigate}
-      className="w-full rounded-3xl px-5 py-4 text-left flex items-center gap-4 transition-all duration-150 active:scale-[0.98]"
+      className="w-full rounded-2xl px-5 py-4 text-left flex items-center gap-4 transition-all duration-150 active:scale-[0.98]"
       style={{
-        background: `linear-gradient(135deg, ${tokens.gradientFrom} 0%, ${tokens.gradientTo} 100%)`,
-        boxShadow: tokens.glowShadow,
+        background: 'linear-gradient(135deg, #0a1f14 0%, #0d2a1a 100%)',
+        border: '1px solid rgba(45,212,160,0.15)',
+        boxShadow: '0 2px 20px rgba(45,212,160,0.06)',
       }}
     >
-      {/* Mini plant previews */}
+      {/* Plant preview */}
       <div className="flex gap-2 shrink-0">
         {plots.length === 0 ? (
-          <div className="h-14 w-14 rounded-2xl flex items-center justify-center text-2xl"
-            style={{ backgroundColor: `${accent}18` }}>
-            🌱
+          <div
+            className="h-14 w-14 rounded-xl flex items-center justify-center"
+            style={{ backgroundColor: 'rgba(45,212,160,0.08)', animation: 'lysPulse 3s ease-in-out infinite' }}
+          >
+            <PlantSvg />
           </div>
         ) : plots.slice(0, 2).map(p => (
           <div
             key={p.id}
-            className="h-14 w-14 rounded-2xl flex items-end justify-center overflow-hidden pb-1"
-            style={{ backgroundColor: `${MINI_ACCENTS[p.plant_type] ?? accent}14` }}
+            className="h-14 w-14 rounded-xl flex items-end justify-center overflow-hidden pb-1"
+            style={{ backgroundColor: `${MINI_ACCENTS[p.plant_type] ?? '#2dd4a0'}14` }}
           >
             {(p.plant_type === 'tree' || p.plant_type === 'herb' || p.plant_type === 'bush' || p.plant_type === 'vegetable')
-              ? <TreePlant stage={p.growth_stage} accent={MINI_ACCENTS[p.plant_type] ?? accent} />
-              : <FlowerPlant stage={p.growth_stage} accent={MINI_ACCENTS[p.plant_type] ?? accent} />
+              ? <TreePlant stage={p.growth_stage} accent={MINI_ACCENTS[p.plant_type] ?? '#2dd4a0'} />
+              : <FlowerPlant stage={p.growth_stage} accent={MINI_ACCENTS[p.plant_type] ?? '#2dd4a0'} />
             }
           </div>
         ))}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-bold tracking-widest uppercase mb-0.5" style={{ color: accent }}>Min Have</p>
+        <p className="text-xs font-bold tracking-widest uppercase mb-0.5" style={{ color: 'var(--lys-green)', opacity: 0.7 }}>Min Have</p>
         {plots.length === 0 ? (
-          <p className="text-sm font-semibold">Plant din første blomst 🌱</p>
+          <p className="text-sm font-semibold" style={{ color: 'var(--lys-text)' }}>Plant din første blomst</p>
         ) : (
-          <p className="text-sm font-semibold">{plots.length} {plots.length === 1 ? 'plante' : 'planter'} vokser</p>
+          <p className="text-sm font-semibold" style={{ color: 'var(--lys-text)' }}>
+            {plots.length} {plots.length === 1 ? 'plante' : 'planter'} vokser
+          </p>
         )}
-        <p className="text-xs mt-0.5" style={{ color: tokens.textMuted }}>Tryk for at vande og se vækst</p>
+        <p className="text-xs mt-0.5" style={{ color: 'var(--lys-muted)' }}>Tryk for at vande og se vækst</p>
       </div>
-      <span className="text-base" style={{ color: accent }}>→</span>
+      <span className="text-sm" style={{ color: 'var(--lys-green)' }}>→</span>
     </button>
   );
 }
 
-function greetingLine(phase: LysPhase, name: string): string {
+function greetingLine(phase: LysPhase, name: string): { static: string; italic: string } {
   switch (phase) {
-    case 'morning':   return `Godmorgen, ${name} ☀️`;
-    case 'afternoon': return `Hej igen, ${name} 🌤`;
-    case 'evening':   return `God aften, ${name} 🌙`;
-    default:          return `Hej ${name} 💙`;
+    case 'morning':   return { static: 'Godmorgen, ', italic: name };
+    case 'afternoon': return { static: 'Hej igen, ',  italic: name };
+    case 'evening':   return { static: 'God aften, ', italic: name };
+    default:          return { static: 'Hej, ',       italic: name };
   }
 }
 
@@ -174,6 +190,7 @@ export default function LysHome({
   const [planStats, setPlanStats] = useState<{ total: number } | null>(null);
   const [showLysCard, setShowLysCard] = useState(false);
   const [checkInSaving, setCheckInSaving] = useState(false);
+  const [krisePlanOpen, setKrisePlanOpen] = useState(false);
 
   const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant')?.content ?? null;
 
@@ -191,7 +208,6 @@ export default function LysHome({
       const raw = localStorage.getItem('budr_last_checkin');
       if (raw) {
         const d = JSON.parse(raw) as CheckIn;
-        // Show last check-in if it was within the last 2 hours
         if (Date.now() - d.ts < 2 * 60 * 60 * 1000) setLastCheckIn(d);
       }
     } catch { /* ignore */ }
@@ -228,8 +244,6 @@ export default function LysHome({
     try {
       localStorage.setItem('budr_last_checkin', JSON.stringify(entry));
     } catch { /* ignore */ }
-
-    // Save via dual-mode dataService
     await dataService.saveCheckin(session.storageMode, session.activeId || residentId, { energy_level: level, label });
     await dataService.addXp(session.storageMode, session.activeId || residentId, 'hum_check', 10);
     setCheckInSaving(false);
@@ -244,20 +258,27 @@ export default function LysHome({
   const todayStr = now.toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long' });
   const greeting = greetingLine(phase, firstName);
 
+  void tokens; void accent; void moodLabel;
+
   return (
-    <div className="relative font-sans" style={{ color: tokens.text }}>
+    <div className="relative" style={{ color: 'var(--lys-text)' }}>
       {/* Header */}
-      <header className="flex items-center justify-between px-5 pt-5 pb-3">
+      <header className="flex items-center justify-between px-5 pt-6 pb-3">
         <div>
-          <h1 className="text-2xl font-black leading-tight tracking-tight">{greeting}</h1>
-          <p className="text-sm capitalize mt-0.5" style={{ color: tokens.textMuted }}>{todayStr}</p>
+          <h1
+            className="leading-tight"
+            style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 400, color: 'var(--lys-text)' }}
+          >
+            {greeting.static}<em>{greeting.italic}</em>
+          </h1>
+          <p className="text-sm capitalize mt-0.5" style={{ color: 'var(--lys-muted)' }}>{todayStr}</p>
         </div>
         <div className="flex items-center gap-2">
           <div
             className="h-10 w-10 shrink-0 rounded-full flex items-center justify-center text-sm font-black text-white"
             style={{
-              background: `linear-gradient(135deg, ${accent}, ${accent}99)`,
-              boxShadow: `0 2px 8px ${accent}44`,
+              background: 'linear-gradient(135deg, var(--lys-green), rgba(45,212,160,0.6))',
+              boxShadow: '0 2px 8px rgba(45,212,160,0.3)',
             }}
             aria-hidden
           >
@@ -267,7 +288,7 @@ export default function LysHome({
             type="button"
             onClick={handleLogout}
             className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium transition-opacity hover:opacity-70"
-            style={{ color: tokens.textMuted }}
+            style={{ color: 'var(--lys-muted)' }}
             aria-label="Log ud"
           >
             ×
@@ -279,28 +300,36 @@ export default function LysHome({
 
         {/* Lys companion card */}
         <section
-          className="rounded-3xl px-6 py-5 transition-all duration-500"
+          className="rounded-2xl px-5 py-4 transition-all duration-500"
           style={{
-            background: `linear-gradient(150deg, ${tokens.gradientFrom} 0%, ${tokens.gradientTo} 100%)`,
-            boxShadow: tokens.glowShadow,
+            backgroundColor: 'var(--lys-bg3)',
+            border: '1px solid var(--lys-border)',
           }}
         >
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold tracking-widest uppercase mb-2" style={{ color: accent }}>Lys</p>
+              <p
+                className="text-xs font-bold tracking-widest uppercase mb-2"
+                style={{ color: 'var(--lys-green)', opacity: 0.8 }}
+              >
+                Lys
+              </p>
               <p
                 key={companionIdx}
-                className="text-base font-semibold leading-snug"
-                style={{ animation: reducedMotion ? undefined : 'lysTabIn 0.4s ease-out' }}
+                className="text-base font-medium leading-snug"
+                style={{
+                  color: 'var(--lys-text)',
+                  animation: reducedMotion ? undefined : 'lysTabIn 0.4s ease-out',
+                }}
               >
                 {COMPANION_MESSAGES[companionIdx]}
               </p>
             </div>
             <div
-              className="h-12 w-12 shrink-0 rounded-full flex items-center justify-center text-xl font-black text-white"
+              className="h-10 w-10 shrink-0 rounded-full flex items-center justify-center text-lg font-black"
               style={{
-                background: `linear-gradient(135deg, ${accent}, ${accent}99)`,
-                boxShadow: `0 4px 16px ${accent}44`,
+                backgroundColor: 'var(--lys-green-dim)',
+                color: 'var(--lys-green)',
               }}
               aria-hidden
             >
@@ -310,10 +339,11 @@ export default function LysHome({
           <button
             type="button"
             onClick={() => router.push('/lys-chat')}
-            className="mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold text-white transition-all duration-150 active:scale-95"
+            className="mt-3 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-150 active:scale-95"
             style={{
-              background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
-              boxShadow: `0 4px 12px ${accent}33`,
+              backgroundColor: 'var(--lys-green-dim)',
+              color: 'var(--lys-green)',
+              border: '1px solid rgba(45,212,160,0.2)',
             }}
           >
             Skriv til Lys →
@@ -322,15 +352,15 @@ export default function LysHome({
 
         {/* Humørtjek */}
         <section
-          className="rounded-3xl px-6 py-5"
-          style={{ backgroundColor: tokens.cardBg, boxShadow: tokens.shadow }}
+          className="rounded-2xl px-5 py-4"
+          style={{ backgroundColor: 'var(--lys-bg3)', border: '1px solid var(--lys-border)' }}
         >
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-bold">Humørtjek</p>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm font-semibold" style={{ color: 'var(--lys-text)' }}>Humørtjek</p>
             {lastCheckIn && (
               <span
                 className="text-xs font-semibold rounded-full px-2.5 py-1"
-                style={{ backgroundColor: `${accent}18`, color: accent }}
+                style={{ backgroundColor: 'var(--lys-green-dim)', color: 'var(--lys-green)' }}
               >
                 Sidst: {lastCheckIn.label}
               </span>
@@ -343,25 +373,25 @@ export default function LysHome({
                 type="button"
                 onClick={() => void handleCheckIn(opt.level, opt.label)}
                 disabled={checkInSaving}
-                className="flex flex-1 flex-col items-center gap-1.5 rounded-2xl py-3.5 transition-all duration-150 active:scale-[0.93] disabled:opacity-40"
+                className="flex flex-1 flex-col items-center gap-1.5 rounded-xl py-3 transition-all duration-150 active:scale-[0.93] disabled:opacity-40"
                 style={{
-                  backgroundColor: lastCheckIn?.level === opt.level ? `${opt.color}28` : `${opt.color}12`,
-                  border: `1.5px solid ${lastCheckIn?.level === opt.level ? opt.color : `${opt.color}28`}`,
+                  backgroundColor: lastCheckIn?.level === opt.level
+                    ? 'var(--lys-green-dim)'
+                    : 'var(--lys-bg4)',
+                  border: `1px solid ${lastCheckIn?.level === opt.level ? 'rgba(45,212,160,0.3)' : 'var(--lys-border)'}`,
                 }}
-                title={opt.sub}
+                title={opt.label}
               >
-                <span className="text-2xl leading-none">{opt.emoji}</span>
-                <span className="text-[9px] font-bold uppercase tracking-wide" style={{ color: opt.color }}>
+                <span className="text-xl leading-none">{opt.emoji}</span>
+                <span
+                  className="text-[9px] font-bold uppercase tracking-wide"
+                  style={{ color: lastCheckIn?.level === opt.level ? 'var(--lys-green)' : 'var(--lys-muted)' }}
+                >
                   {opt.label}
                 </span>
               </button>
             ))}
           </div>
-          {lastCheckIn && (
-            <p className="text-xs mt-3 text-center" style={{ color: tokens.textMuted }}>
-              Du kan tjekke ind igen når som helst
-            </p>
-          )}
         </section>
 
         {/* Today summary */}
@@ -369,23 +399,29 @@ export default function LysHome({
           <button
             type="button"
             onClick={() => onSwitchTab('dag')}
-            className="w-full rounded-2xl px-5 py-4 text-left flex items-center justify-between gap-4 transition-all duration-150 active:scale-[0.98]"
-            style={{ backgroundColor: tokens.cardBg, boxShadow: tokens.shadow }}
+            className="w-full rounded-2xl px-4 py-4 text-left flex items-center justify-between gap-4 transition-all duration-150 active:scale-[0.98]"
+            style={{ backgroundColor: 'var(--lys-bg3)', border: '1px solid var(--lys-border)' }}
           >
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold mb-1">Din dag</p>
+              <p className="text-sm font-semibold mb-0.5" style={{ color: 'var(--lys-text)' }}>Din dag</p>
               {planStats.total > 0 ? (
-                <p className="text-sm" style={{ color: tokens.textMuted }}>{planStats.total} aktiviteter i din plan</p>
+                <p className="text-xs" style={{ color: 'var(--lys-muted)' }}>{planStats.total} aktiviteter i din plan</p>
               ) : (
-                <p className="text-sm" style={{ color: tokens.textMuted }}>🌿 Din dag er fri</p>
+                <p className="text-xs" style={{ color: 'var(--lys-muted)' }}>🌿 Din dag er fri</p>
               )}
             </div>
-            <span className="text-lg" style={{ color: accent }}>→</span>
+            <span className="text-sm" style={{ color: 'var(--lys-muted)' }}>→</span>
           </button>
         )}
 
         {/* Haven widget */}
-        <HavenWidget tokens={tokens} accent={accent} residentId={residentId} onNavigate={() => router.push(residentId ? `/haven?r=${residentId}` : '/haven')} />
+        <HavenWidget
+          residentId={residentId}
+          onNavigate={() => router.push(residentId ? `/haven?r=${residentId}` : '/haven')}
+        />
+
+        {/* Kriseplan card */}
+        <LysKrisePlanCard onOpen={() => setKrisePlanOpen(true)} />
 
         {/* Besked til personalet */}
         <LysBeskedTilPersonale tokens={tokens} accent={accent} firstName={firstName} residentId={residentId} />
@@ -394,8 +430,8 @@ export default function LysHome({
         <button
           type="button"
           onClick={() => onOpenFlow('aac')}
-          className="w-full flex items-center justify-center gap-3 rounded-2xl py-4 text-sm font-bold transition-all duration-150 active:scale-[0.98]"
-          style={{ backgroundColor: tokens.cardBg, boxShadow: tokens.shadow, color: accent }}
+          className="w-full flex items-center justify-center gap-3 rounded-2xl py-4 text-sm font-semibold transition-all duration-150 active:scale-[0.98]"
+          style={{ backgroundColor: 'var(--lys-bg3)', border: '1px solid var(--lys-border)', color: 'var(--lys-text)' }}
         >
           <span className="text-xl">🗣</span>
           Kommunikationstavle
@@ -405,27 +441,19 @@ export default function LysHome({
         <button
           type="button"
           onClick={() => onOpenFlow('sanser')}
-          className="w-full flex items-center justify-center gap-3 rounded-2xl py-4 text-sm font-bold transition-all duration-150 active:scale-[0.98]"
-          style={{
-            backgroundColor: tokens.cardBg,
-            boxShadow: tokens.shadow,
-            color: accent,
-          }}
+          className="w-full flex items-center justify-center gap-3 rounded-2xl py-4 text-sm font-semibold transition-all duration-150 active:scale-[0.98]"
+          style={{ backgroundColor: 'var(--lys-bg3)', border: '1px solid var(--lys-border)', color: 'var(--lys-text)' }}
         >
           <span className="text-xl">🫧</span>
           Ro &amp; sanser
         </button>
 
-        {/* Tal med Lys — link to dedicated chat */}
+        {/* Tal med Lys */}
         <button
           type="button"
           onClick={() => router.push('/lys-chat')}
-          className="w-full flex items-center justify-center gap-3 rounded-2xl py-4 text-sm font-bold transition-all duration-150 active:scale-[0.98]"
-          style={{
-            backgroundColor: tokens.cardBg,
-            boxShadow: tokens.shadow,
-            color: accent,
-          }}
+          className="w-full flex items-center justify-center gap-3 rounded-2xl py-4 text-sm font-semibold transition-all duration-150 active:scale-[0.98]"
+          style={{ backgroundColor: 'var(--lys-bg3)', border: '1px solid var(--lys-border)', color: 'var(--lys-text)' }}
         >
           <span className="text-xl">🎙️</span>
           Tal med Lys
@@ -434,42 +462,41 @@ export default function LysHome({
         {/* Lys AI response (after mood/check-in) */}
         {showLysCard && (lastAssistant || loading) && (
           <div
-            className="rounded-3xl p-6 transition-all duration-300"
+            className="rounded-2xl p-5 transition-all duration-300"
             style={{
-              backgroundColor: tokens.cardBg,
-              boxShadow: tokens.shadow,
-              border: `1px solid ${accent}18`,
+              backgroundColor: 'var(--lys-bg3)',
+              border: '1px solid var(--lys-border)',
             }}
           >
             <div className="flex items-start gap-4">
               <div
-                className="mt-0.5 h-10 w-10 shrink-0 rounded-full flex items-center justify-center text-lg font-black text-white"
-                style={{ background: `linear-gradient(135deg, ${accent}, ${accent}99)` }}
+                className="mt-0.5 h-9 w-9 shrink-0 rounded-full flex items-center justify-center text-base font-black"
+                style={{ backgroundColor: 'var(--lys-green-dim)', color: 'var(--lys-green)' }}
                 aria-hidden
               >
                 ✦
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2 mb-2">
-                  <p className="text-xs font-bold tracking-widest uppercase" style={{ color: accent }}>Lys</p>
+                  <p className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--lys-green)', opacity: 0.8 }}>Lys</p>
                   {lastAssistant && !loading && (
                     <button
                       type="button"
                       onClick={() => speakSafe(lastAssistant)}
-                      className="flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 active:scale-90"
-                      style={{ backgroundColor: tokens.accentSoft, color: accent }}
+                      className="flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200 active:scale-90"
+                      style={{ backgroundColor: 'var(--lys-green-dim)', color: 'var(--lys-green)' }}
                       aria-label="Læs højt"
                     >
-                      <Volume2 className="h-4 w-4" />
+                      <Volume2 className="h-3.5 w-3.5" />
                     </button>
                   )}
                 </div>
-                <p className="text-base leading-relaxed" style={{ color: tokens.text }}>
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--lys-text)' }}>
                   {loading ? (
-                    <span className="flex items-center gap-2" style={{ color: tokens.textMuted }}>
+                    <span className="flex items-center gap-2" style={{ color: 'var(--lys-muted)' }}>
                       <span className="inline-flex gap-1">
                         {[0, 120, 240].map(d => (
-                          <span key={d} className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: accent, animationDelay: `${d}ms` }} />
+                          <span key={d} className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: 'var(--lys-green)', animationDelay: `${d}ms` }} />
                         ))}
                       </span>
                     </span>
@@ -481,6 +508,9 @@ export default function LysHome({
         )}
 
       </main>
+
+      {/* Kriseplan bottom sheet */}
+      <LysKrisePlan open={krisePlanOpen} onClose={() => setKrisePlanOpen(false)} firstName={firstName} />
     </div>
   );
 }
