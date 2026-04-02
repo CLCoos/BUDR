@@ -19,6 +19,7 @@ import LysMaaltrappe from './LysMaaltrappe';
 import LysDagligSejr from './LysDagligSejr';
 import LysKrisekort from './LysKrisekort';
 import LysSansekasse from './LysSansekasse';
+import LysKrisePlan from './LysKrisePlan';
 
 type Props = {
   firstName: string;
@@ -141,6 +142,7 @@ export default function LysShell({ firstName, initials, residentId, facilityId }
               flowerFilledThisWeek={false}
               onOpenBlomst={() => setOverlay('flower')}
               onOpenCrisis={() => setOverlay('crisis')}
+              onOpenKrisePlan={() => setOverlay('kriseplan')}
             />
           )}
         </div>
@@ -234,6 +236,12 @@ export default function LysShell({ firstName, initials, residentId, facilityId }
       {overlay === 'sanser' && (
         <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: tokens.bg }}>
           <LysSansekasse tokens={tokens} accent={accent} onClose={() => setOverlay(null)} />
+        </div>
+      )}
+
+      {overlay === 'kriseplan' && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: tokens.bg }}>
+          <LysKrisePlan tokens={tokens} accent={accent} firstName={firstName} onClose={() => setOverlay(null)} />
         </div>
       )}
 

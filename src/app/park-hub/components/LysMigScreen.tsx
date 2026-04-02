@@ -49,6 +49,7 @@ type Props = {
   flowerFilledThisWeek?: boolean;
   onOpenBlomst: () => void;
   onOpenCrisis: () => void;
+  onOpenKrisePlan: () => void;
 };
 
 function getLevelInfo(xp: number) {
@@ -64,6 +65,7 @@ export default function LysMigScreen({
   flowerFilledThisWeek = false,
   onOpenBlomst,
   onOpenCrisis,
+  onOpenKrisePlan,
 }: Props) {
   const { residentId } = useResident();
   const session = useResidentSession();
@@ -491,6 +493,14 @@ export default function LysMigScreen({
           style={{ backgroundColor: '#E11D48', boxShadow: '0 4px 16px rgba(225,29,72,0.25)' }}
         >
           Åbn krise-støtte
+        </button>
+        <button
+          type="button"
+          onClick={onOpenKrisePlan}
+          className="w-full rounded-2xl py-3.5 text-sm font-bold transition-all duration-200 active:scale-[0.98]"
+          style={{ backgroundColor: '#fef2f2', color: '#E11D48', border: '1.5px solid #fecaca' }}
+        >
+          📋 Min kriseplan
         </button>
       </section>
 
