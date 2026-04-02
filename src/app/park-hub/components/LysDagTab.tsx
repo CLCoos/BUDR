@@ -340,6 +340,15 @@ export default function LysDagTab({ tokens, accent }: Props) {
           >
             <ChevronRight className="h-4 w-4" />
           </button>
+          <button
+            type="button"
+            onClick={() => setShowFab(true)}
+            className="h-8 w-8 rounded-full flex items-center justify-center text-white transition-all active:scale-90"
+            style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)`, boxShadow: `0 2px 10px ${accent}44` }}
+            aria-label="Tilføj aktivitet"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
         </div>
         {totalCount > 0 && (
           <div className="flex items-center justify-between gap-3">
@@ -446,78 +455,86 @@ export default function LysDagTab({ tokens, accent }: Props) {
           </div>
         )}
 
-        {/* Items list */}
+        {/* Items list — timeline style */}
         {approvedItems.length > 0 && (
-          <div className="space-y-2">
-            {approvedItems.map(item => {
-              const isDone = completed.has(item.id);
-              const emoji = item.emoji ?? CATEGORY_EMOJI[item.category] ?? '📌';
-              return (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-3 rounded-2xl px-4 py-3.5 transition-all duration-200"
-                  style={{
-                    backgroundColor: isDone ? `${accent}10` : tokens.cardBg,
-                    boxShadow: isDone ? 'none' : tokens.shadow,
-                    opacity: isDone ? 0.55 : 1,
-                  }}
-                >
-                  <div
-                    className="h-10 w-10 shrink-0 rounded-xl flex items-center justify-center text-xl"
-                    style={{ backgroundColor: `${accent}18` }}
-                    aria-hidden
-                  >
-                    {emoji}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className="text-sm font-semibold leading-snug"
-                      style={{ color: tokens.text, textDecoration: isDone ? 'line-through' : 'none' }}
+          <div className="relative">
+            {/* Vertical timeline line */}
+            <div
+              className="absolute left-[34px] top-3 bottom-3 w-px"
+              style={{ backgroundColor: `${accent}18` }}
+            />
+            <div className="space-y-1">
+              {approvedItems.map(item => {
+                const isDone = completed.has(item.id);
+                const emoji = item.emoji ?? CATEGORY_EMOJI[item.category] ?? '📌';
+                return (
+                  <div key={item.id} className="flex gap-3 items-stretch">
+                    {/* Time + dot column */}
+                    <div className="flex flex-col items-center shrink-0 w-[68px]">
+                      <p className="text-[10px] font-bold tabular-nums pt-3.5 leading-none" style={{ color: isDone ? `${accent}88` : accent }}>
+                        {item.time}
+                      </p>
+                      <div
+                        className="w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 transition-all duration-200"
+                        style={{
+                          backgroundColor: isDone ? accent : `${accent}30`,
+                          border: `2px solid ${isDone ? accent : `${accent}55`}`,
+                          boxShadow: isDone ? `0 0 0 3px ${accent}22` : 'none',
+                        }}
+                      />
+                    </div>
+
+                    {/* Card */}
+                    <div
+                      className="flex-1 flex items-center gap-3 rounded-2xl px-3.5 py-3 mb-2 transition-all duration-200 active:scale-[0.98]"
+                      style={{
+                        backgroundColor: isDone ? `${accent}08` : tokens.cardBg,
+                        boxShadow: isDone ? 'none' : tokens.shadow,
+                        border: isDone ? `1px solid ${accent}20` : '1px solid transparent',
+                        opacity: isDone ? 0.6 : 1,
+                      }}
                     >
-                      {item.title}
-                    </p>
-                    <p className="text-xs mt-0.5" style={{ color: tokens.textMuted }}>
-                      kl. {item.time}
-                      {item.description ? ` · ${item.description}` : ''}
-                    </p>
+                      <div
+                        className="h-9 w-9 shrink-0 rounded-xl flex items-center justify-center text-lg"
+                        style={{ backgroundColor: `${accent}15` }}
+                        aria-hidden
+                      >
+                        {emoji}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className="text-sm font-semibold leading-snug"
+                          style={{ color: tokens.text, textDecoration: isDone ? 'line-through' : 'none', opacity: isDone ? 0.7 : 1 }}
+                        >
+                          {item.title}
+                        </p>
+                        {item.description && (
+                          <p className="text-xs mt-0.5 truncate" style={{ color: tokens.textMuted }}>{item.description}</p>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleComplete(item.id)}
+                        className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90"
+                        style={{
+                          backgroundColor: isDone ? accent : `${accent}14`,
+                          border: `2px solid ${isDone ? accent : `${accent}35`}`,
+                        }}
+                        aria-label={isDone ? 'Fortryd' : 'Marker som færdig'}
+                      >
+                        {isDone
+                          ? <span className="text-white text-sm font-black">✓</span>
+                          : <span className="text-sm" style={{ color: `${accent}55` }}>○</span>
+                        }
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleComplete(item.id)}
-                    className="h-9 w-9 shrink-0 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90"
-                    style={{
-                      backgroundColor: isDone ? `${accent}22` : `${accent}14`,
-                      border: `2px solid ${isDone ? accent : `${accent}44`}`,
-                      color: isDone ? accent : tokens.textMuted,
-                    }}
-                    aria-label={isDone ? 'Fortryd' : 'Marker som færdig'}
-                  >
-                    {isDone ? <span className="text-base font-black">✓</span> : <span className="text-base opacity-40">○</span>}
-                  </button>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
-
-      {/* FAB */}
-      <button
-        type="button"
-        onClick={() => setShowFab(true)}
-        className="fixed z-30 flex items-center justify-center rounded-full text-white shadow-lg transition-all duration-200 active:scale-90"
-        style={{
-          bottom: 'calc(5rem + max(1.25rem, env(safe-area-inset-bottom, 0px)))',
-          right: '72px',
-          width: '44px',
-          height: '44px',
-          background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
-          boxShadow: `0 4px 16px ${accent}44`,
-        }}
-        aria-label="Tilføj aktivitet"
-      >
-        <Plus className="h-5 w-5" />
-      </button>
 
       {/* New item modal */}
       {showFab && (

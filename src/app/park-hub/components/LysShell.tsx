@@ -17,9 +17,7 @@ import LysBlomst from './LysBlomst';
 import LysTankefanger from './LysTankefanger';
 import LysMaaltrappe from './LysMaaltrappe';
 import LysDagligSejr from './LysDagligSejr';
-import LysKrisekort from './LysKrisekort';
 import LysSansekasse from './LysSansekasse';
-import LysKrisePlan from './LysKrisePlan';
 import LysAACBoard from './LysAACBoard';
 
 type Props = {
@@ -79,16 +77,12 @@ export default function LysShell({ firstName, initials, residentId, facilityId }
 
     if (payload.label === 'Meget svært' || payload.traffic === 'roed') {
       toast.success('📋 Sendt til portalen: Personalet ser, at du har haft det svært');
-      setOverlay('crisis');
-      return;
     }
     setOverlay(null);
     const note = payload.note ? ` Jeg skrev også: ${payload.note}` : '';
     await sendToLys(`Jeg har det sådan her: ${payload.label}.${note}`);
     setMoodTick(t => t + 1);
   };
-
-  const closeCrisis = () => setOverlay(null);
 
   const lightBar = phase === 'morning' || phase === 'afternoon';
 
@@ -142,8 +136,6 @@ export default function LysShell({ firstName, initials, residentId, facilityId }
               reducedMotion={reducedMotion}
               flowerFilledThisWeek={false}
               onOpenBlomst={() => setOverlay('flower')}
-              onOpenCrisis={() => setOverlay('crisis')}
-              onOpenKrisePlan={() => setOverlay('kriseplan')}
             />
           )}
         </div>
@@ -225,24 +217,9 @@ export default function LysShell({ firstName, initials, residentId, facilityId }
         </div>
       )}
 
-      {overlay === 'crisis' && (
-        <div
-          className="fixed inset-0 z-50 overflow-y-auto"
-          style={{ backgroundColor: '#0B1220' }}
-        >
-          <LysKrisekort firstName={firstName} facilityId={facilityId} onClose={closeCrisis} />
-        </div>
-      )}
-
       {overlay === 'sanser' && (
         <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: tokens.bg }}>
           <LysSansekasse tokens={tokens} accent={accent} onClose={() => setOverlay(null)} />
-        </div>
-      )}
-
-      {overlay === 'kriseplan' && (
-        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: tokens.bg }}>
-          <LysKrisePlan tokens={tokens} accent={accent} firstName={firstName} onClose={() => setOverlay(null)} />
         </div>
       )}
 
