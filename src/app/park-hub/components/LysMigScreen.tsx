@@ -52,6 +52,8 @@ type Props = {
   onOpenKrisePlan: () => void;
 };
 
+type SendState = 'idle' | 'sending' | 'sent' | 'error';
+
 function getLevelInfo(xp: number) {
   return LEVEL_INFO.find(l => xp >= l.min && xp <= l.max) ?? LEVEL_INFO[0]!;
 }
@@ -81,8 +83,31 @@ export default function LysMigScreen({
   const [editingNick, setEditingNick] = useState(false);
   const [savingNick, setSavingNick] = useState(false);
   const [colorTheme, setColorTheme] = useState('purple');
-  const [trendOpen, setTrendOpen] = useState(false);
+  const [trendOpen, setTrendOpen]       = useState(false);
+  const [staffMsg, setStaffMsg]         = useState('');
+  const [sendState, setSendState]       = useState<SendState>('idle');
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const sendToStaff = async () => {
+    if (!staffMsg.trim() || sendState === 'sending') return;
+    setSendState('sending');
+    try {
+      const res = await fetch('/api/park/message-staff', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: staffMsg }),
+      });
+      if (res.ok) {
+        setSendState('sent');
+        setStaffMsg('');
+        setTimeout(() => setSendState('idle'), 4000);
+      } else {
+        setSendState('error');
+      }
+    } catch {
+      setSendState('error');
+    }
+  };
 
   // Load XP, badges, profile via dataService
   useEffect(() => {
@@ -477,31 +502,58 @@ export default function LysMigScreen({
         </button>
       </section>
 
-      {/* Crisis card */}
-      <section className="rounded-3xl p-5" style={{ backgroundColor: '#FFF1F2', border: '1.5px solid #FECDD3' }}>
+      {/* Skriv til personalet */}
+      <section
+        className="rounded-3xl p-5"
+        style={{ backgroundColor: cardBg, boxShadow: isDarkish ? 'none' : tokens.shadow }}
+      >
         <div className="flex items-center gap-3 mb-3">
-          <span className="text-2xl">🆘</span>
+          <span className="text-xl">💬</span>
           <div>
-            <h2 className="text-sm font-bold text-rose-900">Har du brug for hjælp?</h2>
-            <p className="text-xs text-rose-700 mt-0.5">Du behøver ikke klare det alene.</p>
+            <h2 className="text-sm font-bold" style={{ color: tokens.text }}>Skriv til personalet</h2>
+            <p className="text-xs mt-0.5" style={{ color: subtext }}>Send en besked direkte til personalet på bostedet</p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onOpenCrisis}
-          className="w-full rounded-2xl py-3.5 text-sm font-bold text-white transition-all duration-200 active:scale-[0.98]"
-          style={{ backgroundColor: '#E11D48', boxShadow: '0 4px 16px rgba(225,29,72,0.25)' }}
-        >
-          Åbn krise-støtte
-        </button>
-        <button
-          type="button"
-          onClick={onOpenKrisePlan}
-          className="w-full rounded-2xl py-3.5 text-sm font-bold transition-all duration-200 active:scale-[0.98]"
-          style={{ backgroundColor: '#fef2f2', color: '#E11D48', border: '1.5px solid #fecaca' }}
-        >
-          📋 Min kriseplan
-        </button>
+
+        {sendState === 'sent' ? (
+          <div
+            className="rounded-2xl px-4 py-4 text-center"
+            style={{ backgroundColor: `${accent}14`, border: `1px solid ${accent}30` }}
+          >
+            <p className="text-sm font-bold" style={{ color: accent }}>Sendt ✓</p>
+            <p className="text-xs mt-1" style={{ color: subtext }}>Personalet har modtaget din besked</p>
+          </div>
+        ) : (
+          <>
+            <textarea
+              value={staffMsg}
+              onChange={e => setStaffMsg(e.target.value)}
+              placeholder="Skriv din besked her…"
+              rows={3}
+              className="w-full rounded-2xl px-4 py-3 text-sm resize-none focus:outline-none transition-colors mb-3"
+              style={{
+                backgroundColor: `${accent}10`,
+                border: `1px solid ${accent}25`,
+                color: tokens.text,
+              }}
+            />
+            {sendState === 'error' && (
+              <p className="text-xs text-red-400 mb-2">Noget gik galt — prøv igen</p>
+            )}
+            <button
+              type="button"
+              disabled={!staffMsg.trim() || sendState === 'sending'}
+              onClick={() => void sendToStaff()}
+              className="w-full rounded-2xl py-3.5 text-sm font-bold text-white transition-all duration-200 active:scale-[0.98] disabled:opacity-40"
+              style={{
+                background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
+                boxShadow: staffMsg.trim() ? `0 4px 16px ${accent}35` : undefined,
+              }}
+            >
+              {sendState === 'sending' ? 'Sender…' : 'Send besked'}
+            </button>
+          </>
+        )}
       </section>
 
     </div>
