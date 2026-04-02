@@ -65,7 +65,10 @@ export default function AlertPanel() {
 
   const fetchDbAlerts = useCallback(async () => {
     const supabase = createClient();
-    if (!supabase) return;
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
 
     const { data, error } = await supabase
       .from('care_portal_notifications')
@@ -75,6 +78,7 @@ export default function AlertPanel() {
 
     if (error) {
       console.error('[AlertPanel] fetch error:', error.message);
+      setLoading(false);
       return;
     }
 
