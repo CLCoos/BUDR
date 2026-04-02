@@ -20,6 +20,7 @@ import LysDagligSejr from './LysDagligSejr';
 import LysKrisekort from './LysKrisekort';
 import LysSansekasse from './LysSansekasse';
 import LysKrisePlan from './LysKrisePlan';
+import LysAACBoard from './LysAACBoard';
 
 type Props = {
   firstName: string;
@@ -242,6 +243,12 @@ export default function LysShell({ firstName, initials, residentId, facilityId }
       {overlay === 'kriseplan' && (
         <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: tokens.bg }}>
           <LysKrisePlan tokens={tokens} accent={accent} firstName={firstName} onClose={() => setOverlay(null)} />
+        </div>
+      )}
+
+      {overlay === 'aac' && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: tokens.bg }}>
+          <LysAACBoard tokens={tokens} accent={accent} residentId={residentId} onClose={() => setOverlay(null)} />
         </div>
       )}
 

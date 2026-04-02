@@ -390,6 +390,17 @@ export default function LysHome({
         {/* Besked til personalet */}
         <LysBeskedTilPersonale tokens={tokens} accent={accent} firstName={firstName} residentId={residentId} />
 
+        {/* AAC-board */}
+        <button
+          type="button"
+          onClick={() => onOpenFlow('aac')}
+          className="w-full flex items-center justify-center gap-3 rounded-2xl py-4 text-sm font-bold transition-all duration-150 active:scale-[0.98]"
+          style={{ backgroundColor: tokens.cardBg, boxShadow: tokens.shadow, color: accent }}
+        >
+          <span className="text-xl">🗣</span>
+          Kommunikationstavle
+        </button>
+
         {/* Sansekasse */}
         <button
           type="button"
