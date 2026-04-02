@@ -2,77 +2,23 @@
 
 import React, { useEffect, useState } from 'react';
 import { Pill, CheckCircle2, Clock } from 'lucide-react';
+import type { MedDefinition } from './types';
 
 // ── Types ─────────────────────────────────────────────────────
 
-interface MedDefinition {
-  id: string;
-  name: string;
-  dose: string;
-  frequency: string;
-  time: string;        // "08:00" | "21:00" | "Efter aftale" etc.
-  timeGroup: 'morgen' | 'middag' | 'aften' | 'behoev';
-  prescribedBy: string;
-  notes?: string;
-}
-
 interface GivenRecord {
   given: boolean;
-  givenAt: string; // ISO timestamp
+  givenAt: string;
 }
 
-// ── Medication definitions (shared across residents for demo) ─
-
-const MEDS: MedDefinition[] = [
-  {
-    id: 'med-001',
-    name: 'Escitalopram',
-    dose: '10 mg',
-    frequency: 'Dagligt',
-    time: '08:00',
-    timeGroup: 'morgen',
-    prescribedBy: 'Dr. Andersen',
-    notes: 'Tages med mad. Kan give svimmelhed de første uger.',
-  },
-  {
-    id: 'med-002',
-    name: 'Quetiapin',
-    dose: '50 mg',
-    frequency: 'Aften',
-    time: '21:00',
-    timeGroup: 'aften',
-    prescribedBy: 'Dr. Andersen',
-    notes: 'Sovemedicin. Tages 30 min før sengetid.',
-  },
-  {
-    id: 'med-003',
-    name: 'Melatonin',
-    dose: '3 mg',
-    frequency: 'Aften (ved behov)',
-    time: '22:00',
-    timeGroup: 'aften',
-    prescribedBy: 'Dr. Nielsen',
-  },
-  {
-    id: 'med-004',
-    name: 'Lorazepam',
-    dose: '1 mg',
-    frequency: 'Ved behov (max 3×/uge)',
-    time: 'Efter aftale',
-    timeGroup: 'behoev',
-    prescribedBy: 'Dr. Andersen',
-    notes: 'Kun ved akut angst. Notér i vagtnotat ved brug.',
-  },
-];
-
-const GROUP_LABELS: Record<MedDefinition['timeGroup'], string> = {
+const GROUP_LABELS: Record<MedDefinition['time_group'], string> = {
   morgen: 'Morgen',
   middag: 'Middag',
   aften:  'Aften',
   behoev: 'Ved behov',
 };
 
-const GROUPS: MedDefinition['timeGroup'][] = ['morgen', 'middag', 'aften', 'behoev'];
+const GROUPS: MedDefinition['time_group'][] = ['morgen', 'middag', 'aften', 'behoev'];
 
 // ── Storage helpers ───────────────────────────────────────────
 
@@ -102,9 +48,10 @@ function saveGiven(residentId: string, data: Record<string, GivenRecord>) {
 
 interface Props {
   residentId: string;
+  medications: MedDefinition[];
 }
 
-export default function ResidentMedicinTab({ residentId }: Props) {
+export default function ResidentMedicinTab({ residentId, medications }: Props) {
   const [given, setGiven] = useState<Record<string, GivenRecord>>({});
 
   useEffect(() => {
@@ -124,8 +71,17 @@ export default function ResidentMedicinTab({ residentId }: Props) {
     });
   }
 
-  const givenCount = Object.values(given).filter(g => g.given).length;
-  const totalActive = MEDS.length;
+  const activeMeds  = medications.filter(m => m.status === 'aktiv');
+  const givenCount  = activeMeds.filter(m => given[m.id]?.given).length;
+  const totalActive = activeMeds.length;
+
+  if (medications.length === 0) {
+    return (
+      <div className="py-16 text-center text-sm text-gray-400">
+        Ingen mediciner registreret for denne beboer
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5 max-w-xl">
@@ -148,8 +104,9 @@ export default function ResidentMedicinTab({ residentId }: Props) {
 
       {/* Groups */}
       {GROUPS.map(group => {
-        const meds = MEDS.filter(m => m.timeGroup === group);
+        const meds = medications.filter(m => m.time_group === group && m.status !== 'stoppet');
         if (meds.length === 0) return null;
+
         return (
           <div key={group} className="bg-white rounded-xl border border-gray-100 overflow-hidden">
             <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50">
@@ -159,44 +116,51 @@ export default function ResidentMedicinTab({ residentId }: Props) {
             </div>
             <div className="divide-y divide-gray-50">
               {meds.map(med => {
-                const rec = given[med.id];
+                const rec     = given[med.id];
                 const isGiven = rec?.given ?? false;
+                const isPaused = med.status === 'pauseret';
                 const givenAt = rec?.givenAt
                   ? new Date(rec.givenAt).toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' })
                   : null;
 
                 return (
                   <div key={med.id} className="px-4 py-4 flex items-center gap-4">
-                    {/* Med info */}
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                      isGiven ? 'bg-[#E1F5EE]' : 'bg-gray-100'
+                      isGiven ? 'bg-[#E1F5EE]' : isPaused ? 'bg-amber-50' : 'bg-gray-100'
                     }`}>
-                      <Pill size={18} className={isGiven ? 'text-[#1D9E75]' : 'text-gray-400'} />
+                      <Pill size={18} className={isGiven ? 'text-[#1D9E75]' : isPaused ? 'text-amber-400' : 'text-gray-400'} />
                     </div>
+
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className={`text-sm font-semibold ${isGiven ? 'text-gray-400' : 'text-gray-800'}`}>
                           {med.name}
                         </span>
                         <span className="text-xs text-gray-500">{med.dose}</span>
+                        {isPaused && (
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">Pauseret</span>
+                        )}
                       </div>
                       <div className="flex items-center gap-1 mt-0.5 text-xs text-gray-500">
                         <Clock size={10} />
-                        {med.time} · {med.frequency}
+                        {med.time_label} · {med.frequency}
                       </div>
                       {med.notes && (
                         <p className="text-xs text-gray-400 mt-0.5 italic">{med.notes}</p>
                       )}
                     </div>
 
-                    {/* Give / Given button */}
+                    {/* Give / Given button — disabled for paused meds */}
                     <button
                       type="button"
-                      onClick={() => toggle(med.id)}
+                      disabled={isPaused}
+                      onClick={() => !isPaused && toggle(med.id)}
                       className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all ${
-                        isGiven
-                          ? 'bg-[#E1F5EE] text-[#1D9E75] border border-[#A8DFC9] hover:bg-[#CCF0E0]'
-                          : 'bg-[#0F1B2D] text-white hover:bg-[#1a2d47] active:scale-95'
+                        isPaused
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : isGiven
+                            ? 'bg-[#E1F5EE] text-[#1D9E75] border border-[#A8DFC9] hover:bg-[#CCF0E0]'
+                            : 'bg-[#0F1B2D] text-white hover:bg-[#1a2d47] active:scale-95'
                       }`}
                     >
                       {isGiven ? (
@@ -204,6 +168,8 @@ export default function ResidentMedicinTab({ residentId }: Props) {
                           <CheckCircle2 size={16} />
                           <span>Givet {givenAt}</span>
                         </>
+                      ) : isPaused ? (
+                        'Pauseret'
                       ) : (
                         'Giv medicin'
                       )}

@@ -10,6 +10,7 @@ import ResidentHavenTab from './components/ResidentHavenTab';
 import ResidentOverblikTab from './components/ResidentOverblikTab';
 import ResidentMedicinTab from './components/ResidentMedicinTab';
 import type { DailyPlan, PendingProposal } from './components/DagsPlanPortal';
+import type { MedDefinition } from './components/types';
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -48,7 +49,7 @@ async function fetchResidentData(residentId: string) {
   const today = new Date().toISOString().slice(0, 10);
   const todayStart = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
 
-  const [residentRes, checkinRes, planRes, proposalsRes, journalRes] = await Promise.all([
+  const [residentRes, checkinRes, planRes, proposalsRes, journalRes, medsRes] = await Promise.all([
     supabase
       .from('care_residents')
       .select('user_id, display_name, onboarding_data')
@@ -81,6 +82,11 @@ async function fetchResidentData(residentId: string) {
       .gte('created_at', todayStart)
       .order('created_at', { ascending: false })
       .limit(10),
+    supabase
+      .from('resident_medications')
+      .select('id, name, dose, frequency, time_label, time_group, prescribed_by, notes, status')
+      .eq('resident_id', residentId)
+      .order('created_at', { ascending: true }),
   ]);
 
   if (!residentRes.data) return null;
@@ -111,6 +117,7 @@ async function fetchResidentData(residentId: string) {
       id: string; staff_name: string; entry_text: string; category: string; created_at: string;
     }[],
     todayPlanItems: planItems,
+    medications: (medsRes.data ?? []) as MedDefinition[],
   };
 }
 
@@ -140,11 +147,7 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
   const data = await fetchResidentData(residentId);
   if (!data) notFound();
 
-  const { resident, checkinNote, plan, proposals, journalEntries, todayPlanItems } = data;
-
-  // Medication counts — derived from localStorage on the client side,
-  // but we pass zeros here and the client ResidentMedicinTab handles its own state.
-  // For OverblikTab we pass 0/4 by default; the client re-hydrates from localStorage.
+  const { resident, checkinNote, plan, proposals, journalEntries, todayPlanItems, medications } = data;
 
   return (
     <PortalShell>
@@ -190,8 +193,7 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
             trafficLight={resident.trafficLight}
             moodScore={resident.moodScore}
             checkinNote={checkinNote}
-            medicationGivenCount={0}
-            medicationTotalCount={4}
+            medications={medications}
             journalEntries={journalEntries}
             todayPlanItems={todayPlanItems}
             pendingProposals={proposals.length}
@@ -199,7 +201,7 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
         )}
 
         {activeTab === 'medicin' && (
-          <ResidentMedicinTab residentId={residentId} />
+          <ResidentMedicinTab residentId={residentId} medications={medications} />
         )}
 
         {activeTab === 'dagsplan' && (

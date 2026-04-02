@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Pill, FileText, CheckSquare, AlertTriangle } from 'lucide-react';
+import type { MedDefinition } from './types';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -28,8 +29,7 @@ interface Props {
   trafficLight: TrafficUi;
   moodScore: number | null;
   checkinNote: string | null;
-  medicationGivenCount: number;
-  medicationTotalCount: number;
+  medications: MedDefinition[];
   journalEntries: JournalEntry[];
   todayPlanItems: PlanItem[];
   pendingProposals: number;
@@ -57,14 +57,34 @@ export default function ResidentOverblikTab({
   trafficLight,
   moodScore,
   checkinNote,
-  medicationGivenCount,
-  medicationTotalCount,
+  medications,
   journalEntries,
   todayPlanItems,
   pendingProposals,
 }: Props) {
   const tlCfg = trafficLight ? TL_CONFIG[trafficLight] : null;
   const pendingItems = todayPlanItems.filter(i => !i.done);
+
+  // Read given count from localStorage (same key as ResidentMedicinTab)
+  const [givenCount, setGivenCount] = useState(0);
+  const activeMeds = medications.filter(m => m.status === 'aktiv');
+
+  useEffect(() => {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const raw = localStorage.getItem(`budr_med_v1_${residentId}_${today}`);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Record<string, { given: boolean }>;
+        const count = activeMeds.filter(m => parsed[m.id]?.given).length;
+        setGivenCount(count);
+      }
+    } catch {
+      // ignore
+    }
+  }, [residentId, activeMeds.length]);
+
+  const medicationGivenCount = givenCount;
+  const medicationTotalCount = activeMeds.length;
 
   return (
     <div className="space-y-5">
