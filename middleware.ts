@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { NextRequest, NextResponse } from 'next/server';
 
 const RESIDENT_COOKIE = 'budr_resident_id';
+const DEMO_RESIDENT_ID = 'demo-resident-001';
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
@@ -69,8 +70,17 @@ export async function middleware(req: NextRequest) {
   if (isResidentRoute(pathname)) {
     const residentId = req.cookies.get(RESIDENT_COOKIE)?.value;
     if (!residentId) {
-      // No resident identified — send to root where QR/URL entry sets the cookie
-      return NextResponse.redirect(new URL('/', req.url));
+      // No resident cookie — auto-set demo user so the app is always previewable
+      req.cookies.set(RESIDENT_COOKIE, DEMO_RESIDENT_ID);
+      const response = NextResponse.next({ request: req });
+      response.cookies.set(RESIDENT_COOKIE, DEMO_RESIDENT_ID, {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 365,
+        path: '/',
+      });
+      return response;
     }
     return NextResponse.next();
   }

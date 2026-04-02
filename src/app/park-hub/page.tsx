@@ -1,6 +1,7 @@
 import React from 'react';
 import { createClient } from '@supabase/supabase-js';
 import LysShell from './components/LysShell';
+import DemoSeeder, { DEMO_RESIDENT_ID } from './components/DemoSeeder';
 import { getResidentId } from '@/lib/residentAuth';
 
 function deriveInitials(displayName: string): string {
@@ -40,7 +41,24 @@ async function getResident(residentId: string) {
 export default async function ParkHubPage() {
   const residentId = await getResidentId();
 
-  const resident = residentId ? await getResident(residentId) : null;
+  // Demo mode — auto-set by middleware when no real cookie exists
+  if (!residentId || residentId === DEMO_RESIDENT_ID) {
+    return (
+      <>
+        <DemoSeeder />
+        <div className="pt-8">
+          <LysShell
+            firstName="Anders"
+            initials="AM"
+            residentId={DEMO_RESIDENT_ID}
+            facilityId={null}
+          />
+        </div>
+      </>
+    );
+  }
+
+  const resident = await getResident(residentId);
 
   const displayName = resident?.name ?? '';
   const firstName = displayName.trim().split(/\s+/)[0] || '';
@@ -50,7 +68,7 @@ export default async function ParkHubPage() {
     <LysShell
       firstName={firstName}
       initials={initials}
-      residentId={residentId ?? ''}
+      residentId={residentId}
       facilityId={resident?.facilityId ?? null}
     />
   );
