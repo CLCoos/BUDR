@@ -35,10 +35,10 @@ interface AlertRow {
 }
 
 const alertTypeConfig: Record<AlertType, { label: string; icon: React.ElementType; color: string; bg: string }> = {
-  krise:       { label: 'Krise aktiveret', icon: Shield,        color: '#EF4444', bg: '#FEF2F2' },
-  lav_stemning:{ label: 'Lav stemning',    icon: Activity,      color: '#EF4444', bg: '#FEF2F2' },
-  inaktivitet: { label: 'Inaktivitet',     icon: Clock,         color: '#EAB308', bg: '#FEFCE8' },
-  besked:      { label: 'Besked fra beboer', icon: MessageSquare, color: '#7F77DD', bg: '#F5F4FF' },
+  krise:       { label: 'Krise aktiveret',   icon: Shield,        color: 'var(--cp-red)',   bg: 'var(--cp-red-dim)' },
+  lav_stemning:{ label: 'Lav stemning',      icon: Activity,      color: 'var(--cp-red)',   bg: 'var(--cp-red-dim)' },
+  inaktivitet: { label: 'Inaktivitet',       icon: Clock,         color: 'var(--cp-amber)', bg: 'var(--cp-amber-dim)' },
+  besked:      { label: 'Besked fra beboer', icon: MessageSquare, color: 'var(--cp-blue)',  bg: 'var(--cp-blue-dim)' },
 };
 
 function toInitials(name: string): string {
@@ -200,55 +200,83 @@ export default function AlertPanel() {
   return (
     <div
       id="budr-advarsler"
-      className="scroll-mt-24 bg-white rounded-lg border border-gray-100 overflow-hidden h-full"
+      className="scroll-mt-24 overflow-hidden h-full"
+      style={{ backgroundColor: 'var(--cp-bg2)', border: '1px solid var(--cp-border)', borderRadius: 12 }}
     >
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+      <div
+        className="flex items-center justify-between px-4 py-3"
+        style={{ borderBottom: '1px solid var(--cp-border)' }}
+      >
         <div className="flex items-center gap-2">
-          <AlertTriangle size={16} className="text-red-500" />
-          <span className="text-sm font-semibold text-gray-800">Aktive advarsler</span>
+          <AlertTriangle size={15} style={{ color: 'var(--cp-red)' }} />
+          <span className="text-sm font-medium" style={{ color: 'var(--cp-text)', fontSize: 13 }}>Aktive advarsler</span>
           {alerts.length > 0 && (
-            <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+            <span
+              className="text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold"
+              style={{ backgroundColor: 'var(--cp-red-dim)', color: 'var(--cp-red)' }}
+            >
               {alerts.length}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1 text-xs text-gray-400">
-          <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-          Live
+        {/* Live pill */}
+        <div
+          className="flex items-center gap-1.5"
+          style={{
+            padding: '4px 10px', borderRadius: 20,
+            backgroundColor: 'var(--cp-green-dim)',
+            border: '1px solid rgba(45,212,160,0.2)',
+          }}
+        >
+          <div style={{
+            width: 6, height: 6, borderRadius: '50%',
+            backgroundColor: 'var(--cp-green)',
+            boxShadow: '0 0 6px var(--cp-green)',
+            animation: 'pulse 2s infinite',
+          }} />
+          <span style={{ fontSize: 11, color: 'var(--cp-green)', fontWeight: 500 }}>Live</span>
         </div>
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="w-5 h-5 border-2 border-gray-200 border-t-gray-500 rounded-full animate-spin" />
+          <div className="w-5 h-5 rounded-full animate-spin" style={{ border: '2px solid var(--cp-border2)', borderTopColor: 'var(--cp-green)' }} />
         </div>
       ) : alerts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-          <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mb-3">
-            <Shield size={20} className="text-green-600" />
+          <div
+            className="w-10 h-10 rounded-full flex items-center justify-center mb-3"
+            style={{ backgroundColor: 'var(--cp-green-dim)' }}
+          >
+            <Shield size={20} style={{ color: 'var(--cp-green)' }} />
           </div>
-          <div className="text-sm font-semibold text-gray-700">Ingen aktive advarsler</div>
-          <div className="text-xs text-gray-400 mt-1">Alle beboere har det godt</div>
+          <div className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>Ingen aktive advarsler</div>
+          <div className="text-xs mt-1" style={{ color: 'var(--cp-muted)' }}>Alle beboere har det godt</div>
         </div>
       ) : (
-        <div className="divide-y divide-gray-50">
+        <div>
           {alerts.map(alert => {
             const config = alertTypeConfig[alert.type];
+            const avatarBg = alert.severity === 'roed' ? 'var(--cp-red-dim)' : 'var(--cp-amber-dim)';
+            const avatarColor = alert.severity === 'roed' ? 'var(--cp-red)' : 'var(--cp-amber)';
             return (
               <div
                 key={alert.id}
-                className={`p-4 transition-all ${alert.severity === 'roed' ? 'bg-red-50/30' : 'bg-yellow-50/30'}`}
+                className="p-4 transition-all"
+                style={{ borderBottom: '1px solid var(--cp-border)' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--cp-bg3)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = ''; }}
               >
                 <div className="flex items-start gap-3">
                   <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                    style={{ backgroundColor: alert.severity === 'roed' ? '#EF4444' : '#EAB308' }}
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                    style={{ backgroundColor: avatarBg, color: avatarColor }}
                   >
                     {alert.initials}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-sm font-semibold text-gray-800">{alert.residentName}</span>
+                      <span className="text-sm font-semibold" style={{ color: 'var(--cp-text)', fontSize: 13 }}>{alert.residentName}</span>
                       <span
                         className="text-xs px-1.5 py-0.5 rounded font-medium"
                         style={{ backgroundColor: config.bg, color: config.color }}
@@ -256,13 +284,26 @@ export default function AlertPanel() {
                         {config.label}
                       </span>
                     </div>
-                    <div className="text-xs text-gray-600 mb-1">{alert.detail}</div>
-                    <div className="text-xs text-gray-400">{alert.timestamp}</div>
+                    <div className="text-xs mb-1" style={{ color: 'var(--cp-muted)' }}>{alert.detail}</div>
+                    <div className="text-xs" style={{ color: 'var(--cp-muted2)' }}>{alert.timestamp}</div>
                   </div>
                   <button
                     onClick={() => void acknowledge(alert)}
-                    className="flex-shrink-0 px-2.5 py-1.5 rounded text-xs font-medium border transition-all hover:bg-gray-100 active:scale-95"
-                    style={{ borderColor: config.color, color: config.color }}
+                    className="flex-shrink-0 px-2.5 py-1.5 rounded text-xs font-medium transition-all active:scale-95"
+                    style={{
+                      border: '1px solid var(--cp-border2)',
+                      backgroundColor: 'transparent',
+                      color: 'var(--cp-muted)',
+                      borderRadius: 6,
+                    }}
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--cp-bg3)';
+                      (e.currentTarget as HTMLElement).style.color = 'var(--cp-text)';
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
+                      (e.currentTarget as HTMLElement).style.color = 'var(--cp-muted)';
+                    }}
                   >
                     Kvitter
                   </button>

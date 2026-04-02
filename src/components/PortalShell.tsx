@@ -7,7 +7,7 @@ export default async function PortalShell({ children }: { children: React.ReactN
   const org = await getOrganisationForStaff();
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-gray-50">
+    <div className="flex h-screen flex-col overflow-hidden" style={{ backgroundColor: 'var(--cp-bg)' }}>
       <TopNav />
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden pt-12">
         <PortalMobileNav

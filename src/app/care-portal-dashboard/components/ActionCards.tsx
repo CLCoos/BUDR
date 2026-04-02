@@ -20,78 +20,120 @@ export default function ActionCards({ onOpenOverrapport }: Props) {
       <button
         type="button"
         onClick={onOpenOverrapport}
-        className="text-left bg-white border border-gray-200/80 rounded-xl px-4 py-[14px] hover:shadow-sm hover:border-gray-300 transition-all duration-150 group"
+        className="text-left rounded-xl px-4 py-[14px] transition-all duration-150 group"
+        style={{
+          backgroundColor: 'var(--cp-bg2)',
+          border: '1px solid var(--cp-border)',
+          borderRadius: 12,
+          borderTop: '2px solid var(--cp-green)',
+        }}
+        onMouseEnter={e => {
+          (e.currentTarget as HTMLElement).style.borderColor = 'var(--cp-border2)';
+          (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLElement).style.borderColor = 'var(--cp-border)';
+          (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+        }}
       >
         <div className="flex items-start justify-between mb-3">
           <div
             className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: '#E1F5EE' }}
+            style={{ backgroundColor: 'var(--cp-green-dim)' }}
           >
-            <Home size={18} style={{ color: '#0F6E56' }} />
+            <Home size={18} style={{ color: 'var(--cp-green)' }} />
           </div>
           <span
             className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
-            style={{ backgroundColor: '#E1F5EE', color: '#0F6E56' }}
+            style={{ backgroundColor: 'var(--cp-green-dim)', color: 'var(--cp-green)' }}
           >
             Klar til godkendelse
           </span>
         </div>
-        <div className="text-sm font-semibold text-gray-900 group-hover:text-[#0F6E56] transition-colors">
+        <div className="text-sm font-semibold transition-colors" style={{ color: 'var(--cp-text)' }}>
           Overrapport
         </div>
-        <div className="text-xs text-gray-500 mt-0.5">AI-udkast til vagtskifte</div>
+        <div className="text-xs mt-0.5" style={{ color: 'var(--cp-muted)' }}>AI-udkast til vagtskifte</div>
       </button>
 
       {/* Kort 2 — Indsatsdokumentation */}
       <button
         type="button"
         onClick={() => router.push('/care-portal-indsatsdok')}
-        className="text-left bg-white border border-gray-200/80 rounded-xl px-4 py-[14px] hover:shadow-sm hover:border-gray-300 transition-all duration-150 group"
+        className="text-left rounded-xl px-4 py-[14px] transition-all duration-150 group"
+        style={{
+          backgroundColor: 'var(--cp-bg2)',
+          border: '1px solid var(--cp-border)',
+          borderRadius: 12,
+          borderTop: '2px solid var(--cp-amber)',
+        }}
+        onMouseEnter={e => {
+          (e.currentTarget as HTMLElement).style.borderColor = 'var(--cp-border2)';
+          (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLElement).style.borderColor = 'var(--cp-border)';
+          (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+        }}
       >
         <div className="flex items-start justify-between mb-3">
           <div
             className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: '#FAEEDA' }}
+            style={{ backgroundColor: 'var(--cp-amber-dim)' }}
           >
-            <Building2 size={18} style={{ color: '#854F0B' }} />
+            <Building2 size={18} style={{ color: 'var(--cp-amber)' }} />
           </div>
           <span
             className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
-            style={{ backgroundColor: '#FAEEDA', color: '#854F0B' }}
+            style={{ backgroundColor: 'var(--cp-amber-dim)', color: 'var(--cp-amber)' }}
           >
             2 afventer
           </span>
         </div>
-        <div className="text-sm font-semibold text-gray-900 group-hover:text-[#854F0B] transition-colors">
+        <div className="text-sm font-semibold transition-colors" style={{ color: 'var(--cp-text)' }}>
           Indsatsdok.
         </div>
-        <div className="text-xs text-gray-500 mt-0.5">§136 / §141 struktureret flow</div>
+        <div className="text-xs mt-0.5" style={{ color: 'var(--cp-muted)' }}>§136 / §141 struktureret flow</div>
       </button>
 
       {/* Kort 3 — Tilsynsrapport */}
       <button
         type="button"
         onClick={() => router.push('/care-portal-tilsynsrapport')}
-        className="text-left bg-white border border-gray-200/80 rounded-xl px-4 py-[14px] hover:shadow-sm hover:border-gray-300 transition-all duration-150 group"
+        className="text-left rounded-xl px-4 py-[14px] transition-all duration-150 group"
+        style={{
+          backgroundColor: 'var(--cp-bg2)',
+          border: '1px solid var(--cp-border)',
+          borderRadius: 12,
+          borderTop: '2px solid var(--cp-blue)',
+        }}
+        onMouseEnter={e => {
+          (e.currentTarget as HTMLElement).style.borderColor = 'var(--cp-border2)';
+          (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLElement).style.borderColor = 'var(--cp-border)';
+          (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+        }}
       >
         <div className="flex items-start justify-between mb-3">
           <div
             className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: '#E6F1FB' }}
+            style={{ backgroundColor: 'var(--cp-blue-dim)' }}
           >
-            <Plus size={18} style={{ color: '#185FA5' }} />
+            <Plus size={18} style={{ color: 'var(--cp-blue)' }} />
           </div>
           <span
             className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
-            style={{ backgroundColor: '#E6F1FB', color: '#185FA5' }}
+            style={{ backgroundColor: 'var(--cp-blue-dim)', color: 'var(--cp-blue)' }}
           >
             Opdateret i dag
           </span>
         </div>
-        <div className="text-sm font-semibold text-gray-900 group-hover:text-[#185FA5] transition-colors">
+        <div className="text-sm font-semibold transition-colors" style={{ color: 'var(--cp-text)' }}>
           Tilsynsrapport
         </div>
-        <div className="text-xs text-gray-500 mt-0.5">Autogenerer pakke til tilsyn</div>
+        <div className="text-xs mt-0.5" style={{ color: 'var(--cp-muted)' }}>Autogenerer pakke til tilsyn</div>
       </button>
     </div>
   );

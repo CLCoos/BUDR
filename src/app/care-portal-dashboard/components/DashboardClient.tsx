@@ -67,38 +67,62 @@ function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
       {/* Page header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Dagsoverblik</h1>
-          <div className="text-sm text-gray-500 mt-0.5">Bosted Nordlys · Dagvagt · Sara K.</div>
+          <h1
+            className="font-bold"
+            style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: 'var(--cp-text)', lineHeight: 1.2 }}
+          >
+            Dagsoverblik
+          </h1>
+          <div className="mt-0.5" style={{ fontSize: 13, color: 'var(--cp-muted)' }}>Bosted Nordlys · Dagvagt · Sara K.</div>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-xs text-gray-400">
-            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-            Live · Opdateret {lastUpdated}
+        <div className="flex items-center gap-2">
+          {/* Live pill */}
+          <div
+            className="flex items-center gap-1.5"
+            style={{
+              padding: '4px 10px', borderRadius: 20,
+              backgroundColor: 'var(--cp-green-dim)',
+              border: '1px solid rgba(45,212,160,0.2)',
+            }}
+          >
+            <div style={{
+              width: 6, height: 6, borderRadius: '50%',
+              backgroundColor: 'var(--cp-green)',
+              boxShadow: '0 0 6px var(--cp-green)',
+            }} />
+            <span style={{ fontSize: 11, color: 'var(--cp-green)', fontWeight: 500 }}>
+              Live · {lastUpdated}
+            </span>
           </div>
+          {[
+            { label: 'Overrapport', onClick: () => setOverrapportOpen(true), variant: 'default' },
+            { label: 'Indsatsdok.', onClick: () => setIndsatsOpen(true), variant: 'danger' },
+            { label: 'Tilsynsrapport', onClick: () => setTilsynsrapportOpen(true), variant: 'default' },
+          ].map(btn => (
+            <button
+              key={btn.label}
+              type="button"
+              onClick={btn.onClick}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors"
+              style={btn.variant === 'danger'
+                ? { border: '1px solid var(--cp-red-dim)', color: 'var(--cp-red)', backgroundColor: 'transparent' }
+                : { border: '1px solid var(--cp-border)', color: 'var(--cp-muted)', backgroundColor: 'transparent' }
+              }
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--cp-bg3)'; (e.currentTarget as HTMLElement).style.color = 'var(--cp-text)'; }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
+                (e.currentTarget as HTMLElement).style.color = btn.variant === 'danger' ? 'var(--cp-red)' : 'var(--cp-muted)';
+              }}
+            >
+              {btn.label}
+            </button>
+          ))}
           <button
             type="button"
-            onClick={() => setOverrapportOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-600 hover:bg-gray-100 transition-colors"
-          >
-            Overrapport
-          </button>
-          <button
-            type="button"
-            onClick={() => setIndsatsOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-xs text-red-600 hover:bg-red-50 transition-colors"
-          >
-            Indsatsdok.
-          </button>
-          <button
-            type="button"
-            onClick={() => setTilsynsrapportOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-600 hover:bg-gray-100 transition-colors"
-          >
-            Tilsynsrapport
-          </button>
-          <button
-            type="button"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-600 hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors"
+            style={{ border: '1px solid var(--cp-border)', color: 'var(--cp-muted)', backgroundColor: 'transparent' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--cp-bg3)'; (e.currentTarget as HTMLElement).style.color = 'var(--cp-text)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--cp-muted)'; }}
           >
             <RefreshCw size={12} />
             Opdater
@@ -149,7 +173,7 @@ export default function DashboardClient({ medicationWidget }: DashboardClientPro
   return (
     <Suspense
       fallback={
-        <div className="min-h-[40vh] animate-pulse rounded-xl bg-gray-100" aria-busy aria-label="Indlæser overblik" />
+        <div className="min-h-[40vh] animate-pulse rounded-xl" style={{ backgroundColor: 'var(--cp-bg3)' }} aria-busy aria-label="Indlæser overblik" />
       }
     >
       <DashboardClientInner medicationWidget={medicationWidget} />

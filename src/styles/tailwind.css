@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
 @import './park-flows.css';
 
 @tailwind base;
@@ -7,6 +7,24 @@
 
 @layer base {
   :root {
+    /* ── Care Portal dark theme ── */
+    --cp-bg:         #0f1117;
+    --cp-bg2:        #161b26;
+    --cp-bg3:        #1e2535;
+    --cp-border:     rgba(255,255,255,0.07);
+    --cp-border2:    rgba(255,255,255,0.12);
+    --cp-text:       #f0f2f7;
+    --cp-muted:      #7a8499;
+    --cp-muted2:     #4a5268;
+    --cp-green:      #2dd4a0;
+    --cp-green-dim:  rgba(45,212,160,0.12);
+    --cp-red:        #f56565;
+    --cp-red-dim:    rgba(245,101,101,0.12);
+    --cp-amber:      #f6ad55;
+    --cp-amber-dim:  rgba(246,173,85,0.12);
+    --cp-blue:       #63b3ed;
+    --cp-blue-dim:   rgba(99,179,237,0.12);
+
     --budr-lavender: #F5F4FF;
     --budr-purple: #7F77DD;
     --budr-purple-dark: #5E56C0;
@@ -42,6 +60,11 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Care Portal dark scrollbars */
+  .cp-scroll::-webkit-scrollbar { width: 4px; }
+  .cp-scroll::-webkit-scrollbar-track { background: var(--cp-bg3); }
+  .cp-scroll::-webkit-scrollbar-thumb { background: var(--cp-border2); border-radius: 2px; }
 
   .petal-fill {
     transition: all 0.3s ease;
