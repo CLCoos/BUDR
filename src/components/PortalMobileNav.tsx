@@ -61,7 +61,7 @@ export default function PortalMobileNav({ children, orgName, orgLogoUrl }: Props
           orgName={orgName}
           orgLogoUrl={orgLogoUrl}
         />
-        <main className="min-w-0 flex-1 overflow-y-auto md:pl-64">{children}</main>
+        <main className="min-w-0 flex-1 overflow-y-auto">{children}</main>
       </div>
     </>
   );

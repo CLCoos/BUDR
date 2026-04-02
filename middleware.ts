@@ -10,6 +10,8 @@ const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 function isCarePortalRoute(pathname: string): boolean {
   return (
     pathname.startsWith('/care-portal-dashboard') ||
+    pathname.startsWith('/care-portal-indsatsdok') ||
+    pathname.startsWith('/care-portal-tilsynsrapport') ||
     pathname.startsWith('/handover-workspace') ||
     pathname.startsWith('/resident-360-view')
   );
@@ -77,6 +79,10 @@ export const config = {
   matcher: [
     '/care-portal-dashboard',
     '/care-portal-dashboard/:path*',
+    '/care-portal-indsatsdok',
+    '/care-portal-indsatsdok/:path*',
+    '/care-portal-tilsynsrapport',
+    '/care-portal-tilsynsrapport/:path*',
     '/handover-workspace',
     '/handover-workspace/:path*',
     '/resident-360-view',

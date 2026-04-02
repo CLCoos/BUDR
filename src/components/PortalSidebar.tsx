@@ -84,11 +84,14 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
 
   return (
     <aside
-      className={`fixed bottom-0 left-0 z-[60] flex shrink-0 flex-col bg-[#0F1B2D] transition-[transform,width] duration-300 top-24 md:top-12 ${
-        collapsed ? 'w-16' : 'w-64'
-      } ${mobileClosed ? '-translate-x-full md:translate-x-0' : 'translate-x-0'} ${
-        mobileClosed ? 'pointer-events-none md:pointer-events-auto' : 'pointer-events-auto'
-      }`}
+      className={`
+        fixed bottom-0 left-0 z-[60] flex shrink-0 flex-col bg-[#0F1B2D]
+        transition-[transform,width] duration-300 top-24
+        md:static md:top-auto md:bottom-auto md:z-auto md:translate-x-0 md:pointer-events-auto
+        ${collapsed ? 'w-16' : 'w-64'}
+        ${mobileClosed ? '-translate-x-full' : 'translate-x-0'}
+        ${mobileClosed ? 'pointer-events-none' : 'pointer-events-auto'}
+      `}
     >
       {/* Org branding header */}
       <div className={`flex shrink-0 items-center border-b border-white/10 ${collapsed ? 'justify-center px-0 py-3' : 'gap-2.5 px-4 py-3'}`}>

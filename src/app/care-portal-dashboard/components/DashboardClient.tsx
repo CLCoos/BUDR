@@ -9,8 +9,10 @@ import ResidentList from './ResidentList';
 import StatCards from './StatCards';
 import HurtigJournalModal from './HurtigJournalModal';
 import OverrapportModal from './OverrapportModal';
+import OverrapportPanel from './OverrapportPanel';
 import IndsatsModal from './IndsatsModal';
 import TilsynsrapportModal from './TilsynsrapportModal';
+import ActionCards from './ActionCards';
 import { BookOpen, RefreshCw } from 'lucide-react';
 
 type DashboardClientProps = {
@@ -31,6 +33,7 @@ function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
   }, []);
   const [journalOpen, setJournalOpen] = useState(false);
   const [overrapportOpen, setOverrapportOpen] = useState(false);
+  const [overrapportPanelOpen, setOverrapportPanelOpen] = useState(false);
   const [indsatsOpen, setIndsatsOpen] = useState(false);
   const [tilsynsrapportOpen, setTilsynsrapportOpen] = useState(false);
   const searchParams = useSearchParams();
@@ -103,6 +106,9 @@ function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
         </div>
       </div>
 
+      {/* Action cards */}
+      <ActionCards onOpenOverrapport={() => setOverrapportPanelOpen(true)} />
+
       {medicationWidget}
 
       <BekymringsnotatWidget />
@@ -134,6 +140,7 @@ function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
       <OverrapportModal open={overrapportOpen} onClose={() => setOverrapportOpen(false)} />
       <IndsatsModal open={indsatsOpen} onClose={() => setIndsatsOpen(false)} />
       <TilsynsrapportModal open={tilsynsrapportOpen} onClose={() => setTilsynsrapportOpen(false)} />
+      <OverrapportPanel open={overrapportPanelOpen} onClose={() => setOverrapportPanelOpen(false)} />
     </div>
   );
 }
