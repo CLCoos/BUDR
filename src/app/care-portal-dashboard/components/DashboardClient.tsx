@@ -8,6 +8,9 @@ import OpgaveWidget from './OpgaveWidget';
 import ResidentList from './ResidentList';
 import StatCards from './StatCards';
 import HurtigJournalModal from './HurtigJournalModal';
+import OverrapportModal from './OverrapportModal';
+import IndsatsModal from './IndsatsModal';
+import TilsynsrapportModal from './TilsynsrapportModal';
 import { BookOpen, RefreshCw } from 'lucide-react';
 
 type DashboardClientProps = {
@@ -27,6 +30,9 @@ function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
     return () => window.clearInterval(t);
   }, []);
   const [journalOpen, setJournalOpen] = useState(false);
+  const [overrapportOpen, setOverrapportOpen] = useState(false);
+  const [indsatsOpen, setIndsatsOpen] = useState(false);
+  const [tilsynsrapportOpen, setTilsynsrapportOpen] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
   const tab = searchParams.get('tab');
@@ -66,6 +72,27 @@ function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
             <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
             Live · Opdateret {lastUpdated}
           </div>
+          <button
+            type="button"
+            onClick={() => setOverrapportOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-600 hover:bg-gray-100 transition-colors"
+          >
+            Overrapport
+          </button>
+          <button
+            type="button"
+            onClick={() => setIndsatsOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-xs text-red-600 hover:bg-red-50 transition-colors"
+          >
+            Indsatsdok.
+          </button>
+          <button
+            type="button"
+            onClick={() => setTilsynsrapportOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-600 hover:bg-gray-100 transition-colors"
+          >
+            Tilsynsrapport
+          </button>
           <button
             type="button"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-600 hover:bg-gray-100 transition-colors"
@@ -108,6 +135,9 @@ function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
       </button>
 
       <HurtigJournalModal open={journalOpen} onClose={closeJournal} />
+      <OverrapportModal open={overrapportOpen} onClose={() => setOverrapportOpen(false)} />
+      <IndsatsModal open={indsatsOpen} onClose={() => setIndsatsOpen(false)} />
+      <TilsynsrapportModal open={tilsynsrapportOpen} onClose={() => setTilsynsrapportOpen(false)} />
     </div>
   );
 }
