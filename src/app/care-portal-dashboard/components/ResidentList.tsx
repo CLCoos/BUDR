@@ -1,7 +1,7 @@
 'use client';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, ChevronRight, Clock, Loader2 } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 // ── Types ────────────────────────────────────────────────────
@@ -42,13 +42,23 @@ interface CareResidentRow {
   onboarding_data: Record<string, string> | null;
 }
 
-// ── Helpers ──────────────────────────────────────────────────
+// ── Colour tokens ─────────────────────────────────────────────
 
-const trafficConfig: Record<TrafficUi, { label: string; color: string; bg: string; textColor: string }> = {
-  groen: { label: 'Grøn', color: '#22C55E', bg: '#F0FDF4', textColor: '#15803D' },
-  gul:   { label: 'Gul',  color: '#EAB308', bg: '#FEFCE8', textColor: '#854D0E' },
-  roed:  { label: 'Rød',  color: '#EF4444', bg: '#FEF2F2', textColor: '#B91C1C' },
+/** Dot + progress-bar colours per traffic light */
+const TRAFFIC_DOT: Record<TrafficUi, string> = {
+  groen: '#1D9E75',
+  gul:   '#EF9F27',
+  roed:  '#E24B4A',
 };
+
+/** Avatar background + text per traffic light */
+function avatarStyle(tl: TrafficUi | null): React.CSSProperties {
+  if (tl === 'roed') return { backgroundColor: '#FCEBEB', color: '#A32D2D' };
+  if (tl === 'gul')  return { backgroundColor: '#FAEEDA', color: '#854F0B' };
+  return { backgroundColor: '#9CA3AF', color: '#fff' };
+}
+
+// ── Helpers ──────────────────────────────────────────────────
 
 function formatLastCheckin(isoString: string): string {
   const date = new Date(isoString);
@@ -87,7 +97,6 @@ export default function ResidentList() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'alle' | TrafficUi | 'ingen'>('alle');
 
-  // Realtime update handler (stable ref so useEffect doesn't re-run)
   const handleRealtimeInsert = useCallback((row: CheckinRow) => {
     setResidents(prev =>
       prev.map(r => (r.id === row.resident_id ? applyCheckin(r, row) : r)),
@@ -101,11 +110,9 @@ export default function ResidentList() {
       return;
     }
 
-    // ── Initial data load ──────────────────────────────────
     async function load() {
       if (!supabase) return;
 
-      // 1. All residents
       const { data: careResidents, error: resErr } = await supabase
         .from('care_residents')
         .select('user_id, display_name, onboarding_data')
@@ -116,7 +123,6 @@ export default function ResidentList() {
         return;
       }
 
-      // 2. Latest check-in per resident for today + pending proposals (parallel)
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
 
@@ -134,7 +140,6 @@ export default function ResidentList() {
 
       const checkins = checkinsResult.data;
 
-      // Keep only the most recent check-in per resident
       const latestByResident = new Map<string, CheckinRow>();
       for (const c of (checkins ?? []) as CheckinRow[]) {
         if (!latestByResident.has(c.resident_id)) {
@@ -142,13 +147,11 @@ export default function ResidentList() {
         }
       }
 
-      // Count pending proposals per resident
       const pendingByResident = new Map<string, number>();
       for (const p of (proposalsResult.data ?? []) as { resident_id: string }[]) {
         pendingByResident.set(p.resident_id, (pendingByResident.get(p.resident_id) ?? 0) + 1);
       }
 
-      // 3. Merge
       const merged: Resident[] = (careResidents as CareResidentRow[]).map(r => {
         const od = r.onboarding_data ?? {};
         const base: Resident = {
@@ -173,7 +176,6 @@ export default function ResidentList() {
 
     void load();
 
-    // ── Realtime subscription ──────────────────────────────
     const channel = supabase
       .channel('dashboard-resident-checkins')
       .on(
@@ -208,7 +210,6 @@ export default function ResidentList() {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-gray-800">Beboere</span>
-            {/* Live indicator */}
             <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
               Live
@@ -264,25 +265,28 @@ export default function ResidentList() {
                 <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5">Værelse</th>
                 <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5">Trafiklys</th>
                 <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5">Stemning</th>
-                <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5">Sidst set</th>
+                <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5">Check-in</th>
                 <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5">Note</th>
                 <th className="px-3 py-2.5" />
               </tr>
             </thead>
             <tbody>
               {filtered.map(r => {
-                const tc = r.trafficLight ? trafficConfig[r.trafficLight] : null;
+                const dotColor = r.trafficLight ? TRAFFIC_DOT[r.trafficLight] : '#D1D5DB';
+                const avStyle = avatarStyle(r.trafficLight);
+
                 return (
                   <tr
                     key={r.id}
                     onClick={() => router.push(`/resident-360-view/${r.id}`)}
                     className="border-b border-gray-50 hover:bg-gray-50 transition-colors group cursor-pointer"
                   >
+                    {/* Beboer */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
                         <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 transition-colors"
-                          style={{ backgroundColor: tc?.color ?? '#9CA3AF' }}
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                          style={avStyle}
                         >
                           {r.initials}
                         </div>
@@ -297,39 +301,53 @@ export default function ResidentList() {
                         </div>
                       </div>
                     </td>
+
+                    {/* Værelse */}
                     <td className="px-3 py-3 text-sm text-gray-600">{r.room}</td>
+
+                    {/* Trafiklys — coloured dot */}
                     <td className="px-3 py-3">
-                      {tc ? (
-                        <span
-                          className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium"
-                          style={{ backgroundColor: tc.bg, color: tc.textColor }}
-                        >
-                          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tc.color }} />
-                          {tc.label}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-gray-400 flex items-center gap-1">
-                          <Clock size={10} /> Mangler
-                        </span>
-                      )}
+                      <div
+                        className="rounded-full flex-shrink-0"
+                        style={{ width: 10, height: 10, backgroundColor: dotColor }}
+                      />
                     </td>
+
+                    {/* Stemning + mini progress bar */}
                     <td className="px-3 py-3">
                       {r.moodScore !== null ? (
-                        <span className="text-sm font-bold tabular-nums text-gray-700">
-                          {r.moodScore}
-                          <span className="text-xs text-gray-400 font-normal">/10</span>
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold tabular-nums text-gray-700">
+                            {r.moodScore}
+                            <span className="text-xs text-gray-400 font-normal">/10</span>
+                          </span>
+                          <div className="w-10 h-1 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
+                            <div
+                              className="h-full rounded-full"
+                              style={{
+                                width: `${(r.moodScore / 10) * 100}%`,
+                                backgroundColor: dotColor,
+                              }}
+                            />
+                          </div>
+                        </div>
                       ) : (
                         <span className="text-xs text-gray-400">—</span>
                       )}
                     </td>
+
+                    {/* Check-in tid */}
                     <td className="px-3 py-3 text-xs text-gray-500">{r.lastCheckin}</td>
+
+                    {/* Note */}
                     <td className="px-3 py-3 max-w-[200px]">
                       <span className="text-xs text-gray-500 truncate block">{r.notePreview}</span>
                     </td>
+
+                    {/* Arrow */}
                     <td className="px-3 py-3">
                       <span className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 group-hover:text-[#1D9E75] group-hover:border-[#1D9E75] transition-all">
-                        <ChevronRight size={14} />
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3l4 4-4 4"/></svg>
                       </span>
                     </td>
                   </tr>

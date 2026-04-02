@@ -114,14 +114,10 @@ function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
       {/* Stat cards */}
       <StatCards />
 
-      {/* Two-column layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5 mt-5">
-        <div className="xl:col-span-1">
-          <AlertPanel />
-        </div>
-        <div className="xl:col-span-2">
-          <ResidentList />
-        </div>
+      {/* Two-column layout — alert panel | resident table */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_1.4fr] gap-5 mt-5">
+        <AlertPanel />
+        <ResidentList />
       </div>
 
       <button
