@@ -11,6 +11,14 @@ export type CheckIn = {
   created_at: string;
 };
 
+export type SelfLetter = {
+  id: string;
+  text: string;
+  written_at: string;   // ISO datetime
+  deliver_at: string;   // ISO date (YYYY-MM-DD)
+  delivered: boolean;
+};
+
 export type JournalEntry = {
   id: string;
   date: string;
@@ -112,4 +120,5 @@ export const LOCAL_KEYS = {
   conversations:    'budr_lys_conversations',
   profile:          'budr_profile',
   pushSubscription: 'budr_push_subscription',
+  selfLetters:      'budr_self_letters',
 } as const;

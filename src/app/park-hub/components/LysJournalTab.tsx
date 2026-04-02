@@ -9,9 +9,11 @@ import * as dataService from '@/lib/dataService';
 import { getLysPhase, phaseDaLabel } from '../lib/lysTheme';
 import type { LysThemeTokens } from '../lib/lysTheme';
 import { ANTHROPIC_CHAT_MODEL } from '@/lib/ai/anthropicModel';
-import type { JournalEntry } from '@/types/local';
+import type { JournalEntry, SelfLetter } from '@/types/local';
+import { LOCAL_KEYS } from '@/types/local';
 
 type Mode = 'write' | 'voice';
+type JournalSection = 'dagbog' | 'brev';
 type Privacy = 'private' | 'shared';
 
 // ── Prompts (styrkebaserede, borgersprog) ────────────────────────────────────
@@ -115,6 +117,7 @@ export default function LysJournalTab({ tokens, accent }: Props) {
   const residentId = ctxResidentId || session.activeId;
   const storageMode = ctxResidentId ? 'supabase' as const : session.storageMode;
 
+  const [section, setSection] = useState<JournalSection>('dagbog');
   const [mode, setMode] = useState<Mode>('write');
   const [text, setText] = useState('');
   const [mood, setMood] = useState(3);
@@ -126,6 +129,13 @@ export default function LysJournalTab({ tokens, accent }: Props) {
   const [lysMsg, setLysMsg] = useState<string | null>(null);
   const [lysMsgLoading, setLysMsgLoading] = useState(false);
   const [todayPlanAnchor, setTodayPlanAnchor] = useState<string | null>(null);
+
+  // Self-letter state
+  const [letters, setLetters] = useState<SelfLetter[]>([]);
+  const [letterText, setLetterText] = useState('');
+  const [letterWeeks, setLetterWeeks] = useState(4);
+  const [letterSaving, setLetterSaving] = useState(false);
+  const [openLetter, setOpenLetter] = useState<SelfLetter | null>(null);
 
   // Voice state
   const [isListening, setIsListening] = useState(false);
@@ -151,6 +161,47 @@ export default function LysJournalTab({ tokens, accent }: Props) {
       if (mountedRef.current) setEntries(e);
     });
   }, []);
+
+  // Load self-letters
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(LOCAL_KEYS.selfLetters);
+      const all = raw ? (JSON.parse(raw) as SelfLetter[]) : [];
+      setLetters(all);
+      // Auto-open the first unread delivered letter
+      const today = new Date().toISOString().slice(0, 10);
+      const ready = all.find(l => !l.delivered && l.deliver_at <= today);
+      if (ready) setOpenLetter(ready);
+    } catch { /* ignore */ }
+  }, []);
+
+  const saveLetters = (updated: SelfLetter[]) => {
+    try { localStorage.setItem(LOCAL_KEYS.selfLetters, JSON.stringify(updated)); } catch { /* ignore */ }
+    setLetters(updated);
+  };
+
+  const handleSaveLetter = () => {
+    if (!letterText.trim() || letterSaving) return;
+    setLetterSaving(true);
+    const deliverDate = new Date();
+    deliverDate.setDate(deliverDate.getDate() + letterWeeks * 7);
+    const letter: SelfLetter = {
+      id: crypto.randomUUID(),
+      text: letterText.trim(),
+      written_at: new Date().toISOString(),
+      deliver_at: deliverDate.toISOString().slice(0, 10),
+      delivered: false,
+    };
+    saveLetters([letter, ...letters]);
+    setLetterText('');
+    setLetterSaving(false);
+  };
+
+  const markLetterRead = (id: string) => {
+    const updated = letters.map(l => l.id === id ? { ...l, delivered: true } : l);
+    saveLetters(updated);
+    setOpenLetter(null);
+  };
 
   // Load today's calendar anchor
   useEffect(() => {
@@ -334,6 +385,71 @@ export default function LysJournalTab({ tokens, accent }: Props) {
       </div>
 
       <div className="px-5 space-y-4 pb-8">
+
+        {/* Delivered letter modal */}
+        {openLetter && (
+          <div
+            className="rounded-3xl p-5 border-2"
+            style={{ backgroundColor: `${accent}10`, borderColor: accent }}
+          >
+            <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: accent }}>
+              📬 Et brev til dig selv er ankommet
+            </p>
+            <p className="text-xs mb-3" style={{ color: tokens.textMuted }}>
+              Skrevet {new Date(openLetter.written_at).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+            <p className="text-sm leading-relaxed whitespace-pre-wrap mb-4" style={{ color: tokens.text }}>
+              {openLetter.text}
+            </p>
+            <button
+              type="button"
+              onClick={() => markLetterRead(openLetter.id)}
+              className="rounded-2xl px-5 py-2.5 text-sm font-bold text-white"
+              style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)` }}
+            >
+              Jeg har læst det ✓
+            </button>
+          </div>
+        )}
+
+        {/* Section switcher */}
+        <div
+          className="flex rounded-2xl p-1"
+          style={{ backgroundColor: tokens.cardBg, boxShadow: tokens.shadow }}
+        >
+          {(['dagbog', 'brev'] as const).map(s => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setSection(s)}
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all duration-200"
+              style={{
+                backgroundColor: section === s ? accent : 'transparent',
+                color: section === s ? '#fff' : tokens.textMuted,
+              }}
+            >
+              {s === 'dagbog' ? '✍️ Dagbog' : '💌 Brev til mig selv'}
+            </button>
+          ))}
+        </div>
+
+        {/* Brev til mig selv section */}
+        {section === 'brev' && (
+          <BrevSection
+            tokens={tokens}
+            accent={accent}
+            letters={letters}
+            letterText={letterText}
+            setLetterText={setLetterText}
+            letterWeeks={letterWeeks}
+            setLetterWeeks={setLetterWeeks}
+            letterSaving={letterSaving}
+            onSave={handleSaveLetter}
+          />
+        )}
+
+        {/* Daily journal section — only shown when dagbog is active */}
+        {section === 'dagbog' && <>
 
         {/* Write / Voice toggle */}
         <div
@@ -719,7 +835,142 @@ export default function LysJournalTab({ tokens, accent }: Props) {
           </div>
         )}
 
+        </> /* end section === 'dagbog' */}
+
       </div>
+    </div>
+  );
+}
+
+// ── Brev til mig selv section ─────────────────────────────────────────────────
+
+function BrevSection({
+  tokens,
+  accent,
+  letters,
+  letterText,
+  setLetterText,
+  letterWeeks,
+  setLetterWeeks,
+  letterSaving,
+  onSave,
+}: {
+  tokens: LysThemeTokens;
+  accent: string;
+  letters: SelfLetter[];
+  letterText: string;
+  setLetterText: (v: string) => void;
+  letterWeeks: number;
+  setLetterWeeks: (v: number) => void;
+  letterSaving: boolean;
+  onSave: () => void;
+}) {
+  const today = new Date().toISOString().slice(0, 10);
+  const pending = letters.filter(l => !l.delivered && l.deliver_at > today);
+  const delivered = letters.filter(l => l.delivered);
+  const WEEK_OPTIONS = [1, 2, 4, 8];
+
+  const deliverLabel = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + letterWeeks * 7);
+    return d.toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' });
+  })();
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm leading-relaxed" style={{ color: tokens.textMuted }}>
+        Skriv et brev til dig selv — du modtager det efter dit valgte tidspunkt.
+      </p>
+
+      {/* Compose */}
+      <div className="rounded-3xl p-5 space-y-4" style={{ backgroundColor: tokens.cardBg, boxShadow: tokens.shadow }}>
+        <textarea
+          value={letterText}
+          onChange={e => setLetterText(e.target.value)}
+          rows={6}
+          placeholder="Kære mig selv… Hvad vil du gerne huske? Hvad håber du på?"
+          className="w-full rounded-2xl px-4 py-3.5 text-sm leading-relaxed resize-none outline-none"
+          style={{
+            backgroundColor: `${accent}08`,
+            border: `1.5px solid ${accent}20`,
+            color: tokens.text,
+            caretColor: accent,
+          }}
+        />
+
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: tokens.textMuted }}>
+            Åbn brevet om
+          </p>
+          <div className="flex gap-2">
+            {WEEK_OPTIONS.map(w => (
+              <button
+                key={w}
+                type="button"
+                onClick={() => setLetterWeeks(w)}
+                className="flex-1 rounded-xl py-2.5 text-xs font-bold transition-all duration-150"
+                style={{
+                  backgroundColor: letterWeeks === w ? `${accent}22` : 'transparent',
+                  border: `1.5px solid ${letterWeeks === w ? accent : `${accent}20`}`,
+                  color: letterWeeks === w ? accent : tokens.textMuted,
+                }}
+              >
+                {w === 1 ? '1 uge' : `${w} uger`}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs mt-2" style={{ color: tokens.textMuted }}>
+            Leveres {deliverLabel}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={!letterText.trim() || letterSaving}
+          className="w-full rounded-2xl py-3.5 text-sm font-bold text-white transition-all active:scale-[0.98] disabled:opacity-40"
+          style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)` }}
+        >
+          💌 Forsegl og gem brevet
+        </button>
+      </div>
+
+      {/* Pending letters */}
+      {pending.length > 0 && (
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: tokens.textMuted }}>
+            Forseglet — venter på åbningsdato
+          </p>
+          <div className="space-y-2">
+            {pending.map(l => (
+              <div key={l.id} className="rounded-2xl px-4 py-3" style={{ backgroundColor: tokens.cardBg }}>
+                <p className="text-xs" style={{ color: tokens.textMuted }}>
+                  🔒 Åbnes {new Date(l.deliver_at).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Delivered/read letters */}
+      {delivered.length > 0 && (
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: tokens.textMuted }}>
+            Læste breve
+          </p>
+          <div className="space-y-2">
+            {delivered.map(l => (
+              <div key={l.id} className="rounded-2xl px-4 py-3.5" style={{ backgroundColor: tokens.cardBg, boxShadow: tokens.shadow }}>
+                <p className="text-xs mb-2" style={{ color: tokens.textMuted }}>
+                  Skrevet {new Date(l.written_at).toLocaleDateString('da-DK', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </p>
+                <p className="text-sm leading-relaxed" style={{ color: tokens.text }}>{l.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
