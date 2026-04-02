@@ -103,13 +103,17 @@ async function fetchResidentData(residentId: string) {
 
   return {
     resident: {
-      id:           r.user_id as string,
-      name:         r.display_name as string,
-      initials:     od.avatar_initials ?? (r.display_name as string).slice(0, 2).toUpperCase(),
-      room:         od.room ?? '—',
-      trafficLight: tl,
-      moodScore:    c ? (c.mood_score as number) : null,
-      lastCheckin:  c ? formatCheckin(c.created_at as string) : null,
+      id:                      r.user_id as string,
+      name:                    r.display_name as string,
+      initials:                od.avatar_initials ?? (r.display_name as string).slice(0, 2).toUpperCase(),
+      room:                    od.room ?? '—',
+      trafficLight:            tl,
+      moodScore:               c ? (c.mood_score as number) : null,
+      lastCheckin:             c ? formatCheckin(c.created_at as string) : null,
+      moveInDate:              od.move_in_date ?? null,
+      primaryContact:          od.primary_contact ?? null,
+      primaryContactPhone:     od.primary_contact_phone ?? null,
+      primaryContactRelation:  od.primary_contact_relation ?? null,
     },
     checkinNote:  c ? (c.note as string | null) : null,
     plan:         (planRes.data as DailyPlan | null) ?? null,
@@ -163,6 +167,10 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
           moodScore={resident.moodScore}
           lastCheckin={resident.lastCheckin}
           pendingProposals={proposals.length}
+          moveInDate={resident.moveInDate}
+          primaryContact={resident.primaryContact}
+          primaryContactPhone={resident.primaryContactPhone}
+          primaryContactRelation={resident.primaryContactRelation}
         />
 
         {/* Action bar */}

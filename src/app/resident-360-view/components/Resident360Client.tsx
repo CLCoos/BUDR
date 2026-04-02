@@ -40,6 +40,10 @@ export default function Resident360Client() {
         moodScore={null}
         lastCheckin={null}
         pendingProposals={0}
+        moveInDate={null}
+        primaryContact={null}
+        primaryContactPhone={null}
+        primaryContactRelation={null}
       />
       {/* Tab nav */}
       <div className="flex gap-1 bg-white border border-gray-200 rounded-lg p-1 mt-5 mb-5 w-fit">
