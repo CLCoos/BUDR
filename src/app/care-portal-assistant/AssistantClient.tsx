@@ -14,6 +14,50 @@ const SUGGESTIONS = [
   'En beboer vil ikke forlade sit værelse. Hvad gør jeg?',
 ];
 
+const PRESET_ANSWERS: Record<string, string> = {
+  'Hvem er beboerne her, og hvad er vigtigt at vide?':
+    `Bostedet har aktuelt fem beboere. Generelt er det vigtigt at kende den enkeltes dagsrytme og trivselsmarkører — nogle har brug for struktur og forudsigelighed, andre trives bedst med lidt løsere rammer.
+
+Som vikar er de vigtigste ting: læs seneste journal inden vagten, notér dig eventuelle advarselssignaler fra de foregående dage, og spørg den afløste kollega om der er noget særligt at være opmærksom på. Brug BUDR-systemet til at se beboernes stemningsscore og trafiklys — det giver et hurtigt overblik.
+
+Hvis du er i tvivl om en beboer, er det altid bedre at spørge end at gætte.`,
+
+  'Hvad gør jeg hvis en beboer nægter at tage sin medicin?':
+    `Første skridt er at spørge roligt og nysgerrigt: "Er der noget særligt ved medicinen i dag?" — ofte er der en grund, fx bivirkninger, glemsel eller dårlig dag. Undgå at presse eller argumentere, da det typisk forværrer situationen.
+
+Notér afvisningen i journalen med klokkeslæt og hvad beboeren sagde. Informér den ansvarlige sygeplejerske eller din faglige leder, da medicinnægtelse skal håndteres fagligt og eventuelt dokumenteres som afvigelse. Du må aldrig give medicin uden samtykke — det er lovgivningsmæssigt klart.
+
+Prøv evt. igen efter 30 minutter med en anden indgangsvinkel, eller tilbyd at tage medicinen på en anden måde, hvis det er muligt.`,
+
+  'Hvordan håndterer jeg en konflikt mellem to beboere?':
+    `Hold dig rolig og neutral — din ro smitter. Adskil de to beboere fysisk, gerne ved at bede den ene om at følge med dig et andet sted hen, uden at det føles som en straf. Undgå at tage parti.
+
+Lyt til begge parter hver for sig, anerkend deres følelser ("Jeg kan godt se, du er rigtig ked af det"), og undgå at dømme. Når begge er faldet ned, kan du eventuelt facilitere en kort, rolig samtale — men kun hvis begge er klar til det.
+
+Dokumentér hændelsen i journalen for begge beboere: hvad skete der, hvad var din reaktion, og hvad blev resultatet. Informér din leder ved næste møde, eller med det samme hvis situationen var alvorlig.`,
+
+  'Hvad skal jeg skrive i journalen efter en hændelse?':
+    `En god journalnotits er faktuel, konkret og uden fortolkning. Skriv hvad du observerede — ikke hvad du tror beboeren "mente" eller "følte". Brug gerne SOAP-strukturen: Situation, Observation, Analyse, Plan.
+
+Eksempel: "Kl. 14:30 opstod verbal konflikt mellem beboer X og Y i fællesrummet. Begge parter blev adskilt. X udtrykte at Y havde taget hans stol. Y var ophidset men roliggjordes efter 10 minutter i eget værelse. Ingen fysisk kontakt. Beboerne har siden haft rolig adfærd. Leder informeret."
+
+Husk: journalen er et juridisk dokument. Skriv altid med dit navn, og aldrig noget du ikke ville sige direkte til beboeren.`,
+
+  'Hvornår må man anvende magt ifølge loven?':
+    `Magtanvendelse over for voksne med betydelig og varigt nedsat psykisk funktionsevne reguleres af Servicelovens §§ 124–136. Udgangspunktet er klart: magt må kun bruges som absolut sidste udvej og aldrig som straf eller bekvemmelighed.
+
+Lovlige magtformer inkluderer: fastholdelse ved overhængende fare for skade (§ 126), tilbageholdelse i kortere tid (§ 127) og alarm- og pejlesystemer med samtykke. Al magtanvendelse skal indberettes til kommunen inden for 5 hverdage på en specifik blanket.
+
+Som udgangspunkt: kald på en kollega, forsøg verbal de-eskalering, skab ro i rummet — og brug kun fysisk indgriben hvis beboeren er i overhængende fare for at skade sig selv eller andre. Ring til din leder eller vagttelefonen inden du handler, hvis situationen tillader det.`,
+
+  'En beboer vil ikke forlade sit værelse. Hvad gør jeg?':
+    `Respektér i første omgang beboerens ønske — det er hans eller hendes ret at opholde sig på værelset. Bank på, præsenter dig roligt, og spørg om du må komme ind eller tale ved døren. Undgå at kræve eller ultimere.
+
+Prøv at forstå årsagen: Er beboeren angst? Træt? Konflikter med andre? Dårlig dag? Spørg åbent og lyttende. Tilbyd evt. noget konkret — en kop te, en kort snak, et spil. Nogle beboere har brug for tid og reagerer bedst på gentagne, korte og ikke-krævende kontakter.
+
+Dokumentér i journalen at beboeren har opholdt sig isoleret og hvad du forsøgte. Kontakt din leder hvis isolationen varer længe eller er kombineret med andre bekymringstegn som manglende mad/drikke eller selvskade.`,
+};
+
 export default function AssistantClient() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -35,7 +79,15 @@ export default function AssistantClient() {
     setInput('');
     setStreaming(true);
 
-    // Placeholder assistant message for streaming
+    // Use preset answer immediately if available (demo / suggestion questions)
+    const preset = PRESET_ANSWERS[trimmed];
+    if (preset) {
+      setMessages(prev => [...prev, { role: 'assistant', content: preset }]);
+      setStreaming(false);
+      return;
+    }
+
+    // Placeholder for API response
     setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
 
     try {
