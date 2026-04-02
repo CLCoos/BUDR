@@ -39,3 +39,6 @@ linear-import_1.mjs
 linear-import.mjs
 linear-import_1.mjs
 .env.local
+
+# Local Netlify folder
+.netlify
