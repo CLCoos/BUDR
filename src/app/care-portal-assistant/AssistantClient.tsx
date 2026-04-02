@@ -45,28 +45,21 @@ export default function AssistantClient() {
         body: JSON.stringify({ messages: updated }),
       });
 
-      if (!res.ok || !res.body) {
-        const err = await res.json().catch(() => ({ error: 'Ukendt fejl' }));
+      const data = await res.json().catch(() => ({ error: 'Ugyldigt svar' }));
+
+      if (!res.ok) {
         setMessages(prev => [
           ...prev.slice(0, -1),
-          { role: 'assistant', content: `Beklager, noget gik galt: ${(err as { error?: string }).error ?? 'prøv igen'}` },
+          { role: 'assistant', content: `Beklager, noget gik galt: ${(data as { error?: string }).error ?? 'prøv igen'}` },
         ]);
         return;
       }
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let accumulated = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        accumulated += decoder.decode(value, { stream: true });
-        setMessages(prev => [
-          ...prev.slice(0, -1),
-          { role: 'assistant', content: accumulated },
-        ]);
-      }
+      const reply = (data as { text?: string }).text ?? '';
+      setMessages(prev => [
+        ...prev.slice(0, -1),
+        { role: 'assistant', content: reply },
+      ]);
     } catch {
       setMessages(prev => [
         ...prev.slice(0, -1),

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
@@ -108,41 +107,35 @@ ${journalContext}
 
 VIGTIG GRÆNSE: Du erstatter ikke supervision, lægefaglig vurdering eller akut hjælp (112). Hvis noget er akut eller alvorligt, sig det klart og opfordr til at kontakte leder eller politi/ambulance.`;
 
-  // Stream response
-  const anthropic = new Anthropic({ apiKey: key });
-
-  const stream = anthropic.messages.stream({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 700,
-    system,
-    messages,
-  });
-
-  const encoder = new TextEncoder();
-  const readable = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of stream) {
-          if (
-            chunk.type === 'content_block_delta' &&
-            chunk.delta.type === 'text_delta'
-          ) {
-            controller.enqueue(encoder.encode(chunk.delta.text));
-          }
-        }
-      } catch (e) {
-        console.error('[staff-assistant] stream error:', e);
-      } finally {
-        controller.close();
-      }
-    },
-  });
-
-  return new NextResponse(readable, {
+  // Call Anthropic API directly (same pattern as lys-chat which works on Netlify)
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
     headers: {
-      'Content-Type': 'text/plain; charset=utf-8',
-      'Cache-Control': 'no-cache',
-      'Transfer-Encoding': 'chunked',
+      'content-type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
     },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 700,
+      system,
+      messages,
+    }),
   });
+
+  if (!res.ok) {
+    const err = await res.text();
+    console.error('[staff-assistant] anthropic error:', res.status, err);
+    return NextResponse.json({ error: 'AI svarer ikke — prøv igen' }, { status: 502 });
+  }
+
+  const data = (await res.json()) as { content?: Array<{ type?: string; text?: string }> };
+  const block = data.content?.find(c => c.type === 'text');
+  const text = block?.text?.trim();
+
+  if (!text) {
+    return NextResponse.json({ error: 'Tomt svar fra AI' }, { status: 502 });
+  }
+
+  return NextResponse.json({ text });
 }
