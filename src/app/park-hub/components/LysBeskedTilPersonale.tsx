@@ -18,6 +18,12 @@ const PRESETS = [
   { key: 'praktisk', text: 'Jeg mangler noget praktisk 🏠' },
 ] as const;
 
+const PRN_PRESETS = [
+  { key: 'prn_samtale', text: 'Jeg har brug for en samtale med nogen NU',    urgency: 'high' },
+  { key: 'prn_ro',      text: 'Jeg har brug for hjælp til at få ro i kroppen', urgency: 'high' },
+  { key: 'prn_medicin', text: 'Jeg har brug for min bedarfsmedicin',           urgency: 'high' },
+] as const;
+
 type UIState = 'idle' | 'confirm' | 'sent';
 
 export default function LysBeskedTilPersonale({
@@ -161,54 +167,84 @@ export default function LysBeskedTilPersonale({
 
   // ── Idle form ─────────────────────────────────────────────────────────────
   return (
-    <section
-      className="rounded-2xl p-5 transition-all duration-200"
-      style={{ backgroundColor: cardBg, border: `1px solid ${borderCol}`, color: tokens.text }}
-      aria-labelledby="lys-besked-heading"
-    >
-      <div className="mb-3 flex items-center gap-2">
-        <MessageCircle className="h-5 w-5 shrink-0" style={{ color: accent }} aria-hidden />
-        <h2 id="lys-besked-heading" className="text-sm font-bold">Skriv til personalet</h2>
+    <section className="space-y-3">
+      {/* PRN / urgent help */}
+      <div
+        className="rounded-2xl p-4"
+        style={{ backgroundColor: 'rgba(239,68,68,0.08)', border: '1.5px solid rgba(239,68,68,0.2)' }}
+      >
+        <p className="text-xs font-bold uppercase tracking-wide mb-2.5" style={{ color: '#ef4444' }}>
+          Hjælp mig nu
+        </p>
+        <div className="flex flex-col gap-2">
+          {PRN_PRESETS.map(p => (
+            <button
+              key={p.key}
+              type="button"
+              onClick={() => requestSend(p.text, p.key)}
+              className="min-h-[44px] rounded-xl px-4 py-2.5 text-left text-sm font-semibold transition-all duration-150 active:scale-[0.98]"
+              style={{
+                backgroundColor: 'rgba(239,68,68,0.10)',
+                border: '1px solid rgba(239,68,68,0.25)',
+                color: tokens.text,
+              }}
+            >
+              {p.text}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="flex flex-col gap-2 mb-4">
-        {PRESETS.map(p => (
+      {/* Regular messages */}
+      <div
+        className="rounded-2xl p-5 transition-all duration-200"
+        style={{ backgroundColor: cardBg, border: `1px solid ${borderCol}`, color: tokens.text }}
+        aria-labelledby="lys-besked-heading"
+      >
+        <div className="mb-3 flex items-center gap-2">
+          <MessageCircle className="h-5 w-5 shrink-0" style={{ color: accent }} aria-hidden />
+          <h2 id="lys-besked-heading" className="text-sm font-bold">Skriv til personalet</h2>
+        </div>
+
+        <div className="flex flex-col gap-2 mb-4">
+          {PRESETS.map(p => (
+            <button
+              key={p.key}
+              type="button"
+              onClick={() => requestSend(p.text, p.key)}
+              className="min-h-[44px] rounded-xl px-4 py-2.5 text-left text-sm font-medium transition-all duration-150 active:scale-[0.98]"
+              style={{ border: `1px solid ${borderCol}`, backgroundColor: inputBg, color: tokens.text }}
+            >
+              {p.text}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={custom}
+            onChange={e => setCustom(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && custom.trim()) requestSend(custom); }}
+            maxLength={200}
+            placeholder="Eller skriv selv …"
+            className="min-h-[44px] flex-1 rounded-xl px-4 text-sm outline-none transition-all duration-200"
+            style={{ border: `1px solid ${borderCol}`, backgroundColor: inputBg, color: tokens.text, caretColor: accent }}
+          />
           <button
-            key={p.key}
             type="button"
-            onClick={() => requestSend(p.text, p.key)}
-            className="min-h-[44px] rounded-xl px-4 py-2.5 text-left text-sm font-medium transition-all duration-150 active:scale-[0.98]"
-            style={{ border: `1px solid ${borderCol}`, backgroundColor: inputBg, color: tokens.text }}
+            disabled={!custom.trim()}
+            onClick={() => requestSend(custom, 'custom')}
+            className="min-h-[44px] shrink-0 rounded-full px-5 text-sm font-bold text-white transition-all duration-150 disabled:opacity-40 active:scale-95"
+            style={{ backgroundColor: accent }}
           >
-            {p.text}
+            Send
           </button>
-        ))}
+        </div>
+        <p className="mt-2 text-xs" style={{ color: tokens.textMuted }}>
+          Din besked går kun til personalet på dit bosted.
+        </p>
       </div>
-
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={custom}
-          onChange={e => setCustom(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter' && custom.trim()) requestSend(custom); }}
-          maxLength={200}
-          placeholder="Eller skriv selv …"
-          className="min-h-[44px] flex-1 rounded-xl px-4 text-sm outline-none transition-all duration-200"
-          style={{ border: `1px solid ${borderCol}`, backgroundColor: inputBg, color: tokens.text, caretColor: accent }}
-        />
-        <button
-          type="button"
-          disabled={!custom.trim()}
-          onClick={() => requestSend(custom, 'custom')}
-          className="min-h-[44px] shrink-0 rounded-full px-5 text-sm font-bold text-white transition-all duration-150 disabled:opacity-40 active:scale-95"
-          style={{ backgroundColor: accent }}
-        >
-          Send
-        </button>
-      </div>
-      <p className="mt-2 text-xs" style={{ color: tokens.textMuted }}>
-        Din besked går kun til personalet på dit bosted.
-      </p>
     </section>
   );
 }
