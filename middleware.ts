@@ -12,6 +12,7 @@ function isCarePortalRoute(pathname: string): boolean {
     pathname.startsWith('/care-portal-dashboard') ||
     pathname.startsWith('/care-portal-indsatsdok') ||
     pathname.startsWith('/care-portal-tilsynsrapport') ||
+    pathname.startsWith('/care-portal-settings') ||
     pathname.startsWith('/handover-workspace') ||
     pathname.startsWith('/resident-360-view')
   );
@@ -83,6 +84,8 @@ export const config = {
     '/care-portal-indsatsdok/:path*',
     '/care-portal-tilsynsrapport',
     '/care-portal-tilsynsrapport/:path*',
+    '/care-portal-settings',
+    '/care-portal-settings/:path*',
     '/handover-workspace',
     '/handover-workspace/:path*',
     '/resident-360-view',
