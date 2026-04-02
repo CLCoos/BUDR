@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Pill, FileText, CheckSquare, AlertTriangle } from 'lucide-react';
 import type { MedDefinition } from './types';
+import WriteJournalEntry from './WriteJournalEntry';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -26,6 +27,7 @@ interface PlanItem {
 
 interface Props {
   residentId: string;
+  residentName: string;
   trafficLight: TrafficUi;
   moodScore: number | null;
   checkinNote: string | null;
@@ -54,6 +56,7 @@ function formatTime(iso: string) {
 
 export default function ResidentOverblikTab({
   residentId,
+  residentName,
   trafficLight,
   moodScore,
   checkinNote,
@@ -223,8 +226,11 @@ export default function ResidentOverblikTab({
             <div className="flex items-center gap-2">
               <FileText size={15} className="text-[#378ADD]" />
               <span className="text-sm font-semibold text-gray-800">Journalnoter i dag</span>
+              {journalEntries.length > 0 && (
+                <span className="text-xs text-gray-400">{journalEntries.length} noter</span>
+              )}
             </div>
-            <span className="text-xs text-gray-400">{journalEntries.length} noter</span>
+            <WriteJournalEntry residentId={residentId} residentName={residentName} />
           </div>
           <div className="divide-y divide-gray-50">
             {journalEntries.length === 0 ? (

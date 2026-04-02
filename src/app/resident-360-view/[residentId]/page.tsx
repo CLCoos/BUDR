@@ -9,6 +9,7 @@ import ResidentPlanTab from './components/ResidentPlanTab';
 import ResidentHavenTab from './components/ResidentHavenTab';
 import ResidentOverblikTab from './components/ResidentOverblikTab';
 import ResidentMedicinTab from './components/ResidentMedicinTab';
+import WriteJournalEntry from './components/WriteJournalEntry';
 import type { DailyPlan, PendingProposal } from './components/DagsPlanPortal';
 import type { MedDefinition } from './components/types';
 
@@ -164,8 +165,13 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
           pendingProposals={proposals.length}
         />
 
+        {/* Action bar */}
+        <div className="flex items-center justify-end mt-4">
+          <WriteJournalEntry residentId={residentId} residentName={resident.name} />
+        </div>
+
         {/* Tabs */}
-        <div className="flex gap-0.5 mt-5 mb-5 border-b border-gray-200 overflow-x-auto">
+        <div className="flex gap-0.5 mt-3 mb-5 border-b border-gray-200 overflow-x-auto">
           {ALL_TABS.map(t => (
             <Link
               key={t}
@@ -190,6 +196,7 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
         {activeTab === 'overblik' && (
           <ResidentOverblikTab
             residentId={residentId}
+            residentName={resident.name}
             trafficLight={resident.trafficLight}
             moodScore={resident.moodScore}
             checkinNote={checkinNote}
