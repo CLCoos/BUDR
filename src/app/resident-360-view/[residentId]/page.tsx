@@ -3,12 +3,24 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
 import PortalShell from '@/components/PortalShell';
+import ResidentHeader from '../components/ResidentHeader';
 import DagsPlanPortal from './components/DagsPlanPortal';
 import ResidentPlanTab from './components/ResidentPlanTab';
 import ResidentHavenTab from './components/ResidentHavenTab';
+import ResidentOverblikTab from './components/ResidentOverblikTab';
+import ResidentMedicinTab from './components/ResidentMedicinTab';
 import type { DailyPlan, PendingProposal } from './components/DagsPlanPortal';
 
-// ── Data fetching ─────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────
+
+type TrafficDb = 'grøn' | 'gul' | 'rød';
+type TrafficUi = 'groen' | 'gul' | 'roed';
+
+const DB_TO_UI: Record<TrafficDb, TrafficUi> = {
+  'grøn': 'groen',
+  'gul':  'gul',
+  'rød':  'roed',
+};
 
 function getServiceClient() {
   return createClient(
@@ -18,31 +30,38 @@ function getServiceClient() {
   );
 }
 
-async function fetchResident(residentId: string) {
-  const supabase = getServiceClient();
-  const { data } = await supabase
-    .from('care_residents')
-    .select('user_id, display_name, onboarding_data')
-    .eq('user_id', residentId)
-    .single();
-  if (!data) return null;
-  const od = (data.onboarding_data as Record<string, string> | null) ?? {};
-  return {
-    id: data.user_id as string,
-    name: data.display_name as string,
-    initials: od.avatar_initials ?? (data.display_name as string).slice(0, 2).toUpperCase(),
-    room: od.room ?? '—',
-  };
+function formatCheckin(iso: string): string {
+  const date = new Date(iso);
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const timeStr = date.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
+  if (date >= todayStart) return `I dag · ${timeStr}`;
+  const yesterdayStart = new Date(todayStart.getTime() - 86400000);
+  if (date >= yesterdayStart) return `I går · ${timeStr}`;
+  return date.toLocaleDateString('da-DK', { day: 'numeric', month: 'short' }) + ` · ${timeStr}`;
 }
 
-async function fetchTodayData(residentId: string): Promise<{
-  plan: DailyPlan | null;
-  proposals: PendingProposal[];
-}> {
+// ── Data fetching ─────────────────────────────────────────────
+
+async function fetchResidentData(residentId: string) {
   const supabase = getServiceClient();
   const today = new Date().toISOString().slice(0, 10);
+  const todayStart = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
 
-  const [planRes, proposalsRes] = await Promise.all([
+  const [residentRes, checkinRes, planRes, proposalsRes, journalRes] = await Promise.all([
+    supabase
+      .from('care_residents')
+      .select('user_id, display_name, onboarding_data')
+      .eq('user_id', residentId)
+      .single(),
+    supabase
+      .from('park_daily_checkin')
+      .select('mood_score, traffic_light, note, created_at')
+      .eq('resident_id', residentId)
+      .gte('created_at', todayStart)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
     supabase
       .from('daily_plans')
       .select('id, resident_id, plan_date, plan_items')
@@ -55,109 +74,151 @@ async function fetchTodayData(residentId: string): Promise<{
       .eq('resident_id', residentId)
       .eq('status', 'pending')
       .order('created_at', { ascending: false }),
+    supabase
+      .from('journal_entries')
+      .select('id, staff_name, entry_text, category, created_at')
+      .eq('resident_id', residentId)
+      .gte('created_at', todayStart)
+      .order('created_at', { ascending: false })
+      .limit(10),
   ]);
 
+  if (!residentRes.data) return null;
+
+  const r  = residentRes.data;
+  const od = (r.onboarding_data as Record<string, string> | null) ?? {};
+  const c  = checkinRes.data;
+  const tl = c ? (DB_TO_UI[c.traffic_light as TrafficDb] ?? null) : null;
+
+  const planItems = ((planRes.data?.plan_items ?? []) as { id?: string; title: string; done?: boolean; time?: string }[]).map(
+    (item, i) => ({ id: item.id ?? `item-${i}`, title: item.title, done: item.done ?? false, time: item.time }),
+  );
+
   return {
-    plan: (planRes.data as DailyPlan | null) ?? null,
-    proposals: ((proposalsRes.data ?? []) as PendingProposal[]),
+    resident: {
+      id:           r.user_id as string,
+      name:         r.display_name as string,
+      initials:     od.avatar_initials ?? (r.display_name as string).slice(0, 2).toUpperCase(),
+      room:         od.room ?? '—',
+      trafficLight: tl,
+      moodScore:    c ? (c.mood_score as number) : null,
+      lastCheckin:  c ? formatCheckin(c.created_at as string) : null,
+    },
+    checkinNote:  c ? (c.note as string | null) : null,
+    plan:         (planRes.data as DailyPlan | null) ?? null,
+    proposals:    (proposalsRes.data ?? []) as PendingProposal[],
+    journalEntries: (journalRes.data ?? []) as {
+      id: string; staff_name: string; entry_text: string; category: string; created_at: string;
+    }[],
+    todayPlanItems: planItems,
   };
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// ── Page ──────────────────────────────────────────────────────
 
 type Props = {
   params: Promise<{ residentId: string }>;
   searchParams: Promise<{ tab?: string }>;
 };
 
+const ALL_TABS = ['overblik', 'medicin', 'dagsplan', 'plan', 'haven'] as const;
+type TabId = typeof ALL_TABS[number];
+
+const TAB_LABELS: Record<TabId, string> = {
+  overblik: 'Overblik',
+  medicin:  'Medicin',
+  dagsplan: 'Dagsplan',
+  plan:     'Plan',
+  haven:    'Haven 🌿',
+};
+
 export default async function ResidentDagPage({ params, searchParams }: Props) {
-  const { residentId } = await params;
-  const { tab = 'dagsplan' } = await searchParams as { tab?: string };
+  const { residentId }    = await params;
+  const { tab = 'overblik' } = await searchParams as { tab?: string };
+  const activeTab = (ALL_TABS as readonly string[]).includes(tab) ? (tab as TabId) : 'overblik';
 
-  const [resident, dayData] = await Promise.all([
-    fetchResident(residentId),
-    fetchTodayData(residentId),
-  ]);
+  const data = await fetchResidentData(residentId);
+  if (!data) notFound();
 
-  if (!resident) notFound();
+  const { resident, checkinNote, plan, proposals, journalEntries, todayPlanItems } = data;
 
-  const todayLabel = new Date().toLocaleDateString('da-DK', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
+  // Medication counts — derived from localStorage on the client side,
+  // but we pass zeros here and the client ResidentMedicinTab handles its own state.
+  // For OverblikTab we pass 0/4 by default; the client re-hydrates from localStorage.
 
   return (
     <PortalShell>
       <div className="p-6 max-w-screen-lg">
-        {/* Header */}
-        <div className="flex items-start gap-4 mb-6">
-          <Link
-            href={`/resident-360-view?id=${residentId}`}
-            className="mt-0.5 text-sm text-gray-500 hover:text-gray-700 transition-colors flex items-center gap-1"
-          >
-            ← Tilbage
-          </Link>
-          <div className="flex-1">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#0F1B2D] flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                {resident.initials}
-              </div>
-              <div>
-                <h1 className="text-lg font-bold text-gray-900">{resident.name}</h1>
-                <p className="text-sm text-gray-500">
-                  Værelse {resident.room} · <span className="capitalize">{todayLabel}</span>
-                </p>
-              </div>
-            </div>
-          </div>
-          {dayData.proposals.length > 0 && (
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse inline-block" />
-              {dayData.proposals.length} {dayData.proposals.length === 1 ? 'forslag' : 'forslag'} afventer
-            </div>
-          )}
-        </div>
+        {/* Dynamic header */}
+        <ResidentHeader
+          residentId={residentId}
+          name={resident.name}
+          initials={resident.initials}
+          room={resident.room}
+          trafficLight={resident.trafficLight}
+          moodScore={resident.moodScore}
+          lastCheckin={resident.lastCheckin}
+          pendingProposals={proposals.length}
+        />
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-6 border-b border-gray-200">
-          {[
-            { key: 'dagsplan', label: 'Dagsplan' },
-            { key: 'plan',     label: 'Plan' },
-            { key: 'haven',    label: 'Haven 🌿' },
-          ].map(t => (
+        <div className="flex gap-0.5 mt-5 mb-5 border-b border-gray-200 overflow-x-auto">
+          {ALL_TABS.map(t => (
             <Link
-              key={t.key}
-              href={`/resident-360-view/${residentId}?tab=${t.key}`}
-              className={`px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors ${
-                tab === t.key
+              key={t}
+              href={`/resident-360-view/${residentId}?tab=${t}`}
+              className={`px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap ${
+                activeTab === t
                   ? 'border-[#0F1B2D] text-[#0F1B2D]'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              {t.label}
+              {TAB_LABELS[t]}
+              {t === 'dagsplan' && proposals.length > 0 && (
+                <span className="ml-1.5 w-4 h-4 rounded-full bg-amber-400 text-white text-[10px] font-bold inline-flex items-center justify-center">
+                  {proposals.length}
+                </span>
+              )}
             </Link>
           ))}
         </div>
 
         {/* Tab content */}
-        {tab === 'dagsplan' && (
-          <DagsPlanPortal
+        {activeTab === 'overblik' && (
+          <ResidentOverblikTab
             residentId={residentId}
-            residentName={resident.name}
-            initialPlan={dayData.plan}
-            initialProposals={dayData.proposals}
+            trafficLight={resident.trafficLight}
+            moodScore={resident.moodScore}
+            checkinNote={checkinNote}
+            medicationGivenCount={0}
+            medicationTotalCount={4}
+            journalEntries={journalEntries}
+            todayPlanItems={todayPlanItems}
+            pendingProposals={proposals.length}
           />
         )}
 
-        {tab === 'plan' && (
+        {activeTab === 'medicin' && (
+          <ResidentMedicinTab residentId={residentId} />
+        )}
+
+        {activeTab === 'dagsplan' && (
+          <DagsPlanPortal
+            residentId={residentId}
+            residentName={resident.name}
+            initialPlan={plan}
+            initialProposals={proposals}
+          />
+        )}
+
+        {activeTab === 'plan' && (
           <ResidentPlanTab
             residentId={residentId}
             residentName={resident.name}
           />
         )}
 
-        {tab === 'haven' && (
+        {activeTab === 'haven' && (
           <ResidentHavenTab
             residentId={residentId}
             residentName={resident.name}

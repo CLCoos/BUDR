@@ -31,7 +31,16 @@ export default function Resident360Client() {
 
   return (
     <div className="p-6 max-w-screen-2xl">
-      <ResidentHeader />
+      <ResidentHeader
+        residentId={residentIdFromUrl ?? ''}
+        name="Anders M."
+        initials="AM"
+        room="104"
+        trafficLight="groen"
+        moodScore={null}
+        lastCheckin={null}
+        pendingProposals={0}
+      />
       {/* Tab nav */}
       <div className="flex gap-1 bg-white border border-gray-200 rounded-lg p-1 mt-5 mb-5 w-fit">
         {tabs?.map(tab => (
