@@ -4,4 +4,7 @@ export type LysFlowOverlay =
   | 'thought'
   | 'goals'
   | 'dailyWin'
-  | 'crisis';
+  | 'crisis'
+  | 'sanser'
+  | 'kriseplan'
+  | 'aac';

@@ -18,6 +18,7 @@ import LysTankefanger from './LysTankefanger';
 import LysMaaltrappe from './LysMaaltrappe';
 import LysDagligSejr from './LysDagligSejr';
 import LysKrisekort from './LysKrisekort';
+import LysSansekasse from './LysSansekasse';
 
 type Props = {
   firstName: string;
@@ -227,6 +228,12 @@ export default function LysShell({ firstName, initials, residentId, facilityId }
           style={{ backgroundColor: '#0B1220' }}
         >
           <LysKrisekort firstName={firstName} facilityId={facilityId} onClose={closeCrisis} />
+        </div>
+      )}
+
+      {overlay === 'sanser' && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: tokens.bg }}>
+          <LysSansekasse tokens={tokens} accent={accent} onClose={() => setOverlay(null)} />
         </div>
       )}
 
