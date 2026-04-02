@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import AppLogo from '@/components/ui/AppLogo';
 import { createClient } from '@/lib/supabase/client';
+import { useAlertCount } from '@/hooks/useAlertCount';
 
 type NavItem = {
   icon: typeof LayoutDashboard;
@@ -26,11 +27,11 @@ type NavItem = {
   cpActiveTab?: string | null;
 };
 
-const navItems: NavItem[] = [
+const staticNavItems: NavItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/care-portal-dashboard', badge: 0, cpActiveTab: null },
-  { icon: ClipboardList, label: 'Vagtoverlev.', href: '/handover-workspace', badge: 2 },
+  { icon: ClipboardList, label: 'Vagtoverlev.', href: '/handover-workspace', badge: 0 },
   { icon: Users, label: 'Beboere', href: '/resident-360-view', badge: 0 },
-  { icon: Bell, label: 'Advarsler', href: '/care-portal-dashboard?tab=alerts', badge: 3, cpActiveTab: 'alerts' },
+  { icon: Bell, label: 'Advarsler', href: '/care-portal-dashboard?tab=alerts', badge: 0, cpActiveTab: 'alerts' },
   { icon: Calendar, label: 'Planlægger', href: '/care-portal-dashboard?tab=planner', badge: 0, cpActiveTab: 'planner' },
   { icon: BookOpen, label: 'Journal', href: '/care-portal-dashboard?tab=journal', badge: 0, cpActiveTab: 'journal' },
   { icon: Upload,   label: 'Dataimport',    href: '/care-portal-import',   badge: 0 },
@@ -58,6 +59,11 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
   const [collapsed, setCollapsed] = useState(false);
   const [displayName, setDisplayName] = useState<string>('');
   const [initials, setInitials] = useState<string>('');
+  const alertCount = useAlertCount();
+
+  const navItems = staticNavItems.map(item =>
+    item.cpActiveTab === 'alerts' ? { ...item, badge: alertCount } : item,
+  );
 
   useEffect(() => {
     const supabase = createClient();

@@ -1,6 +1,15 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { getResidentId } from '@/lib/residentAuth';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+
+function getServiceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { auth: { persistSession: false } },
+  );
+}
 
 const UI_TO_DB: Record<string, string> = {
   groen: 'grøn',
@@ -53,6 +62,40 @@ export async function POST(req: Request): Promise<NextResponse> {
   if (error) {
     console.error('[daily-checkin] insert error:', error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Fire alert notification for low mood or red traffic light
+  if (mood_score <= 3 || traffic_light === 'roed') {
+    const serviceClient = getServiceClient();
+
+    // Only create if no unacknowledged lav_stemning alert already exists for this resident
+    const { data: existing } = await serviceClient
+      .from('care_portal_notifications')
+      .select('id')
+      .eq('resident_id', residentId)
+      .eq('type', 'lav_stemning')
+      .is('acknowledged_at', null)
+      .maybeSingle();
+
+    if (!existing) {
+      const trafficLabel = traffic_light === 'roed' ? 'Rød trafiklys' : 'Gul trafiklys';
+      const detail = `Stemningsscore ${mood_score}/10 · ${trafficLabel}`;
+      const severity = mood_score <= 3 || traffic_light === 'roed' ? 'roed' : 'gul';
+
+      const { data: resident } = await serviceClient
+        .from('care_residents')
+        .select('display_name')
+        .eq('user_id', residentId)
+        .maybeSingle();
+
+      await serviceClient.from('care_portal_notifications').insert({
+        resident_id: residentId,
+        type: 'lav_stemning',
+        detail,
+        severity,
+        source_table: 'park_daily_checkin',
+      });
+    }
   }
 
   return NextResponse.json({ ok: true });

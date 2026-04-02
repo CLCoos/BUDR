@@ -2,8 +2,9 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Users, CheckSquare, AlertTriangle, TrendingUp } from 'lucide-react';
+import { useAlertCount } from '@/hooks/useAlertCount';
 
-const stats = [
+const staticStats = [
   {
     id: 'stat-residents',
     label: 'Aktive beboere',
@@ -31,8 +32,8 @@ const stats = [
   {
     id: 'stat-alerts',
     label: 'Åbne advarsler',
-    value: '3',
-    sub: '1 kritisk (rød)',
+    value: null, // filled dynamically
+    sub: null,
     icon: AlertTriangle,
     color: '#E24B4A',
     bg: '#FEF2F2',
@@ -56,12 +57,19 @@ const stats = [
 
 export default function StatCards() {
   const router = useRouter();
+  const alertCount = useAlertCount();
+
+  const stats = staticStats.map(s =>
+    s.alertLink
+      ? { ...s, value: String(alertCount), sub: alertCount === 1 ? '1 aktiv advarsel' : `${alertCount} aktive advarsler` }
+      : s,
+  );
 
   return (
     <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
       {stats.map(stat => {
-        const alertCount = stat.alertLink ? parseInt(stat.value, 10) : 0;
-        const valueColor = stat.alertLink && alertCount > 0 ? '#E24B4A' : '#111827';
+        const liveAlertCount = stat.alertLink ? alertCount : 0;
+        const valueColor = stat.alertLink && liveAlertCount > 0 ? '#E24B4A' : '#111827';
 
         return (
           <div
@@ -98,7 +106,7 @@ export default function StatCards() {
               className="text-2xl font-bold tabular-nums mb-0.5"
               style={{ color: valueColor }}
             >
-              {stat.value}
+              {stat.value ?? '—'}
             </div>
             <div className="text-xs font-medium text-gray-600">{stat.label}</div>
             <div className="text-xs text-gray-400 mt-0.5">{stat.sub}</div>

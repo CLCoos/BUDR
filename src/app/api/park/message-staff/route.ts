@@ -53,5 +53,17 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  // Fire notification so staff see the message in the alerts panel
+  const residentLabel = resident?.display_name
+    ? (resident.display_name as string)
+    : 'En beboer';
+  await supabase.from('care_portal_notifications').insert({
+    resident_id: residentId,
+    type: 'besked',
+    detail: `"${text.length > 80 ? text.slice(0, 77) + '…' : text}"`,
+    severity: 'gul',
+    source_table: 'journal_entries',
+  });
+
   return NextResponse.json({ ok: true });
 }
