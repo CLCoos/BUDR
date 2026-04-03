@@ -43,9 +43,9 @@ const TL_CONFIG: Record<
   NonNullable<TrafficUi>,
   { label: string; color: string; bg: string; border: string }
 > = {
-  groen: { label: 'Grøn',  color: '#1D9E75', bg: '#E1F5EE', border: '#A8DFC9' },
-  gul:   { label: 'Gul',   color: '#C78400', bg: '#FAEEDA', border: '#F5CC85' },
-  roed:  { label: 'Rød',   color: '#C0392B', bg: '#FCEBEB', border: '#F5AAAA' },
+  groen: { label: 'Grøn', color: '#1D9E75', bg: '#E1F5EE', border: '#A8DFC9' },
+  gul: { label: 'Gul', color: '#C78400', bg: '#FAEEDA', border: '#F5CC85' },
+  roed: { label: 'Rød', color: '#C0392B', bg: '#FCEBEB', border: '#F5AAAA' },
 };
 
 function formatTime(iso: string) {
@@ -66,11 +66,11 @@ export default function ResidentOverblikTab({
   pendingProposals,
 }: Props) {
   const tlCfg = trafficLight ? TL_CONFIG[trafficLight] : null;
-  const pendingItems = todayPlanItems.filter(i => !i.done);
+  const pendingItems = todayPlanItems.filter((i) => !i.done);
 
   // Read given count from localStorage (same key as ResidentMedicinTab)
   const [givenCount, setGivenCount] = useState(0);
-  const activeMeds = medications.filter(m => m.status === 'aktiv');
+  const activeMeds = medications.filter((m) => m.status === 'aktiv');
 
   useEffect(() => {
     try {
@@ -78,13 +78,13 @@ export default function ResidentOverblikTab({
       const raw = localStorage.getItem(`budr_med_v1_${residentId}_${today}`);
       if (raw) {
         const parsed = JSON.parse(raw) as Record<string, { given: boolean }>;
-        const count = activeMeds.filter(m => parsed[m.id]?.given).length;
+        const count = activeMeds.filter((m) => parsed[m.id]?.given).length;
         setGivenCount(count);
       }
     } catch {
       // ignore
     }
-  }, [residentId, activeMeds.length]);
+  }, [residentId, activeMeds]);
 
   const medicationGivenCount = givenCount;
   const medicationTotalCount = activeMeds.length;
@@ -96,13 +96,24 @@ export default function ResidentOverblikTab({
         {/* Traffic light */}
         <div
           className="rounded-xl border p-4 flex flex-col gap-1"
-          style={tlCfg ? { backgroundColor: tlCfg.bg, borderColor: tlCfg.border } : { backgroundColor: '#F9FAFB', borderColor: '#E5E7EB' }}
+          style={
+            tlCfg
+              ? { backgroundColor: tlCfg.bg, borderColor: tlCfg.border }
+              : { backgroundColor: '#F9FAFB', borderColor: '#E5E7EB' }
+          }
         >
-          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Trafiklys</span>
+          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+            Trafiklys
+          </span>
           {tlCfg ? (
             <div className="flex items-center gap-2 mt-1">
-              <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: tlCfg.color }} />
-              <span className="text-xl font-bold" style={{ color: tlCfg.color }}>{tlCfg.label}</span>
+              <div
+                className="w-4 h-4 rounded-full flex-shrink-0"
+                style={{ backgroundColor: tlCfg.color }}
+              />
+              <span className="text-xl font-bold" style={{ color: tlCfg.color }}>
+                {tlCfg.label}
+              </span>
             </div>
           ) : (
             <span className="text-xl font-bold text-gray-400 mt-1">Ingen data</span>
@@ -116,7 +127,9 @@ export default function ResidentOverblikTab({
 
         {/* Mood score */}
         <div className="rounded-xl border border-gray-100 bg-white p-4 flex flex-col gap-1">
-          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Stemning i dag</span>
+          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+            Stemning i dag
+          </span>
           {moodScore !== null ? (
             <div className="mt-1">
               <div className="flex items-end gap-1">
@@ -140,15 +153,28 @@ export default function ResidentOverblikTab({
 
         {/* Medication summary */}
         <Link href={`/resident-360-view/${residentId}?tab=medicin`} className="block">
-          <div className={`rounded-xl border p-4 flex flex-col gap-1 transition-colors hover:border-[#1D9E75] cursor-pointer ${
-            medicationGivenCount === medicationTotalCount
-              ? 'bg-[#E1F5EE] border-[#A8DFC9]'
-              : 'bg-amber-50 border-amber-200'
-          }`}>
-            <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Medicin i dag</span>
+          <div
+            className={`rounded-xl border p-4 flex flex-col gap-1 transition-colors hover:border-[#1D9E75] cursor-pointer ${
+              medicationGivenCount === medicationTotalCount
+                ? 'bg-[#E1F5EE] border-[#A8DFC9]'
+                : 'bg-amber-50 border-amber-200'
+            }`}
+          >
+            <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              Medicin i dag
+            </span>
             <div className="flex items-center gap-2 mt-1">
-              <Pill size={18} className={medicationGivenCount === medicationTotalCount ? 'text-[#1D9E75]' : 'text-amber-500'} />
-              <span className={`text-xl font-bold ${medicationGivenCount === medicationTotalCount ? 'text-[#1D9E75]' : 'text-amber-600'}`}>
+              <Pill
+                size={18}
+                className={
+                  medicationGivenCount === medicationTotalCount
+                    ? 'text-[#1D9E75]'
+                    : 'text-amber-500'
+                }
+              />
+              <span
+                className={`text-xl font-bold ${medicationGivenCount === medicationTotalCount ? 'text-[#1D9E75]' : 'text-amber-600'}`}
+              >
                 {medicationGivenCount}/{medicationTotalCount}
               </span>
               <span className="text-xs text-gray-500">givet</span>
@@ -167,7 +193,9 @@ export default function ResidentOverblikTab({
               <span className="text-sm font-semibold text-amber-800">
                 {pendingProposals} planforslag afventer godkendelse
               </span>
-              <p className="text-xs text-amber-700 mt-0.5">Klik for at åbne Dagsplan og gennemse forslagene.</p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                Klik for at åbne Dagsplan og gennemse forslagene.
+              </p>
             </div>
           </div>
         </Link>
@@ -190,20 +218,32 @@ export default function ResidentOverblikTab({
           </div>
           <div className="divide-y divide-gray-50">
             {todayPlanItems.length === 0 ? (
-              <div className="px-4 py-5 text-xs text-gray-400 text-center">Ingen planpunkter i dag</div>
+              <div className="px-4 py-5 text-xs text-gray-400 text-center">
+                Ingen planpunkter i dag
+              </div>
             ) : (
-              todayPlanItems.slice(0, 6).map(item => (
+              todayPlanItems.slice(0, 6).map((item) => (
                 <div key={item.id} className="px-4 py-2.5 flex items-center gap-3">
-                  <div className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 ${
-                    item.done ? 'bg-[#1D9E75]' : 'border-2 border-gray-200'
-                  }`}>
+                  <div
+                    className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 ${
+                      item.done ? 'bg-[#1D9E75]' : 'border-2 border-gray-200'
+                    }`}
+                  >
                     {item.done && (
                       <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                        <path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path
+                          d="M2 5l2.5 2.5L8 3"
+                          stroke="white"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
                       </svg>
                     )}
                   </div>
-                  <span className={`text-sm flex-1 ${item.done ? 'text-gray-400 line-through' : 'text-gray-700'}`}>
+                  <span
+                    className={`text-sm flex-1 ${item.done ? 'text-gray-400 line-through' : 'text-gray-700'}`}
+                  >
                     {item.title}
                   </span>
                   {item.time && (
@@ -234,9 +274,11 @@ export default function ResidentOverblikTab({
           </div>
           <div className="divide-y divide-gray-50">
             {journalEntries.length === 0 ? (
-              <div className="px-4 py-5 text-xs text-gray-400 text-center">Ingen journalnoter i dag</div>
+              <div className="px-4 py-5 text-xs text-gray-400 text-center">
+                Ingen journalnoter i dag
+              </div>
             ) : (
-              journalEntries.slice(0, 4).map(entry => (
+              journalEntries.slice(0, 4).map((entry) => (
                 <div key={entry.id} className="px-4 py-3">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-semibold text-gray-700">{entry.staff_name}</span>

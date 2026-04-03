@@ -47,7 +47,11 @@ const defaultGoals: GoalItem[] = [
   { id: 'g3', text: 'Skriv i journalen', done: false },
 ];
 
-const today = new Date().toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long' });
+const today = new Date().toLocaleDateString('da-DK', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+});
 
 interface TodayCheckin {
   date: string;
@@ -106,7 +110,11 @@ function getMoodEmoji(mood: number): string {
 export default function JournalView() {
   const [mood, setMood] = useState<number>(5);
   const [resources, setResources] = useState<ResourceState>({
-    sleep: 3, food: 3, movement: 3, social: 3, stress: 3,
+    sleep: 3,
+    food: 3,
+    movement: 3,
+    social: 3,
+    stress: 3,
   });
   const [goals, setGoals] = useState<GoalItem[]>(defaultGoals);
   const [krap, setKrap] = useState<KrapState>({ krop: '', rolle: '', affekt: '', plan: '' });
@@ -140,7 +148,7 @@ export default function JournalView() {
 
   const handleKrapChange = (newKrap: KrapState) => {
     setKrap(newKrap);
-    if (!hasStartedWriting && Object.values(newKrap).some(v => v.trim().length > 0)) {
+    if (!hasStartedWriting && Object.values(newKrap).some((v) => v.trim().length > 0)) {
       setHasStartedWriting(true);
       setCompanionReaction('taskComplete');
     }
@@ -156,7 +164,9 @@ export default function JournalView() {
 
   useEffect(() => {
     mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
   const handleSave = () => {
@@ -168,13 +178,13 @@ export default function JournalView() {
     setSummaryLoading(true);
 
     const mergedKrap =
-      !journalExpanded && miniReflection.trim()
-        ? { ...krap, plan: miniReflection.trim() }
-        : krap;
+      !journalExpanded && miniReflection.trim() ? { ...krap, plan: miniReflection.trim() } : krap;
 
-    const goalsCompleted = goals.filter(g => g.done).length;
-    const krapFilled = Object.values(mergedKrap).filter(v => v.trim().length > 0).length;
-    const resourceAvg = Math.round((resources.sleep + resources.food + resources.movement + resources.social) / 4);
+    const goalsCompleted = goals.filter((g) => g.done).length;
+    const krapFilled = Object.values(mergedKrap).filter((v) => v.trim().length > 0).length;
+    const resourceAvg = Math.round(
+      (resources.sleep + resources.food + resources.movement + resources.social) / 4
+    );
 
     if (!journalExpanded && miniReflection.trim()) {
       setKrap(mergedKrap);
@@ -189,7 +199,8 @@ export default function JournalView() {
         messages: [
           {
             role: 'system',
-            content: 'Du er Lys — en varm, empatisk ledsager i en dansk mental sundhedsapp. Du skriver en personlig aftenopsummering til brugeren baseret på deres dagbog. Max 3 sætninger, max 40 ord. Vær varm, anerkendende og konkret. Afslut med ét beroligende emoji.',
+            content:
+              'Du er Lys — en varm, empatisk ledsager i en dansk mental sundhedsapp. Du skriver en personlig aftenopsummering til brugeren baseret på deres dagbog. Max 3 sætninger, max 40 ord. Vær varm, anerkendende og konkret. Afslut med ét beroligende emoji.',
           },
           {
             role: 'user',
@@ -200,13 +211,17 @@ export default function JournalView() {
         parameters: { max_tokens: 100, temperature: 0.8 },
       }),
     })
-      .then(r => r.ok ? r.json() : null)
-      .then(d => {
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
         const text = d?.choices?.[0]?.message?.content;
         if (text && mountedRef.current) setEveningSummary(text.trim());
       })
-      .catch(() => { /* silently fail */ })
-      .finally(() => { if (mountedRef.current) setSummaryLoading(false); });
+      .catch(() => {
+        /* silently fail */
+      })
+      .finally(() => {
+        if (mountedRef.current) setSummaryLoading(false);
+      });
   };
 
   const userContext = `humørscore: ${mood}/10, dag: ${today}`;
@@ -229,7 +244,9 @@ export default function JournalView() {
         <div className="max-w-lg mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="font-display text-lg sm:text-xl font-bold text-midnight-50">Journal</h1>
+              <h1 className="font-display text-lg sm:text-xl font-bold text-midnight-50">
+                Journal
+              </h1>
               <p className="text-xs text-midnight-400 mt-0.5 capitalize">{today}</p>
               <p className="text-[11px] text-sunrise-400/90 font-medium mt-1">
                 Mini-journal først — tryk «Se mere» for ressourcer, mål og KRAP
@@ -261,10 +278,22 @@ export default function JournalView() {
                 onReactionEnd={() => setCompanionReaction('idle')}
               />
               {/* Gentle sparkles around companion */}
-              <span className="absolute -top-2 -right-2 text-lg animate-bounce" style={{ animationDelay: '0.2s' }}>✨</span>
-              <span className="absolute -bottom-1 -left-2 text-base animate-bounce" style={{ animationDelay: '0.5s' }}>🌟</span>
+              <span
+                className="absolute -top-2 -right-2 text-lg animate-bounce"
+                style={{ animationDelay: '0.2s' }}
+              >
+                ✨
+              </span>
+              <span
+                className="absolute -bottom-1 -left-2 text-base animate-bounce"
+                style={{ animationDelay: '0.5s' }}
+              >
+                🌟
+              </span>
             </div>
-            <p className="font-display text-sm font-bold text-midnight-100 mb-1">Klar til at skrive i dag?</p>
+            <p className="font-display text-sm font-bold text-midnight-100 mb-1">
+              Klar til at skrive i dag?
+            </p>
             <p className="text-xs text-midnight-400 leading-relaxed w-full px-2">
               Jeg er her med dig. Start med dit humør nedenfor — bare ét skridt ad gangen. 🌱
             </p>
@@ -277,12 +306,18 @@ export default function JournalView() {
           <>
             <div className="rounded-2xl border border-sunrise-400/25 bg-midnight-800/50 p-4 space-y-3">
               <div className="flex items-center justify-between gap-2">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-sunrise-400/90">Mini-journal</p>
+                <p className="text-[10px] font-bold uppercase tracking-wide text-sunrise-400/90">
+                  Mini-journal
+                </p>
                 {todayCheckin && (
-                  <span className="text-[10px] text-midnight-500">Bruger dit check-in fra i dag</span>
+                  <span className="text-[10px] text-midnight-500">
+                    Bruger dit check-in fra i dag
+                  </span>
                 )}
               </div>
-              <p className="text-sm text-midnight-100 leading-relaxed font-medium">{dailyMiniPrompt}</p>
+              <p className="text-sm text-midnight-100 leading-relaxed font-medium">
+                {dailyMiniPrompt}
+              </p>
               <label htmlFor="mini-journal" className="sr-only">
                 Dit svar
               </label>
@@ -330,12 +365,23 @@ export default function JournalView() {
                 <span className="text-base">🌙</span>
               </div>
               <div className="flex-1">
-                <p className="text-xs text-purple-400 font-semibold mb-1.5">Lys&apos; aftenrefleksion:</p>
+                <p className="text-xs text-purple-400 font-semibold mb-1.5">
+                  Lys&apos; aftenrefleksion:
+                </p>
                 {summaryLoading && !eveningSummary ? (
                   <div className="flex items-center gap-1.5 py-1">
-                    <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <span
+                      className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
+                      style={{ animationDelay: '0ms' }}
+                    />
+                    <span
+                      className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
+                      style={{ animationDelay: '150ms' }}
+                    />
+                    <span
+                      className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
+                      style={{ animationDelay: '300ms' }}
+                    />
                   </div>
                 ) : (
                   <p className="text-sm text-midnight-100 leading-relaxed">{eveningSummary}</p>

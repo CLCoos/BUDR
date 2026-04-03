@@ -16,11 +16,11 @@ export default function LysKrisePlanCard({ onOpen }: Props) {
 
   useEffect(() => {
     const plan = loadKrisePlan();
-    const filled = Object.values(plan.sections).filter(v => v?.trim()).length;
+    const filled = Object.values(plan.sections).filter((v) => v?.trim()).length;
     setFilledCount(Math.min(filled, SECTION_COUNT));
     if (plan.updated_at) {
       setUpdatedAt(
-        new Date(plan.updated_at).toLocaleDateString('da-DK', { day: 'numeric', month: 'short' }),
+        new Date(plan.updated_at).toLocaleDateString('da-DK', { day: 'numeric', month: 'short' })
       );
     }
   }, []);
@@ -45,7 +45,9 @@ export default function LysKrisePlanCard({ onOpen }: Props) {
           <Shield className="h-4 w-4" style={{ color: 'var(--lys-green)' }} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold" style={{ color: 'var(--lys-text)' }}>Min kriseplan</p>
+          <p className="text-sm font-semibold" style={{ color: 'var(--lys-text)' }}>
+            Min kriseplan
+          </p>
           <p className="text-xs mt-0.5" style={{ color: 'var(--lys-muted)' }}>
             {filledCount === 0
               ? 'Ikke udfyldt endnu — tryk for at starte'
@@ -54,11 +56,16 @@ export default function LysKrisePlanCard({ onOpen }: Props) {
                 : `${filledCount}/${SECTION_COUNT} sektioner udfyldt`}
           </p>
         </div>
-        <span className="text-sm shrink-0" style={{ color: 'var(--lys-muted)' }}>→</span>
+        <span className="text-sm shrink-0" style={{ color: 'var(--lys-muted)' }}>
+          →
+        </span>
       </div>
 
       {filledCount > 0 && (
-        <div className="mt-3 h-1 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--lys-bg4)' }}>
+        <div
+          className="mt-3 h-1 rounded-full overflow-hidden"
+          style={{ backgroundColor: 'var(--lys-bg4)' }}
+        >
           <div
             className="h-full rounded-full transition-all duration-500"
             style={{ width: `${pct}%`, backgroundColor: 'var(--lys-green)' }}

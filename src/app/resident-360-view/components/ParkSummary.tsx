@@ -29,7 +29,8 @@ const latestThought = {
   emotion: 'Skam',
   intensityBefore: 7,
   intensityAfter: 4,
-  counterThought: 'En enkelt kommentar definerer ikke hvem du er. De andre tænker formentlig ikke på det.',
+  counterThought:
+    'En enkelt kommentar definerer ikke hvem du er. De andre tænker formentlig ikke på det.',
   date: '25/03/2026',
 };
 
@@ -38,16 +39,20 @@ export default function ParkSummary() {
     <div className="space-y-4">
       {/* PARK framework overview */}
       <div className="bg-white rounded-lg border border-gray-100 p-5">
-        <div className="text-sm font-semibold text-gray-800 mb-4">PARK-overblik · Seneste 7 dage</div>
+        <div className="text-sm font-semibold text-gray-800 mb-4">
+          PARK-overblik · Seneste 7 dage
+        </div>
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
           {[
             { label: 'Plan', value: '3 aktive mål', sub: '2 trin gennemført', color: '#7F77DD' },
             { label: 'Aktivitet', value: '7/7 check-in', sub: 'Fuld stribe!', color: '#1D9E75' },
             { label: 'Ressourcer', value: 'Gns. 3.1/5', sub: 'Bolig stærkest', color: '#F59E0B' },
             { label: 'Krop', value: '3/5', sub: 'Stabil', color: '#EC4899' },
-          ]?.map(item => (
+          ]?.map((item) => (
             <div key={`park-${item?.label}`} className="bg-gray-50 rounded-lg p-3">
-              <div className="text-xs font-semibold mb-1" style={{ color: item?.color }}>{item?.label}</div>
+              <div className="text-xs font-semibold mb-1" style={{ color: item?.color }}>
+                {item?.label}
+              </div>
               <div className="text-sm font-bold text-gray-800">{item?.value}</div>
               <div className="text-xs text-gray-500 mt-0.5">{item?.sub}</div>
             </div>
@@ -59,7 +64,12 @@ export default function ParkSummary() {
           <div className="text-xs font-medium text-gray-600 mb-2">Stemningsscore pr. dag</div>
           <ResponsiveContainer width="100%" height={80}>
             <BarChart data={checkInHistory} margin={{ top: 0, right: 0, bottom: 0, left: -30 }}>
-              <XAxis dataKey="day" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+              <XAxis
+                dataKey="day"
+                tick={{ fontSize: 10, fill: '#9CA3AF' }}
+                axisLine={false}
+                tickLine={false}
+              />
               <YAxis domain={[0, 10]} tick={false} axisLine={false} tickLine={false} />
               <Tooltip
                 content={({ active, payload, label }) =>
@@ -79,7 +89,7 @@ export default function ParkSummary() {
       <div className="bg-white rounded-lg border border-gray-100 p-5">
         <div className="text-sm font-semibold text-gray-800 mb-3">Ressourceprofil</div>
         <div className="space-y-2">
-          {resourceData?.map(r => (
+          {resourceData?.map((r) => (
             <div key={`res-${r?.label}`} className="flex items-center gap-3">
               <div className="w-16 text-xs text-gray-600 flex-shrink-0">{r?.label}</div>
               <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -88,14 +98,21 @@ export default function ParkSummary() {
                   style={{ width: `${(r?.score / 5) * 100}%`, backgroundColor: '#7F77DD' }}
                 />
               </div>
-              <div className="w-6 text-xs font-bold tabular-nums text-right" style={{ color: '#7F77DD' }}>{r?.score}</div>
+              <div
+                className="w-6 text-xs font-bold tabular-nums text-right"
+                style={{ color: '#7F77DD' }}
+              >
+                {r?.score}
+              </div>
             </div>
           ))}
         </div>
       </div>
       {/* Latest thought catch */}
       <div className="bg-white rounded-lg border border-gray-100 p-5">
-        <div className="text-sm font-semibold text-gray-800 mb-3">Seneste tankefanger · {latestThought?.date}</div>
+        <div className="text-sm font-semibold text-gray-800 mb-3">
+          Seneste tankefanger · {latestThought?.date}
+        </div>
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-gray-50 rounded-lg p-3">
@@ -113,9 +130,13 @@ export default function ParkSummary() {
           </div>
           <div className="flex items-center gap-4">
             <div className="text-xs text-gray-500">
-              Intensitet: <span className="font-bold text-red-500">{latestThought?.intensityBefore}</span> → <span className="font-bold text-green-600">{latestThought?.intensityAfter}</span>
+              Intensitet:{' '}
+              <span className="font-bold text-red-500">{latestThought?.intensityBefore}</span> →{' '}
+              <span className="font-bold text-green-600">{latestThought?.intensityAfter}</span>
             </div>
-            <div className="text-xs text-green-600 font-medium">↓ {latestThought?.intensityBefore - latestThought?.intensityAfter} point reduktion</div>
+            <div className="text-xs text-green-600 font-medium">
+              ↓ {latestThought?.intensityBefore - latestThought?.intensityAfter} point reduktion
+            </div>
           </div>
         </div>
       </div>

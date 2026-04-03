@@ -38,41 +38,46 @@ type AmbientPeriod = {
 };
 
 function getAmbientPeriod(h: number): AmbientPeriod {
-  if (h >= 5 && h < 8) return {
-    label: 'tidlig morgen',
-    sky: 'linear-gradient(180deg, #1a1060 0%, #f97316 60%, #fde68a 100%)',
-    ground: '#2d4a1e',
-    horizon: '#f97316',
-    textColor: '#fff',
-  };
-  if (h >= 8 && h < 12) return {
-    label: 'formiddag',
-    sky: 'linear-gradient(180deg, #38bdf8 0%, #7dd3fc 60%, #e0f2fe 100%)',
-    ground: '#2d6a1e',
-    horizon: '#bae6fd',
-    textColor: '#0f172a',
-  };
-  if (h >= 12 && h < 16) return {
-    label: 'eftermiddag',
-    sky: 'linear-gradient(180deg, #1d4ed8 0%, #60a5fa 60%, #bfdbfe 100%)',
-    ground: '#1e5216',
-    horizon: '#93c5fd',
-    textColor: '#0f172a',
-  };
-  if (h >= 16 && h < 19) return {
-    label: 'sen eftermiddag',
-    sky: 'linear-gradient(180deg, #9333ea 0%, #f97316 50%, #fbbf24 100%)',
-    ground: '#1a3d12',
-    horizon: '#f97316',
-    textColor: '#fff',
-  };
-  if (h >= 19 && h < 22) return {
-    label: 'aften',
-    sky: 'linear-gradient(180deg, #0f172a 0%, #1e3a5f 50%, #374151 100%)',
-    ground: '#0f2309',
-    horizon: '#1e3a5f',
-    textColor: '#e2e8f0',
-  };
+  if (h >= 5 && h < 8)
+    return {
+      label: 'tidlig morgen',
+      sky: 'linear-gradient(180deg, #1a1060 0%, #f97316 60%, #fde68a 100%)',
+      ground: '#2d4a1e',
+      horizon: '#f97316',
+      textColor: '#fff',
+    };
+  if (h >= 8 && h < 12)
+    return {
+      label: 'formiddag',
+      sky: 'linear-gradient(180deg, #38bdf8 0%, #7dd3fc 60%, #e0f2fe 100%)',
+      ground: '#2d6a1e',
+      horizon: '#bae6fd',
+      textColor: '#0f172a',
+    };
+  if (h >= 12 && h < 16)
+    return {
+      label: 'eftermiddag',
+      sky: 'linear-gradient(180deg, #1d4ed8 0%, #60a5fa 60%, #bfdbfe 100%)',
+      ground: '#1e5216',
+      horizon: '#93c5fd',
+      textColor: '#0f172a',
+    };
+  if (h >= 16 && h < 19)
+    return {
+      label: 'sen eftermiddag',
+      sky: 'linear-gradient(180deg, #9333ea 0%, #f97316 50%, #fbbf24 100%)',
+      ground: '#1a3d12',
+      horizon: '#f97316',
+      textColor: '#fff',
+    };
+  if (h >= 19 && h < 22)
+    return {
+      label: 'aften',
+      sky: 'linear-gradient(180deg, #0f172a 0%, #1e3a5f 50%, #374151 100%)',
+      ground: '#0f2309',
+      horizon: '#1e3a5f',
+      textColor: '#e2e8f0',
+    };
   return {
     label: 'nat',
     sky: 'linear-gradient(180deg, #020617 0%, #0f172a 60%, #1e293b 100%)',
@@ -93,37 +98,34 @@ function stageFromWater(w: number): 0 | 1 | 2 | 3 | 4 {
 // ── Plant component selector ──────────────────────────────────────────────────
 
 const PLANT_ACCENTS: Record<PlantType, string> = {
-  tree:      '#1D9E75',
-  flower:    '#F59E0B',
-  herb:      '#10B981',
-  bush:      '#7F77DD',
+  tree: '#1D9E75',
+  flower: '#F59E0B',
+  herb: '#10B981',
+  bush: '#7F77DD',
   vegetable: '#EF4444',
 };
 
 const PLANT_LABELS: Record<PlantType, string> = {
-  tree:      'Træ',
-  flower:    'Blomst',
-  herb:      'Urt',
-  bush:      'Busk',
+  tree: 'Træ',
+  flower: 'Blomst',
+  herb: 'Urt',
+  bush: 'Busk',
   vegetable: 'Grøntsag',
-};
-
-const PLANT_EMOJIS: Record<PlantType, string> = {
-  tree:      '🌳',
-  flower:    '🌸',
-  herb:      '🌿',
-  bush:      '🫐',
-  vegetable: '🍅',
 };
 
 function PlantSvg({ type, stage }: { type: PlantType; stage: 0 | 1 | 2 | 3 | 4 }) {
   const accent = PLANT_ACCENTS[type];
   switch (type) {
-    case 'tree':      return <TreePlant stage={stage} accent={accent} />;
-    case 'flower':    return <FlowerPlant stage={stage} accent={accent} />;
-    case 'herb':      return <HerbPlant stage={stage} accent={accent} />;
-    case 'bush':      return <BushPlant stage={stage} accent={accent} />;
-    case 'vegetable': return <VegetablePlant stage={stage} accent={accent} />;
+    case 'tree':
+      return <TreePlant stage={stage} accent={accent} />;
+    case 'flower':
+      return <FlowerPlant stage={stage} accent={accent} />;
+    case 'herb':
+      return <HerbPlant stage={stage} accent={accent} />;
+    case 'bush':
+      return <BushPlant stage={stage} accent={accent} />;
+    case 'vegetable':
+      return <VegetablePlant stage={stage} accent={accent} />;
   }
 }
 
@@ -141,12 +143,14 @@ export default function HavenPage() {
 }
 
 function HavenView() {
-  const router      = useRouter();
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const session     = useResidentSession();
+  const session = useResidentSession();
 
   const [plots, setPlots] = useState<GardenPlot[]>([]);
-  const [ambient, setAmbient] = useState<AmbientPeriod>(() => getAmbientPeriod(new Date().getHours()));
+  const [ambient, setAmbient] = useState<AmbientPeriod>(() =>
+    getAmbientPeriod(new Date().getHours())
+  );
   const [selected, setSelected] = useState<GardenPlot | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [addSlot, setAddSlot] = useState<number>(0);
@@ -162,10 +166,12 @@ function HavenView() {
   // Resolve activeId: URL param wins (passed from LysHome), then session.
   // Treat empty-string param (?r=) the same as no param — it means guest mode.
   const rawParam = searchParams.get('r');
-  const paramId  = rawParam || null;                // '' → null
+  const paramId = rawParam || null; // '' → null
   const activeId = paramId ?? session.activeId;
   const mode: 'supabase' | 'local' = paramId
-    ? (typeof document !== 'undefined' && document.cookie.includes('budr_resident_id') ? 'supabase' : 'local')
+    ? typeof document !== 'undefined' && document.cookie.includes('budr_resident_id')
+      ? 'supabase'
+      : 'local'
     : session.storageMode;
 
   // Ambient timer
@@ -174,7 +180,9 @@ function HavenView() {
     ambientRef.current = setInterval(() => {
       setAmbient(getAmbientPeriod(new Date().getHours()));
     }, 60_000);
-    return () => { if (ambientRef.current) clearInterval(ambientRef.current); };
+    return () => {
+      if (ambientRef.current) clearInterval(ambientRef.current);
+    };
   }, []);
 
   const load = useCallback(async () => {
@@ -202,9 +210,13 @@ function HavenView() {
     await dataService.addXp(mode, activeId, 'haven_water', 10);
 
     setWatering(false);
-    const updated = { ...selected, total_water: newTotal, growth_stage: newStage as GardenPlot['growth_stage'] };
+    const updated = {
+      ...selected,
+      total_water: newTotal,
+      growth_stage: newStage as GardenPlot['growth_stage'],
+    };
     setSelected(updated);
-    setPlots(prev => prev.map(p => p.id === updated.id ? updated : p));
+    setPlots((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
   };
 
   const handleAddPlant = async () => {
@@ -217,14 +229,14 @@ function HavenView() {
     setAddError(null);
     try {
       await dataService.savePlot(mode, activeId, {
-        slot_index:  addSlot,
-        plant_type:  newType,
-        plant_name:  newName.trim(),
-        goal_text:   newGoal.trim(),
+        slot_index: addSlot,
+        plant_type: newType,
+        plant_name: newName.trim(),
+        goal_text: newGoal.trim(),
         growth_stage: 0,
         total_water: 0,
         last_watered_at: null,
-        is_park_linked:  false,
+        is_park_linked: false,
       });
     } catch {
       setAddError('Noget gik galt. Prøv igen.');
@@ -256,7 +268,7 @@ function HavenView() {
   };
 
   // Build 6 slots
-  const slots = Array.from({ length: 6 }, (_, i) => plots.find(p => p.slot_index === i) ?? null);
+  const slots = Array.from({ length: 6 }, (_, i) => plots.find((p) => p.slot_index === i) ?? null);
 
   // Perspective rows: back row slots 0-2 (smaller), front row 3-5 (larger)
   const backRow = slots.slice(0, 3);
@@ -264,16 +276,18 @@ function HavenView() {
 
   const accent = selected ? PLANT_ACCENTS[selected.plant_type] : '#10B981';
   const nextThreshold = selected
-    ? WATER_THRESHOLDS[Math.min(selected.growth_stage + 1, 4)] ?? 200
+    ? (WATER_THRESHOLDS[Math.min(selected.growth_stage + 1, 4)] ?? 200)
     : 200;
-  const waterProgress = selected
-    ? Math.min((selected.total_water / nextThreshold) * 100, 100)
-    : 0;
+  const waterProgress = selected ? Math.min((selected.total_water / nextThreshold) * 100, 100) : 0;
 
   return (
     <div
       className="relative min-h-screen overflow-hidden flex flex-col"
-      style={{ background: ambient.sky, transition: 'background 2s ease', color: ambient.textColor }}
+      style={{
+        background: ambient.sky,
+        transition: 'background 2s ease',
+        color: ambient.textColor,
+      }}
     >
       {/* Header */}
       <div
@@ -322,7 +336,7 @@ function HavenView() {
                 key={`back-${i}`}
                 plot={plot}
                 size="sm"
-                onClick={() => plot ? setSelected(plot) : openAdd(i)}
+                onClick={() => (plot ? setSelected(plot) : openAdd(i))}
                 ambient={ambient}
               />
             ))}
@@ -334,7 +348,7 @@ function HavenView() {
                 key={`front-${i}`}
                 plot={plot}
                 size="lg"
-                onClick={() => plot ? setSelected(plot) : openAdd(i + 3)}
+                onClick={() => (plot ? setSelected(plot) : openAdd(i + 3))}
                 ambient={ambient}
               />
             ))}
@@ -345,8 +359,8 @@ function HavenView() {
       {/* FAB */}
       <button
         type="button"
-        onClick={() => openAdd(slots.findIndex(s => s === null))}
-        disabled={slots.every(s => s !== null) || !activeId}
+        onClick={() => openAdd(slots.findIndex((s) => s === null))}
+        disabled={slots.every((s) => s !== null) || !activeId}
         className="fixed right-5 z-20 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-2xl transition-all duration-200 active:scale-90 disabled:opacity-30"
         style={{
           bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))',
@@ -376,12 +390,18 @@ function HavenView() {
       {showAdd && (
         <div
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60"
-          onClick={e => { if (e.target === e.currentTarget) setShowAdd(false); }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowAdd(false);
+          }}
         >
           <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl space-y-5">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-black text-gray-900">Tilføj plante</h3>
-              <button type="button" onClick={() => setShowAdd(false)} className="text-gray-400 hover:text-gray-600">
+              <button
+                type="button"
+                onClick={() => setShowAdd(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -390,7 +410,7 @@ function HavenView() {
             <div>
               <p className="text-xs font-bold uppercase tracking-wide text-gray-700 mb-2">Type</p>
               <div className="grid grid-cols-5 gap-2">
-                {(Object.keys(PLANT_LABELS) as PlantType[]).map(t => (
+                {(Object.keys(PLANT_LABELS) as PlantType[]).map((t) => (
                   <button
                     key={t}
                     type="button"
@@ -411,11 +431,13 @@ function HavenView() {
             </div>
 
             <div>
-              <label className="text-xs font-bold uppercase tracking-wide text-gray-700 block mb-1">Navn på din plante</label>
+              <label className="text-xs font-bold uppercase tracking-wide text-gray-700 block mb-1">
+                Navn på din plante
+              </label>
               <input
                 type="text"
                 value={newName}
-                onChange={e => setNewName(e.target.value)}
+                onChange={(e) => setNewName(e.target.value)}
                 placeholder={`F.eks. "Min ${PLANT_LABELS[newType].toLowerCase()}"…`}
                 className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-green-400"
                 autoFocus
@@ -429,14 +451,15 @@ function HavenView() {
               <input
                 type="text"
                 value={newGoal}
-                onChange={e => setNewGoal(e.target.value)}
+                onChange={(e) => setNewGoal(e.target.value)}
                 placeholder={'F.eks. \u201cMere ro i hverdagen\u201d\u2026'}
                 className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-green-400"
               />
             </div>
 
             <p className="text-xs text-gray-600 bg-green-50 border border-green-200 rounded-xl p-3">
-              Vand din plante for at se den vokse. Hvert vand giver 10 XP og rykker din plante nærmere fuld blomstring.
+              Vand din plante for at se den vokse. Hvert vand giver 10 XP og rykker din plante
+              nærmere fuld blomstring.
             </p>
 
             {addError && (
@@ -458,7 +481,9 @@ function HavenView() {
                 onClick={() => void handleAddPlant()}
                 disabled={!newName.trim() || saving}
                 className="flex-1 rounded-xl py-3 text-sm font-bold text-white disabled:opacity-40"
-                style={{ background: `linear-gradient(135deg, ${PLANT_ACCENTS[newType]}, ${PLANT_ACCENTS[newType]}bb)` }}
+                style={{
+                  background: `linear-gradient(135deg, ${PLANT_ACCENTS[newType]}, ${PLANT_ACCENTS[newType]}bb)`,
+                }}
               >
                 {saving ? 'Planter…' : 'Plant den!'}
               </button>
@@ -488,7 +513,10 @@ function PlotSlot({
   const moundH = size === 'sm' ? 14 : 18;
 
   return (
-    <div className="flex flex-col items-center" style={{ filter: size === 'sm' ? 'brightness(0.85)' : 'none' }}>
+    <div
+      className="flex flex-col items-center"
+      style={{ filter: size === 'sm' ? 'brightness(0.85)' : 'none' }}
+    >
       <button
         type="button"
         onClick={onClick}
@@ -503,15 +531,17 @@ function PlotSlot({
             {/* Water drop indicator */}
             <div
               className="absolute top-0 right-0 h-5 w-5 rounded-full flex items-center justify-center text-white"
-              style={{ background: PLANT_ACCENTS[plot.plant_type], fontSize: 9, fontWeight: 'bold' }}
+              style={{
+                background: PLANT_ACCENTS[plot.plant_type],
+                fontSize: 9,
+                fontWeight: 'bold',
+              }}
             >
               {plot.growth_stage + 1}
             </div>
           </>
         ) : (
-          <div
-            className="w-full h-full rounded-2xl flex items-center justify-center border-2 border-dashed border-white/40 bg-white/10"
-          >
+          <div className="w-full h-full rounded-2xl flex items-center justify-center border-2 border-dashed border-white/40 bg-white/10">
             <Plus className="h-5 w-5 text-white/60" />
           </div>
         )}
@@ -525,10 +555,20 @@ function PlotSlot({
         className="-mt-1"
         style={{ overflow: 'visible' }}
       >
-        <ellipse cx={moundW / 2} cy={moundH / 2} rx={moundW / 2} ry={moundH / 2}
-          fill={ambient.ground} />
-        <ellipse cx={moundW / 2} cy={moundH / 2 - 2} rx={moundW / 2 - 4} ry={moundH / 2 - 2}
-          fill={`${ambient.ground}88`} />
+        <ellipse
+          cx={moundW / 2}
+          cy={moundH / 2}
+          rx={moundW / 2}
+          ry={moundH / 2}
+          fill={ambient.ground}
+        />
+        <ellipse
+          cx={moundW / 2}
+          cy={moundH / 2 - 2}
+          rx={moundW / 2 - 4}
+          ry={moundH / 2 - 2}
+          fill={`${ambient.ground}88`}
+        />
       </svg>
       {plot && (
         <p className="text-[10px] font-bold mt-0.5 max-w-[80px] text-center truncate text-white drop-shadow">
@@ -567,7 +607,11 @@ function PlotDetailPanel({
   return (
     <div
       className="fixed inset-x-0 bottom-0 z-40 rounded-t-3xl bg-white shadow-2xl"
-      style={{ maxHeight: '70vh', overflowY: 'auto', paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom, 0px))' }}
+      style={{
+        maxHeight: '70vh',
+        overflowY: 'auto',
+        paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom, 0px))',
+      }}
     >
       {/* Drag handle */}
       <div className="flex justify-center pt-3 pb-1">
@@ -588,10 +632,16 @@ function PlotDetailPanel({
             </div>
             <div>
               <h2 className="text-xl font-black text-gray-900">{plot.plant_name}</h2>
-              <p className="text-sm font-medium text-gray-600">{PLANT_LABELS[plot.plant_type]} · {stageLabel}</p>
+              <p className="text-sm font-medium text-gray-600">
+                {PLANT_LABELS[plot.plant_type]} · {stageLabel}
+              </p>
             </div>
           </div>
-          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 mt-1">
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 mt-1"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -602,7 +652,9 @@ function PlotDetailPanel({
             className="rounded-2xl px-4 py-3 mb-4"
             style={{ backgroundColor: `${accent}10`, border: `1px solid ${accent}22` }}
           >
-            <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: accent }}>Mit mål</p>
+            <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: accent }}>
+              Mit mål
+            </p>
             <p className="text-sm text-gray-700">{plot.goal_text}</p>
           </div>
         )}
@@ -611,17 +663,20 @@ function PlotDetailPanel({
         <div className="mb-5">
           <div className="flex items-center justify-between mb-1.5">
             <p className="text-xs font-bold text-gray-700">Vækst mod næste trin</p>
-            {!isFull && (
-              <p className="text-xs text-gray-600">{waterNeeded} vand tilbage</p>
-            )}
+            {!isFull && <p className="text-xs text-gray-600">{waterNeeded} vand tilbage</p>}
           </div>
           {isFull ? (
-            <p className="text-sm font-bold" style={{ color: accent }}>🌳 Fuldt vokset!</p>
+            <p className="text-sm font-bold" style={{ color: accent }}>
+              🌳 Fuldt vokset!
+            </p>
           ) : (
             <div className="h-3 rounded-full bg-gray-100 overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-700"
-                style={{ width: `${waterProgress}%`, background: `linear-gradient(90deg, ${accent}, ${accent}bb)` }}
+                style={{
+                  width: `${waterProgress}%`,
+                  background: `linear-gradient(90deg, ${accent}, ${accent}bb)`,
+                }}
               />
             </div>
           )}
@@ -648,7 +703,10 @@ function PlotDetailPanel({
             <p className="text-xs text-gray-600 font-medium mb-0.5">Sidst vandet</p>
             <p className="text-sm font-bold text-gray-800">
               {plot.last_watered_at
-                ? new Date(plot.last_watered_at).toLocaleDateString('da-DK', { day: 'numeric', month: 'short' })
+                ? new Date(plot.last_watered_at).toLocaleDateString('da-DK', {
+                    day: 'numeric',
+                    month: 'short',
+                  })
                 : 'Aldrig'}
             </p>
           </div>

@@ -8,7 +8,7 @@ function deriveInitials(displayName: string): string {
   return displayName
     .trim()
     .split(/\s+/)
-    .map(w => w[0] ?? '')
+    .map((w) => w[0] ?? '')
     .join('')
     .toUpperCase()
     .slice(0, 2);
@@ -18,7 +18,7 @@ async function getResident(residentId: string) {
   try {
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
     const { data } = await supabase
       .from('care_residents')

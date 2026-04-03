@@ -19,11 +19,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Mangler proposalId' }, { status: 400 });
   }
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    serviceRoleKey,
-    { auth: { persistSession: false } },
-  );
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey, {
+    auth: { persistSession: false },
+  });
 
   // 1. Fetch the pending proposal
   const { data: proposal, error: fetchErr } = await supabase
@@ -34,7 +32,10 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (fetchErr || !proposal) {
-    return NextResponse.json({ error: 'Forslag ikke fundet eller allerede behandlet' }, { status: 404 });
+    return NextResponse.json(
+      { error: 'Forslag ikke fundet eller allerede behandlet' },
+      { status: 404 }
+    );
   }
 
   const now = new Date().toISOString();
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest) {
         created_by: staffId ?? null,
         updated_at: now,
       },
-      { onConflict: 'resident_id,plan_date' },
+      { onConflict: 'resident_id,plan_date' }
     )
     .select()
     .single();

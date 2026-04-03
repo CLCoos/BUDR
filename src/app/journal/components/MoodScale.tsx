@@ -8,16 +8,16 @@ interface MoodScaleProps {
 }
 
 const moodConfig: Record<number, { emoji: string; label: string; accent: string }> = {
-  1:  { emoji: '😩', label: 'Meget dårlig', accent: '#F87171' },
-  2:  { emoji: '😢', label: 'Dårlig',        accent: '#FB923C' },
-  3:  { emoji: '😔', label: 'Lav',           accent: '#FBBF24' },
-  4:  { emoji: '😕', label: 'Lidt lav',      accent: '#FB923C' },
-  5:  { emoji: '😐', label: 'Neutral',       accent: '#A78BFA' },
-  6:  { emoji: '🙂', label: 'OK',            accent: '#60A5FA' },
-  7:  { emoji: '😊', label: 'God',           accent: '#34D399' },
-  8:  { emoji: '😁', label: 'Rigtig god',    accent: '#34D399' },
-  9:  { emoji: '🤩', label: 'Fantastisk',    accent: '#6EE7B7' },
-  10: { emoji: '🥳', label: 'Perfekt dag!',  accent: '#FB923C' },
+  1: { emoji: '😩', label: 'Meget dårlig', accent: '#F87171' },
+  2: { emoji: '😢', label: 'Dårlig', accent: '#FB923C' },
+  3: { emoji: '😔', label: 'Lav', accent: '#FBBF24' },
+  4: { emoji: '😕', label: 'Lidt lav', accent: '#FB923C' },
+  5: { emoji: '😐', label: 'Neutral', accent: '#A78BFA' },
+  6: { emoji: '🙂', label: 'OK', accent: '#60A5FA' },
+  7: { emoji: '😊', label: 'God', accent: '#34D399' },
+  8: { emoji: '😁', label: 'Rigtig god', accent: '#34D399' },
+  9: { emoji: '🤩', label: 'Fantastisk', accent: '#6EE7B7' },
+  10: { emoji: '🥳', label: 'Perfekt dag!', accent: '#FB923C' },
 };
 
 export default function MoodScale({ mood, onChange }: MoodScaleProps) {
@@ -38,7 +38,9 @@ export default function MoodScale({ mood, onChange }: MoodScaleProps) {
       >
         <span className="text-3xl sm:text-4xl">{config.emoji}</span>
         <div>
-          <p className="font-display text-lg font-bold" style={{ color: config.accent }}>{mood}/10</p>
+          <p className="font-display text-lg font-bold" style={{ color: config.accent }}>
+            {mood}/10
+          </p>
           <p className="text-sm font-medium text-midnight-300">{config.label}</p>
         </div>
       </div>
@@ -60,7 +62,12 @@ export default function MoodScale({ mood, onChange }: MoodScaleProps) {
               }}
             >
               <span className="text-sm sm:text-base leading-none">{cfg.emoji}</span>
-              <span className="text-xs font-bold mt-1" style={{ color: isSelected ? cfg.accent : 'rgba(255,255,255,0.3)' }}>{n}</span>
+              <span
+                className="text-xs font-bold mt-1"
+                style={{ color: isSelected ? cfg.accent : 'rgba(255,255,255,0.3)' }}
+              >
+                {n}
+              </span>
             </button>
           );
         })}

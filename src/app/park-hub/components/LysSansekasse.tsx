@@ -8,26 +8,36 @@ type Tool = 'menu' | 'breathing' | 'grounding' | 'color';
 type BreathPhase = 'inhale' | 'hold1' | 'exhale' | 'hold2';
 
 const BREATH_SEQUENCE: { phase: BreathPhase; label: string; duration: number }[] = [
-  { phase: 'inhale', label: 'Træk vejret ind',  duration: 4000 },
-  { phase: 'hold1',  label: 'Hold…',            duration: 4000 },
+  { phase: 'inhale', label: 'Træk vejret ind', duration: 4000 },
+  { phase: 'hold1', label: 'Hold…', duration: 4000 },
   { phase: 'exhale', label: 'Pust langsomt ud', duration: 6000 },
-  { phase: 'hold2',  label: 'Hvil…',            duration: 2000 },
+  { phase: 'hold2', label: 'Hvil…', duration: 2000 },
 ];
 
 const GROUNDING_STEPS = [
-  { count: 5, sense: 'Se',   icon: '👁',  prompt: 'Nævn 5 ting du KAN SE lige nu' },
-  { count: 4, sense: 'Hør',  icon: '👂',  prompt: 'Nævn 4 ting du KAN HØRE' },
-  { count: 3, sense: 'Mærk', icon: '🖐',  prompt: 'Nævn 3 ting du KAN FØLE med kroppen' },
-  { count: 2, sense: 'Lugt', icon: '👃',  prompt: 'Nævn 2 ting du KAN LUGTE (eller forestille dig)' },
-  { count: 1, sense: 'Smag', icon: '👅',  prompt: 'Nævn 1 ting du KAN SMAGE (eller forestille dig)' },
+  { count: 5, sense: 'Se', icon: '👁', prompt: 'Nævn 5 ting du KAN SE lige nu' },
+  { count: 4, sense: 'Hør', icon: '👂', prompt: 'Nævn 4 ting du KAN HØRE' },
+  { count: 3, sense: 'Mærk', icon: '🖐', prompt: 'Nævn 3 ting du KAN FØLE med kroppen' },
+  {
+    count: 2,
+    sense: 'Lugt',
+    icon: '👃',
+    prompt: 'Nævn 2 ting du KAN LUGTE (eller forestille dig)',
+  },
+  {
+    count: 1,
+    sense: 'Smag',
+    icon: '👅',
+    prompt: 'Nævn 1 ting du KAN SMAGE (eller forestille dig)',
+  },
 ];
 
 const CALM_COLORS = [
-  { name: 'Dybt hav',     bg: '#0C2340', text: '#A8C8E8', accent: '#4A9ECC' },
-  { name: 'Skovgrøn',    bg: '#0D2B1A', text: '#A8D4B8', accent: '#4AB878' },
-  { name: 'Aftenlilla',  bg: '#1A0D2B', text: '#C8A8D4', accent: '#9B59B6' },
-  { name: 'Varm sand',   bg: '#2B1F0D', text: '#D4C4A8', accent: '#C49A45' },
-  { name: 'Måneskær',    bg: '#0D1A2B', text: '#A8C0D4', accent: '#5B8BA8' },
+  { name: 'Dybt hav', bg: '#0C2340', text: '#A8C8E8', accent: '#4A9ECC' },
+  { name: 'Skovgrøn', bg: '#0D2B1A', text: '#A8D4B8', accent: '#4AB878' },
+  { name: 'Aftenlilla', bg: '#1A0D2B', text: '#C8A8D4', accent: '#9B59B6' },
+  { name: 'Varm sand', bg: '#2B1F0D', text: '#D4C4A8', accent: '#C49A45' },
+  { name: 'Måneskær', bg: '#0D1A2B', text: '#A8C0D4', accent: '#5B8BA8' },
 ];
 
 type Props = {
@@ -57,7 +67,9 @@ export default function LysSansekasse({ tokens, accent, onClose }: Props) {
         </button>
         <div>
           <h1 className="text-lg font-black tracking-tight">Sansekasse</h1>
-          <p className="text-xs" style={{ color: tokens.textMuted }}>Ro og jordforbindelse</p>
+          <p className="text-xs" style={{ color: tokens.textMuted }}>
+            Ro og jordforbindelse
+          </p>
         </div>
       </div>
 
@@ -77,7 +89,11 @@ function MenuView({
   tokens,
   accent,
   onSelect,
-}: { tokens: LysThemeTokens; accent: string; onSelect: (t: Tool) => void }) {
+}: {
+  tokens: LysThemeTokens;
+  accent: string;
+  onSelect: (t: Tool) => void;
+}) {
   const tools = [
     {
       id: 'breathing' as Tool,
@@ -104,7 +120,7 @@ function MenuView({
       <p className="text-sm leading-relaxed mb-5" style={{ color: tokens.textMuted }}>
         Vælg en øvelse der passer til din situation lige nu.
       </p>
-      {tools.map(t => (
+      {tools.map((t) => (
         <button
           key={t.id}
           type="button"
@@ -114,10 +130,16 @@ function MenuView({
         >
           <span className="text-3xl shrink-0">{t.icon}</span>
           <div>
-            <p className="font-bold text-base" style={{ color: tokens.text }}>{t.title}</p>
-            <p className="text-sm mt-0.5" style={{ color: tokens.textMuted }}>{t.desc}</p>
+            <p className="font-bold text-base" style={{ color: tokens.text }}>
+              {t.title}
+            </p>
+            <p className="text-sm mt-0.5" style={{ color: tokens.textMuted }}>
+              {t.desc}
+            </p>
           </div>
-          <span className="ml-auto text-lg shrink-0" style={{ color: accent }}>→</span>
+          <span className="ml-auto text-lg shrink-0" style={{ color: accent }}>
+            →
+          </span>
         </button>
       ))}
     </div>
@@ -133,19 +155,25 @@ function BreathingView({ tokens, accent }: { tokens: LysThemeTokens; accent: str
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const current = BREATH_SEQUENCE[phaseIdx]!;
-  const scale = current.phase === 'inhale' ? 1.0
-              : current.phase === 'hold1'  ? 1.0
-              : current.phase === 'exhale' ? 0.55
-              : 0.55;
+  const scale =
+    current.phase === 'inhale'
+      ? 1.0
+      : current.phase === 'hold1'
+        ? 1.0
+        : current.phase === 'exhale'
+          ? 0.55
+          : 0.55;
 
   useEffect(() => {
     if (!active) return;
     timerRef.current = setTimeout(() => {
       const next = (phaseIdx + 1) % BREATH_SEQUENCE.length;
-      if (next === 0) setCycles(c => c + 1);
+      if (next === 0) setCycles((c) => c + 1);
       setPhaseIdx(next);
     }, current.duration);
-    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, [active, phaseIdx, current.duration]);
 
   const toggle = () => {
@@ -165,12 +193,16 @@ function BreathingView({ tokens, accent }: { tokens: LysThemeTokens; accent: str
       </p>
 
       {/* Breathing circle */}
-      <div className="relative flex items-center justify-center" style={{ height: 240, width: 240 }}>
+      <div
+        className="relative flex items-center justify-center"
+        style={{ height: 240, width: 240 }}
+      >
         {/* Outer ring */}
         <div
           className="absolute rounded-full transition-transform"
           style={{
-            width: 200, height: 200,
+            width: 200,
+            height: 200,
             border: `3px solid ${accent}30`,
             transform: `scale(${active ? scale : 0.75})`,
             transition: active ? `transform ${current.duration}ms ease-in-out` : 'none',
@@ -180,7 +212,8 @@ function BreathingView({ tokens, accent }: { tokens: LysThemeTokens; accent: str
         <div
           className="absolute rounded-full flex items-center justify-center"
           style={{
-            width: 160, height: 160,
+            width: 160,
+            height: 160,
             backgroundColor: `${accent}18`,
             border: `2px solid ${accent}40`,
             transform: `scale(${active ? scale : 0.75})`,
@@ -195,10 +228,16 @@ function BreathingView({ tokens, accent }: { tokens: LysThemeTokens; accent: str
       <div className="text-center space-y-1">
         {active ? (
           <>
-            <p className="text-xl font-bold" style={{ color: tokens.text }}>{current.label}</p>
-            <p className="text-sm" style={{ color: tokens.textMuted }}>{current.duration / 1000} sekunder</p>
+            <p className="text-xl font-bold" style={{ color: tokens.text }}>
+              {current.label}
+            </p>
+            <p className="text-sm" style={{ color: tokens.textMuted }}>
+              {current.duration / 1000} sekunder
+            </p>
             {cycles > 0 && (
-              <p className="text-xs" style={{ color: accent }}>{cycles} {cycles === 1 ? 'runde' : 'runder'} gennemført</p>
+              <p className="text-xs" style={{ color: accent }}>
+                {cycles} {cycles === 1 ? 'runde' : 'runder'} gennemført
+              </p>
             )}
           </>
         ) : (
@@ -233,7 +272,7 @@ function GroundingView({ tokens, accent }: { tokens: LysThemeTokens; accent: str
   const advance = () => {
     if (checked < step.count) return;
     if (stepIdx < GROUNDING_STEPS.length - 1) {
-      setStepIdx(i => i + 1);
+      setStepIdx((i) => i + 1);
       setChecked(0);
     } else {
       setDone(true);
@@ -244,13 +283,19 @@ function GroundingView({ tokens, accent }: { tokens: LysThemeTokens; accent: str
     return (
       <div className="flex flex-col items-center justify-center pt-12 gap-6 text-center">
         <span className="text-6xl">🌿</span>
-        <p className="text-2xl font-black" style={{ color: tokens.text }}>Godt gået</p>
+        <p className="text-2xl font-black" style={{ color: tokens.text }}>
+          Godt gået
+        </p>
         <p className="text-base leading-relaxed px-4" style={{ color: tokens.textMuted }}>
           Du er til stede her og nu. Husk: du klarede det.
         </p>
         <button
           type="button"
-          onClick={() => { setStepIdx(0); setChecked(0); setDone(false); }}
+          onClick={() => {
+            setStepIdx(0);
+            setChecked(0);
+            setDone(false);
+          }}
           className="rounded-2xl px-8 py-3 text-sm font-bold"
           style={{ backgroundColor: `${accent}20`, color: accent }}
         >
@@ -269,9 +314,7 @@ function GroundingView({ tokens, accent }: { tokens: LysThemeTokens; accent: str
             key={s.sense}
             className="h-1.5 flex-1 rounded-full"
             style={{
-              backgroundColor: i < stepIdx ? accent
-                : i === stepIdx ? `${accent}60`
-                : `${accent}18`,
+              backgroundColor: i < stepIdx ? accent : i === stepIdx ? `${accent}60` : `${accent}18`,
             }}
           />
         ))}
@@ -282,7 +325,9 @@ function GroundingView({ tokens, accent }: { tokens: LysThemeTokens; accent: str
         style={{ backgroundColor: tokens.cardBg, boxShadow: tokens.shadow }}
       >
         <span className="text-5xl block">{step.icon}</span>
-        <p className="text-lg font-bold" style={{ color: tokens.text }}>{step.prompt}</p>
+        <p className="text-lg font-bold" style={{ color: tokens.text }}>
+          {step.prompt}
+        </p>
 
         {/* Tap counters */}
         <div className="flex justify-center gap-2.5 flex-wrap">
@@ -290,7 +335,7 @@ function GroundingView({ tokens, accent }: { tokens: LysThemeTokens; accent: str
             <button
               key={i}
               type="button"
-              onClick={() => setChecked(c => Math.min(c + 1, step.count))}
+              onClick={() => setChecked((c) => Math.min(c + 1, step.count))}
               className="h-12 w-12 rounded-full flex items-center justify-center text-xl font-bold transition-all duration-200 active:scale-90"
               style={{
                 backgroundColor: i < checked ? accent : `${accent}18`,
@@ -305,9 +350,7 @@ function GroundingView({ tokens, accent }: { tokens: LysThemeTokens; accent: str
         </div>
 
         <p className="text-sm" style={{ color: tokens.textMuted }}>
-          {checked < step.count
-            ? `${step.count - checked} tilbage`
-            : 'Alle fundet!'}
+          {checked < step.count ? `${step.count - checked} tilbage` : 'Alle fundet!'}
         </p>
       </div>
 
@@ -327,7 +370,7 @@ function GroundingView({ tokens, accent }: { tokens: LysThemeTokens; accent: str
 // ── Color Room ────────────────────────────────────────────────────────────────
 
 function ColorRoomView() {
-  const [selected, setSelected] = useState<typeof CALM_COLORS[0] | null>(null);
+  const [selected, setSelected] = useState<(typeof CALM_COLORS)[0] | null>(null);
 
   if (selected) {
     return (
@@ -338,7 +381,10 @@ function ColorRoomView() {
         <p className="text-lg font-semibold" style={{ color: selected.text }}>
           {selected.name}
         </p>
-        <p className="text-sm text-center px-8 leading-relaxed" style={{ color: `${selected.text}99` }}>
+        <p
+          className="text-sm text-center px-8 leading-relaxed"
+          style={{ color: `${selected.text}99` }}
+        >
           Lad farven fylde dig. Der er ingenting du skal præstere lige nu.
         </p>
         <button
@@ -359,7 +405,7 @@ function ColorRoomView() {
         Vælg en farve der føles rolig for dig lige nu.
       </p>
       <div className="grid grid-cols-1 gap-3">
-        {CALM_COLORS.map(c => (
+        {CALM_COLORS.map((c) => (
           <button
             key={c.name}
             type="button"
@@ -371,7 +417,9 @@ function ColorRoomView() {
               className="h-10 w-10 rounded-full shrink-0"
               style={{ backgroundColor: c.accent }}
             />
-            <p className="text-base font-semibold" style={{ color: c.text }}>{c.name}</p>
+            <p className="text-base font-semibold" style={{ color: c.text }}>
+              {c.name}
+            </p>
           </button>
         ))}
       </div>

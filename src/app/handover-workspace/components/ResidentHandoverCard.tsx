@@ -31,13 +31,15 @@ export default function ResidentHandoverCard({ entry, onUpdate }: Props) {
   const [recording, setRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
 
-  const residentIndex = ['res-001','res-002','res-003','res-004','res-005','res-006'].indexOf(entry.residentId);
+  const residentIndex = ['res-001', 'res-002', 'res-003', 'res-004', 'res-005', 'res-006'].indexOf(
+    entry.residentId
+  );
   const aiSuggestion = aiHandoverSuggestions[Math.max(0, residentIndex)];
 
   const handleGenerateAI = async () => {
     setLoadingAI(true);
     // Backend: POST /api/portal/ai/handover with resident PARK context
-    await new Promise(r => setTimeout(r, 1600));
+    await new Promise((r) => setTimeout(r, 1600));
     onUpdate({ note: aiSuggestion });
     setLoadingAI(false);
     toast.success('AI-vagtnotat genereret');
@@ -48,14 +50,20 @@ export default function ResidentHandoverCard({ entry, onUpdate }: Props) {
       setRecording(false);
       setRecordingSeconds(0);
       // Backend: Send audio to Supabase Edge Function voice-to-krap → Whisper + Claude
-      await new Promise(r => setTimeout(r, 1000));
-      onUpdate({ note: `[Transskription] ${entry.residentName} havde en rolig morgen. Spiste morgenmad og virkede afslappet. Ingen bekymringer observeret.` });
+      await new Promise((r) => setTimeout(r, 1000));
+      onUpdate({
+        note: `[Transskription] ${entry.residentName} havde en rolig morgen. Spiste morgenmad og virkede afslappet. Ingen bekymringer observeret.`,
+      });
       toast.success('Lydnotat transskriberet');
     } else {
       setRecording(true);
       const interval = setInterval(() => {
-        setRecordingSeconds(s => {
-          if (s >= 30) { clearInterval(interval); setRecording(false); return 0; }
+        setRecordingSeconds((s) => {
+          if (s >= 30) {
+            clearInterval(interval);
+            setRecording(false);
+            return 0;
+          }
           return s + 1;
         });
       }, 1000);
@@ -67,8 +75,11 @@ export default function ResidentHandoverCard({ entry, onUpdate }: Props) {
   return (
     <div
       className={`bg-white rounded-lg border overflow-hidden transition-all ${
-        entry.flagColor === 'roed' ? 'border-red-200' :
-        entry.flagColor === 'gul'? 'border-yellow-200' : 'border-gray-100'
+        entry.flagColor === 'roed'
+          ? 'border-red-200'
+          : entry.flagColor === 'gul'
+            ? 'border-yellow-200'
+            : 'border-gray-100'
       }`}
     >
       {/* Card header */}
@@ -94,18 +105,26 @@ export default function ResidentHandoverCard({ entry, onUpdate }: Props) {
               </span>
             )}
             {!entry.flagColor && (
-              <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-400">Ingen flag</span>
+              <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-400">
+                Ingen flag
+              </span>
             )}
           </div>
           {entry.note ? (
-            <div className="text-xs text-gray-500 truncate mt-0.5">{entry.note.slice(0, 80)}...</div>
+            <div className="text-xs text-gray-500 truncate mt-0.5">
+              {entry.note.slice(0, 80)}...
+            </div>
           ) : (
             <div className="text-xs text-gray-400 mt-0.5">Ingen note endnu</div>
           )}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {entry.note && <div className="w-2 h-2 rounded-full bg-green-400" />}
-          {expanded ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
+          {expanded ? (
+            <ChevronUp size={16} className="text-gray-400" />
+          ) : (
+            <ChevronDown size={16} className="text-gray-400" />
+          )}
         </div>
       </button>
 
@@ -114,7 +133,9 @@ export default function ResidentHandoverCard({ entry, onUpdate }: Props) {
           {/* Previous shift note */}
           {entry.previousNote && (
             <div className="bg-gray-50 rounded-lg p-3">
-              <div className="text-xs font-medium text-gray-500 mb-1.5">Forrige vagt: {entry.previousShift}</div>
+              <div className="text-xs font-medium text-gray-500 mb-1.5">
+                Forrige vagt: {entry.previousShift}
+              </div>
               <div className="text-sm text-gray-600 leading-relaxed">{entry.previousNote}</div>
             </div>
           )}
@@ -123,7 +144,7 @@ export default function ResidentHandoverCard({ entry, onUpdate }: Props) {
           <div>
             <label className="text-xs font-medium text-gray-600 mb-2 block">Flag-farve</label>
             <div className="flex gap-2">
-              {(Object.keys(flagConfig) as FlagColor[]).filter(Boolean).map(f => {
+              {(Object.keys(flagConfig) as FlagColor[]).filter(Boolean).map((f) => {
                 const cfg = flagConfig[f!];
                 return (
                   <button
@@ -149,7 +170,7 @@ export default function ResidentHandoverCard({ entry, onUpdate }: Props) {
           <div>
             <label className="text-xs font-medium text-gray-600 mb-2 block">Vagttype</label>
             <div className="flex gap-2">
-              {(['dag', 'aften', 'nat'] as ShiftLabel[]).map(s => (
+              {(['dag', 'aften', 'nat'] as ShiftLabel[]).map((s) => (
                 <button
                   key={`shiftlabel-${entry.residentId}-${s}`}
                   onClick={() => onUpdate({ shiftLabel: s })}
@@ -159,7 +180,8 @@ export default function ResidentHandoverCard({ entry, onUpdate }: Props) {
                       : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
                   }`}
                 >
-                  {s === 'dag' ? '☀️' : s === 'aften' ? '🌙' : '🌃'} {s.charAt(0).toUpperCase() + s.slice(1)}
+                  {s === 'dag' ? '☀️' : s === 'aften' ? '🌙' : '🌃'}{' '}
+                  {s.charAt(0).toUpperCase() + s.slice(1)}
                 </button>
               ))}
             </div>
@@ -175,7 +197,8 @@ export default function ResidentHandoverCard({ entry, onUpdate }: Props) {
                   onClick={handleRecord}
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all ${
                     recording
-                      ? 'bg-red-50 border-red-300 text-red-600' :'bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-400'
+                      ? 'bg-red-50 border-red-300 text-red-600'
+                      : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-400'
                   }`}
                 >
                   {recording ? (
@@ -184,7 +207,7 @@ export default function ResidentHandoverCard({ entry, onUpdate }: Props) {
                       Stop ({recordingSeconds}s)
                       {/* Waveform bars */}
                       <div className="flex gap-0.5 items-end h-4">
-                        {[1,2,3,4,5].map(b => (
+                        {[1, 2, 3, 4, 5].map((b) => (
                           <div
                             key={`wave-${b}`}
                             className="w-0.5 bg-red-400 rounded-full waveform-bar"
@@ -206,14 +229,18 @@ export default function ResidentHandoverCard({ entry, onUpdate }: Props) {
                   disabled={loadingAI}
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-[#1D9E75]/30 bg-[#E6F7F2] text-[#1D9E75] hover:bg-[#1D9E75]/20 transition-all disabled:opacity-50"
                 >
-                  {loadingAI ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
+                  {loadingAI ? (
+                    <Loader2 size={10} className="animate-spin" />
+                  ) : (
+                    <Sparkles size={10} />
+                  )}
                   Generer med AI
                 </button>
               </div>
             </div>
             <textarea
               value={entry.note}
-              onChange={e => onUpdate({ note: e.target.value })}
+              onChange={(e) => onUpdate({ note: e.target.value })}
               placeholder="Skriv observationer, hændelser og anbefalinger til næste vagt..."
               className="w-full text-sm border border-gray-200 rounded-lg p-3 resize-none focus:outline-none focus:border-[#1D9E75] transition-colors text-gray-700 placeholder-gray-400"
               rows={4}

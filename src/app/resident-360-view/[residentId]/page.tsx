@@ -19,16 +19,16 @@ type TrafficDb = 'grøn' | 'gul' | 'rød';
 type TrafficUi = 'groen' | 'gul' | 'roed';
 
 const DB_TO_UI: Record<TrafficDb, TrafficUi> = {
-  'grøn': 'groen',
-  'gul':  'gul',
-  'rød':  'roed',
+  grøn: 'groen',
+  gul: 'gul',
+  rød: 'roed',
 };
 
 function getServiceClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false } },
+    { auth: { persistSession: false } }
   );
 }
 
@@ -92,34 +92,48 @@ async function fetchResidentData(residentId: string) {
 
   if (!residentRes.data) return null;
 
-  const r  = residentRes.data;
+  const r = residentRes.data;
   const od = (r.onboarding_data as Record<string, string> | null) ?? {};
-  const c  = checkinRes.data;
+  const c = checkinRes.data;
   const tl = c ? (DB_TO_UI[c.traffic_light as TrafficDb] ?? null) : null;
 
-  const planItems = ((planRes.data?.plan_items ?? []) as { id?: string; title: string; done?: boolean; time?: string }[]).map(
-    (item, i) => ({ id: item.id ?? `item-${i}`, title: item.title, done: item.done ?? false, time: item.time }),
-  );
+  const planItems = (
+    (planRes.data?.plan_items ?? []) as {
+      id?: string;
+      title: string;
+      done?: boolean;
+      time?: string;
+    }[]
+  ).map((item, i) => ({
+    id: item.id ?? `item-${i}`,
+    title: item.title,
+    done: item.done ?? false,
+    time: item.time,
+  }));
 
   return {
     resident: {
-      id:                      r.user_id as string,
-      name:                    r.display_name as string,
-      initials:                od.avatar_initials ?? (r.display_name as string).slice(0, 2).toUpperCase(),
-      room:                    od.room ?? '—',
-      trafficLight:            tl,
-      moodScore:               c ? (c.mood_score as number) : null,
-      lastCheckin:             c ? formatCheckin(c.created_at as string) : null,
-      moveInDate:              od.move_in_date ?? null,
-      primaryContact:          od.primary_contact ?? null,
-      primaryContactPhone:     od.primary_contact_phone ?? null,
-      primaryContactRelation:  od.primary_contact_relation ?? null,
+      id: r.user_id as string,
+      name: r.display_name as string,
+      initials: od.avatar_initials ?? (r.display_name as string).slice(0, 2).toUpperCase(),
+      room: od.room ?? '—',
+      trafficLight: tl,
+      moodScore: c ? (c.mood_score as number) : null,
+      lastCheckin: c ? formatCheckin(c.created_at as string) : null,
+      moveInDate: od.move_in_date ?? null,
+      primaryContact: od.primary_contact ?? null,
+      primaryContactPhone: od.primary_contact_phone ?? null,
+      primaryContactRelation: od.primary_contact_relation ?? null,
     },
-    checkinNote:  c ? (c.note as string | null) : null,
-    plan:         (planRes.data as DailyPlan | null) ?? null,
-    proposals:    (proposalsRes.data ?? []) as PendingProposal[],
+    checkinNote: c ? (c.note as string | null) : null,
+    plan: (planRes.data as DailyPlan | null) ?? null,
+    proposals: (proposalsRes.data ?? []) as PendingProposal[],
     journalEntries: (journalRes.data ?? []) as {
-      id: string; staff_name: string; entry_text: string; category: string; created_at: string;
+      id: string;
+      staff_name: string;
+      entry_text: string;
+      category: string;
+      created_at: string;
     }[],
     todayPlanItems: planItems,
     medications: (medsRes.data ?? []) as MedDefinition[],
@@ -134,25 +148,26 @@ type Props = {
 };
 
 const ALL_TABS = ['overblik', 'medicin', 'dagsplan', 'plan', 'haven'] as const;
-type TabId = typeof ALL_TABS[number];
+type TabId = (typeof ALL_TABS)[number];
 
 const TAB_LABELS: Record<TabId, string> = {
   overblik: 'Overblik',
-  medicin:  'Medicin',
+  medicin: 'Medicin',
   dagsplan: 'Dagsplan',
-  plan:     'Plan',
-  haven:    'Haven 🌿',
+  plan: 'Plan',
+  haven: 'Haven 🌿',
 };
 
 export default async function ResidentDagPage({ params, searchParams }: Props) {
-  const { residentId }    = await params;
-  const { tab = 'overblik' } = await searchParams as { tab?: string };
+  const { residentId } = await params;
+  const { tab = 'overblik' } = (await searchParams) as { tab?: string };
   const activeTab = (ALL_TABS as readonly string[]).includes(tab) ? (tab as TabId) : 'overblik';
 
   const data = await fetchResidentData(residentId);
   if (!data) notFound();
 
-  const { resident, checkinNote, plan, proposals, journalEntries, todayPlanItems, medications } = data;
+  const { resident, checkinNote, plan, proposals, journalEntries, todayPlanItems, medications } =
+    data;
 
   return (
     <PortalShell>
@@ -180,7 +195,7 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
 
         {/* Tabs */}
         <div className="flex gap-0.5 mt-3 mb-5 border-b border-gray-200 overflow-x-auto">
-          {ALL_TABS.map(t => (
+          {ALL_TABS.map((t) => (
             <Link
               key={t}
               href={`/resident-360-view/${residentId}?tab=${t}`}
@@ -229,17 +244,11 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
         )}
 
         {activeTab === 'plan' && (
-          <ResidentPlanTab
-            residentId={residentId}
-            residentName={resident.name}
-          />
+          <ResidentPlanTab residentId={residentId} residentName={resident.name} />
         )}
 
         {activeTab === 'haven' && (
-          <ResidentHavenTab
-            residentId={residentId}
-            residentName={resident.name}
-          />
+          <ResidentHavenTab residentId={residentId} residentName={resident.name} />
         )}
       </div>
     </PortalShell>

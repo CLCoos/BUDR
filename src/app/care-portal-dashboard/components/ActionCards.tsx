@@ -12,10 +12,7 @@ export default function ActionCards({ onOpenOverrapport }: Props) {
   const router = useRouter();
 
   return (
-    <div
-      className="grid gap-[10px] mb-6"
-      style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}
-    >
+    <div className="grid gap-[10px] mb-6" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
       {/* Kort 1 — Overrapport */}
       <button
         type="button"
@@ -27,11 +24,11 @@ export default function ActionCards({ onOpenOverrapport }: Props) {
           borderRadius: 12,
           borderTop: '2px solid var(--cp-green)',
         }}
-        onMouseEnter={e => {
+        onMouseEnter={(e) => {
           (e.currentTarget as HTMLElement).style.borderColor = 'var(--cp-border2)';
           (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
         }}
-        onMouseLeave={e => {
+        onMouseLeave={(e) => {
           (e.currentTarget as HTMLElement).style.borderColor = 'var(--cp-border)';
           (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
         }}
@@ -50,10 +47,15 @@ export default function ActionCards({ onOpenOverrapport }: Props) {
             Klar til godkendelse
           </span>
         </div>
-        <div className="text-sm font-semibold transition-colors" style={{ color: 'var(--cp-text)' }}>
+        <div
+          className="text-sm font-semibold transition-colors"
+          style={{ color: 'var(--cp-text)' }}
+        >
           Overrapport
         </div>
-        <div className="text-xs mt-0.5" style={{ color: 'var(--cp-muted)' }}>AI-udkast til vagtskifte</div>
+        <div className="text-xs mt-0.5" style={{ color: 'var(--cp-muted)' }}>
+          AI-udkast til vagtskifte
+        </div>
       </button>
 
       {/* Kort 2 — Indsatsdokumentation */}
@@ -67,11 +69,11 @@ export default function ActionCards({ onOpenOverrapport }: Props) {
           borderRadius: 12,
           borderTop: '2px solid var(--cp-amber)',
         }}
-        onMouseEnter={e => {
+        onMouseEnter={(e) => {
           (e.currentTarget as HTMLElement).style.borderColor = 'var(--cp-border2)';
           (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
         }}
-        onMouseLeave={e => {
+        onMouseLeave={(e) => {
           (e.currentTarget as HTMLElement).style.borderColor = 'var(--cp-border)';
           (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
         }}
@@ -90,10 +92,15 @@ export default function ActionCards({ onOpenOverrapport }: Props) {
             2 afventer
           </span>
         </div>
-        <div className="text-sm font-semibold transition-colors" style={{ color: 'var(--cp-text)' }}>
+        <div
+          className="text-sm font-semibold transition-colors"
+          style={{ color: 'var(--cp-text)' }}
+        >
           Indsatsdok.
         </div>
-        <div className="text-xs mt-0.5" style={{ color: 'var(--cp-muted)' }}>§136 / §141 struktureret flow</div>
+        <div className="text-xs mt-0.5" style={{ color: 'var(--cp-muted)' }}>
+          Skabeloner til magt- og indsatsdokumentation (serviceloven)
+        </div>
       </button>
 
       {/* Kort 3 — Tilsynsrapport */}
@@ -107,11 +114,11 @@ export default function ActionCards({ onOpenOverrapport }: Props) {
           borderRadius: 12,
           borderTop: '2px solid var(--cp-blue)',
         }}
-        onMouseEnter={e => {
+        onMouseEnter={(e) => {
           (e.currentTarget as HTMLElement).style.borderColor = 'var(--cp-border2)';
           (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
         }}
-        onMouseLeave={e => {
+        onMouseLeave={(e) => {
           (e.currentTarget as HTMLElement).style.borderColor = 'var(--cp-border)';
           (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
         }}
@@ -130,10 +137,15 @@ export default function ActionCards({ onOpenOverrapport }: Props) {
             Opdateret i dag
           </span>
         </div>
-        <div className="text-sm font-semibold transition-colors" style={{ color: 'var(--cp-text)' }}>
+        <div
+          className="text-sm font-semibold transition-colors"
+          style={{ color: 'var(--cp-text)' }}
+        >
           Tilsynsrapport
         </div>
-        <div className="text-xs mt-0.5" style={{ color: 'var(--cp-muted)' }}>Autogenerer pakke til tilsyn</div>
+        <div className="text-xs mt-0.5" style={{ color: 'var(--cp-muted)' }}>
+          Autogenerer pakke til tilsyn
+        </div>
       </button>
     </div>
   );

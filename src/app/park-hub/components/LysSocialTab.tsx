@@ -1,7 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ChevronRight, Clock, CheckCheck, Send, Smile, Star, Users, MessageCircle } from 'lucide-react';
+import {
+  ChevronRight,
+  Clock,
+  CheckCheck,
+  Send,
+  Smile,
+  Star,
+  Users,
+  MessageCircle,
+} from 'lucide-react';
 import type { LysThemeTokens } from '../lib/lysTheme';
 
 interface Contact {
@@ -21,11 +30,51 @@ interface SentMessage {
 }
 
 const contacts: Contact[] = [
-  { id: 'c1', name: 'Mor', emoji: '👩', role: 'Familie', color: '#FB923C', bg: 'rgba(251,146,60,0.12)', lastSeen: 'I dag' },
-  { id: 'c2', name: 'Bedste ven', emoji: '🧑', role: 'Ven', color: '#A78BFA', bg: 'rgba(167,139,250,0.12)', lastSeen: 'I går' },
-  { id: 'c3', name: 'Terapeut', emoji: '🩺', role: 'Professionel', color: '#34D399', bg: 'rgba(52,211,153,0.12)', lastSeen: 'Mandag' },
-  { id: 'c4', name: 'Søster', emoji: '👧', role: 'Familie', color: '#F472B6', bg: 'rgba(244,114,182,0.12)', lastSeen: 'I dag' },
-  { id: 'c5', name: 'Kollega', emoji: '🧑‍💼', role: 'Arbejde', color: '#60A5FA', bg: 'rgba(96,165,250,0.12)', lastSeen: 'Tirsdag' },
+  {
+    id: 'c1',
+    name: 'Mor',
+    emoji: '👩',
+    role: 'Familie',
+    color: '#FB923C',
+    bg: 'rgba(251,146,60,0.12)',
+    lastSeen: 'I dag',
+  },
+  {
+    id: 'c2',
+    name: 'Bedste ven',
+    emoji: '🧑',
+    role: 'Ven',
+    color: '#A78BFA',
+    bg: 'rgba(167,139,250,0.12)',
+    lastSeen: 'I går',
+  },
+  {
+    id: 'c3',
+    name: 'Terapeut',
+    emoji: '🩺',
+    role: 'Professionel',
+    color: '#34D399',
+    bg: 'rgba(52,211,153,0.12)',
+    lastSeen: 'Mandag',
+  },
+  {
+    id: 'c4',
+    name: 'Søster',
+    emoji: '👧',
+    role: 'Familie',
+    color: '#F472B6',
+    bg: 'rgba(244,114,182,0.12)',
+    lastSeen: 'I dag',
+  },
+  {
+    id: 'c5',
+    name: 'Kollega',
+    emoji: '🧑‍💼',
+    role: 'Arbejde',
+    color: '#60A5FA',
+    bg: 'rgba(96,165,250,0.12)',
+    lastSeen: 'Tirsdag',
+  },
 ];
 
 const quickMessages = [
@@ -73,7 +122,7 @@ export default function LysSocialTab({ tokens, accent }: Props) {
 
   // Opmuntring state
   const [opmuntringTarget, setOpmuntringTarget] = useState<Contact | null>(null);
-  const [pendingEnc, setPendingEnc] = useState<typeof encouragements[0] | null>(null);
+  const [pendingEnc, setPendingEnc] = useState<(typeof encouragements)[0] | null>(null);
   const [sentEncs, setSentEncs] = useState<Set<string>>(new Set());
   const [encReactions, setEncReactions] = useState<Record<string, string[]>>({});
   const [pickerOpen, setPickerOpen] = useState<string | null>(null);
@@ -88,11 +137,11 @@ export default function LysSocialTab({ tokens, accent }: Props) {
 
   const sendMessage = (contactId: string, text: string) => {
     const msg: SentMessage = { text, timestamp: new Date(), read: false };
-    setMessageHistory(prev => ({ ...prev, [contactId]: [...(prev[contactId] ?? []), msg] }));
+    setMessageHistory((prev) => ({ ...prev, [contactId]: [...(prev[contactId] ?? []), msg] }));
     setTimeout(() => {
-      setMessageHistory(prev => {
+      setMessageHistory((prev) => {
         const msgs = [...(prev[contactId] ?? [])];
-        const i = msgs.findLastIndex(m => m.text === text && !m.read);
+        const i = msgs.findLastIndex((m) => m.text === text && !m.read);
         if (i !== -1) msgs[i] = { ...msgs[i], read: true };
         return { ...prev, [contactId]: msgs };
       });
@@ -129,8 +178,12 @@ export default function LysSocialTab({ tokens, accent }: Props) {
         className="sticky top-0 z-20 border-b px-4 py-3"
         style={{ backgroundColor: tokens.bg, borderColor: tokens.cardBorder }}
       >
-        <h1 className="font-bold text-lg" style={{ color: tokens.text }}>Social</h1>
-        <p className="text-xs mt-0.5" style={{ color: tokens.textMuted }}>Dit støttenetværk</p>
+        <h1 className="font-bold text-lg" style={{ color: tokens.text }}>
+          Social
+        </h1>
+        <p className="text-xs mt-0.5" style={{ color: tokens.textMuted }}>
+          Dit støttenetværk
+        </p>
       </div>
 
       <div className="px-4 py-4 space-y-4">
@@ -139,7 +192,7 @@ export default function LysSocialTab({ tokens, accent }: Props) {
           className="flex gap-1 rounded-xl p-1 border"
           style={{ backgroundColor: tokens.cardBg, borderColor: tokens.cardBorder }}
         >
-          {tabs.map(t => (
+          {tabs.map((t) => (
             <button
               key={t.key}
               type="button"
@@ -160,8 +213,10 @@ export default function LysSocialTab({ tokens, accent }: Props) {
         {/* KONTAKTER TAB */}
         {activeTab === 'kontakter' && (
           <div className="space-y-2">
-            <p className="text-xs px-1" style={{ color: tokens.textMuted }}>Tryk på en kontakt for at sende en hurtig besked</p>
-            {contacts.map(contact => {
+            <p className="text-xs px-1" style={{ color: tokens.textMuted }}>
+              Tryk på en kontakt for at sende en hurtig besked
+            </p>
+            {contacts.map((contact) => {
               const isSelected = selectedContact?.id === contact.id;
               return (
                 <div key={contact.id}>
@@ -176,15 +231,25 @@ export default function LysSocialTab({ tokens, accent }: Props) {
                   >
                     <div
                       className="w-11 h-11 rounded-full flex items-center justify-center text-xl border-2 flex-shrink-0"
-                      style={{ background: contact.bg, borderColor: isSelected ? contact.color : `${contact.color}50` }}
+                      style={{
+                        background: contact.bg,
+                        borderColor: isSelected ? contact.color : `${contact.color}50`,
+                      }}
                     >
                       {contact.emoji}
                     </div>
                     <div className="flex-1 text-left">
-                      <p className="text-sm font-semibold" style={{ color: tokens.text }}>{contact.name}</p>
-                      <p className="text-xs" style={{ color: tokens.textMuted }}>{contact.role} · {contact.lastSeen}</p>
+                      <p className="text-sm font-semibold" style={{ color: tokens.text }}>
+                        {contact.name}
+                      </p>
+                      <p className="text-xs" style={{ color: tokens.textMuted }}>
+                        {contact.role} · {contact.lastSeen}
+                      </p>
                     </div>
-                    <Send size={14} style={{ color: isSelected ? contact.color : tokens.textMuted }} />
+                    <Send
+                      size={14}
+                      style={{ color: isSelected ? contact.color : tokens.textMuted }}
+                    />
                   </button>
 
                   {isSelected && (
@@ -192,18 +257,28 @@ export default function LysSocialTab({ tokens, accent }: Props) {
                       className="mt-1 rounded-2xl border p-3 space-y-2"
                       style={{ backgroundColor: tokens.cardBg, borderColor: `${contact.color}25` }}
                     >
-                      <p className="text-xs" style={{ color: tokens.textMuted }}>Hurtige beskeder til {contact.name}:</p>
+                      <p className="text-xs" style={{ color: tokens.textMuted }}>
+                        Hurtige beskeder til {contact.name}:
+                      </p>
                       <div className="grid grid-cols-2 gap-1.5">
-                        {quickMessages.map(msg => (
+                        {quickMessages.map((msg) => (
                           <button
                             key={msg.id}
                             type="button"
                             onClick={() => sendMessage(contact.id, msg.label)}
                             className="flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all active:scale-95"
-                            style={{ borderColor: `${contact.color}25`, backgroundColor: 'transparent' }}
+                            style={{
+                              borderColor: `${contact.color}25`,
+                              backgroundColor: 'transparent',
+                            }}
                           >
                             <span className="text-sm">{msg.emoji}</span>
-                            <span className="text-[10px] leading-tight" style={{ color: tokens.text }}>{msg.label}</span>
+                            <span
+                              className="text-[10px] leading-tight"
+                              style={{ color: tokens.text }}
+                            >
+                              {msg.label}
+                            </span>
                           </button>
                         ))}
                       </div>
@@ -211,8 +286,8 @@ export default function LysSocialTab({ tokens, accent }: Props) {
                         <input
                           type="text"
                           value={customMessage}
-                          onChange={e => setCustomMessage(e.target.value)}
-                          onKeyDown={e => e.key === 'Enter' && sendCustom()}
+                          onChange={(e) => setCustomMessage(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && sendCustom()}
                           placeholder="Skriv din egen besked..."
                           className="flex-1 rounded-xl border px-3 py-2 text-xs outline-none"
                           style={{
@@ -225,22 +300,42 @@ export default function LysSocialTab({ tokens, accent }: Props) {
                           type="button"
                           onClick={sendCustom}
                           className="px-3 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 min-h-[44px]"
-                          style={{ backgroundColor: contact.bg, color: contact.color, border: `1px solid ${contact.color}40` }}
+                          style={{
+                            backgroundColor: contact.bg,
+                            color: contact.color,
+                            border: `1px solid ${contact.color}40`,
+                          }}
                         >
                           <Send size={13} />
                         </button>
                       </div>
                       {/* Message history preview */}
                       {(messageHistory[contact.id] ?? []).length > 0 && (
-                        <div className="border-t pt-2 mt-1 space-y-1" style={{ borderColor: `${contact.color}20` }}>
-                          {[...(messageHistory[contact.id] ?? [])].reverse().slice(0, 3).map((msg, i) => (
-                            <div key={i} className="flex items-center gap-2">
-                              <span className="text-[10px] flex-1 truncate" style={{ color: tokens.text }}>{msg.text}</span>
-                              <Clock size={9} style={{ color: tokens.textMuted }} />
-                              <span className="text-[9px]" style={{ color: tokens.textMuted }}>{formatTime(msg.timestamp)}</span>
-                              <CheckCheck size={10} style={{ color: msg.read ? '#34D399' : tokens.textMuted }} />
-                            </div>
-                          ))}
+                        <div
+                          className="border-t pt-2 mt-1 space-y-1"
+                          style={{ borderColor: `${contact.color}20` }}
+                        >
+                          {[...(messageHistory[contact.id] ?? [])]
+                            .reverse()
+                            .slice(0, 3)
+                            .map((msg, i) => (
+                              <div key={i} className="flex items-center gap-2">
+                                <span
+                                  className="text-[10px] flex-1 truncate"
+                                  style={{ color: tokens.text }}
+                                >
+                                  {msg.text}
+                                </span>
+                                <Clock size={9} style={{ color: tokens.textMuted }} />
+                                <span className="text-[9px]" style={{ color: tokens.textMuted }}>
+                                  {formatTime(msg.timestamp)}
+                                </span>
+                                <CheckCheck
+                                  size={10}
+                                  style={{ color: msg.read ? '#34D399' : tokens.textMuted }}
+                                />
+                              </div>
+                            ))}
                         </div>
                       )}
                     </div>
@@ -265,8 +360,10 @@ export default function LysSocialTab({ tokens, accent }: Props) {
 
             {!opmuntringTarget ? (
               <div className="space-y-2">
-                <p className="text-xs font-semibold px-1" style={{ color: tokens.textMuted }}>Send til…</p>
-                {contacts.map(c => (
+                <p className="text-xs font-semibold px-1" style={{ color: tokens.textMuted }}>
+                  Send til…
+                </p>
+                {contacts.map((c) => (
                   <button
                     key={`opm-${c.id}`}
                     type="button"
@@ -276,8 +373,12 @@ export default function LysSocialTab({ tokens, accent }: Props) {
                   >
                     <span className="text-2xl">{c.emoji}</span>
                     <div>
-                      <p className="text-sm font-semibold" style={{ color: tokens.text }}>{c.name}</p>
-                      <p className="text-xs" style={{ color: tokens.textMuted }}>{c.role}</p>
+                      <p className="text-sm font-semibold" style={{ color: tokens.text }}>
+                        {c.name}
+                      </p>
+                      <p className="text-xs" style={{ color: tokens.textMuted }}>
+                        {c.role}
+                      </p>
                     </div>
                     <ChevronRight className="ml-auto" size={16} style={{ color: c.color }} />
                   </button>
@@ -288,24 +389,34 @@ export default function LysSocialTab({ tokens, accent }: Props) {
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => { setOpmuntringTarget(null); setPendingEnc(null); }}
+                    onClick={() => {
+                      setOpmuntringTarget(null);
+                      setPendingEnc(null);
+                    }}
                     className="text-xs font-semibold min-h-[44px] px-2"
                     style={{ color: accent }}
                   >
                     ← Skift person
                   </button>
                   <span className="text-xs" style={{ color: tokens.textMuted }}>
-                    Til: <strong style={{ color: tokens.text }}>{opmuntringTarget.emoji} {opmuntringTarget.name}</strong>
+                    Til:{' '}
+                    <strong style={{ color: tokens.text }}>
+                      {opmuntringTarget.emoji} {opmuntringTarget.name}
+                    </strong>
                   </span>
                 </div>
 
                 {pendingEnc && (
                   <div
                     className="rounded-2xl border p-4 space-y-3"
-                    style={{ backgroundColor: tokens.cardBg, borderColor: `${opmuntringTarget.color}35` }}
+                    style={{
+                      backgroundColor: tokens.cardBg,
+                      borderColor: `${opmuntringTarget.color}35`,
+                    }}
                   >
                     <p className="text-sm" style={{ color: tokens.text }}>
-                      Send <strong>&quot;{pendingEnc.text}&quot;</strong> til {opmuntringTarget.name}?
+                      Send <strong>&quot;{pendingEnc.text}&quot;</strong> til{' '}
+                      {opmuntringTarget.name}?
                     </p>
                     <div className="flex gap-2">
                       <button
@@ -320,7 +431,7 @@ export default function LysSocialTab({ tokens, accent }: Props) {
                         type="button"
                         onClick={() => {
                           const key = `${pendingEnc.id}::${opmuntringTarget.id}`;
-                          setSentEncs(prev => new Set([...prev, key]));
+                          setSentEncs((prev) => new Set([...prev, key]));
                           showToast(`Opmuntring sendt til ${opmuntringTarget.name} 🌟`);
                           setPendingEnc(null);
                         }}
@@ -334,7 +445,7 @@ export default function LysSocialTab({ tokens, accent }: Props) {
                 )}
 
                 <div className="grid grid-cols-2 gap-2">
-                  {encouragements.map(enc => {
+                  {encouragements.map((enc) => {
                     const key = `${enc.id}::${opmuntringTarget.id}`;
                     const isSent = sentEncs.has(key);
                     const reactions = encReactions[enc.id] ?? [];
@@ -365,7 +476,13 @@ export default function LysSocialTab({ tokens, accent }: Props) {
                             {reactions.length > 0 && (
                               <div className="flex flex-wrap gap-1 mb-1">
                                 {reactions.map((r, i) => (
-                                  <span key={i} className="text-sm px-1.5 py-0.5 rounded-full border" style={{ borderColor: tokens.cardBorder }}>{r}</span>
+                                  <span
+                                    key={i}
+                                    className="text-sm px-1.5 py-0.5 rounded-full border"
+                                    style={{ borderColor: tokens.cardBorder }}
+                                  >
+                                    {r}
+                                  </span>
                                 ))}
                               </div>
                             )}
@@ -382,15 +499,21 @@ export default function LysSocialTab({ tokens, accent }: Props) {
                               {isPickerOpen && (
                                 <div
                                   className="absolute bottom-full left-0 mb-1 z-30 rounded-2xl border p-2 shadow-xl"
-                                  style={{ backgroundColor: tokens.cardBg, borderColor: tokens.cardBorder }}
+                                  style={{
+                                    backgroundColor: tokens.cardBg,
+                                    borderColor: tokens.cardBorder,
+                                  }}
                                 >
                                   <div className="flex gap-1">
-                                    {reactionOptions.map(emoji => (
+                                    {reactionOptions.map((emoji) => (
                                       <button
                                         key={emoji}
                                         type="button"
                                         onClick={() => {
-                                          setEncReactions(prev => ({ ...prev, [enc.id]: [...(prev[enc.id] ?? []), emoji] }));
+                                          setEncReactions((prev) => ({
+                                            ...prev,
+                                            [enc.id]: [...(prev[enc.id] ?? []), emoji],
+                                          }));
                                           setPickerOpen(null);
                                           showToast(`Reaktion tilføjet ${emoji}`);
                                         }}
@@ -418,9 +541,11 @@ export default function LysSocialTab({ tokens, accent }: Props) {
         {activeTab === 'beskeder' && (
           <div className="space-y-3">
             <div>
-              <p className="text-xs font-semibold px-1 mb-2" style={{ color: tokens.textMuted }}>Send til…</p>
+              <p className="text-xs font-semibold px-1 mb-2" style={{ color: tokens.textMuted }}>
+                Send til…
+              </p>
               <div className="flex flex-wrap gap-2">
-                {contacts.map(c => {
+                {contacts.map((c) => {
                   const on = beskederContact?.id === c.id;
                   return (
                     <button
@@ -443,24 +568,31 @@ export default function LysSocialTab({ tokens, accent }: Props) {
             </div>
 
             <div className="space-y-2">
-              {quickMessages.map(msg => (
+              {quickMessages.map((msg) => (
                 <div
                   key={msg.id}
                   className="rounded-2xl border flex items-center gap-3 p-3.5"
                   style={{ backgroundColor: tokens.cardBg, borderColor: tokens.cardBorder }}
                 >
                   <span className="text-2xl flex-shrink-0">{msg.emoji}</span>
-                  <p className="flex-1 text-sm" style={{ color: tokens.text }}>{msg.label}</p>
+                  <p className="flex-1 text-sm" style={{ color: tokens.text }}>
+                    {msg.label}
+                  </p>
                   <button
                     type="button"
                     onClick={() => {
-                      if (!beskederContact) { showToast('Vælg først hvem beskeden skal til 💬'); return; }
+                      if (!beskederContact) {
+                        showToast('Vælg først hvem beskeden skal til 💬');
+                        return;
+                      }
                       sendMessage(beskederContact.id, msg.label);
                     }}
                     className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-bold border transition-all active:scale-95 min-h-[44px]"
                     style={{
                       backgroundColor: beskederContact?.bg ?? tokens.cardBg,
-                      borderColor: beskederContact ? `${beskederContact.color}45` : tokens.cardBorder,
+                      borderColor: beskederContact
+                        ? `${beskederContact.color}45`
+                        : tokens.cardBorder,
                       color: beskederContact?.color ?? tokens.textMuted,
                     }}
                   >

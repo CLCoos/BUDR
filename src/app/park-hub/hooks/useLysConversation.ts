@@ -31,7 +31,7 @@ export function useLysConversation({ firstName, phase, moodLabel }: UseLysConver
       extra?: Partial<{
         messagesOverride: LysChatMessage[];
         historyLimit: number;
-      }>,
+      }>
     ) => {
       const trimmed = userText.trim();
       if (!trimmed) return null;
@@ -61,17 +61,17 @@ export function useLysConversation({ firstName, phase, moodLabel }: UseLysConver
           data.text ??
           data.error ??
           `Hej ${firstName}. Tak for at du deler det. Vil du sige lidt mere, når du er klar?`;
-        setMessages(curr => [...curr, { role: 'assistant', content: reply }]);
+        setMessages((curr) => [...curr, { role: 'assistant', content: reply }]);
         return reply;
       } catch {
         const fallback = `Hej ${firstName}. Jeg hører dig. Tag den tid, du har brug for.`;
-        setMessages(curr => [...curr, { role: 'assistant', content: fallback }]);
+        setMessages((curr) => [...curr, { role: 'assistant', content: fallback }]);
         return fallback;
       } finally {
         setLoading(false);
       }
     },
-    [messages, firstName, phase, moodLabel],
+    [messages, firstName, phase, moodLabel]
   );
 
   const sendCounterThought = useCallback(
@@ -80,7 +80,7 @@ export function useLysConversation({ firstName, phase, moodLabel }: UseLysConver
         role: 'user',
         content: 'Giv en mild modtanke og afslut med ét kort spørgsmål.',
       };
-      setMessages(m => [...m, trigger]);
+      setMessages((m) => [...m, trigger]);
       setLoading(true);
       try {
         const res = await fetch('/api/lys-chat', {
@@ -101,17 +101,17 @@ export function useLysConversation({ firstName, phase, moodLabel }: UseLysConver
           data.text ??
           data.error ??
           `Hvad hvis man også kunne se det sådan her: du gør dit bedste, og det er nok lige nu. Hvordan føles det at høre?`;
-        setMessages(curr => [...curr, { role: 'assistant', content: reply }]);
+        setMessages((curr) => [...curr, { role: 'assistant', content: reply }]);
         return reply;
       } catch {
         const fallback = `Hvad hvis man også kunne se det sådan her: du er ikke alene med det her. Hvordan føles det at høre?`;
-        setMessages(curr => [...curr, { role: 'assistant', content: fallback }]);
+        setMessages((curr) => [...curr, { role: 'assistant', content: fallback }]);
         return fallback;
       } finally {
         setLoading(false);
       }
     },
-    [firstName, phase, moodLabel],
+    [firstName, phase, moodLabel]
   );
 
   const resetThread = useCallback(() => setMessages([]), []);

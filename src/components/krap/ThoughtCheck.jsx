@@ -74,12 +74,16 @@ export default function ThoughtCheck({ supabase, profileId }) {
     <section className="w-full bg-midnight-800/40 border border-midnight-600/40 rounded-3xl p-4 sm:p-6">
       <div className="mb-3">
         <h2 className="font-display text-lg font-bold text-midnight-50">Søjle 3: Tanketjek</h2>
-        <p className="text-xs text-midnight-400 mt-1">Find den tanke, der fylder — og svar den med en mod-tanke.</p>
+        <p className="text-xs text-midnight-400 mt-1">
+          Find den tanke, der fylder — og svar den med en mod-tanke.
+        </p>
       </div>
 
       <div className="space-y-4">
         <div className="rounded-2xl border border-midnight-600/40 bg-midnight-900/40 p-4">
-          <label className="block text-xs font-semibold text-midnight-200 mb-2">Bekymrende tanke</label>
+          <label className="block text-xs font-semibold text-midnight-200 mb-2">
+            Bekymrende tanke
+          </label>
           <textarea
             value={troublingThought}
             onChange={(e) => setTroublingThought(e.target.value.slice(0, 500))}
@@ -103,7 +107,13 @@ export default function ThoughtCheck({ supabase, profileId }) {
         <div>
           <button
             onClick={onSave}
-            disabled={!supabase || !profileId || saving || troublingThought.trim().length === 0 || counterThought.trim().length === 0}
+            disabled={
+              !supabase ||
+              !profileId ||
+              saving ||
+              troublingThought.trim().length === 0 ||
+              counterThought.trim().length === 0
+            }
             className="w-full rounded-2xl py-3 font-display font-bold text-sm transition-all duration-200 active:scale-[0.99] shadow-sm bg-sunrise-400 hover:bg-sunrise-500 text-midnight-900 disabled:opacity-50"
           >
             {saving ? 'Gemmer…' : 'Gem tanketjek'}
@@ -115,25 +125,38 @@ export default function ThoughtCheck({ supabase, profileId }) {
         <div className="pt-2">
           <div className="flex items-center justify-between gap-3 mb-2">
             <p className="font-display text-sm font-bold text-midnight-50">Seneste tanketjek</p>
-            <p className="text-[10px] text-midnight-500">{loading ? 'Henter…' : `${lastChecks.length}/3`}</p>
+            <p className="text-[10px] text-midnight-500">
+              {loading ? 'Henter…' : `${lastChecks.length}/3`}
+            </p>
           </div>
 
           {lastChecks.length === 0 && !loading ? (
-            <p className="text-sm text-midnight-400">Ingen tanketjek endnu — gem én, når du har lyst.</p>
+            <p className="text-sm text-midnight-400">
+              Ingen tanketjek endnu — gem én, når du har lyst.
+            </p>
           ) : null}
 
           <div className="space-y-2">
             {lastChecks.map((t) => (
-              <div key={t.id} className="rounded-2xl border border-midnight-600/40 bg-midnight-900/40 p-4">
+              <div
+                key={t.id}
+                className="rounded-2xl border border-midnight-600/40 bg-midnight-900/40 p-4"
+              >
                 <p className="text-xs font-semibold text-midnight-200 mb-1">Bekymrende tanke</p>
-                <p className="text-sm text-midnight-100 leading-relaxed mb-2">{t.troubling_thought || '—'}</p>
+                <p className="text-sm text-midnight-100 leading-relaxed mb-2">
+                  {t.troubling_thought || '—'}
+                </p>
                 <p className="text-xs font-semibold text-midnight-200 mb-1">Modtanke</p>
                 <p className="text-sm text-midnight-200 leading-relaxed">
                   {t.counter_thought || '—'}
                 </p>
                 {t.created_at ? (
                   <p className="text-[10px] text-midnight-500 mt-2">
-                    {new Date(t.created_at).toLocaleString('da-DK', { weekday: 'short', day: 'numeric', month: 'short' })}
+                    {new Date(t.created_at).toLocaleString('da-DK', {
+                      weekday: 'short',
+                      day: 'numeric',
+                      month: 'short',
+                    })}
                   </p>
                 ) : null}
               </div>
@@ -144,4 +167,3 @@ export default function ThoughtCheck({ supabase, profileId }) {
     </section>
   );
 }
-

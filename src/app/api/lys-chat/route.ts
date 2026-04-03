@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   if (!key) {
     return NextResponse.json(
       { error: 'Lys er ikke konfigureret endnu', fallback: true },
-      { status: 503 },
+      { status: 503 }
     );
   }
 
@@ -68,7 +68,7 @@ Følelse: ${f}`;
     }
   }
 
-  const anthropicMessages = msgs.map(m => ({
+  const anthropicMessages = msgs.map((m) => ({
     role: m.role === 'assistant' ? ('assistant' as const) : ('user' as const),
     content: m.content,
   }));
@@ -92,7 +92,7 @@ Følelse: ${f}`;
 async function callAnthropic(
   key: string,
   system: string,
-  messages: Array<{ role: 'user' | 'assistant'; content: string }>,
+  messages: Array<{ role: 'user' | 'assistant'; content: string }>
 ): Promise<string> {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -116,7 +116,7 @@ async function callAnthropic(
   }
 
   const data = (await res.json()) as { content?: Array<{ type?: string; text?: string }> };
-  const block = data.content?.find(c => c.type === 'text');
+  const block = data.content?.find((c) => c.type === 'text');
   const t = block?.text?.trim();
   if (!t) throw new Error('empty');
   return t;

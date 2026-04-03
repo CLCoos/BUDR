@@ -25,11 +25,25 @@ const initialGoals: Goal[] = [
     description: 'Bygge en rutine med daglige ture ud af bostedet',
     createdByStaff: 'Sara K.',
     steps: [
-      { id: 'step-001-1', text: 'Gå til postkassen en gang om dagen', completed: true, completedAt: '24/03/2026' },
-      { id: 'step-001-2', text: 'Tag en 5 minutters tur rundt om bygningen', completed: true, completedAt: '25/03/2026' },
+      {
+        id: 'step-001-1',
+        text: 'Gå til postkassen en gang om dagen',
+        completed: true,
+        completedAt: '24/03/2026',
+      },
+      {
+        id: 'step-001-2',
+        text: 'Tag en 5 minutters tur rundt om bygningen',
+        completed: true,
+        completedAt: '25/03/2026',
+      },
       { id: 'step-001-3', text: 'Gå til det lokale bageri og køb en bolle', completed: false },
       { id: 'step-001-4', text: 'Tag offentlig transport til centeret', completed: false },
-      { id: 'step-001-5', text: 'Deltag i et gruppearrangement udenfor bostedet', completed: false },
+      {
+        id: 'step-001-5',
+        text: 'Deltag i et gruppearrangement udenfor bostedet',
+        completed: false,
+      },
     ],
   },
   {
@@ -38,7 +52,12 @@ const initialGoals: Goal[] = [
     description: 'Sove og vågne på faste tidspunkter',
     createdByStaff: 'Morten L.',
     steps: [
-      { id: 'step-002-1', text: 'Sluk skærm 30 min før sengetid', completed: true, completedAt: '23/03/2026' },
+      {
+        id: 'step-002-1',
+        text: 'Sluk skærm 30 min før sengetid',
+        completed: true,
+        completedAt: '23/03/2026',
+      },
       { id: 'step-002-2', text: 'Gå i seng senest kl. 23:00 tre dage i træk', completed: false },
       { id: 'step-002-3', text: 'Stå op kl. 08:00 uden alarm en hel uge', completed: false },
     ],
@@ -50,29 +69,31 @@ export default function GoalLadder() {
   const [expandedGoal, setExpandedGoal] = useState<string>('goal-001');
 
   const toggleStep = (goalId: string, stepId: string) => {
-    setGoals(prev => prev.map(g => {
-      if (g.id !== goalId) return g;
-      const steps = g.steps.map((s, idx) => {
-        if (s.id !== stepId) return s;
-        if (!s.completed) {
-          // Can only complete if previous step is done
-          const prevStep = g.steps[idx - 1];
-          if (idx > 0 && !prevStep.completed) {
-            toast.error('Fuldfør det forrige trin først');
-            return s;
+    setGoals((prev) =>
+      prev.map((g) => {
+        if (g.id !== goalId) return g;
+        const steps = g.steps.map((s, idx) => {
+          if (s.id !== stepId) return s;
+          if (!s.completed) {
+            // Can only complete if previous step is done
+            const prevStep = g.steps[idx - 1];
+            if (idx > 0 && !prevStep.completed) {
+              toast.error('Fuldfør det forrige trin først');
+              return s;
+            }
+            toast.success('Trin gennemført! 🎉');
+            // Backend: UPDATE park_goal_steps SET completed=true, completed_at=NOW() WHERE id=stepId
+            return { ...s, completed: true, completedAt: '26/03/2026' };
           }
-          toast.success('Trin gennemført! 🎉');
-          // Backend: UPDATE park_goal_steps SET completed=true, completed_at=NOW() WHERE id=stepId
-          return { ...s, completed: true, completedAt: '26/03/2026' };
-        }
-        return s;
-      });
-      return { ...g, steps };
-    }));
+          return s;
+        });
+        return { ...g, steps };
+      })
+    );
   };
 
   const getProgress = (goal: Goal) => {
-    const done = goal.steps.filter(s => s.completed).length;
+    const done = goal.steps.filter((s) => s.completed).length;
     return Math.round((done / goal.steps.length) * 100);
   };
 
@@ -84,10 +105,10 @@ export default function GoalLadder() {
         <span className="text-xs text-gray-400 ml-auto">Sat af personalet</span>
       </div>
 
-      {goals.map(goal => {
+      {goals.map((goal) => {
         const progress = getProgress(goal);
         const isExpanded = expandedGoal === goal.id;
-        const completedSteps = goal.steps.filter(s => s.completed).length;
+        const completedSteps = goal.steps.filter((s) => s.completed).length;
 
         return (
           <div key={goal.id} className="bg-white rounded-lg border border-gray-100 overflow-hidden">
@@ -101,8 +122,12 @@ export default function GoalLadder() {
                   <div className="text-xs text-gray-500 mt-0.5">{goal.description}</div>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <div className="text-xs font-bold tabular-nums" style={{ color: '#7F77DD' }}>{progress}%</div>
-                  <div className="text-xs text-gray-400">{completedSteps}/{goal.steps.length}</div>
+                  <div className="text-xs font-bold tabular-nums" style={{ color: '#7F77DD' }}>
+                    {progress}%
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    {completedSteps}/{goal.steps.length}
+                  </div>
                 </div>
               </div>
               <div className="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -131,7 +156,8 @@ export default function GoalLadder() {
                               step.completed
                                 ? 'bg-[#7F77DD]'
                                 : isLocked
-                                ? 'bg-gray-100' :'bg-white border-2 border-[#7F77DD]/40 hover:border-[#7F77DD]'
+                                  ? 'bg-gray-100'
+                                  : 'bg-white border-2 border-[#7F77DD]/40 hover:border-[#7F77DD]'
                             }`}
                           >
                             {step.completed ? (
@@ -143,11 +169,15 @@ export default function GoalLadder() {
                             )}
                           </button>
                           <div className={`flex-1 pt-0.5 ${isLocked ? 'opacity-40' : ''}`}>
-                            <div className={`text-sm ${step.completed ? 'line-through text-gray-400' : 'text-gray-700'}`}>
+                            <div
+                              className={`text-sm ${step.completed ? 'line-through text-gray-400' : 'text-gray-700'}`}
+                            >
                               {step.text}
                             </div>
                             {step.completedAt && (
-                              <div className="text-xs text-[#7F77DD] mt-0.5">✓ Gennemført {step.completedAt}</div>
+                              <div className="text-xs text-[#7F77DD] mt-0.5">
+                                ✓ Gennemført {step.completedAt}
+                              </div>
                             )}
                           </div>
                         </div>

@@ -1,6 +1,15 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, AreaChart } from 'recharts';
+import {
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceLine,
+  Area,
+  AreaChart,
+} from 'recharts';
 import type { TooltipProps } from 'recharts';
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
 import { createClient } from '@/lib/supabase/client';
@@ -9,15 +18,15 @@ type TrafficUi = 'groen' | 'gul' | 'roed';
 type TrafficDb = 'grøn' | 'gul' | 'rød';
 
 const DB_TO_UI: Record<TrafficDb, TrafficUi> = {
-  'grøn': 'groen',
-  'gul':  'gul',
-  'rød':  'roed',
+  grøn: 'groen',
+  gul: 'gul',
+  rød: 'roed',
 };
 
 const TRAFFIC_COLORS: Record<TrafficUi, string> = {
   groen: '#22C55E',
-  gul:   '#EAB308',
-  roed:  '#EF4444',
+  gul: '#EAB308',
+  roed: '#EF4444',
 };
 
 const WEEKDAYS = ['Søn', 'Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør'];
@@ -107,7 +116,7 @@ export default function MoodTrendChart({ residentId }: Props) {
   const renderTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
     if (!active || !payload?.length) return null;
     const score = payload[0].value as number;
-    const item = chartData.find(d => d.day === label);
+    const item = chartData.find((d) => d.day === label);
     const tc = item ? TRAFFIC_COLORS[item.traffic] : '#6B7280';
     return (
       <div className="bg-white border border-gray-200 rounded-lg px-3 py-2.5 shadow-sm text-xs">
@@ -130,16 +139,25 @@ export default function MoodTrendChart({ residentId }: Props) {
           <div className="text-xs text-gray-500 mt-0.5">Daglig check-in score (1–10)</div>
         </div>
         <div className="flex items-center gap-3 text-xs text-gray-500">
-          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-green-500" />Grøn</div>
-          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-yellow-400" />Gul</div>
-          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-red-500" />Rød</div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-green-500" />
+            Grøn
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-yellow-400" />
+            Gul
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-red-500" />
+            Rød
+          </div>
         </div>
       </div>
 
       {loading ? (
         <div className="h-[200px] flex items-center justify-center">
           <div className="flex gap-1.5">
-            {[0, 150, 300].map(delay => (
+            {[0, 150, 300].map((delay) => (
               <div
                 key={delay}
                 className="w-2 h-2 rounded-full bg-gray-300 animate-bounce"
@@ -157,7 +175,7 @@ export default function MoodTrendChart({ residentId }: Props) {
           <AreaChart data={chartData} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
             <defs>
               <linearGradient id="moodGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor="#1D9E75" stopOpacity={0.15} />
+                <stop offset="5%" stopColor="#1D9E75" stopOpacity={0.15} />
                 <stop offset="95%" stopColor="#1D9E75" stopOpacity={0} />
               </linearGradient>
             </defs>
@@ -165,7 +183,7 @@ export default function MoodTrendChart({ residentId }: Props) {
             <XAxis
               dataKey="day"
               tick={{ fontSize: 10, fill: '#9CA3AF', fontFamily: 'DM Sans' }}
-              tickFormatter={v => (v as string).split(' ')[0]}
+              tickFormatter={(v) => (v as string).split(' ')[0]}
               axisLine={false}
               tickLine={false}
             />
@@ -207,7 +225,10 @@ export default function MoodTrendChart({ residentId }: Props) {
       <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
         <div className="text-xs text-gray-500">
           Gns. stemning:{' '}
-          <span className="font-bold text-gray-800 tabular-nums">{avg}{typeof avg === 'string' && avg !== '—' ? '/10' : ''}</span>
+          <span className="font-bold text-gray-800 tabular-nums">
+            {avg}
+            {typeof avg === 'string' && avg !== '—' ? '/10' : ''}
+          </span>
         </div>
         <div className="text-xs text-gray-500">Rød linje = bekymringsgrænse (4)</div>
       </div>

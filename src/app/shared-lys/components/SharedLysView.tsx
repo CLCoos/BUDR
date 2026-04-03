@@ -53,11 +53,15 @@ export default function SharedLysView() {
     const getUser = async () => {
       const supabase = supabaseRef.current;
       if (!supabase) return;
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (user && mountedRef.current) setCurrentUserId(user.id);
     };
     getUser();
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
   const generateCode = () => {
@@ -116,8 +120,15 @@ export default function SharedLysView() {
         .eq('session_code', inputCode.toUpperCase())
         .eq('is_active', true)
         .single();
-      if (err || !session) { setError('Ugyldig kode. Tjek koden og prøv igen.'); setLoading(false); return; }
-      await supabase.from('shared_lys_sessions').update({ support_user_id: currentUserId }).eq('id', session.id);
+      if (err || !session) {
+        setError('Ugyldig kode. Tjek koden og prøv igen.');
+        setLoading(false);
+        return;
+      }
+      await supabase
+        .from('shared_lys_sessions')
+        .update({ support_user_id: currentUserId })
+        .eq('id', session.id);
       if (mountedRef.current) {
         setSessionCode(session.session_code);
         setSessionId(session.id);
@@ -136,19 +147,31 @@ export default function SharedLysView() {
     if (!supabase) return;
     const channel = supabase
       .channel(`shared_lys_${sid}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'shared_lys_events', filter: `session_id=eq.${sid}` },
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'shared_lys_events',
+          filter: `session_id=eq.${sid}`,
+        },
         (payload: { new: LysEvent }) => {
           if (mountedRef.current) {
-            setEvents(prev => [...prev, payload.new]);
+            setEvents((prev) => [...prev, payload.new]);
             if (payload.new.color) {
-              const found = colorOptions.find(c => c.color === payload.new.color);
-              if (found) { setActiveMood(found.mood); setActiveColor(found.color); }
+              const found = colorOptions.find((c) => c.color === payload.new.color);
+              if (found) {
+                setActiveMood(found.mood);
+                setActiveColor(found.color);
+              }
             }
           }
         }
       )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const sendColor = async (color: string, mood: LysMood) => {
@@ -186,18 +209,22 @@ export default function SharedLysView() {
       message,
       created_at: new Date().toISOString(),
     };
-    setEvents(prev => [...prev, localEvent]);
-    setTimeout(() => { if (mountedRef.current) setSendingMessage(false); }, 500);
+    setEvents((prev) => [...prev, localEvent]);
+    setTimeout(() => {
+      if (mountedRef.current) setSendingMessage(false);
+    }, 500);
   };
 
-  const recentMessages = events.filter(e => e.event_type === 'message').slice(-5);
+  const recentMessages = events.filter((e) => e.event_type === 'message').slice(-5);
 
   return (
     <div className="min-h-screen gradient-midnight pb-32">
       <div className="sticky top-0 z-20 bg-midnight-900/90 backdrop-blur-xl border-b border-midnight-700/50">
         <div className="max-w-lg mx-auto px-4 py-4">
           <h1 className="font-display text-xl font-bold text-midnight-50">🫂 Delt Lys</h1>
-          <p className="text-xs text-midnight-400 mt-0.5">Del Lys med en støtteperson — i realtid</p>
+          <p className="text-xs text-midnight-400 mt-0.5">
+            Del Lys med en støtteperson — i realtid
+          </p>
         </div>
       </div>
 
@@ -206,9 +233,12 @@ export default function SharedLysView() {
           <div className="space-y-4">
             <div className="bg-midnight-800/50 rounded-3xl border border-midnight-700/50 p-5 text-center">
               <div className="text-4xl mb-3">🫂</div>
-              <h2 className="font-display text-lg font-bold text-midnight-50 mb-2">Delt Lys-kompagnon</h2>
+              <h2 className="font-display text-lg font-bold text-midnight-50 mb-2">
+                Delt Lys-kompagnon
+              </h2>
               <p className="text-sm text-midnight-400 leading-relaxed">
-                Del din Lys med en støtteperson. I kan begge sende farver og opmuntringer — og se det i realtid.
+                Del din Lys med en støtteperson. I kan begge sende farver og opmuntringer — og se
+                det i realtid.
               </p>
             </div>
 
@@ -235,7 +265,7 @@ export default function SharedLysView() {
             <div className="flex gap-2">
               <input
                 value={inputCode}
-                onChange={e => setInputCode(e.target.value.toUpperCase())}
+                onChange={(e) => setInputCode(e.target.value.toUpperCase())}
                 placeholder="Kode (fx ABC123)"
                 maxLength={6}
                 className="flex-1 bg-midnight-800 border border-midnight-600 rounded-xl px-3 py-3 text-sm text-midnight-100 placeholder-midnight-600 focus:outline-none focus:border-aurora-violet/50 font-mono tracking-widest min-h-[48px]"
@@ -255,16 +285,25 @@ export default function SharedLysView() {
             <div className="bg-midnight-800/50 rounded-2xl border border-midnight-700/50 p-4 flex items-center justify-between">
               <div>
                 <p className="text-xs text-midnight-400">Din session-kode:</p>
-                <p className="font-mono text-2xl font-bold text-sunrise-300 tracking-widest">{sessionCode}</p>
-                <p className="text-xs text-midnight-500 mt-0.5">Del denne kode med din støtteperson</p>
+                <p className="font-mono text-2xl font-bold text-sunrise-300 tracking-widest">
+                  {sessionCode}
+                </p>
+                <p className="text-xs text-midnight-500 mt-0.5">
+                  Del denne kode med din støtteperson
+                </p>
               </div>
-              <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse" title="Forbundet" />
+              <div
+                className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"
+                title="Forbundet"
+              />
             </div>
 
             {/* Shared Lys */}
             <div className="flex flex-col items-center py-4">
               <Lys mood={activeMood} size="xl" showMessage />
-              <p className="text-xs text-midnight-400 mt-3">Lys reagerer på farver I sender hinanden</p>
+              <p className="text-xs text-midnight-400 mt-3">
+                Lys reagerer på farver I sender hinanden
+              </p>
             </div>
 
             {/* Color picker */}
@@ -277,7 +316,8 @@ export default function SharedLysView() {
                     onClick={() => sendColor(color, mood)}
                     className={`rounded-xl py-3 text-xs font-semibold transition-all duration-200 border ${
                       activeColor === color
-                        ? 'border-white/30 scale-105' :'border-transparent hover:border-white/10'
+                        ? 'border-white/30 scale-105'
+                        : 'border-transparent hover:border-white/10'
                     }`}
                     style={{ background: `${color}20`, color }}
                   >
@@ -291,7 +331,7 @@ export default function SharedLysView() {
             <div className="bg-midnight-800/50 rounded-2xl border border-midnight-700/50 p-4">
               <p className="text-xs text-midnight-400 font-semibold mb-3">Send en opmuntring:</p>
               <div className="grid grid-cols-2 gap-2">
-                {encouragements.map(msg => (
+                {encouragements.map((msg) => (
                   <button
                     key={msg}
                     onClick={() => sendEncouragement(msg)}
@@ -307,13 +347,22 @@ export default function SharedLysView() {
             {/* Recent messages */}
             {recentMessages.length > 0 && (
               <div className="bg-midnight-800/50 rounded-2xl border border-midnight-700/50 p-4">
-                <p className="text-xs text-midnight-400 font-semibold mb-3">💬 Seneste opmuntringer:</p>
+                <p className="text-xs text-midnight-400 font-semibold mb-3">
+                  💬 Seneste opmuntringer:
+                </p>
                 <div className="space-y-2">
-                  {recentMessages.map(event => (
-                    <div key={event.id} className="bg-aurora-violet/10 border border-aurora-violet/20 rounded-xl px-3 py-2">
+                  {recentMessages.map((event) => (
+                    <div
+                      key={event.id}
+                      className="bg-aurora-violet/10 border border-aurora-violet/20 rounded-xl px-3 py-2"
+                    >
                       <p className="text-sm text-midnight-100">{event.message}</p>
                       <p className="text-xs text-midnight-500 mt-0.5">
-                        {event.sender_id === currentUserId ? 'Dig' : 'Støtteperson'} · {new Date(event.created_at).toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' })}
+                        {event.sender_id === currentUserId ? 'Dig' : 'Støtteperson'} ·{' '}
+                        {new Date(event.created_at).toLocaleTimeString('da-DK', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
                       </p>
                     </div>
                   ))}

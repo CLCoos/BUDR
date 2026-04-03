@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 const PIN_LENGTH = 4;
@@ -30,88 +30,94 @@ export default function PinSetupFlow({ residentId, residentName, onComplete }: P
   const [loading, setLoading] = useState(false);
   const [offerBiometric, setOfferBiometric] = useState(false);
 
-  const handleDigit = useCallback((d: string) => {
-    if (loading) return;
-    setError(null);
-    setDigits(prev => {
-      if (prev.length >= PIN_LENGTH) return prev;
-      const next = [...prev, d];
-      if (next.length === PIN_LENGTH) {
-        const pin = next.join('');
-        setTimeout(() => {
-          if (step === 'enter') {
-            setFirstPin(pin);
-            setDigits([]);
-            setStep('confirm');
-          } else if (step === 'confirm') {
-            handleConfirm(pin);
-          }
-        }, 80);
-      }
-      return next;
-    });
-  }, [loading, step]);
+  const handleDigit = useCallback(
+    (d: string) => {
+      if (loading) return;
+      setError(null);
+      setDigits((prev) => {
+        if (prev.length >= PIN_LENGTH) return prev;
+        const next = [...prev, d];
+        if (next.length === PIN_LENGTH) {
+          const pin = next.join('');
+          setTimeout(() => {
+            if (step === 'enter') {
+              setFirstPin(pin);
+              setDigits([]);
+              setStep('confirm');
+            } else if (step === 'confirm') {
+              handleConfirm(pin);
+            }
+          }, 80);
+        }
+        return next;
+      });
+    },
+    [loading, step] // eslint-disable-line react-hooks/exhaustive-deps -- handleConfirm below
+  );
 
   const handleDelete = useCallback(() => {
     if (loading) return;
-    setDigits(prev => prev.slice(0, -1));
+    setDigits((prev) => prev.slice(0, -1));
   }, [loading]);
 
-  const handleConfirm = useCallback(async (confirmPin: string) => {
-    if (confirmPin !== firstPin) {
-      setError('PIN matcher ikke – prøv igen');
-      setDigits([]);
-      setStep('enter');
-      setFirstPin('');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        setError('Du er ikke logget ind som personale');
-        setLoading(false);
-        return;
-      }
-
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/resident-pin-set`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            resident_id: residentId,
-            pin: confirmPin,
-            staff_token: session.access_token,
-          }),
-        },
-      );
-
-      const json = (await res.json()) as { data?: { success: boolean }; error?: string };
-
-      if (!res.ok || !json.data?.success) {
-        setError(json.error ?? 'Kunne ikke gemme PIN');
+  const handleConfirm = useCallback(
+    async (confirmPin: string) => {
+      if (confirmPin !== firstPin) {
+        setError('PIN matcher ikke – prøv igen');
         setDigits([]);
         setStep('enter');
+        setFirstPin('');
         return;
       }
 
-      setStep('success');
-      // Check if browser supports WebAuthn for offering biometric setup
-      setOfferBiometric(
-        typeof window !== 'undefined' &&
-        !!window.PublicKeyCredential &&
-        !!navigator.credentials,
-      );
-    } catch {
-      setError('Netværksfejl – prøv igen');
-      setDigits([]);
-      setStep('enter');
-    } finally {
-      setLoading(false);
-    }
-  }, [firstPin, residentId]);
+      setLoading(true);
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+          setError('Du er ikke logget ind som personale');
+          setLoading(false);
+          return;
+        }
+
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/resident-pin-set`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              resident_id: residentId,
+              pin: confirmPin,
+              staff_token: session.access_token,
+            }),
+          }
+        );
+
+        const json = (await res.json()) as { data?: { success: boolean }; error?: string };
+
+        if (!res.ok || !json.data?.success) {
+          setError(json.error ?? 'Kunne ikke gemme PIN');
+          setDigits([]);
+          setStep('enter');
+          return;
+        }
+
+        setStep('success');
+        // Check if browser supports WebAuthn for offering biometric setup
+        setOfferBiometric(
+          typeof window !== 'undefined' && !!window.PublicKeyCredential && !!navigator.credentials
+        );
+      } catch {
+        setError('Netværksfejl – prøv igen');
+        setDigits([]);
+        setStep('enter');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [firstPin, residentId]
+  );
 
   const reset = () => {
     setStep('enter');
@@ -128,22 +134,28 @@ export default function PinSetupFlow({ residentId, residentName, onComplete }: P
         <>
           <div style={avatarStyle}>
             <span style={{ color: 'white', fontWeight: 700, fontSize: '1.125rem' }}>
-              {residentName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+              {residentName
+                .split(' ')
+                .map((w) => w[0])
+                .join('')
+                .slice(0, 2)
+                .toUpperCase()}
             </span>
           </div>
           <h2 style={titleStyle}>
             {step === 'enter' ? `Opret PIN for ${residentName}` : 'Bekræft PIN'}
           </h2>
           <p style={hintStyle}>
-            {step === 'enter'
-              ? 'Indtast en ny 4-cifret PIN'
-              : 'Gentag PIN for at bekræfte'}
+            {step === 'enter' ? 'Indtast en ny 4-cifret PIN' : 'Gentag PIN for at bekræfte'}
           </p>
 
           {/* Dots */}
           <div className="setup-dots">
             {Array.from({ length: PIN_LENGTH }).map((_, i) => (
-              <div key={i} className={`setup-dot ${i < digits.length ? 'setup-dot--filled' : ''}`} />
+              <div
+                key={i}
+                className={`setup-dot ${i < digits.length ? 'setup-dot--filled' : ''}`}
+              />
             ))}
           </div>
 
@@ -151,15 +163,32 @@ export default function PinSetupFlow({ residentId, residentName, onComplete }: P
 
           {/* Numpad */}
           <div className={`setup-numpad ${loading ? 'setup-numpad--disabled' : ''}`}>
-            {['1','2','3','4','5','6','7','8','9'].map(d => (
-              <button key={d} className="setup-key" onClick={() => handleDigit(d)} disabled={loading}>{d}</button>
+            {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((d) => (
+              <button
+                key={d}
+                className="setup-key"
+                onClick={() => handleDigit(d)}
+                disabled={loading}
+              >
+                {d}
+              </button>
             ))}
             <div className="setup-key setup-key--empty" />
-            <button className="setup-key" onClick={() => handleDigit('0')} disabled={loading}>0</button>
-            <button className="setup-key setup-key--delete" onClick={handleDelete} disabled={loading || digits.length === 0}>⌫</button>
+            <button className="setup-key" onClick={() => handleDigit('0')} disabled={loading}>
+              0
+            </button>
+            <button
+              className="setup-key setup-key--delete"
+              onClick={handleDelete}
+              disabled={loading || digits.length === 0}
+            >
+              ⌫
+            </button>
           </div>
 
-          <button style={cancelStyle} onClick={reset}>Annullér</button>
+          <button style={cancelStyle} onClick={reset}>
+            Annullér
+          </button>
         </>
       ) : (
         /* Success state */

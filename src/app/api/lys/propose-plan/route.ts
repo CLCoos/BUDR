@@ -68,23 +68,24 @@ export async function POST(req: NextRequest) {
   const aiData = (await aiRes.json()) as {
     content?: Array<{ type?: string; text?: string }>;
   };
-  const rawText = aiData.content?.find(c => c.type === 'text')?.text?.trim() ?? '';
+  const rawText = aiData.content?.find((c) => c.type === 'text')?.text?.trim() ?? '';
 
   let parsed: { proposed_items: PlanItem[]; ai_reasoning: string };
   try {
     // Strip optional markdown code fences if present
-    const jsonStr = rawText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+    const jsonStr = rawText
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/\s*```$/, '')
+      .trim();
     parsed = JSON.parse(jsonStr);
   } catch {
     console.error('propose-plan parse error', rawText);
     return NextResponse.json({ error: 'Kunne ikke forstå AI-svaret' }, { status: 502 });
   }
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    serviceRoleKey,
-    { auth: { persistSession: false } },
-  );
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey, {
+    auth: { persistSession: false },
+  });
 
   const today = new Date().toISOString().slice(0, 10);
 

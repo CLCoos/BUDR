@@ -117,17 +117,14 @@ function residentMatchesQuery(r: MockResident, q: string): boolean {
   if (r.initials.toLowerCase().includes(s)) return true;
   if (r.name.toLowerCase().includes(s)) return true;
   const parts = r.name.toLowerCase().split(/\s+/);
-  if (parts.some(p => p.startsWith(s))) return true;
+  if (parts.some((p) => p.startsWith(s))) return true;
   return false;
 }
 
 function docMatchesQuery(d: MockDoc, q: string): boolean {
   const s = q.trim().toLowerCase();
   if (!s) return false;
-  return (
-    d.title.toLowerCase().includes(s) ||
-    CATEGORY_LABEL[d.category].toLowerCase().includes(s)
-  );
+  return d.title.toLowerCase().includes(s) || CATEGORY_LABEL[d.category].toLowerCase().includes(s);
 }
 
 type NavEntry =
@@ -146,7 +143,7 @@ export default function DokumentSøgning() {
 
   const matchedResidents = useMemo(() => {
     if (q.length < 1) return [];
-    return MOCK_RESIDENTS.filter(r => residentMatchesQuery(r, q));
+    return MOCK_RESIDENTS.filter((r) => residentMatchesQuery(r, q));
   }, [q]);
 
   const matchedDocs = useMemo(() => {
@@ -177,11 +174,13 @@ export default function DokumentSøgning() {
 
   const navigateTo = useCallback(
     (residentId: string, tab: string) => {
-      router.push(`/resident-360-view?id=${encodeURIComponent(residentId)}&tab=${encodeURIComponent(tab)}`);
+      router.push(
+        `/resident-360-view?id=${encodeURIComponent(residentId)}&tab=${encodeURIComponent(tab)}`
+      );
       setOpen(false);
       setQuery('');
     },
-    [router],
+    [router]
   );
 
   const activateEntry = useCallback(
@@ -193,7 +192,7 @@ export default function DokumentSøgning() {
         navigateTo(entry.resident.id, tab);
       }
     },
-    [navigateTo],
+    [navigateTo]
   );
 
   useEffect(() => {
@@ -229,10 +228,10 @@ export default function DokumentSøgning() {
     if (!navEntries.length) return;
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setActiveIndex(i => (i + 1) % navEntries.length);
+      setActiveIndex((i) => (i + 1) % navEntries.length);
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setActiveIndex(i => (i - 1 + navEntries.length) % navEntries.length);
+      setActiveIndex((i) => (i - 1 + navEntries.length) % navEntries.length);
     } else if (e.key === 'Enter') {
       e.preventDefault();
       const entry = navEntries[activeIndex];
@@ -252,12 +251,17 @@ export default function DokumentSøgning() {
     <div ref={rootRef} className="relative w-full max-w-md min-w-0 flex-1">
       <div className="flex items-center gap-2 rounded-full border border-transparent bg-gray-100 shadow-none transition-all duration-200 focus-within:border-budr-purple/30 focus-within:bg-white focus-within:shadow-md">
         <div className="relative flex min-w-0 flex-1 items-center">
-          <Search className="pointer-events-none absolute left-3 h-4 w-4 text-gray-400" aria-hidden />
+          <Search
+            className="pointer-events-none absolute left-3 h-4 w-4 text-gray-400"
+            aria-hidden
+          />
           <input
             ref={inputRef}
             type="search"
+            role="combobox"
+            aria-autocomplete="list"
             value={query}
-            onChange={e => {
+            onChange={(e) => {
               setQuery(e.target.value);
               setOpen(true);
             }}
@@ -296,7 +300,7 @@ export default function DokumentSøgning() {
           id="dokument-sogning-results"
           className="absolute left-0 right-0 top-full z-50 mt-2 w-96 max-w-[calc(100vw-2rem)] rounded-xl border border-gray-100 bg-white shadow-lg"
           role="listbox"
-          onMouseDown={e => e.preventDefault()}
+          onMouseDown={(e) => e.preventDefault()}
         >
           {matchedResidents.length === 0 && matchedDocs.length === 0 ? (
             <div className="px-4 py-8 text-center text-sm text-gray-400">
@@ -341,11 +345,11 @@ export default function DokumentSøgning() {
                             </div>
                           </div>
                           <div className="flex max-w-[48%] shrink-0 flex-wrap justify-end gap-1">
-                            {uniqueCategories(r).map(cat => (
+                            {uniqueCategories(r).map((cat) => (
                               <button
                                 key={`${r.id}-${cat}`}
                                 type="button"
-                                onClick={ev => {
+                                onClick={(ev) => {
                                   ev.stopPropagation();
                                   navigateTo(r.id, CATEGORY_TO_TAB[cat]);
                                 }}
@@ -363,7 +367,9 @@ export default function DokumentSøgning() {
               ) : null}
 
               {matchedDocs.length > 0 ? (
-                <div className={`px-2 ${matchedResidents.length > 0 ? 'mt-3 border-t border-gray-100 pt-3' : ''}`}>
+                <div
+                  className={`px-2 ${matchedResidents.length > 0 ? 'mt-3 border-t border-gray-100 pt-3' : ''}`}
+                >
                   <div className="flex items-center gap-1.5 px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
                     <FileText className="h-3.5 w-3.5" aria-hidden />
                     Dokumenter

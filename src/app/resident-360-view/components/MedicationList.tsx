@@ -79,9 +79,9 @@ interface Props {
 export default function MedicationList({ compact }: Props) {
   const [showAll, setShowAll] = useState(false);
 
-  const activeMeds = medications.filter(m => m.status === 'aktiv');
-  const displayMeds = compact ? activeMeds.slice(0, 3) : (showAll ? medications : activeMeds);
-  const takenCount = activeMeds.filter(m => m.takenToday).length;
+  const activeMeds = medications.filter((m) => m.status === 'aktiv');
+  const displayMeds = compact ? activeMeds.slice(0, 3) : showAll ? medications : activeMeds;
+  const takenCount = activeMeds.filter((m) => m.takenToday).length;
 
   return (
     <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
@@ -90,34 +90,48 @@ export default function MedicationList({ compact }: Props) {
           <Pill size={15} className="text-[#1D9E75]" />
           <span className="text-sm font-semibold text-gray-800">Medicin</span>
         </div>
-        <div className={`text-xs font-medium px-2 py-1 rounded ${
-          takenCount === activeMeds.length
-            ? 'bg-green-100 text-green-700' :'bg-amber-100 text-amber-700'
-        }`}>
+        <div
+          className={`text-xs font-medium px-2 py-1 rounded ${
+            takenCount === activeMeds.length
+              ? 'bg-green-100 text-green-700'
+              : 'bg-amber-100 text-amber-700'
+          }`}
+        >
           {takenCount}/{activeMeds.length} taget i dag
         </div>
       </div>
 
       <div className="divide-y divide-gray-50">
-        {displayMeds.map(med => (
+        {displayMeds.map((med) => (
           <div key={med.id} className="px-4 py-3">
             <div className="flex items-start gap-3">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                med.status === 'stoppet' ? 'bg-gray-100' : 'bg-[#E6F7F2]'
-              }`}>
-                <Pill size={14} className={med.status === 'stoppet' ? 'text-gray-400' : 'text-[#1D9E75]'} />
+              <div
+                className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                  med.status === 'stoppet' ? 'bg-gray-100' : 'bg-[#E6F7F2]'
+                }`}
+              >
+                <Pill
+                  size={14}
+                  className={med.status === 'stoppet' ? 'text-gray-400' : 'text-[#1D9E75]'}
+                />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className={`text-sm font-semibold ${med.status === 'stoppet' ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
+                  <span
+                    className={`text-sm font-semibold ${med.status === 'stoppet' ? 'text-gray-400 line-through' : 'text-gray-800'}`}
+                  >
                     {med.name}
                   </span>
                   <span className="text-xs text-gray-500">{med.dose}</span>
                   {med.status === 'pauseret' && (
-                    <span className="text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">Pauseret</span>
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
+                      Pauseret
+                    </span>
                   )}
                   {med.status === 'stoppet' && (
-                    <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">Stoppet</span>
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
+                      Stoppet
+                    </span>
                   )}
                 </div>
                 <div className="flex items-center gap-3 mt-0.5">
@@ -131,8 +145,8 @@ export default function MedicationList({ compact }: Props) {
                 )}
               </div>
               <div className="flex-shrink-0">
-                {med.status === 'aktiv' && (
-                  med.takenToday ? (
+                {med.status === 'aktiv' &&
+                  (med.takenToday ? (
                     <div className="flex items-center gap-1 text-xs text-green-600 font-medium">
                       <CheckCircle2 size={14} className="text-green-500" />
                       {med.takenAt}
@@ -142,15 +156,14 @@ export default function MedicationList({ compact }: Props) {
                       <AlertCircle size={14} className="text-amber-400" />
                       Mangler
                     </div>
-                  )
-                )}
+                  ))}
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {!compact && medications.filter(m => m.status === 'stoppet').length > 0 && (
+      {!compact && medications.filter((m) => m.status === 'stoppet').length > 0 && (
         <div className="px-4 py-2 border-t border-gray-100">
           <button
             onClick={() => setShowAll(!showAll)}

@@ -53,7 +53,9 @@ export default function BareEtSkridt({ onClose, nextTask }: BareEtSkrigtProps) {
       {/* Breathing orb */}
       <div className="flex flex-col items-center gap-8 animate-fade-in">
         <div className="text-center mb-2">
-          <p className="text-midnight-400 text-sm font-medium tracking-widest uppercase">Bare ét skridt</p>
+          <p className="text-midnight-400 text-sm font-medium tracking-widest uppercase">
+            Bare ét skridt
+          </p>
         </div>
 
         {/* Breath circle */}
@@ -92,7 +94,8 @@ export default function BareEtSkridt({ onClose, nextTask }: BareEtSkrigtProps) {
               style={{
                 width: '40%',
                 height: '40%',
-                background: 'radial-gradient(circle at 35% 35%, rgba(255,255,255,0.8) 0%, transparent 60%)',
+                background:
+                  'radial-gradient(circle at 35% 35%, rgba(255,255,255,0.8) 0%, transparent 60%)',
               }}
             />
           </div>
@@ -107,7 +110,9 @@ export default function BareEtSkridt({ onClose, nextTask }: BareEtSkrigtProps) {
 
         {/* The one task */}
         <div className="w-full max-w-xs bg-midnight-800/80 backdrop-blur-sm rounded-3xl border border-midnight-600/50 p-6 text-center">
-          <p className="text-midnight-400 text-xs font-medium tracking-widest uppercase mb-4">Dit næste skridt</p>
+          <p className="text-midnight-400 text-xs font-medium tracking-widest uppercase mb-4">
+            Dit næste skridt
+          </p>
           <div className="text-5xl mb-3">{task.emoji}</div>
           <h2 className="font-display text-xl font-bold text-midnight-50 mb-2">{task.title}</h2>
           <p className="text-midnight-400 text-sm">{task.duration}</p>

@@ -6,7 +6,7 @@ function getServiceClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false } },
+    { auth: { persistSession: false } }
   );
 }
 
@@ -15,7 +15,9 @@ export async function POST(req: NextRequest) {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   let body: { messages?: Array<{ role: 'user' | 'assistant'; content: string }> };
@@ -51,7 +53,7 @@ export async function POST(req: NextRequest) {
     .limit(15);
 
   // Build resident list
-  const residentLines = (residents ?? []).map(r => {
+  const residentLines = (residents ?? []).map((r) => {
     const od = r.onboarding_data as Record<string, string> | null;
     const parts = [`• ${r.display_name as string}`];
     if (od?.move_in_date) parts.push(`indflyttet ${od.move_in_date}`);
@@ -62,23 +64,29 @@ export async function POST(req: NextRequest) {
     return parts.join(', ');
   });
 
-  const residentContext = residentLines.length > 0
-    ? residentLines.join('\n')
-    : 'Ingen beboere registreret endnu.';
+  const residentContext =
+    residentLines.length > 0 ? residentLines.join('\n') : 'Ingen beboere registreret endnu.';
 
   // Build journal context — truncated, for background awareness only
-  const journalLines = (journal ?? []).map(j => {
-    const name = (j.care_residents as { display_name: string } | null)?.display_name ?? 'Beboer';
-    const date = new Date(j.created_at).toLocaleDateString('da-DK', { day: 'numeric', month: 'short' });
+  const journalLines = (journal ?? []).map((j) => {
+    const cr = j.care_residents as { display_name?: string } | { display_name?: string }[] | null;
+    const row = Array.isArray(cr) ? cr[0] : cr;
+    const name = row?.display_name ?? 'Beboer';
+    const date = new Date(j.created_at).toLocaleDateString('da-DK', {
+      day: 'numeric',
+      month: 'short',
+    });
     const text = (j.entry_text as string).slice(0, 120);
     return `[${date}] ${name} — ${j.category as string}: ${text}`;
   });
 
-  const journalContext = journalLines.length > 0
-    ? `\nSENESTE JOURNALOBSERVATIONER (brug kun som baggrundskontekst — del ikke specifikt indhold direkte):\n${journalLines.join('\n')}`
-    : '';
+  const journalContext =
+    journalLines.length > 0
+      ? `\nSENESTE JOURNALOBSERVATIONER (brug kun som baggrundskontekst — del ikke specifikt indhold direkte):\n${journalLines.join('\n')}`
+      : '';
 
-  const staffName = (user.user_metadata?.full_name as string | undefined) ?? user.email ?? 'kollega';
+  const staffName =
+    (user.user_metadata?.full_name as string | undefined) ?? user.email ?? 'kollega';
 
   const system = `Du er en erfaren faglig kollega og supervisor på et socialpsykiatrisk bosted i Danmark. Du er ikke en robot eller AI-assistent — du er "den erfarne kollega" der altid har tid og aldrig dømmer.
 
@@ -130,7 +138,7 @@ VIGTIG GRÆNSE: Du erstatter ikke supervision, lægefaglig vurdering eller akut 
   }
 
   const data = (await res.json()) as { content?: Array<{ type?: string; text?: string }> };
-  const block = data.content?.find(c => c.type === 'text');
+  const block = data.content?.find((c) => c.type === 'text');
   const text = block?.text?.trim();
 
   if (!text) {

@@ -13,11 +13,51 @@ interface ResourceTrend {
 }
 
 const RESOURCE_TRENDS: ResourceTrend[] = [
-  { key: 'sleep',    label: 'Søvn',      emoji: '😴', thisWeek: 3.8, lastWeek: 3.2, color: 'bg-blue-400',   accentColor: '#60A5FA' },
-  { key: 'food',     label: 'Mad',       emoji: '🥗', thisWeek: 4.1, lastWeek: 3.9, color: 'bg-emerald-400', accentColor: '#34D399' },
-  { key: 'movement', label: 'Bevægelse', emoji: '🚶', thisWeek: 3.2, lastWeek: 2.8, color: 'bg-sunrise-400', accentColor: '#FB923C' },
-  { key: 'social',   label: 'Social',    emoji: '👥', thisWeek: 2.9, lastWeek: 3.5, color: 'bg-aurora-violet', accentColor: '#A78BFA' },
-  { key: 'stress',   label: 'Stress',    emoji: '🧘', thisWeek: 3.5, lastWeek: 2.7, color: 'bg-aurora-teal', accentColor: '#2DD4BF' },
+  {
+    key: 'sleep',
+    label: 'Søvn',
+    emoji: '😴',
+    thisWeek: 3.8,
+    lastWeek: 3.2,
+    color: 'bg-blue-400',
+    accentColor: '#60A5FA',
+  },
+  {
+    key: 'food',
+    label: 'Mad',
+    emoji: '🥗',
+    thisWeek: 4.1,
+    lastWeek: 3.9,
+    color: 'bg-emerald-400',
+    accentColor: '#34D399',
+  },
+  {
+    key: 'movement',
+    label: 'Bevægelse',
+    emoji: '🚶',
+    thisWeek: 3.2,
+    lastWeek: 2.8,
+    color: 'bg-sunrise-400',
+    accentColor: '#FB923C',
+  },
+  {
+    key: 'social',
+    label: 'Social',
+    emoji: '👥',
+    thisWeek: 2.9,
+    lastWeek: 3.5,
+    color: 'bg-aurora-violet',
+    accentColor: '#A78BFA',
+  },
+  {
+    key: 'stress',
+    label: 'Stress',
+    emoji: '🧘',
+    thisWeek: 3.5,
+    lastWeek: 2.7,
+    color: 'bg-aurora-teal',
+    accentColor: '#2DD4BF',
+  },
 ];
 
 function TrendArrow({ thisWeek, lastWeek }: { thisWeek: number; lastWeek: number }) {
@@ -72,7 +112,9 @@ export default function ResourceTrends() {
                 />
               </div>
               <div className="flex justify-between mt-1">
-                <span className="text-xs text-midnight-500">Forrige uge: {r.lastWeek.toFixed(1)}</span>
+                <span className="text-xs text-midnight-500">
+                  Forrige uge: {r.lastWeek.toFixed(1)}
+                </span>
                 <span className="text-xs text-midnight-500">Maks: 5</span>
               </div>
             </div>

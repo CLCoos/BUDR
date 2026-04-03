@@ -7,7 +7,7 @@ function getServiceClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false } },
+    { auth: { persistSession: false } }
   );
 }
 
@@ -81,12 +81,6 @@ export async function POST(req: Request): Promise<NextResponse> {
       const trafficLabel = traffic_light === 'roed' ? 'Rød trafiklys' : 'Gul trafiklys';
       const detail = `Stemningsscore ${mood_score}/10 · ${trafficLabel}`;
       const severity = mood_score <= 3 || traffic_light === 'roed' ? 'roed' : 'gul';
-
-      const { data: resident } = await serviceClient
-        .from('care_residents')
-        .select('display_name')
-        .eq('user_id', residentId)
-        .maybeSingle();
 
       await serviceClient.from('care_portal_notifications').insert({
         resident_id: residentId,

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Plus, Trash2, X } from 'lucide-react';
+import { Plus, Trash2, X } from 'lucide-react';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -62,14 +62,21 @@ export function loadKrisePlan(): KrisePlanData {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw) as KrisePlanData;
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return { version: 1, updated_at: '', sections: {}, helpers: [] };
 }
 
 function savePlan(plan: KrisePlanData) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...plan, updated_at: new Date().toISOString() }));
-  } catch { /* ignore */ }
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ ...plan, updated_at: new Date().toISOString() })
+    );
+  } catch {
+    /* ignore */
+  }
 }
 
 type Props = {
@@ -80,7 +87,9 @@ type Props = {
 
 export default function LysKrisePlan({ open, onClose, firstName }: Props) {
   const [plan, setPlan] = useState<KrisePlanData>(() =>
-    typeof window !== 'undefined' ? loadKrisePlan() : { version: 1, updated_at: '', sections: {}, helpers: [] },
+    typeof window !== 'undefined'
+      ? loadKrisePlan()
+      : { version: 1, updated_at: '', sections: {}, helpers: [] }
   );
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [newHelper, setNewHelper] = useState('');
@@ -98,21 +107,35 @@ export default function LysKrisePlan({ open, onClose, firstName }: Props) {
     } else {
       document.body.style.overflow = '';
     }
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [open]);
 
   const updateSection = (key: string, value: string) => {
-    setPlan(p => ({ ...p, sections: { ...p.sections, [key]: value }, updated_at: new Date().toISOString() }));
+    setPlan((p) => ({
+      ...p,
+      sections: { ...p.sections, [key]: value },
+      updated_at: new Date().toISOString(),
+    }));
   };
 
   const addHelper = () => {
     if (!newHelper.trim()) return;
-    setPlan(p => ({ ...p, helpers: [...p.helpers, newHelper.trim()], updated_at: new Date().toISOString() }));
+    setPlan((p) => ({
+      ...p,
+      helpers: [...p.helpers, newHelper.trim()],
+      updated_at: new Date().toISOString(),
+    }));
     setNewHelper('');
   };
 
   const removeHelper = (i: number) => {
-    setPlan(p => ({ ...p, helpers: p.helpers.filter((_, idx) => idx !== i), updated_at: new Date().toISOString() }));
+    setPlan((p) => ({
+      ...p,
+      helpers: p.helpers.filter((_, idx) => idx !== i),
+      updated_at: new Date().toISOString(),
+    }));
   };
 
   const handleSave = () => {
@@ -121,9 +144,13 @@ export default function LysKrisePlan({ open, onClose, firstName }: Props) {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const filledCount = SECTIONS.filter(s => plan.sections[s.key]?.trim()).length;
+  const filledCount = SECTIONS.filter((s) => plan.sections[s.key]?.trim()).length;
   const updatedAt = plan.updated_at
-    ? new Date(plan.updated_at).toLocaleDateString('da-DK', { day: 'numeric', month: 'short', year: 'numeric' })
+    ? new Date(plan.updated_at).toLocaleDateString('da-DK', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      })
     : null;
 
   void firstName;
@@ -134,7 +161,9 @@ export default function LysKrisePlan({ open, onClose, firstName }: Props) {
     <div
       className="fixed inset-0 z-50 flex flex-col justify-end"
       style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div
         className="mx-auto w-full max-w-lg flex flex-col"
@@ -147,11 +176,17 @@ export default function LysKrisePlan({ open, onClose, firstName }: Props) {
       >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1 shrink-0">
-          <div className="h-1 w-10 rounded-full" style={{ backgroundColor: 'var(--lys-border2)' }} />
+          <div
+            className="h-1 w-10 rounded-full"
+            style={{ backgroundColor: 'var(--lys-border2)' }}
+          />
         </div>
 
         {/* Header */}
-        <div className="flex items-center gap-3 px-5 pt-2 pb-4 shrink-0" style={{ borderBottom: '1px solid var(--lys-border)' }}>
+        <div
+          className="flex items-center gap-3 px-5 pt-2 pb-4 shrink-0"
+          style={{ borderBottom: '1px solid var(--lys-border)' }}
+        >
           <div className="flex-1 min-w-0">
             <h2
               className="font-semibold"
@@ -182,14 +217,14 @@ export default function LysKrisePlan({ open, onClose, firstName }: Props) {
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto px-5 pt-4 pb-8 space-y-3">
-
           {/* Intro */}
           <p className="text-sm leading-relaxed px-1" style={{ color: 'var(--lys-muted)' }}>
-            Dette er din plan — ikke personalets. Du bestemmer hvad der står her, og du kan ændre det når som helst.
+            Dette er din plan — ikke personalets. Du bestemmer hvad der står her, og du kan ændre
+            det når som helst.
           </p>
 
           {/* Accordion sections */}
-          {SECTIONS.map(s => {
+          {SECTIONS.map((s) => {
             const value = plan.sections[s.key] ?? '';
             const isOpen = activeSection === s.key;
             const filled = value.trim().length > 0;
@@ -209,13 +244,19 @@ export default function LysKrisePlan({ open, onClose, firstName }: Props) {
                 >
                   <span className="text-lg shrink-0">{s.icon}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm" style={{ color: 'var(--lys-text)' }}>{s.title}</p>
+                    <p className="font-semibold text-sm" style={{ color: 'var(--lys-text)' }}>
+                      {s.title}
+                    </p>
                     {filled && !isOpen && (
-                      <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--lys-muted)' }}>{value}</p>
+                      <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--lys-muted)' }}>
+                        {value}
+                      </p>
                     )}
                   </div>
                   {filled && (
-                    <span className="text-xs font-bold shrink-0" style={{ color: s.color }}>✓</span>
+                    <span className="text-xs font-bold shrink-0" style={{ color: s.color }}>
+                      ✓
+                    </span>
                   )}
                   <span className="text-xs shrink-0" style={{ color: 'var(--lys-muted)' }}>
                     {isOpen ? '▲' : '▼'}
@@ -224,10 +265,12 @@ export default function LysKrisePlan({ open, onClose, firstName }: Props) {
 
                 {isOpen && (
                   <div className="px-4 pb-4">
-                    <p className="text-xs mb-2" style={{ color: 'var(--lys-muted)' }}>{s.prompt}</p>
+                    <p className="text-xs mb-2" style={{ color: 'var(--lys-muted)' }}>
+                      {s.prompt}
+                    </p>
                     <textarea
                       value={value}
-                      onChange={e => updateSection(s.key, e.target.value)}
+                      onChange={(e) => updateSection(s.key, e.target.value)}
                       rows={4}
                       placeholder={s.placeholder}
                       autoFocus
@@ -250,12 +293,18 @@ export default function LysKrisePlan({ open, onClose, firstName }: Props) {
             className="rounded-2xl px-4 py-4 space-y-3"
             style={{ backgroundColor: 'var(--lys-bg3)', border: '1px solid var(--lys-border)' }}
           >
-            <p className="font-semibold text-sm" style={{ color: 'var(--lys-text)' }}>👥 Hvem kan hjælpe mig?</p>
-            <p className="text-xs" style={{ color: 'var(--lys-muted)' }}>Navne, telefonnumre eller relationer du stoler på</p>
+            <p className="font-semibold text-sm" style={{ color: 'var(--lys-text)' }}>
+              👥 Hvem kan hjælpe mig?
+            </p>
+            <p className="text-xs" style={{ color: 'var(--lys-muted)' }}>
+              Navne, telefonnumre eller relationer du stoler på
+            </p>
 
             {plan.helpers.map((h, i) => (
               <div key={i} className="flex items-center gap-2">
-                <span className="flex-1 text-sm" style={{ color: 'var(--lys-text)' }}>{h}</span>
+                <span className="flex-1 text-sm" style={{ color: 'var(--lys-text)' }}>
+                  {h}
+                </span>
                 <button
                   type="button"
                   onClick={() => removeHelper(i)}
@@ -272,8 +321,13 @@ export default function LysKrisePlan({ open, onClose, firstName }: Props) {
               <input
                 type="text"
                 value={newHelper}
-                onChange={e => setNewHelper(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addHelper(); } }}
+                onChange={(e) => setNewHelper(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addHelper();
+                  }
+                }}
                 placeholder="Tilføj navn eller nummer…"
                 className="flex-1 rounded-xl px-3 py-2.5 text-sm outline-none"
                 style={{

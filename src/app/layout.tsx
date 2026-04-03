@@ -10,15 +10,14 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: 'BUDR — Dansk AI-livscoach til socialpsykiatrien',
-  description: 'BUDR hjælper beboere i socialpsykiatriske bosteder med daglig trivsel via PARK-metoden og giver personalet et komplet overblik.',
+  description:
+    'BUDR hjælper beboere i socialpsykiatriske bosteder med daglig trivsel via PARK-metoden og giver personalet et komplet overblik.',
   icons: {
     icon: [{ url: '/favicon.ico', type: 'image/x-icon' }],
   },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="da">
       <body>

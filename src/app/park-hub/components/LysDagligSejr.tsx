@@ -31,7 +31,7 @@ export default function LysDagligSejr({ tokens, accent, firstName, onBack }: Pro
   const save = () => {
     const t = text.trim();
     if (!t) return;
-    setSaved(s => [...s, t]);
+    setSaved((s) => [...s, t]);
     setText('');
   };
 
@@ -48,10 +48,14 @@ export default function LysDagligSejr({ tokens, accent, firstName, onBack }: Pro
 
       <textarea
         value={text}
-        onChange={e => setText(e.target.value)}
+        onChange={(e) => setText(e.target.value)}
         rows={4}
         className="w-full rounded-2xl border p-4 text-lg outline-none focus:ring-2"
-        style={{ borderColor: tokens.cardBorder, backgroundColor: tokens.cardBg, color: tokens.text }}
+        style={{
+          borderColor: tokens.cardBorder,
+          backgroundColor: tokens.cardBg,
+          color: tokens.text,
+        }}
         placeholder="Skriv her, hvis du har lyst …"
       />
 
@@ -67,7 +71,7 @@ export default function LysDagligSejr({ tokens, accent, firstName, onBack }: Pro
       {saved.length >= 7 ? (
         <button
           type="button"
-          onClick={() => setShowJournal(j => !j)}
+          onClick={() => setShowJournal((j) => !j)}
           className="mt-6 min-h-[48px] w-full rounded-2xl border-2 py-3 text-lg font-semibold transition-colors"
           style={{ borderColor: accent, color: accent }}
         >

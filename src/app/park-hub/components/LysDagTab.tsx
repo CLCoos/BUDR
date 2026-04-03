@@ -12,7 +12,7 @@ import type { LysThemeTokens } from '../lib/lysTheme';
 
 type PlanItem = {
   id: string;
-  time: string;   // HH:MM
+  time: string; // HH:MM
   title: string;
   description?: string;
   category: string;
@@ -32,16 +32,20 @@ type NewItemForm = {
 };
 
 const CATEGORY_EMOJI: Record<string, string> = {
-  mad: '🍽', medicin: '💊', aktivitet: '⚡',
-  hvile: '😌', social: '👥', struktur: '🔵',
+  mad: '🍽',
+  medicin: '💊',
+  aktivitet: '⚡',
+  hvile: '😌',
+  social: '👥',
+  struktur: '🔵',
 };
 
 const CATEGORIES = [
   { key: 'aktivitet', label: 'Aktivitet', emoji: '⚡' },
-  { key: 'mad',       label: 'Mad',       emoji: '🍽' },
-  { key: 'medicin',   label: 'Medicin',   emoji: '💊' },
-  { key: 'hvile',     label: 'Hvile',     emoji: '😌' },
-  { key: 'social',    label: 'Social',    emoji: '👥' },
+  { key: 'mad', label: 'Mad', emoji: '🍽' },
+  { key: 'medicin', label: 'Medicin', emoji: '💊' },
+  { key: 'hvile', label: 'Hvile', emoji: '😌' },
+  { key: 'social', label: 'Social', emoji: '👥' },
 ];
 
 function timeToMin(t: string) {
@@ -55,7 +59,9 @@ function addDays(base: Date, n: number): Date {
   return d;
 }
 
-function toDateStr(d: Date) { return d.toISOString().slice(0, 10); }
+function toDateStr(d: Date) {
+  return d.toISOString().slice(0, 10);
+}
 
 function isoWeekNumber(d: Date): number {
   const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -65,14 +71,17 @@ function isoWeekNumber(d: Date): number {
 }
 
 // Determine if a resident_plan_item is active on a given date
-function isItemActiveOnDate(item: {
-  time_of_day: string;
-  recurrence: string;
-  recurrence_days: number[] | null;
-  recurrence_week_parity: string | null;
-  active_from: string;
-  active_until: string | null;
-}, date: Date): boolean {
+function isItemActiveOnDate(
+  item: {
+    time_of_day: string;
+    recurrence: string;
+    recurrence_days: number[] | null;
+    recurrence_week_parity: string | null;
+    active_from: string;
+    active_until: string | null;
+  },
+  date: Date
+): boolean {
   const dateStr = toDateStr(date);
   if (item.active_from > dateStr) return false;
   if (item.active_until && item.active_until < dateStr) return false;
@@ -102,7 +111,7 @@ export default function LysDagTab({ tokens, accent }: Props) {
   const session = useResidentSession();
   // Use real residentId if logged in, otherwise fall back to guest activeId
   const residentId = ctxResidentId || session.activeId;
-  const storageMode = ctxResidentId ? 'supabase' as const : session.storageMode;
+  const storageMode = ctxResidentId ? ('supabase' as const) : session.storageMode;
 
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [items, setItems] = useState<PlanItem[] | null>(null);
@@ -113,29 +122,40 @@ export default function LysDagTab({ tokens, accent }: Props) {
 
   // New item form
   const [form, setForm] = useState<NewItemForm>({
-    title: '', time: '09:00', category: 'aktivitet',
-    recurrence: 'none', notify: false, notify_minutes_before: 10,
+    title: '',
+    time: '09:00',
+    category: 'aktivitet',
+    recurrence: 'none',
+    notify: false,
+    notify_minutes_before: 10,
   });
   const [saving, setSaving] = useState(false);
 
   const dateStr = toDateStr(selectedDate);
-  const dayLabel = selectedDate.toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long' });
+  const dayLabel = selectedDate.toLocaleDateString('da-DK', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
   const isToday = dateStr === toDateStr(new Date());
 
   // ── Load items for selected date ────────────────────────────────────────
   const loadItems = useCallback(async () => {
-    if (!residentId) { setItems([]); return; }
+    if (!residentId) {
+      setItems([]);
+      return;
+    }
 
     // Guest mode — read from localStorage via dataService
     if (storageMode === 'local') {
       const all = await dataService.getPlanItems('local', residentId);
       const filtered = all
-        .filter(p => {
+        .filter((p) => {
           if (p.recurrence === 'none') return p.active_from === dateStr;
           if (p.recurrence === 'daily') return p.active_from <= dateStr;
           return p.active_from <= dateStr;
         })
-        .map(p => ({
+        .map((p) => ({
           id: p.id,
           time: p.time_of_day.slice(0, 5),
           title: p.title,
@@ -149,7 +169,10 @@ export default function LysDagTab({ tokens, accent }: Props) {
     }
 
     const supabase = createClient();
-    if (!supabase) { setItems([]); return; }
+    if (!supabase) {
+      setItems([]);
+      return;
+    }
 
     setItems(null);
 
@@ -164,29 +187,47 @@ export default function LysDagTab({ tokens, accent }: Props) {
       // From resident_plan_items (recurring personal plan)
       supabase
         .from('resident_plan_items')
-        .select('id, title, category, emoji, time_of_day, recurrence, recurrence_days, recurrence_week_parity, active_from, active_until, staff_suggestion, approved_by_resident')
+        .select(
+          'id, title, category, emoji, time_of_day, recurrence, recurrence_days, recurrence_week_parity, active_from, active_until, staff_suggestion, approved_by_resident'
+        )
         .eq('resident_id', residentId),
     ]);
 
-    type RawPlanItem = { id?: string; time: string; title: string; description?: string; category?: string };
-    const fromPlan: PlanItem[] = ((planRes.data?.plan_items ?? []) as RawPlanItem[]).map((r, i) => ({
-      id: r.id ?? `plan-${i}`,
-      time: r.time,
-      title: r.title,
-      description: r.description,
-      category: r.category ?? 'struktur',
-      source: 'daily_plan',
-    }));
+    type RawPlanItem = {
+      id?: string;
+      time: string;
+      title: string;
+      description?: string;
+      category?: string;
+    };
+    const fromPlan: PlanItem[] = ((planRes.data?.plan_items ?? []) as RawPlanItem[]).map(
+      (r, i) => ({
+        id: r.id ?? `plan-${i}`,
+        time: r.time,
+        title: r.title,
+        description: r.description,
+        category: r.category ?? 'struktur',
+        source: 'daily_plan',
+      })
+    );
 
     type ResidentItemRow = {
-      id: string; title: string; category: string; emoji: string | null;
-      time_of_day: string; recurrence: string; recurrence_days: number[] | null;
-      recurrence_week_parity: string | null; active_from: string; active_until: string | null;
-      staff_suggestion: boolean; approved_by_resident: boolean;
+      id: string;
+      title: string;
+      category: string;
+      emoji: string | null;
+      time_of_day: string;
+      recurrence: string;
+      recurrence_days: number[] | null;
+      recurrence_week_parity: string | null;
+      active_from: string;
+      active_until: string | null;
+      staff_suggestion: boolean;
+      approved_by_resident: boolean;
     };
     const fromResident: PlanItem[] = ((residentItemsRes.data ?? []) as ResidentItemRow[])
-      .filter(r => isItemActiveOnDate(r, selectedDate))
-      .map(r => ({
+      .filter((r) => isItemActiveOnDate(r, selectedDate))
+      .map((r) => ({
         id: r.id,
         time: r.time_of_day.slice(0, 5),
         title: r.title,
@@ -197,11 +238,15 @@ export default function LysDagTab({ tokens, accent }: Props) {
         approved_by_resident: r.approved_by_resident,
       }));
 
-    const all = [...fromPlan, ...fromResident].sort((a, b) => timeToMin(a.time) - timeToMin(b.time));
+    const all = [...fromPlan, ...fromResident].sort(
+      (a, b) => timeToMin(a.time) - timeToMin(b.time)
+    );
     setItems(all);
   }, [residentId, dateStr, selectedDate, storageMode]);
 
-  useEffect(() => { void loadItems(); }, [loadItems]);
+  useEffect(() => {
+    void loadItems();
+  }, [loadItems]);
 
   // Restore completed from localStorage
   useEffect(() => {
@@ -209,36 +254,53 @@ export default function LysDagTab({ tokens, accent }: Props) {
       const raw = localStorage.getItem(`budr_dag_completed_${dateStr}`);
       if (raw) setCompleted(new Set(JSON.parse(raw) as string[]));
       else setCompleted(new Set());
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, [dateStr]);
 
   // ── Complete item ─────────────────────────────────────────────────────────
-  const handleComplete = useCallback((id: string) => {
-    setCompleted(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-        setXpEarned(xp => xp + 5);
-        const supabase = createClient();
-        if (supabase && residentId) {
-          void supabase.from('resident_plan_completions').upsert(
-            { resident_id: residentId, plan_item_id: id, completion_date: dateStr },
-            { onConflict: 'resident_id,plan_item_id,completion_date' },
-          );
-          void supabase.rpc('award_xp', { p_resident_id: residentId, p_activity: 'plan_completion', p_xp: 5 });
+  const handleComplete = useCallback(
+    (id: string) => {
+      setCompleted((prev) => {
+        const next = new Set(prev);
+        if (next.has(id)) {
+          next.delete(id);
+        } else {
+          next.add(id);
+          setXpEarned((xp) => xp + 5);
+          const supabase = createClient();
+          if (supabase && residentId) {
+            void supabase
+              .from('resident_plan_completions')
+              .upsert(
+                { resident_id: residentId, plan_item_id: id, completion_date: dateStr },
+                { onConflict: 'resident_id,plan_item_id,completion_date' }
+              );
+            void supabase.rpc('award_xp', {
+              p_resident_id: residentId,
+              p_activity: 'plan_completion',
+              p_xp: 5,
+            });
+          }
+          try {
+            const raw = localStorage.getItem('budr_xp_v1');
+            const xpData = raw ? (JSON.parse(raw) as { total: number }) : { total: 0 };
+            localStorage.setItem('budr_xp_v1', JSON.stringify({ total: xpData.total + 5 }));
+          } catch {
+            /* ignore */
+          }
         }
         try {
-          const raw = localStorage.getItem('budr_xp_v1');
-          const xpData = raw ? (JSON.parse(raw) as { total: number }) : { total: 0 };
-          localStorage.setItem('budr_xp_v1', JSON.stringify({ total: xpData.total + 5 }));
-        } catch { /* ignore */ }
-      }
-      try { localStorage.setItem(`budr_dag_completed_${dateStr}`, JSON.stringify([...next])); } catch { /* ignore */ }
-      return next;
-    });
-  }, [residentId, dateStr]);
+          localStorage.setItem(`budr_dag_completed_${dateStr}`, JSON.stringify([...next]));
+        } catch {
+          /* ignore */
+        }
+        return next;
+      });
+    },
+    [residentId, dateStr]
+  );
 
   // ── Approve staff suggestion ──────────────────────────────────────────────
   const handleApprove = async (itemId: string, approve: boolean) => {
@@ -246,7 +308,10 @@ export default function LysDagTab({ tokens, accent }: Props) {
     const supabase = createClient();
     if (supabase) {
       if (approve) {
-        await supabase.from('resident_plan_items').update({ approved_by_resident: true }).eq('id', itemId);
+        await supabase
+          .from('resident_plan_items')
+          .update({ approved_by_resident: true })
+          .eq('id', itemId);
       } else {
         await supabase.from('resident_plan_items').delete().eq('id', itemId);
       }
@@ -268,7 +333,7 @@ export default function LysDagTab({ tokens, accent }: Props) {
         emoji: CATEGORY_EMOJI[form.category] ?? '📌',
         time_of_day: form.time,
         recurrence: form.recurrence,
-        recurrence_days: form.recurrence === 'daily' ? [0,1,2,3,4,5,6] : [],
+        recurrence_days: form.recurrence === 'daily' ? [0, 1, 2, 3, 4, 5, 6] : [],
         notify: form.notify,
         notify_minutes_before: form.notify_minutes_before,
         created_by: 'resident',
@@ -286,7 +351,7 @@ export default function LysDagTab({ tokens, accent }: Props) {
           emoji: CATEGORY_EMOJI[form.category] ?? '📌',
           time_of_day: form.time,
           recurrence: form.recurrence,
-          recurrence_days: form.recurrence === 'daily' ? [0,1,2,3,4,5,6] : [],
+          recurrence_days: form.recurrence === 'daily' ? [0, 1, 2, 3, 4, 5, 6] : [],
           notify: form.notify,
           notify_minutes_before: form.notify_minutes_before,
           created_by: 'resident',
@@ -297,19 +362,25 @@ export default function LysDagTab({ tokens, accent }: Props) {
 
     setSaving(false);
     setShowFab(false);
-    setForm({ title: '', time: '09:00', category: 'aktivitet', recurrence: 'none', notify: false, notify_minutes_before: 10 });
+    setForm({
+      title: '',
+      time: '09:00',
+      category: 'aktivitet',
+      recurrence: 'none',
+      notify: false,
+      notify_minutes_before: 10,
+    });
     void loadItems();
   };
 
   const allItems = items ?? [];
-  const completedCount = allItems.filter(i => completed.has(i.id)).length;
+  const completedCount = allItems.filter((i) => completed.has(i.id)).length;
   const totalCount = allItems.length;
-  const pendingSuggestions = allItems.filter(i => i.staff_suggestion && !i.approved_by_resident);
-  const approvedItems = allItems.filter(i => !i.staff_suggestion || i.approved_by_resident);
+  const pendingSuggestions = allItems.filter((i) => i.staff_suggestion && !i.approved_by_resident);
+  const approvedItems = allItems.filter((i) => !i.staff_suggestion || i.approved_by_resident);
 
   return (
     <div className="font-sans min-h-screen relative" style={{ color: tokens.text }}>
-
       {/* Date header with navigation */}
       <div
         className="sticky top-0 z-10 px-5 py-3 backdrop-blur-xl"
@@ -318,7 +389,7 @@ export default function LysDagTab({ tokens, accent }: Props) {
         <div className="flex items-center gap-3 mb-2">
           <button
             type="button"
-            onClick={() => setSelectedDate(d => addDays(d, -1))}
+            onClick={() => setSelectedDate((d) => addDays(d, -1))}
             className="h-8 w-8 rounded-full flex items-center justify-center transition-all active:scale-90"
             style={{ backgroundColor: tokens.cardBg, color: tokens.textMuted }}
             aria-label="Forrige dag"
@@ -328,12 +399,14 @@ export default function LysDagTab({ tokens, accent }: Props) {
           <div className="flex-1 text-center">
             <p className="text-base font-black capitalize">{dayLabel}</p>
             {isToday && (
-              <p className="text-xs font-semibold" style={{ color: accent }}>I dag</p>
+              <p className="text-xs font-semibold" style={{ color: accent }}>
+                I dag
+              </p>
             )}
           </div>
           <button
             type="button"
-            onClick={() => setSelectedDate(d => addDays(d, 1))}
+            onClick={() => setSelectedDate((d) => addDays(d, 1))}
             className="h-8 w-8 rounded-full flex items-center justify-center transition-all active:scale-90"
             style={{ backgroundColor: tokens.cardBg, color: tokens.textMuted }}
             aria-label="Næste dag"
@@ -344,7 +417,10 @@ export default function LysDagTab({ tokens, accent }: Props) {
             type="button"
             onClick={() => setShowFab(true)}
             className="h-8 w-8 rounded-full flex items-center justify-center text-white transition-all active:scale-90"
-            style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)`, boxShadow: `0 2px 10px ${accent}44` }}
+            style={{
+              background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
+              boxShadow: `0 2px 10px ${accent}44`,
+            }}
             aria-label="Tilføj aktivitet"
           >
             <Plus className="h-4 w-4" />
@@ -353,13 +429,22 @@ export default function LysDagTab({ tokens, accent }: Props) {
         {totalCount > 0 && (
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 flex-1">
-              <div className="h-1.5 flex-1 rounded-full overflow-hidden" style={{ backgroundColor: `${accent}22` }}>
+              <div
+                className="h-1.5 flex-1 rounded-full overflow-hidden"
+                style={{ backgroundColor: `${accent}22` }}
+              >
                 <div
                   className="h-full rounded-full transition-all duration-500"
-                  style={{ width: `${(completedCount / totalCount) * 100}%`, backgroundColor: accent }}
+                  style={{
+                    width: `${(completedCount / totalCount) * 100}%`,
+                    backgroundColor: accent,
+                  }}
                 />
               </div>
-              <span className="text-xs font-semibold whitespace-nowrap" style={{ color: tokens.textMuted }}>
+              <span
+                className="text-xs font-semibold whitespace-nowrap"
+                style={{ color: tokens.textMuted }}
+              >
                 {completedCount}/{totalCount}
               </span>
             </div>
@@ -372,13 +457,16 @@ export default function LysDagTab({ tokens, accent }: Props) {
       </div>
 
       <div className="px-5 pt-4 pb-32 space-y-4">
-
         {/* Loading */}
         {items === null && (
           <div className="flex justify-center py-12">
             <div className="flex gap-1.5">
-              {[0, 150, 300].map(d => (
-                <div key={d} className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: accent, animationDelay: `${d}ms` }} />
+              {[0, 150, 300].map((d) => (
+                <div
+                  key={d}
+                  className="w-2 h-2 rounded-full animate-bounce"
+                  style={{ backgroundColor: accent, animationDelay: `${d}ms` }}
+                />
               ))}
             </div>
           </div>
@@ -387,15 +475,21 @@ export default function LysDagTab({ tokens, accent }: Props) {
         {/* Staff suggestions */}
         {pendingSuggestions.length > 0 && (
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: tokens.textMuted }}>
+            <p
+              className="text-xs font-bold uppercase tracking-widest mb-2"
+              style={{ color: tokens.textMuted }}
+            >
               Foreslået af personalet
             </p>
             <div className="space-y-2">
-              {pendingSuggestions.map(item => (
+              {pendingSuggestions.map((item) => (
                 <div
                   key={item.id}
                   className="rounded-2xl px-4 py-4"
-                  style={{ backgroundColor: 'rgba(127,119,221,0.08)', border: '1.5px solid rgba(127,119,221,0.35)' }}
+                  style={{
+                    backgroundColor: 'rgba(127,119,221,0.08)',
+                    border: '1.5px solid rgba(127,119,221,0.35)',
+                  }}
                 >
                   <div className="flex items-center gap-3 mb-3">
                     <div
@@ -406,7 +500,9 @@ export default function LysDagTab({ tokens, accent }: Props) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold">{item.title}</p>
-                      <p className="text-xs mt-0.5" style={{ color: tokens.textMuted }}>kl. {item.time}</p>
+                      <p className="text-xs mt-0.5" style={{ color: tokens.textMuted }}>
+                        kl. {item.time}
+                      </p>
                     </div>
                   </div>
                   <p className="text-xs mb-3" style={{ color: 'rgba(127,119,221,0.9)' }}>
@@ -464,14 +560,17 @@ export default function LysDagTab({ tokens, accent }: Props) {
               style={{ backgroundColor: `${accent}18` }}
             />
             <div className="space-y-1">
-              {approvedItems.map(item => {
+              {approvedItems.map((item) => {
                 const isDone = completed.has(item.id);
                 const emoji = item.emoji ?? CATEGORY_EMOJI[item.category] ?? '📌';
                 return (
                   <div key={item.id} className="flex gap-3 items-stretch">
                     {/* Time + dot column */}
                     <div className="flex flex-col items-center shrink-0 w-[68px]">
-                      <p className="text-[10px] font-bold tabular-nums pt-3.5 leading-none" style={{ color: isDone ? `${accent}88` : accent }}>
+                      <p
+                        className="text-[10px] font-bold tabular-nums pt-3.5 leading-none"
+                        style={{ color: isDone ? `${accent}88` : accent }}
+                      >
                         {item.time}
                       </p>
                       <div
@@ -504,12 +603,21 @@ export default function LysDagTab({ tokens, accent }: Props) {
                       <div className="flex-1 min-w-0">
                         <p
                           className="text-sm font-semibold leading-snug"
-                          style={{ color: tokens.text, textDecoration: isDone ? 'line-through' : 'none', opacity: isDone ? 0.7 : 1 }}
+                          style={{
+                            color: tokens.text,
+                            textDecoration: isDone ? 'line-through' : 'none',
+                            opacity: isDone ? 0.7 : 1,
+                          }}
                         >
                           {item.title}
                         </p>
                         {item.description && (
-                          <p className="text-xs mt-0.5 truncate" style={{ color: tokens.textMuted }}>{item.description}</p>
+                          <p
+                            className="text-xs mt-0.5 truncate"
+                            style={{ color: tokens.textMuted }}
+                          >
+                            {item.description}
+                          </p>
                         )}
                       </div>
                       <button
@@ -522,10 +630,13 @@ export default function LysDagTab({ tokens, accent }: Props) {
                         }}
                         aria-label={isDone ? 'Fortryd' : 'Marker som færdig'}
                       >
-                        {isDone
-                          ? <span className="text-white text-sm font-black">✓</span>
-                          : <span className="text-sm" style={{ color: `${accent}55` }}>○</span>
-                        }
+                        {isDone ? (
+                          <span className="text-white text-sm font-black">✓</span>
+                        ) : (
+                          <span className="text-sm" style={{ color: `${accent}55` }}>
+                            ○
+                          </span>
+                        )}
                       </button>
                     </div>
                   </div>
@@ -541,7 +652,9 @@ export default function LysDagTab({ tokens, accent }: Props) {
         <div
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
           style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-          onClick={e => { if (e.target === e.currentTarget) setShowFab(false); }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowFab(false);
+          }}
         >
           <div
             className="w-full max-w-lg rounded-3xl p-6 space-y-4"
@@ -561,45 +674,63 @@ export default function LysDagTab({ tokens, accent }: Props) {
 
             {/* Title */}
             <div>
-              <label className="text-xs font-bold uppercase tracking-wide mb-1.5 block" style={{ color: tokens.textMuted }}>
+              <label
+                className="text-xs font-bold uppercase tracking-wide mb-1.5 block"
+                style={{ color: tokens.textMuted }}
+              >
                 Hvad vil du gøre?
               </label>
               <input
                 type="text"
                 value={form.title}
-                onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                 placeholder="F.eks. Morgentur, Kaffe med Sara …"
                 className="w-full rounded-xl px-4 py-3 text-sm outline-none"
-                style={{ backgroundColor: tokens.cardBg, border: `1.5px solid ${accent}22`, color: tokens.text, caretColor: accent }}
+                style={{
+                  backgroundColor: tokens.cardBg,
+                  border: `1.5px solid ${accent}22`,
+                  color: tokens.text,
+                  caretColor: accent,
+                }}
                 autoFocus
               />
             </div>
 
             {/* Time */}
             <div>
-              <label className="text-xs font-bold uppercase tracking-wide mb-1.5 block" style={{ color: tokens.textMuted }}>
+              <label
+                className="text-xs font-bold uppercase tracking-wide mb-1.5 block"
+                style={{ color: tokens.textMuted }}
+              >
                 Tidspunkt
               </label>
               <input
                 type="time"
                 value={form.time}
-                onChange={e => setForm(f => ({ ...f, time: e.target.value }))}
+                onChange={(e) => setForm((f) => ({ ...f, time: e.target.value }))}
                 className="w-full rounded-xl px-4 py-3 text-sm outline-none"
-                style={{ backgroundColor: tokens.cardBg, border: `1.5px solid ${accent}22`, color: tokens.text }}
+                style={{
+                  backgroundColor: tokens.cardBg,
+                  border: `1.5px solid ${accent}22`,
+                  color: tokens.text,
+                }}
               />
             </div>
 
             {/* Category */}
             <div>
-              <label className="text-xs font-bold uppercase tracking-wide mb-1.5 block" style={{ color: tokens.textMuted }}>
+              <label
+                className="text-xs font-bold uppercase tracking-wide mb-1.5 block"
+                style={{ color: tokens.textMuted }}
+              >
                 Kategori
               </label>
               <div className="flex gap-2 flex-wrap">
-                {CATEGORIES.map(cat => (
+                {CATEGORIES.map((cat) => (
                   <button
                     key={cat.key}
                     type="button"
-                    onClick={() => setForm(f => ({ ...f, category: cat.key }))}
+                    onClick={() => setForm((f) => ({ ...f, category: cat.key }))}
                     className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150 active:scale-95"
                     style={{
                       backgroundColor: form.category === cat.key ? `${accent}22` : tokens.cardBg,
@@ -616,15 +747,23 @@ export default function LysDagTab({ tokens, accent }: Props) {
 
             {/* Recurrence */}
             <div>
-              <label className="text-xs font-bold uppercase tracking-wide mb-1.5 block" style={{ color: tokens.textMuted }}>
+              <label
+                className="text-xs font-bold uppercase tracking-wide mb-1.5 block"
+                style={{ color: tokens.textMuted }}
+              >
                 Gentagelse
               </label>
               <div className="flex gap-2">
-                {([['none', 'Ingen'], ['daily', 'Hver dag']] as const).map(([v, l]) => (
+                {(
+                  [
+                    ['none', 'Ingen'],
+                    ['daily', 'Hver dag'],
+                  ] as const
+                ).map(([v, l]) => (
                   <button
                     key={v}
                     type="button"
-                    onClick={() => setForm(f => ({ ...f, recurrence: v }))}
+                    onClick={() => setForm((f) => ({ ...f, recurrence: v }))}
                     className="flex-1 rounded-xl py-2.5 text-xs font-semibold transition-all active:scale-95"
                     style={{
                       backgroundColor: form.recurrence === v ? `${accent}22` : tokens.cardBg,
@@ -648,14 +787,17 @@ export default function LysDagTab({ tokens, accent }: Props) {
               </div>
               <button
                 type="button"
-                onClick={() => setForm(f => ({ ...f, notify: !f.notify }))}
+                onClick={() => setForm((f) => ({ ...f, notify: !f.notify }))}
                 className="h-7 w-12 rounded-full transition-all duration-200"
                 style={{ backgroundColor: form.notify ? accent : `${accent}22` }}
                 aria-pressed={form.notify}
               >
                 <span
                   className="block h-5 w-5 rounded-full bg-white shadow transition-all duration-200"
-                  style={{ transform: form.notify ? 'translateX(22px)' : 'translateX(2px)', marginTop: '4px' }}
+                  style={{
+                    transform: form.notify ? 'translateX(22px)' : 'translateX(2px)',
+                    marginTop: '4px',
+                  }}
                 />
               </button>
             </div>

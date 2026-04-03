@@ -7,12 +7,54 @@ import { CompanionReaction } from '@/components/CompanionAvatar';
 import { Moon, Sparkles, Leaf } from 'lucide-react';
 
 const restActivities = [
-  { id: 'a1', emoji: '☕', label: 'En varm drik', description: 'Te, kakao eller kaffe', color: '#FB923C', bg: 'rgba(251,146,60,0.12)' },
-  { id: 'a2', emoji: '🎵', label: 'Blid musik', description: 'Lyt til noget du elsker', color: '#60A5FA', bg: 'rgba(96,165,250,0.12)' },
-  { id: 'a3', emoji: '📖', label: 'Læs lidt', description: 'Ingen krav — bare nyd det', color: '#34D399', bg: 'rgba(52,211,153,0.12)' },
-  { id: 'a4', emoji: '🌿', label: 'Frisk luft', description: 'Åbn et vindue eller gå ud', color: '#A78BFA', bg: 'rgba(167,139,250,0.12)' },
-  { id: 'a5', emoji: '🛁', label: 'Bad eller brusebad', description: 'Varm og blød', color: '#F472B6', bg: 'rgba(244,114,182,0.12)' },
-  { id: 'a6', emoji: '😴', label: 'Hvil dig', description: 'Luk øjnene og slap af', color: '#818CF8', bg: 'rgba(129,140,248,0.12)' },
+  {
+    id: 'a1',
+    emoji: '☕',
+    label: 'En varm drik',
+    description: 'Te, kakao eller kaffe',
+    color: '#FB923C',
+    bg: 'rgba(251,146,60,0.12)',
+  },
+  {
+    id: 'a2',
+    emoji: '🎵',
+    label: 'Blid musik',
+    description: 'Lyt til noget du elsker',
+    color: '#60A5FA',
+    bg: 'rgba(96,165,250,0.12)',
+  },
+  {
+    id: 'a3',
+    emoji: '📖',
+    label: 'Læs lidt',
+    description: 'Ingen krav — bare nyd det',
+    color: '#34D399',
+    bg: 'rgba(52,211,153,0.12)',
+  },
+  {
+    id: 'a4',
+    emoji: '🌿',
+    label: 'Frisk luft',
+    description: 'Åbn et vindue eller gå ud',
+    color: '#A78BFA',
+    bg: 'rgba(167,139,250,0.12)',
+  },
+  {
+    id: 'a5',
+    emoji: '🛁',
+    label: 'Bad eller brusebad',
+    description: 'Varm og blød',
+    color: '#F472B6',
+    bg: 'rgba(244,114,182,0.12)',
+  },
+  {
+    id: 'a6',
+    emoji: '😴',
+    label: 'Hvil dig',
+    description: 'Luk øjnene og slap af',
+    color: '#818CF8',
+    bg: 'rgba(129,140,248,0.12)',
+  },
 ];
 
 const companionMessages: Record<string, string[]> = {
@@ -110,7 +152,6 @@ export default function HviledagView() {
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-5 space-y-5">
-
         {/* Hero companion card */}
         <div className="rounded-2xl bg-gradient-to-br from-aurora-violet/15 to-midnight-800/60 border border-aurora-violet/25 p-5 flex flex-col items-center text-center">
           <CompanionAvatar
@@ -135,7 +176,8 @@ export default function HviledagView() {
         {!restDayConfirmed ? (
           <div className="rounded-2xl bg-midnight-800/60 border border-midnight-700/40 p-4 text-center">
             <p className="text-sm text-midnight-200 mb-4 leading-relaxed">
-              I dag er en hviledag. Du behøver ikke gøre noget. Ingen opgaver, ingen krav — bare hvile.
+              I dag er en hviledag. Du behøver ikke gøre noget. Ingen opgaver, ingen krav — bare
+              hvile.
             </p>
             <button
               type="button"
@@ -188,10 +230,14 @@ export default function HviledagView() {
                     >
                       {activity.label}
                     </p>
-                    <p className="text-[10px] text-midnight-500 mt-0.5 leading-tight">{activity.description}</p>
+                    <p className="text-[10px] text-midnight-500 mt-0.5 leading-tight">
+                      {activity.description}
+                    </p>
                   </div>
                   {isSelected && (
-                    <span className="text-xs flex-shrink-0" style={{ color: activity.color }}>✓</span>
+                    <span className="text-xs flex-shrink-0" style={{ color: activity.color }}>
+                      ✓
+                    </span>
                   )}
                 </button>
               );
@@ -203,7 +249,8 @@ export default function HviledagView() {
         <div className="rounded-2xl bg-gradient-to-br from-midnight-800/60 to-aurora-violet/8 border border-midnight-700/30 p-4 text-center">
           <p className="text-xs text-midnight-400 mb-2">💜 Dagens påmindelse</p>
           <p className="text-sm text-midnight-200 leading-relaxed italic">
-            "Hvile er ikke en belønning for hårdt arbejde — det er en nødvendighed for at leve godt."
+            «Hvile er ikke en belønning for hårdt arbejde — det er en nødvendighed for at leve
+            godt.»
           </p>
         </div>
 

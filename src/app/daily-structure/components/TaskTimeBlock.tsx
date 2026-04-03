@@ -39,7 +39,9 @@ export default function TaskTimeBlock({
         aria-expanded={!collapsed}
       >
         <div className="flex items-center gap-3">
-          <div className={`w-9 h-9 ${colorClass} rounded-2xl flex items-center justify-center shadow-sm`}>
+          <div
+            className={`w-9 h-9 ${colorClass} rounded-2xl flex items-center justify-center shadow-sm`}
+          >
             <span className="text-lg select-none">{emoji}</span>
           </div>
           <div className="text-left">
@@ -70,7 +72,13 @@ export default function TaskTimeBlock({
             fill="none"
             className={`text-midnight-500 transition-transform duration-200 ${collapsed ? '-rotate-90' : ''}`}
           >
-            <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M4 6L8 10L12 6"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </div>
       </button>
@@ -81,7 +89,9 @@ export default function TaskTimeBlock({
           {tasks.length === 0 ? (
             <div className="text-center py-6">
               <span className="text-3xl block mb-2">🎯</span>
-              <p className="text-sm text-midnight-400 font-medium">Ingen opgaver for {label.toLowerCase()}</p>
+              <p className="text-sm text-midnight-400 font-medium">
+                Ingen opgaver for {label.toLowerCase()}
+              </p>
             </div>
           ) : (
             tasks.map((task) => (

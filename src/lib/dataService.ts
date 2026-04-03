@@ -19,7 +19,7 @@ import type {
 
 // ── XP helpers ────────────────────────────────────────────────────────────────
 
-const XP_COOLDOWN_MS   = 60 * 60 * 1000; // 1 hour per activity
+const XP_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour per activity
 const LEVEL_THRESHOLDS = [0, 100, 250, 500, 1000];
 
 function calcLevel(xp: number): number {
@@ -45,7 +45,7 @@ function canAwardXp(activity: string): boolean {
 export async function saveCheckin(
   mode: StorageMode,
   activeId: string,
-  data: { energy_level: number; label: string },
+  data: { energy_level: number; label: string }
 ): Promise<void> {
   if (mode === 'supabase') {
     const supabase = createClient();
@@ -71,10 +71,7 @@ export async function saveCheckin(
   ls.setItem(LOCAL_KEYS.checkins, entries.slice(0, 100));
 }
 
-export async function getCheckins(
-  mode: StorageMode,
-  activeId: string,
-): Promise<CheckIn[]> {
+export async function getCheckins(mode: StorageMode, activeId: string): Promise<CheckIn[]> {
   if (mode === 'supabase') {
     const supabase = createClient();
     if (!supabase) return [];
@@ -94,7 +91,7 @@ export async function getCheckins(
 export async function saveJournalEntry(
   mode: StorageMode,
   _activeId: string,
-  entry: Omit<JournalEntry, 'id'>,
+  entry: Omit<JournalEntry, 'id'>
 ): Promise<void> {
   // Journal is always localStorage-first (existing behavior)
   const entries = ls.getItem<JournalEntry[]>(LOCAL_KEYS.journal) ?? [];
@@ -113,7 +110,7 @@ export async function addXp(
   mode: StorageMode,
   activeId: string,
   activity: string,
-  amount: number,
+  amount: number
 ): Promise<void> {
   if (mode === 'supabase') {
     const supabase = createClient();
@@ -130,14 +127,11 @@ export async function addXp(
   ls.setItem(xpCooldownKey(activity), Date.now());
 
   const current = ls.getItem<XpData>(LOCAL_KEYS.xp) ?? { total_xp: 0, level: 1 };
-  const newXp    = current.total_xp + amount;
+  const newXp = current.total_xp + amount;
   ls.setItem(LOCAL_KEYS.xp, { total_xp: newXp, level: calcLevel(newXp) });
 }
 
-export async function getXp(
-  mode: StorageMode,
-  activeId: string,
-): Promise<XpData> {
+export async function getXp(mode: StorageMode, activeId: string): Promise<XpData> {
   if (mode === 'supabase') {
     const supabase = createClient();
     if (!supabase) return { total_xp: 0, level: 1 };
@@ -156,7 +150,7 @@ export async function getXp(
 export async function earnBadge(
   mode: StorageMode,
   activeId: string,
-  badge_key: string,
+  badge_key: string
 ): Promise<void> {
   if (mode === 'supabase') {
     const supabase = createClient();
@@ -167,16 +161,13 @@ export async function earnBadge(
     return;
   }
   const badges = ls.getItem<Badge[]>(LOCAL_KEYS.badges) ?? [];
-  if (!badges.find(b => b.badge_key === badge_key)) {
+  if (!badges.find((b) => b.badge_key === badge_key)) {
     badges.push({ badge_key, earned_at: new Date().toISOString() });
     ls.setItem(LOCAL_KEYS.badges, badges);
   }
 }
 
-export async function getBadges(
-  mode: StorageMode,
-  activeId: string,
-): Promise<Badge[]> {
+export async function getBadges(mode: StorageMode, activeId: string): Promise<Badge[]> {
   if (mode === 'supabase') {
     const supabase = createClient();
     if (!supabase) return [];
@@ -191,10 +182,7 @@ export async function getBadges(
 
 // ── Haven / Garden ────────────────────────────────────────────────────────────
 
-export async function getGardenPlots(
-  mode: StorageMode,
-  activeId: string,
-): Promise<GardenPlot[]> {
+export async function getGardenPlots(mode: StorageMode, activeId: string): Promise<GardenPlot[]> {
   if (mode === 'supabase') {
     const supabase = createClient();
     if (!supabase) return [];
@@ -206,30 +194,31 @@ export async function getGardenPlots(
     return (data ?? []) as GardenPlot[];
   }
   const plots = ls.getItem<GardenPlot[]>(LOCAL_KEYS.garden) ?? [];
-  return plots.filter(p => p.resident_id === activeId);
+  return plots.filter((p) => p.resident_id === activeId);
 }
 
 export async function savePlot(
   mode: StorageMode,
   activeId: string,
-  data: Omit<GardenPlot, 'id' | 'resident_id' | 'created_at'>,
+  data: Omit<GardenPlot, 'id' | 'resident_id' | 'created_at'>
 ): Promise<void> {
   if (mode === 'supabase') {
     const supabase = createClient();
     if (!supabase) return;
-    const { error } = await supabase.from('garden_plots').upsert(
-      { ...data, resident_id: activeId },
-      { onConflict: 'resident_id,slot_index' },
-    );
+    const { error } = await supabase
+      .from('garden_plots')
+      .upsert({ ...data, resident_id: activeId }, { onConflict: 'resident_id,slot_index' });
     if (error) throw new Error(error.message);
     return;
   }
   const plots = ls.getItem<GardenPlot[]>(LOCAL_KEYS.garden) ?? [];
-  const idx   = plots.findIndex(p => p.resident_id === activeId && p.slot_index === data.slot_index);
+  const idx = plots.findIndex(
+    (p) => p.resident_id === activeId && p.slot_index === data.slot_index
+  );
   const plot: GardenPlot = {
-    id:          idx >= 0 ? plots[idx]!.id : crypto.randomUUID(),
+    id: idx >= 0 ? plots[idx]!.id : crypto.randomUUID(),
     resident_id: activeId,
-    created_at:  idx >= 0 ? plots[idx]!.created_at : new Date().toISOString(),
+    created_at: idx >= 0 ? plots[idx]!.created_at : new Date().toISOString(),
     ...data,
   };
   if (idx >= 0) plots[idx] = plot;
@@ -241,7 +230,7 @@ export async function updatePlot(
   mode: StorageMode,
   activeId: string,
   id: string,
-  data: Partial<GardenPlot>,
+  data: Partial<GardenPlot>
 ): Promise<void> {
   if (mode === 'supabase') {
     const supabase = createClient();
@@ -250,18 +239,14 @@ export async function updatePlot(
     return;
   }
   const plots = ls.getItem<GardenPlot[]>(LOCAL_KEYS.garden) ?? [];
-  const idx   = plots.findIndex(p => p.id === id && p.resident_id === activeId);
+  const idx = plots.findIndex((p) => p.id === id && p.resident_id === activeId);
   if (idx >= 0) {
     plots[idx] = { ...plots[idx]!, ...data };
     ls.setItem(LOCAL_KEYS.garden, plots);
   }
 }
 
-export async function deletePlot(
-  mode: StorageMode,
-  activeId: string,
-  id: string,
-): Promise<void> {
+export async function deletePlot(mode: StorageMode, activeId: string, id: string): Promise<void> {
   if (mode === 'supabase') {
     const supabase = createClient();
     if (!supabase) return;
@@ -269,7 +254,10 @@ export async function deletePlot(
     return;
   }
   const plots = ls.getItem<GardenPlot[]>(LOCAL_KEYS.garden) ?? [];
-  ls.setItem(LOCAL_KEYS.garden, plots.filter(p => !(p.id === id && p.resident_id === activeId)));
+  ls.setItem(
+    LOCAL_KEYS.garden,
+    plots.filter((p) => !(p.id === id && p.resident_id === activeId))
+  );
 }
 
 // ── Lys conversations ─────────────────────────────────────────────────────────
@@ -277,7 +265,7 @@ export async function deletePlot(
 export async function saveConversation(
   mode: StorageMode,
   activeId: string,
-  data: Omit<LysConversation, 'id' | 'resident_id' | 'created_at' | 'updated_at'> & { id?: string },
+  data: Omit<LysConversation, 'id' | 'resident_id' | 'created_at' | 'updated_at'> & { id?: string }
 ): Promise<void> {
   if (mode === 'supabase') {
     const supabase = createClient();
@@ -285,7 +273,11 @@ export async function saveConversation(
     if (data.id) {
       await supabase
         .from('lys_conversations')
-        .update({ title: data.title, messages: data.messages, updated_at: new Date().toISOString() })
+        .update({
+          title: data.title,
+          messages: data.messages,
+          updated_at: new Date().toISOString(),
+        })
         .eq('id', data.id);
     } else {
       await supabase.from('lys_conversations').insert({
@@ -298,9 +290,14 @@ export async function saveConversation(
   }
   const convs = ls.getItem<LysConversation[]>(LOCAL_KEYS.conversations) ?? [];
   if (data.id) {
-    const idx = convs.findIndex(c => c.id === data.id);
+    const idx = convs.findIndex((c) => c.id === data.id);
     if (idx >= 0) {
-      convs[idx] = { ...convs[idx]!, title: data.title, messages: data.messages, updated_at: new Date().toISOString() };
+      convs[idx] = {
+        ...convs[idx]!,
+        title: data.title,
+        messages: data.messages,
+        updated_at: new Date().toISOString(),
+      };
     }
   } else {
     convs.unshift({
@@ -317,7 +314,7 @@ export async function saveConversation(
 
 export async function getConversations(
   mode: StorageMode,
-  activeId: string,
+  activeId: string
 ): Promise<LysConversation[]> {
   if (mode === 'supabase') {
     const supabase = createClient();
@@ -331,15 +328,12 @@ export async function getConversations(
     return (data ?? []) as LysConversation[];
   }
   const convs = ls.getItem<LysConversation[]>(LOCAL_KEYS.conversations) ?? [];
-  return convs.filter(c => c.resident_id === activeId);
+  return convs.filter((c) => c.resident_id === activeId);
 }
 
 // ── Profile ───────────────────────────────────────────────────────────────────
 
-export async function getProfile(
-  mode: StorageMode,
-  activeId: string,
-): Promise<LocalProfile> {
+export async function getProfile(mode: StorageMode, activeId: string): Promise<LocalProfile> {
   if (mode === 'supabase') {
     const supabase = createClient();
     if (!supabase) return { nickname: '', theme: 'purple', avatar: null };
@@ -350,17 +344,19 @@ export async function getProfile(
       .maybeSingle();
     return {
       nickname: (data as { nickname?: string | null } | null)?.nickname ?? '',
-      theme:    (data as { color_theme?: string | null } | null)?.color_theme ?? 'purple',
-      avatar:   null,
+      theme: (data as { color_theme?: string | null } | null)?.color_theme ?? 'purple',
+      avatar: null,
     };
   }
-  return ls.getItem<LocalProfile>(LOCAL_KEYS.profile) ?? { nickname: '', theme: 'purple', avatar: null };
+  return (
+    ls.getItem<LocalProfile>(LOCAL_KEYS.profile) ?? { nickname: '', theme: 'purple', avatar: null }
+  );
 }
 
 export async function saveProfile(
   mode: StorageMode,
   activeId: string,
-  data: Partial<LocalProfile>,
+  data: Partial<LocalProfile>
 ): Promise<void> {
   if (mode === 'supabase') {
     const supabase = createClient();
@@ -371,16 +367,17 @@ export async function saveProfile(
       .eq('user_id', activeId);
     return;
   }
-  const current = ls.getItem<LocalProfile>(LOCAL_KEYS.profile) ?? { nickname: '', theme: 'purple', avatar: null };
+  const current = ls.getItem<LocalProfile>(LOCAL_KEYS.profile) ?? {
+    nickname: '',
+    theme: 'purple',
+    avatar: null,
+  };
   ls.setItem(LOCAL_KEYS.profile, { ...current, ...data });
 }
 
 // ── Plan items (read-only in guest mode for now) ──────────────────────────────
 
-export async function getPlanItems(
-  mode: StorageMode,
-  activeId: string,
-): Promise<PlanItem[]> {
+export async function getPlanItems(mode: StorageMode, activeId: string): Promise<PlanItem[]> {
   if (mode === 'supabase') {
     const supabase = createClient();
     if (!supabase) return [];
@@ -392,13 +389,13 @@ export async function getPlanItems(
     return (data ?? []) as PlanItem[];
   }
   const items = ls.getItem<PlanItem[]>(LOCAL_KEYS.planItems) ?? [];
-  return items.filter(p => p.resident_id === activeId);
+  return items.filter((p) => p.resident_id === activeId);
 }
 
 export async function savePlanItem(
   mode: StorageMode,
   activeId: string,
-  data: Omit<PlanItem, 'id' | 'resident_id' | 'created_at'>,
+  data: Omit<PlanItem, 'id' | 'resident_id' | 'created_at'>
 ): Promise<void> {
   if (mode === 'supabase') {
     const supabase = createClient();
@@ -420,7 +417,7 @@ export async function completePlanItem(
   mode: StorageMode,
   activeId: string,
   planItemId: string,
-  date: string,
+  date: string
 ): Promise<void> {
   if (mode === 'supabase') {
     const supabase = createClient();
@@ -433,7 +430,9 @@ export async function completePlanItem(
     return;
   }
   const completions = ls.getItem<PlanCompletion[]>(LOCAL_KEYS.planCompletions) ?? [];
-  const exists = completions.find(c => c.plan_item_id === planItemId && c.completion_date === date);
+  const exists = completions.find(
+    (c) => c.plan_item_id === planItemId && c.completion_date === date
+  );
   if (!exists) {
     completions.push({
       id: crypto.randomUUID(),

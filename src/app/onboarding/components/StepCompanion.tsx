@@ -126,14 +126,18 @@ export default function StepCompanion({ data, setData, onNext }: StepProps) {
         <div
           className={`mb-4 p-4 rounded-2xl bg-midnight-800 border-2 ${selectedCompanion.selectedBorder} ${selectedCompanion.selectedBg} flex items-center gap-4 animate-slide-up`}
         >
-          <div className={`w-16 h-16 ${selectedCompanion.circleBg} rounded-full flex items-center justify-center shadow-lg companion-float flex-shrink-0 border-2 ${selectedCompanion.selectedBorder}`}>
+          <div
+            className={`w-16 h-16 ${selectedCompanion.circleBg} rounded-full flex items-center justify-center shadow-lg companion-float flex-shrink-0 border-2 ${selectedCompanion.selectedBorder}`}
+          >
             <span className="text-4xl select-none">{selectedCompanion.emoji}</span>
           </div>
           <div className="min-w-0">
             <p className="font-display font-bold text-midnight-50 text-base">
               {selectedCompanion.name} er din ledsager! {selectedCompanion.sparkle}
             </p>
-            <p className="text-xs text-midnight-400 mt-0.5 leading-snug">{selectedCompanion.description}</p>
+            <p className="text-xs text-midnight-400 mt-0.5 leading-snug">
+              {selectedCompanion.description}
+            </p>
           </div>
         </div>
       )}
@@ -149,9 +153,10 @@ export default function StepCompanion({ data, setData, onNext }: StepProps) {
               onClick={() => select(companion.id)}
               className={`
                 flex flex-col items-center justify-center rounded-2xl border-2 p-4 cursor-pointer transition-all duration-200 min-h-[140px] relative overflow-hidden
-                ${isSelected
-                  ? `${companion.selectedBorder} ${companion.selectedBg} shadow-xl scale-[1.04]`
-                  : 'border-midnight-600 bg-midnight-800 hover:shadow-md hover:scale-[1.02] active:scale-95'
+                ${
+                  isSelected
+                    ? `${companion.selectedBorder} ${companion.selectedBg} shadow-xl scale-[1.04]`
+                    : 'border-midnight-600 bg-midnight-800 hover:shadow-md hover:scale-[1.02] active:scale-95'
                 }
               `}
               aria-pressed={isSelected}
@@ -159,7 +164,9 @@ export default function StepCompanion({ data, setData, onNext }: StepProps) {
             >
               {/* Sparkle decoration top-right when selected */}
               {isSelected && (
-                <span className="absolute top-2 right-2 text-sm animate-bounce">{companion.sparkle}</span>
+                <span className="absolute top-2 right-2 text-sm animate-bounce">
+                  {companion.sparkle}
+                </span>
               )}
 
               {/* Circular animal avatar */}
@@ -176,7 +183,9 @@ export default function StepCompanion({ data, setData, onNext }: StepProps) {
               <p className="font-display font-bold text-midnight-100 text-sm break-words w-full text-center">
                 {companion.name}
               </p>
-              <p className={`text-xs mt-0.5 break-words w-full text-center ${isSelected ? companion.accent : 'text-midnight-400'}`}>
+              <p
+                className={`text-xs mt-0.5 break-words w-full text-center ${isSelected ? companion.accent : 'text-midnight-400'}`}
+              >
                 {companion.personality}
               </p>
               <p className="text-[10px] text-midnight-500 mt-1 italic break-words w-full text-center leading-snug px-0.5">
@@ -186,7 +195,13 @@ export default function StepCompanion({ data, setData, onNext }: StepProps) {
               {isSelected && (
                 <div className="mt-2 w-5 h-5 bg-sunrise-400 rounded-full flex items-center justify-center mx-auto">
                   <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                    <path d="M1 4L3.5 6.5L9 1" stroke="#0f0f1a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path
+                      d="M1 4L3.5 6.5L9 1"
+                      stroke="#0f0f1a"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </div>
               )}
@@ -195,12 +210,14 @@ export default function StepCompanion({ data, setData, onNext }: StepProps) {
         })}
       </div>
 
-      {error && (
-        <p className="text-rose-400 text-sm font-medium text-center mb-4">{error}</p>
-      )}
+      {error && <p className="text-rose-400 text-sm font-medium text-center mb-4">{error}</p>}
 
       <StickyPrimaryFooter>
-        <button type="button" onClick={handleNext} className="btn-primary w-full text-base py-3.5 min-h-[48px]">
+        <button
+          type="button"
+          onClick={handleNext}
+          className="btn-primary w-full text-base py-3.5 min-h-[48px]"
+        >
           Vælg {selectedCompanion ? selectedCompanion.name : 'ledsager'} →
         </button>
       </StickyPrimaryFooter>

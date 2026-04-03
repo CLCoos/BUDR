@@ -13,18 +13,13 @@ type Props = {
 };
 
 const TABS: { id: LysNavTab; label: string; Icon: typeof Home }[] = [
-  { id: 'hjem',    label: 'Hjem',    Icon: Home },
-  { id: 'dag',     label: 'Dag',     Icon: Zap },
+  { id: 'hjem', label: 'Hjem', Icon: Home },
+  { id: 'dag', label: 'Dag', Icon: Zap },
   { id: 'journal', label: 'Journal', Icon: BookOpen },
-  { id: 'mig',     label: 'Mig',     Icon: Flower2 },
+  { id: 'mig', label: 'Mig', Icon: Flower2 },
 ];
 
-export default function LysBottomNav({
-  active,
-  onChange,
-  showDagReminderDot,
-  hidden,
-}: Props) {
+export default function LysBottomNav({ active, onChange, showDagReminderDot, hidden }: Props) {
   if (hidden) return null;
 
   return (
@@ -38,7 +33,7 @@ export default function LysBottomNav({
       aria-label="Hovedmenu"
     >
       <div className="mx-auto flex h-16 max-w-lg items-stretch px-2">
-        {TABS.map(tab => {
+        {TABS.map((tab) => {
           const isOn = active === tab.id;
           const Icon = tab.Icon;
           const showDot = tab.id === 'dag' && showDagReminderDot;

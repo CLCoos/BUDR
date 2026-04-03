@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   if (!key) {
     return NextResponse.json(
       { error: 'ANTHROPIC_API_KEY er ikke sat på serveren' },
-      { status: 503 },
+      { status: 503 }
     );
   }
 
@@ -47,16 +47,13 @@ export async function POST(req: NextRequest) {
     if (!res.ok) {
       const errText = await res.text();
       console.error('Anthropic error', res.status, errText);
-      return NextResponse.json(
-        { error: 'AI-kald fejlede. Prøv igen senere.' },
-        { status: 502 },
-      );
+      return NextResponse.json({ error: 'AI-kald fejlede. Prøv igen senere.' }, { status: 502 });
     }
 
     const data = (await res.json()) as {
       content?: Array<{ type?: string; text?: string }>;
     };
-    const block = data.content?.find(c => c.type === 'text');
+    const block = data.content?.find((c) => c.type === 'text');
     const polished = block?.text?.trim();
     if (!polished) {
       return NextResponse.json({ error: 'Tomt svar fra AI' }, { status: 502 });

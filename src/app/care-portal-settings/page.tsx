@@ -8,7 +8,9 @@ export default function CarePortalSettingsPage() {
       <div className="p-6 max-w-screen-md">
         <div className="mb-8">
           <h1 className="text-2xl font-black text-gray-900">Indstillinger</h1>
-          <p className="text-sm text-gray-500 mt-1">Administrer bostedets krisekontakter og opsætning</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Administrer bostedets krisekontakter og opsætning
+          </p>
         </div>
         <FacilityContactsManager />
       </div>

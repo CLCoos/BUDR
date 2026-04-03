@@ -27,7 +27,12 @@ const getMood = (percent: number): 'happy' | 'excited' | 'neutral' | 'sleepy' =>
   return 'sleepy';
 };
 
-export default function CompanionBubble({ companion, percent, completedToday, lastCompletedTaskId }: CompanionBubbleProps) {
+export default function CompanionBubble({
+  companion,
+  percent,
+  completedToday,
+  lastCompletedTaskId,
+}: CompanionBubbleProps) {
   const message = getCompanionMessage(percent, completedToday);
   const mood = getMood(percent);
   const [reaction, setReaction] = useState<CompanionReaction>('idle');

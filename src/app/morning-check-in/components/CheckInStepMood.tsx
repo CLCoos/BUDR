@@ -38,14 +38,19 @@ export default function CheckInStepMood({ data, setData, onNext }: Props) {
   };
 
   const handleNext = () => {
-    if (!data.mood) { setError('Vælg dit humør for at fortsætte'); return; }
+    if (!data.mood) {
+      setError('Vælg dit humør for at fortsætte');
+      return;
+    }
     onNext();
   };
 
   return (
     <div className="max-w-lg mx-auto px-4 pb-12">
       <div className="mb-5 pt-2">
-        <h2 className="font-display text-xl sm:text-2xl font-bold text-midnight-50 mb-2">Hvad føler du lige nu? 💭</h2>
+        <h2 className="font-display text-xl sm:text-2xl font-bold text-midnight-50 mb-2">
+          Hvad føler du lige nu? 💭
+        </h2>
         <p className="text-midnight-400 text-sm">Vælg det ord der passer bedst til din følelse.</p>
       </div>
 
@@ -72,19 +77,28 @@ export default function CheckInStepMood({ data, setData, onNext }: Props) {
 
       {selected && (
         <div className="bg-midnight-800/60 rounded-2xl border border-midnight-600/50 p-3.5 mb-4 flex items-start gap-3 animate-slide-up">
-          <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: `${selected.accent}20` }}>
+          <div
+            className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: `${selected.accent}20` }}
+          >
             <span className="text-lg">💜</span>
           </div>
           <div>
             <p className="text-xs text-midnight-400 font-medium mb-1">Lys siger:</p>
-            <p className="text-sm text-midnight-100 font-medium leading-relaxed">{companionResponses[selected.id]}</p>
+            <p className="text-sm text-midnight-100 font-medium leading-relaxed">
+              {companionResponses[selected.id]}
+            </p>
           </div>
         </div>
       )}
 
       {error && <p className="text-rose-400 text-sm font-medium text-center mb-4">{error}</p>}
       <StickyPrimaryFooter>
-        <button type="button" onClick={handleNext} className="btn-primary w-full text-base py-3.5 min-h-[48px]">
+        <button
+          type="button"
+          onClick={handleNext}
+          className="btn-primary w-full text-base py-3.5 min-h-[48px]"
+        >
           Næste →
         </button>
       </StickyPrimaryFooter>

@@ -28,7 +28,9 @@ export default function OverrapportModal({ open, onClose }: Props) {
 
   useEffect(() => {
     mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -36,7 +38,7 @@ export default function OverrapportModal({ open, onClose }: Props) {
     setReport('');
     setEdited(false);
     void fetchData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const fetchData = async () => {
@@ -56,7 +58,7 @@ export default function OverrapportModal({ open, onClose }: Props) {
       if (!careResidents?.length) return;
 
       // Fetch today's check-ins
-      const residentIds = careResidents.map(r => r.user_id);
+      const residentIds = careResidents.map((r) => r.user_id);
       const { data: checkins } = await supabase
         .from('park_daily_checkin')
         .select('resident_id, mood_score, traffic_light, note, created_at')
@@ -73,19 +75,31 @@ export default function OverrapportModal({ open, onClose }: Props) {
         .eq('status', 'pending');
 
       const MOOD_LABELS: Record<number, string> = {
-        1: 'Svært', 2: 'Dårligt', 3: 'OK', 4: 'Godt', 5: 'Fantastisk',
+        1: 'Svært',
+        2: 'Dårligt',
+        3: 'OK',
+        4: 'Godt',
+        5: 'Fantastisk',
       };
 
-      const summaries: ResidentSummary[] = careResidents.map(r => {
-        const checkin = checkins?.find(c => c.resident_id === r.user_id);
-        const pending = proposals?.filter(p => p.resident_id === r.user_id).length ?? 0;
+      const summaries: ResidentSummary[] = careResidents.map((r) => {
+        const checkin = checkins?.find((c) => c.resident_id === r.user_id);
+        const pending = proposals?.filter((p) => p.resident_id === r.user_id).length ?? 0;
         return {
           name: r.display_name,
-          initials: r.display_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase(),
+          initials: r.display_name
+            .split(' ')
+            .map((n: string) => n[0])
+            .join('')
+            .slice(0, 2)
+            .toUpperCase(),
           moodLabel: checkin?.mood_score ? (MOOD_LABELS[checkin.mood_score] ?? null) : null,
           trafficLight: checkin?.traffic_light ?? null,
           checkinTime: checkin?.created_at
-            ? new Date(checkin.created_at).toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' })
+            ? new Date(checkin.created_at).toLocaleTimeString('da-DK', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })
             : null,
           notePreview: checkin?.note ?? null,
           pendingMessages: pending,
@@ -96,8 +110,11 @@ export default function OverrapportModal({ open, onClose }: Props) {
         setResidents(summaries);
         void generateReport(summaries);
       }
-    } catch { /* ignore */ }
-    finally { if (mountedRef.current) setLoading(false); }
+    } catch {
+      /* ignore */
+    } finally {
+      if (mountedRef.current) setLoading(false);
+    }
   };
 
   const generateReport = async (data: ResidentSummary[]) => {
@@ -105,18 +122,24 @@ export default function OverrapportModal({ open, onClose }: Props) {
     try {
       const now = new Date();
       const timeStr = now.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
-      const dateStr = now.toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long' });
+      const dateStr = now.toLocaleDateString('da-DK', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      });
 
-      const residentLines = data.map(r => {
-        const parts = [`${r.name}:`];
-        if (r.checkinTime) parts.push(`check-in kl. ${r.checkinTime}`);
-        if (r.moodLabel) parts.push(`stemning: ${r.moodLabel}`);
-        if (r.trafficLight) parts.push(`trafiklys: ${r.trafficLight}`);
-        if (r.notePreview) parts.push(`note: "${r.notePreview.slice(0, 80)}"`);
-        if (r.pendingMessages > 0) parts.push(`${r.pendingMessages} besked(er) til personalet`);
-        if (!r.checkinTime) parts.push('ingen check-in i dag');
-        return parts.join(', ');
-      }).join('\n');
+      const residentLines = data
+        .map((r) => {
+          const parts = [`${r.name}:`];
+          if (r.checkinTime) parts.push(`check-in kl. ${r.checkinTime}`);
+          if (r.moodLabel) parts.push(`stemning: ${r.moodLabel}`);
+          if (r.trafficLight) parts.push(`trafiklys: ${r.trafficLight}`);
+          if (r.notePreview) parts.push(`note: "${r.notePreview.slice(0, 80)}"`);
+          if (r.pendingMessages > 0) parts.push(`${r.pendingMessages} besked(er) til personalet`);
+          if (!r.checkinTime) parts.push('ingen check-in i dag');
+          return parts.join(', ');
+        })
+        .join('\n');
 
       const res = await fetch('/api/ai/chat-completion', {
         method: 'POST',
@@ -150,8 +173,11 @@ Hold sproget professionelt men ikke stift. Max 300 ord.`,
       if (text && mountedRef.current) {
         setReport(text);
       }
-    } catch { /* ignore */ }
-    finally { if (mountedRef.current) setGenerating(false); }
+    } catch {
+      /* ignore */
+    } finally {
+      if (mountedRef.current) setGenerating(false);
+    }
   };
 
   const handleCopy = () => {
@@ -162,24 +188,34 @@ Hold sproget professionelt men ikke stift. Max 300 ord.`,
   };
 
   const handlePrint = () => {
-    const now = new Date().toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const now = new Date().toLocaleDateString('da-DK', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
     const html = `<!DOCTYPE html><html lang="da"><head><meta charset="UTF-8"><title>Overrapport ${now}</title>
 <style>body{font-family:system-ui,sans-serif;max-width:700px;margin:40px auto;color:#111;line-height:1.6}h1{font-size:18px;margin-bottom:4px}p.meta{color:#666;font-size:13px;margin-bottom:24px}pre{white-space:pre-wrap;font-family:inherit;font-size:15px}@media print{body{margin:20px}}</style>
-</head><body><h1>Vagtskifterapport</h1><p class="meta">${now}</p><pre>${report.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></body></html>`;
+</head><body><h1>Vagtskifterapport</h1><p class="meta">${now}</p><pre>${report.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre></body></html>`;
     const w = window.open('', '_blank');
-    if (w) { w.document.write(html); w.document.close(); w.print(); }
+    if (w) {
+      w.document.write(html);
+      w.document.close();
+      w.print();
+    }
   };
 
   if (!open) return null;
 
-  const noCheckins = residents.filter(r => !r.checkinTime).length;
-  const attention = residents.filter(r => r.trafficLight === 'rød' || r.trafficLight === 'gul' || r.pendingMessages > 0);
+  const noCheckins = residents.filter((r) => !r.checkinTime).length;
+  const attention = residents.filter(
+    (r) => r.trafficLight === 'rød' || r.trafficLight === 'gul' || r.pendingMessages > 0
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full sm:max-w-2xl max-h-[92dvh] flex flex-col bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
-
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
           <div className="flex items-center gap-3">
@@ -191,13 +227,16 @@ Hold sproget professionelt men ikke stift. Max 300 ord.`,
               <p className="text-xs text-gray-500">Genereret fra dagens borgerdata</p>
             </div>
           </div>
-          <button type="button" onClick={onClose} className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-100"
+          >
             <X className="h-4 w-4 text-gray-500" />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-
           {/* Data summary chips */}
           {!loading && residents.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -221,8 +260,12 @@ Hold sproget professionelt men ikke stift. Max 300 ord.`,
           {(generating || loading) && !report && (
             <div className="flex flex-col items-center py-12 gap-3 text-gray-400">
               <div className="flex gap-1.5">
-                {[0, 150, 300].map(d => (
-                  <span key={d} className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: `${d}ms` }} />
+                {[0, 150, 300].map((d) => (
+                  <span
+                    key={d}
+                    className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                    style={{ animationDelay: `${d}ms` }}
+                  />
                 ))}
               </div>
               <p className="text-sm">Henter borgerdata og genererer rapport…</p>
@@ -231,12 +274,13 @@ Hold sproget professionelt men ikke stift. Max 300 ord.`,
 
           {report && (
             <div className="space-y-3">
-              {edited && (
-                <p className="text-xs text-blue-600 font-medium">✏️ Redigeret</p>
-              )}
+              {edited && <p className="text-xs text-blue-600 font-medium">✏️ Redigeret</p>}
               <textarea
                 value={report}
-                onChange={e => { setReport(e.target.value); setEdited(true); }}
+                onChange={(e) => {
+                  setReport(e.target.value);
+                  setEdited(true);
+                }}
                 rows={14}
                 className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3.5 text-sm leading-relaxed resize-none outline-none focus:border-blue-300 focus:bg-white transition-colors"
               />

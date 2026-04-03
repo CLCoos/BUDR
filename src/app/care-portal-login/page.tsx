@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useActionState } from 'react';
+import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 import AppLogo from '@/components/ui/AppLogo';
 import { signInAction, type SignInState } from './actions';
@@ -79,8 +80,23 @@ export default function CarePortalLoginPage() {
         </div>
 
         <p className="text-center text-xs text-gray-600 mt-6">
-          Bosted Nordlys · BUDR Care Platform
+          BUDR Care Platform · Adgang styres af jeres organisationsprofil (
+          <code className="text-gray-500">org_id</code>)
         </p>
+        <nav className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-gray-500 mt-4">
+          <Link href="/privacy" className="hover:text-gray-300">
+            Privatliv
+          </Link>
+          <Link href="/cookies" className="hover:text-gray-300">
+            Cookies
+          </Link>
+          <Link href="/terms" className="hover:text-gray-300">
+            Vilkår
+          </Link>
+          <Link href="/care-portal-demo" className="hover:text-gray-300">
+            Demo (uden login)
+          </Link>
+        </nav>
       </div>
     </div>
   );

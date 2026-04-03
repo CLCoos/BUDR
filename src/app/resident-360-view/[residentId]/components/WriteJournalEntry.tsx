@@ -14,11 +14,11 @@ interface Props {
 
 export default function WriteJournalEntry({ residentId, residentName }: Props) {
   const router = useRouter();
-  const [open, setOpen]         = useState(false);
-  const [text, setText]         = useState('');
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState('');
   const [category, setCategory] = useState('Observation');
-  const [saving, setSaving]     = useState(false);
-  const [error, setError]       = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   function handleOpen() {
     setText('');
@@ -39,17 +39,17 @@ export default function WriteJournalEntry({ residentId, residentName }: Props) {
       return;
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     const staffName =
-      (user?.user_metadata?.full_name as string | undefined) ??
-      user?.email ??
-      'Ukendt personale';
+      (user?.user_metadata?.full_name as string | undefined) ?? user?.email ?? 'Ukendt personale';
 
     const { error: insertError } = await supabase.from('journal_entries').insert({
       resident_id: residentId,
-      staff_id:    user?.id ?? null,
-      staff_name:  staffName,
-      entry_text:  text.trim(),
+      staff_id: user?.id ?? null,
+      staff_name: staffName,
+      entry_text: text.trim(),
       category,
     });
 
@@ -79,7 +79,9 @@ export default function WriteJournalEntry({ residentId, residentName }: Props) {
       {open && (
         <div
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/40"
-          onClick={e => { if (e.target === e.currentTarget) setOpen(false); }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setOpen(false);
+          }}
         >
           <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl">
             {/* Header */}
@@ -103,7 +105,7 @@ export default function WriteJournalEntry({ residentId, residentName }: Props) {
               <div>
                 <span className="block text-xs font-medium text-gray-500 mb-2">Kategori</span>
                 <div className="flex flex-wrap gap-2">
-                  {CATEGORIES.map(cat => (
+                  {CATEGORIES.map((cat) => (
                     <button
                       key={cat}
                       type="button"
@@ -125,7 +127,7 @@ export default function WriteJournalEntry({ residentId, residentName }: Props) {
                 <span className="block text-xs font-medium text-gray-500 mb-2">Notat</span>
                 <textarea
                   value={text}
-                  onChange={e => setText(e.target.value)}
+                  onChange={(e) => setText(e.target.value)}
                   placeholder="Beskriv observationen, hændelsen eller samtalen…"
                   rows={5}
                   // eslint-disable-next-line jsx-a11y/no-autofocus

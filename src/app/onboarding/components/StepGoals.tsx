@@ -53,9 +53,24 @@ const presetGoals: { id: string; label: string; emoji: string; category: GoalCat
   { id: 'goal-ro', label: 'Finde ro i løbet af dagen', emoji: '🧘', category: 'sind' },
   { id: 'goal-opgaver', label: 'Overblik over dagens opgaver', emoji: '✅', category: 'sind' },
   { id: 'goal-humør', label: 'Mærke efter hvordan jeg har det', emoji: '😊', category: 'sind' },
-  { id: 'goal-kreativ', label: 'Gøre noget kreativt eller hyggeligt', emoji: '🎨', category: 'sind' },
-  { id: 'goal-social', label: 'Holde kontakt med nogen jeg kender', emoji: '💬', category: 'sociale' },
-  { id: 'goal-hjælp', label: 'Turde spørge om hjælp eller selskab', emoji: '🫂', category: 'sociale' },
+  {
+    id: 'goal-kreativ',
+    label: 'Gøre noget kreativt eller hyggeligt',
+    emoji: '🎨',
+    category: 'sind',
+  },
+  {
+    id: 'goal-social',
+    label: 'Holde kontakt med nogen jeg kender',
+    emoji: '💬',
+    category: 'sociale',
+  },
+  {
+    id: 'goal-hjælp',
+    label: 'Turde spørge om hjælp eller selskab',
+    emoji: '🫂',
+    category: 'sociale',
+  },
 ];
 
 const MAX_GOALS = 5;
@@ -103,9 +118,10 @@ export default function StepGoals({ data, setData, onNext }: StepProps) {
           Hvad er dine mål? 🎯
         </h2>
         <p className="text-midnight-400 text-sm leading-relaxed">
-          Tryk på <strong className="text-midnight-200">Krop</strong>, <strong className="text-midnight-200">Sind</strong> eller{' '}
-          <strong className="text-midnight-200">Sociale</strong> — vælg forslag herunder. Du kan blande på tværs af fanerne og vælge op til{' '}
-          {MAX_GOALS} mål i alt.
+          Tryk på <strong className="text-midnight-200">Krop</strong>,{' '}
+          <strong className="text-midnight-200">Sind</strong> eller{' '}
+          <strong className="text-midnight-200">Sociale</strong> — vælg forslag herunder. Du kan
+          blande på tværs af fanerne og vælge op til {MAX_GOALS} mål i alt.
         </p>
       </div>
 
@@ -169,11 +185,12 @@ export default function StepGoals({ data, setData, onNext }: StepProps) {
               className={`
                 w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border-2 text-left
                 transition-all duration-200 cursor-pointer min-h-[52px]
-                ${isSelected
-                  ? 'border-aurora-teal bg-aurora-teal/10 shadow-sm ring-1 ring-aurora-teal/30'
-                  : isDisabled
-                  ? 'border-midnight-700 bg-midnight-800/50 opacity-40 cursor-not-allowed'
-                  : 'border-midnight-600 bg-midnight-800 hover:border-midnight-500 hover:shadow-sm active:scale-[0.99]'
+                ${
+                  isSelected
+                    ? 'border-aurora-teal bg-aurora-teal/10 shadow-sm ring-1 ring-aurora-teal/30'
+                    : isDisabled
+                      ? 'border-midnight-700 bg-midnight-800/50 opacity-40 cursor-not-allowed'
+                      : 'border-midnight-600 bg-midnight-800 hover:border-midnight-500 hover:shadow-sm active:scale-[0.99]'
                 }
               `}
               aria-pressed={isSelected}
@@ -205,7 +222,9 @@ export default function StepGoals({ data, setData, onNext }: StepProps) {
       </div>
 
       <div className="bg-midnight-800 rounded-2xl border-2 border-dashed border-sunrise-400/30 p-3.5 mb-4">
-        <p className="text-xs font-semibold text-midnight-400 mb-2 font-display">Tilføj dit eget mål</p>
+        <p className="text-xs font-semibold text-midnight-400 mb-2 font-display">
+          Tilføj dit eget mål
+        </p>
         <div className="flex gap-2">
           <input
             type="text"
@@ -230,7 +249,11 @@ export default function StepGoals({ data, setData, onNext }: StepProps) {
       {error && <p className="text-rose-400 text-sm font-medium text-center mb-4">{error}</p>}
 
       <StickyPrimaryFooter>
-        <button type="button" onClick={handleNext} className="btn-primary w-full text-base py-3.5 min-h-[48px]">
+        <button
+          type="button"
+          onClick={handleNext}
+          className="btn-primary w-full text-base py-3.5 min-h-[48px]"
+        >
           Fortsæt →
         </button>
       </StickyPrimaryFooter>

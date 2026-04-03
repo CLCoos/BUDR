@@ -42,14 +42,16 @@ export default function TilsynsrapportModal({ open, onClose }: Props) {
 
   useEffect(() => {
     mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
   useEffect(() => {
     if (!open) return;
     setReport('');
     void fetchAndGenerate();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const fetchAndGenerate = async () => {
@@ -68,7 +70,7 @@ export default function TilsynsrapportModal({ open, onClose }: Props) {
       const residents: ResidentData[] = [];
 
       if (careResidents?.length) {
-        const residentIds = careResidents.map(r => r.user_id);
+        const residentIds = careResidents.map((r) => r.user_id);
         const { data: checkins } = await supabase
           .from('park_daily_checkin')
           .select('resident_id, mood_score, traffic_light, note, created_at')
@@ -77,11 +79,15 @@ export default function TilsynsrapportModal({ open, onClose }: Props) {
           .order('created_at', { ascending: false });
 
         const MOOD_LABELS: Record<number, string> = {
-          1: 'Svært', 2: 'Dårligt', 3: 'OK', 4: 'Godt', 5: 'Fantastisk',
+          1: 'Svært',
+          2: 'Dårligt',
+          3: 'OK',
+          4: 'Godt',
+          5: 'Fantastisk',
         };
 
         for (const r of careResidents) {
-          const checkin = checkins?.find(c => c.resident_id === r.user_id);
+          const checkin = checkins?.find((c) => c.resident_id === r.user_id);
           residents.push({
             name: r.display_name,
             trafficLight: checkin?.traffic_light ?? null,
@@ -96,7 +102,9 @@ export default function TilsynsrapportModal({ open, onClose }: Props) {
       try {
         const raw = localStorage.getItem(INDSATS_STORAGE_KEY);
         indsatsRecords = raw ? (JSON.parse(raw) as IndsatsRecord[]) : [];
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
 
       if (mountedRef.current) {
         setLoading(false);
@@ -111,7 +119,11 @@ export default function TilsynsrapportModal({ open, onClose }: Props) {
     setGenerating(true);
     try {
       const now = new Date();
-      const dateStr = now.toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' });
+      const dateStr = now.toLocaleDateString('da-DK', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
 
       const trafficCounts = { grøn: 0, gul: 0, rød: 0, ingen: 0 };
       for (const r of residents) {
@@ -121,15 +133,21 @@ export default function TilsynsrapportModal({ open, onClose }: Props) {
         else trafficCounts.ingen++;
       }
 
-      const residentLines = residents.map(r =>
-        `${r.name}: trafiklys=${r.trafficLight ?? 'ingen'}, stemning=${r.moodLabel ?? 'ikke registreret'}${r.note ? `, note: "${r.note.slice(0, 80)}"` : ''}`
-      ).join('\n');
+      const residentLines = residents
+        .map(
+          (r) =>
+            `${r.name}: trafiklys=${r.trafficLight ?? 'ingen'}, stemning=${r.moodLabel ?? 'ikke registreret'}${r.note ? `, note: "${r.note.slice(0, 80)}"` : ''}`
+        )
+        .join('\n');
 
-      const magtanvendelseLines = indsatsRecords
-        .filter(r => r.paragraph === '§136' || r.paragraph === '§141')
-        .map(r =>
-          `${new Date(r.tidspunkt).toLocaleString('da-DK')} — ${r.type} (${r.paragraph}): ${r.beskrivelse.slice(0, 120)}`
-        ).join('\n') || 'Ingen registrerede magtanvendelser';
+      const magtanvendelseLines =
+        indsatsRecords
+          .filter((r) => r.paragraph === '§136' || r.paragraph === '§141')
+          .map(
+            (r) =>
+              `${new Date(r.tidspunkt).toLocaleString('da-DK')} — ${r.type} (${r.paragraph}): ${r.beskrivelse.slice(0, 120)}`
+          )
+          .join('\n') || 'Ingen registrerede magtanvendelser';
 
       const res = await fetch('/api/ai/chat-completion', {
         method: 'POST',
@@ -177,8 +195,11 @@ Udarbejd tilsynsrapporten.`,
       if (text && mountedRef.current) {
         setReport(text);
       }
-    } catch { /* ignore */ }
-    finally { if (mountedRef.current) setGenerating(false); }
+    } catch {
+      /* ignore */
+    } finally {
+      if (mountedRef.current) setGenerating(false);
+    }
   };
 
   const handleCopy = () => {
@@ -189,7 +210,11 @@ Udarbejd tilsynsrapporten.`,
   };
 
   const handlePrint = () => {
-    const now = new Date().toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' });
+    const now = new Date().toLocaleDateString('da-DK', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
     const html = `<!DOCTYPE html><html lang="da"><head><meta charset="UTF-8"><title>Tilsynsrapport ${now}</title>
 <style>
   body { font-family: system-ui, sans-serif; max-width: 750px; margin: 40px auto; color: #111; line-height: 1.7; font-size: 14px; }
@@ -204,7 +229,11 @@ Udarbejd tilsynsrapporten.`,
 <pre>${report.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
 </body></html>`;
     const w = window.open('', '_blank');
-    if (w) { w.document.write(html); w.document.close(); w.print(); }
+    if (w) {
+      w.document.write(html);
+      w.document.close();
+      w.print();
+    }
   };
 
   if (!open) return null;
@@ -213,7 +242,6 @@ Udarbejd tilsynsrapporten.`,
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full sm:max-w-2xl max-h-[92dvh] flex flex-col bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
-
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 shrink-0">
           <div className="flex items-center gap-3">
@@ -225,7 +253,11 @@ Udarbejd tilsynsrapporten.`,
               <p className="text-xs text-gray-500">Socialtilsyns-format · AI-genereret</p>
             </div>
           </div>
-          <button type="button" onClick={onClose} className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-100"
+          >
             <X className="h-4 w-4 text-gray-500" />
           </button>
         </div>
@@ -235,8 +267,12 @@ Udarbejd tilsynsrapporten.`,
           {(loading || generating) && !report && (
             <div className="flex flex-col items-center py-16 gap-3 text-gray-400">
               <div className="flex gap-1.5">
-                {[0, 150, 300].map(d => (
-                  <span key={d} className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: `${d}ms` }} />
+                {[0, 150, 300].map((d) => (
+                  <span
+                    key={d}
+                    className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"
+                    style={{ animationDelay: `${d}ms` }}
+                  />
                 ))}
               </div>
               <p className="text-sm">Henter data og genererer tilsynsrapport…</p>
@@ -246,7 +282,7 @@ Udarbejd tilsynsrapporten.`,
           {report && (
             <textarea
               value={report}
-              onChange={e => setReport(e.target.value)}
+              onChange={(e) => setReport(e.target.value)}
               rows={20}
               className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3.5 text-sm leading-relaxed resize-none outline-none focus:border-indigo-300 focus:bg-white transition-colors"
             />

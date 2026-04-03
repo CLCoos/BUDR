@@ -97,10 +97,7 @@ function TimelineItem({
       {/* Dot */}
       <div className="flex flex-col items-center relative z-10 flex-shrink-0 mt-2.5">
         {isCurrent ? (
-          <div
-            className="w-4 h-4 rounded-full lys-pulse-dot"
-            style={{ backgroundColor: accent }}
-          />
+          <div className="w-4 h-4 rounded-full lys-pulse-dot" style={{ backgroundColor: accent }} />
         ) : (
           <div
             className="w-3 h-3 rounded-full"
@@ -151,7 +148,7 @@ function TimelineItem({
 function ProposedTimeline({
   items,
   tokens,
-  accent,
+  accent: _accent,
 }: {
   items: PlanItem[];
   tokens: LysThemeTokens;
@@ -234,17 +231,19 @@ export default function DailyPlanView({ residentId, plan, pendingProposal }: Pro
           setActivePlan(row);
           // Clear pending banner once the approved plan arrives
           setHasPending(false);
-        },
+        }
       )
       .subscribe();
 
-    return () => { void supabase.removeChannel(channel); };
+    return () => {
+      void supabase.removeChannel(channel);
+    };
   }, [residentId]);
 
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
-  const items: PlanItem[] = (activePlan?.plan_items ?? []).slice().sort((a, b) =>
-    timeToMinutes(a.time) - timeToMinutes(b.time),
-  );
+  const items: PlanItem[] = (activePlan?.plan_items ?? [])
+    .slice()
+    .sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
 
   const handleSubmitProposal = useCallback(async () => {
     if (!userMessage.trim() || isSubmitting) return;
@@ -343,9 +342,7 @@ export default function DailyPlanView({ residentId, plan, pendingProposal }: Pro
             }}
           >
             <span className="text-base">⏳</span>
-            <p style={{ color: accent }}>
-              Du har et forslag til behandling hos personalet
-            </p>
+            <p style={{ color: accent }}>Du har et forslag til behandling hos personalet</p>
           </div>
         )}
 
@@ -415,7 +412,7 @@ export default function DailyPlanView({ residentId, plan, pendingProposal }: Pro
         <div
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6"
           style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
-          onClick={e => {
+          onClick={(e) => {
             if (e.target === e.currentTarget) closeModal();
           }}
         >
@@ -435,7 +432,7 @@ export default function DailyPlanView({ residentId, plan, pendingProposal }: Pro
                 </p>
                 <textarea
                   value={userMessage}
-                  onChange={e => setUserMessage(e.target.value)}
+                  onChange={(e) => setUserMessage(e.target.value)}
                   placeholder={'F.eks. \u201cJeg vil gerne spise morgenmad lidt senere\u201d...'}
                   rows={4}
                   className="w-full rounded-2xl p-4 text-sm resize-none outline-none"

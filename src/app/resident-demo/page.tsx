@@ -30,8 +30,16 @@ function seedLocalStorage() {
   // ── 14 days of check-ins ────────────────────────────────────
   const energyPattern = [8, 7, 9, 6, 5, 4, 6, 7, 8, 8, 7, 6, 7, 8];
   const labelMap: Record<number, string> = {
-    1: 'Svært', 2: 'Svært', 3: 'Dårligt', 4: 'Dårligt',
-    5: 'OK', 6: 'OK', 7: 'Godt', 8: 'Godt', 9: 'Fantastisk', 10: 'Fantastisk',
+    1: 'Svært',
+    2: 'Svært',
+    3: 'Dårligt',
+    4: 'Dårligt',
+    5: 'OK',
+    6: 'OK',
+    7: 'Godt',
+    8: 'Godt',
+    9: 'Fantastisk',
+    10: 'Fantastisk',
   };
   const checkins = energyPattern.map((e, i) => ({
     id: `demo-ci-${i}`,
@@ -103,25 +111,25 @@ function seedLocalStorage() {
 
   // ── XP log ───────────────────────────────────────────────────
   const xpLog = [
-    { id: 'xl-1', activity: 'check_in',    xp: 25,  ts: daysAgo(0) },
-    { id: 'xl-2', activity: 'journal',     xp: 30,  ts: daysAgo(0) },
-    { id: 'xl-3', activity: 'check_in',    xp: 25,  ts: daysAgo(1) },
-    { id: 'xl-4', activity: 'goal_water',  xp: 20,  ts: daysAgo(1) },
-    { id: 'xl-5', activity: 'check_in',    xp: 25,  ts: daysAgo(2) },
+    { id: 'xl-1', activity: 'check_in', xp: 25, ts: daysAgo(0) },
+    { id: 'xl-2', activity: 'journal', xp: 30, ts: daysAgo(0) },
+    { id: 'xl-3', activity: 'check_in', xp: 25, ts: daysAgo(1) },
+    { id: 'xl-4', activity: 'goal_water', xp: 20, ts: daysAgo(1) },
+    { id: 'xl-5', activity: 'check_in', xp: 25, ts: daysAgo(2) },
     { id: 'xl-6', activity: 'counter_thought', xp: 40, ts: daysAgo(2) },
-    { id: 'xl-7', activity: 'journal',     xp: 30,  ts: daysAgo(2) },
-    { id: 'xl-8', activity: 'check_in',    xp: 25,  ts: daysAgo(3) },
+    { id: 'xl-7', activity: 'journal', xp: 30, ts: daysAgo(2) },
+    { id: 'xl-8', activity: 'check_in', xp: 25, ts: daysAgo(3) },
   ];
   localStorage.setItem('budr_xp_log', JSON.stringify(xpLog));
 
   // ── Badges ───────────────────────────────────────────────────
   const badges = [
-    { badge_key: 'first_checkin',    earned_at: daysAgo(13) },
-    { badge_key: 'week_streak',      earned_at: daysAgo(7) },
-    { badge_key: 'journal_debut',    earned_at: daysAgo(10) },
-    { badge_key: 'garden_first',     earned_at: daysAgo(8) },
-    { badge_key: 'krap_master',      earned_at: daysAgo(4) },
-    { badge_key: 'calm_week',        earned_at: daysAgo(1) },
+    { badge_key: 'first_checkin', earned_at: daysAgo(13) },
+    { badge_key: 'week_streak', earned_at: daysAgo(7) },
+    { badge_key: 'journal_debut', earned_at: daysAgo(10) },
+    { badge_key: 'garden_first', earned_at: daysAgo(8) },
+    { badge_key: 'krap_master', earned_at: daysAgo(4) },
+    { badge_key: 'calm_week', earned_at: daysAgo(1) },
   ];
   localStorage.setItem('budr_badges', JSON.stringify(badges));
 
@@ -189,12 +197,24 @@ function seedLocalStorage() {
       resident_id: RESIDENT_ID,
       title: 'Morgensnak om mål',
       messages: [
-        { role: 'user',      content: 'Hej Lys, jeg har sovet godt i nat!' },
-        { role: 'assistant', content: 'Det er virkelig dejligt at høre, Anders! God søvn gør en stor forskel for, hvordan vi har det i løbet af dagen. Har du nogen planer for i dag?' },
-        { role: 'user',      content: 'Ja, jeg tænkte på at male lidt og måske gå en tur.' },
-        { role: 'assistant', content: 'Det lyder som en rigtig god dag! At kombinere noget kreativt med frisk luft er kraftfuldt for humøret. Hvad vil du male?' },
-        { role: 'user',      content: 'Noget med haven måske. Jeg kan godt lide blomster.' },
-        { role: 'assistant', content: 'Blomster er smukt valg. De symboliserer vækst og fornyelse — præcis som din solsikke i haven herinde. Husk at vande dine planter i dag! 🌻' },
+        { role: 'user', content: 'Hej Lys, jeg har sovet godt i nat!' },
+        {
+          role: 'assistant',
+          content:
+            'Det er virkelig dejligt at høre, Anders! God søvn gør en stor forskel for, hvordan vi har det i løbet af dagen. Har du nogen planer for i dag?',
+        },
+        { role: 'user', content: 'Ja, jeg tænkte på at male lidt og måske gå en tur.' },
+        {
+          role: 'assistant',
+          content:
+            'Det lyder som en rigtig god dag! At kombinere noget kreativt med frisk luft er kraftfuldt for humøret. Hvad vil du male?',
+        },
+        { role: 'user', content: 'Noget med haven måske. Jeg kan godt lide blomster.' },
+        {
+          role: 'assistant',
+          content:
+            'Blomster er smukt valg. De symboliserer vækst og fornyelse — præcis som din solsikke i haven herinde. Husk at vande dine planter i dag! 🌻',
+        },
       ],
       created_at: daysAgo(0, 8),
       updated_at: daysAgo(0, 8, 15),
@@ -204,14 +224,33 @@ function seedLocalStorage() {
       resident_id: RESIDENT_ID,
       title: 'Tankefanger: Telefonopkald',
       messages: [
-        { role: 'user',      content: 'Jeg er ked af det. Min søster ringede og sagde noget der sårede mig.' },
-        { role: 'assistant', content: 'Det lyder hårdt, Anders. Det er okay at være ked af det. Vil du fortælle mig lidt mere om, hvad hun sagde?' },
-        { role: 'user',      content: 'Hun sagde at jeg aldrig ringer. Men det er svært for mig.' },
-        { role: 'assistant', content: 'Jeg forstår. Det kan føles uretfærdigt at blive kritiseret for noget, du allerede kæmper med. Hvad tænker du om hendes ord?' },
-        { role: 'user',      content: 'At hun har ret, men at jeg gerne ville. Det er bare svært.' },
-        { role: 'assistant', content: 'Det er en vigtig erkendelse — at skelne imellem "kan ikke" og "vil gerne, men det er svært". Det er faktisk et tegn på fremgang, at du ønsker det. Hvad ville gøre det lidt lettere at ringe til hende?' },
-        { role: 'user',      content: 'Måske at have et tidspunkt, jeg beslutter på forhånd.' },
-        { role: 'assistant', content: 'Perfekt idé! En fast aftale fjerner en masse af den mentale energi, det koster at beslutte sig. Din tomat-plante handler om netop det mål. Vil du vande den i dag som en lille markering?' },
+        {
+          role: 'user',
+          content: 'Jeg er ked af det. Min søster ringede og sagde noget der sårede mig.',
+        },
+        {
+          role: 'assistant',
+          content:
+            'Det lyder hårdt, Anders. Det er okay at være ked af det. Vil du fortælle mig lidt mere om, hvad hun sagde?',
+        },
+        { role: 'user', content: 'Hun sagde at jeg aldrig ringer. Men det er svært for mig.' },
+        {
+          role: 'assistant',
+          content:
+            'Jeg forstår. Det kan føles uretfærdigt at blive kritiseret for noget, du allerede kæmper med. Hvad tænker du om hendes ord?',
+        },
+        { role: 'user', content: 'At hun har ret, men at jeg gerne ville. Det er bare svært.' },
+        {
+          role: 'assistant',
+          content:
+            'Det er en vigtig erkendelse — at skelne imellem "kan ikke" og "vil gerne, men det er svært". Det er faktisk et tegn på fremgang, at du ønsker det. Hvad ville gøre det lidt lettere at ringe til hende?',
+        },
+        { role: 'user', content: 'Måske at have et tidspunkt, jeg beslutter på forhånd.' },
+        {
+          role: 'assistant',
+          content:
+            'Perfekt idé! En fast aftale fjerner en masse af den mentale energi, det koster at beslutte sig. Din tomat-plante handler om netop det mål. Vil du vande den i dag som en lille markering?',
+        },
       ],
       created_at: daysAgo(2, 14),
       updated_at: daysAgo(2, 15),
@@ -220,23 +259,134 @@ function seedLocalStorage() {
   localStorage.setItem('budr_lys_conversations', JSON.stringify(conversations));
 
   // ── Profile ───────────────────────────────────────────────────
-  localStorage.setItem('budr_profile', JSON.stringify({ nickname: 'Anders', theme: 'purple', avatar: null }));
+  localStorage.setItem(
+    'budr_profile',
+    JSON.stringify({ nickname: 'Anders', theme: 'purple', avatar: null })
+  );
 
   // ── Plan items ────────────────────────────────────────────────
   const planItems = [
-    { id: 'demo-pi-1', resident_id: RESIDENT_ID, title: 'Morgenmeditation',    category: 'Velvære',   emoji: '🧘', time_of_day: '08:00', recurrence: 'daily', recurrence_days: null, notify: true,  notify_minutes_before: 10, created_by: 'resident', staff_suggestion: false, approved_by_resident: true, active_from: todayStr(13), created_at: daysAgo(13) },
-    { id: 'demo-pi-2', resident_id: RESIDENT_ID, title: 'Morgenmad',            category: 'Ernæring',  emoji: '🍳', time_of_day: '08:30', recurrence: 'daily', recurrence_days: null, notify: false, notify_minutes_before: 0,  created_by: 'staff',    staff_suggestion: true,  approved_by_resident: true, active_from: todayStr(13), created_at: daysAgo(13) },
-    { id: 'demo-pi-3', resident_id: RESIDENT_ID, title: 'Daglig gåtur',         category: 'Aktivitet', emoji: '🚶', time_of_day: '10:00', recurrence: 'daily', recurrence_days: null, notify: true,  notify_minutes_before: 5,  created_by: 'resident', staff_suggestion: false, approved_by_resident: true, active_from: todayStr(10), created_at: daysAgo(10) },
-    { id: 'demo-pi-4', resident_id: RESIDENT_ID, title: 'Frokost',              category: 'Ernæring',  emoji: '🥗', time_of_day: '12:00', recurrence: 'daily', recurrence_days: null, notify: false, notify_minutes_before: 0,  created_by: 'staff',    staff_suggestion: true,  approved_by_resident: true, active_from: todayStr(13), created_at: daysAgo(13) },
-    { id: 'demo-pi-5', resident_id: RESIDENT_ID, title: 'Kreativ tid (maleri)', category: 'Kreativitet', emoji: '🎨', time_of_day: '14:00', recurrence: 'weekdays', recurrence_days: [1,2,3,4,5], notify: true, notify_minutes_before: 15, created_by: 'resident', staff_suggestion: false, approved_by_resident: true, active_from: todayStr(7), created_at: daysAgo(7) },
-    { id: 'demo-pi-6', resident_id: RESIDENT_ID, title: 'Aftensmad med gruppen', category: 'Social',   emoji: '🍽️', time_of_day: '18:00', recurrence: 'daily', recurrence_days: null, notify: false, notify_minutes_before: 0,  created_by: 'staff',    staff_suggestion: true,  approved_by_resident: true, active_from: todayStr(13), created_at: daysAgo(13) },
+    {
+      id: 'demo-pi-1',
+      resident_id: RESIDENT_ID,
+      title: 'Morgenmeditation',
+      category: 'Velvære',
+      emoji: '🧘',
+      time_of_day: '08:00',
+      recurrence: 'daily',
+      recurrence_days: null,
+      notify: true,
+      notify_minutes_before: 10,
+      created_by: 'resident',
+      staff_suggestion: false,
+      approved_by_resident: true,
+      active_from: todayStr(13),
+      created_at: daysAgo(13),
+    },
+    {
+      id: 'demo-pi-2',
+      resident_id: RESIDENT_ID,
+      title: 'Morgenmad',
+      category: 'Ernæring',
+      emoji: '🍳',
+      time_of_day: '08:30',
+      recurrence: 'daily',
+      recurrence_days: null,
+      notify: false,
+      notify_minutes_before: 0,
+      created_by: 'staff',
+      staff_suggestion: true,
+      approved_by_resident: true,
+      active_from: todayStr(13),
+      created_at: daysAgo(13),
+    },
+    {
+      id: 'demo-pi-3',
+      resident_id: RESIDENT_ID,
+      title: 'Daglig gåtur',
+      category: 'Aktivitet',
+      emoji: '🚶',
+      time_of_day: '10:00',
+      recurrence: 'daily',
+      recurrence_days: null,
+      notify: true,
+      notify_minutes_before: 5,
+      created_by: 'resident',
+      staff_suggestion: false,
+      approved_by_resident: true,
+      active_from: todayStr(10),
+      created_at: daysAgo(10),
+    },
+    {
+      id: 'demo-pi-4',
+      resident_id: RESIDENT_ID,
+      title: 'Frokost',
+      category: 'Ernæring',
+      emoji: '🥗',
+      time_of_day: '12:00',
+      recurrence: 'daily',
+      recurrence_days: null,
+      notify: false,
+      notify_minutes_before: 0,
+      created_by: 'staff',
+      staff_suggestion: true,
+      approved_by_resident: true,
+      active_from: todayStr(13),
+      created_at: daysAgo(13),
+    },
+    {
+      id: 'demo-pi-5',
+      resident_id: RESIDENT_ID,
+      title: 'Kreativ tid (maleri)',
+      category: 'Kreativitet',
+      emoji: '🎨',
+      time_of_day: '14:00',
+      recurrence: 'weekdays',
+      recurrence_days: [1, 2, 3, 4, 5],
+      notify: true,
+      notify_minutes_before: 15,
+      created_by: 'resident',
+      staff_suggestion: false,
+      approved_by_resident: true,
+      active_from: todayStr(7),
+      created_at: daysAgo(7),
+    },
+    {
+      id: 'demo-pi-6',
+      resident_id: RESIDENT_ID,
+      title: 'Aftensmad med gruppen',
+      category: 'Social',
+      emoji: '🍽️',
+      time_of_day: '18:00',
+      recurrence: 'daily',
+      recurrence_days: null,
+      notify: false,
+      notify_minutes_before: 0,
+      created_by: 'staff',
+      staff_suggestion: true,
+      approved_by_resident: true,
+      active_from: todayStr(13),
+      created_at: daysAgo(13),
+    },
   ];
   localStorage.setItem('budr_plan_items', JSON.stringify(planItems));
 
   // ── Plan completions (today) ──────────────────────────────────
   const completions = [
-    { id: 'demo-pc-1', resident_id: RESIDENT_ID, plan_item_id: 'demo-pi-1', completion_date: todayStr(0), completed_at: daysAgo(0, 8, 5) },
-    { id: 'demo-pc-2', resident_id: RESIDENT_ID, plan_item_id: 'demo-pi-2', completion_date: todayStr(0), completed_at: daysAgo(0, 8, 45) },
+    {
+      id: 'demo-pc-1',
+      resident_id: RESIDENT_ID,
+      plan_item_id: 'demo-pi-1',
+      completion_date: todayStr(0),
+      completed_at: daysAgo(0, 8, 5),
+    },
+    {
+      id: 'demo-pc-2',
+      resident_id: RESIDENT_ID,
+      plan_item_id: 'demo-pi-2',
+      completion_date: todayStr(0),
+      completed_at: daysAgo(0, 8, 45),
+    },
   ];
   localStorage.setItem('budr_plan_completions', JSON.stringify(completions));
 
@@ -281,8 +431,12 @@ export default function ResidentDemoPage() {
       <div className="flex h-screen items-center justify-center bg-[#F5F4FF]">
         <div className="text-center">
           <div className="flex justify-center gap-1.5 mb-4">
-            {[0, 150, 300].map(d => (
-              <span key={d} className="w-2.5 h-2.5 bg-[#7F77DD] rounded-full animate-bounce" style={{ animationDelay: `${d}ms` }} />
+            {[0, 150, 300].map((d) => (
+              <span
+                key={d}
+                className="w-2.5 h-2.5 bg-[#7F77DD] rounded-full animate-bounce"
+                style={{ animationDelay: `${d}ms` }}
+              />
             ))}
           </div>
           <p className="text-sm text-gray-500">Gør demo klar…</p>
@@ -317,12 +471,7 @@ export default function ResidentDemoPage() {
 
       {/* Offset for banner */}
       <div className="pt-8">
-        <LysShell
-          firstName="Anders"
-          initials="AM"
-          residentId={RESIDENT_ID}
-          facilityId={null}
-        />
+        <LysShell firstName="Anders" initials="AM" residentId={RESIDENT_ID} facilityId={null} />
       </div>
     </div>
   );

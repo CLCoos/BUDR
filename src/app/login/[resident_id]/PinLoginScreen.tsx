@@ -55,74 +55,80 @@ export default function PinLoginScreen({
     setTimeout(() => setShake(false), 500);
   }, []);
 
-  const handleVerify = useCallback(async (pin: string) => {
-    setLoading(true);
-    setError(null);
+  const handleVerify = useCallback(
+    async (pin: string) => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/resident-pin-verify`,
-        {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/resident-pin-verify`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
+              Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''}`,
+            },
+            body: JSON.stringify({ resident_id: residentId, pin }),
+          }
+        );
+        const json = (await res.json()) as { data?: { session_token: string }; error?: string };
+
+        if (!res.ok || !json.data?.session_token) {
+          const newAttempts = attempts + 1;
+          setAttempts(newAttempts);
+          setDigits([]);
+          triggerShake();
+          if (newAttempts >= MAX_ATTEMPTS) {
+            setLockedUntil(Date.now() + LOCKOUT_SECONDS * 1000);
+            setError(null);
+          } else {
+            setError('Forkert PIN');
+          }
+          return;
+        }
+
+        // Store session via server action
+        await fetch('/api/resident-session', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
-            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''}`,
-          },
-          body: JSON.stringify({ resident_id: residentId, pin }),
-        },
-      );
-      const json = (await res.json()) as { data?: { session_token: string }; error?: string };
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: json.data.session_token }),
+        });
 
-      if (!res.ok || !json.data?.session_token) {
-        const newAttempts = attempts + 1;
-        setAttempts(newAttempts);
+        router.replace(redirectTo);
+      } catch {
+        setError('Netværksfejl – prøv igen');
         setDigits([]);
         triggerShake();
-        if (newAttempts >= MAX_ATTEMPTS) {
-          setLockedUntil(Date.now() + LOCKOUT_SECONDS * 1000);
-          setError(null);
-        } else {
-          setError('Forkert PIN');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [residentId, attempts, redirectTo, router, triggerShake]
+  );
+
+  const pressDigit = useCallback(
+    (d: string) => {
+      if (locked || loading) return;
+      setError(null);
+      setDigits((prev) => {
+        if (prev.length >= PIN_LENGTH) return prev;
+        const next = [...prev, d];
+        if (next.length === PIN_LENGTH) {
+          // Auto-submit when 4 digits entered
+          setTimeout(() => handleVerify(next.join('')), 80);
         }
-        return;
-      }
-
-      // Store session via server action
-      await fetch('/api/resident-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: json.data.session_token }),
+        return next;
       });
-
-      router.replace(redirectTo);
-    } catch {
-      setError('Netværksfejl – prøv igen');
-      setDigits([]);
-      triggerShake();
-    } finally {
-      setLoading(false);
-    }
-  }, [residentId, attempts, redirectTo, router, triggerShake]);
-
-  const pressDigit = useCallback((d: string) => {
-    if (locked || loading) return;
-    setError(null);
-    setDigits(prev => {
-      if (prev.length >= PIN_LENGTH) return prev;
-      const next = [...prev, d];
-      if (next.length === PIN_LENGTH) {
-        // Auto-submit when 4 digits entered
-        setTimeout(() => handleVerify(next.join('')), 80);
-      }
-      return next;
-    });
-  }, [locked, loading, handleVerify]);
+    },
+    [locked, loading, handleVerify]
+  );
 
   const pressDelete = useCallback(() => {
     if (locked || loading) return;
     setError(null);
-    setDigits(prev => prev.slice(0, -1));
+    setDigits((prev) => prev.slice(0, -1));
   }, [locked, loading]);
 
   return (
@@ -140,18 +146,13 @@ export default function PinLoginScreen({
       {/* Dot indicators */}
       <div className={`pin-dots ${shake ? 'pin-dots--shake' : ''}`}>
         {Array.from({ length: PIN_LENGTH }).map((_, i) => (
-          <div
-            key={i}
-            className={`pin-dot ${i < digits.length ? 'pin-dot--filled' : ''}`}
-          />
+          <div key={i} className={`pin-dot ${i < digits.length ? 'pin-dot--filled' : ''}`} />
         ))}
       </div>
 
       {/* Error / lockout message */}
       {locked ? (
-        <p className="pin-lockout">
-          Kontakt personalet &nbsp;·&nbsp; Låst i {lockSecondsLeft}s
-        </p>
+        <p className="pin-lockout">Kontakt personalet &nbsp;·&nbsp; Låst i {lockSecondsLeft}s</p>
       ) : error ? (
         <p className="pin-error">{error}</p>
       ) : (
@@ -160,7 +161,7 @@ export default function PinLoginScreen({
 
       {/* Numpad */}
       <div className={`pin-numpad ${locked || loading ? 'pin-numpad--disabled' : ''}`}>
-        {['1','2','3','4','5','6','7','8','9'].map(d => (
+        {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((d) => (
           <button
             key={d}
             className="pin-key"
@@ -192,12 +193,7 @@ export default function PinLoginScreen({
       </div>
 
       {/* Biometric prompt (only rendered if WebAuthn available) */}
-      {!locked && (
-        <BiometricPrompt
-          residentId={residentId}
-          redirectTo={redirectTo}
-        />
-      )}
+      {!locked && <BiometricPrompt residentId={residentId} redirectTo={redirectTo} />}
     </div>
   );
 }

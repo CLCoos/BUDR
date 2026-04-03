@@ -6,12 +6,12 @@ import type { LysThemeTokens } from '../lib/lysTheme';
 export type Traffic = 'groen' | 'gul' | 'roed';
 
 const MOODS = [
-  { emoji: '☀️', label: 'Fantastisk', sub: 'Fuldt af energi',     traffic: 'groen' as const },
-  { emoji: '🌤',  label: 'Godt',       sub: 'En god dag',          traffic: 'groen' as const },
-  { emoji: '⛅',  label: 'Okay',        sub: 'Hverken eller',      traffic: 'gul'   as const },
-  { emoji: '🌥',  label: 'Lidt tungt', sub: 'Lidt svær start',    traffic: 'gul'   as const },
-  { emoji: '🌧',  label: 'Svært',      sub: 'Har brug for støtte', traffic: 'roed'  as const },
-  { emoji: '⛈',  label: 'Meget svært', sub: 'Rigtig hårdt',      traffic: 'roed'  as const },
+  { emoji: '☀️', label: 'Fantastisk', sub: 'Fuldt af energi', traffic: 'groen' as const },
+  { emoji: '🌤', label: 'Godt', sub: 'En god dag', traffic: 'groen' as const },
+  { emoji: '⛅', label: 'Okay', sub: 'Hverken eller', traffic: 'gul' as const },
+  { emoji: '🌥', label: 'Lidt tungt', sub: 'Lidt svær start', traffic: 'gul' as const },
+  { emoji: '🌧', label: 'Svært', sub: 'Har brug for støtte', traffic: 'roed' as const },
+  { emoji: '⛈', label: 'Meget svært', sub: 'Rigtig hårdt', traffic: 'roed' as const },
 ];
 
 type Props = {
@@ -52,9 +52,7 @@ export default function LysStemningskort({
         ←
       </button>
 
-      <h1 className="text-3xl font-black leading-tight tracking-tight mb-1">
-        Hvordan har du det?
-      </h1>
+      <h1 className="text-3xl font-black leading-tight tracking-tight mb-1">Hvordan har du det?</h1>
       <p className="text-base mb-8" style={{ color: tokens.textMuted }}>
         Hej {firstName} — der er ikke nogen forkerte svar.
       </p>
@@ -79,7 +77,9 @@ export default function LysStemningskort({
               }}
               aria-pressed={active}
             >
-              <span className="text-4xl leading-none" aria-hidden>{m.emoji}</span>
+              <span className="text-4xl leading-none" aria-hidden>
+                {m.emoji}
+              </span>
               <div>
                 <p className="text-sm font-bold leading-tight">{m.label}</p>
                 <p
@@ -105,7 +105,7 @@ export default function LysStemningskort({
         <textarea
           id="lys-mood-note"
           value={note}
-          onChange={e => setNote(e.target.value)}
+          onChange={(e) => setNote(e.target.value)}
           rows={3}
           placeholder="Skriv gerne lidt…"
           className="w-full rounded-2xl px-4 py-3 text-base outline-none resize-none transition-all"

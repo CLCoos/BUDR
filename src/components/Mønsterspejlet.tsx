@@ -22,9 +22,24 @@ interface MønsterspejletProps {
 }
 
 const defaultPatterns: InsightPattern[] = [
-  { icon: '🌅', label: 'Morgenmønster', observation: 'Du starter stærkere på dage med tidlig check-in', trend: 'up' },
-  { icon: '😴', label: 'Søvn & humør', observation: 'Dine bedste dage følger nætter med 7+ timers søvn', trend: 'stable' },
-  { icon: '🚶', label: 'Bevægelse', observation: 'Gåture om eftermiddagen løfter dit energiniveau markant', trend: 'up' },
+  {
+    icon: '🌅',
+    label: 'Morgenmønster',
+    observation: 'Du starter stærkere på dage med tidlig check-in',
+    trend: 'up',
+  },
+  {
+    icon: '😴',
+    label: 'Søvn & humør',
+    observation: 'Dine bedste dage følger nætter med 7+ timers søvn',
+    trend: 'stable',
+  },
+  {
+    icon: '🚶',
+    label: 'Bevægelse',
+    observation: 'Gåture om eftermiddagen løfter dit energiniveau markant',
+    trend: 'up',
+  },
 ];
 
 const trendColors = { up: 'text-aurora-teal', down: 'text-rose-400', stable: 'text-aurora-blue' };
@@ -37,7 +52,9 @@ function parseAIPatterns(text: string): { summary: string; patterns: InsightPatt
       const parsed = JSON.parse(jsonMatch[1]);
       if (parsed.summary && Array.isArray(parsed.patterns)) return parsed;
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return { summary: text.split('\n')[0] || text, patterns: defaultPatterns };
 }
 
@@ -79,7 +96,9 @@ Vær specifik, varm og undgå klichéer.`,
       const text = data?.choices?.[0]?.message?.content;
       if (text) return parseAIPatterns(text);
     }
-  } catch { /* silently fail */ }
+  } catch {
+    /* silently fail */
+  }
   return null;
 }
 
@@ -94,13 +113,23 @@ export default function Mønsterspejlet({
   topMood,
 }: MønsterspejletProps) {
   const [patterns, setPatterns] = useState<InsightPattern[]>(propPatterns || defaultPatterns);
-  const [summary, setSummary] = useState(propSummary || 'Denne uge har du vist stor vedholdenhed. Dine mønstre viser, at struktur om morgenen er din nøgle.');
+  const [summary, setSummary] = useState(
+    propSummary ||
+      'Denne uge har du vist stor vedholdenhed. Dine mønstre viser, at struktur om morgenen er din nøgle.'
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [aiLoaded, setAiLoaded] = useState(false);
 
   const loadInsights = async () => {
     setIsLoading(true);
-    const result = await fetchAIInsights({ weekMoods, avgSleep, avgMovement, completedChallenges, journalEntries, topMood });
+    const result = await fetchAIInsights({
+      weekMoods,
+      avgSleep,
+      avgMovement,
+      completedChallenges,
+      journalEntries,
+      topMood,
+    });
     if (result) {
       setSummary(result.summary);
       if (result.patterns.length > 0) setPatterns(result.patterns);
@@ -111,13 +140,19 @@ export default function Mønsterspejlet({
 
   useEffect(() => {
     loadInsights();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <div className="insight-card animate-fade-in">
       <div className="flex items-center gap-3 mb-5">
-        <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-lg" style={{ background: 'linear-gradient(135deg, rgba(167,139,250,0.3) 0%, rgba(251,146,60,0.2) 100%)' }}>
+        <div
+          className="w-10 h-10 rounded-2xl flex items-center justify-center text-lg"
+          style={{
+            background:
+              'linear-gradient(135deg, rgba(167,139,250,0.3) 0%, rgba(251,146,60,0.2) 100%)',
+          }}
+        >
           🔮
         </div>
         <div>
@@ -125,33 +160,58 @@ export default function Mønsterspejlet({
           <p className="text-xs text-midnight-400">Ugentlige indsigter</p>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <button onClick={loadInsights} disabled={isLoading} className="text-xs text-midnight-500 hover:text-midnight-300 transition-colors disabled:opacity-40" title="Opdater indsigter">
+          <button
+            onClick={loadInsights}
+            disabled={isLoading}
+            className="text-xs text-midnight-500 hover:text-midnight-300 transition-colors disabled:opacity-40"
+            title="Opdater indsigter"
+          >
             {isLoading ? '⟳' : '↺'}
           </button>
-          <span className="text-xs bg-aurora-violet/15 text-purple-300 border border-aurora-violet/20 rounded-full px-2.5 py-1 font-medium">AI</span>
+          <span className="text-xs bg-aurora-violet/15 text-purple-300 border border-aurora-violet/20 rounded-full px-2.5 py-1 font-medium">
+            AI
+          </span>
         </div>
       </div>
 
       <div className="bg-midnight-900/50 rounded-2xl p-4 mb-4 border border-midnight-700/50 min-h-[56px]">
         {isLoading ? (
           <div className="flex items-center gap-2">
-            <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-            <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-            <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            <span
+              className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
+              style={{ animationDelay: '0ms' }}
+            />
+            <span
+              className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
+              style={{ animationDelay: '150ms' }}
+            />
+            <span
+              className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
+              style={{ animationDelay: '300ms' }}
+            />
           </div>
         ) : (
-          <p className="text-sm text-midnight-200 leading-relaxed italic">&ldquo;{summary}&rdquo;</p>
+          <p className="text-sm text-midnight-200 leading-relaxed italic">
+            &ldquo;{summary}&rdquo;
+          </p>
         )}
       </div>
 
       <div className="space-y-3">
         {patterns.map((pattern, i) => (
-          <div key={`pattern-${i}`} className={`flex items-start gap-3 bg-midnight-900/30 rounded-2xl p-3 border border-midnight-700/30 transition-opacity duration-300 ${isLoading ? 'opacity-40' : 'opacity-100'}`}>
+          <div
+            key={`pattern-${i}`}
+            className={`flex items-start gap-3 bg-midnight-900/30 rounded-2xl p-3 border border-midnight-700/30 transition-opacity duration-300 ${isLoading ? 'opacity-40' : 'opacity-100'}`}
+          >
             <span className="text-xl mt-0.5">{pattern.icon}</span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
                 <span className="text-xs font-semibold text-midnight-300">{pattern.label}</span>
-                <span className={`text-xs font-bold ${trendColors[pattern.trend] || 'text-aurora-blue'}`}>{trendIcons[pattern.trend] || '→'}</span>
+                <span
+                  className={`text-xs font-bold ${trendColors[pattern.trend] || 'text-aurora-blue'}`}
+                >
+                  {trendIcons[pattern.trend] || '→'}
+                </span>
               </div>
               <p className="text-xs text-midnight-400 leading-relaxed">{pattern.observation}</p>
             </div>
@@ -160,7 +220,9 @@ export default function Mønsterspejlet({
       </div>
 
       <p className="text-xs text-midnight-500 text-center mt-4">
-        {aiLoaded ? 'Personlige indsigter baseret på din uge · Claude AI' : 'Baseret på dine seneste 7 dages data'}
+        {aiLoaded
+          ? 'Personlige indsigter baseret på din uge · Claude AI'
+          : 'Baseret på dine seneste 7 dages data'}
       </p>
     </div>
   );

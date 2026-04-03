@@ -27,18 +27,19 @@ export default function StepCelebration({ data, onComplete }: StepProps) {
   const [showContent, setShowContent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [companionReaction, setCompanionReaction] = useState<CompanionReaction>('idle');
-  const [reactionPhase, setReactionPhase] = useState(0);
-
   useEffect(() => {
     const t1 = setTimeout(() => setShowContent(true), 300);
     // Phase 1: celebrate on mount
     const t2 = setTimeout(() => setCompanionReaction('celebrate'), 600);
     // Phase 2: after celebrate ends, do a second pulse
     const t3 = setTimeout(() => {
-      setReactionPhase(1);
       setCompanionReaction('taskComplete');
     }, 4000);
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
   }, []);
 
   // Save companion to localStorage so other screens can use it
@@ -76,7 +77,10 @@ export default function StepCelebration({ data, onComplete }: StepProps) {
   };
 
   return (
-    <div className="max-w-lg mx-auto px-4 pb-32 flex flex-col items-center text-center relative overflow-hidden" style={{ minHeight: '100dvh', justifyContent: 'center' }}>
+    <div
+      className="max-w-lg mx-auto px-4 pb-32 flex flex-col items-center text-center relative overflow-hidden"
+      style={{ minHeight: '100dvh', justifyContent: 'center' }}
+    >
       {/* Confetti */}
       {confettiItems.map((item) => (
         <div
@@ -95,8 +99,14 @@ export default function StepCelebration({ data, onComplete }: StepProps) {
         }`}
       >
         {/* Pulsing ring behind companion */}
-        <div className="absolute inset-0 rounded-full animate-ping opacity-10 bg-yellow-400/40" style={{ animationDuration: '2.5s' }} />
-        <div className="absolute -inset-3 rounded-full animate-ping opacity-5 bg-amber-400/30" style={{ animationDuration: '3s', animationDelay: '0.5s' }} />
+        <div
+          className="absolute inset-0 rounded-full animate-ping opacity-10 bg-yellow-400/40"
+          style={{ animationDuration: '2.5s' }}
+        />
+        <div
+          className="absolute -inset-3 rounded-full animate-ping opacity-5 bg-amber-400/30"
+          style={{ animationDuration: '3s', animationDelay: '0.5s' }}
+        />
 
         <div className="w-36 h-36 sm:w-44 sm:h-44 bg-gradient-to-br from-amber-500/20 via-yellow-400/15 to-amber-400/20 rounded-full flex items-center justify-center shadow-lg border border-amber-400/20 relative z-10">
           <CompanionAvatar
@@ -110,8 +120,18 @@ export default function StepCelebration({ data, onComplete }: StepProps) {
           />
         </div>
         <div className="absolute -top-3 -right-3 text-3xl animate-bounce z-20">🎉</div>
-        <div className="absolute -bottom-2 -left-3 text-2xl animate-bounce z-20" style={{ animationDelay: '0.3s' }}>✨</div>
-        <div className="absolute top-2 -left-5 text-xl animate-bounce z-20" style={{ animationDelay: '0.6s' }}>🌟</div>
+        <div
+          className="absolute -bottom-2 -left-3 text-2xl animate-bounce z-20"
+          style={{ animationDelay: '0.3s' }}
+        >
+          ✨
+        </div>
+        <div
+          className="absolute top-2 -left-5 text-xl animate-bounce z-20"
+          style={{ animationDelay: '0.6s' }}
+        >
+          🌟
+        </div>
       </div>
 
       {/* Text */}
@@ -186,8 +206,19 @@ export default function StepCelebration({ data, onComplete }: StepProps) {
           {isLoading ? (
             <span className="flex items-center justify-center gap-2">
               <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                />
               </svg>
               Opretter din profil...
             </span>

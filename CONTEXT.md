@@ -2,196 +2,81 @@
 
 ## Overview
 
-**BUDR** is a Danish gamified health and wellbeing app for residents in social psychiatric care facilities ("socialpsykiatriske bosteder"). It has two distinct interfaces:
+**BUDR** is a Danish wellbeing platform for residents in social psychiatric care facilities and the staff who support them. It includes:
 
-1. **Borger-app (Resident App)** – Mobile-first interface for residents to track wellbeing using the PARK method
-2. **Care Portal** – Staff dashboard for monitoring residents and managing shift handovers
+1. **Borger-app (resident webapp)** — PARK-oriented flows under `/park-hub` (mood, journal, goals, crisis tools).
+2. **Care Portal** — Staff dashboard (overview, resident 360°, handover, documentation helpers).
 
-The app is a Next.js 15 full-stack project with Supabase as backend, currently in prototype state with some mock data and placeholder AI integrations.
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 15.1.11 (App Router) |
-| Language | TypeScript 5 (strict mode) |
-| React | React 19.0.3 |
-| Styling | Tailwind CSS 3.4 + custom BUDR theme |
-| Backend | Supabase (PostgreSQL + Edge Functions) |
-| Auth | PIN (4-digit) + WebAuthn/biometric |
-| Icons | Lucide React + Heroicons |
-| Charts | Recharts |
-| Toasts | Sonner |
-| Edge Functions | Deno (TypeScript) |
-| Deployment | Netlify |
-
----
-
-## Directory Structure
-
-```
-budr-luksus/
-├── src/
-│   ├── app/
-│   │   ├── login/[resident_id]/          # Resident PIN login
-│   │   ├── park-hub/                     # Resident app (PARK features)
-│   │   │   └── components/
-│   │   │       ├── ParkHubClient.tsx     # Tab container
-│   │   │       ├── DailyCheckin.tsx      # Mood + traffic light
-│   │   │       ├── ThoughtCatcher.tsx    # CBT 5-step exercise
-│   │   │       ├── GoalLadder.tsx        # Sequential goal steps
-│   │   │       └── ResourceFlower.tsx    # 8-petal SVG assessment
-│   │   ├── care-portal-dashboard/        # Staff overview
-│   │   ├── resident-360-view/            # Individual resident profile
-│   │   ├── handover-workspace/           # Shift handover editor
-│   │   └── api/resident-session/         # Cookie session API route
-│   ├── components/
-│   │   ├── TopNav.tsx
-│   │   ├── PortalSidebar.tsx
-│   │   ├── ui/                           # AppLogo, AppIcon, AppImage
-│   │   └── auth/                         # BiometricPrompt, PinSetupFlow
-│   ├── lib/
-│   │   └── residentAuth.ts               # Server actions for session
-│   └── styles/
-│       ├── tailwind.css                  # CSS variables + Tailwind base
-│       └── index.css
-├── supabase/
-│   ├── migrations/
-│   └── functions/
-│       ├── resident-pin-verify/
-│       ├── resident-pin-set/
-│       ├── resident-session-validate/
-│       ├── resident-webauthn-register/
-│       └── resident-webauthn-verify/
-├── middleware.ts                          # Auth guard for /park-hub
-├── next.config.mjs                        # Redirects / → /care-portal-dashboard
-├── tailwind.config.js
-└── .env
-```
-
----
-
-## Features
-
-### Resident App (`/park-hub`)
-
-Four tabbed features under the PARK methodology:
-
-1. **Daglig Check-in** – Mood slider (1–10), traffic light (grøn/gul/rød), optional note
-2. **Tankefanger** – 5-step CBT exercise: situation → thought → emotion + intensity → AI counter-thought → new intensity
-3. **Mål (Goal Ladder)** – Sequential goal steps; must complete each step in order
-4. **Ressourceblomst** – Interactive SVG flower with 8 life-domain petals scored 1–5
-
-### Care Portal
-
-- **Dashboard** (`/care-portal-dashboard`) – KPI cards, active alerts, searchable/filterable resident list with traffic light status
-- **Beboer 360** (`/resident-360-view`) – Tabbed profile: overview, PARK data, goals, medications, shift notes
-- **Vagtoverleveringsrum** (`/handover-workspace`) – Per-resident note editor with flag colors (grøn/gul/rød/sort), shift selector (dag/aften/nat), progress tracker, export to `.txt`
+Stack: **Next.js 15** (App Router), **Supabase** (Postgres, Auth, Edge Functions), **Netlify** (typical deployment).
 
 ---
 
 ## Authentication
 
 ### Residents
-- 4-digit numeric PIN, validated via Supabase edge function using `pgcrypto`
-- Optional WebAuthn/biometric (stored credential in localStorage)
-- Session: HttpOnly cookie `budr_resident_session`, 12-hour expiry
-- Lockout: 5 failed attempts → 60-second lockout
 
-### Staff
-- Supabase JWT authentication (Supabase Auth)
-- Staff can set/reset resident PINs via `resident-pin-set` edge function
+- PIN (4 digits) via Supabase Edge Functions; optional WebAuthn.
+- Session cookies and validation via edge functions (`resident-session-validate`, etc.).
+- **Preview:** `middleware.ts` can set a demo resident cookie when none exists so `/park-hub` is viewable without login — **disable or tighten for real production** where each resident must authenticate.
 
-### Middleware
-- `middleware.ts` protects `/park-hub` routes
-- Validates session token against `resident-session-validate` edge function
-- Redirects unauthenticated to `/login/unknown?redirect=[path]`
+### Staff (Care Portal)
+
+- **Supabase Auth** (email/password). Middleware redirects unauthenticated users from portal routes to `/care-portal-login`.
+- **Organisation scoping:** Staff users should have `org_id` (UUID) in **Auth user metadata**. Client queries filter `care_residents` (and related alerts, journals, plans) by that organisation.
+- **Audit:** Successful staff logins can be logged with `create_audit_log` (`staff.login`) when `SUPABASE_SERVICE_ROLE_KEY` is set on the server.
 
 ---
 
-## Data Flow
+## Database
 
-```
-Server Component (page.tsx)
-  → fetches initial data from Supabase
-  → passes as props to Client Component
+Schema is versioned under `supabase/migrations/` (organisations, `org_id` on residents, audit logs, daily plans, etc.). Apply migrations in Supabase for each environment.
 
-Client Component
-  → manages local UI state (useState)
-  → calls Supabase edge functions for mutations
-  → shows toast feedback via Sonner
-```
-
-No global state library. No Redux/Zustand. Server/client split follows Next.js App Router conventions.
+Do **not** commit real project URLs or secrets; use environment variables only.
 
 ---
 
-## Database (Supabase)
+## Care Portal: demo vs live
 
-**Project URL:** `https://olszwyeikwbtjcoopfid.supabase.co`
-
-Key tables (inferred from code — schema not in migrations):
-
-| Table | Purpose |
-|---|---|
-| `care_residents` | Resident profiles (display_name, user_id, onboarding_data) |
-| `resident_sessions` | Active sessions (token, expires_at) |
-| `park_daily_checkin` | Daily mood + traffic light + note |
-| `park_thought_catch` | CBT thought-catcher entries |
-| `park_goal_steps` | Goal ladder step tracking |
-| `park_resource_profile` | Resource flower scores |
-| `care_handover_notes` | Shift notes with flag color |
-| `care_portal_notifications` | Alerts (inaktivitet, lav_stemning, krise) |
-
-Database RPC functions:
-- `set_resident_pin(resident_id, pin)` – hashes and stores PIN
-- `verify_resident_pin(resident_id, pin)` – validates PIN with pgcrypto
+| Route | Behaviour |
+|--------|-----------|
+| `/care-portal-demo` | **Simulated** widgets and `ResidentListDemo` — no staff session required. |
+| `/care-portal-dashboard` (after login) | **Live** data from Supabase, scoped by staff `org_id`. |
 
 ---
 
-## Theme & Styling
+## Legal / compliance (site)
 
-Custom BUDR color palette in Tailwind:
+- `/privacy` — Privatlivspolitik (GDPR-oriented template; adjust with counsel for your DPA).
+- `/cookies` — Cookies og lokal lagring.
+- `/terms` — Vilkår, herunder ansvar for dokumentation og serviceloven.
 
-```js
-budr: {
-  lavender:     '#F5F4FF',
-  purple:       '#7F77DD',
-  'purple-dark':'#5E56C0',
-  navy:         '#0F1B2D',
-  teal:         '#1D9E75',
-  'teal-light': '#E6F7F2',
-  groen:        '#22C55E',
-  gul:          '#EAB308',
-  roed:         '#EF4444',
-}
-```
-
-Fonts: **DM Sans** (UI) + **IBM Plex Mono** (code/data)
-
-Path alias: `@/*` → `src/*`
+Marketing copy avoids implying automatic myndighedsgodkendelse or “GDPR-certified” without basis; native app store links are not shown until apps exist (webapp CTA instead).
 
 ---
 
-## Environment Variables
+## Environment variables
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
-OPENAI_API_KEY=          # AI counter-thought generation (not yet implemented)
-ANTHROPIC_API_KEY=       # Alternative AI provider
+SUPABASE_SERVICE_ROLE_KEY=   # server only — audit log, imports, APIs
 NEXT_PUBLIC_SITE_URL=
+# AI keys as needed for features that call LLMs
 ```
 
 ---
 
-## Known Limitations / TODOs
+## Quality gates
 
-- Migration file is empty — database schema is managed in Supabase dashboard, not version-controlled
-- Most PARK components use mock/hardcoded data instead of live DB queries
-- AI counter-thought generation is mocked (no real LLM call yet)
-- Staff portal lacks full auth protection (no middleware for `/care-portal-dashboard`)
-- No test suite
-- Lockout enforcement is client-side only (not server-side)
+- `npm run build` — TypeScript check + ESLint (Prettier via ESLint). Build fails on TS errors; remaining ESLint issues are mostly **warnings** (some rules relaxed to `warn` so legacy code does not block deploy — tighten over time).
+- `npm run type-check` — `tsc --noEmit` (Deno edge functions under `supabase/functions` are excluded in `tsconfig.json`).
+- `npm run lint` / `npm run lint:fix` — full ESLint + Prettier.
+- `npm test` — Vitest (`src/lib/staffOrgScope.test.ts`).
+
+---
+
+## Known gaps (non-exhaustive)
+
+- Full **RLS** on all tables for staff/resident separation should mirror app-side `org_id` filtering.
+- **AI** features may be partial or mocked in places — verify before clinical claims.
+- **Lockout** and rate limits: combine client UX with server-side enforcement where security-critical.

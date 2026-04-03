@@ -1,52 +1,52 @@
-'use client'
+'use client';
 // BUDR App – Flow 3: Ressourceblomsten
 // PARK-metodik | KRAP-inspireret: Ressourceblomsten (#5a)
 // Onboarding-flow — bygger borgerens ressourceprofil
 
-import { useState, useEffect } from 'react'
-import { getResourceProfile, upsertResourceProfile } from '@/lib/park-queries'
-import { RESOURCE_PETALS } from '@/types/park'
-import type { ResourceProfile } from '@/types/park'
+import { useState, useEffect } from 'react';
+import { getResourceProfile, upsertResourceProfile } from '@/lib/park-queries';
+import { RESOURCE_PETALS } from '@/types/park';
+import type { ResourceProfile } from '@/types/park';
 
 interface Props {
-  residentId: string
-  onComplete?: () => void
+  residentId: string;
+  onComplete?: () => void;
 }
 
 export default function ResourceFlower({ residentId, onComplete }: Props) {
-  const [petals, setPetals] = useState<Partial<ResourceProfile>>({})
-  const [currentPetal, setCurrentPetal] = useState(0)
-  const [loading, setLoading] = useState(false)
-  const [initialLoad, setInitialLoad] = useState(true)
+  const [petals, setPetals] = useState<Partial<ResourceProfile>>({});
+  const [currentPetal, setCurrentPetal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
 
   useEffect(() => {
-    getResourceProfile(residentId).then(profile => {
-      if (profile) setPetals(profile)
-      setInitialLoad(false)
-    })
-  }, [residentId])
+    getResourceProfile(residentId).then((profile) => {
+      if (profile) setPetals(profile);
+      setInitialLoad(false);
+    });
+  }, [residentId]);
 
-  const petal = RESOURCE_PETALS[currentPetal]
-  const isLast = currentPetal === RESOURCE_PETALS.length - 1
-  const completedCount = RESOURCE_PETALS.filter(p => petals[p.key]).length
+  const petal = RESOURCE_PETALS[currentPetal];
+  const isLast = currentPetal === RESOURCE_PETALS.length - 1;
+  const completedCount = RESOURCE_PETALS.filter((p) => petals[p.key]).length;
 
   async function handleSave() {
-    setLoading(true)
+    setLoading(true);
     try {
-      await upsertResourceProfile(residentId, petals)
+      await upsertResourceProfile(residentId, petals);
       if (isLast) {
-        onComplete?.()
+        onComplete?.();
       } else {
-        setCurrentPetal(c => c + 1)
+        setCurrentPetal((c) => c + 1);
       }
     } catch (e) {
-      console.error(e)
+      console.error(e);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
-  if (initialLoad) return <div className="park-loading">Henter din blomst...</div>
+  if (initialLoad) return <div className="park-loading">Henter din blomst...</div>;
 
   return (
     <div className="park-flow">
@@ -62,7 +62,9 @@ export default function ResourceFlower({ residentId, onComplete }: Props) {
           </div>
         ))}
         <div className="park-flower__center">
-          <span>{completedCount}/{RESOURCE_PETALS.length}</span>
+          <span>
+            {completedCount}/{RESOURCE_PETALS.length}
+          </span>
         </div>
       </div>
 
@@ -77,29 +79,31 @@ export default function ResourceFlower({ residentId, onComplete }: Props) {
           className="park-textarea"
           placeholder={`Skriv hvad der passer til: "${petal.label}"`}
           value={(petals[petal.key] as string) ?? ''}
-          onChange={e => setPetals(prev => ({ ...prev, [petal.key]: e.target.value }))}
+          onChange={(e) => setPetals((prev) => ({ ...prev, [petal.key]: e.target.value }))}
           rows={4}
         />
 
         <div className="park-btn-row">
           {currentPetal > 0 && (
-            <button className="park-btn park-btn--secondary" onClick={() => setCurrentPetal(c => c - 1)}>
+            <button
+              className="park-btn park-btn--secondary"
+              onClick={() => setCurrentPetal((c) => c - 1)}
+            >
               Tilbage
             </button>
           )}
-          <button
-            className="park-btn park-btn--primary"
-            disabled={loading}
-            onClick={handleSave}
-          >
+          <button className="park-btn park-btn--primary" disabled={loading} onClick={handleSave}>
             {loading ? 'Gemmer...' : isLast ? 'Afslut blomst' : 'Næste blad'}
           </button>
         </div>
 
-        <p className="park-skip-link" onClick={() => setCurrentPetal(c => Math.min(c + 1, RESOURCE_PETALS.length - 1))}>
+        <p
+          className="park-skip-link"
+          onClick={() => setCurrentPetal((c) => Math.min(c + 1, RESOURCE_PETALS.length - 1))}
+        >
           Spring over for nu
         </p>
       </div>
     </div>
-  )
+  );
 }

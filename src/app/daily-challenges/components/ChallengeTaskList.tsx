@@ -9,7 +9,20 @@ interface ChallengeTaskListProps {
   onComplete: (id: string) => void;
 }
 
-const categoryOrder = ['Sundhed', 'Krop', 'Bevægelse', 'Mad', 'Ro', 'Social', 'Struktur', 'Kreativitet', 'Læring', 'Refleksion', 'Glæde', 'Vækst'];
+const categoryOrder = [
+  'Sundhed',
+  'Krop',
+  'Bevægelse',
+  'Mad',
+  'Ro',
+  'Social',
+  'Struktur',
+  'Kreativitet',
+  'Læring',
+  'Refleksion',
+  'Glæde',
+  'Vækst',
+];
 
 export default function ChallengeTaskList({ challenges, onComplete }: ChallengeTaskListProps) {
   const [showAllPending, setShowAllPending] = useState(false);
@@ -57,7 +70,9 @@ export default function ChallengeTaskList({ challenges, onComplete }: ChallengeT
           if (pendingItems.length === 0) return null;
           if (remainingSlots <= 0) return null;
 
-          const sliceCount = showAllPending ? pendingItems.length : Math.min(pendingItems.length, remainingSlots);
+          const sliceCount = showAllPending
+            ? pendingItems.length
+            : Math.min(pendingItems.length, remainingSlots);
           const toShow = pendingItems.slice(0, sliceCount);
           if (toShow.length === 0) return null;
 
@@ -69,7 +84,9 @@ export default function ChallengeTaskList({ challenges, onComplete }: ChallengeT
             <div key={`cat-${category}`}>
               <div className="flex items-center gap-2 mb-2.5">
                 <span className="text-base">{icon}</span>
-                <span className="text-xs font-bold text-midnight-400 uppercase tracking-wide">{category}</span>
+                <span className="text-xs font-bold text-midnight-400 uppercase tracking-wide">
+                  {category}
+                </span>
                 <div className="flex-1 h-px bg-midnight-700" />
                 <span className="text-xs text-midnight-500">{pendingItems.length} opgaver</span>
               </div>
@@ -103,7 +120,9 @@ export default function ChallengeTaskList({ challenges, onComplete }: ChallengeT
         <div>
           <div className="flex items-center gap-2 mb-2.5">
             <span className="text-base">✅</span>
-            <span className="text-xs font-bold text-emerald-400 uppercase tracking-wide">Gennemført</span>
+            <span className="text-xs font-bold text-emerald-400 uppercase tracking-wide">
+              Gennemført
+            </span>
             <div className="flex-1 h-px bg-emerald-500/20" />
             <span className="text-xs text-emerald-400">{completed.length} opgaver</span>
           </div>
@@ -124,7 +143,9 @@ export default function ChallengeTaskList({ challenges, onComplete }: ChallengeT
       {pending.length === 0 && completed.length > 0 && (
         <div className="bg-gradient-to-br from-sunrise-400/10 to-emerald-500/10 border border-sunrise-400/20 rounded-3xl p-6 text-center animate-pop-in">
           <span className="text-5xl block mb-3 companion-float">🏆</span>
-          <p className="font-display font-bold text-midnight-50 text-lg">Alle udfordringer klaret!</p>
+          <p className="font-display font-bold text-midnight-50 text-lg">
+            Alle udfordringer klaret!
+          </p>
           <p className="text-midnight-400 text-sm mt-1">Du er fantastisk i dag 🌟</p>
         </div>
       )}
