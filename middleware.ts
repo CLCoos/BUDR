@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const RESIDENT_COOKIE = 'budr_resident_id';
 const DEMO_RESIDENT_ID = 'demo-resident-001';
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
 // ── Route matchers ────────────────────────────────────────────
 
@@ -30,6 +30,10 @@ function isResidentRoute(pathname: string): boolean {
 async function checkStaffAuth(
   req: NextRequest,
 ): Promise<{ response: NextResponse; authenticated: boolean }> {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    return { response: NextResponse.next({ request: req }), authenticated: false };
+  }
+
   let supabaseResponse = NextResponse.next({ request: req });
 
   const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -60,6 +64,9 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (isCarePortalRoute(pathname)) {
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      return NextResponse.redirect(new URL('/care-portal-login?err=config', req.url));
+    }
     const { response, authenticated } = await checkStaffAuth(req);
     if (!authenticated) {
       return NextResponse.redirect(new URL('/care-portal-login', req.url));

@@ -1,24 +1,13 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import AppLogo from '@/components/ui/AppLogo';
-import {
-  ArrowRight,
-  Brain,
-  Check,
-  Clock,
-  FileText,
-  Heart,
-  MessageSquare,
-  Shield,
-  Star,
-  Zap,
-} from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Sparkles } from 'lucide-react';
 
-/* ─────────────────────────────────────────────────────────
-   Scroll-reveal hook — fades + lifts elements into view
-───────────────────────────────────────────────────────── */
+const sans =
+  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+
 function useScrollReveal() {
   useEffect(() => {
     const els = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'));
@@ -32,16 +21,13 @@ function useScrollReveal() {
           observer.unobserve(el);
         });
       },
-      { threshold: 0.12 }
+      { threshold: 0.1, rootMargin: '0px 0px -8% 0px' }
     );
     els.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, []);
 }
 
-/* ─────────────────────────────────────────────────────────
-   Animated counter stat
-───────────────────────────────────────────────────────── */
 function AnimatedStat({ value, label }: { value: string; label: string }) {
   const [visible, setVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -49,13 +35,13 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
+      ([e]) => {
+        if (e.isIntersecting) {
           setVisible(true);
           obs.disconnect();
         }
       },
-      { threshold: 0.5 }
+      { threshold: 0.4 }
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -63,127 +49,92 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
   return (
     <div
       ref={ref}
-      className="flex flex-col items-center gap-1 transition-all duration-700"
+      className="text-center transition-all duration-1000"
       style={{
         opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(16px)',
+        transform: visible ? 'translateY(0)' : 'translateY(12px)',
       }}
     >
-      <span
-        className="text-3xl font-extrabold tabular-nums"
-        style={{ color: 'var(--budr-purple)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+      <p
+        className="text-4xl font-semibold tracking-tight text-neutral-900 sm:text-5xl"
+        style={{ fontFamily: sans }}
       >
         {value}
-      </span>
-      <span className="text-sm font-medium text-slate-500">{label}</span>
+      </p>
+      <p className="mt-2 text-sm font-medium text-neutral-500">{label}</p>
     </div>
   );
 }
 
-/* ─────────────────────────────────────────────────────────
-   CSS-only phone mockup with animated Lys chat
-───────────────────────────────────────────────────────── */
 function PhoneMockup() {
   return (
-    <div className="relative mx-auto" style={{ width: 220, height: 440 }}>
-      {/* Phone shell */}
+    <div className="relative mx-auto w-[min(100%,240px)]" style={{ aspectRatio: '9/19' }}>
       <div
-        className="absolute inset-0 rounded-[2.5rem] shadow-2xl"
+        className="absolute inset-0 rounded-[2.35rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.28)]"
         style={{
-          background: 'linear-gradient(160deg, #1a1a2e 0%, #16213e 100%)',
-          border: '2px solid rgba(255,255,255,0.12)',
+          background: 'linear-gradient(165deg, #1c1c1e 0%, #0d0d0f 100%)',
+          border: '1px solid rgba(255,255,255,0.12)',
         }}
       />
-      {/* Notch */}
       <div
-        className="absolute left-1/2 -translate-x-1/2 rounded-b-xl"
-        style={{ top: 10, width: 60, height: 18, background: '#0d0d1a' }}
-      />
-      {/* Screen */}
-      <div
-        className="absolute overflow-hidden rounded-[2.2rem]"
-        style={{ inset: 6, background: '#0f1423' }}
+        className="absolute overflow-hidden rounded-[2.05rem]"
+        style={{ inset: 5, background: '#000' }}
       >
-        {/* Status bar */}
-        <div className="flex items-center justify-between px-4 pt-5 pb-2">
-          <span className="text-[9px] font-semibold text-white/60">09:41</span>
-          <div className="flex items-center gap-1">
-            <div className="h-1.5 w-1.5 rounded-full bg-white/40" />
-            <div className="h-1.5 w-2.5 rounded-sm bg-white/40" />
+        <div className="flex items-center justify-between px-4 pt-4 pb-1">
+          <span className="text-[10px] font-medium text-white/50">09:41</span>
+          <div className="flex gap-1">
+            <div className="h-2.5 w-2.5 rounded-full bg-white/25" />
           </div>
         </div>
-        {/* App header */}
-        <div className="flex items-center gap-2 border-b border-white/6 px-4 pb-2.5">
+        <div className="flex items-center gap-2 border-b border-white/[0.06] px-4 pb-2.5">
+          <div
+            className="flex h-8 w-8 items-center justify-center rounded-full"
+            style={{ background: 'var(--budr-purple)' }}
+          >
+            <span className="text-[11px] font-semibold text-white">L</span>
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold text-white">Lys</p>
+            <p className="text-[9px] text-emerald-400/90">Aktiv</p>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2 px-3 pt-3">
+          <div
+            className="budr-chat-1 self-end max-w-[78%] rounded-2xl rounded-br-md px-3 py-2 opacity-0"
+            style={{ background: 'var(--budr-purple)' }}
+          >
+            <p className="text-[10px] leading-snug text-white">Jeg er lidt nervøs i dag</p>
+          </div>
+          <div
+            className="budr-chat-2 self-start max-w-[85%] rounded-2xl rounded-bl-md px-3 py-2 opacity-0"
+            style={{ background: 'rgba(255,255,255,0.08)' }}
+          >
+            <p className="text-[10px] leading-snug text-white/90">
+              Det er helt okay. Hvad tror du udløser det?
+            </p>
+          </div>
+          <div className="budr-chat-3 self-end opacity-0">
+            <div
+              className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-medium"
+              style={{
+                background: 'rgba(127,119,221,0.2)',
+                color: '#c4b5fd',
+                border: '1px solid rgba(127,119,221,0.35)',
+              }}
+            >
+              Humørtjek · registreret
+            </div>
+          </div>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 flex items-center gap-2 border-t border-white/[0.06] bg-black/40 px-3 py-2.5">
+          <div className="flex-1 rounded-full bg-white/[0.07] px-3 py-1.5 text-[9px] text-white/35">
+            Skriv til Lys…
+          </div>
           <div
             className="flex h-7 w-7 items-center justify-center rounded-full"
             style={{ background: 'var(--budr-purple)' }}
           >
-            <span className="text-[10px] font-bold text-white">L</span>
-          </div>
-          <div>
-            <p className="text-[10px] font-bold text-white leading-none">Lys</p>
-            <p className="text-[8px] text-green-400 leading-none mt-0.5">● Online</p>
-          </div>
-        </div>
-        {/* Chat messages */}
-        <div className="flex flex-col gap-2 px-3 pt-3" style={{ minHeight: 260 }}>
-          {/* User message */}
-          <div
-            className="chat-msg-1 self-end max-w-[70%] rounded-2xl rounded-br-sm px-3 py-2"
-            style={{ background: 'var(--budr-purple)', opacity: 0 }}
-          >
-            <p className="text-[10px] text-white leading-snug">Jeg er lidt nervøs i dag 😟</p>
-          </div>
-          {/* Typing dots */}
-          <div
-            className="chat-typing self-start max-w-[50%] rounded-2xl rounded-bl-sm px-3 py-2.5"
-            style={{ background: 'rgba(255,255,255,0.08)', opacity: 0 }}
-          >
-            <div className="flex items-center gap-1">
-              <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-white/60" />
-              <span
-                className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-white/60"
-                style={{ animationDelay: '0.2s' }}
-              />
-              <span
-                className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-white/60"
-                style={{ animationDelay: '0.4s' }}
-              />
-            </div>
-          </div>
-          {/* Lys response */}
-          <div
-            className="chat-msg-2 self-start max-w-[80%] rounded-2xl rounded-bl-sm px-3 py-2"
-            style={{ background: 'rgba(255,255,255,0.08)', opacity: 0 }}
-          >
-            <p className="text-[10px] text-white/90 leading-snug">
-              Det er helt ok at føle det sådan. Hvad tror du udløser det? 💜
-            </p>
-          </div>
-          {/* Mood pill */}
-          <div className="chat-msg-3 self-end opacity-0">
-            <div
-              className="flex items-center gap-1 rounded-full px-3 py-1.5 text-[9px] font-semibold"
-              style={{
-                background: 'rgba(127,119,221,0.25)',
-                color: 'var(--budr-purple)',
-                border: '1px solid rgba(127,119,221,0.3)',
-              }}
-            >
-              <span>📊</span> Humørtjek registreret
-            </div>
-          </div>
-        </div>
-        {/* Input bar */}
-        <div className="absolute bottom-0 left-0 right-0 flex items-center gap-2 border-t border-white/6 bg-black/20 px-3 py-2.5">
-          <div className="flex-1 rounded-full bg-white/8 px-3 py-1.5 text-[9px] text-white/30">
-            Skriv til Lys…
-          </div>
-          <div
-            className="flex h-6 w-6 items-center justify-center rounded-full"
-            style={{ background: 'var(--budr-purple)' }}
-          >
-            <ArrowRight className="h-3 w-3 text-white" />
+            <ArrowRight className="h-3.5 w-3.5 text-white" />
           </div>
         </div>
       </div>
@@ -191,730 +142,539 @@ function PhoneMockup() {
   );
 }
 
-/* ─────────────────────────────────────────────────────────
-   Care Portal mini-dashboard card (desktop companion)
-───────────────────────────────────────────────────────── */
-function CarePortalCard() {
-  const residents = [
-    { name: 'Maria K.', time: '08:32', status: 'green' as const },
-    { name: 'Thomas B.', time: '07:55', status: 'yellow' as const },
-    { name: 'Sara J.', time: 'Ingen tjek', status: 'red' as const },
+function PortalMockup({ pulseRow }: { pulseRow?: boolean }) {
+  const rows = [
+    { name: 'Maria K.', meta: '08:32', dot: '#22c55e' },
+    { name: 'Thomas B.', meta: '07:55', dot: '#eab308' },
+    { name: 'Sara J.', meta: 'Ingen tjek', dot: '#ef4444', emphasize: true },
   ];
-  const statusColor = { green: '#22C55E', yellow: '#EAB308', red: '#EF4444' };
-
   return (
     <div
-      className="rounded-3xl p-5 shadow-xl"
-      style={{ background: 'white', border: '1.5px solid rgba(29,158,117,0.18)', minWidth: 220 }}
+      className="w-full max-w-[320px] overflow-hidden rounded-2xl shadow-[0_24px_48px_-12px_rgba(0,0,0,0.2)]"
+      style={{
+        background: '#fff',
+        border: '1px solid rgba(0,0,0,0.06)',
+      }}
     >
-      {/* Header */}
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <p className="text-xs font-bold text-slate-800">Care Portal</p>
-          <p className="text-[10px] text-slate-400">3 beboere</p>
+      <div
+        className="flex h-8 items-center gap-2 border-b px-3"
+        style={{ borderColor: 'rgba(0,0,0,0.06)', background: '#fafafa' }}
+      >
+        <div className="flex gap-1">
+          <span className="h-2 w-2 rounded-full bg-neutral-300" />
+          <span className="h-2 w-2 rounded-full bg-neutral-300" />
+          <span className="h-2 w-2 rounded-full bg-neutral-300" />
+        </div>
+        <span className="flex-1 text-center text-[10px] font-medium text-neutral-400">
+          care.budr.dk
+        </span>
+      </div>
+      <div className="p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <div>
+            <p className="text-[11px] font-semibold text-neutral-900">Dagsoverblik</p>
+            <p className="text-[10px] text-neutral-400">I dag · 12 beboere</p>
+          </div>
+          <span className="text-sm">🏥</span>
+        </div>
+        <div className="flex flex-col gap-2">
+          {rows.map((r) => (
+            <div
+              key={r.name}
+              className={`flex items-center justify-between rounded-xl px-3 py-2.5 transition-shadow duration-500 ${
+                pulseRow && r.emphasize ? 'budr-pulse-row' : ''
+              }`}
+              style={{ background: '#f4f4f5' }}
+            >
+              <div className="flex items-center gap-2.5">
+                <span
+                  className="h-2 w-2 shrink-0 rounded-full"
+                  style={{
+                    background: r.dot,
+                    boxShadow: `0 0 0 3px ${r.dot}22`,
+                  }}
+                />
+                <span className="text-[11px] font-medium text-neutral-800">{r.name}</span>
+              </div>
+              <span className="text-[9px] tabular-nums text-neutral-400">{r.meta}</span>
+            </div>
+          ))}
         </div>
         <div
-          className="flex h-7 w-7 items-center justify-center rounded-xl"
-          style={{ background: 'var(--budr-teal-light)' }}
+          className="mt-3 rounded-lg px-3 py-2 text-center text-[10px] font-medium"
+          style={{ background: 'rgba(29,158,117,0.1)', color: 'var(--budr-teal)' }}
         >
-          <span className="text-xs">🏥</span>
+          1 beboer kræver opmærksomhed nu
         </div>
-      </div>
-      {/* Rows */}
-      <div className="flex flex-col gap-2.5">
-        {residents.map((r) => (
-          <div
-            key={r.name}
-            className="flex items-center justify-between rounded-xl px-3 py-2"
-            style={{ background: '#f8f9fc' }}
-          >
-            <div className="flex items-center gap-2.5">
-              <div
-                className="h-2.5 w-2.5 rounded-full shrink-0"
-                style={{
-                  backgroundColor: statusColor[r.status],
-                  boxShadow: `0 0 6px ${statusColor[r.status]}55`,
-                }}
-              />
-              <span className="text-xs font-semibold text-slate-700">{r.name}</span>
-            </div>
-            <span className="text-[9px] text-slate-400">{r.time}</span>
-          </div>
-        ))}
-      </div>
-      {/* Footer */}
-      <div
-        className="mt-4 rounded-xl px-3 py-2 text-center text-[10px] font-semibold"
-        style={{ background: 'var(--budr-teal-light)', color: 'var(--budr-teal)' }}
-      >
-        1 beboer kræver opmærksomhed
       </div>
     </div>
   );
 }
 
-/* ─────────────────────────────────────────────────────────
-   Feature grid data
-───────────────────────────────────────────────────────── */
-const FEATURES = [
-  {
-    icon: Brain,
-    title: 'Recovery-orienteret',
-    desc: 'Bygget over KRAP og PARK-metodik',
-    color: '#7F77DD',
-  },
-  {
-    icon: Clock,
-    title: 'Onboarding < 5 min',
-    desc: 'Personalet er klar inden første møde',
-    color: '#1D9E75',
-  },
-  {
-    icon: Shield,
-    title: 'GDPR og hosting',
-    desc: 'Udformet til persondatasikker drift — se privatlivspolitik',
-    color: '#5E56C0',
-  },
-  { icon: Zap, title: 'Tidlig indsats', desc: 'Stop eskalationer, før de sker', color: '#F59E0B' },
-  {
-    icon: MessageSquare,
-    title: 'Fælles sprog',
-    desc: 'Borger og pædagog taler ud fra samme data',
-    color: '#EC4899',
-  },
-  {
-    icon: FileText,
-    title: 'Dokumentationsstøtte',
-    desc: 'Skabeloner der understøtter journalføring efter gældende regler — institutionen godkender',
-    color: '#60A5FA',
-  },
-  {
-    icon: Heart,
-    title: '24/7 tilgængelig',
-    desc: 'Lys er der, også når personalet sover',
-    color: '#F472B6',
-  },
-  {
-    icon: Star,
-    title: 'Mestringstro',
-    desc: 'XP, badges og have — fremskridt man kan se',
-    color: '#34D399',
-  },
-] as const;
-
-/* ─────────────────────────────────────────────────────────
-   Main page
-───────────────────────────────────────────────────────── */
 export default function HomePage() {
   useScrollReveal();
   const productRef = useRef<HTMLDivElement>(null);
+  const demoRef = useRef<HTMLDivElement>(null);
   const scrollToProducts = useCallback(() => {
     productRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+  const scrollToDemo = useCallback(() => {
+    demoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
 
   return (
     <>
-      {/* ── Animation & reveal CSS ─────────────────────── */}
       <style>{`
-        /* Scroll-reveal */
         [data-reveal] {
           opacity: 0;
-          transform: translateY(20px);
-          transition: opacity 0.55s ease-out, transform 0.55s ease-out;
+          transform: translateY(28px);
+          transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
         }
         [data-reveal].reveal-visible {
           opacity: 1;
           transform: translateY(0);
         }
-
-        /* Hero floating blobs */
-        @keyframes blob-drift {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33%       { transform: translate(20px, -15px) scale(1.05); }
-          66%       { transform: translate(-10px, 10px) scale(0.97); }
+        @keyframes budr-chat-in {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-        .blob { animation: blob-drift 28s ease-in-out infinite; }
-        .blob-2 { animation: blob-drift 22s ease-in-out infinite reverse; }
-        .blob-3 { animation: blob-drift 34s ease-in-out infinite 6s; }
-
-        /* Chat animations */
-        @keyframes chat-appear { from { opacity: 0; transform: translateY(6px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        .chat-msg-1 { animation: chat-appear 0.4s ease-out 0.6s forwards; }
-        .chat-typing { animation: chat-appear 0.3s ease-out 1.4s forwards; }
-        .chat-msg-2  { animation: chat-appear 0.4s ease-out 2.6s forwards; }
-        .chat-msg-3  { animation: chat-appear 0.4s ease-out 3.6s forwards; }
-
-        @keyframes typing-bounce { 0%, 80%, 100% { transform: scaleY(1); opacity: 0.6; } 40% { transform: scaleY(1.4); opacity: 1; } }
-        .typing-dot { animation: typing-bounce 1s ease-in-out infinite; }
-
-        /* Stagger for children with data-reveal-stagger */
-        [data-stagger] > * { opacity: 0; transform: translateY(16px); transition: opacity 0.45s ease-out, transform 0.45s ease-out; }
-        [data-stagger].reveal-visible > *:nth-child(1) { opacity: 1; transform: none; transition-delay: 0ms; }
-        [data-stagger].reveal-visible > *:nth-child(2) { opacity: 1; transform: none; transition-delay: 80ms; }
-        [data-stagger].reveal-visible > *:nth-child(3) { opacity: 1; transform: none; transition-delay: 160ms; }
-        [data-stagger].reveal-visible > *:nth-child(4) { opacity: 1; transform: none; transition-delay: 240ms; }
-        [data-stagger].reveal-visible > *:nth-child(5) { opacity: 1; transform: none; transition-delay: 320ms; }
-        [data-stagger].reveal-visible > *:nth-child(6) { opacity: 1; transform: none; transition-delay: 400ms; }
-        [data-stagger].reveal-visible > *:nth-child(7) { opacity: 1; transform: none; transition-delay: 480ms; }
-        [data-stagger].reveal-visible > *:nth-child(8) { opacity: 1; transform: none; transition-delay: 560ms; }
+        .budr-chat-1 { animation: budr-chat-in 0.5s ease-out 0.4s forwards; }
+        .budr-chat-2 { animation: budr-chat-in 0.5s ease-out 1.2s forwards; }
+        .budr-chat-3 { animation: budr-chat-in 0.45s ease-out 2.4s forwards; }
+        @keyframes budr-pulse-ring {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+          35% { box-shadow: 0 0 0 6px rgba(239,68,68,0.15); }
+          70% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+        }
+        .budr-pulse-row {
+          animation: budr-pulse-ring 2.2s ease-in-out 2.8s infinite;
+        }
+        @keyframes budr-beam {
+          0%, 100% { opacity: 0.35; }
+          50% { opacity: 1; }
+        }
+        .budr-signal-beam {
+          animation: budr-beam 2.2s ease-in-out 1s infinite;
+        }
       `}</style>
 
-      <div className="min-h-screen bg-white font-sans text-slate-900 antialiased">
-        {/* ── Sticky nav ─────────────────────────────────── */}
-        <nav
-          className="sticky top-0 z-50 border-b"
-          style={{
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            background: 'rgba(255,255,255,0.85)',
-            borderColor: 'rgba(0,0,0,0.07)',
-          }}
+      <div
+        className="min-h-screen bg-[#fbfbfd] text-neutral-900 antialiased"
+        style={{ fontFamily: sans }}
+      >
+        {/* Nav */}
+        <header
+          className="sticky top-0 z-50 border-b border-black/[0.06] bg-[#fbfbfd]/80 backdrop-blur-xl backdrop-saturate-150"
+          style={{ WebkitBackdropFilter: 'blur(20px) saturate(180%)' }}
         >
-          <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5">
-            <AppLogo size={30} />
-            <div className="flex items-center gap-1 sm:gap-2">
+          <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 sm:h-[3.25rem] sm:px-8">
+            <div className="flex items-center gap-2">
+              <AppLogo size={28} />
+              <span className="text-[15px] font-semibold tracking-tight text-neutral-900">
+                BUDR Care
+              </span>
+            </div>
+            <nav className="flex items-center gap-1 sm:gap-2">
               <button
                 type="button"
                 onClick={scrollToProducts}
-                className="hidden rounded-xl px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 sm:block"
+                className="hidden rounded-full px-3 py-1.5 text-[13px] font-medium text-neutral-600 transition-colors hover:bg-black/[0.04] hover:text-neutral-900 sm:block"
               >
-                BUDR App
+                Produkter
+              </button>
+              <button
+                type="button"
+                onClick={scrollToDemo}
+                className="hidden rounded-full px-3 py-1.5 text-[13px] font-medium text-neutral-600 transition-colors hover:bg-black/[0.04] hover:text-neutral-900 sm:block"
+              >
+                Sådan virker det
               </button>
               <Link
                 href="/care-portal-demo"
-                className="rounded-full px-4 py-2 text-sm font-bold text-white transition-all hover:opacity-90 hover:scale-[1.02]"
-                style={{ backgroundColor: 'var(--budr-teal)' }}
+                className="rounded-full bg-neutral-900 px-4 py-2 text-[13px] font-medium text-white transition-transform hover:scale-[1.02] active:scale-[0.98]"
               >
-                Prøv Care Portal
+                Prøv portal
+              </Link>
+            </nav>
+          </div>
+        </header>
+
+        {/* Hero */}
+        <section className="relative px-5 pb-24 pt-16 sm:pb-32 sm:pt-24">
+          <div className="mx-auto max-w-4xl text-center">
+            <p
+              className="mb-6 inline-flex items-center gap-2 rounded-full border border-black/[0.08] bg-white px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-500"
+              data-reveal
+            >
+              <Sparkles className="h-3.5 w-3.5 text-[var(--budr-teal)]" aria-hidden />
+              Botilbud · Region Midtjylland
+            </p>
+            <h1
+              className="text-[2.5rem] font-semibold leading-[1.05] tracking-[-0.03em] text-neutral-950 sm:text-5xl sm:leading-[1.05] lg:text-[3.5rem]"
+              data-reveal
+              data-reveal-delay="40"
+            >
+              Borgeren når ud.
+              <br />
+              <span className="text-neutral-400">Du ser det med det samme.</span>
+            </h1>
+            <p
+              className="mx-auto mt-6 max-w-lg text-[17px] leading-relaxed text-neutral-500 sm:text-lg"
+              data-reveal
+              data-reveal-delay="80"
+            >
+              Lys fanger stemning og signaler i lommen. Care Portal samler dem, før dagen spinder
+              af.
+            </p>
+            <div
+              className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4"
+              data-reveal
+              data-reveal-delay="120"
+            >
+              <Link
+                href="/app"
+                className="inline-flex h-12 items-center gap-2 rounded-full bg-neutral-900 px-8 text-[15px] font-medium text-white transition-transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Åbn Lys
+                <ArrowUpRight className="h-4 w-4 opacity-80" />
               </Link>
               <a
-                href="mailto:hej@budrcare.dk?subject=Demo af BUDR"
-                className="hidden rounded-xl px-4 py-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-800 sm:block"
+                href="mailto:hej@budrcare.dk?subject=Demo%20af%20BUDR%20Care"
+                className="inline-flex h-12 items-center rounded-full px-6 text-[15px] font-medium text-[var(--budr-teal)] transition-colors hover:text-[#17875f]"
               >
-                Book demo
+                Book en gennemgang →
               </a>
             </div>
           </div>
-        </nav>
+        </section>
 
-        {/* ── Hero ────────────────────────────────────────── */}
+        {/* Demonstration — show the loop */}
         <section
-          className="relative overflow-hidden px-5 pb-20 pt-16 sm:pb-28 sm:pt-24"
-          style={{ background: 'linear-gradient(155deg, #F5F4FF 0%, #ffffff 55%, #E6F7F2 100%)' }}
+          ref={demoRef}
+          id="sadan-virker-det"
+          className="scroll-mt-16 border-t border-black/[0.06] bg-white px-5 py-20 sm:py-28"
         >
-          {/* Floating blobs */}
-          <div
-            className="blob pointer-events-none absolute -top-20 right-0 h-[500px] w-[500px] rounded-full opacity-[0.18] blur-3xl"
-            style={{ background: 'var(--budr-purple)' }}
-          />
-          <div
-            className="blob-2 pointer-events-none absolute bottom-0 -left-20 h-80 w-80 rounded-full opacity-[0.15] blur-3xl"
-            style={{ background: 'var(--budr-teal)' }}
-          />
-          <div
-            className="blob-3 pointer-events-none absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-[0.08] blur-3xl"
-            style={{ background: 'var(--budr-purple-dark)' }}
-          />
-
-          <div className="relative mx-auto max-w-5xl">
-            {/* Pill badge */}
-            <div className="mb-6 flex justify-center">
-              <span
-                className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold"
-                style={{
-                  borderColor: 'rgba(127,119,221,0.3)',
-                  backgroundColor: 'rgba(127,119,221,0.08)',
-                  color: 'var(--budr-purple)',
-                }}
-              >
-                <span>✦</span> Bruges på botilbud i Region Midtjylland
-              </span>
+          <div className="mx-auto max-w-6xl">
+            <div className="mx-auto max-w-2xl text-center" data-reveal>
+              <h2 className="text-3xl font-semibold tracking-tight text-neutral-950 sm:text-4xl">
+                Ét øjeblik. To overflader.
+              </h2>
+              <p className="mt-4 text-[17px] leading-relaxed text-neutral-500">
+                Ingen pitch — bare flowet. Det, borgeren gør i Lys, lander i overblikket uden ekstra
+                tastearbejde.
+              </p>
             </div>
 
-            {/* Headline */}
-            <h1
-              className="mx-auto max-w-3xl text-center text-5xl font-extrabold leading-[1.1] tracking-tight text-slate-900 sm:text-6xl lg:text-7xl"
-              style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+            <div
+              className="mt-16 flex flex-col items-center justify-center gap-10 lg:flex-row lg:gap-6 xl:gap-10"
+              data-reveal
+              data-reveal-delay="80"
             >
-              Borgere trives.{' '}
-              <span
-                className="bg-clip-text text-transparent"
-                style={{ backgroundImage: 'linear-gradient(135deg, var(--budr-purple), #A78BFA)' }}
-              >
-                Personalet
-              </span>{' '}
-              ser&nbsp;det.
-            </h1>
+              <div className="flex flex-col items-center">
+                <p className="mb-4 text-center text-[11px] font-semibold uppercase tracking-widest text-neutral-400">
+                  Borger · Lys
+                </p>
+                <PhoneMockup />
+              </div>
 
-            {/* Subtext */}
-            <p className="mx-auto mt-6 max-w-xl text-center text-lg leading-relaxed text-slate-600 sm:text-xl">
-              BUDR er Danmarks første AI-platform bygget til socialpsykiatrien. Borgeren har støtte
-              i lommen. Du har overblikket.
-            </p>
+              <div className="flex flex-col items-center justify-center gap-3 lg:min-w-[100px]">
+                <div
+                  className="budr-signal-beam hidden h-[3px] w-full max-w-[140px] rounded-full lg:block"
+                  style={{
+                    background:
+                      'linear-gradient(90deg, transparent, var(--budr-purple), var(--budr-teal), transparent)',
+                  }}
+                />
+                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-black/[0.08] bg-neutral-50 text-neutral-400 lg:hidden">
+                  <ArrowRight className="h-5 w-5" />
+                </div>
+                <span className="hidden text-center text-[10px] font-medium uppercase tracking-wider text-neutral-400 lg:block">
+                  Samme hændelse
+                </span>
+              </div>
 
-            {/* CTAs */}
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
-              <Link
-                href="/app"
-                className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-base font-bold text-white shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
-                style={{
-                  background:
-                    'linear-gradient(135deg, var(--budr-purple), var(--budr-purple-dark))',
-                }}
-              >
-                Kom i gang gratis
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-              <a
-                href="mailto:hej@budrcare.dk?subject=Demo af BUDR"
-                className="inline-flex items-center gap-2 rounded-full border-2 px-7 py-3.5 text-base font-semibold text-slate-700 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                style={{ borderColor: 'rgba(0,0,0,0.12)' }}
-              >
-                Book en demo
-              </a>
+              <div className="flex flex-col items-center">
+                <p className="mb-4 text-center text-[11px] font-semibold uppercase tracking-widest text-neutral-400">
+                  Personale · Portal
+                </p>
+                <PortalMockup pulseRow />
+              </div>
             </div>
+          </div>
+        </section>
 
-            {/* Mockup section */}
-            <div className="mt-16 flex flex-col items-center justify-center gap-8 sm:flex-row sm:items-start sm:gap-12">
-              <PhoneMockup />
-              <div className="hidden sm:flex sm:flex-col sm:justify-center sm:gap-4 sm:pt-6">
-                <CarePortalCard />
-                <p className="text-center text-xs text-slate-400">
-                  Realtids-overblik for personalet
+        {/* Bento — outcomes as visuals */}
+        <section ref={productRef} className="scroll-mt-16 px-5 py-20 sm:py-28">
+          <div className="mx-auto max-w-6xl">
+            <h2
+              className="mx-auto max-w-xl text-center text-3xl font-semibold tracking-tight text-neutral-950 sm:text-4xl"
+              data-reveal
+            >
+              Mindre gæt. Mere møde.
+            </h2>
+            <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
+              <div
+                className="rounded-3xl border border-black/[0.06] bg-white p-8 shadow-sm sm:col-span-2 lg:col-span-2 lg:row-span-1"
+                data-reveal
+              >
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400">
+                  Overblik
+                </p>
+                <p className="mt-3 max-w-md text-xl font-semibold leading-snug tracking-tight text-neutral-900 sm:text-2xl">
+                  Træf prioriteringen, mens kaffen stadig er varm.
+                </p>
+                <div className="mt-8 flex flex-wrap gap-2">
+                  {['Rolig nat', 'Hold øje', 'Tjek ind'].map((t, i) => (
+                    <span
+                      key={t}
+                      className="rounded-full px-3 py-1.5 text-[12px] font-medium"
+                      style={{
+                        background: i === 1 ? 'rgba(234,179,8,0.15)' : 'rgba(34,197,94,0.12)',
+                        color: i === 1 ? '#a16207' : '#15803d',
+                      }}
+                    >
+                      {t}
+                    </span>
+                  ))}
+                  <span
+                    className="rounded-full px-3 py-1.5 text-[12px] font-medium"
+                    style={{ background: 'rgba(239,68,68,0.12)', color: '#b91c1c' }}
+                  >
+                    Kræver dig
+                  </span>
+                </div>
+                <p className="mt-6 text-sm leading-relaxed text-neutral-500">
+                  Trafiklysene er et fælles sprog — ikke en erstatning for faglighed.
+                </p>
+              </div>
+
+              <div
+                className="rounded-3xl border border-black/[0.06] bg-gradient-to-b from-white to-neutral-50 p-8 shadow-sm"
+                data-reveal
+                data-reveal-delay="60"
+              >
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400">
+                  Start
+                </p>
+                <p className="mt-3 text-3xl font-semibold tracking-tight text-neutral-900">
+                  &lt; 5
+                </p>
+                <p className="text-sm text-neutral-500">minutter til første rigtige visning.</p>
+                <div className="mt-8 h-1.5 overflow-hidden rounded-full bg-neutral-200">
+                  <div
+                    className="h-full w-[92%] rounded-full"
+                    style={{ background: 'var(--budr-teal)' }}
+                  />
+                </div>
+                <p className="mt-2 text-[11px] text-neutral-400">Onboarding · næsten færdig</p>
+              </div>
+
+              <div
+                className="rounded-3xl border border-black/[0.06] bg-neutral-900 p-8 text-white shadow-sm"
+                data-reveal
+                data-reveal-delay="100"
+              >
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-white/40">
+                  Data
+                </p>
+                <p className="mt-3 text-lg font-semibold leading-snug">
+                  Udformet til persondata i drift — ikke som et sidespor.
+                </p>
+                <Link
+                  href="/privacy"
+                  className="mt-6 inline-flex items-center gap-1 text-sm font-medium text-white/70 hover:text-white"
+                >
+                  Læs privatlivspolitik <ArrowUpRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+
+              <div
+                className="rounded-3xl border border-black/[0.06] bg-white p-8 shadow-sm sm:col-span-2"
+                data-reveal
+                data-reveal-delay="140"
+              >
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400">
+                  Mestring
+                </p>
+                <p className="mt-3 max-w-lg text-lg font-semibold leading-snug text-neutral-900">
+                  Fremskridt, borgeren kan se — have, små sejre, tydelig retning.
+                </p>
+                <p className="mt-2 text-sm text-neutral-500">
+                  Styrker <span className="font-medium text-neutral-700">mestrings-tro</span> gennem
+                  synlige skridt — ikke bare point på en skærm.
                 </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── Social proof strip ───────────────────────── */}
-        <section
-          className="border-y px-5 py-12"
-          style={{ borderColor: 'rgba(0,0,0,0.06)', background: '#fafafa' }}
-        >
-          <div className="mx-auto max-w-5xl">
-            <p className="mb-8 text-center text-sm font-bold uppercase tracking-widest text-slate-400">
-              Tillid fra frontlinjen i dansk socialpsykiatri
-            </p>
-            {/* Logo placeholders */}
-            <div
-              className="mb-10 flex flex-wrap items-center justify-center gap-4"
-              data-reveal
-              data-stagger
-            >
+        {/* Products — minimal, CTA forward */}
+        <section className="border-t border-black/[0.06] bg-[#f5f5f7] px-5 py-20 sm:py-28">
+          <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-2 lg:gap-16">
+            <div data-reveal>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400">
+                Lys
+              </p>
+              <h3 className="mt-2 text-3xl font-semibold tracking-tight text-neutral-950">
+                Støtte, når hverdagen er tung.
+              </h3>
+              <p className="mt-4 text-[17px] leading-relaxed text-neutral-500">
+                Samtale, humør, plan og ro — i én rolig flade. Demo i browseren; produktion med
+                sikkert login pr. borger.
+              </p>
+              <Link
+                href="/app"
+                className="mt-8 inline-flex items-center gap-2 text-[15px] font-semibold text-[var(--budr-purple)] hover:underline"
+              >
+                Åbn Lys <ArrowRight className="h-4 w-4" />
+              </Link>
+              <div className="mt-10 flex justify-center sm:justify-start">
+                <PhoneMockup />
+              </div>
+            </div>
+            <div data-reveal data-reveal-delay="80">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400">
+                Care Portal
+              </p>
+              <h3 className="mt-2 text-3xl font-semibold tracking-tight text-neutral-950">
+                Overblik, der følger vagten.
+              </h3>
+              <p className="mt-4 text-[17px] leading-relaxed text-neutral-500">
+                Beskeder, planforslag og dokumentationsstøtte — samlet, så teamet kan handle
+                ensartet.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link
+                  href="/care-portal-demo"
+                  className="inline-flex h-11 items-center rounded-full bg-[var(--budr-teal)] px-6 text-[14px] font-medium text-white"
+                >
+                  Interaktiv demo
+                </Link>
+                <Link
+                  href="/care-portal-login"
+                  className="inline-flex h-11 items-center rounded-full border border-black/[0.12] bg-white px-6 text-[14px] font-medium text-neutral-800"
+                >
+                  Log ind
+                </Link>
+              </div>
+              <div className="mt-10 flex justify-center sm:justify-end">
+                <PortalMockup />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Proof */}
+        <section className="px-5 py-16 sm:py-20">
+          <div className="mx-auto max-w-6xl">
+            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4" data-reveal>
               {['Botilbud Midtjylland', 'Socialpsykiatri Nordjylland', 'Pilot 2025'].map((name) => (
                 <div
                   key={name}
-                  className="flex h-12 items-center justify-center rounded-2xl px-6 text-sm font-semibold text-slate-400"
-                  style={{
-                    background: '#f1f1f4',
-                    border: '1.5px solid rgba(0,0,0,0.07)',
-                    minWidth: 160,
-                  }}
+                  className="rounded-2xl border border-black/[0.06] bg-white px-5 py-3 text-[13px] font-medium text-neutral-500"
                 >
                   {name}
                 </div>
               ))}
             </div>
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 text-center" data-reveal data-reveal-delay="150">
-              <AnimatedStat value="3" label="aktive botilbud" />
-              <AnimatedStat value="< 5 min" label="Onboarding tid" />
-              <AnimatedStat value="24/7" label="tilgængelig" />
-            </div>
-          </div>
-        </section>
-
-        {/* ── Products split section ───────────────────── */}
-        <section ref={productRef} className="scroll-mt-20 px-5 py-20 sm:py-28">
-          <div className="mx-auto max-w-5xl">
-            <div className="grid gap-6 sm:grid-cols-2">
-              {/* BUDR App */}
-              <div
-                className="rounded-3xl p-8"
-                data-reveal
-                style={{
-                  background: 'linear-gradient(150deg, var(--budr-lavender) 0%, #ede9ff 100%)',
-                  border: '1.5px solid rgba(127,119,221,0.2)',
-                }}
-              >
-                <div
-                  className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl text-2xl shadow-sm"
-                  style={{ background: 'white' }}
-                >
-                  📱
-                </div>
-                <h2
-                  className="text-2xl font-extrabold text-slate-900"
-                  style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                >
-                  Lys — din AI-ledsager
-                </h2>
-                <p className="mt-2 text-sm font-semibold" style={{ color: 'var(--budr-purple)' }}>
-                  Til borgere
-                </p>
-                <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                  Humørtjek, dagplan, journal og krisestøtte. Altid tilgængelig.
-                </p>
-                <ul className="mt-5 flex flex-col gap-2.5">
-                  {[
-                    'AI-chat der møder borgeren med empati',
-                    'Daglig humørregistrering med trafiklys',
-                    'Personlig have der vokser med din indsats',
-                    'Krisestøtte og nødkontakter samlet ét sted',
-                    'Webapp med demo-tilstand; produktion bruger sikkert login (PIN) pr. borger',
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-2.5 text-sm text-slate-700">
-                      <div
-                        className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full"
-                        style={{ background: 'rgba(127,119,221,0.15)' }}
-                      >
-                        <Check className="h-2.5 w-2.5" style={{ color: 'var(--budr-purple)' }} />
-                      </div>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="/app"
-                  className="mt-7 inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:shadow-lg"
-                  style={{ background: 'var(--budr-purple)' }}
-                >
-                  Prøv appen <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-
-              {/* Care Portal */}
-              <div
-                className="rounded-3xl p-8"
-                data-reveal
-                data-reveal-delay="100"
-                style={{
-                  background: 'linear-gradient(150deg, var(--budr-teal-light) 0%, #d4f5ea 100%)',
-                  border: '1.5px solid rgba(29,158,117,0.2)',
-                }}
-              >
-                <div
-                  className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl text-2xl shadow-sm"
-                  style={{ background: 'white' }}
-                >
-                  🏥
-                </div>
-                <h2
-                  className="text-2xl font-extrabold text-slate-900"
-                  style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                >
-                  Care Portal — dit professionelle overblik
-                </h2>
-                <p className="mt-2 text-sm font-semibold" style={{ color: 'var(--budr-teal)' }}>
-                  Til personale
-                </p>
-                <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                  Realtids-indblik i dine borgeres trivsel. Ingen overraskelser.
-                </p>
-                <ul className="mt-5 flex flex-col gap-2.5">
-                  {[
-                    'Trafiklys-overblik over alle borgere',
-                    'Modtag beskeder direkte fra borgerne',
-                    'Godkend og foreslå dagplaner',
-                    'Skabeloner til indsats- og magtdokumentation (serviceloven)',
-                    'Persondata behandlet efter GDPR — se privatlivspolitik',
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-2.5 text-sm text-slate-700">
-                      <div
-                        className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full"
-                        style={{ background: 'rgba(29,158,117,0.15)' }}
-                      >
-                        <Check className="h-2.5 w-2.5" style={{ color: 'var(--budr-teal)' }} />
-                      </div>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="/care-portal-demo"
-                  className="mt-7 inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:shadow-lg"
-                  style={{ background: 'var(--budr-teal)' }}
-                >
-                  Prøv Care Portal <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Feature grid ─────────────────────────────── */}
-        <section className="px-5 py-20 sm:py-24" style={{ background: '#fafbff' }}>
-          <div className="mx-auto max-w-5xl">
-            <div className="mb-12 text-center" data-reveal>
-              <h2
-                className="text-3xl font-extrabold text-slate-900 sm:text-4xl"
-                style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-              >
-                Bygget til virkeligheden i socialpsykiatrien
-              </h2>
-              <p className="mx-auto mt-3 max-w-xl text-lg text-slate-500">
-                Ikke endnu et digitalt clipboard. Et levende redskab.
-              </p>
-            </div>
             <div
-              className="grid grid-cols-2 gap-4 sm:grid-cols-4"
-              data-reveal
-              data-reveal-delay="100"
-              data-stagger
-            >
-              {FEATURES.map((f) => {
-                const Icon = f.icon;
-                return (
-                  <div
-                    key={f.title}
-                    className="group rounded-2xl border p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                    style={{ borderColor: `${f.color}22`, background: `${f.color}08` }}
-                  >
-                    <div
-                      className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl"
-                      style={{ background: `${f.color}18` }}
-                    >
-                      <Icon className="h-5 w-5" style={{ color: f.color }} />
-                    </div>
-                    <p className="text-sm font-bold text-slate-800 leading-snug">{f.title}</p>
-                    <p className="mt-1 text-xs leading-relaxed text-slate-500">{f.desc}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* ── Testimonials ─────────────────────────────── */}
-        <section className="px-5 py-20 sm:py-24">
-          <div className="mx-auto max-w-4xl">
-            <div className="grid gap-6 sm:grid-cols-2">
-              {/* Quote 1 */}
-              <div
-                className="relative rounded-3xl px-8 py-10"
-                data-reveal
-                style={{
-                  background:
-                    'linear-gradient(135deg, rgba(127,119,221,0.09) 0%, rgba(167,139,250,0.12) 100%)',
-                  border: '1.5px solid rgba(127,119,221,0.15)',
-                }}
-              >
-                {/* Large decorative quote mark */}
-                <span
-                  className="pointer-events-none absolute -top-3 left-5 select-none text-8xl font-extrabold leading-none"
-                  style={{ color: 'rgba(127,119,221,0.15)', fontFamily: 'Georgia, serif' }}
-                  aria-hidden
-                >
-                  {'\u201C'}
-                </span>
-                <p className="relative text-lg font-semibold leading-relaxed text-slate-800 sm:text-xl">
-                  Borgerne fortæller os, hvad der sker — selv når de ikke har ord for det. BUDR
-                  giver dem sproget og strukturen til at række ud.
-                </p>
-                <p className="mt-5 text-sm font-medium text-slate-500">
-                  — Socialpsykiatrisk pædagog, botilbud i Region Midtjylland
-                </p>
-              </div>
-
-              {/* Quote 2 */}
-              <div
-                className="relative rounded-3xl px-8 py-10"
-                data-reveal
-                data-reveal-delay="120"
-                style={{
-                  background:
-                    'linear-gradient(135deg, rgba(29,158,117,0.07) 0%, rgba(52,211,153,0.10) 100%)',
-                  border: '1.5px solid rgba(29,158,117,0.15)',
-                }}
-              >
-                <span
-                  className="pointer-events-none absolute -top-3 left-5 select-none text-8xl font-extrabold leading-none"
-                  style={{ color: 'rgba(29,158,117,0.15)', fontFamily: 'Georgia, serif' }}
-                  aria-hidden
-                >
-                  {'\u201C'}
-                </span>
-                <p className="relative text-lg font-semibold leading-relaxed text-slate-800 sm:text-xl">
-                  Vi har sparet estimeret 2 timer dagligt på dokumentation siden vi tog BUDR i brug.
-                </p>
-                <p className="mt-5 text-sm font-medium text-slate-500">
-                  — Leder, socialpsykiatrisk botilbud, Aalborg
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Care Portal feature section ───────────────── */}
-        <section
-          className="px-5 py-20 sm:py-28"
-          style={{ background: 'linear-gradient(160deg, #f0fdf8 0%, #e6f7f2 100%)' }}
-        >
-          <div className="mx-auto max-w-5xl">
-            <div className="mb-12 text-center" data-reveal>
-              <div
-                className="mb-4 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold"
-                style={{
-                  borderColor: 'rgba(29,158,117,0.3)',
-                  background: 'rgba(29,158,117,0.08)',
-                  color: 'var(--budr-teal)',
-                }}
-              >
-                🏥 Care Portal
-              </div>
-              <h2
-                className="text-3xl font-extrabold text-slate-900 sm:text-4xl"
-                style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-              >
-                Designet til pædagoger, ikke it-folk
-              </h2>
-            </div>
-
-            <div
-              className="grid gap-5 sm:grid-cols-3"
+              className="mt-14 grid grid-cols-1 gap-10 border-t border-black/[0.06] pt-14 sm:grid-cols-3"
               data-reveal
               data-reveal-delay="80"
-              data-stagger
             >
-              {[
-                {
-                  icon: '🚦',
-                  title: 'Trafiklys-overblik',
-                  desc: 'Se øjeblikkeligt hvem der har det svært — uden at skulle læse lange journaler.',
-                },
-                {
-                  icon: '💬',
-                  title: 'Direkte kommunikation',
-                  desc: 'Borgerne sender dig beskeder. Du svarer og godkender deres planer. Alt ét sted.',
-                },
-                {
-                  icon: '📄',
-                  title: 'Struktureret dokumentation',
-                  desc: 'Hjælper med at samle notater og indsatsforløb — godkendelse og myndighedsindberetning sker hos jer.',
-                },
-              ].map((card) => (
-                <div
-                  key={card.title}
-                  className="rounded-2xl bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                  style={{ border: '1.5px solid rgba(29,158,117,0.15)' }}
-                >
-                  <span className="mb-3 block text-3xl">{card.icon}</span>
-                  <h3 className="mb-2 text-base font-bold text-slate-900">{card.title}</h3>
-                  <p className="text-sm leading-relaxed text-slate-600">{card.desc}</p>
-                </div>
-              ))}
+              <AnimatedStat value="3" label="aktive botilbud" />
+              <AnimatedStat value="< 5 min" label="onboardingstid" />
+              <AnimatedStat value="24/7" label="Lys tilgængelig" />
             </div>
+          </div>
+        </section>
 
-            <div
-              className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center"
-              data-reveal
-              data-reveal-delay="200"
-            >
+        {/* Quotes */}
+        <section className="border-t border-black/[0.06] bg-white px-5 py-20 sm:py-28">
+          <div className="mx-auto grid max-w-5xl gap-12 sm:grid-cols-2 sm:gap-16">
+            <blockquote data-reveal>
+              <p className="text-xl font-medium leading-relaxed text-neutral-900 sm:text-2xl sm:leading-snug">
+                Borgerne fortæller os, hvad der sker — selv når de ikke har ord for det. BUDR giver
+                dem sproget og strukturen til at række ud.
+              </p>
+              <footer className="mt-8 text-sm text-neutral-500">
+                Socialpsykiatrisk pædagog · botilbud · Region Midtjylland
+              </footer>
+            </blockquote>
+            <blockquote data-reveal data-reveal-delay="80">
+              <p className="text-xl font-medium leading-relaxed text-neutral-900 sm:text-2xl sm:leading-snug">
+                Vi har sparet cirka 2 timer dagligt på dokumentation siden vi tog BUDR i brug.
+              </p>
+              <footer className="mt-8 text-sm text-neutral-500">
+                Leder · socialpsykiatrisk botilbud · Aalborg
+              </footer>
+            </blockquote>
+          </div>
+        </section>
+
+        {/* Closing CTA */}
+        <section className="px-5 py-24 sm:py-32" style={{ background: '#000' }}>
+          <div className="mx-auto max-w-2xl text-center" data-reveal>
+            <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-[2.75rem] lg:leading-tight">
+              Vil du se det på jeres egne borgeres præmisser?
+            </h2>
+            <p className="mx-auto mt-5 max-w-md text-[17px] leading-relaxed text-white/55">
+              Vi viser — vi lover ikke mirakler. Book en gennemgang, eller åbn demoerne selv.
+            </p>
+            <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
+              <a
+                href="mailto:hej@budrcare.dk?subject=Demo%20af%20BUDR%20Care"
+                className="inline-flex h-12 items-center rounded-full bg-white px-8 text-[15px] font-medium text-neutral-900 transition-transform hover:scale-[1.02]"
+              >
+                Book samtale
+              </a>
               <Link
                 href="/care-portal-demo"
-                className="inline-flex items-center gap-2 rounded-full px-8 py-4 text-base font-bold text-white shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
-                style={{ background: 'var(--budr-teal)' }}
+                className="inline-flex h-12 items-center rounded-full border border-white/25 px-8 text-[15px] font-medium text-white hover:bg-white/10"
               >
-                Prøv Care Portal interaktivt
-                <ArrowRight className="h-5 w-5" />
-              </Link>
-              <Link
-                href="/care-portal-login"
-                className="inline-flex items-center gap-2 rounded-full border-2 px-8 py-4 text-base font-semibold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                style={{ borderColor: 'rgba(29,158,117,0.35)', color: 'var(--budr-teal)' }}
-              >
-                Log ind — rigtig Care Portal
+                Prøv Care Portal
               </Link>
             </div>
           </div>
         </section>
 
-        {/* ── Bottom CTA ───────────────────────────────── */}
-        <section
-          className="px-5 py-24 sm:py-32"
-          style={{
-            background: 'linear-gradient(135deg, var(--budr-navy) 0%, #1a1040 50%, #0d2a1f 100%)',
-          }}
-        >
-          <div className="mx-auto max-w-2xl text-center" data-reveal>
-            <h2
-              className="text-3xl font-extrabold leading-tight text-white sm:text-4xl lg:text-5xl"
-              style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-            >
-              Klar til at give dine borgere bedre støtte?
-            </h2>
-            <p className="mx-auto mt-5 max-w-lg text-lg text-white/60">
-              Kom i gang på under 5 minutter. Ingen kontrakt. Ingen kreditkort.
-            </p>
-            <div className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Link
-                href="/app"
-                className="inline-flex items-center gap-2 rounded-full px-8 py-4 text-base font-bold text-white shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
-                style={{
-                  background:
-                    'linear-gradient(135deg, var(--budr-purple), var(--budr-purple-dark))',
-                }}
-              >
-                Start med appen gratis
-                <ArrowRight className="h-5 w-5" />
-              </Link>
-              <a
-                href="mailto:hej@budrcare.dk?subject=Demo af BUDR"
-                className="inline-flex items-center gap-2 rounded-full border-2 px-8 py-4 text-base font-semibold text-white/80 transition-all duration-200 hover:-translate-y-0.5 hover:text-white"
-                style={{ borderColor: 'rgba(255,255,255,0.2)' }}
-              >
-                Book en demo
-              </a>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Footer ──────────────────────────────────── */}
-        <footer
-          className="border-t px-5 py-10"
-          style={{ borderColor: 'rgba(0,0,0,0.07)', background: '#f8f9fc' }}
-        >
+        {/* Footer */}
+        <footer className="border-t border-black/[0.06] bg-[#f5f5f7] px-5 py-12">
           <div className="mx-auto max-w-6xl">
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-              {/* Brand */}
+            <div className="flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
-                <AppLogo size={28} />
+                <AppLogo size={26} />
                 <div>
-                  <p className="text-sm font-bold text-slate-800">BUDR</p>
-                  <p className="text-xs text-slate-400">Fremtidens socialpsykiatri</p>
+                  <p className="text-sm font-semibold text-neutral-900">BUDR</p>
+                  <p className="text-xs text-neutral-500">Socialpsykiatri · borger og personale</p>
                 </div>
               </div>
-              {/* Links */}
-              <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-500">
-                <a href="mailto:hej@budrcare.dk" className="hover:text-slate-800 transition-colors">
+              <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-neutral-500">
+                <a href="mailto:hej@budrcare.dk" className="hover:text-neutral-900">
                   hej@budrcare.dk
                 </a>
-                <Link href="/privacy" className="hover:text-slate-800 transition-colors">
+                <Link href="/privacy" className="hover:text-neutral-900">
                   Privatlivspolitik
                 </Link>
-                <Link href="/cookies" className="hover:text-slate-800 transition-colors">
+                <Link href="/cookies" className="hover:text-neutral-900">
                   Cookies
                 </Link>
-                <Link href="/terms" className="hover:text-slate-800 transition-colors">
+                <Link href="/terms" className="hover:text-neutral-900">
                   Vilkår
                 </Link>
                 <a
                   href="https://www.linkedin.com/company/budr"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-slate-800 transition-colors"
+                  className="hover:text-neutral-900"
                 >
                   LinkedIn
                 </a>
               </div>
             </div>
-            <div
-              className="mt-6 border-t pt-6 text-center text-xs text-slate-400"
-              style={{ borderColor: 'rgba(0,0,0,0.06)' }}
-            >
+            <p className="mt-10 text-center text-xs text-neutral-400">
               © {new Date().getFullYear()} BUDR. Alle rettigheder forbeholdes.
-            </div>
+            </p>
           </div>
         </footer>
       </div>

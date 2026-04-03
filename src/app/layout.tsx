@@ -11,7 +11,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: 'BUDR — Dansk AI-livscoach til socialpsykiatrien',
   description:
-    'BUDR hjælper beboere i socialpsykiatriske bosteder med daglig trivsel via PARK-metoden og giver personalet et komplet overblik.',
+    'Lys giver borgeren støtte i lommen; Care Portal samler signaler og overblik for personalet i socialpsykiatrien.',
   icons: {
     icon: [{ url: '/favicon.ico', type: 'image/x-icon' }],
   },

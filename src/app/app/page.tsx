@@ -329,7 +329,7 @@ export default function AppPage() {
                 className="mb-4 text-sm font-semibold uppercase tracking-[0.2em]"
                 style={{ color: '#34D399' }}
               >
-                Realtids-indblik
+                Realtidsindblik
               </p>
             </Scene>
             <Scene delay={120}>

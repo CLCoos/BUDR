@@ -22,7 +22,7 @@ export default function DailyCheckin() {
 
   const handleSave = async () => {
     if (!traffic) {
-      toast.error('Vælg venligst en trafiklys-farve');
+      toast.error('Vælg venligst en trafiklysfarve');
       return;
     }
     setLoading(true);

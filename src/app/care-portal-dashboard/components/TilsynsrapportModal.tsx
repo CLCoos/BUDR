@@ -161,7 +161,7 @@ export default function TilsynsrapportModal({ open, onClose }: Props) {
               content: `Du er en assistent der hjælper pædagoger på et botilbud med at udarbejde tilsynsrapporter i Socialtilsynets format. Skriv en professionel, struktureret tilsynsrapport på dansk med følgende fem afsnit:
 
 1. Generelle oplysninger om tilbuddet
-2. Borgersammensætning og trivselsoverblik (inkl. trafiklys-fordeling)
+2. Borgersammensætning og trivselsoverblik (inkl. trafiklysfordeling)
 3. Dokumenterede magtanvendelser (fra perioden)
 4. Handleplaner og indsatser
 5. Personalets vurdering af den aktuelle periode
@@ -174,7 +174,7 @@ Hold sproget formelt og fagligt. Brug passende fagbegreber fra socialpædagogikk
 
 Tilbud: Bosted Nordlys
 Antal borgere: ${residents.length}
-Trafiklys-fordeling: ${trafficCounts.grøn} grøn, ${trafficCounts.gul} gul, ${trafficCounts.rød} rød, ${trafficCounts.ingen} ikke registreret
+Trafiklysfordeling: ${trafficCounts.grøn} grøn, ${trafficCounts.gul} gul, ${trafficCounts.rød} rød, ${trafficCounts.ingen} ikke registreret
 
 Borgerdata:
 ${residentLines || 'Ingen borgerdata tilgængeligt'}
