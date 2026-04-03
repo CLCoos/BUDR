@@ -2,9 +2,14 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { CalendarDays, Clock, MapPin, Plus, User } from 'lucide-react';
+import type { CareHouse } from '@/lib/careDemoResidents';
+import {
+  CARE_DEMO_RESIDENT_PROFILES,
+  CARE_HOUSES,
+  careDemoProfileById,
+} from '@/lib/careDemoResidents';
 
-const HOUSES = ['A', 'B', 'C', 'D'] as const;
-export type CareHouse = (typeof HOUSES)[number];
+export type { CareHouse } from '@/lib/careDemoResidents';
 
 const APPT_TYPES = [
   { id: 'laege', label: 'Læge/Psykiater', color: 'var(--cp-blue)' },
@@ -29,14 +34,12 @@ export interface CareAppointment {
   responsible: string;
 }
 
-const RESIDENT_OPTIONS = [
-  { id: 'res-001', name: 'Anders M.', initials: 'AM' },
-  { id: 'res-002', name: 'Finn L.', initials: 'FL' },
-  { id: 'res-003', name: 'Kirsten R.', initials: 'KR' },
-  { id: 'res-004', name: 'Maja T.', initials: 'MT' },
-  { id: 'res-005', name: 'Thomas B.', initials: 'TB' },
-  { id: 'res-006', name: 'Lena P.', initials: 'LP' },
-];
+const RESIDENT_OPTIONS = CARE_DEMO_RESIDENT_PROFILES.map((r) => ({
+  id: r.id,
+  name: r.displayName,
+  initials: r.initials,
+  house: r.house,
+}));
 
 function formatDanishLongDate(d: Date): string {
   const wd = d.toLocaleDateString('da-DK', { weekday: 'long' });
@@ -59,6 +62,7 @@ function todayAt(day: Date, h: number, m: number): Date {
 }
 
 function createMockAppointments(day: Date): CareAppointment[] {
+  const p = (id: string) => careDemoProfileById(id);
   return [
     {
       id: 'cal-001',
@@ -66,9 +70,9 @@ function createMockAppointments(day: Date): CareAppointment[] {
       scheduledAt: todayAt(day, 8, 0),
       type: 'laege',
       residentId: 'res-002',
-      residentName: 'Finn L.',
-      residentInitials: 'FL',
-      house: 'A',
+      residentName: p('res-002')?.displayName ?? null,
+      residentInitials: p('res-002')?.initials ?? null,
+      house: p('res-002')?.house ?? 'A',
       location: 'Regionshospitalet',
       responsible: 'Sara K.',
     },
@@ -90,9 +94,9 @@ function createMockAppointments(day: Date): CareAppointment[] {
       scheduledAt: todayAt(day, 10, 15),
       type: 'laege',
       residentId: 'res-003',
-      residentName: 'Kirsten R.',
-      residentInitials: 'KR',
-      house: 'A',
+      residentName: p('res-003')?.displayName ?? null,
+      residentInitials: p('res-003')?.initials ?? null,
+      house: p('res-003')?.house ?? 'A',
       location: 'Tandklinikken, st.',
       responsible: 'Lena P.',
     },
@@ -114,9 +118,9 @@ function createMockAppointments(day: Date): CareAppointment[] {
       scheduledAt: todayAt(day, 14, 0),
       type: 'transport',
       residentId: 'res-005',
-      residentName: 'Thomas B.',
-      residentInitials: 'TB',
-      house: 'D',
+      residentName: p('res-005')?.displayName ?? null,
+      residentInitials: p('res-005')?.initials ?? null,
+      house: p('res-005')?.house ?? 'D',
       location: 'Rema 1000',
       responsible: 'Henrik S.',
     },
@@ -126,9 +130,9 @@ function createMockAppointments(day: Date): CareAppointment[] {
       scheduledAt: todayAt(day, 15, 30),
       type: 'aktivitet',
       residentId: 'res-004',
-      residentName: 'Maja T.',
-      residentInitials: 'MT',
-      house: 'B',
+      residentName: p('res-004')?.displayName ?? null,
+      residentInitials: p('res-004')?.initials ?? null,
+      house: p('res-004')?.house ?? 'B',
       location: 'Aktivitetsrummet',
       responsible: 'Birgit N.',
     },
@@ -138,11 +142,47 @@ function createMockAppointments(day: Date): CareAppointment[] {
       scheduledAt: todayAt(day, 18, 45),
       type: 'andet',
       residentId: 'res-001',
-      residentName: 'Anders M.',
-      residentInitials: 'AM',
-      house: 'A',
+      residentName: p('res-001')?.displayName ?? null,
+      residentInitials: p('res-001')?.initials ?? null,
+      house: p('res-001')?.house ?? 'A',
       location: 'Telefon / stue 104',
       responsible: 'Sara K.',
+    },
+    {
+      id: 'cal-008',
+      title: 'Blodprøve — LAB',
+      scheduledAt: todayAt(day, 11, 0),
+      type: 'laege',
+      residentId: 'res-008',
+      residentName: p('res-008')?.displayName ?? null,
+      residentInitials: p('res-008')?.initials ?? null,
+      house: p('res-008')?.house ?? 'B',
+      location: 'Sygeplejerske / stue',
+      responsible: 'Regionssygeplejerske',
+    },
+    {
+      id: 'cal-009',
+      title: 'Gåtur i parken',
+      scheduledAt: todayAt(day, 13, 15),
+      type: 'aktivitet',
+      residentId: 'res-011',
+      residentName: p('res-011')?.displayName ?? null,
+      residentInitials: p('res-011')?.initials ?? null,
+      house: p('res-011')?.house ?? 'B',
+      location: 'Mødeplads Hus B',
+      responsible: 'Mikkel H.',
+    },
+    {
+      id: 'cal-010',
+      title: 'Netværksmøde — pårørende',
+      scheduledAt: todayAt(day, 16, 0),
+      type: 'intern',
+      residentId: null,
+      residentName: null,
+      residentInitials: null,
+      house: 'A',
+      location: 'Fællesstuen',
+      responsible: 'Leder + team',
     },
   ];
 }
@@ -207,7 +247,7 @@ export default function KalenderWidget() {
           residentId: res?.id ?? null,
           residentName: res?.name ?? null,
           residentInitials: res?.initials ?? null,
-          house: houseFilter !== 'alle' ? houseFilter : 'A',
+          house: res?.house ?? (houseFilter !== 'alle' ? houseFilter : 'A'),
           location: formLocation.trim() || '—',
           responsible: formResponsible.trim(),
         },
@@ -282,7 +322,7 @@ export default function KalenderWidget() {
             Tilføj aftale
           </button>
           <div className="flex flex-wrap justify-start gap-1.5 sm:justify-end">
-            {(['alle', ...HOUSES] as const).map((key) => {
+            {(['alle', ...CARE_HOUSES] as const).map((key) => {
               const label = key === 'alle' ? 'Alle' : `Hus ${key}`;
               const selected = houseFilter === key;
               return (
@@ -545,7 +585,8 @@ export default function KalenderWidget() {
                     </span>
                     {a.residentInitials && (
                       <span
-                        className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
+                        title={a.residentName ?? undefined}
+                        className="inline-flex cursor-help items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
                         style={{
                           backgroundColor: 'var(--cp-green-dim)',
                           color: 'var(--cp-green)',
@@ -555,11 +596,6 @@ export default function KalenderWidget() {
                       </span>
                     )}
                   </div>
-                  {a.residentName && (
-                    <p className="mt-1 text-xs leading-snug" style={{ color: 'var(--cp-muted)' }}>
-                      {a.residentName}
-                    </p>
-                  )}
                   {/* Meta på smalle skærme under titel */}
                   <div
                     className="mt-2 space-y-1 text-xs leading-snug sm:hidden"

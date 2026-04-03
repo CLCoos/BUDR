@@ -34,6 +34,8 @@ import {
   IconUser,
   IconWarning,
 } from '@/components/marketing/LandingIcons';
+import { LandingInteractiveDemo } from '@/components/marketing/LandingInteractiveDemo';
+import { ResidentInitialsAbbr } from '@/components/marketing/ResidentInitialsAbbr';
 
 type HomeLandingProps = {
   className?: string;
@@ -59,40 +61,42 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
   return (
     <div className={`budr-landing ${className}`.trim()}>
       <nav>
-        <Link href="/" className="nav-logo" aria-label="BUDR Care — forsiden">
-          <BudrLogo dark size={40} />
-        </Link>
-        <ul className="nav-links">
-          <li>
-            <a href="#fordele">Fordele</a>
-          </li>
-          <li>
-            <a href="#problem">Hverdagsudfordringer</a>
-          </li>
-          <li>
-            <a href="#losning">Lys &amp; portal</a>
-          </li>
-          <li>
-            <a href="#sadan-virker-det">Sådan virker det</a>
-          </li>
-          <li>
-            <a href="#features">Funktioner</a>
-          </li>
-          <li>
-            <a href="#tryghed">Tryghed</a>
-          </li>
-          <li>
-            <a href="#prover-selv">Prøv demo</a>
-          </li>
-          <li>
-            <a href={BOOK_MAIL} className="nav-cta">
-              Book gennemgang →
-            </a>
-          </li>
-        </ul>
-        <a href={BOOK_MAIL} className="nav-mobile-demo">
-          Book
-        </a>
+        <div className="nav-inner shell">
+          <Link href="/" className="nav-logo" aria-label="BUDR Care — forsiden">
+            <BudrLogo dark size={40} />
+          </Link>
+          <ul className="nav-links">
+            <li>
+              <a href="#fordele">Fordele</a>
+            </li>
+            <li>
+              <a href="#problem">Hverdagsudfordringer</a>
+            </li>
+            <li>
+              <a href="#losning">Lys &amp; portal</a>
+            </li>
+            <li>
+              <a href="#sadan-virker-det">Sådan virker det</a>
+            </li>
+            <li>
+              <a href="#features">Funktioner</a>
+            </li>
+            <li>
+              <a href="#tryghed">Tryghed</a>
+            </li>
+            <li>
+              <a href="#prover-selv">Prøv demo</a>
+            </li>
+            <li>
+              <a href={BOOK_MAIL} className="nav-cta">
+                Book gennemgang →
+              </a>
+            </li>
+          </ul>
+          <a href={BOOK_MAIL} className="nav-mobile-demo">
+            Book
+          </a>
+        </div>
       </nav>
 
       {/* 1. HERO */}
@@ -128,7 +132,9 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
             </div>
             <div className="res-item">
               <div className="res-dot d-green" />
-              <span className="res-name">Thomas Vang</span>
+              <span className="res-name">
+                <ResidentInitialsAbbr initials="TV" fullName="Thomas Vang" />
+              </span>
               <span className="res-mood res-mood-with-ic">
                 <IconCheck size={12} className="landing-icon landing-icon--inline" />
                 Morgentjek
@@ -137,19 +143,26 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
             </div>
             <div className="res-item">
               <div className="res-dot d-amber" />
-              <span className="res-name">Camilla Frost</span>
+              <span className="res-name">
+                <ResidentInitialsAbbr initials="CF" fullName="Camilla Frost" />
+              </span>
               <span className="res-mood">Lys: angst</span>
               <span className="res-time">08:05</span>
             </div>
             <div className="res-item">
               <div className="res-dot d-red" />
-              <span className="res-name">Jakob Møller</span>
+              <span className="res-name">
+                <ResidentInitialsAbbr initials="JM" fullName="Jakob Møller" />
+              </span>
               <span className="res-mood">Intet tjek</span>
               <span className="res-time">—</span>
             </div>
             <div className="pmh-alert">
               <IconWarning size={16} className="landing-icon landing-icon--warn icon-flex-none" />
-              <span>Camilla har markeret angst i Lys — anbefalet opfølgning før kl. 09</span>
+              <span>
+                <ResidentInitialsAbbr initials="CF" fullName="Camilla Frost" /> har markeret angst i
+                Lys — anbefalet opfølgning før kl. 09
+              </span>
             </div>
             <div className="pmh-sep" />
             <div className="pmh-stat-row">
@@ -304,7 +317,8 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                 <IconMoodSignal size={22} className="landing-icon" />
               </div>
               <div className="pain-text">
-                <strong>Borgerens humør ændrer sig</strong> — men vagten ved det først ved samtalen.
+                <strong>Borgerens humør ændrer sig</strong> — men personalet ved det først ved
+                samtalen.
               </div>
             </div>
             <div className="pain-item">
@@ -394,19 +408,26 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               </div>
               <div className="res-item lys-portal-highlight">
                 <div className="res-dot d-amber" />
-                <span className="res-name">Camilla Frost</span>
+                <span className="res-name">
+                  <ResidentInitialsAbbr initials="CF" fullName="Camilla Frost" />
+                </span>
                 <span className="res-mood">Lys · tung energi</span>
                 <span className="res-time">08:05</span>
               </div>
               <div className="res-item">
                 <div className="res-dot d-green" />
-                <span className="res-name">Thomas Vang</span>
+                <span className="res-name">
+                  <ResidentInitialsAbbr initials="TV" fullName="Thomas Vang" />
+                </span>
                 <span className="res-mood">OK</span>
                 <span className="res-time">07:48</span>
               </div>
               <div className="pmh-alert lys-alert-pulse">
                 <IconWarning size={16} className="landing-icon landing-icon--warn icon-flex-none" />
-                <span>Prioritér samtale · Camilla</span>
+                <span>
+                  Prioritér samtale ·{' '}
+                  <ResidentInitialsAbbr initials="CF" fullName="Camilla Frost" />
+                </span>
               </div>
             </div>
           </div>
@@ -484,78 +505,21 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
         </div>
       </section>
 
-      {/* 5b. LIVE DEMOS — klikbare “screenshots” mod rigtige demoer */}
-      <section className="live-demo-strip fi" id="prover-selv" aria-label="Prøv demoerne selv">
+      {/* 5b. Interaktiv mini-demo: Lys check-in → portal-notifikation */}
+      <section className="live-demo-strip fi" id="prover-selv" aria-label="Prøv flowet selv">
         <div className="shell">
           <div className="live-demo-head">
             <div className="eyebrow">Interaktivt</div>
             <h2 className="section-h">
-              Prøv demoerne <em>selv</em>
+              Prøv et <em>check-in</em> — se portalen reagere
             </h2>
             <p className="section-p live-demo-lead">
-              Klik ind i et anonymiseret overblik eller åbn Lys — så mærker I produktet på egen
-              hånd.
+              Udfyld humør, energi og hvad der fylder — tilføj evt. en bemærkning — og send til Care
+              Portal. Til højre ser I, hvordan dagsoverblikket og beskeden til personalet ændrer sig
+              efter jeres valg, som i rigtig drift.
             </p>
           </div>
-          <div className="live-demo-grid">
-            <Link href="/care-portal-demo" className="live-demo-card">
-              <div className="live-demo-preview" aria-hidden>
-                <div className="ld-mini-bar">
-                  <span className="ld-mini-dots">
-                    <span />
-                    <span />
-                    <span />
-                  </span>
-                  <span className="ld-mini-url">care.budr.dk · demo</span>
-                </div>
-                <div className="ld-mini-body">
-                  <div className="ld-mini-side">
-                    <span className="ld-mini-nav active">Dagsoverblik</span>
-                    <span className="ld-mini-nav">Beboere</span>
-                    <span className="ld-mini-nav">Journal</span>
-                  </div>
-                  <div className="ld-mini-main">
-                    <div className="ld-mini-row">
-                      <span className="dss-dot green" />
-                      <span>T. Vang</span>
-                      <span className="ld-badge ok">Rolig</span>
-                    </div>
-                    <div className="ld-mini-row highlight">
-                      <span className="dss-dot amber" />
-                      <span>C. Frost</span>
-                      <span className="ld-badge warn">Lys</span>
-                    </div>
-                    <div className="ld-mini-row">
-                      <span className="dss-dot red" />
-                      <span>J. Møller</span>
-                      <span className="ld-badge crit">Intet tjek</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <h3 className="live-demo-card-title">Care Portal</h3>
-              <p className="live-demo-card-desc">
-                Demo med dagsoverblik, rækker og trafiklys — uden login.
-              </p>
-              <span className="live-demo-card-cta">Åbn Care Portal demo →</span>
-            </Link>
-            <Link href="/app" className="live-demo-card">
-              <div className="live-demo-preview live-demo-preview-lys" aria-hidden>
-                <div className="ld-lys-hdr">
-                  <span className="ld-lys-av">L</span>
-                  <span>Lys · check-in</span>
-                </div>
-                <div className="ld-lys-bubble user">God morgen — jeg er klar på dagen.</div>
-                <div className="ld-lys-bubble ai">Dejligt. Hvordan er energien?</div>
-                <div className="ld-lys-foot">
-                  <span className="ld-lys-energy" />
-                </div>
-              </div>
-              <h3 className="live-demo-card-title">Lys</h3>
-              <p className="live-demo-card-desc">Borgerens app — tjek ind, humør og egne ord.</p>
-              <span className="live-demo-card-cta">Åbn Lys →</span>
-            </Link>
-          </div>
+          <LandingInteractiveDemo />
         </div>
       </section>
 
@@ -571,7 +535,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               <p className="section-p">
                 Dagsoverblik pr. beboer, journaludkast tæt på dagen, medicin og profil samlet,
                 varsler fra Lys og manglende tjek, planforslag I godkender — plus søgning på tværs,
-                roller der matcher vagten, og ét sted at handle, når noget brænder.
+                roller der matcher jeres team, og ét sted at handle, når noget brænder.
               </p>
               <div className="feature-pills">
                 <div className="fpill">
@@ -591,7 +555,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                   </div>
                   <div>
                     <div className="fpill-title">Dokumentation</div>
-                    <div className="fpill-desc">Udkast fra vagten og Lys — I godkender.</div>
+                    <div className="fpill-desc">Udkast fra personalet og Lys — I godkender.</div>
                   </div>
                 </div>
                 <div className="fpill">
@@ -639,7 +603,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                   <div>
                     <div className="fpill-title">Roller &amp; adgang</div>
                     <div className="fpill-desc">
-                      Kun det, vagten og lederen skal se — tilpasset jeres enhed.
+                      Kun det, personalet og lederen skal se — tilpasset jeres enhed.
                     </div>
                   </div>
                 </div>
@@ -650,7 +614,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                   <div>
                     <div className="fpill-title">Mindre dobbeltarbejde</div>
                     <div className="fpill-desc">
-                      Ét sted at handle — færre gentagelser mellem systemer og vagter.
+                      Ét sted at handle — færre gentagelser mellem systemer og personalet.
                     </div>
                   </div>
                 </div>
@@ -704,28 +668,34 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                   <div className="ps-main-title">Dagsoverblik · 12 beboere</div>
                   <div className="ps-col-h">
                     <span />
-                    <span>Navn</span>
+                    <span>Initialer</span>
                     <span>Status</span>
                     <span>Signal</span>
                     <span>Siden</span>
                   </div>
                   <div className="ps-res-row">
                     <div className="res-dot d-green" />
-                    <span>Thomas Vang</span>
+                    <span>
+                      <ResidentInitialsAbbr initials="TV" fullName="Thomas Vang" />
+                    </span>
                     <span className="ps-badge badge-ok">Rolig</span>
                     <span className="ps-note">OK</span>
                     <span className="ps-note">07:48</span>
                   </div>
                   <div className="ps-res-row">
                     <div className="res-dot d-amber" />
-                    <span>Camilla Frost</span>
+                    <span>
+                      <ResidentInitialsAbbr initials="CF" fullName="Camilla Frost" />
+                    </span>
                     <span className="ps-badge badge-warn">Opmærksom</span>
                     <span className="ps-note">Lys</span>
                     <span className="ps-note">08:05</span>
                   </div>
                   <div className="ps-res-row">
                     <div className="res-dot d-red" />
-                    <span>Jakob Møller</span>
+                    <span>
+                      <ResidentInitialsAbbr initials="JM" fullName="Jakob Møller" />
+                    </span>
                     <span className="ps-badge badge-crit">Intet tjek</span>
                     <span className="ps-note">—</span>
                     <span className="ps-note">—</span>

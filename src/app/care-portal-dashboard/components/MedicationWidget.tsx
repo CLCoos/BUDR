@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
+  BarChart3,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -12,13 +13,20 @@ import {
   Shield,
   Timer,
 } from 'lucide-react';
+import { CARE_HOUSES, careDemoProfileById, type CareHouse } from '@/lib/careDemoResidents';
 
 export interface MedicationTask {
   id: string;
+  residentId: string;
   residentName: string;
   initials: string;
+  house: CareHouse;
+  room: string;
   medicationName: string;
-  dose: string;
+  strengthLabel: string;
+  quantity: number;
+  unit: 'tabletter' | 'kapsler' | 'ml' | 'dråber' | 'inhalationer';
+  routeLabel: string;
   scheduledAt: Date;
   givenAt: Date | null;
 }
@@ -63,78 +71,293 @@ function enumerateSlotsAround(now: Date): Date[] {
   return out.sort((a, b) => a.getTime() - b.getTime());
 }
 
+function qtyLabel(q: number, unit: MedicationTask['unit']): string {
+  if (unit === 'tabletter') return q === 1 ? '1 tablet' : `${q} tabletter`;
+  if (unit === 'kapsler') return q === 1 ? '1 kapsel' : `${q} kapsler`;
+  if (unit === 'ml') return `${q} ml`;
+  if (unit === 'dråber') return q === 1 ? '1 dråbe' : `${q} dråber`;
+  return q === 1 ? '1 inhalation' : `${q} inhalationer`;
+}
+
+function taskForResident(
+  partial: Omit<
+    MedicationTask,
+    'residentId' | 'residentName' | 'initials' | 'house' | 'room' | 'scheduledAt' | 'givenAt'
+  > & { residentId: string }
+): Omit<MedicationTask, 'scheduledAt' | 'givenAt'> {
+  const p = careDemoProfileById(partial.residentId);
+  if (!p) throw new Error(`Unknown resident ${partial.residentId}`);
+  return {
+    ...partial,
+    residentName: p.displayName,
+    initials: p.initials,
+    house: p.house,
+    room: p.room,
+  };
+}
+
 function createMockEntries(nowMs: number): MedicationTask[] {
   const now = new Date(nowMs);
   const slots = enumerateSlotsAround(now);
   const past = slots.filter((t) => t.getTime() < now.getTime());
-  const overdueSlots = past.slice(-2);
-  const inTwoHours = slots.filter(
-    (t) => t.getTime() > now.getTime() && t.getTime() <= now.getTime() + TWO_HOURS_MS
-  );
-  const upcomingSlots = inTwoHours.slice(0, 2);
-  const futureAll = slots.filter((t) => t.getTime() > now.getTime());
-  const afterWindow = slots.filter((t) => t.getTime() > now.getTime() + TWO_HOURS_MS);
+  const future = slots.filter((t) => t.getTime() > now.getTime());
+  const inTwoHours = future.filter((t) => t.getTime() <= now.getTime() + TWO_HOURS_MS);
+  const afterTwo = future.filter((t) => t.getTime() > now.getTime() + TWO_HOURS_MS);
 
-  const u0 = upcomingSlots[0] ?? inTwoHours[0] ?? futureAll[0];
-  const u1 =
-    upcomingSlots[1] ??
-    inTwoHours[1] ??
-    futureAll.find((t) => u0 && t.getTime() > u0.getTime()) ??
-    futureAll[1];
-  const farSlots: [Date, Date] = [
-    afterWindow[0] ?? futureAll[2] ?? u1!,
-    afterWindow[1] ?? futureAll[3] ?? futureAll[2] ?? u1!,
-  ];
+  const overdueSlots = past.slice(-4);
+  const upcomingSlots = inTwoHours.slice(0, 6);
+  const laterSlots = afterTwo.slice(0, 14);
 
   const templates: Omit<MedicationTask, 'scheduledAt' | 'givenAt'>[] = [
-    {
-      id: 'med-001',
-      residentName: 'Anders M.',
-      initials: 'AM',
+    taskForResident({
+      id: 'mw-001',
+      residentId: 'res-001',
       medicationName: 'Metformin',
-      dose: '500 mg',
-    },
-    {
-      id: 'med-002',
-      residentName: 'Finn L.',
-      initials: 'FL',
+      strengthLabel: '500 mg',
+      quantity: 2,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-002',
+      residentId: 'res-002',
       medicationName: 'Sertralin',
-      dose: '50 mg',
-    },
-    {
-      id: 'med-003',
-      residentName: 'Kirsten R.',
-      initials: 'KR',
+      strengthLabel: '50 mg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-003',
+      residentId: 'res-003',
       medicationName: 'Risperidon',
-      dose: '2 mg',
-    },
-    {
-      id: 'med-004',
-      residentName: 'Maja T.',
-      initials: 'MT',
+      strengthLabel: '2 mg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-004',
+      residentId: 'res-004',
       medicationName: 'Lisinopril',
-      dose: '10 mg',
-    },
-    {
-      id: 'med-005',
-      residentName: 'Thomas B.',
-      initials: 'TB',
+      strengthLabel: '10 mg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-005',
+      residentId: 'res-005',
       medicationName: 'Quetiapin',
-      dose: '25 mg',
-    },
-    {
-      id: 'med-006',
-      residentName: 'Lena P.',
-      initials: 'LP',
+      strengthLabel: '25 mg',
+      quantity: 2,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-006',
+      residentId: 'res-006',
       medicationName: 'Panodil',
-      dose: '1 g',
-    },
+      strengthLabel: '1 g',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-007',
+      residentId: 'res-007',
+      medicationName: 'Abilify',
+      strengthLabel: '10 mg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-008',
+      residentId: 'res-008',
+      medicationName: 'Omeprazol',
+      strengthLabel: '20 mg',
+      quantity: 1,
+      unit: 'kapsler',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-009',
+      residentId: 'res-009',
+      medicationName: 'Metformin',
+      strengthLabel: '850 mg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-010',
+      residentId: 'res-010',
+      medicationName: 'Melatonin',
+      strengthLabel: '3 mg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-011',
+      residentId: 'res-011',
+      medicationName: 'Warfarin',
+      strengthLabel: '2,5 mg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-012',
+      residentId: 'res-012',
+      medicationName: 'Salbutamol',
+      strengthLabel: '100 mcg',
+      quantity: 2,
+      unit: 'inhalationer',
+      routeLabel: 'Inhalation',
+    }),
+    taskForResident({
+      id: 'mw-013',
+      residentId: 'res-001',
+      medicationName: 'Quetiapin',
+      strengthLabel: '100 mg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-014',
+      residentId: 'res-004',
+      medicationName: 'Sertralin',
+      strengthLabel: '100 mg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-015',
+      residentId: 'res-002',
+      medicationName: 'Lithium',
+      strengthLabel: '12,2 mmol',
+      quantity: 2,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-016',
+      residentId: 'res-008',
+      medicationName: 'Prednisolon',
+      strengthLabel: '5 mg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-017',
+      residentId: 'res-003',
+      medicationName: 'Lorazepam',
+      strengthLabel: '1 mg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-018',
+      residentId: 'res-005',
+      medicationName: 'Metformin',
+      strengthLabel: '500 mg',
+      quantity: 2,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-019',
+      residentId: 'res-006',
+      medicationName: 'Vitamin D',
+      strengthLabel: '20 µg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-020',
+      residentId: 'res-007',
+      medicationName: 'Mirtazapin',
+      strengthLabel: '15 mg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-021',
+      residentId: 'res-009',
+      medicationName: 'Citalopram',
+      strengthLabel: '20 mg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-022',
+      residentId: 'res-010',
+      medicationName: 'B12-vitamin',
+      strengthLabel: '1 mg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'SL',
+    }),
+    taskForResident({
+      id: 'mw-023',
+      residentId: 'res-011',
+      medicationName: 'Zopiclon',
+      strengthLabel: '7,5 mg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-024',
+      residentId: 'res-012',
+      medicationName: 'Natriumvalproat',
+      strengthLabel: '300 mg',
+      quantity: 2,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
   ];
 
-  const o0 = overdueSlots[0] ?? past[past.length - 1];
-  const o1 = overdueSlots[1] ?? past[past.length - 2] ?? past[past.length - 1];
-  const scheduled: Date[] = [o0!, o1!, u0!, u1!, farSlots[0], farSlots[1]];
-  return templates.map((t, i) => ({ ...t, scheduledAt: scheduled[i]!, givenAt: null }));
+  const scheduledTimes = [...overdueSlots, ...upcomingSlots, ...laterSlots];
+  const n = Math.min(templates.length, scheduledTimes.length);
+  return templates.slice(0, n).map((t, i) => ({
+    ...t,
+    scheduledAt: scheduledTimes[i]!,
+    givenAt: null,
+  }));
+}
+
+function ResidentAbbr({
+  fullName,
+  initials,
+  className,
+}: {
+  fullName: string;
+  initials: string;
+  className?: string;
+}) {
+  return (
+    <abbr
+      title={fullName}
+      className={className}
+      style={{
+        cursor: 'help',
+        textDecoration: 'none',
+        borderBottom: '1px dotted rgba(148,163,184,0.45)',
+      }}
+    >
+      {initials}
+    </abbr>
+  );
 }
 
 export default function MedicationWidget() {
@@ -142,6 +365,7 @@ export default function MedicationWidget() {
   const [hydrated, setHydrated] = useState(false);
   const [laterExpanded, setLaterExpanded] = useState(true);
   const [nowTick, setNowTick] = useState(() => Date.now());
+  const [houseFilter, setHouseFilter] = useState<'alle' | CareHouse>('alle');
 
   useEffect(() => {
     setEntries(createMockEntries(Date.now()));
@@ -158,7 +382,21 @@ export default function MedicationWidget() {
     setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, givenAt: at } : e)));
   }, []);
 
-  const { overdue, upcoming, laterToday, overduePrimary, stats, pendingCount } = useMemo(() => {
+  const scopedEntries = useMemo(() => {
+    if (houseFilter === 'alle') return entries;
+    return entries.filter((e) => e.house === houseFilter);
+  }, [entries, houseFilter]);
+
+  const {
+    overdue,
+    upcoming,
+    laterToday,
+    overduePrimary,
+    stats,
+    pendingCount,
+    prepOverview,
+    doseTotals,
+  } = useMemo(() => {
     if (!hydrated) {
       return {
         overdue: [] as MedicationTask[],
@@ -167,11 +405,13 @@ export default function MedicationWidget() {
         overduePrimary: false,
         stats: { pending: 0, overdueN: 0, upcomingN: 0, laterN: 0 },
         pendingCount: 0,
+        prepOverview: [] as { name: string; administrations: number; units: number }[],
+        doseTotals: { tabletter: 0, ovrige: 0 },
       };
     }
     const now = nowTick;
-    const pending = entries.filter((e) => e.givenAt === null);
-    const overdueWindow = entries
+    const pending = scopedEntries.filter((e) => e.givenAt === null);
+    const overdueWindow = scopedEntries
       .filter((e) => e.scheduledAt.getTime() < now)
       .sort((a, b) => {
         const aDone = a.givenAt !== null ? 1 : 0;
@@ -183,19 +423,37 @@ export default function MedicationWidget() {
     const overdueList = hasOpenOverdue ? overdueWindow : [];
     const upcomingList = pending
       .filter((e) => {
-        const t = e.scheduledAt.getTime();
-        return t > now && t <= now + TWO_HOURS_MS;
+        const t0 = e.scheduledAt.getTime();
+        return t0 > now && t0 <= now + TWO_HOURS_MS;
       })
       .sort((a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime());
     const laterList = pending
       .filter((e) => e.scheduledAt.getTime() > now + TWO_HOURS_MS)
       .sort((a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime());
+
+    const byPrep = new Map<string, { administrations: number; units: number }>();
+    let tabletter = 0;
+    let ovrige = 0;
+    for (const e of pending) {
+      const prev = byPrep.get(e.medicationName) ?? { administrations: 0, units: 0 };
+      prev.administrations += 1;
+      prev.units += e.quantity;
+      byPrep.set(e.medicationName, prev);
+      if (e.unit === 'tabletter' || e.unit === 'kapsler') tabletter += e.quantity;
+      else ovrige += e.quantity;
+    }
+    const prepOverview = [...byPrep.entries()]
+      .map(([name, v]) => ({ name, ...v }))
+      .sort((a, b) => b.units - a.units || b.administrations - a.administrations);
+
     return {
       overdue: overdueList,
       upcoming: upcomingList,
       laterToday: laterList,
       overduePrimary: overdueList.length > 0,
       pendingCount: pending.length,
+      prepOverview,
+      doseTotals: { tabletter, ovrige },
       stats: {
         pending: pending.length,
         overdueN: overdueList.filter((e) => !e.givenAt).length,
@@ -203,7 +461,12 @@ export default function MedicationWidget() {
         laterN: laterList.length,
       },
     };
-  }, [entries, hydrated, nowTick]);
+  }, [scopedEntries, hydrated, nowTick]);
+
+  const uniqueResidentsPending = useMemo(() => {
+    const ids = new Set(scopedEntries.filter((e) => e.givenAt === null).map((e) => e.residentId));
+    return ids.size;
+  }, [scopedEntries]);
 
   if (!hydrated) {
     return (
@@ -223,14 +486,12 @@ export default function MedicationWidget() {
       className="cp-card-elevated relative w-full overflow-hidden p-6 sm:p-7"
       aria-label="Medicinudleveringer"
     >
-      {/* Ambient top edge */}
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/12 to-transparent"
         aria-hidden
       />
 
-      {/* Header */}
-      <header className="relative mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-start sm:justify-between">
+      <header className="relative mb-5 flex flex-col gap-4 sm:mb-6 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-4">
           <div
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl shadow-lg shadow-black/20"
@@ -264,24 +525,120 @@ export default function MedicationWidget() {
               )}
             </div>
             <p className="mt-1 text-sm leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
-              Overblik over dagens udleveringer · ét tryk for at registrere
+              Samlet overblik pr. præparat og beboer · hold musepeker over initialer for fulde navn
             </p>
           </div>
         </div>
-        <span
-          className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-medium"
-          style={{
-            borderColor: 'rgba(99,179,237,0.25)',
-            backgroundColor: 'rgba(99,179,237,0.08)',
-            color: 'var(--cp-blue)',
-          }}
-        >
-          <Shield className="h-3.5 w-3.5" aria-hidden />
-          FMK-integration
-        </span>
+        <div className="flex flex-col items-stretch gap-2 sm:items-end">
+          <span
+            className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-medium"
+            style={{
+              borderColor: 'rgba(99,179,237,0.25)',
+              backgroundColor: 'rgba(99,179,237,0.08)',
+              color: 'var(--cp-blue)',
+            }}
+          >
+            <Shield className="h-3.5 w-3.5" aria-hidden />
+            FMK-integration
+          </span>
+          <div className="flex flex-wrap justify-start gap-1.5 sm:justify-end">
+            {(['alle', ...CARE_HOUSES] as const).map((key) => {
+              const label = key === 'alle' ? 'Alle' : `Hus ${key}`;
+              const selected = houseFilter === key;
+              return (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => setHouseFilter(key)}
+                  className="rounded-full px-2.5 py-1 text-xs font-medium transition-all duration-200"
+                  style={
+                    selected
+                      ? { backgroundColor: 'var(--cp-green)', color: '#fff' }
+                      : {
+                          backgroundColor: 'var(--cp-bg3)',
+                          color: 'var(--cp-muted)',
+                          border: '1px solid var(--cp-border)',
+                        }
+                  }
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </header>
 
-      {/* Live status chips */}
+      {stats.pending > 0 && (
+        <div
+          className="mb-5 rounded-2xl p-4 sm:p-5"
+          style={{
+            background: 'linear-gradient(135deg, rgba(99,179,237,0.1) 0%, var(--cp-bg3) 100%)',
+            border: '1px solid rgba(99,179,237,0.2)',
+          }}
+        >
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <BarChart3
+              className="h-4 w-4 shrink-0"
+              style={{ color: 'var(--cp-blue)' }}
+              aria-hidden
+            />
+            <p className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+              Mængde &amp; præparater{' '}
+              {houseFilter === 'alle' ? '(alle huse)' : `(Hus ${houseFilter})`}
+            </p>
+          </div>
+          <div
+            className="mb-3 flex flex-wrap gap-3 text-xs sm:text-sm"
+            style={{ color: 'var(--cp-muted)' }}
+          >
+            <span className="tabular-nums">
+              <strong style={{ color: 'var(--cp-text)' }}>{stats.pending}</strong> udleveringer
+              tilbage
+            </span>
+            <span className="opacity-40" aria-hidden>
+              ·
+            </span>
+            <span>
+              <strong style={{ color: 'var(--cp-text)' }}>{uniqueResidentsPending}</strong> beboere
+            </span>
+            <span className="opacity-40" aria-hidden>
+              ·
+            </span>
+            <span>
+              <strong style={{ color: 'var(--cp-text)' }}>{prepOverview.length}</strong> forskellige
+              præparater
+            </span>
+            <span className="opacity-40" aria-hidden>
+              ·
+            </span>
+            <span>
+              Tabletter/kapsler i alt:{' '}
+              <strong style={{ color: 'var(--cp-text)' }} className="tabular-nums">
+                {doseTotals.tabletter}
+              </strong>
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2" aria-label="Fordeling pr. præparat">
+            {prepOverview.slice(0, 8).map((row) => (
+              <span
+                key={row.name}
+                className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium"
+                style={{
+                  backgroundColor: 'var(--cp-bg2)',
+                  color: 'var(--cp-text)',
+                  border: '1px solid var(--cp-border)',
+                }}
+                title={`${row.name}: ${row.administrations} administrationer, ${row.units} enheder i alt (tabletter/kapsler/ml m.v.)`}
+              >
+                <span className="max-w-[140px] truncate">{row.name}</span>
+                <span className="tabular-nums opacity-80">{row.units}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {(stats.overdueN > 0 || stats.upcomingN > 0 || stats.laterN > 0) && (
         <div className="mb-6 flex flex-wrap gap-2" role="status" aria-live="polite">
           {stats.overdueN > 0 && (
@@ -336,7 +693,6 @@ export default function MedicationWidget() {
       )}
 
       <div className="flex flex-col gap-6">
-        {/* Forfaldne — prioriteret bane */}
         {overdue.length > 0 && (
           <div>
             <div className="mb-4 flex items-end justify-between gap-3">
@@ -391,6 +747,7 @@ export default function MedicationWidget() {
                             style={{
                               background: 'linear-gradient(145deg, #63b3ed 0%, #3182ce 100%)',
                             }}
+                            title={item.residentName}
                           >
                             {item.initials}
                           </div>
@@ -406,17 +763,28 @@ export default function MedicationWidget() {
                                 {item.medicationName}
                               </p>
                               <span
+                                className="rounded-md px-2 py-0.5 text-xs font-semibold tabular-nums"
+                                style={{
+                                  backgroundColor: 'var(--cp-blue-dim, rgba(99,179,237,0.15))',
+                                  color: 'var(--cp-blue)',
+                                  border: '1px solid rgba(99,179,237,0.25)',
+                                }}
+                              >
+                                {qtyLabel(item.quantity, item.unit)}
+                              </span>
+                              <span
                                 className="rounded-md px-2 py-0.5 text-xs font-medium"
                                 style={{
                                   backgroundColor: 'var(--cp-bg3)',
                                   color: 'var(--cp-muted)',
                                 }}
                               >
-                                {item.dose}
+                                {item.strengthLabel}
                               </span>
                             </div>
                             <p className="mt-1 text-sm" style={{ color: 'var(--cp-muted)' }}>
-                              {item.residentName}
+                              <ResidentAbbr fullName={item.residentName} initials={item.initials} />{' '}
+                              · Hus {item.house} · værelse {item.room} · {item.routeLabel}
                             </p>
                             <div
                               className="mt-2 flex flex-wrap items-center gap-2 text-xs font-medium"
@@ -481,7 +849,6 @@ export default function MedicationWidget() {
           </div>
         )}
 
-        {/* Kommende — tidslinje */}
         {upcoming.length > 0 && (
           <div
             className="rounded-2xl p-1"
@@ -519,7 +886,7 @@ export default function MedicationWidget() {
                 {upcoming.map((row) => (
                   <li
                     key={row.id}
-                    className="grid grid-cols-[3.25rem_40px_minmax(0,1fr)] items-center gap-3 border-t py-3.5 first:border-t-0 first:pt-0 sm:grid-cols-[3.5rem_44px_minmax(0,1fr)] sm:gap-4"
+                    className="grid grid-cols-[3.25rem_40px_minmax(0,1fr)_auto] items-center gap-3 border-t py-3.5 first:border-t-0 first:pt-0 sm:grid-cols-[3.5rem_44px_minmax(0,1fr)_auto] sm:gap-4"
                     style={{ borderColor: 'var(--cp-border)' }}
                   >
                     <div className="flex justify-end">
@@ -536,6 +903,7 @@ export default function MedicationWidget() {
                       style={{
                         background: 'linear-gradient(145deg, #63b3ed 0%, #3182ce 100%)',
                       }}
+                      title={row.residentName}
                     >
                       {row.initials}
                     </div>
@@ -544,13 +912,24 @@ export default function MedicationWidget() {
                         {row.medicationName}
                         <span className="font-normal" style={{ color: 'var(--cp-muted)' }}>
                           {' '}
-                          · {row.dose}
+                          · {qtyLabel(row.quantity, row.unit)} · {row.strengthLabel}
                         </span>
                       </p>
                       <p className="text-xs" style={{ color: 'var(--cp-muted2)' }}>
-                        {row.residentName}
+                        <ResidentAbbr fullName={row.residentName} initials={row.initials} /> · Hus{' '}
+                        {row.house} · {row.room}
                       </p>
                     </div>
+                    <span
+                      className="hidden shrink-0 rounded-lg px-2 py-1 text-[10px] font-semibold tabular-nums sm:inline-block"
+                      style={{
+                        backgroundColor: 'var(--cp-bg3)',
+                        color: 'var(--cp-muted)',
+                        border: '1px solid var(--cp-border)',
+                      }}
+                    >
+                      {row.routeLabel}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -558,7 +937,6 @@ export default function MedicationWidget() {
           </div>
         )}
 
-        {/* Senere i dag */}
         {laterToday.length > 0 && (
           <div className="rounded-2xl" style={{ border: '1px solid var(--cp-border)' }}>
             <button
@@ -607,15 +985,20 @@ export default function MedicationWidget() {
                     <span
                       className="flex h-8 w-8 items-center justify-center rounded-lg text-[10px] font-semibold text-white"
                       style={{ backgroundColor: 'var(--cp-muted2)' }}
+                      title={row.residentName}
                     >
                       {row.initials}
                     </span>
                     <div className="min-w-0 truncate text-sm">
                       <span style={{ color: 'var(--cp-text)' }}>{row.medicationName}</span>
-                      <span style={{ color: 'var(--cp-muted)' }}> · {row.dose}</span>
+                      <span style={{ color: 'var(--cp-muted)' }}>
+                        {' '}
+                        · {qtyLabel(row.quantity, row.unit)} · {row.strengthLabel}
+                      </span>
                       <span className="text-xs" style={{ color: 'var(--cp-muted2)' }}>
                         {' '}
-                        · {row.residentName}
+                        · <ResidentAbbr fullName={row.residentName} initials={row.initials} /> · H
+                        {row.house}
                       </span>
                     </div>
                   </li>
@@ -625,8 +1008,7 @@ export default function MedicationWidget() {
           </div>
         )}
 
-        {/* Intet mere at vise: alle registreret */}
-        {pendingCount === 0 && entries.length > 0 && (
+        {pendingCount === 0 && scopedEntries.length > 0 && (
           <div
             className="relative overflow-hidden rounded-2xl p-6 sm:p-8"
             style={{
@@ -654,6 +1036,7 @@ export default function MedicationWidget() {
                   style={{ color: 'var(--cp-text)' }}
                 >
                   Alle udleveringer registreret
+                  {houseFilter !== 'alle' ? ` for Hus ${houseFilter}` : ''}
                 </p>
                 <p className="mt-2 text-sm leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
                   Godt gået — der er ingen åbne medicinopgaver på listen lige nu.
@@ -661,6 +1044,12 @@ export default function MedicationWidget() {
               </div>
             </div>
           </div>
+        )}
+
+        {scopedEntries.length === 0 && houseFilter !== 'alle' && (
+          <p className="text-center text-sm" style={{ color: 'var(--cp-muted)' }}>
+            Ingen planlagte udleveringer for Hus {houseFilter} i dette vindue.
+          </p>
         )}
       </div>
     </section>

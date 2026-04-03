@@ -1,7 +1,8 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Search, ChevronRight, Clock } from 'lucide-react';
 import { toast } from 'sonner';
+import { CARE_DEMO_RESIDENT_PROFILES, CARE_HOUSES, type CareHouse } from '@/lib/careDemoResidents';
 
 type TrafficUi = 'groen' | 'gul' | 'roed';
 
@@ -10,6 +11,7 @@ interface DemoResident {
   name: string;
   initials: string;
   room: string;
+  house: CareHouse;
   trafficLight: TrafficUi | null;
   moodScore: number | null;
   lastCheckin: string;
@@ -42,60 +44,20 @@ const trafficConfig: Record<
   },
 };
 
-const DEMO_RESIDENTS: DemoResident[] = [
-  {
-    id: 'demo-001',
-    name: 'Finn L.',
-    initials: 'FL',
-    room: '3',
-    trafficLight: 'roed',
-    moodScore: 2,
-    lastCheckin: '08:12',
-    notePreview: 'Åbnede kriseplan kl. 08:12. Meget ked af det.',
-    checkinToday: true,
-    pendingProposals: 2,
-  },
-  {
-    id: 'demo-002',
-    name: 'Kirsten R.',
-    initials: 'KR',
-    room: '9',
-    trafficLight: 'roed',
-    moodScore: 3,
-    lastCheckin: '07:50',
-    notePreview: 'Dårlig nat, klager over mave og angst.',
-    checkinToday: true,
-    pendingProposals: 1,
-  },
-  {
-    id: 'demo-003',
-    name: 'Thomas B.',
-    initials: 'TB',
-    room: '7',
-    trafficLight: null,
-    moodScore: null,
-    lastCheckin: 'I går 15:30',
-    notePreview: 'Ingen check-in i dag endnu',
-    checkinToday: false,
-    pendingProposals: 0,
-  },
-  {
-    id: 'demo-004',
-    name: 'Maja T.',
-    initials: 'MT',
-    room: '11',
-    trafficLight: 'gul',
-    moodScore: 4,
-    lastCheckin: '09:05',
-    notePreview: 'Lidt ked af det, vil gerne snakke.',
-    checkinToday: true,
-    pendingProposals: 1,
-  },
-  {
-    id: 'demo-005',
-    name: 'Anders M.',
-    initials: 'AM',
-    room: '5',
+/** Stemning og trafiklys pr. beboer (fiktiv demo). */
+const ROWS: Record<
+  string,
+  Pick<
+    DemoResident,
+    | 'trafficLight'
+    | 'moodScore'
+    | 'lastCheckin'
+    | 'notePreview'
+    | 'checkinToday'
+    | 'pendingProposals'
+  >
+> = {
+  'res-001': {
     trafficLight: 'groen',
     moodScore: 8,
     lastCheckin: '07:45',
@@ -103,11 +65,39 @@ const DEMO_RESIDENTS: DemoResident[] = [
     checkinToday: true,
     pendingProposals: 0,
   },
-  {
-    id: 'demo-006',
-    name: 'Lena P.',
-    initials: 'LP',
-    room: '4',
+  'res-002': {
+    trafficLight: 'roed',
+    moodScore: 2,
+    lastCheckin: '08:12',
+    notePreview: 'Åbnede kriseplan kl. 08:12. Meget ked af det.',
+    checkinToday: true,
+    pendingProposals: 2,
+  },
+  'res-003': {
+    trafficLight: 'roed',
+    moodScore: 3,
+    lastCheckin: '07:50',
+    notePreview: 'Dårlig nat, klager over mave og angst.',
+    checkinToday: true,
+    pendingProposals: 1,
+  },
+  'res-004': {
+    trafficLight: 'gul',
+    moodScore: 4,
+    lastCheckin: '09:05',
+    notePreview: 'Lidt ked af det, vil gerne snakke.',
+    checkinToday: true,
+    pendingProposals: 1,
+  },
+  'res-005': {
+    trafficLight: null,
+    moodScore: null,
+    lastCheckin: 'I går 15:30',
+    notePreview: 'Ingen check-in i dag endnu',
+    checkinToday: false,
+    pendingProposals: 0,
+  },
+  'res-006': {
     trafficLight: 'groen',
     moodScore: 6,
     lastCheckin: '08:30',
@@ -115,11 +105,7 @@ const DEMO_RESIDENTS: DemoResident[] = [
     checkinToday: true,
     pendingProposals: 0,
   },
-  {
-    id: 'demo-007',
-    name: 'Henrik S.',
-    initials: 'HS',
-    room: '12',
+  'res-007': {
     trafficLight: 'groen',
     moodScore: 8,
     lastCheckin: '08:00',
@@ -127,11 +113,7 @@ const DEMO_RESIDENTS: DemoResident[] = [
     checkinToday: true,
     pendingProposals: 0,
   },
-  {
-    id: 'demo-008',
-    name: 'Birgit N.',
-    initials: 'BN',
-    room: '6',
+  'res-008': {
     trafficLight: 'gul',
     moodScore: 5,
     lastCheckin: '08:45',
@@ -139,11 +121,7 @@ const DEMO_RESIDENTS: DemoResident[] = [
     checkinToday: true,
     pendingProposals: 1,
   },
-  {
-    id: 'demo-009',
-    name: 'Rasmus V.',
-    initials: 'RV',
-    room: '8',
+  'res-009': {
     trafficLight: 'groen',
     moodScore: 7,
     lastCheckin: '07:30',
@@ -151,11 +129,7 @@ const DEMO_RESIDENTS: DemoResident[] = [
     checkinToday: true,
     pendingProposals: 0,
   },
-  {
-    id: 'demo-010',
-    name: 'Dorthe A.',
-    initials: 'DA',
-    room: '2',
+  'res-010': {
     trafficLight: 'groen',
     moodScore: 9,
     lastCheckin: '07:15',
@@ -163,19 +137,63 @@ const DEMO_RESIDENTS: DemoResident[] = [
     checkinToday: true,
     pendingProposals: 0,
   },
-];
+  'res-011': {
+    trafficLight: 'groen',
+    moodScore: 7,
+    lastCheckin: '08:20',
+    notePreview: 'Rolig morgen, vil gerne male i eftermiddag.',
+    checkinToday: true,
+    pendingProposals: 0,
+  },
+  'res-012': {
+    trafficLight: 'gul',
+    moodScore: 5,
+    lastCheckin: '09:10',
+    notePreview: 'Lidt træt efter nattevagt-støj. Vil have ro.',
+    checkinToday: true,
+    pendingProposals: 0,
+  },
+};
+
+const DEMO_RESIDENTS: DemoResident[] = CARE_DEMO_RESIDENT_PROFILES.map((p) => {
+  const row = ROWS[p.id] ?? {
+    trafficLight: null as TrafficUi | null,
+    moodScore: null,
+    lastCheckin: '—',
+    notePreview: '—',
+    checkinToday: false,
+    pendingProposals: 0,
+  };
+  return {
+    id: p.id,
+    name: p.displayName,
+    initials: p.initials,
+    room: p.room,
+    house: p.house,
+    ...row,
+  };
+});
 
 export default function ResidentListDemo() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'alle' | TrafficUi | 'ingen'>('alle');
+  const [houseFilter, setHouseFilter] = useState<'alle' | CareHouse>('alle');
 
-  const filtered = DEMO_RESIDENTS.filter((r) => {
-    const matchSearch =
-      r.name.toLowerCase().includes(search.toLowerCase()) || r.room.includes(search);
-    const matchFilter =
-      filter === 'alle' ? true : filter === 'ingen' ? !r.trafficLight : r.trafficLight === filter;
-    return matchSearch && matchFilter;
-  });
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return DEMO_RESIDENTS.filter((r) => {
+      const matchHouse = houseFilter === 'alle' || r.house === houseFilter;
+      const matchSearch =
+        !q ||
+        r.name.toLowerCase().includes(q) ||
+        r.initials.toLowerCase().includes(q) ||
+        r.room.toLowerCase().includes(q) ||
+        r.house.toLowerCase().includes(q);
+      const matchFilter =
+        filter === 'alle' ? true : filter === 'ingen' ? !r.trafficLight : r.trafficLight === filter;
+      return matchSearch && matchFilter && matchHouse;
+    });
+  }, [search, filter, houseFilter]);
 
   const checkinCount = DEMO_RESIDENTS.filter((r) => r.checkinToday).length;
 
@@ -209,6 +227,34 @@ export default function ResidentListDemo() {
             {DEMO_RESIDENTS.length} beboere · {checkinCount} check-in i dag
           </span>
         </div>
+        <div className="mb-2 flex flex-wrap gap-1.5">
+          {(['alle', ...CARE_HOUSES] as const).map((key) => {
+            const label = key === 'alle' ? 'Alle huse' : `Hus ${key}`;
+            const active = houseFilter === key;
+            return (
+              <button
+                key={label}
+                type="button"
+                onClick={() => setHouseFilter(key)}
+                className="rounded-full px-2.5 py-1 text-[11px] font-medium transition-all"
+                style={
+                  active
+                    ? {
+                        backgroundColor: 'var(--cp-green)',
+                        color: '#fff',
+                      }
+                    : {
+                        backgroundColor: 'var(--cp-bg3)',
+                        color: 'var(--cp-muted)',
+                        border: '1px solid var(--cp-border)',
+                      }
+                }
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:gap-2">
           <div className="relative min-w-0 flex-1">
             <Search
@@ -219,7 +265,7 @@ export default function ResidentListDemo() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Søg navn eller værelse..."
+              placeholder="Søg initialer, navn (internt), værelse eller hus…"
               className="w-full rounded-[10px] py-2 pl-8 pr-3 text-sm outline-none transition-colors"
               style={{
                 backgroundColor: 'var(--cp-bg3)',
@@ -281,6 +327,12 @@ export default function ResidentListDemo() {
                 className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide"
                 style={{ color: 'var(--cp-muted)', borderBottom: '1px solid var(--cp-border)' }}
               >
+                Hus
+              </th>
+              <th
+                className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide"
+                style={{ color: 'var(--cp-muted)', borderBottom: '1px solid var(--cp-border)' }}
+              >
                 Vær.
               </th>
               <th
@@ -316,7 +368,9 @@ export default function ResidentListDemo() {
               return (
                 <tr
                   key={r.id}
-                  onClick={() => toast.info(`Demo: ${r.name} — klik tilgængeligt i live-portalen`)}
+                  onClick={() =>
+                    toast.info(`Demo: ${r.initials} — fuld profil i live-portalen efter login`)
+                  }
                   className="group cursor-pointer transition-colors"
                   style={{ borderBottom: '1px solid var(--cp-border)' }}
                   onMouseEnter={(e) => {
@@ -331,6 +385,7 @@ export default function ResidentListDemo() {
                     <div className="flex items-center gap-2.5">
                       <div
                         className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                        title={r.name}
                         style={{
                           backgroundColor: tc?.color ?? 'var(--cp-muted2)',
                           boxShadow: tc ? '0 0 0 2px var(--cp-bg2)' : undefined,
@@ -339,9 +394,18 @@ export default function ResidentListDemo() {
                         {r.initials}
                       </div>
                       <div className="flex min-w-0 flex-wrap items-center gap-2">
-                        <span className="text-sm font-medium" style={{ color: 'var(--cp-text)' }}>
-                          {r.name}
-                        </span>
+                        <abbr
+                          title={r.name}
+                          className="text-sm font-semibold tracking-wide"
+                          style={{
+                            color: 'var(--cp-text)',
+                            cursor: 'help',
+                            textDecoration: 'none',
+                            borderBottom: '1px dotted rgba(148,163,184,0.5)',
+                          }}
+                        >
+                          {r.initials}
+                        </abbr>
                         {r.pendingProposals > 0 && (
                           <span
                             className="inline-flex items-center gap-1 whitespace-nowrap rounded-full px-1.5 py-0.5 text-[11px] font-medium"
@@ -360,6 +424,12 @@ export default function ResidentListDemo() {
                         )}
                       </div>
                     </div>
+                  </td>
+                  <td
+                    className="px-3 py-3 text-xs font-medium tabular-nums"
+                    style={{ color: 'var(--cp-muted)' }}
+                  >
+                    {r.house}
                   </td>
                   <td
                     className="px-3 py-3 text-sm tabular-nums"
@@ -434,7 +504,7 @@ export default function ResidentListDemo() {
         </table>
         {filtered.length === 0 && (
           <div className="py-12 text-center text-sm" style={{ color: 'var(--cp-muted)' }}>
-            Ingen beboere matcher søgningen
+            Ingen beboere matcher filtrene
           </div>
         )}
       </div>

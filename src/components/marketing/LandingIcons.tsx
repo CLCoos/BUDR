@@ -48,7 +48,7 @@ export function IconDocMemory(props: BaseProps) {
   );
 }
 
-/** Vagtskifte — brudt vidensflow mellem to punkter */
+/** Personaleskifte — brudt vidensflow mellem to punkter */
 export function IconShiftGap(props: BaseProps) {
   return (
     <Svg {...props}>
