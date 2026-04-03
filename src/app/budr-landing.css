@@ -50,9 +50,13 @@ html {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.045);
-  background: rgba(12, 17, 24, 0.92);
-  backdrop-filter: blur(14px);
+  border-bottom: 1px solid transparent;
+  background: linear-gradient(180deg, rgba(12, 17, 24, 0.96) 0%, rgba(12, 17, 24, 0.88) 100%);
+  backdrop-filter: blur(20px) saturate(1.35);
+  -webkit-backdrop-filter: blur(20px) saturate(1.35);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06),
+    0 24px 48px rgba(0, 0, 0, 0.35);
 }
 
 .budr-landing .nav-logo {
@@ -132,14 +136,69 @@ html {
     linear-gradient(150deg, #0c1118 0%, #10192a 60%, #0c1118 100%);
 }
 
+.budr-landing .hero-bg::before {
+  content: '';
+  position: absolute;
+  inset: -35% -20%;
+  background:
+    radial-gradient(circle at 18% 28%, rgba(233, 170, 71, 0.14) 0%, transparent 42%),
+    radial-gradient(circle at 82% 18%, rgba(100, 140, 220, 0.1) 0%, transparent 38%),
+    radial-gradient(circle at 55% 88%, rgba(233, 170, 71, 0.08) 0%, transparent 45%);
+  animation: budr-mesh 22s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes budr-mesh {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(2%, -3%) scale(1.05);
+    opacity: 0.92;
+  }
+}
+
+.budr-landing .shell {
+  width: 100%;
+  max-width: 1180px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .budr-landing .hero-inner {
   position: relative;
   z-index: 1;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 72px;
+  gap: clamp(40px, 6vw, 88px);
   align-items: center;
   width: 100%;
+}
+
+.budr-landing .hero-kicker {
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--fog);
+  margin-bottom: 14px;
+  animation: budr-fadeUp 0.65s ease both;
+}
+
+.budr-landing .hero-kicker strong {
+  color: var(--white);
+  font-weight: 600;
+}
+
+.budr-landing .hero-kicker a {
+  color: var(--amber);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 600;
+}
+
+.budr-landing .hero-kicker a:hover {
+  color: var(--amber-lt);
 }
 
 .budr-landing .hero-tag {
@@ -178,9 +237,11 @@ html {
 
 .budr-landing .hero h1 {
   font-family: var(--font-landing-display, 'Playfair Display', Georgia, serif);
-  font-size: clamp(2.8rem, 5.5vw, 5.2rem);
+  font-size: clamp(2.65rem, 5.2vw, 4.85rem);
   font-weight: 900;
-  line-height: 1.06;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
   animation: budr-fadeUp 0.7s 0.08s ease both;
 }
 
@@ -191,12 +252,17 @@ html {
 
 .budr-landing .hero-sub {
   margin-top: 22px;
-  font-size: 1rem;
+  font-size: 1.05rem;
   color: var(--white-dim);
-  max-width: 52ch;
+  max-width: 48ch;
   font-weight: 300;
-  line-height: 1.8;
+  line-height: 1.75;
   animation: budr-fadeUp 0.7s 0.16s ease both;
+}
+
+.budr-landing .hero-sub strong {
+  color: rgba(245, 243, 239, 0.92);
+  font-weight: 600;
 }
 
 .budr-landing .hero-actions {
@@ -208,12 +274,27 @@ html {
 }
 
 .budr-landing .portal-hero-mock {
-  background: linear-gradient(145deg, #111d0e, #162213);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 20px;
+  position: relative;
+  background: linear-gradient(145deg, rgba(17, 29, 14, 0.95), rgba(22, 33, 19, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 22px;
   padding: 22px;
   animation: budr-fadeUp 0.7s 0.1s ease both;
-  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 0 0 1px rgba(233, 170, 71, 0.06),
+    0 48px 96px rgba(0, 0, 0, 0.55),
+    0 0 80px rgba(233, 170, 71, 0.04);
+  transition:
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.45s ease;
+}
+
+.budr-landing .portal-hero-mock:hover {
+  transform: translateY(-6px);
+  box-shadow:
+    0 0 0 1px rgba(233, 170, 71, 0.12),
+    0 56px 100px rgba(0, 0, 0, 0.58),
+    0 0 100px rgba(233, 170, 71, 0.07);
 }
 
 .budr-landing .pmh-top {
@@ -512,6 +593,184 @@ html {
   color: var(--fog);
   font-weight: 300;
   margin-top: 4px;
+}
+
+.budr-landing .intro-section {
+  position: relative;
+  padding: 96px 52px 100px;
+  background: linear-gradient(180deg, rgba(20, 30, 42, 0.5) 0%, transparent 45%), var(--ink);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.budr-landing .intro-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(90%, 720px);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(233, 170, 71, 0.35), transparent);
+  pointer-events: none;
+}
+
+.budr-landing .intro-head {
+  text-align: center;
+  max-width: 38rem;
+  margin: 0 auto 48px;
+}
+
+.budr-landing .intro-head .section-h {
+  max-width: none;
+  margin: 0 auto;
+}
+
+.budr-landing .intro-lead {
+  font-size: 1rem;
+  color: var(--white-dim);
+  font-weight: 300;
+  line-height: 1.7;
+  margin-top: 14px;
+}
+
+.budr-landing .intro-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+.budr-landing .intro-card {
+  position: relative;
+  border-radius: 18px;
+  padding: 28px 24px;
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  transition:
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.3s ease,
+    box-shadow 0.35s ease;
+}
+
+.budr-landing .intro-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(233, 170, 71, 0.22);
+  box-shadow: 0 28px 56px rgba(0, 0, 0, 0.35);
+}
+
+.budr-landing .intro-card-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin-bottom: 12px;
+}
+
+.budr-landing .intro-card-h {
+  font-family: var(--font-landing-display, 'Playfair Display', Georgia, serif);
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--white);
+  margin-bottom: 10px;
+}
+
+.budr-landing .intro-card-p {
+  font-size: 0.88rem;
+  color: var(--white-dim);
+  font-weight: 300;
+  line-height: 1.65;
+  margin-bottom: 16px;
+}
+
+.budr-landing .intro-card-link {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--amber);
+  text-decoration: none;
+  transition: color 0.18s;
+}
+
+.budr-landing .intro-card-link:hover {
+  color: var(--amber-lt);
+}
+
+.budr-landing .flow-section {
+  padding: 100px 52px;
+  background: linear-gradient(180deg, var(--ink) 0%, var(--ink-mid) 55%, var(--ink-mid) 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  position: relative;
+}
+
+.budr-landing .flow-head {
+  text-align: center;
+  max-width: 40rem;
+  margin: 0 auto 52px;
+}
+
+.budr-landing .flow-head .section-h {
+  max-width: none;
+}
+
+.budr-landing .flow-lead {
+  font-size: 0.95rem;
+  color: var(--white-dim);
+  font-weight: 300;
+  line-height: 1.7;
+  margin-top: 12px;
+}
+
+.budr-landing .flow-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px 32px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.budr-landing .flow-step {
+  position: relative;
+  padding: 28px 22px 24px;
+  border-radius: var(--r);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: border-color 0.25s ease;
+}
+
+.budr-landing .flow-step:hover {
+  border-color: rgba(233, 170, 71, 0.18);
+}
+
+.budr-landing .flow-num {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink);
+  background: linear-gradient(135deg, var(--amber-lt), var(--amber));
+  margin-bottom: 18px;
+  box-shadow: 0 0 28px rgba(233, 170, 71, 0.2);
+}
+
+.budr-landing .flow-h {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: 8px;
+  line-height: 1.35;
+}
+
+.budr-landing .flow-p {
+  font-size: 0.84rem;
+  color: var(--fog);
+  font-weight: 300;
+  line-height: 1.65;
 }
 
 .budr-landing .switch-section {
@@ -1271,7 +1530,11 @@ html {
 .budr-landing .cta-bg {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(233, 170, 71, 0.07) 0%, transparent 65%);
+  background: radial-gradient(
+    ellipse 70% 60% at 50% 50%,
+    rgba(233, 170, 71, 0.07) 0%,
+    transparent 65%
+  );
 }
 
 .budr-landing .cta-section h2 {
@@ -1488,5 +1751,43 @@ html {
     flex-direction: column;
     gap: 12px;
     align-items: flex-start;
+  }
+
+  .budr-landing .intro-grid,
+  .budr-landing .flow-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .budr-landing .intro-section {
+    padding-top: 72px;
+    padding-bottom: 80px;
+  }
+
+  .budr-landing .flow-section {
+    padding-top: 72px;
+    padding-bottom: 80px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .budr-landing .hero-bg::before {
+    animation: none !important;
+  }
+
+  .budr-landing .portal-hero-mock {
+    transition: none;
+  }
+
+  .budr-landing .portal-hero-mock:hover {
+    transform: none;
+  }
+
+  .budr-landing .intro-card,
+  .budr-landing .flow-step {
+    transition: none;
+  }
+
+  .budr-landing .intro-card:hover {
+    transform: none;
   }
 }

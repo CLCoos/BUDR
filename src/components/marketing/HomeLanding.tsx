@@ -141,6 +141,9 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
         </Link>
         <ul className="nav-links">
           <li>
+            <a href="#hvad-er-budr">Ny her?</a>
+          </li>
+          <li>
             <a href="#portalen">Care Portal</a>
           </li>
           <li>
@@ -168,18 +171,24 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
 
       <section className="hero">
         <div className="hero-bg" aria-hidden />
-        <div className="hero-inner">
+        <div className="hero-inner shell">
           <div>
+            <p className="hero-kicker">
+              Første gang her?{' '}
+              <a href="#hvad-er-budr">Start med &quot;hvad er BUDR?&quot; — to korte produkter</a>.
+            </p>
             <div className="hero-tag">
               <span aria-hidden />
-              Til pædagoger og ledere · Botilbud &amp; socialpsykiatri
+              Til pædagoger &amp; ledere · Socialpsykiatriske botilbud
             </div>
             <h1>
-              Journalen, medicinen og borgerens egne ord — <em>før I åbner første dør.</em>
+              Ét overblik for personalet. <em>En stemme for borgeren.</em>
             </h1>
             <p className="hero-sub">
-              Journal efter vagt, medicin der skal stemples, oplysninger spredt på tværs af
-              systemer. Care Portal samler overblikket — mere tid til borgerne, mindre til jagt.
+              <strong>BUDR Care</strong> er dansk software til jeres hverdag:{' '}
+              <strong>Care Portal</strong> giver pædagoger og ledere samme billede af vagten
+              (journal, medicin, signaler). <strong>Lys</strong> er en rolig companion til beboeren
+              — det, de vælger at dele, kan I se i portalen med det samme.
             </p>
             <div className="hero-actions">
               <Link href="/care-portal-demo" className="btn-primary">
@@ -244,8 +253,58 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
         </div>
       </section>
 
+      <section className="intro-section fi" id="hvad-er-budr" aria-label="Hvad er BUDR Care">
+        <div className="shell">
+          <div className="intro-head">
+            <div className="eyebrow">Hvad er BUDR Care?</div>
+            <h2 className="section-h">
+              To produkter. Én idé: <em>mindre jagt, mere møde.</em>
+            </h2>
+            <p className="intro-lead">
+              I behøver ikke kende os på forhånd. Her er forskellen på de to dele — før I scroller
+              videre til tal, sammenligning og demo.
+            </p>
+          </div>
+          <div className="intro-grid">
+            <div className="intro-card">
+              <div className="intro-card-label">01 · Personalet</div>
+              <h3 className="intro-card-h">Care Portal</h3>
+              <p className="intro-card-p">
+                Web til team og ledelse: dagsoverblik pr. beboer, journalstøtte, medicin og
+                borgeroplysninger samlet — så I ved, hvem der har brug for jer først.
+              </p>
+              <Link href="/care-portal-demo" className="intro-card-link">
+                Prøv portal-demo →
+              </Link>
+            </div>
+            <div className="intro-card">
+              <div className="intro-card-label">02 · Beboeren</div>
+              <h3 className="intro-card-h">Lys</h3>
+              <p className="intro-card-p">
+                En tryg samtale i lommen — humør, små planer, døgnet rundt. Beboeren styrer, hvad
+                der deles; personalet ser kun det, der hjælper jer med at reagere rigtigt.
+              </p>
+              <a href="#lys" className="intro-card-link">
+                Læs om Lys →
+              </a>
+            </div>
+            <div className="intro-card">
+              <div className="intro-card-label">03 · Sammen</div>
+              <h3 className="intro-card-h">Ikke endnu et kommunestystem</h3>
+              <p className="intro-card-p">
+                I beholder de platforme, kommunen kræver. BUDR lægger et lag ovenpå: overblik,
+                borgerens egne ord og bedre overdragelse — bygget til socialpsykiatrien.
+              </p>
+              <a href="#skift" className="intro-card-link">
+                Hvorfor skifte eller supplere? →
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <div className="stats-bar fi">
-        <div className="stats-inner">
+        <div className="stats-inner shell">
           <div>
             <div className="stat-n">3</div>
             <div className="stat-l">Aktive botilbud i pilot</div>
@@ -265,17 +324,57 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
         </div>
       </div>
 
+      <section className="flow-section fi" id="sadan-virker-det" aria-label="Sådan fungerer BUDR">
+        <div className="shell">
+          <div className="flow-head">
+            <div className="eyebrow">Scroll-flow</div>
+            <h2 className="section-h">
+              Fra beboer til vagt — <em>i tre trin</em>
+            </h2>
+            <p className="flow-lead">
+              Sådan binder vi det sammen, når en kommune eller et botilbud vurderer os første gang.
+            </p>
+          </div>
+          <div className="flow-steps">
+            <div className="flow-step">
+              <div className="flow-num">1</div>
+              <div className="flow-h">Beboeren møder Lys</div>
+              <p className="flow-p">
+                Samtale og humør i et roligt interface — når de har brug for det. De vælger selv,
+                hvad der deles videre til huset.
+              </p>
+            </div>
+            <div className="flow-step">
+              <div className="flow-num">2</div>
+              <div className="flow-h">Portalen samler billedet</div>
+              <p className="flow-p">
+                Lys-signaler, morgentjek, medicin og journal lander ét sted — så team og leder ser
+                det samme, før dagen spidser til.
+              </p>
+            </div>
+            <div className="flow-step">
+              <div className="flow-num">3</div>
+              <div className="flow-h">I handler med faglighed</div>
+              <p className="flow-p">
+                I prioriterer og dokumenterer ud fra det, der faktisk skete — mindre gæt, klarere
+                overdragelse til næste vagt og til kommunen.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="switch-section" id="skift">
         <div className="switch-grid fi">
           <div>
-            <div className="eyebrow">Det I mærker hver dag</div>
+            <div className="eyebrow">Genkender I det?</div>
             <h2 className="section-h">
-              Eksisterende systemer er bygget til sager — <em>ikke til jeres vagt</em>
+              Systemerne løser sager. <em>I løser hverdagen.</em>
             </h2>
             <p className="section-p">
-              Mange systemer er bygget til sager og regler — ikke til{' '}
-              <em>hvem har brug for mig først?</em> BUDR tilføjer borgerens signaler og et overblik,
-              I kan handle på med det samme.
+              Det I bruger i forvejen er ofte lavet til sagsmapper, tilsyn og regler — ikke til
+              spørgsmålet <em>hvem har brug for mig lige nu?</em> BUDR lægger borgerens signaler og
+              et vagtoverblik ovenpå, så I kan handle i nuet.
             </p>
             <div className="pain-list">
               <div className="pain-item">
@@ -478,9 +577,9 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
       <section className="portal-section" id="portalen">
         <div className="portal-grid fi">
           <div>
-            <div className="eyebrow">Care Portal — bygget til personalet</div>
+            <div className="eyebrow">Care Portal — til personalet</div>
             <h2 className="section-h">
-              Alt det, I alligevel ville spørge kollegaen om — <em>samlet ét sted</em>
+              Det, I plejer at spørge kollegaen om — <em>samlet ét sted</em>
             </h2>
             <p className="section-p">
               Hvem har det svært, hvad er aftalt, hvad skal journalen vide — uden fire programmer.
@@ -745,9 +844,9 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               Værdighed starter med at blive hørt — <em>også når ordene mangler</em>
             </h2>
             <p className="section-p">
-              I <a href="#hvad-kan-budr">Hvad kan BUDR Care?</a> er Lys kort forklaret for borgeren.
-              Her er produktet i dybden: borger og portal hænger sammen — tryghed og bedre
-              beslutninger uden sagsnummer-følelse.
+              Under <a href="#hvad-kan-budr">Hvad kan BUDR?</a> får borgeren en kort forklaring. Her
+              dykker vi ned i Lys: hvordan det føles for beboeren, og hvad I ser i portalen — uden
+              at nogen føles som et sagsnummer.
             </p>
             <div className="lys-bonus-pills">
               <div className="lys-bonus-pill">
@@ -918,7 +1017,8 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
             Vi viser det på <em>jeres</em> præmisser — for personale og borgere
           </h2>
           <p className="cta-lead">
-            Ikke generisk slidshow — journal, medicin, profiler og Lys ud fra jeres hverdag.
+            Vi tager udgangspunkt i jeres hverdag — ikke et standard slide-show. Portal, Lys,
+            journal og medicin, som I faktisk bruger dem.
           </p>
           <div className="cta-actions">
             <a
@@ -965,6 +1065,8 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
           </div>
           <div className="footer-col">
             <h5>Selskab</h5>
+            <a href="#hvad-er-budr">Ny her? (hvad er BUDR)</a>
+            <a href="#sadan-virker-det">Sådan fungerer det</a>
             <a href="#hvad-kan-budr">Hvad kan BUDR?</a>
             <a href="#om-budr">Om BUDR</a>
             <a href="#skift">Hverdag &amp; systemer</a>
