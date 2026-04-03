@@ -329,7 +329,11 @@ export default function CarePortalDemoPage() {
       </button>
 
       <HurtigJournalModal open={journalOpen} onClose={() => setJournalOpen(false)} />
-      <OverrapportModal open={overrapportOpen} onClose={() => setOverrapportOpen(false)} />
+      <OverrapportModal
+        open={overrapportOpen}
+        onClose={() => setOverrapportOpen(false)}
+        preferDemoWhenNoResidents
+      />
       <IndsatsModal open={indsatsOpen} onClose={() => setIndsatsOpen(false)} />
       <TilsynsrapportModal open={tilsynsrapportOpen} onClose={() => setTilsynsrapportOpen(false)} />
     </div>

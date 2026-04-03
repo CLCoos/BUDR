@@ -4,26 +4,35 @@ import React, { useEffect, useRef, useState } from 'react';
 import { X, Copy, Check, FileText } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { ANTHROPIC_CHAT_MODEL } from '@/lib/ai/anthropicModel';
+import {
+  composeStructuredOverrapport,
+  needsOverrapportAttention,
+  type OverrapportResidentInput,
+} from '@/lib/overrapport/composeStructuredReport';
+import { getDemoOverrapportResidents } from '@/lib/overrapport/demoResidentSummaries';
 
-interface ResidentSummary {
-  name: string;
-  initials: string;
-  moodLabel: string | null;
-  trafficLight: string | null;
-  checkinTime: string | null;
-  notePreview: string | null;
-  pendingMessages: number;
-}
+type ResidentSummary = OverrapportResidentInput;
 
-type Props = { open: boolean; onClose: () => void };
+type Props = {
+  open: boolean;
+  onClose: () => void;
+  /** Kun til /care-portal-demo: fyld med realistiske beboerdata når Supabase mangler eller er tom. */
+  preferDemoWhenNoResidents?: boolean;
+};
 
-export default function OverrapportModal({ open, onClose }: Props) {
+export default function OverrapportModal({
+  open,
+  onClose,
+  preferDemoWhenNoResidents = false,
+}: Props) {
   const [loading, setLoading] = useState(false);
   const [residents, setResidents] = useState<ResidentSummary[]>([]);
   const [report, setReport] = useState('');
   const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
   const [edited, setEdited] = useState(false);
+  const [reportSource, setReportSource] = useState<'ai' | 'template'>('template');
+  const [dataSource, setDataSource] = useState<'live' | 'demo'>('live');
   const mountedRef = useRef(true);
 
   useEffect(() => {
@@ -37,97 +46,110 @@ export default function OverrapportModal({ open, onClose }: Props) {
     if (!open) return;
     setReport('');
     setEdited(false);
+    setReportSource('template');
     void fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const fetchData = async () => {
     setLoading(true);
+    let summaries: ResidentSummary[] = [];
+    let source: 'live' | 'demo' = 'live';
+
     try {
       const supabase = createClient();
-      if (!supabase) return;
+      if (supabase) {
+        const today = new Date().toISOString().slice(0, 10);
 
-      const today = new Date().toISOString().slice(0, 10);
+        const { data: careResidents } = await supabase
+          .from('care_residents')
+          .select('user_id, display_name')
+          .limit(30);
 
-      // Fetch residents
-      const { data: careResidents } = await supabase
-        .from('care_residents')
-        .select('user_id, display_name')
-        .limit(30);
+        if (careResidents?.length) {
+          const residentIds = careResidents.map((r) => r.user_id);
+          const { data: checkins } = await supabase
+            .from('park_daily_checkin')
+            .select('resident_id, mood_score, traffic_light, note, created_at')
+            .in('resident_id', residentIds)
+            .gte('created_at', `${today}T00:00:00`)
+            .order('created_at', { ascending: false });
 
-      if (!careResidents?.length) return;
+          const { data: proposals } = await supabase
+            .from('plan_proposals')
+            .select('resident_id, status')
+            .in('resident_id', residentIds)
+            .eq('plan_date', today)
+            .eq('status', 'pending');
 
-      // Fetch today's check-ins
-      const residentIds = careResidents.map((r) => r.user_id);
-      const { data: checkins } = await supabase
-        .from('park_daily_checkin')
-        .select('resident_id, mood_score, traffic_light, note, created_at')
-        .in('resident_id', residentIds)
-        .gte('created_at', `${today}T00:00:00`)
-        .order('created_at', { ascending: false });
+          const MOOD_LABELS: Record<number, string> = {
+            1: 'Svært',
+            2: 'Dårligt',
+            3: 'OK',
+            4: 'Godt',
+            5: 'Fantastisk',
+          };
 
-      // Fetch pending messages
-      const { data: proposals } = await supabase
-        .from('plan_proposals')
-        .select('resident_id, status')
-        .in('resident_id', residentIds)
-        .eq('plan_date', today)
-        .eq('status', 'pending');
-
-      const MOOD_LABELS: Record<number, string> = {
-        1: 'Svært',
-        2: 'Dårligt',
-        3: 'OK',
-        4: 'Godt',
-        5: 'Fantastisk',
-      };
-
-      const summaries: ResidentSummary[] = careResidents.map((r) => {
-        const checkin = checkins?.find((c) => c.resident_id === r.user_id);
-        const pending = proposals?.filter((p) => p.resident_id === r.user_id).length ?? 0;
-        return {
-          name: r.display_name,
-          initials: r.display_name
-            .split(' ')
-            .map((n: string) => n[0])
-            .join('')
-            .slice(0, 2)
-            .toUpperCase(),
-          moodLabel: checkin?.mood_score ? (MOOD_LABELS[checkin.mood_score] ?? null) : null,
-          trafficLight: checkin?.traffic_light ?? null,
-          checkinTime: checkin?.created_at
-            ? new Date(checkin.created_at).toLocaleTimeString('da-DK', {
-                hour: '2-digit',
-                minute: '2-digit',
-              })
-            : null,
-          notePreview: checkin?.note ?? null,
-          pendingMessages: pending,
-        };
-      });
-
-      if (mountedRef.current) {
-        setResidents(summaries);
-        void generateReport(summaries);
+          summaries = careResidents.map((r) => {
+            const checkin = checkins?.find((c) => c.resident_id === r.user_id);
+            const pending = proposals?.filter((p) => p.resident_id === r.user_id).length ?? 0;
+            return {
+              name: r.display_name,
+              initials: r.display_name
+                .split(' ')
+                .map((n: string) => n[0])
+                .join('')
+                .slice(0, 2)
+                .toUpperCase(),
+              moodLabel: checkin?.mood_score ? (MOOD_LABELS[checkin.mood_score] ?? null) : null,
+              trafficLight: checkin?.traffic_light ?? null,
+              checkinTime: checkin?.created_at
+                ? new Date(checkin.created_at).toLocaleTimeString('da-DK', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
+                : null,
+              notePreview: checkin?.note ?? null,
+              pendingMessages: pending,
+            };
+          });
+        }
       }
     } catch {
       /* ignore */
-    } finally {
-      if (mountedRef.current) setLoading(false);
     }
+
+    if (summaries.length === 0 && preferDemoWhenNoResidents) {
+      summaries = getDemoOverrapportResidents();
+      source = 'demo';
+    }
+
+    if (mountedRef.current) {
+      setResidents(summaries);
+      setDataSource(source);
+      void generateReport(summaries);
+    }
+    if (mountedRef.current) setLoading(false);
   };
 
   const generateReport = async (data: ResidentSummary[]) => {
     setGenerating(true);
-    try {
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
-      const dateStr = now.toLocaleDateString('da-DK', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-      });
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
+    const dateStr = now.toLocaleDateString('da-DK', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    });
+    const ctx = { dateStr, timeStr };
 
+    const applyTemplate = () => {
+      if (!mountedRef.current) return;
+      setReport(composeStructuredOverrapport(data, ctx));
+      setReportSource('template');
+    };
+
+    try {
       const residentLines = data
         .map((r) => {
           const parts = [`${r.name}:`];
@@ -168,13 +190,19 @@ Hold sproget professionelt men ikke stift. Max 300 ord.`,
         }),
       });
 
-      const d = (await res.json()) as { choices?: [{ message: { content: string } }] };
+      const d = (await res.json()) as {
+        choices?: [{ message?: { content?: string | null } }];
+        error?: string;
+      };
       const text = d.choices?.[0]?.message?.content?.trim();
-      if (text && mountedRef.current) {
+      if (res.ok && text && mountedRef.current) {
         setReport(text);
+        setReportSource('ai');
+      } else {
+        applyTemplate();
       }
     } catch {
-      /* ignore */
+      applyTemplate();
     } finally {
       if (mountedRef.current) setGenerating(false);
     }
@@ -208,9 +236,7 @@ Hold sproget professionelt men ikke stift. Max 300 ord.`,
   if (!open) return null;
 
   const noCheckins = residents.filter((r) => !r.checkinTime).length;
-  const attention = residents.filter(
-    (r) => r.trafficLight === 'rød' || r.trafficLight === 'gul' || r.pendingMessages > 0
-  );
+  const attention = residents.filter(needsOverrapportAttention);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -224,7 +250,11 @@ Hold sproget professionelt men ikke stift. Max 300 ord.`,
             </div>
             <div>
               <h2 className="font-bold text-gray-900">Auto-overrapport</h2>
-              <p className="text-xs text-gray-500">Genereret fra dagens borgerdata</p>
+              <p className="text-xs text-gray-500">
+                {reportSource === 'ai'
+                  ? 'Genereret med AI ud fra dagens borgerdata'
+                  : 'Struktureret udkast ud fra dagens data — klar til redigering'}
+              </p>
             </div>
           </div>
           <button
@@ -240,6 +270,11 @@ Hold sproget professionelt men ikke stift. Max 300 ord.`,
           {/* Data summary chips */}
           {!loading && residents.length > 0 && (
             <div className="flex flex-wrap gap-2">
+              {dataSource === 'demo' && (
+                <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-800">
+                  Demo-data
+                </span>
+              )}
               <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
                 {residents.length} borgere
               </span>

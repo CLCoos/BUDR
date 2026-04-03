@@ -490,83 +490,109 @@ export default function KalenderWidget() {
           </p>
         </div>
       ) : (
-        <div className="flex">
-          <div className="w-14 shrink-0">
+        <div
+          className="rounded-xl"
+          style={{ border: '1px solid var(--cp-border)', backgroundColor: 'var(--cp-bg3)' }}
+        >
+          <ul className="list-none p-0 m-0">
             {filtered.map((a) => (
-              <div
-                key={`t-${a.id}`}
-                className="py-2.5 font-mono text-xs font-semibold tabular-nums"
-                style={{ color: 'var(--cp-text)' }}
-              >
-                {formatTime(a.scheduledAt)}
-              </div>
-            ))}
-          </div>
-          <div
-            className="relative min-w-0 flex-1 ml-2"
-            style={{ borderLeft: '2px solid var(--cp-border)' }}
-          >
-            {filtered.map((a) => (
-              <div
+              <li
                 key={a.id}
-                className="group relative py-2.5 pl-5 pr-1 transition-all duration-200 last:border-b-0"
-                style={{ borderBottom: '1px solid var(--cp-border)' }}
+                className="group grid grid-cols-[4.25rem_18px_minmax(0,1fr)] gap-x-2 border-b px-2 py-3 transition-colors duration-200 last:border-b-0 sm:grid-cols-[4.25rem_18px_minmax(0,1fr)_10.5rem] sm:gap-x-3 sm:px-3"
+                style={{ borderColor: 'var(--cp-border)' }}
                 onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--cp-bg3)';
+                  (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--cp-bg2)';
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.backgroundColor = '';
                 }}
               >
-                <div
-                  className="absolute left-[-5px] top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full"
-                  style={{
-                    backgroundColor: typeColor(a.type),
-                    boxShadow: `0 0 0 2px var(--cp-bg2)`,
-                  }}
-                  aria-hidden
-                />
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
-                        {a.title}
+                {/* Kolonne 1: tid — samme række som indhold, vertikalt centreret */}
+                <div className="flex items-center justify-end sm:pr-0.5">
+                  <time
+                    dateTime={a.scheduledAt.toISOString()}
+                    className="font-mono text-[11px] font-semibold tabular-nums leading-none sm:text-xs"
+                    style={{ color: 'var(--cp-text)' }}
+                  >
+                    {formatTime(a.scheduledAt)}
+                  </time>
+                </div>
+
+                {/* Kolonne 2: tidslinje + prik (fuld rækkehøjde) */}
+                <div className="relative flex justify-center">
+                  <div
+                    className="absolute bottom-0 left-1/2 top-0 w-px -translate-x-1/2"
+                    style={{ backgroundColor: 'var(--cp-border2)' }}
+                    aria-hidden
+                  />
+                  <div
+                    className="relative z-[1] my-auto h-2.5 w-2.5 shrink-0 rounded-full shadow-[0_0_0_3px_var(--cp-bg3)] transition-shadow group-hover:shadow-[0_0_0_3px_var(--cp-bg2)]"
+                    style={{
+                      backgroundColor: typeColor(a.type),
+                    }}
+                    aria-hidden
+                  />
+                </div>
+
+                {/* Kolonne 3: titel + beboer */}
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      className="text-sm font-semibold leading-snug"
+                      style={{ color: 'var(--cp-text)' }}
+                    >
+                      {a.title}
+                    </span>
+                    {a.residentInitials && (
+                      <span
+                        className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
+                        style={{
+                          backgroundColor: 'var(--cp-green-dim)',
+                          color: 'var(--cp-green)',
+                        }}
+                      >
+                        {a.residentInitials}
                       </span>
-                      {a.residentInitials && (
-                        <span
-                          className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-                          style={{
-                            backgroundColor: 'var(--cp-green-dim)',
-                            color: 'var(--cp-green)',
-                          }}
-                        >
-                          {a.residentInitials}
-                        </span>
-                      )}
-                    </div>
-                    {a.residentName && (
-                      <p className="mt-0.5 text-xs" style={{ color: 'var(--cp-muted)' }}>
-                        {a.residentName}
-                      </p>
                     )}
                   </div>
+                  {a.residentName && (
+                    <p className="mt-1 text-xs leading-snug" style={{ color: 'var(--cp-muted)' }}>
+                      {a.residentName}
+                    </p>
+                  )}
+                  {/* Meta på smalle skærme under titel */}
                   <div
-                    className="max-w-[42%] shrink-0 text-right text-xs leading-snug"
+                    className="mt-2 space-y-1 text-xs leading-snug sm:hidden"
                     style={{ color: 'var(--cp-muted2)' }}
                   >
-                    <span className="flex items-start justify-end gap-1">
+                    <span className="flex items-start gap-1.5">
                       <MapPin className="mt-0.5 h-3 w-3 shrink-0 opacity-80" aria-hidden />
                       <span>{a.location}</span>
                     </span>
-                    <span className="mt-1 flex items-start justify-end gap-1">
+                    <span className="flex items-start gap-1.5">
                       <User className="mt-0.5 h-3 w-3 shrink-0 opacity-80" aria-hidden />
                       <span>{a.responsible}</span>
                     </span>
                   </div>
                 </div>
-              </div>
+
+                {/* Kolonne 4: lokation + ansvarlig (desktop) */}
+                <div
+                  className="hidden min-w-0 flex-col items-end justify-center gap-1.5 text-right text-xs leading-snug sm:flex"
+                  style={{ color: 'var(--cp-muted2)' }}
+                >
+                  <span className="flex items-start justify-end gap-1.5">
+                    <MapPin className="mt-0.5 h-3 w-3 shrink-0 opacity-80" aria-hidden />
+                    <span className="break-words">{a.location}</span>
+                  </span>
+                  <span className="flex items-start justify-end gap-1.5">
+                    <User className="mt-0.5 h-3 w-3 shrink-0 opacity-80" aria-hidden />
+                    <span>{a.responsible}</span>
+                  </span>
+                </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       )}
     </section>
