@@ -1,11 +1,19 @@
 import type { Metadata } from 'next';
-import { DM_Sans, Playfair_Display } from 'next/font/google';
+import { DM_Sans, DM_Serif_Display, Playfair_Display } from 'next/font/google';
 import HomeLanding from '@/components/marketing/HomeLanding';
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
   display: 'swap',
+  weight: ['300', '400', '500'],
   variable: '--font-landing-body',
+});
+
+const dmSerifDisplay = DM_Serif_Display({
+  subsets: ['latin'],
+  display: 'swap',
+  weight: '400',
+  variable: '--font-budr-wordmark',
 });
 
 const playfair = Playfair_Display({
@@ -27,5 +35,7 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
-  return <HomeLanding className={`${dmSans.variable} ${playfair.variable}`} />;
+  return (
+    <HomeLanding className={`${dmSans.variable} ${dmSerifDisplay.variable} ${playfair.variable}`} />
+  );
 }

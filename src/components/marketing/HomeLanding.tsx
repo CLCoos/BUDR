@@ -1,123 +1,47 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useId, useState } from 'react';
+import { useEffect } from 'react';
+import { BudrLogo } from '@/components/brand/BudrLogo';
+import {
+  IconAlertBell,
+  IconCareAction,
+  IconCheck,
+  IconDocMemory,
+  IconJournal,
+  IconLock,
+  IconMedicine,
+  IconMonitorPortal,
+  IconMoodSignal,
+  IconOverviewGrid,
+  IconPhoneCheckin,
+  IconPlanCheck,
+  IconRoles,
+  IconSearchDoc,
+  IconShiftGap,
+  IconShield,
+  IconSyncSend,
+  IconTeam,
+  IconTraffic,
+  IconUspBotilbud,
+  IconUspDemo,
+  IconUspHumanOk,
+  IconUspOneTruth,
+  IconUspRealtime,
+  IconUspSignal,
+  IconUspTrust,
+  IconUspVoice,
+  IconUser,
+  IconWarning,
+} from '@/components/marketing/LandingIcons';
 
 type HomeLandingProps = {
   className?: string;
 };
 
-type RoleId =
-  | 'paedagoger'
-  | 'ledere'
-  | 'koordinatorer'
-  | 'vikarer'
-  | 'vagtplan'
-  | 'sagsbehandler'
-  | 'borger';
-
-type RoleBlock = {
-  id: RoleId;
-  label: string;
-  title: string;
-  lead: string;
-  bullets: string[];
-  demo: string;
-  showLysSectionLink?: boolean;
-};
-
-const ROLE_BLOCKS: RoleBlock[] = [
-  {
-    id: 'paedagoger',
-    label: 'For pædagoger',
-    title: 'For pædagoger',
-    lead: 'Hvem har brug for jer først — uden at lede i fire systemer. Når pædagogerne trives i overblikket, følger resten trop.',
-    bullets: [
-      'Overblik efter behov — ikke alfabetisk.',
-      'Lys + morgentjek samme sted — færre “vidste du ikke …?” på gangen.',
-      'Journaludkast fra dagen — mindre blank skærm og klarere overdragelse.',
-    ],
-    demo: 'Første minutter af vagten: prioritering, én borger, notat på vej.',
-  },
-  {
-    id: 'ledere',
-    label: 'For ledere',
-    title: 'For ledere',
-    lead: 'Drift og dokumentation I kan stole på — uden mailjagt. Gennemskueligt for team og omverden.',
-    bullets: [
-      'Hvem kræver opmærksomhed, hvor halter dokumentationen — uden KPI-støj.',
-      'Sporbare hændelser: bedre samtaler med medarbejdere, pårørende og kommune.',
-      'Varsler før små ting bliver store; samme sandhed for faste og vikarer.',
-    ],
-    demo: 'Lederoverblik: risiko, opfølgning, kommunikation ud af huset.',
-  },
-  {
-    id: 'koordinatorer',
-    label: 'For koordinatorer',
-    title: 'For koordinatorer',
-    lead: 'Én opdateret sandhed på tværs af vagter — ikke hver sin notesbog.',
-    bullets: [
-      'Planer, aftaler og opfølgning samlet.',
-      'Journal, profil og praksis hænger sammen — mindre dobbeltarbejde.',
-      'Klart ansvar og bedre dialog med kommune og sagsbehandler.',
-    ],
-    demo: 'Én borger, én uge: koordinering uden kaos.',
-  },
-  {
-    id: 'vikarer',
-    label: 'For vikarer',
-    title: 'For vikarer',
-    lead: 'Sygdom eller akut dækning: trygt huset hurtigt — for både nye og garvede, der ikke har daglig gang her.',
-    bullets: [
-      'Vagtoverblik: tryg / fokus / medicin og rutiner.',
-      'Kort kontekst pr. borger — uden at læse hele sagen første time.',
-      'Varsler så “stille” ikke læses som “trygt”; samme platform som faste team.',
-    ],
-    demo: 'Første kvarter: login → prioritering → handling.',
-  },
-  {
-    id: 'vagtplan',
-    label: 'For vagtplanlæggere',
-    title: 'For vagtplanlæggere',
-    lead: 'Tal på tavlen + den omsorg I mærker i huset — begge dele.',
-    bullets: [
-      'Se perioder med mange signaler eller skift i trivsel.',
-      'Supplerer jeres vagtplan — menneskeligt overblik, ikke overvågning.',
-      'Når front og plan ser det samme, bliver dialogen enklere.',
-    ],
-    demo: 'Hverdagssignaler som grundlag for planlægningsdialog.',
-  },
-  {
-    id: 'sagsbehandler',
-    label: 'For sagsbehandlere',
-    title: 'For sagsbehandlere',
-    lead: 'Klar botilbud–kommune-kommunikation gavner alle — især borgeren. Her kan BUDR skille sig ud.',
-    bullets: [
-      'Dokumentation tættere på praksis — mindre bilag- og mailjagt.',
-      'Skel: borger (Lys), observation, faglig vurdering — læsbart i sagen.',
-      'Relevant deling med GDPR og retssikkerhed; færre “hvad skete der?”-opkald.',
-    ],
-    demo: 'Hændelse → struktureret underlag og bedre kommunikationsflow.',
-  },
-  {
-    id: 'borger',
-    label: 'For borgere',
-    title: 'For borgere',
-    lead: 'Øjenhøjje, også når ordene mangler. Lys til jer; portal til personalet — samme værdige hverdag.',
-    bullets: [
-      'Lys: samtale, humør, små planer — når I har brug for det, døgnet rundt.',
-      'Det I deler, kan hjælpe personalet at forstå jer — når I ønsker det.',
-      'Typisk link og ét klik — uden app-butik og tungt login.',
-    ],
-    demo: 'Lys-demo + hvad personalet ser (kun det relevante).',
-    showLysSectionLink: true,
-  },
-];
+const BOOK_MAIL = 'mailto:hej@budrcare.dk?subject=Demo%20af%20BUDR%20Care' as const;
 
 export default function HomeLanding({ className = '' }: HomeLandingProps) {
-  const rolesHeadingId = useId();
-  const [activeRole, setActiveRole] = useState<RoleId>('paedagoger');
-  const active = ROLE_BLOCKS.find((r) => r.id === activeRole) ?? ROLE_BLOCKS[0];
   useEffect(() => {
     const els = Array.from(document.querySelectorAll<HTMLElement>('.budr-landing .fi'));
     const obs = new IntersectionObserver(
@@ -135,71 +59,60 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
   return (
     <div className={`budr-landing ${className}`.trim()}>
       <nav>
-        <Link href="/" className="nav-logo">
-          <div className="logo-mark">B</div>
-          BUDR Care
+        <Link href="/" className="nav-logo" aria-label="BUDR Care — forsiden">
+          <BudrLogo dark size={40} />
         </Link>
         <ul className="nav-links">
           <li>
-            <a href="#hvad-er-budr">Ny her?</a>
+            <a href="#fordele">Fordele</a>
           </li>
           <li>
-            <a href="#portalen">Care Portal</a>
+            <a href="#problem">Hverdagsudfordringer</a>
           </li>
           <li>
-            <a href="#skift">Hverdag &amp; systemer</a>
+            <a href="#losning">Lys &amp; portal</a>
           </li>
           <li>
-            <a href="#hvad-kan-budr">Hvad kan BUDR?</a>
+            <a href="#sadan-virker-det">Sådan virker det</a>
           </li>
           <li>
-            <a href="#lys">Lys til borgeren</a>
+            <a href="#features">Funktioner</a>
           </li>
           <li>
-            <a href="#om-budr">Om BUDR</a>
+            <a href="#tryghed">Tryghed</a>
           </li>
           <li>
-            <Link href="/care-portal-demo" className="nav-cta">
-              Prøv portal →
-            </Link>
+            <a href="#prover-selv">Prøv demo</a>
+          </li>
+          <li>
+            <a href={BOOK_MAIL} className="nav-cta">
+              Book gennemgang →
+            </a>
           </li>
         </ul>
-        <Link href="/care-portal-demo" className="nav-mobile-demo">
-          Prøv portal
-        </Link>
+        <a href={BOOK_MAIL} className="nav-mobile-demo">
+          Book
+        </a>
       </nav>
 
+      {/* 1. HERO */}
       <section className="hero">
         <div className="hero-bg" aria-hidden />
         <div className="hero-inner shell">
           <div>
-            <p className="hero-kicker">
-              Første gang her?{' '}
-              <a href="#hvad-er-budr">Start med &quot;hvad er BUDR?&quot; — to korte produkter</a>.
-            </p>
-            <div className="hero-tag">
-              <span aria-hidden />
-              Til pædagoger &amp; ledere · Socialpsykiatriske botilbud
-            </div>
             <h1>
-              Ét overblik for personalet. <em>En stemme for borgeren.</em>
+              Færre overraskelser. <em>Mere tid til borgeren.</em>
             </h1>
             <p className="hero-sub">
-              <strong>BUDR Care</strong> er dansk software til jeres hverdag:{' '}
-              <strong>Care Portal</strong> giver pædagoger og ledere samme billede af vagten
-              (journal, medicin, signaler). <strong>Lys</strong> er en rolig companion til beboeren
-              — det, de vælger at dele, kan I se i portalen med det samme.
+              Tjek-in i Lys — overblik og handling i Care Portal, i realtid.
             </p>
             <div className="hero-actions">
-              <Link href="/care-portal-demo" className="btn-primary">
-                Prøv portalen gratis →
-              </Link>
-              <a
-                href="mailto:hej@budrcare.dk?subject=Demo%20af%20BUDR%20Care"
-                className="btn-ghost"
-              >
+              <a href={BOOK_MAIL} className="btn-primary">
                 Book en gennemgang
               </a>
+              <Link href="/care-portal-demo" className="btn-ghost">
+                Prøv Care Portal selv
+              </Link>
             </div>
           </div>
 
@@ -216,7 +129,10 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
             <div className="res-item">
               <div className="res-dot d-green" />
               <span className="res-name">Thomas Vang</span>
-              <span className="res-mood">Morgentjek ✓</span>
+              <span className="res-mood res-mood-with-ic">
+                <IconCheck size={12} className="landing-icon landing-icon--inline" />
+                Morgentjek
+              </span>
               <span className="res-time">07:48</span>
             </div>
             <div className="res-item">
@@ -232,7 +148,8 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               <span className="res-time">—</span>
             </div>
             <div className="pmh-alert">
-              ⚠ Camilla har markeret angst i Lys — anbefalet opfølgning før kl. 09
+              <IconWarning size={16} className="landing-icon landing-icon--warn icon-flex-none" />
+              <span>Camilla har markeret angst i Lys — anbefalet opfølgning før kl. 09</span>
             </div>
             <div className="pmh-sep" />
             <div className="pmh-stat-row">
@@ -253,320 +170,566 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
         </div>
       </section>
 
-      <section className="intro-section fi" id="hvad-er-budr" aria-label="Hvad er BUDR Care">
+      {/* 2. SOCIAL PROOF */}
+      <section className="social-proof-section fi" id="social-proof" aria-label="Udtalelser">
         <div className="shell">
-          <div className="intro-head">
-            <div className="eyebrow">Hvad er BUDR Care?</div>
-            <h2 className="section-h">
-              To produkter. Én idé: <em>mindre jagt, mere møde.</em>
-            </h2>
-            <p className="intro-lead">
-              I behøver ikke kende os på forhånd. Her er forskellen på de to dele — før I scroller
-              videre til tal, sammenligning og demo.
-            </p>
+          <div className="social-proof-grid">
+            <div className="t-card">
+              <p className="t-text">
+                Borgerne fortæller os meget mere nu — og vi opdager det, inden det eskalerer.
+              </p>
+              <div className="t-author">
+                Socialpsykiatrisk pædagog · botilbud · Region Midtjylland
+              </div>
+            </div>
+            <div className="t-card">
+              <p className="t-text">
+                Vi har sparet betydelig tid på dokumentation siden vi tog BUDR i brug.
+              </p>
+              <div className="t-author">Leder · socialpsykiatrisk botilbud · Nordjylland</div>
+            </div>
           </div>
-          <div className="intro-grid">
-            <div className="intro-card">
-              <div className="intro-card-label">01 · Personalet</div>
-              <h3 className="intro-card-h">Care Portal</h3>
-              <p className="intro-card-p">
-                Web til team og ledelse: dagsoverblik pr. beboer, journalstøtte, medicin og
-                borgeroplysninger samlet — så I ved, hvem der har brug for jer først.
-              </p>
-              <Link href="/care-portal-demo" className="intro-card-link">
-                Prøv portal-demo →
-              </Link>
+          <div className="social-proof-logos" aria-hidden>
+            <span>Botilbud · Midtjylland</span>
+            <span>Botilbud · Nordjylland</span>
+            <span>Pilot · socialpsykiatri</span>
+          </div>
+        </div>
+      </section>
+
+      {/* 2b. USP / fordele */}
+      <section className="usp-section fi" id="fordele" aria-label="Fordele ved BUDR">
+        <div className="shell">
+          <div className="usp-head">
+            <div className="eyebrow" style={{ justifyContent: 'center', display: 'flex' }}>
+              Udvalgte fordele
             </div>
-            <div className="intro-card">
-              <div className="intro-card-label">02 · Beboeren</div>
-              <h3 className="intro-card-h">Lys</h3>
-              <p className="intro-card-p">
-                En tryg samtale i lommen — humør, små planer, døgnet rundt. Beboeren styrer, hvad
-                der deles; personalet ser kun det, der hjælper jer med at reagere rigtigt.
+            <h2
+              className="section-h"
+              style={{ textAlign: 'center', maxWidth: '44rem', margin: '0 auto' }}
+            >
+              Bygget til <em>botilbud</em> — ikke generisk sundheds-IT
+            </h2>
+          </div>
+          <div className="usp-grid">
+            <div className="usp-card">
+              <div className="usp-icon-wrap">
+                <IconUspRealtime size={22} className="landing-icon" />
+              </div>
+              <h3 className="usp-card-h">Realtid mellem Lys og portal</h3>
+              <p className="usp-card-p">
+                Ét check-in hos borgeren bliver til signal hos jer — uden telefonkæder eller
+                mellemnotater.
               </p>
-              <a href="#lys" className="intro-card-link">
-                Læs om Lys →
-              </a>
             </div>
-            <div className="intro-card">
-              <div className="intro-card-label">03 · Sammen</div>
-              <h3 className="intro-card-h">Ikke endnu et kommunestystem</h3>
-              <p className="intro-card-p">
-                I beholder de platforme, kommunen kræver. BUDR lægger et lag ovenpå: overblik,
-                borgerens egne ord og bedre overdragelse — bygget til socialpsykiatrien.
+            <div className="usp-card">
+              <div className="usp-icon-wrap">
+                <IconUspHumanOk size={22} className="landing-icon" />
+              </div>
+              <h3 className="usp-card-h">Mennesket i centrum</h3>
+              <p className="usp-card-p">
+                AI prioriterer og foreslår — intet journalindhold uden jeres faglige godkendelse.
               </p>
-              <a href="#skift" className="intro-card-link">
-                Hvorfor skifte eller supplere? →
-              </a>
+            </div>
+            <div className="usp-card">
+              <div className="usp-icon-wrap">
+                <IconUspOneTruth size={22} className="landing-icon" />
+              </div>
+              <h3 className="usp-card-h">Én fælles virkelighed</h3>
+              <p className="usp-card-p">
+                Samme overblik efter vagtskifte. Mindre &quot;hvem vidste hvad?&quot; — mere tid til
+                borgeren.
+              </p>
+            </div>
+            <div className="usp-card">
+              <div className="usp-icon-wrap">
+                <IconUspBotilbud size={22} className="landing-icon" />
+              </div>
+              <h3 className="usp-card-h">Domæne for socialpsykiatrien</h3>
+              <p className="usp-card-p">
+                Trafiklys, tjek, dokumentation og medicinoverblik — tilrettet hverdagen på botilbud.
+              </p>
+            </div>
+            <div className="usp-card">
+              <div className="usp-icon-wrap">
+                <IconUspDemo size={22} className="landing-icon" />
+              </div>
+              <h3 className="usp-card-h">Prøv før I beslutter</h3>
+              <p className="usp-card-p">
+                Åbn demo af portal og Lys uden binding — mærk flowet på egen hånd.
+              </p>
+            </div>
+            <div className="usp-card">
+              <div className="usp-icon-wrap">
+                <IconUspTrust size={22} className="landing-icon" />
+              </div>
+              <h3 className="usp-card-h">Tryg datahåndtering</h3>
+              <p className="usp-card-p">
+                GDPR, samtykke og klare rammer — designet sammen med fagpersoner på gulvet.
+              </p>
+            </div>
+            <div className="usp-card">
+              <div className="usp-icon-wrap">
+                <IconUspVoice size={22} className="landing-icon" />
+              </div>
+              <h3 className="usp-card-h">Fra borgerens ord til struktur</h3>
+              <p className="usp-card-p">
+                Stemmen fra Lys bliver til læsbare signaler og journalstøtte — ikke bare noter i
+                marginen.
+              </p>
+            </div>
+            <div className="usp-card">
+              <div className="usp-icon-wrap">
+                <IconUspSignal size={22} className="landing-icon" />
+              </div>
+              <h3 className="usp-card-h">Varsler med mening</h3>
+              <p className="usp-card-p">
+                I ser først det, der kræver opmærksomhed — ikke endnu en notifikationsstøj.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      <div className="stats-bar fi">
-        <div className="stats-inner shell">
-          <div>
-            <div className="stat-n">3</div>
-            <div className="stat-l">Aktive botilbud i pilot</div>
-          </div>
-          <div>
-            <div className="stat-n">&lt;5 min</div>
-            <div className="stat-l">Til første rigtige overblik</div>
-          </div>
-          <div>
-            <div className="stat-n">~2 t</div>
-            <div className="stat-l">Mindre dokumentation pr. døgn*</div>
-          </div>
-          <div>
-            <div className="stat-n">0</div>
-            <div className="stat-l">Ringbind som eneste sandhed</div>
+      {/* 3. PROBLEM */}
+      <section className="switch-section fi" id="problem">
+        <div className="shell">
+          <div className="eyebrow">Uden det rigtige overblik</div>
+          <h2 className="section-h">
+            Dagen bevæger sig hurtigt. <em>Signalerne forsvinder i støjen.</em>
+          </h2>
+          <div className="pain-list" style={{ marginTop: 28 }}>
+            <div className="pain-item">
+              <div className="pain-icon">
+                <IconMoodSignal size={22} className="landing-icon" />
+              </div>
+              <div className="pain-text">
+                <strong>Borgerens humør ændrer sig</strong> — men vagten ved det først ved samtalen.
+              </div>
+            </div>
+            <div className="pain-item">
+              <div className="pain-icon">
+                <IconDocMemory size={22} className="landing-icon" />
+              </div>
+              <div className="pain-text">
+                <strong>Dokumentation sker på hukommelsen</strong> — ikke i øjeblikket.
+              </div>
+            </div>
+            <div className="pain-item">
+              <div className="pain-icon">
+                <IconShiftGap size={22} className="landing-icon" />
+              </div>
+              <div className="pain-text">
+                <strong>Videndeling stopper</strong>, når vagtplanen skifter.
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <section className="flow-section fi" id="sadan-virker-det" aria-label="Sådan fungerer BUDR">
+      {/* 4. LØSNING — Ét øjeblik, to overflader */}
+      <section className="lys-section fi" id="losning">
+        <div className="shell">
+          <div style={{ textAlign: 'center', maxWidth: '40rem', margin: '0 auto 40px' }}>
+            <div className="eyebrow" style={{ justifyContent: 'center', display: 'flex' }}>
+              To produkter
+            </div>
+            <h2 className="section-h" style={{ maxWidth: 'none', margin: '0 auto' }}>
+              Ét øjeblik. <em>To overflader.</em>
+            </h2>
+            <p className="intro-lead" style={{ marginTop: 14 }}>
+              Lys er borgerens trygge indgang til at sige til i hverdagen. Care Portal er
+              personalets arbejdsflade — overblik, varsler og journalstøtte. BUDR holder de to
+              synkroniseret, så stemmen fra Lys bliver til handling og dokumentation hos jer.
+            </p>
+          </div>
+          <div className="lys-grid lys-sync-grid">
+            <div className="lys-mock-wrap lys-sync-source">
+              <div className="lys-hdr">
+                <div className="lys-av">L</div>
+                <div>
+                  <div className="lys-nm">Lys</div>
+                  <div className="lys-st">● Check-in</div>
+                </div>
+                <div style={{ marginLeft: 'auto', fontSize: '0.68rem', color: 'var(--fog)' }}>
+                  08:05
+                </div>
+              </div>
+              <div className="chat-b user">Jeg starter dagen — lidt tung energi.</div>
+              <div className="chat-b ai">Tak for at sige til. Hvad fylder mest lige nu?</div>
+              <div className="chat-notif">
+                <IconSyncSend size={16} className="landing-icon icon-flex-none" />
+                <span>Tjek sendt til Care Portal</span>
+              </div>
+              <div
+                style={{ marginTop: 12, fontSize: '0.68rem', color: 'var(--fog)', marginBottom: 5 }}
+              >
+                Humør · energi · egne ord
+              </div>
+              <div className="energy-bar">
+                <div className="e-seg" style={{ background: '#e8874a' }} />
+                <div
+                  className="e-seg"
+                  style={{
+                    background: 'var(--amber)',
+                    boxShadow: '0 0 7px rgba(233,170,71,.5)',
+                  }}
+                />
+                <div className="e-seg" style={{ background: 'rgba(255,255,255,.08)' }} />
+                <div className="e-seg" style={{ background: 'rgba(255,255,255,.08)' }} />
+                <div className="e-seg" style={{ background: 'rgba(255,255,255,.08)' }} />
+              </div>
+            </div>
+            <div className="lys-sync-bridge" aria-hidden="true">
+              <span className="lys-sync-arrow">→</span>
+              <div className="lys-sync-line">
+                <span className="lys-sync-dot" />
+              </div>
+              <span className="lys-sync-caption">Samme hændelse</span>
+            </div>
+            <div className="portal-hero-mock lys-sync-target" style={{ maxWidth: '100%' }}>
+              <div className="pmh-top">
+                <span className="pmh-title">Care Portal</span>
+                <span className="pmh-date">Realtime</span>
+              </div>
+              <div className="res-item lys-portal-highlight">
+                <div className="res-dot d-amber" />
+                <span className="res-name">Camilla Frost</span>
+                <span className="res-mood">Lys · tung energi</span>
+                <span className="res-time">08:05</span>
+              </div>
+              <div className="res-item">
+                <div className="res-dot d-green" />
+                <span className="res-name">Thomas Vang</span>
+                <span className="res-mood">OK</span>
+                <span className="res-time">07:48</span>
+              </div>
+              <div className="pmh-alert lys-alert-pulse">
+                <IconWarning size={16} className="landing-icon landing-icon--warn icon-flex-none" />
+                <span>Prioritér samtale · Camilla</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="lys-flow-showcase">
+            <p className="sr-only">
+              Illustration: et check-in i Lys sendes gennem BUDR og vises i Care Portal med det
+              samme. Gentages som loop.
+            </p>
+            <p className="lys-flow-label" aria-hidden="true">
+              Sådan flyder signalet
+            </p>
+            <div className="lys-flow-track" aria-hidden="true">
+              <div className="lys-flow-node n1">
+                <span className="lys-flow-ring" />
+                <span className="lys-flow-name">Lys</span>
+                <span className="lys-flow-hint">Check-in</span>
+              </div>
+              <div className="lys-flow-connector-wrap">
+                <div className="lys-flow-connector c1" />
+              </div>
+              <div className="lys-flow-node n2">
+                <span className="lys-flow-ring" />
+                <span className="lys-flow-name">BUDR</span>
+                <span className="lys-flow-hint">Realtime</span>
+              </div>
+              <div className="lys-flow-connector-wrap">
+                <div className="lys-flow-connector c2" />
+              </div>
+              <div className="lys-flow-node n3">
+                <span className="lys-flow-ring" />
+                <span className="lys-flow-name">Portal</span>
+                <span className="lys-flow-hint">Handling</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. SÅDAN VIRKER DET */}
+      <section className="flow-section fi" id="sadan-virker-det" aria-label="Sådan virker det">
         <div className="shell">
           <div className="flow-head">
-            <div className="eyebrow">Scroll-flow</div>
+            <div className="eyebrow">Processen</div>
             <h2 className="section-h">
-              Fra beboer til vagt — <em>i tre trin</em>
+              Fra check-in til handling <em>på under 5 minutter</em>
             </h2>
-            <p className="flow-lead">
-              Sådan binder vi det sammen, når en kommune eller et botilbud vurderer os første gang.
-            </p>
           </div>
           <div className="flow-steps">
             <div className="flow-step">
+              <div className="flow-emoji" aria-hidden>
+                <IconPhoneCheckin size={28} className="landing-icon" />
+              </div>
               <div className="flow-num">1</div>
-              <div className="flow-h">Beboeren møder Lys</div>
-              <p className="flow-p">
-                Samtale og humør i et roligt interface — når de har brug for det. De vælger selv,
-                hvad der deles videre til huset.
-              </p>
+              <div className="flow-h">Borgeren åbner Lys og tjekker ind</div>
+              <p className="flow-p">Humør, tanker, energi — struktureret, så personalet forstår.</p>
             </div>
             <div className="flow-step">
+              <div className="flow-emoji" aria-hidden>
+                <IconMonitorPortal size={28} className="landing-icon" />
+              </div>
               <div className="flow-num">2</div>
-              <div className="flow-h">Portalen samler billedet</div>
-              <p className="flow-p">
-                Lys-signaler, morgentjek, medicin og journal lander ét sted — så team og leder ser
-                det samme, før dagen spidser til.
-              </p>
+              <div className="flow-h">Care Portal opdateres i realtid</div>
+              <p className="flow-p">Ingen manuel overførsel mellem systemer.</p>
             </div>
             <div className="flow-step">
+              <div className="flow-emoji" aria-hidden>
+                <IconCareAction size={28} className="landing-icon" />
+              </div>
               <div className="flow-num">3</div>
-              <div className="flow-h">I handler med faglighed</div>
-              <p className="flow-p">
-                I prioriterer og dokumenterer ud fra det, der faktisk skete — mindre gæt, klarere
-                overdragelse til næste vagt og til kommunen.
+              <div className="flow-h">Personalet handler med det samme</div>
+              <p className="flow-p">Eller følger op ved næste planlagte møde.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 5b. LIVE DEMOS — klikbare “screenshots” mod rigtige demoer */}
+      <section className="live-demo-strip fi" id="prover-selv" aria-label="Prøv demoerne selv">
+        <div className="shell">
+          <div className="live-demo-head">
+            <div className="eyebrow">Interaktivt</div>
+            <h2 className="section-h">
+              Prøv demoerne <em>selv</em>
+            </h2>
+            <p className="section-p live-demo-lead">
+              Klik ind i et anonymiseret overblik eller åbn Lys — så mærker I produktet på egen
+              hånd.
+            </p>
+          </div>
+          <div className="live-demo-grid">
+            <Link href="/care-portal-demo" className="live-demo-card">
+              <div className="live-demo-preview" aria-hidden>
+                <div className="ld-mini-bar">
+                  <span className="ld-mini-dots">
+                    <span />
+                    <span />
+                    <span />
+                  </span>
+                  <span className="ld-mini-url">care.budr.dk · demo</span>
+                </div>
+                <div className="ld-mini-body">
+                  <div className="ld-mini-side">
+                    <span className="ld-mini-nav active">Dagsoverblik</span>
+                    <span className="ld-mini-nav">Beboere</span>
+                    <span className="ld-mini-nav">Journal</span>
+                  </div>
+                  <div className="ld-mini-main">
+                    <div className="ld-mini-row">
+                      <span className="dss-dot green" />
+                      <span>T. Vang</span>
+                      <span className="ld-badge ok">Rolig</span>
+                    </div>
+                    <div className="ld-mini-row highlight">
+                      <span className="dss-dot amber" />
+                      <span>C. Frost</span>
+                      <span className="ld-badge warn">Lys</span>
+                    </div>
+                    <div className="ld-mini-row">
+                      <span className="dss-dot red" />
+                      <span>J. Møller</span>
+                      <span className="ld-badge crit">Intet tjek</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h3 className="live-demo-card-title">Care Portal</h3>
+              <p className="live-demo-card-desc">
+                Demo med dagsoverblik, rækker og trafiklys — uden login.
               </p>
-            </div>
+              <span className="live-demo-card-cta">Åbn Care Portal demo →</span>
+            </Link>
+            <Link href="/app" className="live-demo-card">
+              <div className="live-demo-preview live-demo-preview-lys" aria-hidden>
+                <div className="ld-lys-hdr">
+                  <span className="ld-lys-av">L</span>
+                  <span>Lys · check-in</span>
+                </div>
+                <div className="ld-lys-bubble user">God morgen — jeg er klar på dagen.</div>
+                <div className="ld-lys-bubble ai">Dejligt. Hvordan er energien?</div>
+                <div className="ld-lys-foot">
+                  <span className="ld-lys-energy" />
+                </div>
+              </div>
+              <h3 className="live-demo-card-title">Lys</h3>
+              <p className="live-demo-card-desc">Borgerens app — tjek ind, humør og egne ord.</p>
+              <span className="live-demo-card-cta">Åbn Lys →</span>
+            </Link>
           </div>
         </div>
       </section>
 
-      <section className="switch-section" id="skift">
-        <div className="switch-grid fi">
-          <div>
-            <div className="eyebrow">Genkender I det?</div>
-            <h2 className="section-h">
-              Systemerne løser sager. <em>I løser hverdagen.</em>
-            </h2>
-            <p className="section-p">
-              Det I bruger i forvejen er ofte lavet til sagsmapper, tilsyn og regler — ikke til
-              spørgsmålet <em>hvem har brug for mig lige nu?</em> BUDR lægger borgerens signaler og
-              et vagtoverblik ovenpå, så I kan handle i nuet.
-            </p>
-            <div className="pain-list">
-              <div className="pain-item">
-                <div className="pain-icon">📝</div>
-                <div className="pain-text">
-                  <strong>Journal</strong> — sidste opgave eller tomme fraser. Nuancer og borgerens
-                  fremgang forsvinder.
+      {/* 6. FEATURES */}
+      <section className="portal-section fi" id="features">
+        <div className="shell">
+          <div className="portal-grid">
+            <div>
+              <div className="eyebrow">I portalen</div>
+              <h2 className="section-h">
+                Overblik, dokumentation, <em>trafiklys</em> — ét sted
+              </h2>
+              <p className="section-p">
+                Dagsoverblik pr. beboer, journaludkast tæt på dagen, medicin og profil samlet,
+                varsler fra Lys og manglende tjek, planforslag I godkender — plus søgning på tværs,
+                roller der matcher vagten, og ét sted at handle, når noget brænder.
+              </p>
+              <div className="feature-pills">
+                <div className="fpill">
+                  <div className="fpill-icon">
+                    <IconOverviewGrid size={20} className="landing-icon" />
+                  </div>
+                  <div>
+                    <div className="fpill-title">Dagsoverblik</div>
+                    <div className="fpill-desc">
+                      Hvem er ok, hvem kræver øje — sorteret efter behov.
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="pain-item">
-                <div className="pain-icon">💊</div>
-                <div className="pain-text">
-                  <strong>Medicin</strong> — kræver fokus hver gang. Spredte lister øger risiko og
-                  mental belastning.
+                <div className="fpill">
+                  <div className="fpill-icon">
+                    <IconJournal size={20} className="landing-icon" />
+                  </div>
+                  <div>
+                    <div className="fpill-title">Dokumentation</div>
+                    <div className="fpill-desc">Udkast fra vagten og Lys — I godkender.</div>
+                  </div>
                 </div>
-              </div>
-              <div className="pain-item">
-                <div className="pain-icon">🗂</div>
-                <div className="pain-text">
-                  <strong>Borgeroplysninger</strong> — PRP, allergi, aftaler overalt. Tid der kunne
-                  være nærvær.
+                <div className="fpill">
+                  <div className="fpill-icon">
+                    <IconTraffic size={20} className="landing-icon" />
+                  </div>
+                  <div>
+                    <div className="fpill-title">Trafiklys &amp; varsler</div>
+                    <div className="fpill-desc">Se det kritiske først — uden støj.</div>
+                  </div>
+                </div>
+                <div className="fpill">
+                  <div className="fpill-icon">
+                    <IconMedicine size={20} className="landing-icon" />
+                  </div>
+                  <div>
+                    <div className="fpill-title">Medicin &amp; profil</div>
+                    <div className="fpill-desc">Færre skift mellem skærme.</div>
+                  </div>
+                </div>
+                <div className="fpill">
+                  <div className="fpill-icon">
+                    <IconPlanCheck size={20} className="landing-icon" />
+                  </div>
+                  <div>
+                    <div className="fpill-title">Planforslag</div>
+                    <div className="fpill-desc">AI foreslår — intet uden jeres ok.</div>
+                  </div>
+                </div>
+                <div className="fpill">
+                  <div className="fpill-icon">
+                    <IconSearchDoc size={20} className="landing-icon" />
+                  </div>
+                  <div>
+                    <div className="fpill-title">Søgning i dokumentation</div>
+                    <div className="fpill-desc">
+                      Find notater og journal hurtigt — mindre jagt i mapper.
+                    </div>
+                  </div>
+                </div>
+                <div className="fpill">
+                  <div className="fpill-icon">
+                    <IconRoles size={20} className="landing-icon" />
+                  </div>
+                  <div>
+                    <div className="fpill-title">Roller &amp; adgang</div>
+                    <div className="fpill-desc">
+                      Kun det, vagten og lederen skal se — tilpasset jeres enhed.
+                    </div>
+                  </div>
+                </div>
+                <div className="fpill">
+                  <div className="fpill-icon">
+                    <IconUspOneTruth size={20} className="landing-icon" />
+                  </div>
+                  <div>
+                    <div className="fpill-title">Mindre dobbeltarbejde</div>
+                    <div className="fpill-desc">
+                      Ét sted at handle — færre gentagelser mellem systemer og vagter.
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div className="fi fi-d1">
-            <div className="eyebrow" style={{ marginBottom: 20 }}>
-              Hvad kan hvad?
-            </div>
-            <div className="comp-table">
-              <div className="comp-row hdr">
-                <div className="comp-cell">Funktion</div>
-                <div className="comp-cell budr-c">BUDR</div>
-                <div className="comp-cell">Planner4You</div>
-                <div className="comp-cell">Citizen ONE</div>
-                <div className="comp-cell">KMD</div>
+            <div className="portal-screen fi fi-d1">
+              <div className="ps-bar">
+                <div className="ps-dots">
+                  <div className="ps-dot" style={{ background: '#e05555' }} />
+                  <div className="ps-dot" style={{ background: '#e8a847' }} />
+                  <div className="ps-dot" style={{ background: '#3cbf70' }} />
+                </div>
+                <div className="ps-url">care.budr.dk</div>
               </div>
-              <div className="comp-row">
-                <div className="comp-cell feat-label">Journal- &amp; notatstøtte tæt på vagten</div>
-                <div className="comp-cell budr-c">
-                  <span className="yes">✓</span>
+              <div className="ps-body">
+                <div className="ps-sidebar">
+                  <div
+                    style={{
+                      fontSize: '0.7rem',
+                      color: 'var(--fog)',
+                      fontWeight: 600,
+                      marginBottom: 12,
+                      padding: '0 4px',
+                    }}
+                  >
+                    BUDR
+                  </div>
+                  <div className="ps-nav-item active">
+                    <IconOverviewGrid size={14} className="landing-icon ps-nav-ic" />
+                    Dagsoverblik
+                  </div>
+                  <div className="ps-nav-item">
+                    <IconUser size={14} className="landing-icon ps-nav-ic" />
+                    Beboere
+                  </div>
+                  <div className="ps-nav-item">
+                    <IconJournal size={14} className="landing-icon ps-nav-ic" />
+                    Journal
+                  </div>
+                  <div className="ps-nav-item">
+                    <IconMedicine size={14} className="landing-icon ps-nav-ic" />
+                    Medicin
+                  </div>
+                  <div className="ps-nav-item">
+                    <IconAlertBell size={14} className="landing-icon ps-nav-ic" />
+                    Varsler
+                  </div>
                 </div>
-                <div className="comp-cell">
-                  <span className="no">✗</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="part">Delvist</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="part">Delvist</span>
-                </div>
-              </div>
-              <div className="comp-row">
-                <div className="comp-cell feat-label">Medicin &amp; udlevering med sporbarhed</div>
-                <div className="comp-cell budr-c">
-                  <span className="yes">✓</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="no">✗</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="part">Delvist</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="part">Delvist</span>
-                </div>
-              </div>
-              <div className="comp-row">
-                <div className="comp-cell feat-label">
-                  Samlet borgerprofil (PRP, risiko, kontakter)
-                </div>
-                <div className="comp-cell budr-c">
-                  <span className="yes">✓</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="part">Delvist</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="no">✗</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="part">Delvist</span>
-                </div>
-              </div>
-              <div className="comp-row">
-                <div className="comp-cell feat-label">Realtidsstatus pr. borger</div>
-                <div className="comp-cell budr-c">
-                  <span className="yes">✓</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="no">✗</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="no">✗</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="no">✗</span>
-                </div>
-              </div>
-              <div className="comp-row">
-                <div className="comp-cell feat-label">
-                  Borgerens stemme direkte i systemet (Lys)
-                </div>
-                <div className="comp-cell budr-c">
-                  <span className="yes">✓</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="no">✗</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="no">✗</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="no">✗</span>
-                </div>
-              </div>
-              <div className="comp-row">
-                <div className="comp-cell feat-label">
-                  AI-dagplan — først efter personalets godkendelse
-                </div>
-                <div className="comp-cell budr-c">
-                  <span className="yes">✓</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="no">✗</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="no">✗</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="no">✗</span>
-                </div>
-              </div>
-              <div className="comp-row">
-                <div className="comp-cell feat-label">Vagtskifte-overblik på under 2 min.</div>
-                <div className="comp-cell budr-c">
-                  <span className="yes">✓</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="part">Delvist</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="no">✗</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="no">✗</span>
-                </div>
-              </div>
-              <div className="comp-row">
-                <div className="comp-cell feat-label">Varsler ved krise / manglende tjek-in</div>
-                <div className="comp-cell budr-c">
-                  <span className="yes">✓</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="no">✗</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="no">✗</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="no">✗</span>
-                </div>
-              </div>
-              <div className="comp-row">
-                <div className="comp-cell feat-label">Onboarding under 5 minutter</div>
-                <div className="comp-cell budr-c">
-                  <span className="yes">✓</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="yes">✓</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="no">✗</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="no">✗</span>
-                </div>
-              </div>
-              <div className="comp-row">
-                <div className="comp-cell feat-label">GDPR · databehandling i DK/EU</div>
-                <div className="comp-cell budr-c">
-                  <span className="yes">✓</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="yes">✓</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="part">Delvist</span>
-                </div>
-                <div className="comp-cell">
-                  <span className="yes">✓</span>
+                <div className="ps-main">
+                  <div className="ps-main-title">Dagsoverblik · 12 beboere</div>
+                  <div className="ps-col-h">
+                    <span />
+                    <span>Navn</span>
+                    <span>Status</span>
+                    <span>Signal</span>
+                    <span>Siden</span>
+                  </div>
+                  <div className="ps-res-row">
+                    <div className="res-dot d-green" />
+                    <span>Thomas Vang</span>
+                    <span className="ps-badge badge-ok">Rolig</span>
+                    <span className="ps-note">OK</span>
+                    <span className="ps-note">07:48</span>
+                  </div>
+                  <div className="ps-res-row">
+                    <div className="res-dot d-amber" />
+                    <span>Camilla Frost</span>
+                    <span className="ps-badge badge-warn">Opmærksom</span>
+                    <span className="ps-note">Lys</span>
+                    <span className="ps-note">08:05</span>
+                  </div>
+                  <div className="ps-res-row">
+                    <div className="res-dot d-red" />
+                    <span>Jakob Møller</span>
+                    <span className="ps-badge badge-crit">Intet tjek</span>
+                    <span className="ps-note">—</span>
+                    <span className="ps-note">—</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -574,472 +737,70 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
         </div>
       </section>
 
-      <section className="portal-section" id="portalen">
-        <div className="portal-grid fi">
-          <div>
-            <div className="eyebrow">Care Portal — til personalet</div>
-            <h2 className="section-h">
-              Det, I plejer at spørge kollegaen om — <em>samlet ét sted</em>
-            </h2>
-            <p className="section-p">
-              Hvem har det svært, hvad er aftalt, hvad skal journalen vide — uden fire programmer.
-              Beslutningsstøtte til jeres faglighed.
-            </p>
-            <div className="feature-pills">
-              <div className="fpill">
-                <div className="fpill-icon">📊</div>
-                <div>
-                  <div className="fpill-title">Dagsoverblik</div>
-                  <div className="fpill-desc">
-                    Ok / øje på / mangler tjek — sorteret efter behov.
-                  </div>
-                </div>
-              </div>
-              <div className="fpill">
-                <div className="fpill-icon">📝</div>
-                <div>
-                  <div className="fpill-title">Journal</div>
-                  <div className="fpill-desc">
-                    Udkast fra dagen og Lys — godkend frem for blank skærm.
-                  </div>
-                </div>
-              </div>
-              <div className="fpill">
-                <div className="fpill-icon">💊</div>
-                <div>
-                  <div className="fpill-title">Medicin &amp; profil</div>
-                  <div className="fpill-desc">Færre skærme, sporbarhed omkring udlevering.</div>
-                </div>
-              </div>
-              <div className="fpill">
-                <div className="fpill-icon">⚡</div>
-                <div>
-                  <div className="fpill-title">Varsler</div>
-                  <div className="fpill-desc">
-                    Lys og manglende tjek — her og nu, ikke i morgenposten.
-                  </div>
-                </div>
-              </div>
-              <div className="fpill">
-                <div className="fpill-icon">✅</div>
-                <div>
-                  <div className="fpill-title">Planforslag</div>
-                  <div className="fpill-desc">AI foreslår — intet uden jeres godkendelse.</div>
-                </div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 12, marginTop: 28, flexWrap: 'wrap' }}>
-              <Link href="/care-portal-demo" className="btn-sm">
-                Interaktiv demo
-              </Link>
-              <Link href="/care-portal-login" className="btn-sm-ghost">
-                Log ind →
-              </Link>
-            </div>
-          </div>
-
-          <div className="portal-screen fi fi-d1">
-            <div className="ps-bar">
-              <div className="ps-dots">
-                <div className="ps-dot" style={{ background: '#e05555' }} />
-                <div className="ps-dot" style={{ background: '#e8a847' }} />
-                <div className="ps-dot" style={{ background: '#3cbf70' }} />
-              </div>
-              <div className="ps-url">care.budr.dk</div>
-            </div>
-            <div className="ps-body">
-              <div className="ps-sidebar">
-                <div
-                  style={{
-                    fontSize: '0.7rem',
-                    color: 'var(--fog)',
-                    fontWeight: 600,
-                    marginBottom: 12,
-                    padding: '0 4px',
-                  }}
-                >
-                  BUDR
-                </div>
-                <div className="ps-nav-item active">📊 Dagsoverblik</div>
-                <div className="ps-nav-item">👤 Beboere &amp; profil</div>
-                <div className="ps-nav-item">📝 Journal</div>
-                <div className="ps-nav-item">💊 Medicin</div>
-                <div className="ps-nav-item">✅ Planforslag</div>
-                <div className="ps-nav-item">⚡ Varsler</div>
-                <div className="ps-nav-item">⚙ Indstillinger</div>
-              </div>
-              <div className="ps-main">
-                <div className="ps-main-title">Dagsoverblik · 12 beboere</div>
-                <div className="ps-col-h">
-                  <span />
-                  <span>Navn</span>
-                  <span>Status</span>
-                  <span>Signal</span>
-                  <span>Siden</span>
-                </div>
-                <div className="ps-res-row">
-                  <div className="res-dot d-green" />
-                  <span>Thomas Vang</span>
-                  <span className="ps-badge badge-ok">Rolig</span>
-                  <span className="ps-note">God energi</span>
-                  <span className="ps-note">07:48</span>
-                </div>
-                <div className="ps-res-row">
-                  <div className="res-dot d-amber" />
-                  <span>Camilla Frost</span>
-                  <span className="ps-badge badge-warn">Opmærksom</span>
-                  <span className="ps-note">Lys: angst</span>
-                  <span className="ps-note">08:05</span>
-                </div>
-                <div className="ps-res-row">
-                  <div className="res-dot d-red" />
-                  <span>Jakob Møller</span>
-                  <span className="ps-badge badge-crit">Intet tjek</span>
-                  <span className="ps-note">—</span>
-                  <span className="ps-note">—</span>
-                </div>
-                <div className="ps-res-row">
-                  <div className="res-dot d-green" />
-                  <span>Sara Jensen</span>
-                  <span className="ps-badge badge-ok">Rolig</span>
-                  <span className="ps-note">Glad</span>
-                  <span className="ps-note">07:22</span>
-                </div>
-                <div className="ps-res-row">
-                  <div className="res-dot d-green" />
-                  <span>Mikkel Dahl</span>
-                  <span className="ps-badge badge-ok">Rolig</span>
-                  <span className="ps-note">Ok</span>
-                  <span className="ps-note">08:11</span>
-                </div>
-                <div
-                  style={{
-                    padding: '10px 10px 0',
-                    fontSize: '0.68rem',
-                    color: 'var(--fog)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <span>Viser 5 af 12 beboere</span>
-                  <span style={{ color: 'var(--amber)', fontSize: '0.7rem' }}>Se alle →</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="roles-section" id="hvad-kan-budr" aria-labelledby={rolesHeadingId}>
-        <div className="fi">
-          <div className="eyebrow">Én platform — mange roller</div>
-          <h2 className="section-h" id={rolesHeadingId}>
-            Hvad kan BUDR Care? <em>Valgfrit: din rolle.</em>
+      {/* 7. TRYGHED */}
+      <section className="tryghed-section fi" id="tryghed">
+        <div className="shell">
+          <div className="eyebrow">Data &amp; retssikkerhed</div>
+          <h2 className="section-h">
+            Bygget til <em>dansk socialpsykiatri</em>
           </h2>
-          <p className="section-p roles-intro">
-            Vælg rolle — se gevinsten. Demoen tilpasser vi; vi starter ofte hos pædagogerne.
+          <div className="pain-list" style={{ marginTop: 28 }}>
+            <div className="pain-item">
+              <div className="pain-icon">
+                <IconShield size={22} className="landing-icon" />
+              </div>
+              <div className="pain-text">
+                <strong>GDPR-compliant</strong> — data behandles efter dansk og europæisk
+                lovgivning.
+              </div>
+            </div>
+            <div className="pain-item">
+              <div className="pain-icon">
+                <IconLock size={22} className="landing-icon" />
+              </div>
+              <div className="pain-text">
+                <strong>Persondata forlader aldrig platformen</strong> uden samtykke.
+              </div>
+            </div>
+            <div className="pain-item">
+              <div className="pain-icon">
+                <IconTeam size={22} className="landing-icon" />
+              </div>
+              <div className="pain-text">
+                <strong>Udformet i tæt samarbejde</strong> med fagpersonale fra botilbud.
+              </div>
+            </div>
+          </div>
+          <p className="section-p" style={{ marginTop: 24 }}>
+            <Link href="/privacy">Læs privatlivspolitikken →</Link>
           </p>
-
-          <div
-            className="roles-tablist"
-            role="tablist"
-            aria-label="Vælg rolle for at se, hvad BUDR Care tilbyder"
-          >
-            {ROLE_BLOCKS.map((r) => {
-              const tabId = `budr-role-tab-${r.id}`;
-              const panelId = `budr-role-panel-${r.id}`;
-              return (
-                <button
-                  key={r.id}
-                  type="button"
-                  role="tab"
-                  id={tabId}
-                  className="roles-tab"
-                  aria-selected={activeRole === r.id}
-                  aria-controls={panelId}
-                  tabIndex={activeRole === r.id ? 0 : -1}
-                  onClick={() => setActiveRole(r.id)}
-                >
-                  {r.label}
-                </button>
-              );
-            })}
-          </div>
-
-          <div
-            role="tabpanel"
-            id={`budr-role-panel-${active.id}`}
-            aria-labelledby={`budr-role-tab-${active.id}`}
-            className="roles-panel"
-          >
-            <h3 className="roles-panel-h">{active.title}</h3>
-            <p className="roles-panel-lead">{active.lead}</p>
-            <ul className="roles-panel-ul">
-              {active.bullets.map((line, i) => (
-                <li key={`${active.id}-${i}`} className="roles-panel-li">
-                  {line}
-                </li>
-              ))}
-            </ul>
-            <p className="roles-panel-demo">
-              Demo: <span>{active.demo}</span>
-            </p>
-            {active.showLysSectionLink ? (
-              <a href="#lys" className="roles-lys-link">
-                Hele Lys-sektionen →
-              </a>
-            ) : null}
-          </div>
         </div>
       </section>
 
-      <section className="lys-section" id="lys">
-        <div className="lys-grid fi">
-          <div className="lys-mock-wrap">
-            <div className="lys-hdr">
-              <div className="lys-av">L</div>
-              <div>
-                <div className="lys-nm">Lys</div>
-                <div className="lys-st">● Aktiv nu</div>
-              </div>
-              <div style={{ marginLeft: 'auto', fontSize: '0.68rem', color: 'var(--fog)' }}>
-                09:41
-              </div>
-            </div>
-            <div className="chat-b user">
-              Jeg er lidt nervøs i dag. Ikke helt sikker på hvorfor.
-            </div>
-            <div className="chat-b ai">
-              Det lyder som en tung start. Hvad tror du er det første, der fylder mest lige nu?
-            </div>
-            <div className="chat-notif">⚡ Angstmarkering sendt til personalets portal</div>
-            <div className="chat-b user">Måske mødet med sagsbehandleren senere.</div>
-            <div className="chat-b ai">
-              Sådanne møder kan føles store. Vil du prøve en helt lille plan for, hvad du gerne vil
-              sige?
-            </div>
-            <div
-              style={{ marginTop: 12, fontSize: '0.68rem', color: 'var(--fog)', marginBottom: 5 }}
-            >
-              Dagens energi (fra borgeren)
-            </div>
-            <div className="energy-bar">
-              <div className="e-seg" style={{ background: '#d95555' }} />
-              <div className="e-seg" style={{ background: '#e8874a' }} />
-              <div
-                className="e-seg"
-                style={{
-                  background: 'var(--amber)',
-                  boxShadow: '0 0 7px rgba(233,170,71,.5)',
-                }}
-              />
-              <div className="e-seg" style={{ background: 'rgba(255,255,255,.08)' }} />
-              <div className="e-seg" style={{ background: 'rgba(255,255,255,.08)' }} />
-            </div>
-          </div>
-          <div>
-            <div className="eyebrow">Lys — borgerens stemme</div>
-            <h2 className="section-h">
-              Værdighed starter med at blive hørt — <em>også når ordene mangler</em>
-            </h2>
-            <p className="section-p">
-              Under <a href="#hvad-kan-budr">Hvad kan BUDR?</a> får borgeren en kort forklaring. Her
-              dykker vi ned i Lys: hvordan det føles for beboeren, og hvad I ser i portalen — uden
-              at nogen føles som et sagsnummer.
-            </p>
-            <div className="lys-bonus-pills">
-              <div className="lys-bonus-pill">
-                <div className="lys-bonus-pill-icon">🗣</div>
-                <p>
-                  <strong>Borgerens stemme i data</strong> — ikke kun personalets vurdering.
-                </p>
-              </div>
-              <div className="lys-bonus-pill">
-                <div className="lys-bonus-pill-icon">🌙</div>
-                <p>
-                  <strong>24/7.</strong> Eskalerer til personalet, når det er nødvendigt.
-                </p>
-              </div>
-              <div className="lys-bonus-pill">
-                <div className="lys-bonus-pill-icon">🔐</div>
-                <p>
-                  <strong>Link + ét klik</strong> — ingen app-butik, intet tungt login.
-                </p>
-              </div>
-            </div>
-            <div style={{ marginTop: 24 }}>
-              <Link href="/app" className="btn-sm">
-                Åbn Lys-demo
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="testimonials">
-        <div className="fi" style={{ textAlign: 'center' }}>
-          <div className="eyebrow" style={{ display: 'flex', justifyContent: 'center' }}>
-            Fra pædagoger og ledere
-          </div>
-          <h2
-            className="section-h"
-            style={{ margin: '0 auto', textAlign: 'center', maxWidth: 'none' }}
-          >
-            Når hverdagen føles anderledes
-          </h2>
-        </div>
-        <div className="t-grid fi fi-d1">
-          <div className="t-card">
-            <div className="t-stars">★★★★★</div>
-            <p className="t-text">
-              Borgerne siger ting til Lys, de ikke når i køkkenet. Vi ser det i portalen før
-              opgavefordeling — et forspring for omsorgen.
-            </p>
-            <div className="t-author">
-              Socialpsykiatrisk pædagog · botilbud · Region Midtjylland
-            </div>
-          </div>
-          <div className="t-card">
-            <div className="t-stars">★★★★★</div>
-            <p className="t-text">
-              Cirka to timer om dagen tilbage til borgerne frem for skærm og notater. Som leder:
-              tydeligt, vi er på rette vej.
-            </p>
-            <div className="t-author">Leder · socialpsykiatrisk botilbud · Aalborg</div>
-          </div>
-          <div className="t-card">
-            <div className="t-stars">★★★★☆</div>
-            <p className="t-text">
-              Ikke endnu et kontrolsystem — det hjælper os med at møde mennesker som mennesker.
-              Borgerne mærker det.
-            </p>
-            <div className="t-author">Pædagog · bosted · Nordjylland</div>
-          </div>
-        </div>
-      </section>
-
-      <section className="origin-section" id="om-budr">
-        <div className="origin-grid fi">
-          <div>
-            <div className="eyebrow">Om BUDR</div>
-            <h2 className="section-h">
-              Skabt ud fra praksis — ikke fra et whiteboard langt fra vagten
-            </h2>
-            <p className="section-p">
-              Værdig hverdag for borgeren, respekt for personalets faglighed. Hjælp til at huske,
-              prioritere og dokumentere det, der betyder noget.
-            </p>
-            <div className="origin-quote">
-              <p>
-                Når borgeren høres gennem Lys, bliver arbejdet mere meningsfuldt — bedre møder
-                mellem mennesker.
-              </p>
-              <cite>Socialpsykiatrisk pædagog · botilbud · Region Midtjylland</cite>
-            </div>
-          </div>
-          <div>
-            <div
-              style={{
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                color: 'var(--fog)',
-                marginBottom: 24,
-              }}
-            >
-              Udviklingen bag BUDR
-            </div>
-            <div className="timeline">
-              <div className="tl-item">
-                <div className="tl-dot-col">
-                  <div className="tl-dot" />
-                  <div className="tl-line" />
-                </div>
-                <div>
-                  <div className="tl-year">Udgangspunkt</div>
-                  <div className="tl-text">
-                    Systemer dokumenterede fortiden — ikke hvem der har brug for hjælp nu.
-                  </div>
-                </div>
-              </div>
-              <div className="tl-item">
-                <div className="tl-dot-col">
-                  <div className="tl-dot" />
-                  <div className="tl-line" />
-                </div>
-                <div>
-                  <div className="tl-year">PARK som rygrad</div>
-                  <div className="tl-text">
-                    PARK som rygrad — personcentrering I mærker, ikke bare på papir.
-                  </div>
-                </div>
-              </div>
-              <div className="tl-item">
-                <div className="tl-dot-col">
-                  <div className="tl-dot" />
-                  <div className="tl-line" />
-                </div>
-                <div>
-                  <div className="tl-year">Pilot 2025</div>
-                  <div className="tl-text">
-                    Pilot: tre botilbud — mindre dokumentation; borgere opsøger Lys selv.
-                  </div>
-                </div>
-              </div>
-              <div className="tl-item">
-                <div className="tl-dot-col">
-                  <div className="tl-dot" />
-                </div>
-                <div>
-                  <div className="tl-year">Nu</div>
-                  <div className="tl-text">
-                    Klar til flere bosteder. Kort onboarding. Demo med jeres faglige blik.
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
+      {/* 8. SEKUNDÆR CTA */}
       <section className="cta-section">
         <div className="cta-bg" aria-hidden />
         <div style={{ position: 'relative', zIndex: 1 }} className="fi">
-          <div
-            className="eyebrow"
-            style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}
-          >
-            Klar til at mærke forskellen?
-          </div>
-          <h2>
-            Vi viser det på <em>jeres</em> præmisser — for personale og borgere
-          </h2>
+          <h2>Klar til at se det i praksis?</h2>
           <p className="cta-lead">
-            Vi tager udgangspunkt i jeres hverdag — ikke et standard slide-show. Portal, Lys,
-            journal og medicin, som I faktisk bruger dem.
+            Book en uforpligtende gennemgang — eller prøv demoerne, når det passer jer.
           </p>
           <div className="cta-actions">
-            <a
-              href="mailto:hej@budrcare.dk?subject=Demo%20af%20BUDR%20Care"
-              className="btn-primary"
-            >
-              Book en samtale
+            <a href={BOOK_MAIL} className="btn-primary">
+              Book en uforpligtende gennemgang
             </a>
             <Link href="/care-portal-demo" className="btn-ghost">
-              Prøv Care Portal demo →
+              Prøv demoerne selv
             </Link>
           </div>
         </div>
       </section>
 
       <footer>
-        <div className="footer-grid">
+        <div className="footer-grid shell">
           <div>
             <div className="footer-logo">
-              <div className="logo-mark">B</div>
-              BUDR Care
+              <BudrLogo dark size={36} />
             </div>
             <p className="footer-desc">
               Portal til personalet. Lys til borgeren. Socialpsykiatri og botilbud.
@@ -1064,13 +825,14 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
             <Link href="/app">Lys</Link>
           </div>
           <div className="footer-col">
-            <h5>Selskab</h5>
-            <a href="#hvad-er-budr">Ny her? (hvad er BUDR)</a>
-            <a href="#sadan-virker-det">Sådan fungerer det</a>
-            <a href="#hvad-kan-budr">Hvad kan BUDR?</a>
-            <a href="#om-budr">Om BUDR</a>
-            <a href="#skift">Hverdag &amp; systemer</a>
-            <a href="mailto:hej@budrcare.dk">Kontakt</a>
+            <h5>På siden</h5>
+            <a href="#fordele">Fordele</a>
+            <a href="#problem">Hverdagsudfordringer</a>
+            <a href="#losning">Lys &amp; portal</a>
+            <a href="#sadan-virker-det">Sådan virker det</a>
+            <a href="#features">Funktioner</a>
+            <a href="#tryghed">Tryghed</a>
+            <a href="#prover-selv">Prøv demo</a>
             <a
               href="https://www.linkedin.com/company/budr"
               target="_blank"
@@ -1086,11 +848,8 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
             <Link href="/terms">Vilkår</Link>
           </div>
         </div>
-        <div className="footer-bottom">
+        <div className="footer-bottom shell">
           <span>© {new Date().getFullYear()} BUDR ApS · Aalborg, Danmark</span>
-          <span style={{ opacity: 0.4, fontSize: '0.7rem' }}>
-            *Baseret på lederudsagn fra pilot · botilbud Aalborg 2025
-          </span>
         </div>
       </footer>
     </div>
