@@ -114,8 +114,8 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               <a href={BOOK_MAIL} className="btn-primary">
                 Book en gennemgang
               </a>
-              <Link href="/care-portal-demo" className="btn-ghost">
-                Prøv Care Portal selv
+              <Link href="/app" className="btn-ghost">
+                Hvad er Lys?
               </Link>
             </div>
           </div>
