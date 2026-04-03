@@ -31,91 +31,85 @@ const ROLE_BLOCKS: RoleBlock[] = [
     id: 'paedagoger',
     label: 'For pædagoger',
     title: 'For pædagoger',
-    lead: 'Når vagten starter, skal I vide, hvem der har brug for jer — ikke lede i fire systemer først. Når pædagogerne elsker overblikket, følger resten af huset trop.',
+    lead: 'Hvem har brug for jer først — uden at lede i fire systemer. Når pædagogerne trives i overblikket, følger resten trop.',
     bullets: [
-      'Dagsoverblik sorteret efter behov, så I prioriterer som fagpersoner — ikke som arkivarer.',
-      'Signaler fra borgeren (via Lys) og morgentjek samme sted — færre “vidste du ikke …?” på gangen.',
-      'Udkast til journal og notater tæt på det, der skete — mindre tom skærm, når dagen er slut.',
-      'Struktur til overdragelse, så kvaliteten holder vagt efter vagt — uden at noget forbliver i hovedet på én person.',
+      'Overblik efter behov — ikke alfabetisk.',
+      'Lys + morgentjek samme sted — færre “vidste du ikke …?” på gangen.',
+      'Journaludkast fra dagen — mindre blank skærm og klarere overdragelse.',
     ],
-    demo: 'Vi viser de første minutter af en vagt: prioritering, én borger i dybden, og hvordan notatet tager form.',
+    demo: 'Første minutter af vagten: prioritering, én borger, notat på vej.',
   },
   {
     id: 'ledere',
     label: 'For ledere',
     title: 'For ledere',
-    lead: 'I skal kunne stole på drift og dokumentation — uden at mikrostyre eller jagte svar i mailtråde. BUDR gør hverdagen mere gennemskuelig for både team og omverden.',
+    lead: 'Drift og dokumentation I kan stole på — uden mailjagt. Gennemskueligt for team og omverden.',
     bullets: [
-      'Samlet billede af huset: hvem kræver opmærksomhed, og hvor dokumentationen halter — uden KPI-støj.',
-      'Bedre grundlag til samtaler med medarbejdere, pårørende og kommune, fordi hændelser er sporbare og forståelige.',
-      'Mindre brandslukning: varsler og overblik, før små ting bliver store.',
-      'Tryg introduktion af nye medarbejdere og vikarer — samme sandhed i systemet, uanset hvem der går vagt.',
+      'Hvem kræver opmærksomhed, hvor halter dokumentationen — uden KPI-støj.',
+      'Sporbare hændelser: bedre samtaler med medarbejdere, pårørende og kommune.',
+      'Varsler før små ting bliver store; samme sandhed for faste og vikarer.',
     ],
-    demo: 'Lederens overblik: fra risiko og belastning til opfølgning og klar kommunikation ud af huset.',
+    demo: 'Lederoverblik: risiko, opfølgning, kommunikation ud af huset.',
   },
   {
     id: 'koordinatorer',
     label: 'For koordinatorer',
     title: 'For koordinatorer',
-    lead: 'Koordinering kræver, at alle trækker på den samme opdaterede virkelighed — ikke på hver sin notesbog eller sidste uges mail.',
+    lead: 'Én opdateret sandhed på tværs af vagter — ikke hver sin notesbog.',
     bullets: [
-      'Én kilde for planer, aftaler og opfølgning på tværs af vagter og faggrupper.',
-      'Lettere at holde tråden i sager, når journal, borgerprofil og daglig praksis hænger sammen.',
-      'Mindre dobbeltindtastning og færre “jeg troede, X havde sagt til kommunen …”.',
-      'Tydelighed om ansvar: hvem følger op — og hvornår.',
+      'Planer, aftaler og opfølgning samlet.',
+      'Journal, profil og praksis hænger sammen — mindre dobbeltarbejde.',
+      'Klart ansvar og bedre dialog med kommune og sagsbehandler.',
     ],
-    demo: 'Én borger på tværs af uge og kontakter — koordinering uden kaos, med plads til kommunikation med kommune og sagsbehandler.',
+    demo: 'Én borger, én uge: koordinering uden kaos.',
   },
   {
     id: 'vikarer',
     label: 'For vikarer',
     title: 'For vikarer',
-    lead: 'Ved sygdom eller akut hjælp skal huset ikke blive usikkert — hverken for borgere eller for jer. Her menes både nye og garvede vikarer, som ikke har deres daglige gang i huset.',
+    lead: 'Sygdom eller akut dækning: trygt huset hurtigt — for både nye og garvede, der ikke har daglig gang her.',
     bullets: [
-      'Overblik skåret til vagten: hvem er tryg, hvem kræver særligt fokus, og hvad er aftalt om medicin og rutiner.',
-      'Kort kontekst pr. borger uden at læse hele sagen igennem den første time.',
-      'Tydelige varsler, så “stille” ikke fejlfortolkes som “trygt”.',
-      'Samme platform som det faste team — I falder til ro hurtigere, også når I er helt uprøvede i netop dette hus.',
+      'Vagtoverblik: tryg / fokus / medicin og rutiner.',
+      'Kort kontekst pr. borger — uden at læse hele sagen første time.',
+      'Varsler så “stille” ikke læses som “trygt”; samme platform som faste team.',
     ],
-    demo: 'Første kvarter på en vikar-vagt: fra login til tryg prioritering og handling.',
+    demo: 'Første kvarter: login → prioritering → handling.',
   },
   {
     id: 'vagtplan',
     label: 'For vagtplanlæggere',
     title: 'For vagtplanlæggere',
-    lead: 'Gode vagter handler ikke kun om tal på en tavle — men om at matche bemanding til den omsorgsmæssige virkelighed, I kan mærke i huset.',
+    lead: 'Tal på tavlen + den omsorg I mærker i huset — begge dele.',
     bullets: [
-      'Indsigt i perioder med mange signaler eller skift i trivsel, så I kan tale om belastning før den bliver kritisk.',
-      'Supplering af jeres eksisterende vagtplan med et menneskeligt overblik — ikke et overvågningssystem.',
-      'Færre overraskelser: når fronten og planlægningen ser det samme, bliver dialogen enklere.',
+      'Se perioder med mange signaler eller skift i trivsel.',
+      'Supplerer jeres vagtplan — menneskeligt overblik, ikke overvågning.',
+      'Når front og plan ser det samme, bliver dialogen enklere.',
     ],
-    demo: 'Sådan omsættes hverdagens signaler til bedre planlægningsdialog — uden ekstra papirarbejde.',
+    demo: 'Hverdagssignaler som grundlag for planlægningsdialog.',
   },
   {
     id: 'sagsbehandler',
     label: 'For sagsbehandlere',
     title: 'For sagsbehandlere',
-    lead: 'Når kommunikationen mellem botilbud og kommune er klar, præcis og rettidig, vinder alle — især borgeren. Det er essentielt for ledere og koordinatorer i det daglige, og det er her BUDR kan skille sig ud fra konkurrenter.',
+    lead: 'Klar botilbud–kommune-kommunikation gavner alle — især borgeren. Her kan BUDR skille sig ud.',
     bullets: [
-      'Dokumentation der følger praksis tættere — mindre jagt på bilag og mails, når der skal træffes beslutninger.',
-      'Tydeligt skel: borgerens egen oplevelse (Lys), observation og personalets faglige vurdering — læsbart for sagsbehandling.',
-      'Kontrolleret deling af det, der er relevant for sagen — med respekt for GDPR og retssikkerhed.',
-      'Færre opkald for at rekonstruere “hvad der egentlig skete” — mere tid til faktisk indsats.',
+      'Dokumentation tættere på praksis — mindre bilag- og mailjagt.',
+      'Skel: borger (Lys), observation, faglig vurdering — læsbart i sagen.',
+      'Relevant deling med GDPR og retssikkerhed; færre “hvad skete der?”-opkald.',
     ],
-    demo: 'Fra hændelse i hverdagen til struktureret underlag til sagsbehandling — inkl. hvordan kommunikationen med kommunen kan glide bedre.',
+    demo: 'Hændelse → struktureret underlag og bedre kommunikationsflow.',
   },
   {
     id: 'borger',
     label: 'For borgere',
     title: 'For borgere',
-    lead: 'I fortjener at blive mødt i øjenhøjje — også når det er svært at sætte ord på. Borger og Lys hænger sammen: Lys er jeres produkt, portalen er personalets, og begge dele tjener den samme værdige hverdag.',
+    lead: 'Øjenhøjje, også når ordene mangler. Lys til jer; portal til personalet — samme værdige hverdag.',
     bullets: [
-      'Lys er jeres rolige ledsager i lommen: samtale, humør og små planer, når I har brug for det — døgnet rundt.',
-      'Det, I deler i Lys, kan (når I ønsker det) hjælpe personalet med at forstå jer bedre — uden at I skal gentage alt foran alle.',
-      'Enkel adgang: typisk personligt link, uden app-butik og uden tungt login — lavet til mennesker, ikke superbrugere.',
-      'Værdighed først: teknologien skal understøtte jeres autonomi og tryghed — ikke føles som overvågning.',
+      'Lys: samtale, humør, små planer — når I har brug for det, døgnet rundt.',
+      'Det I deler, kan hjælpe personalet at forstå jer — når I ønsker det.',
+      'Typisk link og ét klik — uden app-butik og tungt login.',
     ],
-    demo: 'Prøv Lys-demoen og se, hvordan personalet ser det, der hjælper jer — ikke alt.',
+    demo: 'Lys-demo + hvad personalet ser (kun det relevante).',
     showLysSectionLink: true,
   },
 ];
@@ -184,10 +178,8 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               Journalen, medicinen og borgerens egne ord — <em>før I åbner første dør.</em>
             </h1>
             <p className="hero-sub">
-              I kender det: notater der skal skrives efter vagt, medicin der skal stemples rigtigt,
-              og borgeroplysninger der ligger spredt mellem mapper og gamle systemer. Care Portal
-              samler overblikket, så I kan møde borgerne som mennesker — med ro i maven og tid til
-              det, der faktisk kræver jer.
+              Journal efter vagt, medicin der skal stemples, oplysninger spredt på tværs af
+              systemer. Care Portal samler overblikket — mere tid til borgerne, mindre til jagt.
             </p>
             <div className="hero-actions">
               <Link href="/care-portal-demo" className="btn-primary">
@@ -281,35 +273,30 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               Eksisterende systemer er bygget til sager — <em>ikke til jeres vagt</em>
             </h2>
             <p className="section-p">
-              Som pædagog eller leder skal I både være til stede i nuet og dokumentere bagefter.
-              Kommunale platforme er ofte skabt til sagsbehandling, tilsyn og regler — ikke til at
-              besvare spørgsmålet: <em>Hvem har brug for mig først — og hvorfor?</em> BUDR Care
-              supplerer billedet med borgerens egne signaler og et overblik, I kan handle på, mens
-              kaffen stadig er varm.
+              Mange systemer er bygget til sager og regler — ikke til{' '}
+              <em>hvem har brug for mig først?</em> BUDR tilføjer borgerens signaler og et overblik,
+              I kan handle på med det samme.
             </p>
             <div className="pain-list">
               <div className="pain-item">
                 <div className="pain-icon">📝</div>
                 <div className="pain-text">
-                  <strong>Journal og dokumentation</strong> lægger sig som en sidste opgave efter
-                  vagt — eller bliver til generiske sætninger, fordi tiden ikke er der. I mister
-                  nuancer, og borgeren mister synlighed i egen fremgang.
+                  <strong>Journal</strong> — sidste opgave eller tomme fraser. Nuancer og borgerens
+                  fremgang forsvinder.
                 </div>
               </div>
               <div className="pain-item">
                 <div className="pain-icon">💊</div>
                 <div className="pain-text">
-                  <strong>Medicin og udlevering</strong> kræver fokus hver eneste gang. Når lister
-                  ligger i forskellige systemer, stiger risikoen — og den mentale belastning for
-                  personalet, der allerede har nok at holde styr på.
+                  <strong>Medicin</strong> — kræver fokus hver gang. Spredte lister øger risiko og
+                  mental belastning.
                 </div>
               </div>
               <div className="pain-item">
                 <div className="pain-icon">🗂</div>
                 <div className="pain-text">
-                  <strong>Borgeroplysninger</strong> er spredt: PRP, allergier, pårørende, triggere,
-                  aftaler. I bruger minutter på at lede — minutter, borgeren kunne have fået som
-                  nærvær.
+                  <strong>Borgeroplysninger</strong> — PRP, allergi, aftaler overalt. Tid der kunne
+                  være nærvær.
                 </div>
               </div>
             </div>
@@ -317,7 +304,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
 
           <div className="fi fi-d1">
             <div className="eyebrow" style={{ marginBottom: 20 }}>
-              Hvad kan hvad? (kort fortalt)
+              Hvad kan hvad?
             </div>
             <div className="comp-table">
               <div className="comp-row hdr">
@@ -496,61 +483,49 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               Alt det, I alligevel ville spørge kollegaen om — <em>samlet ét sted</em>
             </h2>
             <p className="section-p">
-              Portalen er jeres fælles situationssyn: hvem har det svært lige nu, hvad er aftalt om
-              medicin og aktiviteter, og hvad skal journalen vide — uden at I skal jagte tråde i
-              fire forskellige programmer. Det er beslutningsstøtte, ikke erstatning for jeres
-              faglighed.
+              Hvem har det svært, hvad er aftalt, hvad skal journalen vide — uden fire programmer.
+              Beslutningsstøtte til jeres faglighed.
             </p>
             <div className="feature-pills">
               <div className="fpill">
                 <div className="fpill-icon">📊</div>
                 <div>
-                  <div className="fpill-title">Dagsoverblik pr. beboer</div>
+                  <div className="fpill-title">Dagsoverblik</div>
                   <div className="fpill-desc">
-                    Ét skærmbillede: hvem er ok, hvem skal have øje på, og hvem har ikke meldt sig.
-                    Sorteret efter behov — ikke alfabetisk.
+                    Ok / øje på / mangler tjek — sorteret efter behov.
                   </div>
                 </div>
               </div>
               <div className="fpill">
                 <div className="fpill-icon">📝</div>
                 <div>
-                  <div className="fpill-title">Journal &amp; dokumentation der følger dagen</div>
+                  <div className="fpill-title">Journal</div>
                   <div className="fpill-desc">
-                    Udkast og struktur bygget på det, der faktisk skete — inkl. signaler fra Lys —
-                    så I kan godkende og justere i stedet for at starte fra blank skærm kl. 21.
+                    Udkast fra dagen og Lys — godkend frem for blank skærm.
                   </div>
                 </div>
               </div>
               <div className="fpill">
                 <div className="fpill-icon">💊</div>
                 <div>
-                  <div className="fpill-title">Medicin, lister og borgeroplysninger samlet</div>
-                  <div className="fpill-desc">
-                    Færre skærmbilleder når I skal handle sikkert: overblik over relevante
-                    oplysninger og sporbarhed omkring udlevering — så hverdagen føles mere tryg for
-                    alle.
-                  </div>
+                  <div className="fpill-title">Medicin &amp; profil</div>
+                  <div className="fpill-desc">Færre skærme, sporbarhed omkring udlevering.</div>
                 </div>
               </div>
               <div className="fpill">
                 <div className="fpill-icon">⚡</div>
                 <div>
-                  <div className="fpill-title">Realtidsvarsler</div>
+                  <div className="fpill-title">Varsler</div>
                   <div className="fpill-desc">
-                    Når Lys markerer uro, eller et tjek mangler, lander det i portalen med det samme
-                    — ikke som en mail i morgen.
+                    Lys og manglende tjek — her og nu, ikke i morgenposten.
                   </div>
                 </div>
               </div>
               <div className="fpill">
                 <div className="fpill-icon">✅</div>
                 <div>
-                  <div className="fpill-title">Planforslag — I godkender</div>
-                  <div className="fpill-desc">
-                    AI kan foreslå struktur for dagen ud fra mønstre; intet aktiveres uden
-                    personalets klare ok. Borgeren møder en plan, I står inde for.
-                  </div>
+                  <div className="fpill-title">Planforslag</div>
+                  <div className="fpill-desc">AI foreslår — intet uden jeres godkendelse.</div>
                 </div>
               </div>
             </div>
@@ -661,12 +636,10 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
         <div className="fi">
           <div className="eyebrow">Én platform — mange roller</div>
           <h2 className="section-h" id={rolesHeadingId}>
-            Hvad kan BUDR Care? <em>Det afhænger af, hvem du er.</em>
+            Hvad kan BUDR Care? <em>Valgfrit: din rolle.</em>
           </h2>
           <p className="section-p roles-intro">
-            Vælg jeres rolle og se, hvordan Care Portal og Lys gør arbejdet nemmere, hurtigere og
-            mere meningsfuldt. Vi tilpasser gerne demoen, så den starter med det, der betyder mest
-            for jer — ofte med pædagogerne først, for når de får ro i maven, følger resten trop.
+            Vælg rolle — se gevinsten. Demoen tilpasser vi; vi starter ofte hos pædagogerne.
           </p>
 
           <div
@@ -711,11 +684,11 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               ))}
             </ul>
             <p className="roles-panel-demo">
-              I en demo: <span>{active.demo}</span>
+              Demo: <span>{active.demo}</span>
             </p>
             {active.showLysSectionLink ? (
               <a href="#lys" className="roles-lys-link">
-                Se hele Lys-sektionen — produktet for borgeren →
+                Hele Lys-sektionen →
               </a>
             ) : null}
           </div>
@@ -772,32 +745,27 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               Værdighed starter med at blive hørt — <em>også når ordene mangler</em>
             </h2>
             <p className="section-p">
-              Under <a href="#hvad-kan-budr">Hvad kan BUDR Care?</a> forklarer vi også Lys set fra
-              borgerens side. Her går vi i dybden: Lys er et selvstændigt produkt, der hænger sammen
-              med portalen — det, borgeren deler, kan blive til tryghed og bedre beslutninger i
-              huset, uden at gøre nogen til et sagsnummer.
+              I <a href="#hvad-kan-budr">Hvad kan BUDR Care?</a> er Lys kort forklaret for borgeren.
+              Her er produktet i dybden: borger og portal hænger sammen — tryghed og bedre
+              beslutninger uden sagsnummer-følelse.
             </p>
             <div className="lys-bonus-pills">
               <div className="lys-bonus-pill">
                 <div className="lys-bonus-pill-icon">🗣</div>
                 <p>
-                  <strong>Borgeren som aktiv kilde — ikke kun observation.</strong> I konkurrerende
-                  løsninger er data ofte personalets vurdering. Lys tilføjer borgerens egen
-                  oplevelse direkte i flowet.
+                  <strong>Borgerens stemme i data</strong> — ikke kun personalets vurdering.
                 </p>
               </div>
               <div className="lys-bonus-pill">
                 <div className="lys-bonus-pill-icon">🌙</div>
                 <p>
-                  <strong>Tilgængelig 24/7.</strong> Når natten er lang, eller angsten rammer, er
-                  der et sted at gå hen — som samtidig kan eskalere til jer, når det er nødvendigt.
+                  <strong>24/7.</strong> Eskalerer til personalet, når det er nødvendigt.
                 </p>
               </div>
               <div className="lys-bonus-pill">
                 <div className="lys-bonus-pill-icon">🔐</div>
                 <p>
-                  <strong>Ingen app-butik. Intet kodeord.</strong> Personligt link og ét klik —
-                  designet til reelle mennesker, ikke superbrugere.
+                  <strong>Link + ét klik</strong> — ingen app-butik, intet tungt login.
                 </p>
               </div>
             </div>
@@ -826,8 +794,8 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
           <div className="t-card">
             <div className="t-stars">★★★★★</div>
             <p className="t-text">
-              Borgerne fortæller Lys ting, de ikke når at sige i køkkenet. Vi ser det i portalen,
-              før vi fordeler opgaver — det føles som at få et forspring på omsorgen.
+              Borgerne siger ting til Lys, de ikke når i køkkenet. Vi ser det i portalen før
+              opgavefordeling — et forspring for omsorgen.
             </p>
             <div className="t-author">
               Socialpsykiatrisk pædagog · botilbud · Region Midtjylland
@@ -836,16 +804,16 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
           <div className="t-card">
             <div className="t-stars">★★★★★</div>
             <p className="t-text">
-              Vi har frigjort omkring to timer om dagen til borgerne i stedet for skærm og notater.
-              Som leder er det det tydeligste tegn på, at vi er på rette vej.
+              Cirka to timer om dagen tilbage til borgerne frem for skærm og notater. Som leder:
+              tydeligt, vi er på rette vej.
             </p>
             <div className="t-author">Leder · socialpsykiatrisk botilbud · Aalborg</div>
           </div>
           <div className="t-card">
             <div className="t-stars">★★★★☆</div>
             <p className="t-text">
-              Det her føles ikke som endnu et kontrolsystem. Det hjælper os med at være mennesker
-              over for mennesker — og borgerne mærker det.
+              Ikke endnu et kontrolsystem — det hjælper os med at møde mennesker som mennesker.
+              Borgerne mærker det.
             </p>
             <div className="t-author">Pædagog · bosted · Nordjylland</div>
           </div>
@@ -860,14 +828,13 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               Skabt ud fra praksis — ikke fra et whiteboard langt fra vagten
             </h2>
             <p className="section-p">
-              BUDR er vokset ud af ønsket om at give borgere en værdig hverdag og personalet et
-              værktøj, der respekterer deres faglighed. Ikke flere tomme felter — men hjælp til at
-              huske, prioritere og dokumentere det, der betyder noget for den enkelte borger.
+              Værdig hverdag for borgeren, respekt for personalets faglighed. Hjælp til at huske,
+              prioritere og dokumentere det, der betyder noget.
             </p>
             <div className="origin-quote">
               <p>
-                Når borgeren bliver hørt gennem Lys, bliver vores arbejde mere meningsfuldt. Det er
-                ikke teknologi for teknologiens skyld — det er bedre møder mellem mennesker.
+                Når borgeren høres gennem Lys, bliver arbejdet mere meningsfuldt — bedre møder
+                mellem mennesker.
               </p>
               <cite>Socialpsykiatrisk pædagog · botilbud · Region Midtjylland</cite>
             </div>
@@ -894,8 +861,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                 <div>
                   <div className="tl-year">Udgangspunkt</div>
                   <div className="tl-text">
-                    Frustration over systemer, der dokumenterer fortiden, men ikke hjælper pædagoger
-                    og ledere med at prioritere nuet.
+                    Systemer dokumenterede fortiden — ikke hvem der har brug for hjælp nu.
                   </div>
                 </div>
               </div>
@@ -907,8 +873,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                 <div>
                   <div className="tl-year">PARK som rygrad</div>
                   <div className="tl-text">
-                    Lys og portalen bygger på personcentreret, anerkendende praksis — ikke som
-                    papirarbejde, men som noget, I kan mærke i hverdagen.
+                    PARK som rygrad — personcentrering I mærker, ikke bare på papir.
                   </div>
                 </div>
               </div>
@@ -920,8 +885,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                 <div>
                   <div className="tl-year">Pilot 2025</div>
                   <div className="tl-text">
-                    Tre botilbud i Nord- og Midtjylland: markant mindre tid på dokumentation, og
-                    borgere der selv opsøger Lys uden at blive bedt om det.
+                    Pilot: tre botilbud — mindre dokumentation; borgere opsøger Lys selv.
                   </div>
                 </div>
               </div>
@@ -932,8 +896,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                 <div>
                   <div className="tl-year">Nu</div>
                   <div className="tl-text">
-                    Klar til flere bosteder. Kort onboarding. Vi viser gerne, hvordan det kan se ud
-                    med jeres faglige øjne — for ledere og for dem, der går vagt.
+                    Klar til flere bosteder. Kort onboarding. Demo med jeres faglige blik.
                   </div>
                 </div>
               </div>
@@ -955,8 +918,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
             Vi viser det på <em>jeres</em> præmisser — for personale og borgere
           </h2>
           <p className="cta-lead">
-            Ingen generisk slidshow. En gennemgang af journal, medicin-overblik, borgerprofiler og
-            Lys — med jeres egne dilemmaer fra hverdagen i centrum.
+            Ikke generisk slidshow — journal, medicin, profiler og Lys ud fra jeres hverdag.
           </p>
           <div className="cta-actions">
             <a
@@ -980,8 +942,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               BUDR Care
             </div>
             <p className="footer-desc">
-              Portal til personalet. Lys til borgeren. Bygget til socialpsykiatrien og botilbud,
-              hvor værdighed og faglighed går hånd i hånd.
+              Portal til personalet. Lys til borgeren. Socialpsykiatri og botilbud.
             </p>
             <a
               href="mailto:hej@budrcare.dk"
