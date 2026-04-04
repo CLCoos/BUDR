@@ -83,7 +83,12 @@ const initialEntries: HandoverEntry[] = [
   },
 ];
 
-export default function HandoverClient() {
+type HandoverClientProps = {
+  /** Mørk Care Portal-flade (fx demo med --cp-* tokens) */
+  carePortalDark?: boolean;
+};
+
+export default function HandoverClient({ carePortalDark = false }: HandoverClientProps) {
   const [entries, setEntries] = useState<HandoverEntry[]>(initialEntries);
   const [currentShift, setCurrentShift] = useState<ShiftLabel>('dag');
   const [saving, setSaving] = useState(false);
@@ -120,24 +125,44 @@ export default function HandoverClient() {
 
   const completedCount = entries.filter((e) => e.note.trim() && e.flagColor).length;
 
+  const pd = carePortalDark;
+
   return (
-    <div className="p-6 max-w-screen-2xl">
+    <div className="max-w-screen-2xl p-6">
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Vagtoverleveringsrum</h1>
-          <div className="text-sm text-gray-500 mt-0.5">Bosted Nordlys · 26/03/2026 · Sara K.</div>
+          <h1 className="text-xl font-bold" style={{ color: pd ? 'var(--cp-text)' : undefined }}>
+            Vagtoverleveringsrum
+          </h1>
+          <div className="mt-0.5 text-sm" style={{ color: pd ? 'var(--cp-muted)' : '#6b7280' }}>
+            Bosted Nordlys · 26/03/2026 · Sara K.
+          </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {/* Shift selector */}
-          <div className="flex bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div
+            className="flex overflow-hidden rounded-lg border"
+            style={
+              pd
+                ? { backgroundColor: 'var(--cp-bg2)', borderColor: 'var(--cp-border)' }
+                : { backgroundColor: '#fff', borderColor: '#e5e7eb' }
+            }
+          >
             {(['dag', 'aften', 'nat'] as ShiftLabel[]).map((s) => (
               <button
                 key={`shift-${s}`}
                 onClick={() => setCurrentShift(s)}
-                className={`px-4 py-2 text-sm font-medium transition-all capitalize ${
-                  currentShift === s ? 'bg-[#0F1B2D] text-white' : 'text-gray-600 hover:bg-gray-50'
+                className={`px-4 py-2 text-sm font-medium capitalize transition-all ${
+                  currentShift === s ? 'bg-[#0F1B2D] text-white' : ''
                 }`}
+                style={
+                  pd && currentShift !== s
+                    ? { color: 'var(--cp-muted)' }
+                    : !pd && currentShift !== s
+                      ? { color: '#4b5563' }
+                      : undefined
+                }
               >
                 {s === 'dag' ? '☀️' : s === 'aften' ? '🌙' : '🌃'}{' '}
                 {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -146,7 +171,16 @@ export default function HandoverClient() {
           </div>
           <button
             onClick={handleDownload}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-100 transition-all"
+            className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-all"
+            style={
+              pd
+                ? {
+                    borderColor: 'var(--cp-border)',
+                    color: 'var(--cp-muted)',
+                    backgroundColor: 'var(--cp-bg2)',
+                  }
+                : undefined
+            }
           >
             <Download size={14} /> Download .txt
           </button>
@@ -169,14 +203,35 @@ export default function HandoverClient() {
       </div>
 
       {/* Progress bar */}
-      <div className="bg-white rounded-lg border border-gray-100 p-4 mb-5">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-gray-700">Vagtnotat fremskridt</span>
-          <span className="text-sm font-bold tabular-nums text-gray-800">
+      <div
+        className="mb-5 rounded-lg border p-4"
+        style={
+          pd
+            ? {
+                backgroundColor: 'var(--cp-bg2)',
+                borderColor: 'var(--cp-border)',
+              }
+            : { backgroundColor: '#fff', borderColor: '#f3f4f6' }
+        }
+      >
+        <div className="mb-2 flex items-center justify-between">
+          <span
+            className="text-sm font-medium"
+            style={{ color: pd ? 'var(--cp-text)' : '#374151' }}
+          >
+            Vagtnotat fremskridt
+          </span>
+          <span
+            className="text-sm font-bold tabular-nums"
+            style={{ color: pd ? 'var(--cp-text)' : '#1f2937' }}
+          >
             {completedCount}/{entries.length}
           </span>
         </div>
-        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+        <div
+          className="h-2 overflow-hidden rounded-full"
+          style={{ backgroundColor: pd ? 'var(--cp-bg3)' : '#f3f4f6' }}
+        >
           <div
             className="h-full rounded-full transition-all duration-500"
             style={{
@@ -185,14 +240,15 @@ export default function HandoverClient() {
             }}
           />
         </div>
-        <div className="flex gap-4 mt-3">
+        <div className="mt-3 flex flex-wrap gap-4">
           {(['groen', 'gul', 'roed', 'sort'] as FlagColor[]).map((f) => {
             const count = entries.filter((e) => e.flagColor === f).length;
             const colors = { groen: '#22C55E', gul: '#EAB308', roed: '#EF4444', sort: '#1F2937' };
             return (
               <div
                 key={`flag-count-${f}`}
-                className="flex items-center gap-1.5 text-xs text-gray-500"
+                className="flex items-center gap-1.5 text-xs"
+                style={{ color: pd ? 'var(--cp-muted)' : '#6b7280' }}
               >
                 <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: colors[f!] }} />
                 {count}{' '}
@@ -209,6 +265,7 @@ export default function HandoverClient() {
           <ResidentHandoverCard
             key={entry.residentId}
             entry={entry}
+            carePortalDark={carePortalDark}
             onUpdate={(updates) => updateEntry(entry.residentId, updates)}
           />
         ))}

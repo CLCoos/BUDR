@@ -131,8 +131,19 @@ type NavEntry =
   | { kind: 'resident'; resident: MockResident }
   | { kind: 'doc'; resident: MockResident; doc: MockDoc };
 
-export default function DokumentSøgning() {
+export type DokumentSøgningProps = {
+  /** Mørk Care Portal-flade (matcher demo / --cp-* tokens) */
+  carePortalDark?: boolean;
+  /** live → resident-360-view; demo → /care-portal-demo/residents med query */
+  linkTarget?: 'live' | 'demo';
+};
+
+export default function DokumentSøgning({
+  carePortalDark = false,
+  linkTarget = 'live',
+}: DokumentSøgningProps) {
   const router = useRouter();
+  const dark = carePortalDark;
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -174,13 +185,18 @@ export default function DokumentSøgning() {
 
   const navigateTo = useCallback(
     (residentId: string, tab: string) => {
-      router.push(
-        `/resident-360-view?id=${encodeURIComponent(residentId)}&tab=${encodeURIComponent(tab)}`
-      );
+      if (linkTarget === 'demo') {
+        const q = new URLSearchParams({ resident: residentId, tab });
+        router.push(`/care-portal-demo/residents?${q.toString()}`);
+      } else {
+        router.push(
+          `/resident-360-view?id=${encodeURIComponent(residentId)}&tab=${encodeURIComponent(tab)}`
+        );
+      }
       setOpen(false);
       setQuery('');
     },
-    [router]
+    [router, linkTarget]
   );
 
   const activateEntry = useCallback(
@@ -247,12 +263,72 @@ export default function DokumentSøgning() {
     return Array.from(keys);
   };
 
+  const shellCls = dark
+    ? 'border border-[var(--cp-border)] bg-[var(--cp-bg3)] shadow-none transition-all duration-200 focus-within:border-[rgba(45,212,160,0.35)] focus-within:shadow-[0_0_0_1px_rgba(45,212,160,0.12)]'
+    : 'border border-transparent bg-gray-100 shadow-none transition-all duration-200 focus-within:border-budr-purple/30 focus-within:bg-white focus-within:shadow-md';
+
+  const iconMuted = dark ? 'var(--cp-muted2)' : undefined;
+  const inputCls = dark
+    ? 'w-full border-none bg-transparent py-2 pl-10 pr-3 text-sm text-[var(--cp-text)] placeholder:text-[var(--cp-muted)] focus:outline-none focus:ring-0'
+    : 'w-full border-none bg-transparent py-2 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-0';
+
+  const kbdCls = dark
+    ? 'mr-2 hidden shrink-0 rounded bg-[var(--cp-bg2)] px-1.5 py-0.5 font-mono text-[10px] font-medium text-[var(--cp-muted2)] sm:inline'
+    : 'mr-2 hidden shrink-0 rounded bg-gray-200 px-1.5 py-0.5 font-mono text-[10px] font-medium text-gray-500 sm:inline';
+
+  const clearBtnCls = dark
+    ? 'mr-2 rounded-full p-1 text-[var(--cp-muted)] transition-all duration-200 hover:bg-[var(--cp-bg2)] hover:text-[var(--cp-text)]'
+    : 'mr-2 rounded-full p-1 text-gray-400 transition-all duration-200 hover:bg-gray-200 hover:text-gray-600';
+
+  const dropdownCls = dark
+    ? 'absolute left-0 right-0 top-full z-50 mt-2 w-96 max-w-[calc(100vw-2rem)] rounded-xl border border-[var(--cp-border)] bg-[var(--cp-bg2)] shadow-[0_12px_40px_rgba(0,0,0,0.35)]'
+    : 'absolute left-0 right-0 top-full z-50 mt-2 w-96 max-w-[calc(100vw-2rem)] rounded-xl border border-gray-100 bg-white shadow-lg';
+
+  const emptyCls = dark
+    ? 'px-4 py-8 text-center text-sm text-[var(--cp-muted)]'
+    : 'px-4 py-8 text-center text-sm text-gray-400';
+
+  const sectionHdrCls = dark
+    ? 'px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-[var(--cp-muted2)]'
+    : 'px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-gray-400';
+
+  const rowActive = (active: boolean) =>
+    dark
+      ? active
+        ? 'bg-[var(--cp-bg3)] ring-1 ring-[rgba(45,212,160,0.25)]'
+        : 'hover:bg-[var(--cp-bg3)]'
+      : active
+        ? 'bg-gray-50 ring-1 ring-budr-purple/20'
+        : 'hover:bg-gray-50';
+
+  const chipCls = dark
+    ? 'rounded-full bg-[var(--cp-bg)] px-2 py-0.5 text-[10px] font-medium text-[var(--cp-text)] transition-all duration-200 hover:bg-[rgba(45,212,160,0.12)] hover:text-[var(--cp-green)]'
+    : 'rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-700 transition-all duration-200 hover:bg-budr-lavender hover:text-budr-purple';
+
+  const docMetaCls = dark ? 'text-xs text-[var(--cp-muted)]' : 'text-xs text-gray-400';
+  const docTitleCls = dark
+    ? 'text-sm font-medium text-[var(--cp-text)]'
+    : 'text-sm font-medium text-gray-900';
+  const residentNameCls = dark
+    ? 'text-sm font-semibold text-[var(--cp-text)]'
+    : 'text-sm font-semibold text-gray-900';
+  const roomCls = dark
+    ? 'flex items-center gap-1 text-xs text-[var(--cp-muted)]'
+    : 'flex items-center gap-1 text-xs text-gray-400';
+  const dividerCls = dark
+    ? 'mt-3 border-t border-[var(--cp-border)] pt-3'
+    : 'mt-3 border-t border-gray-100 pt-3';
+  const fileIconCls = dark
+    ? 'mt-0.5 h-4 w-4 shrink-0 text-[var(--cp-muted2)]'
+    : 'mt-0.5 h-4 w-4 shrink-0 text-gray-400';
+
   return (
     <div ref={rootRef} className="relative w-full max-w-md min-w-0 flex-1">
-      <div className="flex items-center gap-2 rounded-full border border-transparent bg-gray-100 shadow-none transition-all duration-200 focus-within:border-budr-purple/30 focus-within:bg-white focus-within:shadow-md">
+      <div className={`flex items-center gap-2 rounded-full ${shellCls}`}>
         <div className="relative flex min-w-0 flex-1 items-center">
           <Search
-            className="pointer-events-none absolute left-3 h-4 w-4 text-gray-400"
+            className={`pointer-events-none absolute left-3 h-4 w-4 ${dark ? '' : 'text-gray-400'}`}
+            style={dark ? { color: iconMuted } : undefined}
             aria-hidden
           />
           <input
@@ -273,12 +349,10 @@ export default function DokumentSøgning() {
             autoComplete="off"
             aria-expanded={showDropdown}
             aria-controls="dokument-sogning-results"
-            className="w-full border-none bg-transparent py-2 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-0"
+            className={inputCls}
           />
         </div>
-        <span className="mr-2 hidden shrink-0 rounded bg-gray-200 px-1.5 py-0.5 font-mono text-[10px] font-medium text-gray-500 sm:inline">
-          ⌘K
-        </span>
+        <span className={kbdCls}>⌘K</span>
         {query ? (
           <button
             type="button"
@@ -287,7 +361,7 @@ export default function DokumentSøgning() {
               setOpen(false);
               inputRef.current?.focus();
             }}
-            className="mr-2 rounded-full p-1 text-gray-400 transition-all duration-200 hover:bg-gray-200 hover:text-gray-600"
+            className={clearBtnCls}
             aria-label="Ryd søgning"
           >
             <X className="h-3.5 w-3.5" />
@@ -298,21 +372,17 @@ export default function DokumentSøgning() {
       {showDropdown ? (
         <div
           id="dokument-sogning-results"
-          className="absolute left-0 right-0 top-full z-50 mt-2 w-96 max-w-[calc(100vw-2rem)] rounded-xl border border-gray-100 bg-white shadow-lg"
+          className={dropdownCls}
           role="listbox"
           onMouseDown={(e) => e.preventDefault()}
         >
           {matchedResidents.length === 0 && matchedDocs.length === 0 ? (
-            <div className="px-4 py-8 text-center text-sm text-gray-400">
-              Ingen resultater for &apos;{q}&apos;
-            </div>
+            <div className={emptyCls}>Ingen resultater for &apos;{q}&apos;</div>
           ) : (
             <div className="max-h-[min(70vh,28rem)] overflow-y-auto py-2">
               {matchedResidents.length > 0 ? (
                 <div className="px-2">
-                  <div className="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
-                    Beboere
-                  </div>
+                  <div className={sectionHdrCls}>Beboere</div>
                   {matchedResidents.map((r, i) => {
                     const globalIdx = i;
                     const active = globalIdx === activeIndex;
@@ -321,9 +391,7 @@ export default function DokumentSøgning() {
                         key={r.id}
                         role="option"
                         aria-selected={active}
-                        className={`rounded-lg transition-all duration-200 ${
-                          active ? 'bg-gray-50 ring-1 ring-budr-purple/20' : 'hover:bg-gray-50'
-                        }`}
+                        className={`rounded-lg transition-all duration-200 ${rowActive(active)}`}
                       >
                         <button
                           type="button"
@@ -333,13 +401,20 @@ export default function DokumentSøgning() {
                         >
                           <div
                             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-                            style={{ backgroundColor: '#7F77DD' }}
+                            style={
+                              dark
+                                ? {
+                                    background:
+                                      'linear-gradient(135deg, rgba(110,231,183,0.9), rgba(5,150,105,0.95))',
+                                  }
+                                : { backgroundColor: '#7F77DD' }
+                            }
                           >
                             {r.initials}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <div className="text-sm font-semibold text-gray-900">{r.name}</div>
-                            <div className="flex items-center gap-1 text-xs text-gray-400">
+                            <div className={residentNameCls}>{r.name}</div>
+                            <div className={roomCls}>
                               <User className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
                               <span>Værelse {r.room}</span>
                             </div>
@@ -353,7 +428,7 @@ export default function DokumentSøgning() {
                                   ev.stopPropagation();
                                   navigateTo(r.id, CATEGORY_TO_TAB[cat]);
                                 }}
-                                className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-700 transition-all duration-200 hover:bg-budr-lavender hover:text-budr-purple"
+                                className={chipCls}
                               >
                                 {CATEGORY_LABEL[cat]}
                               </button>
@@ -367,10 +442,10 @@ export default function DokumentSøgning() {
               ) : null}
 
               {matchedDocs.length > 0 ? (
-                <div
-                  className={`px-2 ${matchedResidents.length > 0 ? 'mt-3 border-t border-gray-100 pt-3' : ''}`}
-                >
-                  <div className="flex items-center gap-1.5 px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                <div className={`px-2 ${matchedResidents.length > 0 ? dividerCls : ''}`}>
+                  <div
+                    className={`flex items-center gap-1.5 px-2 pb-2 text-xs font-semibold uppercase tracking-wide ${dark ? 'text-[var(--cp-muted2)]' : 'text-gray-400'}`}
+                  >
                     <FileText className="h-3.5 w-3.5" aria-hidden />
                     Dokumenter
                   </div>
@@ -385,14 +460,12 @@ export default function DokumentSøgning() {
                         aria-selected={active}
                         onMouseEnter={() => setActiveIndex(globalIdx)}
                         onClick={() => navigateTo(resident.id, CATEGORY_TO_TAB[doc.category])}
-                        className={`flex w-full items-start gap-2 rounded-lg px-3 py-2 text-left transition-all duration-200 ${
-                          active ? 'bg-gray-50 ring-1 ring-budr-purple/20' : 'hover:bg-gray-50'
-                        }`}
+                        className={`flex w-full items-start gap-2 rounded-lg px-3 py-2 text-left transition-all duration-200 ${rowActive(active)}`}
                       >
-                        <FileText className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" aria-hidden />
+                        <FileText className={fileIconCls} aria-hidden />
                         <div className="min-w-0 flex-1">
-                          <div className="text-sm font-medium text-gray-900">{doc.title}</div>
-                          <div className="text-xs text-gray-400">
+                          <div className={docTitleCls}>{doc.title}</div>
+                          <div className={docMetaCls}>
                             {CATEGORY_LABEL[doc.category]} · {resident.name}
                           </div>
                         </div>

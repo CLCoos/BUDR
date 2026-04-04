@@ -55,7 +55,13 @@ Prøv at forstå årsagen: Er beboeren angst? Træt? Konflikter med andre? Dårl
 Dokumentér i journalen at beboeren har opholdt sig isoleret og hvad du forsøgte. Kontakt din leder hvis isolationen varer længe eller er kombineret med andre bekymringstegn som manglende mad/drikke eller selvskade.`,
 };
 
-export default function AssistantClient() {
+type AssistantClientProps = {
+  /** Samme mørke flade som resten af Care Portal (undgår hvide paneler) */
+  carePortalDark?: boolean;
+};
+
+export default function AssistantClient({ carePortalDark = false }: AssistantClientProps) {
+  const pd = carePortalDark;
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
@@ -135,15 +141,26 @@ export default function AssistantClient() {
   const isEmpty = messages.length === 0;
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div className="flex h-full min-h-0 flex-col">
       {/* Header */}
-      <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-white shrink-0">
-        <div className="w-9 h-9 rounded-lg bg-[#1D9E75]/10 flex items-center justify-center">
+      <div
+        className="flex shrink-0 items-center gap-3 border-b px-6 py-4"
+        style={{
+          borderColor: pd ? 'var(--cp-border)' : '#f3f4f6',
+          backgroundColor: pd ? 'var(--cp-bg2)' : '#fff',
+        }}
+      >
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#1D9E75]/10">
           <BrainCircuit size={18} className="text-[#1D9E75]" />
         </div>
         <div>
-          <div className="text-sm font-semibold text-gray-900">Faglig støtte</div>
-          <div className="text-xs text-gray-400">
+          <div
+            className="text-sm font-semibold"
+            style={{ color: pd ? 'var(--cp-text)' : '#111827' }}
+          >
+            Faglig støtte
+          </div>
+          <div className="text-xs" style={{ color: pd ? 'var(--cp-muted)' : '#9ca3af' }}>
             Erfaren kollega · Fortrolig · Altid tilgængelig
           </div>
         </div>
@@ -151,7 +168,8 @@ export default function AssistantClient() {
           <button
             type="button"
             onClick={() => setMessages([])}
-            className="ml-auto flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+            className="ml-auto flex items-center gap-1.5 text-xs transition-colors"
+            style={{ color: pd ? 'var(--cp-muted)' : '#9ca3af' }}
           >
             <Trash2 size={13} />
             Ryd samtale
@@ -160,24 +178,44 @@ export default function AssistantClient() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 min-h-0">
+      <div
+        className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-4"
+        style={{ backgroundColor: pd ? 'var(--cp-bg)' : undefined }}
+      >
         {isEmpty ? (
-          <div className="flex flex-col items-center justify-center h-full text-center py-8">
-            <div className="w-14 h-14 rounded-2xl bg-[#1D9E75]/10 flex items-center justify-center mb-4">
+          <div className="flex h-full flex-col items-center justify-center py-8 text-center">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#1D9E75]/10">
               <BrainCircuit size={28} className="text-[#1D9E75]" />
             </div>
-            <h2 className="text-base font-semibold text-gray-800 mb-1">Hvad kan jeg hjælpe med?</h2>
-            <p className="text-sm text-gray-400 mb-6 max-w-xs">
+            <h2
+              className="mb-1 text-base font-semibold"
+              style={{ color: pd ? 'var(--cp-text)' : '#1f2937' }}
+            >
+              Hvad kan jeg hjælpe med?
+            </h2>
+            <p
+              className="mb-6 max-w-xs text-sm"
+              style={{ color: pd ? 'var(--cp-muted)' : '#9ca3af' }}
+            >
               Spørg om beboere, faglige situationer, lovgivning eller hvad du ellers har brug for at
               vide.
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-lg">
+            <div className="grid w-full max-w-lg grid-cols-1 gap-2 sm:grid-cols-2">
               {SUGGESTIONS.map((s) => (
                 <button
                   key={s}
                   type="button"
                   onClick={() => void send(s)}
-                  className="text-left text-xs text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg px-3 py-2.5 transition-colors leading-snug"
+                  className="rounded-lg border px-3 py-2.5 text-left text-xs leading-snug transition-colors"
+                  style={
+                    pd
+                      ? {
+                          color: 'var(--cp-text)',
+                          backgroundColor: 'var(--cp-bg2)',
+                          borderColor: 'var(--cp-border)',
+                        }
+                      : { color: '#4b5563', backgroundColor: '#f9fafb', borderColor: '#e5e7eb' }
+                  }
                 >
                   {s}
                 </button>
@@ -198,9 +236,24 @@ export default function AssistantClient() {
               <div
                 className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
                   msg.role === 'user'
-                    ? 'bg-[#1D9E75] text-white rounded-tr-sm'
-                    : 'bg-gray-50 text-gray-800 border border-gray-100 rounded-tl-sm'
+                    ? 'rounded-tr-sm bg-[#1D9E75] text-white'
+                    : 'rounded-tl-sm border'
                 }`}
+                style={
+                  msg.role === 'assistant' && pd
+                    ? {
+                        backgroundColor: 'var(--cp-bg2)',
+                        borderColor: 'var(--cp-border)',
+                        color: 'var(--cp-text)',
+                      }
+                    : msg.role === 'assistant' && !pd
+                      ? {
+                          backgroundColor: '#f9fafb',
+                          borderColor: '#f3f4f6',
+                          color: '#1f2937',
+                        }
+                      : undefined
+                }
               >
                 {msg.content}
                 {msg.role === 'assistant' && msg.content === '' && streaming && (
@@ -227,8 +280,24 @@ export default function AssistantClient() {
       </div>
 
       {/* Input */}
-      <div className="shrink-0 border-t border-gray-100 bg-white px-4 py-3">
-        <div className="flex items-end gap-2 bg-gray-50 rounded-xl border border-gray-200 px-3 py-2 focus-within:border-[#1D9E75] transition-colors">
+      <div
+        className="shrink-0 border-t px-4 py-3"
+        style={{
+          borderColor: pd ? 'var(--cp-border)' : '#f3f4f6',
+          backgroundColor: pd ? 'var(--cp-bg2)' : '#fff',
+        }}
+      >
+        <div
+          className="flex items-end gap-2 rounded-xl border px-3 py-2 transition-colors focus-within:border-[#1D9E75]"
+          style={
+            pd
+              ? {
+                  backgroundColor: 'var(--cp-bg3)',
+                  borderColor: 'var(--cp-border)',
+                }
+              : { backgroundColor: '#f9fafb', borderColor: '#e5e7eb' }
+          }
+        >
           <textarea
             ref={textareaRef}
             rows={1}
@@ -237,8 +306,8 @@ export default function AssistantClient() {
             onKeyDown={handleKeyDown}
             placeholder="Skriv dit spørgsmål..."
             disabled={streaming}
-            className="flex-1 resize-none bg-transparent text-sm text-gray-800 placeholder-gray-400 outline-none max-h-32 leading-relaxed"
-            style={{ minHeight: '1.5rem' }}
+            className="max-h-32 min-h-[1.5rem] flex-1 resize-none bg-transparent text-sm leading-relaxed outline-none placeholder:opacity-70"
+            style={{ color: pd ? 'var(--cp-text)' : '#1f2937' }}
           />
           <button
             type="button"
@@ -249,7 +318,10 @@ export default function AssistantClient() {
             <Send size={14} className="text-white" />
           </button>
         </div>
-        <p className="text-xs text-gray-400 mt-1.5 text-center">
+        <p
+          className="mt-1.5 text-center text-xs"
+          style={{ color: pd ? 'var(--cp-muted)' : '#9ca3af' }}
+        >
           Samtalen gemmes ikke · Til faglig vejledning — erstatter ikke akut hjælp
         </p>
       </div>

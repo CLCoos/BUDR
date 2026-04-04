@@ -16,7 +16,7 @@ Stack: **Next.js 15** (App Router), **Supabase** (Postgres, Auth, Edge Functions
 ### Residents
 
 - PIN (4 digits) via Supabase Edge Functions; optional WebAuthn.
-- Session cookies and validation via edge functions (`resident-session-validate`, etc.).
+- Session cookies and validation via edge functions (`resident-session-validate`, etc.). The app route `POST/DELETE /api/resident-session` can set or clear the HttpOnly `budr_resident_session` cookie after client-side verification.
 - **Preview:** `middleware.ts` can set a demo resident cookie when none exists so `/park-hub` is viewable without login — **disable or tighten for real production** where each resident must authenticate.
 
 ### Staff (Care Portal)
@@ -39,8 +39,12 @@ Do **not** commit real project URLs or secrets; use environment variables only.
 
 | Route | Behaviour |
 |--------|-----------|
-| `/care-portal-demo` | **Simulated** widgets and `ResidentListDemo` — no staff session required. |
+| `/care-portal-demo` | **Simulated** data, dark portal shell (sidebar + top bar + mobile menu). Same navigation pattern as live; no staff session required. |
 | `/care-portal-dashboard` (after login) | **Live** data from Supabase, scoped by staff `org_id`. |
+
+**Demo routes** (all under `/care-portal-demo/…`): dashboard (tabs `journal` / `planner` / `alerts`), handover, residents, import, assistant, settings, indsatsdokumentation, tilsynsrapport, **vagtplan** (+ `/vagtplan/loen` for hours, vacation, estimated gross pay; shifts stored in `localStorage`), **beskeder** (internal + Lys-style mock threads). Shared clients (`HandoverClient`, `AssistantClient`, indsats/tilsyn) accept `carePortalDark` and demo `returnHref` where relevant.
+
+**Dokumentsøgning** (`DokumentSøgning`): live top nav uses mock index → `resident-360-view`. In the demo, `linkTarget="demo"` sends results to `/care-portal-demo/residents?resident=…&tab=…` with a short on-page context panel. Search appears in the fixed demo top bar from `sm` and up, and in the **mobile sub-header** below `sm` so narrow phones still have search.
 
 ---
 
