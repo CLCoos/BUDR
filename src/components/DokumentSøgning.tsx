@@ -186,8 +186,8 @@ export default function DokumentSøgning({
   const navigateTo = useCallback(
     (residentId: string, tab: string) => {
       if (linkTarget === 'demo') {
-        const q = new URLSearchParams({ resident: residentId, tab });
-        router.push(`/care-portal-demo/residents?${q.toString()}`);
+        const q = tab ? `?tab=${encodeURIComponent(tab)}` : '';
+        router.push(`/care-portal-demo/residents/${encodeURIComponent(residentId)}${q}`);
       } else {
         router.push(
           `/resident-360-view?id=${encodeURIComponent(residentId)}&tab=${encodeURIComponent(tab)}`
