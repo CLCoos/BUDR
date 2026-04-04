@@ -113,6 +113,16 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
           </div>
           <ul className="nav-links" id="primary-nav-panel" role="list">
             <li>
+              <a href="#hvad-er-budr" onClick={closeNav}>
+                Om BUDR
+              </a>
+            </li>
+            <li>
+              <a href="#sammenligning" onClick={closeNav}>
+                Sammenligning
+              </a>
+            </li>
+            <li>
               <a href="#fordele" onClick={closeNav}>
                 Fordele
               </a>
@@ -162,8 +172,77 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
       </nav>
 
       <div className="budr-landing-content">
-        {/* 1. HERO */}
-        <section className="hero">
+        {/* 1. KORT FORTALT — øverst */}
+        <section
+          className="intro-section intro-section--lead fi"
+          id="hvad-er-budr"
+          aria-label="Hvad er BUDR Care"
+        >
+          <div className="shell">
+            <div className="intro-head">
+              <div className="eyebrow" style={{ justifyContent: 'center', display: 'flex' }}>
+                Kort fortalt
+              </div>
+              <h2 className="section-h" style={{ maxWidth: 'none', margin: '0 auto' }}>
+                Hvad er <em>BUDR Care?</em>
+              </h2>
+              <p className="intro-lead">
+                BUDR Care er en produktfamilie til <strong>socialpsykiatriske botilbud</strong>:
+                borger-appen <strong>Lys</strong> og <strong>Care Portal</strong> til pædagoger og
+                ledere. Det er ét sammenhængende økosystem — ikke to leverandører, der skal
+                integreres bag efter.
+              </p>
+            </div>
+            <div className="intro-grid">
+              <div className="intro-card">
+                <div className="intro-card-ic" aria-hidden>
+                  <IconSyncSend size={22} className="landing-icon" />
+                </div>
+                <div className="intro-card-label">Helhed</div>
+                <h3 className="intro-card-h">Ét flow fra borger til journal</h3>
+                <p className="intro-card-p">
+                  Lys og portal deler logik og data, så signaler fra borgeren kan blive til
+                  overblik, varsler og journalstøtte hos jer — uden telefonkæder og
+                  dobbeltregistrering.
+                </p>
+                <a className="intro-card-link" href="#losning" onClick={closeNav}>
+                  Se Lys og portal →
+                </a>
+              </div>
+              <div className="intro-card">
+                <div className="intro-card-ic" aria-hidden>
+                  <IconPhoneCheckin size={22} className="landing-icon" />
+                </div>
+                <div className="intro-card-label">Borgeren</div>
+                <h3 className="intro-card-h">Lys</h3>
+                <p className="intro-card-p">
+                  En tryg indgang til tjek-in, humør og egne ord — designet til autonomi, samtykke
+                  og hverdagsrytme på bostedet.
+                </p>
+                <Link className="intro-card-link" href="/app" onClick={closeNav}>
+                  Åbn Lys →
+                </Link>
+              </div>
+              <div className="intro-card">
+                <div className="intro-card-ic" aria-hidden>
+                  <IconMonitorPortal size={22} className="landing-icon" />
+                </div>
+                <div className="intro-card-label">Personalet</div>
+                <h3 className="intro-card-h">Care Portal</h3>
+                <p className="intro-card-p">
+                  Dagligt overblik, opgaver, dokumentation og medicin ét sted — bygget til
+                  vagtskifte, overdragelse og fælles beslutninger i teamet.
+                </p>
+                <Link className="intro-card-link" href="/care-portal-demo" onClick={closeNav}>
+                  Prøv portal-demo →
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 2. HERO */}
+        <section className="hero hero--after-intro">
           <div className="hero-bg" aria-hidden />
           <div className="hero-inner shell">
             <div>
@@ -250,7 +329,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
           </div>
         </section>
 
-        {/* 2. SOCIAL PROOF */}
+        {/* 3. SOCIAL PROOF */}
         <section className="social-proof-section fi" id="social-proof" aria-label="Udtalelser">
           <div className="shell">
             <div className="social-proof-grid">
@@ -277,7 +356,305 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
           </div>
         </section>
 
-        {/* 2b. USP / fordele */}
+        {/* 4. SAMMENLIGNING (navngivne konkurrenter) */}
+        <section
+          className="comparison-section fi"
+          id="sammenligning"
+          aria-label="Sammenligning med Planner4You, CitizenOne m.fl."
+        >
+          <div className="shell">
+            <div style={{ textAlign: 'center', maxWidth: '46rem', margin: '0 auto' }}>
+              <div className="eyebrow" style={{ justifyContent: 'center', display: 'flex' }}>
+                Konkurrenter
+              </div>
+              <h2 className="section-h" style={{ maxWidth: 'none', margin: '0 auto' }}>
+                Standardsvask eller <em>guldbehandling?</em>
+              </h2>
+              <p className="section-p" style={{ marginTop: 14 }}>
+                Tænk på det som i vaskehallen: <strong>begge</strong> får bilen våd — men
+                guldprogrammet har flere trin, bedre finish og flere detaljer, der tæller i
+                hverdagen. Nedenfor ser du <strong>BUDR Care</strong> (Lys + Care Portal) over for{' '}
+                <strong>Planner4You</strong>, <strong>CitizenOne</strong> og typiske{' '}
+                <strong>øvrige journal-/driftssystemer</strong>. Vi har gennemgået deres offentlige
+                produkttekster: de tilbyder stærke moduler til personalet og drift — men{' '}
+                <strong>ikke en borger-først companion-app</strong> i samme klasse som Lys (tjek-in,
+                AI-samtale, kriseplan hos borgeren). Tjek altid aktuel funktionsliste hos
+                leverandøren.
+              </p>
+            </div>
+            <div className="comp-scroll">
+              <div
+                className="comp-table"
+                role="table"
+                aria-label="Sammenligning BUDR Care, Planner4You, CitizenOne og øvrige systemer"
+              >
+                <div className="comp-row hdr" role="row">
+                  <div className="comp-cell" role="columnheader">
+                    Funktion / fokus
+                  </div>
+                  <div className="comp-cell budr-c" role="columnheader">
+                    <span className="comp-budr-hdr-title">BUDR Care</span>
+                    <span className="comp-budr-badge">Fuld pakke</span>
+                  </div>
+                  <div className="comp-cell comp-col-standard" role="columnheader">
+                    <span className="comp-basic-label">Typisk drift</span>
+                    Planner4You
+                  </div>
+                  <div className="comp-cell comp-col-standard" role="columnheader">
+                    <span className="comp-basic-label">Typisk journal</span>
+                    CitizenOne
+                  </div>
+                  <div className="comp-cell comp-col-standard" role="columnheader">
+                    <span className="comp-basic-label">Øvrige</span>
+                    Andre systemer
+                  </div>
+                </div>
+                <div className="comp-row" role="row">
+                  <div className="comp-cell feat-label" role="cell">
+                    <strong>Borger-app Lys</strong> — egen app til tjek-in, humør, AI-samtale og
+                    kriseplan (ikke kun “mobil browser til journal”)
+                  </div>
+                  <div className="comp-cell budr-c" role="cell">
+                    <span className="yes" aria-label="Ja, inkluderet">
+                      ✓
+                    </span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="comp-na" aria-label="Ikke som dedikeret borger-app">
+                      —
+                    </span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="comp-na" aria-label="Ikke som dedikeret borger-app">
+                      —
+                    </span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="comp-na" aria-label="Sjældent">
+                      —
+                    </span>
+                  </div>
+                </div>
+                <div className="comp-row" role="row">
+                  <div className="comp-cell feat-label" role="cell">
+                    <strong>Realtid</strong> fra borgerens handling i Lys til trafiklys og opgaver i
+                    Care Portal — uden telefonkæde
+                  </div>
+                  <div className="comp-cell budr-c" role="cell">
+                    <span className="yes" aria-label="Ja">
+                      ✓
+                    </span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="comp-na" aria-label="Ikke samme flow">
+                      —
+                    </span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="comp-na" aria-label="Ikke samme flow">
+                      —
+                    </span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="part">Delvis</span>
+                  </div>
+                </div>
+                <div className="comp-row" role="row">
+                  <div className="comp-cell feat-label" role="cell">
+                    <strong>AI-journal &amp; plan</strong> som udkast med{' '}
+                    <strong>krav om faglig godkendelse</strong>, før noget låses
+                  </div>
+                  <div className="comp-cell budr-c" role="cell">
+                    <span className="yes" aria-label="Ja">
+                      ✓
+                    </span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="comp-na" aria-label="Nej">
+                      —
+                    </span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="comp-na" aria-label="Nej">
+                      —
+                    </span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="part">Varierer</span>
+                  </div>
+                </div>
+                <div className="comp-row" role="row">
+                  <div className="comp-cell feat-label" role="cell">
+                    <strong>AI-faglig sparring</strong> til personalet i portalen (hurtig
+                    kollega-lignende støtte i hverdagen)
+                  </div>
+                  <div className="comp-cell budr-c" role="cell">
+                    <span className="yes" aria-label="Ja">
+                      ✓
+                    </span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="comp-na" aria-label="Nej">
+                      —
+                    </span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="comp-na" aria-label="Nej">
+                      —
+                    </span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="comp-na" aria-label="Nej">
+                      —
+                    </span>
+                  </div>
+                </div>
+                <div className="comp-row" role="row">
+                  <div className="comp-cell feat-label" role="cell">
+                    <strong>Kriseplan &amp; beredskab</strong> struktureret{' '}
+                    <strong>hos borgeren</strong> i Lys — synligt for teamet i portalen
+                  </div>
+                  <div className="comp-cell budr-c" role="cell">
+                    <span className="yes" aria-label="Ja">
+                      ✓
+                    </span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="comp-na" aria-label="Nej">
+                      —
+                    </span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="comp-na" aria-label="Nej">
+                      —
+                    </span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="comp-na" aria-label="Nej">
+                      —
+                    </span>
+                  </div>
+                </div>
+                <div className="comp-row" role="row">
+                  <div className="comp-cell feat-label" role="cell">
+                    <strong>Varsler</strong> der prioriterer “kræver dig først” — mindre støj fra
+                    generiske påmindelser
+                  </div>
+                  <div className="comp-cell budr-c" role="cell">
+                    <span className="yes" aria-label="Ja">
+                      ✓
+                    </span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="part">Delvis</span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="part">Delvis</span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="part">Delvis</span>
+                  </div>
+                </div>
+                <div className="comp-row" role="row">
+                  <div className="comp-cell feat-label" role="cell">
+                    <strong>Ét økosystem</strong> — Lys og Care Portal designet og leveret som ét
+                    forløb til socialpsykiatriske botilbud
+                  </div>
+                  <div className="comp-cell budr-c" role="cell">
+                    <span className="yes" aria-label="Ja">
+                      ✓
+                    </span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="part">Modulpakke</span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="part">Journal-suite</span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="part">Fragmenteret</span>
+                  </div>
+                </div>
+                <div className="comp-row" role="row">
+                  <div className="comp-cell feat-label" role="cell">
+                    <strong>Journal, medicin, dokumentation</strong> og fagligt overblik over
+                    beboere (baseline “vasken”)
+                  </div>
+                  <div className="comp-cell budr-c" role="cell">
+                    <span className="yes" aria-label="Ja">
+                      ✓
+                    </span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="yes" aria-label="Ja">
+                      ✓
+                    </span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="yes" aria-label="Ja">
+                      ✓
+                    </span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="part">Delvis</span>
+                  </div>
+                </div>
+                <div className="comp-row" role="row">
+                  <div className="comp-cell feat-label" role="cell">
+                    <strong>Vagtplan, møder, kalender</strong> og klassisk drift på gulvet
+                  </div>
+                  <div className="comp-cell budr-c" role="cell">
+                    <span className="part">Fokus portal</span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="yes" aria-label="Stærkt">
+                      ✓
+                    </span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="yes" aria-label="Stærkt">
+                      ✓
+                    </span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="part">Varierer</span>
+                  </div>
+                </div>
+                <div className="comp-row" role="row">
+                  <div className="comp-cell feat-label" role="cell">
+                    <strong>Åben demo</strong> af både borgerflow (Lys) og portal uden
+                    købsforpligtelse
+                  </div>
+                  <div className="comp-cell budr-c" role="cell">
+                    <span className="yes" aria-label="Ja">
+                      ✓
+                    </span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="part">Ofte personale</span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="yes" aria-label="Ja">
+                      ✓
+                    </span>
+                  </div>
+                  <div className="comp-cell" role="cell">
+                    <span className="part">Varierer</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p className="comparison-footnote">
+              <strong>Om borger-app:</strong> Planner4You beskriver bl.a. trivselsvurdering med
+              borgerinddragelse — det er ikke det samme som en dedikeret borger-companion som Lys.
+              CitizenOne fremhæver journal, medicin og mobil adgang til <em>personalets</em>{' '}
+              arbejde. Planner4You og CitizenOne er tredjeparter med egne vilkår. Tabellen er BUDRs
+              fortolkning og erstatter ikke udbud eller DPA — kontakt os for gennemgang af pasform.
+            </p>
+          </div>
+        </section>
+
+        {/* 2c. USP / fordele */}
         <section className="usp-section fi" id="fordele" aria-label="Fordele ved BUDR">
           <div className="shell">
             <div className="usp-head">
@@ -372,7 +749,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
           </div>
         </section>
 
-        {/* 2c. Konkrete “smarte” højdepunkter — til fremvisning */}
+        {/* 2d. Konkrete “smarte” højdepunkter — til fremvisning */}
         <section
           className="smart-hl-section fi"
           id="smart-funktioner"
@@ -990,6 +1367,8 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
             </div>
             <div className="footer-col">
               <h5>På siden</h5>
+              <a href="#hvad-er-budr">Om BUDR</a>
+              <a href="#sammenligning">Sammenligning</a>
               <a href="#fordele">Fordele</a>
               <a href="#problem">Hverdagsudfordringer</a>
               <a href="#losning">Lys &amp; portal</a>

@@ -646,6 +646,16 @@ html {
   overflow: hidden;
 }
 
+/* Første sektion under fast nav: «Kort fortalt » */
+.budr-landing .intro-section.intro-section--lead {
+  border-top: none;
+  padding-top: clamp(102px, 11vw, 130px);
+}
+
+.budr-landing .hero.hero--after-intro {
+  padding-top: 88px;
+}
+
 .budr-landing .intro-section::before {
   content: '';
   position: absolute;
@@ -726,6 +736,18 @@ html {
   font-weight: 300;
   line-height: 1.65;
   margin-bottom: 16px;
+}
+
+.budr-landing .intro-card-ic {
+  width: 44px;
+  height: 44px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--amber-dim);
+  border: 1px solid var(--amber-border);
 }
 
 .budr-landing .intro-card-link {
@@ -2100,7 +2122,7 @@ html {
 
 .budr-landing .comp-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: minmax(0, 2fr) repeat(4, minmax(0, 1fr));
   border-bottom: 1px solid rgba(255, 255, 255, 0.055);
 }
 
@@ -2120,6 +2142,15 @@ html {
   border-right: none;
 }
 
+/* Undgå flex på første kolonne: ellers bliver tekst + <strong> til hver sit flex-item */
+.budr-landing .comp-row:not(.hdr) .comp-cell:first-child {
+  display: block;
+  min-width: 0;
+  align-self: stretch;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
 .budr-landing .comp-row.hdr .comp-cell {
   font-size: 0.65rem;
   font-weight: 600;
@@ -2128,21 +2159,105 @@ html {
   color: var(--fog);
   background: rgba(255, 255, 255, 0.02);
   padding: 11px 14px;
+  line-height: 1.25;
+  hyphens: auto;
 }
 
 .budr-landing .comp-row.hdr .budr-c {
-  background: rgba(233, 170, 71, 0.07);
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding-top: 16px;
+  padding-bottom: 16px;
+  background: linear-gradient(180deg, rgba(233, 170, 71, 0.26) 0%, rgba(233, 170, 71, 0.09) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(233, 170, 71, 0.35),
+    inset 0 -2px 0 rgba(233, 170, 71, 0.45);
   color: var(--amber);
+}
+
+.budr-landing .comp-budr-badge {
+  display: inline-block;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: linear-gradient(180deg, var(--amber-lt), var(--amber));
+  padding: 5px 12px;
+  border-radius: 100px;
+  line-height: 1.2;
+  box-shadow: 0 2px 12px rgba(233, 170, 71, 0.25);
+}
+
+.budr-landing .comp-budr-hdr-title {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--white);
+  text-shadow: 0 1px 18px rgba(233, 170, 71, 0.35);
 }
 
 .budr-landing .budr-c {
   background: rgba(233, 170, 71, 0.025);
 }
 
+.budr-landing .comp-row:not(.hdr) .budr-c {
+  background: linear-gradient(
+    165deg,
+    rgba(233, 170, 71, 0.2) 0%,
+    rgba(233, 170, 71, 0.07) 45%,
+    rgba(12, 17, 24, 0.35) 100%
+  );
+  box-shadow:
+    inset 0 0 0 1px rgba(233, 170, 71, 0.3),
+    inset 3px 0 0 rgba(233, 170, 71, 0.55);
+}
+
+.budr-landing .comp-row:not(.hdr) .comp-cell:not(:first-child):not(.budr-c) {
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.budr-landing .budr-c .yes {
+  font-size: 1.08rem;
+  filter: drop-shadow(0 0 10px rgba(61, 191, 112, 0.35));
+}
+
+.budr-landing .comp-na {
+  color: rgba(255, 255, 255, 0.22);
+  font-size: 0.95rem;
+  font-weight: 300;
+}
+
+.budr-landing .comp-basic-label {
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--fog-dim);
+  opacity: 0.92;
+  line-height: 1.2;
+}
+
+.budr-landing .comp-row.hdr .comp-cell.comp-col-standard {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  text-align: center;
+}
+
 .budr-landing .feat-label {
   color: var(--white-dim);
   font-weight: 300;
-  line-height: 1.35;
+  line-height: 1.5;
+}
+
+.budr-landing .feat-label strong {
+  font-weight: 600;
+  color: rgba(245, 243, 239, 0.92);
 }
 
 .budr-landing .yes {
@@ -2159,6 +2274,41 @@ html {
   color: var(--amber);
   font-size: 0.72rem;
   font-weight: 500;
+}
+
+.budr-landing .comp-row:not(.hdr) .comp-cell:not(:first-child) {
+  justify-content: center;
+  text-align: center;
+}
+
+.budr-landing .comparison-section {
+  background: var(--ink-mid);
+  border-top: 1px solid rgba(255, 255, 255, 0.045);
+}
+
+.budr-landing .comp-scroll {
+  margin-top: 40px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 18px;
+}
+
+.budr-landing .comp-scroll .comp-table {
+  min-width: 820px;
+}
+
+.budr-landing .comparison-footnote {
+  margin-top: 22px;
+  font-size: 0.78rem;
+  color: var(--fog-dim);
+  font-weight: 300;
+  line-height: 1.6;
+  max-width: 58rem;
+}
+
+.budr-landing .comparison-footnote strong {
+  color: rgba(245, 243, 239, 0.88);
+  font-weight: 600;
 }
 
 .budr-landing .roles-section {
@@ -3229,7 +3379,7 @@ html {
   }
 
   .budr-landing .comp-row {
-    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    grid-template-columns: minmax(0, 1.55fr) repeat(3, minmax(0, 1fr));
   }
 
   .budr-landing .comp-row .comp-cell:nth-child(5),
@@ -3270,6 +3420,10 @@ html {
     padding-bottom: 80px;
   }
 
+  .budr-landing .intro-section.intro-section--lead {
+    padding-top: 88px;
+  }
+
   .budr-landing .flow-section {
     padding-top: 72px;
     padding-bottom: 80px;
@@ -3290,6 +3444,11 @@ html {
 
   .budr-landing .smart-hl-section {
     padding: 56px 22px 64px;
+  }
+
+  .budr-landing .comparison-section {
+    padding-left: 22px;
+    padding-right: 22px;
   }
 
   .budr-landing .smart-hl-grid {
