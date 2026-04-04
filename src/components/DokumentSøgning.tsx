@@ -104,7 +104,7 @@ const MOCK_RESIDENTS: MockResident[] = [
     room: '103',
     documents: [
       { category: 'journal', title: 'Ugentlig trivselsnotat' },
-      { category: 'medicin', title: 'Panodil — PRN log' },
+      { category: 'medicin', title: 'Panodil — PN log' },
       { category: 'aftaler', title: 'Besøg pårørende søndag' },
       { category: 'bekymringsnotater', title: 'Obs: træthed efter aktivitet' },
     ],

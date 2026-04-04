@@ -41,12 +41,16 @@ export async function POST(req: Request): Promise<NextResponse> {
     ? `Beboer: ${resident.display_name as string}`
     : 'Beboer';
 
+  const nowIso = new Date().toISOString();
   const { error } = await supabase.from('journal_entries').insert({
     resident_id: residentId,
     staff_id: null,
     staff_name: staffName,
     entry_text: text,
     category: 'Besked fra beboer',
+    journal_status: 'godkendt',
+    approved_at: nowIso,
+    approved_by: null,
   });
 
   if (error) {

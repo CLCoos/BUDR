@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
 import {
   ArrowLeft,
   BrainCircuit,
@@ -11,21 +12,53 @@ import {
   CheckCircle2,
   Circle,
   ClipboardList,
+  FilePenLine,
   FileText,
   Heart,
+  History,
+  LayoutTemplate,
   MessageSquare,
   Pill,
   Sparkles,
   Stethoscope,
+  Layers,
+  Smartphone,
   Target,
   User,
   Users,
 } from 'lucide-react';
-import { getResidentDemoDetail } from '@/lib/careDemoResidentDetail';
-import type { TrafficDemo } from '@/lib/careDemoResidentDetail';
+import {
+  buildUnifiedResidentStatus,
+  getResidentDemoDetail,
+  SITUATION_TEMPLATES,
+} from '@/lib/careDemoResidentDetail';
+import type {
+  BorgerAppActivityKind,
+  JournalDemo,
+  StandardEventDemoKind,
+  TrafficDemo,
+  UnifiedStatusTone,
+} from '@/lib/careDemoResidentDetail';
+
+const STANDARD_EVENT_KIND_LABEL: Record<StandardEventDemoKind, string> = {
+  pn_medicin: 'PN medicin',
+  kriseplan: 'Kriseplan',
+  observation: 'Observation',
+  dagsplan_trin: 'Dagsplan',
+  neutral: 'Info',
+};
+
+const BORGER_APP_KIND_LABEL: Record<BorgerAppActivityKind, string> = {
+  checkin: 'Check-in',
+  humør: 'Humør',
+  mål: 'Mål',
+  besked: 'Besked',
+  aktivitet: 'Aktivitet',
+  dagsplan: 'Dagsplan',
+};
 
 const TAB_TO_SECTION: Record<string, string> = {
-  overview: 'oversigt',
+  overview: 'status',
   notes: 'journal',
   goals: 'maal',
   medication: 'medicin',
@@ -33,10 +66,14 @@ const TAB_TO_SECTION: Record<string, string> = {
 };
 
 const NAV = [
+  { id: 'status', label: 'Samlet status' },
+  { id: 'borgerapp', label: 'Lys / app' },
   { id: 'oversigt', label: 'Overblik' },
   { id: 'assistent', label: 'Assistent' },
   { id: 'indtjek', label: 'Indtjek' },
   { id: 'dagsplan', label: 'Dagsplan' },
+  { id: 'haendelser', label: 'Hændelser' },
+  { id: 'skabeloner', label: 'Skabeloner' },
   { id: 'aftaler', label: 'Aftaler' },
   { id: 'medicin', label: 'Medicin' },
   { id: 'planer', label: 'Planer' },
@@ -69,6 +106,31 @@ function trafficStyle(t: TrafficDemo): { bg: string; label: string; border: stri
     label: 'Ikke sat',
     border: 'var(--cp-border)',
   };
+}
+
+function unifiedTileSurface(tone: UnifiedStatusTone): React.CSSProperties {
+  switch (tone) {
+    case 'alert':
+      return {
+        borderColor: 'rgba(245,101,101,0.42)',
+        backgroundColor: 'rgba(245,101,101,0.07)',
+      };
+    case 'warn':
+      return {
+        borderColor: 'rgba(246,173,85,0.4)',
+        backgroundColor: 'rgba(246,173,85,0.07)',
+      };
+    case 'ok':
+      return {
+        borderColor: 'rgba(45,212,160,0.32)',
+        backgroundColor: 'rgba(45,212,160,0.07)',
+      };
+    default:
+      return {
+        borderColor: 'var(--cp-border)',
+        backgroundColor: 'var(--cp-bg3)',
+      };
+  }
 }
 
 function SectionCard({
@@ -111,8 +173,11 @@ function SectionCard({
 
 export default function ResidentDemo360Client({ residentId }: { residentId: string }) {
   const detail = useMemo(() => getResidentDemoDetail(residentId), [residentId]);
+  const unified = useMemo(() => (detail ? buildUnifiedResidentStatus(detail) : null), [detail]);
   const searchParams = useSearchParams();
-  const [activeNav, setActiveNav] = useState<string>('oversigt');
+  const [activeNav, setActiveNav] = useState<string>('status');
+  /** Demo: lokalt godkendte kladde-id → flyttes til godkendt journal */
+  const [journalApprovedIds, setJournalApprovedIds] = useState<Record<string, true>>({});
 
   const scrollTo = useCallback((sectionId: string) => {
     document.getElementById(`section-${sectionId}`)?.scrollIntoView({
@@ -131,10 +196,50 @@ export default function ResidentDemo360Client({ residentId }: { residentId: stri
     }
   }, [searchParams, scrollTo, residentId]);
 
-  if (!detail) return null;
+  useEffect(() => {
+    setJournalApprovedIds({});
+  }, [residentId]);
 
-  const { profile, traffic, checkIn, aiBrief, dagsplan, appointments, medications, plans } = detail;
-  const { goalsResident, goalsStaff, journal, agreements, extras } = detail;
+  const journalEffective: JournalDemo[] = useMemo(() => {
+    if (!detail) return [];
+    return detail.journal.map((j) => {
+      const id = j.id ?? '';
+      if (id && journalApprovedIds[id]) return { ...j, status: 'godkendt' as const };
+      return j;
+    });
+  }, [detail, journalApprovedIds]);
+
+  const journalDrafts = useMemo(
+    () => journalEffective.filter((j) => j.status === 'kladde'),
+    [journalEffective]
+  );
+  const journalGodkendt = useMemo(
+    () => journalEffective.filter((j) => j.status !== 'kladde'),
+    [journalEffective]
+  );
+
+  const approveJournalDraft = useCallback((id: string) => {
+    setJournalApprovedIds((prev) => ({ ...prev, [id]: true }));
+    toast.success('Notat godkendt — nu synlig som journal (demo)');
+  }, []);
+
+  if (!detail || !unified) return null;
+
+  const {
+    profile,
+    traffic,
+    checkIn,
+    aiBrief,
+    dagsplan,
+    appointments,
+    medications,
+    plans,
+    borgerApp,
+    standardEvents,
+    situationRecommendation,
+  } = detail;
+  const { goalsResident, goalsStaff, agreements, extras } = detail;
+
   const ts = trafficStyle(traffic);
 
   return (
@@ -215,6 +320,266 @@ export default function ResidentDemo360Client({ residentId }: { residentId: stri
             </div>
           </div>
         </header>
+
+        {/* Samlet status — ét sted (én sandhed, samme data som nedenfor) */}
+        <section
+          id="section-status"
+          className="mb-6 scroll-mt-[5.5rem] rounded-2xl border p-4 sm:p-5"
+          style={{
+            borderColor: 'rgba(45,212,160,0.22)',
+            background:
+              'linear-gradient(165deg, rgba(45,212,160,0.07) 0%, var(--cp-bg2) 38%, var(--cp-bg2) 100%)',
+            boxShadow: '0 0 0 1px rgba(45,212,160,0.05)',
+          }}
+          aria-labelledby="samlet-status-heading"
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex min-w-0 items-start gap-3">
+              <div
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+                style={{
+                  backgroundColor: 'rgba(45,212,160,0.12)',
+                  border: '1px solid rgba(45,212,160,0.22)',
+                }}
+              >
+                <Layers className="h-5 w-5" style={{ color: 'var(--cp-green)' }} aria-hidden />
+              </div>
+              <div className="min-w-0">
+                <h2
+                  id="samlet-status-heading"
+                  className="text-base font-semibold sm:text-lg"
+                  style={{ color: 'var(--cp-text)' }}
+                >
+                  Samlet status
+                </h2>
+                <p
+                  className="mt-1 text-xs leading-relaxed sm:text-sm"
+                  style={{ color: 'var(--cp-muted)' }}
+                >
+                  Ét overblik for vagten — alle felter er hentet fra de samme oplysninger som de
+                  detaljerede sektioner nedenfor, så du ikke møder modstridende tekster i
+                  forskellige vinduer.
+                </p>
+              </div>
+            </div>
+          </div>
+          <p
+            className="mt-4 rounded-xl border px-3 py-2.5 text-sm leading-relaxed sm:text-[15px]"
+            style={{
+              borderColor: 'var(--cp-border)',
+              backgroundColor: 'var(--cp-bg3)',
+              color: 'var(--cp-text)',
+            }}
+          >
+            {unified.summary}
+          </p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {unified.tiles.map((tile) => (
+              <button
+                key={tile.id}
+                type="button"
+                onClick={() => scrollTo(tile.goToSection)}
+                className="flex w-full flex-col rounded-xl border p-3 text-left transition-all hover:brightness-[1.05] active:scale-[0.99]"
+                style={unifiedTileSurface(tile.tone)}
+              >
+                <span
+                  className="text-[11px] font-semibold uppercase tracking-wide"
+                  style={{ color: 'var(--cp-muted2)' }}
+                >
+                  {tile.label}
+                </span>
+                <span
+                  className="mt-1 text-sm font-medium leading-snug"
+                  style={{ color: 'var(--cp-text)' }}
+                >
+                  {tile.value}
+                </span>
+                {tile.hint ? (
+                  <span
+                    className="mt-1.5 text-xs leading-snug"
+                    style={{ color: 'var(--cp-muted)' }}
+                  >
+                    {tile.hint}
+                  </span>
+                ) : null}
+                <span className="mt-2 text-[11px] font-medium" style={{ color: 'var(--cp-green)' }}>
+                  Gå til detaljer →
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Lys / borger-app — koblet til portalen uden dobbeltindtastning (demo) */}
+        <section
+          id="section-borgerapp"
+          className="mb-6 scroll-mt-[5.5rem] rounded-2xl border p-4 sm:p-5"
+          style={{
+            borderColor: 'var(--cp-border)',
+            backgroundColor: 'var(--cp-bg2)',
+          }}
+          aria-labelledby="borgerapp-heading"
+        >
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+            <div
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+              style={{
+                backgroundColor: 'var(--cp-bg3)',
+                border: '1px solid var(--cp-border)',
+              }}
+            >
+              <Smartphone className="h-5 w-5" style={{ color: 'var(--cp-green)' }} aria-hidden />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2
+                  id="borgerapp-heading"
+                  className="text-base font-semibold sm:text-lg"
+                  style={{ color: 'var(--cp-text)' }}
+                >
+                  Lys · borger-app
+                </h2>
+                <span
+                  className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                  style={{ backgroundColor: 'var(--cp-green-dim)', color: 'var(--cp-green)' }}
+                >
+                  Synk (demo)
+                </span>
+              </div>
+              <p className="mt-2 text-sm leading-relaxed" style={{ color: 'var(--cp-text)' }}>
+                {borgerApp.headline}
+              </p>
+              <p className="mt-2 text-xs leading-relaxed" style={{ color: 'var(--cp-muted2)' }}>
+                {borgerApp.sameSourceFootnote}
+              </p>
+
+              <div
+                className="mt-4 rounded-xl border p-3 sm:p-4"
+                style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg3)' }}
+              >
+                <div
+                  className="text-[11px] font-semibold uppercase tracking-wide"
+                  style={{ color: 'var(--cp-muted2)' }}
+                >
+                  Humør (Lys)
+                </div>
+                {borgerApp.mood ? (
+                  <p className="mt-1 text-sm font-medium" style={{ color: 'var(--cp-text)' }}>
+                    {borgerApp.mood.label}
+                    <span className="font-normal" style={{ color: 'var(--cp-muted)' }}>
+                      {' '}
+                      · {borgerApp.mood.at}
+                    </span>
+                  </p>
+                ) : (
+                  <p className="mt-1 text-sm" style={{ color: 'var(--cp-muted)' }}>
+                    Ikke registreret i dag — samme som under Indtjek.
+                  </p>
+                )}
+              </div>
+
+              <div className="mt-4">
+                <div
+                  className="mb-2 text-[11px] font-semibold uppercase tracking-wide"
+                  style={{ color: 'var(--cp-muted2)' }}
+                >
+                  Felter der spejles i portalen
+                </div>
+                <ul className="flex flex-wrap gap-2">
+                  {borgerApp.syncedFields.map((f) => (
+                    <li
+                      key={f}
+                      className="rounded-lg border px-2.5 py-1 text-xs font-medium"
+                      style={{
+                        borderColor: 'rgba(45,212,160,0.25)',
+                        color: 'var(--cp-muted)',
+                        backgroundColor: 'rgba(45,212,160,0.06)',
+                      }}
+                    >
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="mt-5">
+                <div
+                  className="mb-2 text-[11px] font-semibold uppercase tracking-wide"
+                  style={{ color: 'var(--cp-muted2)' }}
+                >
+                  Seneste fra appen
+                </div>
+                <ul className="space-y-2">
+                  {borgerApp.activities.map((a, idx) => (
+                    <li
+                      key={`${a.kind}-${idx}`}
+                      className="flex flex-col gap-1 rounded-xl border px-3 py-2.5 sm:flex-row sm:items-start sm:gap-3"
+                      style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg3)' }}
+                    >
+                      <span
+                        className="shrink-0 text-[11px] font-medium tabular-nums"
+                        style={{ color: 'var(--cp-muted2)' }}
+                      >
+                        {a.when}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className="rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase"
+                            style={{
+                              backgroundColor: 'var(--cp-bg2)',
+                              color: 'var(--cp-green)',
+                            }}
+                          >
+                            {BORGER_APP_KIND_LABEL[a.kind]}
+                          </span>
+                          <span className="text-sm font-medium" style={{ color: 'var(--cp-text)' }}>
+                            {a.title}
+                          </span>
+                        </div>
+                        {a.detail ? (
+                          <p
+                            className="mt-1 text-xs leading-relaxed"
+                            style={{ color: 'var(--cp-muted)' }}
+                          >
+                            {a.detail}
+                          </p>
+                        ) : null}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => scrollTo('indtjek')}
+                  className="rounded-lg border px-3 py-2 text-xs font-medium transition-colors hover:bg-[rgba(255,255,255,0.04)]"
+                  style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-muted)' }}
+                >
+                  Se indtjek
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollTo('maal')}
+                  className="rounded-lg border px-3 py-2 text-xs font-medium transition-colors hover:bg-[rgba(255,255,255,0.04)]"
+                  style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-muted)' }}
+                >
+                  Se borgermål
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollTo('dagsplan')}
+                  className="rounded-lg border px-3 py-2 text-xs font-medium transition-colors hover:bg-[rgba(255,255,255,0.04)]"
+                  style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-muted)' }}
+                >
+                  Se dagsplan
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Sticky section nav */}
         <nav
@@ -442,6 +807,207 @@ export default function ResidentDemo360Client({ residentId }: { residentId: stri
             </SectionCard>
           </div>
 
+          <SectionCard id="haendelser" title="Standardhændelser" icon={History}>
+            <p className="mb-4 text-sm leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
+              Foruddefinerede hændelser (fx kriseplan, PN medicin, observation) logges{' '}
+              <strong style={{ color: 'var(--cp-text)' }}>ét sted</strong> og vises automatisk de
+              steder i portalen, hvor de giver mening — uden at I skriver det samme tre gange.
+            </p>
+            <ul className="space-y-3">
+              {standardEvents.map((ev) => (
+                <li
+                  key={ev.id}
+                  className="rounded-xl border p-3 sm:p-4"
+                  style={{
+                    borderColor:
+                      ev.kind === 'kriseplan'
+                        ? 'rgba(245,101,101,0.35)'
+                        : ev.kind === 'pn_medicin'
+                          ? 'rgba(246,173,85,0.28)'
+                          : 'var(--cp-border)',
+                    backgroundColor: 'var(--cp-bg3)',
+                  }}
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      className="rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase"
+                      style={{
+                        backgroundColor: 'var(--cp-bg2)',
+                        color: 'var(--cp-green)',
+                      }}
+                    >
+                      {STANDARD_EVENT_KIND_LABEL[ev.kind]}
+                    </span>
+                    <span className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+                      {ev.title}
+                    </span>
+                    <span className="text-xs tabular-nums" style={{ color: 'var(--cp-muted2)' }}>
+                      {ev.when}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
+                    {ev.summary}
+                  </p>
+                  {ev.loggedBy ? (
+                    <p className="mt-1 text-xs" style={{ color: 'var(--cp-muted2)' }}>
+                      Registreret af: {ev.loggedBy}
+                    </p>
+                  ) : null}
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    <span
+                      className="text-[10px] font-medium uppercase tracking-wide"
+                      style={{ color: 'var(--cp-muted2)' }}
+                    >
+                      Vises også under:
+                    </span>
+                    {ev.visibleIn.map((place) => (
+                      <span
+                        key={place}
+                        className="rounded-md border px-2 py-0.5 text-[11px]"
+                        style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-muted)' }}
+                      >
+                        {place}
+                      </span>
+                    ))}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </SectionCard>
+
+          <SectionCard id="skabeloner" title="Skabeloner pr. situation" icon={LayoutTemplate}>
+            <div
+              className="mb-4 rounded-xl border px-3 py-3 sm:px-4"
+              style={{
+                borderColor: 'rgba(45,212,160,0.28)',
+                backgroundColor: 'rgba(45,212,160,0.06)',
+              }}
+            >
+              <div
+                className="text-[11px] font-semibold uppercase tracking-wide"
+                style={{ color: 'var(--cp-green)' }}
+              >
+                Anbefalet nu (demo)
+              </div>
+              <p className="mt-1 text-sm font-medium" style={{ color: 'var(--cp-text)' }}>
+                {SITUATION_TEMPLATES.find((x) => x.id === situationRecommendation.templateId)
+                  ?.label ?? situationRecommendation.templateId}
+              </p>
+              <p className="mt-1 text-xs leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
+                {situationRecommendation.reason}
+              </p>
+            </div>
+            <p className="mb-4 text-sm leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
+              Faste strukturer til typiske situationer — journalhints, tjekliste og
+              overleveringspunkter. I produktion kan assistenten foreslå skabelon ud fra vagttype,
+              dato og sagsfase.
+            </p>
+            <div className="grid gap-4 md:grid-cols-2">
+              {SITUATION_TEMPLATES.map((tpl) => {
+                const recommended = tpl.id === situationRecommendation.templateId;
+                return (
+                  <article
+                    key={tpl.id}
+                    className="rounded-xl border p-4"
+                    style={{
+                      borderColor: recommended ? 'rgba(45,212,160,0.4)' : 'var(--cp-border)',
+                      backgroundColor: recommended ? 'rgba(45,212,160,0.05)' : 'var(--cp-bg3)',
+                      boxShadow: recommended ? '0 0 0 1px rgba(45,212,160,0.12)' : undefined,
+                    }}
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <h3 className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+                        {tpl.label}
+                      </h3>
+                      {recommended ? (
+                        <span
+                          className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase"
+                          style={{
+                            backgroundColor: 'var(--cp-green-dim)',
+                            color: 'var(--cp-green)',
+                          }}
+                        >
+                          Anbefalet
+                        </span>
+                      ) : null}
+                    </div>
+                    <p
+                      className="mt-2 text-xs leading-relaxed"
+                      style={{ color: 'var(--cp-muted)' }}
+                    >
+                      {tpl.intro}
+                    </p>
+                    <div className="mt-3">
+                      <div
+                        className="mb-1 text-[10px] font-semibold uppercase tracking-wide"
+                        style={{ color: 'var(--cp-muted2)' }}
+                      >
+                        Tjekliste
+                      </div>
+                      <ul
+                        className="list-inside list-disc space-y-1 text-xs"
+                        style={{ color: 'var(--cp-text)' }}
+                      >
+                        {tpl.checklist.map((c) => (
+                          <li key={c}>{c}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="mt-3">
+                      <div
+                        className="mb-1 text-[10px] font-semibold uppercase tracking-wide"
+                        style={{ color: 'var(--cp-muted2)' }}
+                      >
+                        Journal — spørgsmål I kan besvare
+                      </div>
+                      <ul
+                        className="list-inside list-disc space-y-1 text-xs"
+                        style={{ color: 'var(--cp-muted)' }}
+                      >
+                        {tpl.journalPrompts.map((c) => (
+                          <li key={c}>{c}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="mt-3">
+                      <div
+                        className="mb-1 text-[10px] font-semibold uppercase tracking-wide"
+                        style={{ color: 'var(--cp-muted2)' }}
+                      >
+                        Vagtoverdragelse
+                      </div>
+                      <ul
+                        className="list-inside list-disc space-y-1 text-xs"
+                        style={{ color: 'var(--cp-muted)' }}
+                      >
+                        {tpl.handoverBullets.map((c) => (
+                          <li key={c}>{c}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link
+                href="/care-portal-demo/handover"
+                className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors hover:bg-[rgba(255,255,255,0.04)]"
+                style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-muted)' }}
+              >
+                Åbn vagtoverdragelse (demo)
+              </Link>
+              <button
+                type="button"
+                onClick={() => scrollTo('journal')}
+                className="rounded-lg border px-3 py-2 text-xs font-medium transition-colors hover:bg-[rgba(255,255,255,0.04)]"
+                style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-muted)' }}
+              >
+                Gå til journal
+              </button>
+            </div>
+          </SectionCard>
+
           <SectionCard id="aftaler" title="Fremtidige aftaler" icon={Calendar}>
             {appointments.length === 0 ? (
               <p className="text-sm" style={{ color: 'var(--cp-muted)' }}>
@@ -490,7 +1056,7 @@ export default function ResidentDemo360Client({ residentId }: { residentId: stri
                         </div>
                         <div className="text-xs sm:text-sm" style={{ color: 'var(--cp-muted)' }}>
                           {m.schedule}
-                          {m.prn && (
+                          {m.pn && (
                             <span
                               className="ml-2 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase"
                               style={{
@@ -498,7 +1064,7 @@ export default function ResidentDemo360Client({ residentId }: { residentId: stri
                                 color: 'var(--cp-amber)',
                               }}
                             >
-                              PRN
+                              PN
                             </span>
                           )}
                         </div>
@@ -651,42 +1217,140 @@ export default function ResidentDemo360Client({ residentId }: { residentId: stri
 
           <div className="grid gap-5 lg:grid-cols-2">
             <SectionCard id="journal" title="Journal" icon={Stethoscope}>
-              <ul className="space-y-3">
-                {journal.map((j, i) => (
-                  <li
-                    key={i}
-                    className="rounded-xl border p-3"
-                    style={{
-                      borderColor:
-                        j.type === 'bekymring' ? 'rgba(245,101,101,0.35)' : 'var(--cp-border)',
-                      backgroundColor: 'var(--cp-bg3)',
-                    }}
+              <p className="mb-4 text-xs leading-relaxed" style={{ color: 'var(--cp-muted2)' }}>
+                Kladder vises her, indtil de godkendes. Før godkendelse tæller et notat ikke som
+                officiel journal til dashboard og RAG — efter godkendelse flyttes det til listen
+                nedenfor (demo).
+              </p>
+
+              {journalDrafts.length > 0 ? (
+                <div className="mb-6">
+                  <h3
+                    className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide"
+                    style={{ color: 'var(--cp-amber)' }}
                   >
-                    <div
-                      className="flex flex-wrap items-center justify-between gap-2 text-xs"
-                      style={{ color: 'var(--cp-muted2)' }}
-                    >
-                      <span>{j.when}</span>
-                      <span
-                        className="rounded px-1.5 py-0.5 font-medium uppercase"
+                    <FilePenLine className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                    Kladder
+                  </h3>
+                  <ul className="space-y-3">
+                    {journalDrafts.map((j, i) => (
+                      <li
+                        key={j.id ?? `kladde-${i}`}
+                        className="rounded-xl border border-dashed p-3"
                         style={{
-                          backgroundColor:
-                            j.type === 'bekymring' ? 'rgba(245,101,101,0.12)' : 'var(--cp-bg2)',
-                          color: j.type === 'bekymring' ? 'var(--cp-red)' : 'var(--cp-muted)',
+                          borderColor: 'rgba(245,158,11,0.45)',
+                          backgroundColor: 'rgba(245,158,11,0.06)',
                         }}
                       >
-                        {j.type}
-                      </span>
-                    </div>
-                    <div className="mt-1 text-xs" style={{ color: 'var(--cp-muted)' }}>
-                      {j.author}
-                    </div>
-                    <p className="mt-2 text-sm leading-relaxed" style={{ color: 'var(--cp-text)' }}>
-                      {j.excerpt}
-                    </p>
-                  </li>
-                ))}
-              </ul>
+                        <div
+                          className="flex flex-wrap items-center justify-between gap-2 text-xs"
+                          style={{ color: 'var(--cp-muted2)' }}
+                        >
+                          <span>{j.when}</span>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span
+                              className="rounded px-1.5 py-0.5 font-medium uppercase"
+                              style={{
+                                backgroundColor: 'var(--cp-amber-dim)',
+                                color: 'var(--cp-amber)',
+                              }}
+                            >
+                              Kladde
+                            </span>
+                            <span
+                              className="rounded px-1.5 py-0.5 font-medium uppercase"
+                              style={{
+                                backgroundColor:
+                                  j.type === 'bekymring'
+                                    ? 'rgba(245,101,101,0.12)'
+                                    : 'var(--cp-bg2)',
+                                color: j.type === 'bekymring' ? 'var(--cp-red)' : 'var(--cp-muted)',
+                              }}
+                            >
+                              {j.type}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mt-1 text-xs" style={{ color: 'var(--cp-muted)' }}>
+                          {j.author}
+                        </div>
+                        <p
+                          className="mt-2 text-sm leading-relaxed"
+                          style={{ color: 'var(--cp-text)' }}
+                        >
+                          {j.excerpt}
+                        </p>
+                        {j.id ? (
+                          <button
+                            type="button"
+                            onClick={() => approveJournalDraft(j.id!)}
+                            className="mt-3 inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors hover:bg-[rgba(255,255,255,0.04)]"
+                            style={{
+                              borderColor: 'var(--cp-amber)',
+                              color: 'var(--cp-amber)',
+                            }}
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                            Godkend og synliggør (demo)
+                          </button>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              <h3
+                className="mb-2 text-xs font-semibold uppercase tracking-wide"
+                style={{ color: 'var(--cp-muted)' }}
+              >
+                Godkendt journal
+              </h3>
+              {journalGodkendt.length === 0 ? (
+                <p className="text-sm" style={{ color: 'var(--cp-muted)' }}>
+                  Ingen godkendte journalnotater i demo (endnu).
+                </p>
+              ) : (
+                <ul className="space-y-3">
+                  {journalGodkendt.map((j, i) => (
+                    <li
+                      key={j.id ?? `godkendt-${i}`}
+                      className="rounded-xl border p-3"
+                      style={{
+                        borderColor:
+                          j.type === 'bekymring' ? 'rgba(245,101,101,0.35)' : 'var(--cp-border)',
+                        backgroundColor: 'var(--cp-bg3)',
+                      }}
+                    >
+                      <div
+                        className="flex flex-wrap items-center justify-between gap-2 text-xs"
+                        style={{ color: 'var(--cp-muted2)' }}
+                      >
+                        <span>{j.when}</span>
+                        <span
+                          className="rounded px-1.5 py-0.5 font-medium uppercase"
+                          style={{
+                            backgroundColor:
+                              j.type === 'bekymring' ? 'rgba(245,101,101,0.12)' : 'var(--cp-bg2)',
+                            color: j.type === 'bekymring' ? 'var(--cp-red)' : 'var(--cp-muted)',
+                          }}
+                        >
+                          {j.type}
+                        </span>
+                      </div>
+                      <div className="mt-1 text-xs" style={{ color: 'var(--cp-muted)' }}>
+                        {j.author}
+                      </div>
+                      <p
+                        className="mt-2 text-sm leading-relaxed"
+                        style={{ color: 'var(--cp-text)' }}
+                      >
+                        {j.excerpt}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </SectionCard>
 
             <SectionCard id="dokumenter" title="Aftaler & dokumenter" icon={FileText}>

@@ -120,6 +120,7 @@ export default function OverrapportPanel({ open, onClose }: Props) {
         supabase
           .from('journal_entries')
           .select('id, entry_text, category, staff_name, created_at, resident_id')
+          .eq('journal_status', 'godkendt')
           .gte('created_at', todayIso)
           .in('resident_id', residentIds)
           .order('created_at', { ascending: false }),

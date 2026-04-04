@@ -19,10 +19,13 @@ export default function WriteJournalEntry({ residentId, residentName }: Props) {
   const [category, setCategory] = useState('Observation');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** `kladde` = udkast; `godkendt` = officiel journal med det samme */
+  const [saveMode, setSaveMode] = useState<'kladde' | 'godkendt'>('godkendt');
 
   function handleOpen() {
     setText('');
     setCategory('Observation');
+    setSaveMode('godkendt');
     setError(null);
     setOpen(true);
   }
@@ -45,13 +48,22 @@ export default function WriteJournalEntry({ residentId, residentName }: Props) {
     const staffName =
       (user?.user_metadata?.full_name as string | undefined) ?? user?.email ?? 'Ukendt personale';
 
-    const { error: insertError } = await supabase.from('journal_entries').insert({
+    const nowIso = new Date().toISOString();
+    const asDraft = saveMode === 'kladde';
+    const insertRow: Record<string, unknown> = {
       resident_id: residentId,
       staff_id: user?.id ?? null,
       staff_name: staffName,
       entry_text: text.trim(),
       category,
-    });
+      journal_status: asDraft ? 'kladde' : 'godkendt',
+    };
+    if (!asDraft && user?.id) {
+      insertRow.approved_at = nowIso;
+      insertRow.approved_by = user.id;
+    }
+
+    const { error: insertError } = await supabase.from('journal_entries').insert(insertRow);
 
     if (insertError) {
       setError('Kunne ikke gemme notat — prøv igen');
@@ -61,7 +73,7 @@ export default function WriteJournalEntry({ residentId, residentName }: Props) {
 
     setOpen(false);
     setSaving(false);
-    router.refresh(); // re-run server component to show new entry
+    router.refresh();
   }
 
   return (
@@ -136,17 +148,49 @@ export default function WriteJournalEntry({ residentId, residentName }: Props) {
                 />
               </div>
 
+              <div>
+                <span className="block text-xs font-medium text-gray-500 mb-2">Gem som</span>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSaveMode('godkendt')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      saveMode === 'godkendt'
+                        ? 'bg-[#0F1B2D] text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    Godkendt journal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSaveMode('kladde')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      saveMode === 'kladde'
+                        ? 'bg-amber-600 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    Kladde
+                  </button>
+                </div>
+                <p className="text-[11px] text-gray-400 mt-1.5 leading-snug">
+                  Kladder vises på overblikket og kan godkendes senere. Godkendt journal tæller som
+                  officielt notat (fx overdragelse).
+                </p>
+              </div>
+
               {error && (
                 <p className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
               )}
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-3 px-5 pb-5">
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 px-5 pb-5">
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors sm:mr-auto"
               >
                 Annuller
               </button>
@@ -154,10 +198,10 @@ export default function WriteJournalEntry({ residentId, residentName }: Props) {
                 type="button"
                 disabled={!text.trim() || saving}
                 onClick={() => void handleSave()}
-                className="flex items-center gap-2 px-5 py-2 bg-[#1D9E75] text-white text-sm font-semibold rounded-xl hover:bg-[#18886a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center justify-center gap-2 px-5 py-2 bg-[#1D9E75] text-white text-sm font-semibold rounded-xl hover:bg-[#18886a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving && <Loader2 size={14} className="animate-spin" />}
-                Gem notat
+                {saveMode === 'kladde' ? 'Gem kladde' : 'Gem som godkendt'}
               </button>
             </div>
           </div>

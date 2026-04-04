@@ -73,7 +73,7 @@ const TAB_BLURB: Record<string, string> = {
   goals:
     'Handleplan og mål opdateres af tværfagligt team. Her vises et uddrag som i den rigtige portal.',
   medication:
-    'Medicinkort, dosering og PRN. Link fra dokumentsøgning lander på den tilsvarende fane (demo).',
+    'Medicinkort, dosering og PN. Link fra dokumentsøgning lander på den tilsvarende fane (demo).',
 };
 
 export default function ResidentsDemoGrid() {

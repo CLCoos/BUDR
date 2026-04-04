@@ -78,11 +78,11 @@ async function fetchResidentData(residentId: string) {
       .order('created_at', { ascending: false }),
     supabase
       .from('journal_entries')
-      .select('id, staff_name, entry_text, category, created_at')
+      .select('id, staff_name, entry_text, category, created_at, journal_status, approved_at')
       .eq('resident_id', residentId)
       .gte('created_at', todayStart)
       .order('created_at', { ascending: false })
-      .limit(10),
+      .limit(20),
     supabase
       .from('resident_medications')
       .select('id, name, dose, frequency, time_label, time_group, prescribed_by, notes, status')
@@ -134,6 +134,8 @@ async function fetchResidentData(residentId: string) {
       entry_text: string;
       category: string;
       created_at: string;
+      journal_status: string;
+      approved_at: string | null;
     }[],
     todayPlanItems: planItems,
     medications: (medsRes.data ?? []) as MedDefinition[],

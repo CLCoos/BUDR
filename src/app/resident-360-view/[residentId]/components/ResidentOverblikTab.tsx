@@ -2,7 +2,17 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Pill, FileText, CheckSquare, AlertTriangle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import {
+  CheckCircle2,
+  FilePenLine,
+  Pill,
+  FileText,
+  CheckSquare,
+  AlertTriangle,
+} from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import type { MedDefinition } from './types';
 import WriteJournalEntry from './WriteJournalEntry';
 
@@ -16,6 +26,8 @@ interface JournalEntry {
   entry_text: string;
   category: string;
   created_at: string;
+  journal_status?: string;
+  approved_at?: string | null;
 }
 
 interface PlanItem {
@@ -65,8 +77,50 @@ export default function ResidentOverblikTab({
   todayPlanItems,
   pendingProposals,
 }: Props) {
+  const router = useRouter();
   const tlCfg = trafficLight ? TL_CONFIG[trafficLight] : null;
   const pendingItems = todayPlanItems.filter((i) => !i.done);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+
+  const journalDrafts = journalEntries.filter((e) => e.journal_status === 'kladde');
+  const journalGodkendt = journalEntries.filter((e) => e.journal_status !== 'kladde');
+  const maxJournalLines = 4;
+  const shownDrafts = journalDrafts.slice(0, maxJournalLines);
+  const shownGodkendt = journalGodkendt.slice(0, maxJournalLines - shownDrafts.length);
+
+  async function approveJournalDraft(entryId: string) {
+    const supabase = createClient();
+    if (!supabase) {
+      toast.error('Forbindelsesfejl');
+      return;
+    }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user?.id) {
+      toast.error('Du skal være logget ind');
+      return;
+    }
+    setApprovingId(entryId);
+    const nowIso = new Date().toISOString();
+    const { error } = await supabase
+      .from('journal_entries')
+      .update({
+        journal_status: 'godkendt',
+        approved_at: nowIso,
+        approved_by: user.id,
+      })
+      .eq('id', entryId)
+      .eq('resident_id', residentId)
+      .eq('journal_status', 'kladde');
+    setApprovingId(null);
+    if (error) {
+      toast.error('Kunne ikke godkende — tjek rettigheder eller prøv igen');
+      return;
+    }
+    toast.success('Notat godkendt og synlig som journal');
+    router.refresh();
+  }
 
   // Read given count from localStorage (same key as ResidentMedicinTab)
   const [givenCount, setGivenCount] = useState(0);
@@ -265,7 +319,7 @@ export default function ResidentOverblikTab({
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
             <div className="flex items-center gap-2">
               <FileText size={15} className="text-[#378ADD]" />
-              <span className="text-sm font-semibold text-gray-800">Journalnoter i dag</span>
+              <span className="text-sm font-semibold text-gray-800">Journal i dag</span>
               {journalEntries.length > 0 && (
                 <span className="text-xs text-gray-400">{journalEntries.length} noter</span>
               )}
@@ -278,20 +332,74 @@ export default function ResidentOverblikTab({
                 Ingen journalnoter i dag
               </div>
             ) : (
-              journalEntries.slice(0, 4).map((entry) => (
-                <div key={entry.id} className="px-4 py-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-semibold text-gray-700">{entry.staff_name}</span>
-                    <span className="text-xs text-gray-400">{formatTime(entry.created_at)}</span>
-                  </div>
-                  <p className="text-xs text-gray-600 line-clamp-2">{entry.entry_text}</p>
-                  {entry.category && (
-                    <span className="inline-block mt-1 text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
-                      {entry.category}
+              <>
+                {shownDrafts.length > 0 && (
+                  <div className="px-4 py-2 bg-amber-50/80 border-b border-amber-100">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-800 flex items-center gap-1">
+                      <FilePenLine size={12} aria-hidden />
+                      Kladder
                     </span>
-                  )}
-                </div>
-              ))
+                  </div>
+                )}
+                {shownDrafts.map((entry) => (
+                  <div
+                    key={entry.id}
+                    className="px-4 py-3 border-l-2 border-amber-400 bg-amber-50/40"
+                  >
+                    <div className="flex items-center justify-between mb-1 gap-2 flex-wrap">
+                      <span className="text-xs font-semibold text-gray-700">
+                        {entry.staff_name}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-medium uppercase text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">
+                          Kladde
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {formatTime(entry.created_at)}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-600 line-clamp-3">{entry.entry_text}</p>
+                    {entry.category && (
+                      <span className="inline-block mt-1 text-[10px] bg-white text-gray-500 px-1.5 py-0.5 rounded border border-amber-100">
+                        {entry.category}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      disabled={approvingId === entry.id}
+                      onClick={() => void approveJournalDraft(entry.id)}
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-amber-600 px-2.5 py-1.5 text-[11px] font-semibold text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+                    >
+                      <CheckCircle2 size={12} aria-hidden />
+                      {approvingId === entry.id ? 'Godkender…' : 'Godkend journal'}
+                    </button>
+                  </div>
+                ))}
+                {shownGodkendt.length > 0 && shownDrafts.length > 0 && (
+                  <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+                      Godkendt journal
+                    </span>
+                  </div>
+                )}
+                {shownGodkendt.map((entry) => (
+                  <div key={entry.id} className="px-4 py-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-semibold text-gray-700">
+                        {entry.staff_name}
+                      </span>
+                      <span className="text-xs text-gray-400">{formatTime(entry.created_at)}</span>
+                    </div>
+                    <p className="text-xs text-gray-600 line-clamp-2">{entry.entry_text}</p>
+                    {entry.category && (
+                      <span className="inline-block mt-1 text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
+                        {entry.category}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </>
             )}
           </div>
         </div>

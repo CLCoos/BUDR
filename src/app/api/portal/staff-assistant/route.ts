@@ -48,6 +48,7 @@ export async function POST(req: NextRequest) {
   const { data: journal } = await service
     .from('journal_entries')
     .select('entry_text, category, created_at, care_residents(display_name)')
+    .eq('journal_status', 'godkendt')
     .gte('created_at', since)
     .order('created_at', { ascending: false })
     .limit(15);
