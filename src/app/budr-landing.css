@@ -917,6 +917,70 @@ html {
   margin: 0;
 }
 
+/* Udvalgte “smarte” funktioner (mellem USP og problem) */
+.budr-landing .smart-hl-section {
+  padding: 72px 52px 88px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, transparent 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.budr-landing .smart-hl-head {
+  margin-bottom: 36px;
+}
+
+.budr-landing .smart-hl-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.budr-landing .smart-hl-card {
+  padding: 20px 18px 22px;
+  border-radius: var(--r);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.025);
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.budr-landing .smart-hl-card:hover {
+  border-color: rgba(233, 170, 71, 0.2);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.budr-landing .smart-hl-ic {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  background: var(--amber-dim);
+  border: 1px solid var(--amber-border);
+  color: var(--amber);
+}
+
+.budr-landing .smart-hl-title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: var(--white);
+  line-height: 1.35;
+}
+
+.budr-landing .smart-hl-desc {
+  font-size: 0.8rem;
+  color: var(--fog);
+  line-height: 1.55;
+  font-weight: 300;
+  margin: 0;
+}
+
 /* Statusprikker i demo-kort (live-demo-strip) */
 .budr-landing .dss-dot {
   display: inline-block;
@@ -3013,6 +3077,19 @@ html {
     padding: 64px 22px 72px;
   }
 
+  .budr-landing .smart-hl-section {
+    padding: 56px 22px 64px;
+  }
+
+  .budr-landing .smart-hl-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .budr-landing .smart-hl-head {
+    margin-bottom: 28px;
+  }
+
   .budr-landing .usp-grid {
     grid-template-columns: 1fr 1fr;
     gap: 14px;
@@ -3027,6 +3104,10 @@ html {
 
 @media (max-width: 560px) {
   .budr-landing .usp-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .budr-landing .smart-hl-grid {
     grid-template-columns: 1fr;
   }
 }

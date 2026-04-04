@@ -13,7 +13,7 @@ import ResidentListDemo from '../care-portal-dashboard/components/ResidentListDe
 import OverrapportModal from '../care-portal-dashboard/components/OverrapportModal';
 import IndsatsModal from '../care-portal-dashboard/components/IndsatsModal';
 import TilsynsrapportModal from '../care-portal-dashboard/components/TilsynsrapportModal';
-import HurtigJournalModal from '../care-portal-dashboard/components/HurtigJournalModal';
+import JournalAiDemoModal from '../care-portal-dashboard/components/JournalAiDemoModal';
 
 const DEMO_INDSATS_KEY = 'budr_indsats_records_v1';
 
@@ -322,13 +322,14 @@ export default function CarePortalDemoPage() {
           background: 'linear-gradient(135deg, #8b84e8 0%, #5E56C0 55%, #4c3d91 100%)',
           boxShadow: '0 8px 32px rgba(94, 86, 192, 0.45), 0 0 0 1px rgba(255,255,255,0.08)',
         }}
-        aria-label="Åbn hurtignotat til journal"
+        aria-label="Åbn journaludkast med AI (demo)"
       >
         <BookOpen className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
-        <span>Hurtignotat</span>
+        <span className="hidden sm:inline">Journal · AI-demo</span>
+        <span className="sm:hidden">Journal</span>
       </button>
 
-      <HurtigJournalModal open={journalOpen} onClose={() => setJournalOpen(false)} />
+      <JournalAiDemoModal open={journalOpen} onClose={() => setJournalOpen(false)} />
       <OverrapportModal
         open={overrapportOpen}
         onClose={() => setOverrapportOpen(false)}

@@ -79,6 +79,9 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               <a href="#sadan-virker-det">Sådan virker det</a>
             </li>
             <li>
+              <a href="#smart-funktioner">Højdepunkter</a>
+            </li>
+            <li>
               <a href="#features">Funktioner</a>
             </li>
             <li>
@@ -301,6 +304,97 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* 2c. Konkrete “smarte” højdepunkter — til fremvisning */}
+      <section
+        className="smart-hl-section fi"
+        id="smart-funktioner"
+        aria-label="Udvalgte funktioner"
+      >
+        <div className="shell">
+          <div className="smart-hl-head">
+            <div className="eyebrow" style={{ justifyContent: 'center', display: 'flex' }}>
+              Mere end overblik
+            </div>
+            <h2
+              className="section-h"
+              style={{ textAlign: 'center', maxWidth: '44rem', margin: '0 auto' }}
+            >
+              Det, <em>personalet ofte nikker til</em>
+            </h2>
+            <p
+              className="section-p"
+              style={{ textAlign: 'center', maxWidth: '38rem', margin: '14px auto 0' }}
+            >
+              Udvalgte ting fra Care Portal og Lys — faglig støtte, kontrol med AI og tryghed når
+              det gælder.
+            </p>
+          </div>
+          <ul className="smart-hl-grid">
+            <li className="smart-hl-card">
+              <div className="smart-hl-ic" aria-hidden>
+                <IconTeam size={20} className="landing-icon" />
+              </div>
+              <h3 className="smart-hl-title">Faglig sparring i portalen</h3>
+              <p className="smart-hl-desc">
+                AI-assistent der kan svare på konkrete hverdagssituationer — som hurtig
+                kollega-hjælp til refleksion og næste skridt. Vejledning, ikke erstatning for jeres
+                faglighed.
+              </p>
+            </li>
+            <li className="smart-hl-card">
+              <div className="smart-hl-ic" aria-hidden>
+                <IconPlanCheck size={20} className="landing-icon" />
+              </div>
+              <h3 className="smart-hl-title">AI med godkendelse</h3>
+              <p className="smart-hl-desc">
+                Forslag til plan og journal kommer som udkast. Intet låses ind, før personalet eller
+                lederen har sagt god for — I beholder den faglige kontrol.
+              </p>
+            </li>
+            <li className="smart-hl-card">
+              <div className="smart-hl-ic" aria-hidden>
+                <IconShield size={20} className="landing-icon" />
+              </div>
+              <h3 className="smart-hl-title">Kriseplan hos borgeren</h3>
+              <p className="smart-hl-desc">
+                Struktur og beredskab i borgerens app, så svære stunder ikke starter fra et tomt ark
+                — i tråd med det, I allerede arbejder med på bostedet.
+              </p>
+            </li>
+            <li className="smart-hl-card">
+              <div className="smart-hl-ic" aria-hidden>
+                <IconSyncSend size={20} className="landing-icon" />
+              </div>
+              <h3 className="smart-hl-title">Fra ord i Lys til signal i portalen</h3>
+              <p className="smart-hl-desc">
+                Check-in og stemning lander som trafiklys og notifikationer hos personalet med det
+                samme — uden mellemled.
+              </p>
+            </li>
+            <li className="smart-hl-card">
+              <div className="smart-hl-ic" aria-hidden>
+                <IconShiftGap size={20} className="landing-icon" />
+              </div>
+              <h3 className="smart-hl-title">Mindre der tabes ved overdragelse</h3>
+              <p className="smart-hl-desc">
+                Overblik og notater samlet, så viden følger med når teamet skifter — færre
+                &quot;hvem vidste det?&quot;-momenter.
+              </p>
+            </li>
+            <li className="smart-hl-card">
+              <div className="smart-hl-ic" aria-hidden>
+                <IconAlertBell size={20} className="landing-icon" />
+              </div>
+              <h3 className="smart-hl-title">Varsler der prioriterer</h3>
+              <p className="smart-hl-desc">
+                I mødes med det, der kræver opmærksomhed først — mindre støj fra endnu en generisk
+                påmindelse.
+              </p>
+            </li>
+          </ul>
         </div>
       </section>
 
@@ -533,9 +627,12 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                 Overblik, dokumentation, <em>trafiklys</em> — ét sted
               </h2>
               <p className="section-p">
-                Dagsoverblik pr. beboer, journaludkast tæt på dagen, medicin og profil samlet,
-                varsler fra Lys og manglende tjek, planforslag I godkender — plus søgning på tværs,
-                roller der matcher jeres team, og ét sted at handle, når noget brænder.
+                Dagsoverblik pr. beboer,{' '}
+                <strong>AI der kan sparre jer igennem konkrete situationer</strong>, journal- og
+                planudkast I godkender, medicin og profil samlet, varsler fra Lys og manglende tjek
+                — og hos borgeren struktur til <strong>krise og beredskab</strong> i appen. Plus
+                søgning på tværs, roller der matcher jeres team, og ét sted at handle, når noget
+                brænder.
               </p>
               <div className="feature-pills">
                 <div className="fpill">
@@ -583,6 +680,28 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                   <div>
                     <div className="fpill-title">Planforslag</div>
                     <div className="fpill-desc">AI foreslår — intet uden jeres ok.</div>
+                  </div>
+                </div>
+                <div className="fpill">
+                  <div className="fpill-icon">
+                    <IconTeam size={20} className="landing-icon" />
+                  </div>
+                  <div>
+                    <div className="fpill-title">AI-sparring til personalet</div>
+                    <div className="fpill-desc">
+                      Svar og idéer til konkrete udfordringer — som hurtig faglig kollega-hjælp.
+                    </div>
+                  </div>
+                </div>
+                <div className="fpill">
+                  <div className="fpill-icon">
+                    <IconShield size={20} className="landing-icon" />
+                  </div>
+                  <div>
+                    <div className="fpill-title">Krise &amp; beredskab (Lys)</div>
+                    <div className="fpill-desc">
+                      Tryg struktur hos borgeren, så planen er tilgængelig, når den bruges.
+                    </div>
                   </div>
                 </div>
                 <div className="fpill">
