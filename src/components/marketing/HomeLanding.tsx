@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { BudrLogo } from '@/components/brand/BudrLogo';
 import {
   IconAlertBell,
@@ -40,8 +40,28 @@ type HomeLandingProps = {
 const BOOK_MAIL = 'mailto:hej@budrcare.dk?subject=Demo%20af%20BUDR%20Care' as const;
 
 export default function HomeLanding({ className = '' }: HomeLandingProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
   const [navOpen, setNavOpen] = useState(false);
   const closeNav = useCallback(() => setNavOpen(false), []);
+
+  /** Mål fast header så mobil-drawer får korrekt top / højde (viewport, ikke klippet bar) */
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const nav = root.querySelector('nav');
+    if (!nav) return;
+    const setTop = () => {
+      root.style.setProperty('--budr-nav-drawer-top', `${nav.getBoundingClientRect().height}px`);
+    };
+    setTop();
+    const ro = new ResizeObserver(setTop);
+    ro.observe(nav);
+    window.addEventListener('resize', setTop);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', setTop);
+    };
+  }, []);
 
   useEffect(() => {
     const els = Array.from(document.querySelectorAll<HTMLElement>('.budr-landing .fi'));
@@ -81,7 +101,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
   }, []);
 
   return (
-    <div className={`budr-landing ${className}`.trim()}>
+    <div ref={rootRef} className={`budr-landing ${className}`.trim()}>
       <nav aria-label="Primær navigation" className={navOpen ? 'is-open' : undefined}>
         <div className="nav-inner">
           <Link href="/" className="nav-logo" aria-label="BUDR Care — forsiden" onClick={closeNav}>

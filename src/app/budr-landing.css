@@ -65,8 +65,7 @@ html {
   backdrop-filter: blur(16px) saturate(1.2);
   -webkit-backdrop-filter: blur(16px) saturate(1.2);
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
-  isolation: isolate;
-  transform: translateZ(0);
+  /* Ingen transform her: ellers bliver fixed-afkom (mobil drawer) klippet til nav-højden */
   overflow: visible;
 }
 
@@ -3508,7 +3507,7 @@ html {
     position: fixed;
     left: 0;
     right: 0;
-    top: calc(var(--budr-nav-drawer-top, 64px) + env(safe-area-inset-top, 0px));
+    top: var(--budr-nav-drawer-top, 72px);
     bottom: 0;
     margin: 0;
     margin-left: 0;
@@ -3516,15 +3515,23 @@ html {
     flex-wrap: nowrap;
     align-items: stretch;
     gap: 0;
-    padding: 16px max(22px, env(safe-area-inset-right, 0px)) max(32px, env(safe-area-inset-bottom, 0px))
+    /* Fyld resten af viewport (dvh hvor understøttet — bedre med mobil browser-chrome) */
+    min-height: calc(100vh - var(--budr-nav-drawer-top, 72px));
+    max-height: calc(100vh - var(--budr-nav-drawer-top, 72px));
+    min-height: calc(100dvh - var(--budr-nav-drawer-top, 72px));
+    max-height: calc(100dvh - var(--budr-nav-drawer-top, 72px));
+    height: auto;
+    padding: 20px max(22px, env(safe-area-inset-right, 0px)) max(28px, env(safe-area-inset-bottom, 12px))
       max(22px, env(safe-area-inset-left, 0px));
     /* Uigennemsigtig baggrund — ingen “gennemlysning” af siden under */
     background: rgb(10, 22, 20);
     border-top: 1px solid rgba(133, 183, 235, 0.14);
     box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
-    z-index: 1;
+    z-index: 5;
     overflow-y: auto;
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     visibility: hidden;
     opacity: 0;
     pointer-events: none;
@@ -3575,7 +3582,7 @@ html {
   .budr-landing .nav-actions-bar {
     display: flex;
     position: relative;
-    z-index: 3;
+    z-index: 15;
   }
 
   .budr-landing .nav-menu-toggle {
