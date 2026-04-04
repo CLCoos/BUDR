@@ -7,11 +7,16 @@ html {
   --ink: #0c1118;
   --ink-mid: #141e2a;
   --ink-soft: #1a2636;
-  --amber: #e9aa47;
-  --amber-lt: #f6cc78;
-  --amber-dim: rgba(233, 170, 71, 0.1);
-  --amber-border: rgba(233, 170, 71, 0.22);
-  --fog: #7a95b0;
+  /* Primær accent = logo-teal (BudrLogo mørk baggrund); hover/rammer følger teal/blå */
+  --amber: #5dcaa5;
+  --amber-lt: #8ae4c9;
+  --amber-dim: rgba(93, 202, 165, 0.12);
+  --amber-border: rgba(133, 183, 235, 0.24);
+  /* Advarsel / traffic-light i mockups — ikke brand-accent */
+  --status-warn: #e9aa47;
+  --status-warn-lt: #f6cc78;
+  --status-warn-dim: rgba(233, 170, 71, 0.12);
+  --fog: #8aa4b8;
   --fog-dim: rgba(122, 149, 176, 0.5);
   --white: #f5f3ef;
   --white-dim: rgba(245, 243, 239, 0.65);
@@ -53,8 +58,8 @@ html {
   right: 0;
   z-index: 500;
   padding: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(12, 17, 24, 0.97);
+  border-bottom: 1px solid rgba(133, 183, 235, 0.12);
+  background: rgba(10, 22, 20, 0.97);
   backdrop-filter: blur(16px) saturate(1.2);
   -webkit-backdrop-filter: blur(16px) saturate(1.2);
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
@@ -69,7 +74,10 @@ html {
   max-width: min(1520px, 100%);
   margin-left: auto;
   margin-right: auto;
-  padding: 14px clamp(22px, 4vw, 52px);
+  padding-top: calc(14px + env(safe-area-inset-top, 0px));
+  padding-bottom: 14px;
+  padding-left: max(clamp(22px, 4vw, 52px), env(safe-area-inset-left, 0px));
+  padding-right: max(clamp(22px, 4vw, 52px), env(safe-area-inset-right, 0px));
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -91,13 +99,13 @@ html {
 .budr-landing .logo-mark {
   width: 30px;
   height: 30px;
-  background: var(--amber);
+  background: linear-gradient(135deg, var(--budr-teal), var(--budr-blue));
   border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
-  color: var(--ink);
+  color: var(--budr-brand-dark);
   font-family: var(--font-landing-body, 'DM Sans', system-ui, sans-serif);
   font-weight: 700;
 }
@@ -130,8 +138,8 @@ html {
 }
 
 .budr-landing .nav-cta {
-  background: var(--amber) !important;
-  color: var(--ink) !important;
+  background: linear-gradient(135deg, var(--budr-teal) 0%, var(--budr-blue) 100%) !important;
+  color: var(--budr-brand-dark) !important;
   font-weight: 600 !important;
   padding: 9px 22px;
   border-radius: 100px;
@@ -140,7 +148,7 @@ html {
 }
 
 .budr-landing .nav-cta:hover {
-  background: var(--amber-lt) !important;
+  filter: brightness(1.08) !important;
   transform: translateY(-1px);
 }
 
@@ -157,8 +165,8 @@ html {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 70% 70% at 72% 45%, rgba(233, 170, 71, 0.035) 0%, transparent 58%),
-    radial-gradient(ellipse 50% 80% at 15% 70%, rgba(28, 55, 90, 0.45) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 70% at 72% 45%, rgba(93, 202, 165, 0.035) 0%, transparent 58%),
+    radial-gradient(ellipse 50% 80% at 15% 70%, rgba(45, 90, 75, 0.38) 0%, transparent 55%),
     linear-gradient(150deg, #0c1118 0%, #10192a 60%, #0c1118 100%);
 }
 
@@ -167,9 +175,9 @@ html {
   position: absolute;
   inset: -35% -20%;
   background:
-    radial-gradient(circle at 78% 22%, rgba(233, 170, 71, 0.045) 0%, transparent 40%),
-    radial-gradient(circle at 82% 18%, rgba(100, 140, 220, 0.09) 0%, transparent 38%),
-    radial-gradient(circle at 48% 88%, rgba(233, 170, 71, 0.04) 0%, transparent 46%);
+    radial-gradient(circle at 78% 22%, rgba(93, 202, 165, 0.045) 0%, transparent 40%),
+    radial-gradient(circle at 82% 18%, rgba(133, 183, 235, 0.1) 0%, transparent 38%),
+    radial-gradient(circle at 48% 88%, rgba(93, 202, 165, 0.04) 0%, transparent 46%);
   animation: budr-mesh 22s ease-in-out infinite alternate;
   pointer-events: none;
 }
@@ -262,18 +270,18 @@ html {
 }
 
 .budr-landing .hero h1 {
-  font-family: var(--font-landing-display, 'Playfair Display', Georgia, serif);
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
   font-size: clamp(2.65rem, 5.2vw, 4.85rem);
-  font-weight: 900;
-  line-height: 1.04;
-  letter-spacing: -0.02em;
+  font-weight: 400;
+  line-height: 1.06;
+  letter-spacing: -0.01em;
   text-wrap: balance;
   animation: budr-fadeUp 0.7s 0.08s ease both;
 }
 
 .budr-landing .hero h1 em {
   font-style: italic;
-  color: var(--amber);
+  color: var(--budr-blue);
 }
 
 .budr-landing .hero-sub {
@@ -299,6 +307,240 @@ html {
   animation: budr-fadeUp 0.7s 0.24s ease both;
 }
 
+.budr-landing .hero-track {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  animation: budr-fadeUp 0.7s 0.28s ease both;
+}
+
+.budr-landing .hero-track-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fog-dim);
+  margin-bottom: 10px;
+}
+
+.budr-landing .hero-track-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.budr-landing .hero-track-link {
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: var(--fog);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition:
+    color 0.18s,
+    border-color 0.18s;
+}
+
+.budr-landing .hero-track-link:hover {
+  color: var(--amber);
+  border-bottom-color: rgba(93, 202, 165, 0.45);
+}
+
+.budr-landing .hero-track-link--primary {
+  color: var(--amber);
+  font-weight: 600;
+}
+
+.budr-landing .hero-track-sep {
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 0.85rem;
+  user-select: none;
+}
+
+.budr-landing .hurtig-oversigt {
+  padding: 48px 52px 52px;
+  background: linear-gradient(180deg, rgba(93, 202, 165, 0.06) 0%, transparent 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.budr-landing .hurtig-oversigt-h {
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  font-weight: 400;
+  margin: 0 0 18px;
+  color: var(--white);
+}
+
+.budr-landing .hurtig-oversigt-list {
+  margin: 0;
+  padding: 0 0 0 1.15rem;
+  max-width: 52rem;
+  color: var(--white-dim);
+  font-size: 0.95rem;
+  font-weight: 300;
+  line-height: 1.7;
+}
+
+.budr-landing .hurtig-oversigt-list li {
+  margin-bottom: 12px;
+}
+
+.budr-landing .hurtig-oversigt-list li:last-child {
+  margin-bottom: 0;
+}
+
+.budr-landing .hurtig-oversigt-list a {
+  color: var(--amber);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.budr-landing .hurtig-oversigt-list a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.budr-landing .problem-losning-arc {
+  scroll-margin-top: 88px;
+}
+
+.budr-landing .hurtig-oversigt,
+.budr-landing .problem-losning-arc section,
+.budr-landing .section-cta-band {
+  scroll-margin-top: 88px;
+}
+
+.budr-landing .section-cta-band {
+  padding: 36px 52px;
+  background: rgba(93, 202, 165, 0.07);
+  border-top: 1px solid rgba(93, 202, 165, 0.15);
+  border-bottom: 1px solid rgba(93, 202, 165, 0.12);
+}
+
+.budr-landing .section-cta-band-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.budr-landing .section-cta-band-text {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--white-dim);
+  font-weight: 300;
+  line-height: 1.55;
+  max-width: 36rem;
+}
+
+.budr-landing .section-cta-band-text strong {
+  color: var(--white);
+  font-weight: 600;
+}
+
+.budr-landing .section-cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.budr-landing .section-cta-actions .btn-primary,
+.budr-landing .section-cta-actions .btn-ghost {
+  padding: 11px 22px;
+  font-size: 0.86rem;
+}
+
+.budr-landing .comp-teaser {
+  margin: 28px auto 0;
+  max-width: 40rem;
+  text-align: left;
+  list-style: none;
+  padding: 0 4px;
+}
+
+.budr-landing .comp-teaser li {
+  position: relative;
+  padding-left: 22px;
+  margin-bottom: 12px;
+  font-size: 0.92rem;
+  color: var(--white-dim);
+  font-weight: 300;
+  line-height: 1.55;
+}
+
+.budr-landing .comp-teaser li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 0 2px rgba(93, 202, 165, 0.25);
+}
+
+.budr-landing .comp-teaser li:last-child {
+  margin-bottom: 0;
+}
+
+.budr-landing .comp-full-details {
+  margin-top: 28px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.budr-landing .comp-full-details summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 16px 20px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--amber);
+  background: rgba(93, 202, 165, 0.08);
+  transition: background 0.18s;
+}
+
+.budr-landing .comp-full-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.budr-landing .comp-full-details summary::after {
+  content: '▼';
+  float: right;
+  font-size: 0.65rem;
+  opacity: 0.75;
+  margin-top: 3px;
+}
+
+.budr-landing .comp-full-details[open] summary::after {
+  transform: rotate(-180deg);
+}
+
+.budr-landing .comp-full-details summary:hover {
+  background: rgba(93, 202, 165, 0.12);
+}
+
+.budr-landing .comp-full-details .comp-scroll {
+  margin-top: 0;
+  border-radius: 0;
+}
+
+.budr-landing .comp-full-details .comparison-footnote {
+  padding: 0 20px 20px;
+  margin-top: 16px;
+}
+
+.budr-landing .usp-grid--six {
+  grid-template-columns: repeat(3, 1fr);
+}
+
 .budr-landing .portal-hero-mock {
   position: relative;
   background: linear-gradient(145deg, rgba(17, 29, 14, 0.95), rgba(22, 33, 19, 0.98));
@@ -307,9 +549,9 @@ html {
   padding: 22px;
   animation: budr-fadeUp 0.7s 0.1s ease both;
   box-shadow:
-    0 0 0 1px rgba(233, 170, 71, 0.06),
+    0 0 0 1px rgba(93, 202, 165, 0.06),
     0 48px 96px rgba(0, 0, 0, 0.55),
-    0 0 80px rgba(233, 170, 71, 0.04);
+    0 0 80px rgba(93, 202, 165, 0.04);
   transition:
     transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 0.45s ease;
@@ -318,9 +560,9 @@ html {
 .budr-landing .portal-hero-mock:hover {
   transform: translateY(-6px);
   box-shadow:
-    0 0 0 1px rgba(233, 170, 71, 0.12),
+    0 0 0 1px rgba(93, 202, 165, 0.12),
     0 56px 100px rgba(0, 0, 0, 0.58),
-    0 0 100px rgba(233, 170, 71, 0.07);
+    0 0 100px rgba(93, 202, 165, 0.07);
 }
 
 .budr-landing .pmh-top {
@@ -397,7 +639,7 @@ html {
 }
 
 .budr-landing .d-amber {
-  background: var(--amber);
+  background: var(--status-warn);
 }
 
 .budr-landing .d-red {
@@ -465,9 +707,9 @@ html {
 
 .budr-landing .pmh-stat-n {
   font-size: 1.3rem;
-  font-weight: 700;
-  font-family: var(--font-landing-display, 'Playfair Display', Georgia, serif);
-  color: var(--amber);
+  font-weight: 400;
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
+  color: var(--budr-teal);
 }
 
 .budr-landing .pmh-stat-l {
@@ -477,15 +719,15 @@ html {
 }
 
 .budr-landing .btn-primary {
-  background: var(--amber);
-  color: var(--ink);
+  background: linear-gradient(135deg, var(--budr-teal) 0%, var(--budr-blue) 100%);
+  color: var(--budr-brand-dark);
   font-weight: 600;
   font-size: 0.92rem;
   padding: 14px 30px;
   border-radius: 100px;
   text-decoration: none;
   transition:
-    background 0.2s,
+    filter 0.2s,
     transform 0.2s,
     box-shadow 0.2s;
   border: none;
@@ -498,9 +740,9 @@ html {
 }
 
 .budr-landing .btn-primary:hover {
-  background: var(--amber-lt);
+  filter: brightness(1.08);
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 22px rgba(93, 202, 165, 0.28);
 }
 
 .budr-landing .btn-ghost {
@@ -525,8 +767,8 @@ html {
 }
 
 .budr-landing .btn-sm {
-  background: var(--amber);
-  color: var(--ink);
+  background: linear-gradient(135deg, var(--budr-teal) 0%, var(--budr-blue) 100%);
+  color: var(--budr-brand-dark);
   font-weight: 600;
   font-size: 0.8rem;
   padding: 9px 20px;
@@ -541,7 +783,7 @@ html {
 }
 
 .budr-landing .btn-sm:hover {
-  background: var(--amber-lt);
+  filter: brightness(1.08);
 }
 
 .budr-landing .btn-sm-ghost {
@@ -573,16 +815,16 @@ html {
 }
 
 .budr-landing .section-h {
-  font-family: var(--font-landing-display, 'Playfair Display', Georgia, serif);
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
   font-size: clamp(2rem, 3.8vw, 3.2rem);
-  font-weight: 700;
+  font-weight: 400;
   line-height: 1.15;
   max-width: 22ch;
 }
 
 .budr-landing .section-h em {
   font-style: italic;
-  color: var(--amber);
+  color: var(--budr-blue);
 }
 
 .budr-landing .section-p {
@@ -602,7 +844,7 @@ html {
 }
 
 .budr-landing .section-p a:hover {
-  color: var(--amber-lt);
+  color: var(--budr-blue);
 }
 
 .budr-landing section {
@@ -624,10 +866,10 @@ html {
 }
 
 .budr-landing .stat-n {
-  font-family: var(--font-landing-display, 'Playfair Display', Georgia, serif);
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
   font-size: 2.6rem;
-  font-weight: 700;
-  color: var(--amber);
+  font-weight: 400;
+  color: var(--budr-teal);
   line-height: 1;
 }
 
@@ -664,7 +906,7 @@ html {
   transform: translateX(-50%);
   width: min(90%, 720px);
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(233, 170, 71, 0.35), transparent);
+  background: linear-gradient(90deg, transparent, rgba(93, 202, 165, 0.35), transparent);
   pointer-events: none;
 }
 
@@ -708,7 +950,7 @@ html {
 
 .budr-landing .intro-card:hover {
   transform: translateY(-5px);
-  border-color: rgba(233, 170, 71, 0.22);
+  border-color: rgba(93, 202, 165, 0.22);
   box-shadow: 0 28px 56px rgba(0, 0, 0, 0.35);
 }
 
@@ -722,9 +964,9 @@ html {
 }
 
 .budr-landing .intro-card-h {
-  font-family: var(--font-landing-display, 'Playfair Display', Georgia, serif);
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
   font-size: 1.35rem;
-  font-weight: 700;
+  font-weight: 400;
   line-height: 1.2;
   color: var(--white);
   margin-bottom: 10px;
@@ -805,7 +1047,7 @@ html {
 }
 
 .budr-landing .flow-step:hover {
-  border-color: rgba(233, 170, 71, 0.18);
+  border-color: rgba(93, 202, 165, 0.18);
 }
 
 .budr-landing .flow-num {
@@ -817,10 +1059,10 @@ html {
   justify-content: center;
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--ink);
-  background: linear-gradient(135deg, var(--amber-lt), var(--amber));
+  color: var(--budr-brand-dark);
+  background: linear-gradient(135deg, var(--budr-teal), var(--budr-blue));
   margin-bottom: 18px;
-  box-shadow: 0 0 28px rgba(233, 170, 71, 0.2);
+  box-shadow: 0 0 28px rgba(93, 202, 165, 0.2);
 }
 
 .budr-landing .flow-h {
@@ -928,7 +1170,7 @@ html {
 }
 
 .budr-landing .usp-card:hover {
-  border-color: rgba(233, 170, 71, 0.15);
+  border-color: rgba(93, 202, 165, 0.15);
   background: rgba(255, 255, 255, 0.03);
 }
 
@@ -991,7 +1233,7 @@ html {
 }
 
 .budr-landing .smart-hl-card:hover {
-  border-color: rgba(233, 170, 71, 0.2);
+  border-color: rgba(93, 202, 165, 0.2);
   background: rgba(255, 255, 255, 0.04);
 }
 
@@ -1038,7 +1280,7 @@ html {
 }
 
 .budr-landing .dss-dot.amber {
-  background: var(--amber);
+  background: var(--status-warn);
 }
 
 .budr-landing .dss-dot.red {
@@ -1086,7 +1328,7 @@ html {
   margin: -5px 0 0 -5px;
   border-radius: 50%;
   background: var(--amber);
-  box-shadow: 0 0 14px rgba(233, 170, 71, 0.65);
+  box-shadow: 0 0 14px rgba(93, 202, 165, 0.65);
 }
 
 .budr-landing .lys-sync-caption {
@@ -1123,12 +1365,12 @@ html {
 @keyframes budr-notif-glow {
   0%,
   100% {
-    background: rgba(233, 170, 71, 0.06);
+    background: rgba(93, 202, 165, 0.06);
     border-color: transparent;
   }
   50% {
-    background: rgba(233, 170, 71, 0.14);
-    border-color: rgba(233, 170, 71, 0.25);
+    background: rgba(93, 202, 165, 0.14);
+    border-color: rgba(93, 202, 165, 0.25);
   }
 }
 
@@ -1217,9 +1459,9 @@ html {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(233, 170, 71, 0.2),
+    rgba(93, 202, 165, 0.2),
     var(--amber),
-    rgba(233, 170, 71, 0.2),
+    rgba(93, 202, 165, 0.2),
     transparent
   );
   opacity: 0;
@@ -1269,8 +1511,8 @@ html {
   }
   5% {
     border-color: var(--amber);
-    box-shadow: 0 0 16px rgba(233, 170, 71, 0.38);
-    background: rgba(233, 170, 71, 0.12);
+    box-shadow: 0 0 16px rgba(93, 202, 165, 0.38);
+    background: rgba(93, 202, 165, 0.12);
   }
   16% {
     border-color: rgba(255, 255, 255, 0.12);
@@ -1298,9 +1540,9 @@ html {
   }
   46%,
   58% {
-    background: rgba(233, 170, 71, 0.1);
-    border-color: rgba(233, 170, 71, 0.32);
-    box-shadow: 0 0 0 1px rgba(233, 170, 71, 0.12);
+    background: rgba(93, 202, 165, 0.1);
+    border-color: rgba(93, 202, 165, 0.32);
+    box-shadow: 0 0 0 1px rgba(93, 202, 165, 0.12);
   }
   64%,
   100% {
@@ -1440,8 +1682,8 @@ html {
 
 .budr-landing .idemo-comment:focus {
   outline: none;
-  border-color: rgba(233, 170, 71, 0.45);
-  box-shadow: 0 0 0 2px rgba(233, 170, 71, 0.12);
+  border-color: rgba(93, 202, 165, 0.45);
+  box-shadow: 0 0 0 2px rgba(93, 202, 165, 0.12);
 }
 
 .budr-landing .idemo-comment-meta {
@@ -1476,7 +1718,7 @@ html {
 }
 
 .budr-landing .idemo-chip:hover {
-  border-color: rgba(233, 170, 71, 0.35);
+  border-color: rgba(93, 202, 165, 0.35);
   color: var(--white);
 }
 
@@ -1484,7 +1726,7 @@ html {
   border-color: var(--amber-border);
   background: var(--amber-dim);
   color: var(--amber);
-  box-shadow: 0 0 0 1px rgba(233, 170, 71, 0.12);
+  box-shadow: 0 0 0 1px rgba(93, 202, 165, 0.12);
 }
 
 .budr-landing .idemo-chip:focus-visible {
@@ -1538,9 +1780,9 @@ html {
 }
 
 .budr-landing .interactive-demo-portal.is-live {
-  border-color: rgba(233, 170, 71, 0.28);
+  border-color: rgba(93, 202, 165, 0.28);
   box-shadow:
-    0 0 0 1px rgba(233, 170, 71, 0.08),
+    0 0 0 1px rgba(93, 202, 165, 0.08),
     0 28px 64px rgba(0, 0, 0, 0.4);
 }
 
@@ -1606,8 +1848,8 @@ html {
 }
 
 .budr-landing .idemo-portal-row.is-highlight {
-  background: rgba(233, 170, 71, 0.1);
-  border-color: rgba(233, 170, 71, 0.28);
+  background: rgba(93, 202, 165, 0.1);
+  border-color: rgba(93, 202, 165, 0.28);
 }
 
 .budr-landing .idemo-portal-row.is-highlight-urgent {
@@ -1701,8 +1943,8 @@ html {
 }
 
 .budr-landing .idemo-portal-notify--caution {
-  background: rgba(233, 170, 71, 0.12);
-  border-color: rgba(233, 170, 71, 0.4);
+  background: rgba(93, 202, 165, 0.12);
+  border-color: rgba(93, 202, 165, 0.4);
   color: #e8c896;
 }
 
@@ -1711,7 +1953,7 @@ html {
 }
 
 .budr-landing .idemo-portal-notify--caution .idemo-portal-notify-rec {
-  border-top-color: rgba(233, 170, 71, 0.25);
+  border-top-color: rgba(93, 202, 165, 0.25);
 }
 
 .budr-landing .idemo-portal-notify--caution .idemo-notify-ic {
@@ -1817,9 +2059,9 @@ html {
 
 .budr-landing .live-demo-card:hover {
   transform: translateY(-5px);
-  border-color: rgba(233, 170, 71, 0.22);
+  border-color: rgba(93, 202, 165, 0.22);
   box-shadow:
-    0 0 0 1px rgba(233, 170, 71, 0.06),
+    0 0 0 1px rgba(93, 202, 165, 0.06),
     0 32px 64px rgba(0, 0, 0, 0.4);
 }
 
@@ -1898,7 +2140,7 @@ html {
 }
 
 .budr-landing .ld-mini-nav.active {
-  background: rgba(233, 170, 71, 0.1);
+  background: rgba(93, 202, 165, 0.1);
   color: var(--amber);
   font-weight: 600;
 }
@@ -1922,8 +2164,8 @@ html {
 }
 
 .budr-landing .ld-mini-row.highlight {
-  background: rgba(233, 170, 71, 0.07);
-  border-color: rgba(233, 170, 71, 0.2);
+  background: rgba(93, 202, 165, 0.07);
+  border-color: rgba(93, 202, 165, 0.2);
 }
 
 .budr-landing .ld-badge {
@@ -1940,8 +2182,8 @@ html {
 }
 
 .budr-landing .ld-badge.warn {
-  background: rgba(233, 170, 71, 0.12);
-  color: var(--amber);
+  background: var(--status-warn-dim);
+  color: var(--status-warn);
 }
 
 .budr-landing .ld-badge.crit {
@@ -2009,17 +2251,17 @@ html {
   border-radius: 3px;
   background: linear-gradient(
     90deg,
-    rgba(232, 135, 74, 0.9) 0%,
-    var(--amber) 35%,
-    rgba(255, 255, 255, 0.08) 36%,
+    rgba(93, 202, 165, 0.85) 0%,
+    var(--budr-blue) 38%,
+    rgba(255, 255, 255, 0.08) 39%,
     rgba(255, 255, 255, 0.08) 100%
   );
 }
 
 .budr-landing .live-demo-card-title {
-  font-family: var(--font-landing-display, 'Playfair Display', Georgia, serif);
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
   font-size: 1.35rem;
-  font-weight: 700;
+  font-weight: 400;
   margin: 0 0 8px;
   color: var(--white);
 }
@@ -2040,7 +2282,7 @@ html {
 }
 
 .budr-landing .live-demo-card:hover .live-demo-card-cta {
-  color: var(--amber-lt);
+  color: var(--budr-blue);
 }
 
 .budr-landing .tryghed-section {
@@ -2170,11 +2412,11 @@ html {
   gap: 8px;
   padding-top: 16px;
   padding-bottom: 16px;
-  background: linear-gradient(180deg, rgba(233, 170, 71, 0.26) 0%, rgba(233, 170, 71, 0.09) 100%);
+  background: linear-gradient(180deg, rgba(93, 202, 165, 0.26) 0%, rgba(93, 202, 165, 0.09) 100%);
   box-shadow:
-    inset 0 0 0 1px rgba(233, 170, 71, 0.35),
-    inset 0 -2px 0 rgba(233, 170, 71, 0.45);
-  color: var(--amber);
+    inset 0 0 0 1px rgba(93, 202, 165, 0.35),
+    inset 0 -2px 0 rgba(93, 202, 165, 0.45);
+  color: var(--white);
 }
 
 .budr-landing .comp-budr-badge {
@@ -2183,12 +2425,12 @@ html {
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--ink);
-  background: linear-gradient(180deg, var(--amber-lt), var(--amber));
+  color: var(--budr-brand-dark);
+  background: linear-gradient(135deg, var(--budr-teal) 0%, var(--budr-blue) 100%);
   padding: 5px 12px;
   border-radius: 100px;
   line-height: 1.2;
-  box-shadow: 0 2px 12px rgba(233, 170, 71, 0.25);
+  box-shadow: 0 2px 12px rgba(93, 202, 165, 0.25);
 }
 
 .budr-landing .comp-budr-hdr-title {
@@ -2197,23 +2439,23 @@ html {
   text-transform: uppercase;
   font-weight: 700;
   color: var(--white);
-  text-shadow: 0 1px 18px rgba(233, 170, 71, 0.35);
+  text-shadow: 0 1px 18px rgba(93, 202, 165, 0.35);
 }
 
 .budr-landing .budr-c {
-  background: rgba(233, 170, 71, 0.025);
+  background: rgba(93, 202, 165, 0.025);
 }
 
 .budr-landing .comp-row:not(.hdr) .budr-c {
   background: linear-gradient(
     165deg,
-    rgba(233, 170, 71, 0.2) 0%,
-    rgba(233, 170, 71, 0.07) 45%,
+    rgba(93, 202, 165, 0.2) 0%,
+    rgba(93, 202, 165, 0.07) 45%,
     rgba(12, 17, 24, 0.35) 100%
   );
   box-shadow:
-    inset 0 0 0 1px rgba(233, 170, 71, 0.3),
-    inset 3px 0 0 rgba(233, 170, 71, 0.55);
+    inset 0 0 0 1px rgba(93, 202, 165, 0.3),
+    inset 3px 0 0 rgba(93, 202, 165, 0.55);
 }
 
 .budr-landing .comp-row:not(.hdr) .comp-cell:not(:first-child):not(.budr-c) {
@@ -2271,7 +2513,7 @@ html {
 }
 
 .budr-landing .part {
-  color: var(--amber);
+  color: var(--status-warn);
   font-size: 0.72rem;
   font-weight: 500;
 }
@@ -2368,9 +2610,9 @@ html {
 }
 
 .budr-landing .roles-panel-h {
-  font-family: var(--font-landing-display, 'Playfair Display', Georgia, serif);
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
   font-size: 1.35rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--white);
   margin-bottom: 12px;
   line-height: 1.25;
@@ -2599,7 +2841,7 @@ html {
 
 .budr-landing .ps-nav-item:hover,
 .budr-landing .ps-nav-item.active {
-  background: rgba(233, 170, 71, 0.08);
+  background: rgba(93, 202, 165, 0.08);
   color: var(--amber);
 }
 
@@ -2659,9 +2901,9 @@ html {
 }
 
 .budr-landing .badge-warn {
-  background: rgba(233, 170, 71, 0.1);
+  background: rgba(93, 202, 165, 0.1);
   color: var(--amber);
-  border: 1px solid rgba(233, 170, 71, 0.2);
+  border: 1px solid rgba(93, 202, 165, 0.2);
 }
 
 .budr-landing .badge-crit {
@@ -2756,7 +2998,7 @@ html {
   font-size: 0.68rem;
   color: var(--fog);
   padding: 6px 10px;
-  background: rgba(233, 170, 71, 0.06);
+  background: rgba(93, 202, 165, 0.06);
   border-radius: 7px;
   margin: 8px 0;
   border: 1px solid transparent;
@@ -2830,14 +3072,14 @@ html {
 }
 
 .budr-landing .t-stars {
-  color: var(--amber);
+  color: var(--status-warn-lt);
   font-size: 0.8rem;
   letter-spacing: 2px;
   margin-bottom: 14px;
 }
 
 .budr-landing .t-text {
-  font-family: var(--font-landing-display, 'Playfair Display', Georgia, serif);
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
   font-style: italic;
   font-size: 0.95rem;
   line-height: 1.7;
@@ -2872,7 +3114,7 @@ html {
 
 .budr-landing .origin-quote::before {
   content: '"';
-  font-family: var(--font-landing-display, 'Playfair Display', Georgia, serif);
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
   font-size: 5rem;
   color: var(--amber);
   opacity: 0.25;
@@ -2883,7 +3125,7 @@ html {
 }
 
 .budr-landing .origin-quote p {
-  font-family: var(--font-landing-display, 'Playfair Display', Georgia, serif);
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
   font-style: italic;
   font-size: 1.05rem;
   line-height: 1.65;
@@ -2938,7 +3180,7 @@ html {
 .budr-landing .tl-line {
   flex: 1;
   width: 1px;
-  background: rgba(233, 170, 71, 0.2);
+  background: rgba(93, 202, 165, 0.2);
   margin-top: 6px;
 }
 
@@ -2972,15 +3214,15 @@ html {
   inset: 0;
   background: radial-gradient(
     ellipse 70% 60% at 50% 50%,
-    rgba(233, 170, 71, 0.07) 0%,
+    rgba(93, 202, 165, 0.07) 0%,
     transparent 65%
   );
 }
 
 .budr-landing .cta-section h2 {
-  font-family: var(--font-landing-display, 'Playfair Display', Georgia, serif);
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
   font-size: clamp(2.4rem, 4.5vw, 4rem);
-  font-weight: 900;
+  font-weight: 400;
   line-height: 1.1;
   max-width: 22ch;
   margin: 0 auto 20px;
@@ -2988,7 +3230,7 @@ html {
 
 .budr-landing .cta-section h2 em {
   font-style: italic;
-  color: var(--amber);
+  color: var(--budr-blue);
 }
 
 .budr-landing .cta-section .cta-lead {
@@ -3245,14 +3487,14 @@ html {
   }
 
   .budr-landing nav.is-open .nav-inner {
-    background: rgba(12, 17, 24, 0.98);
+    background: rgba(10, 22, 20, 0.98);
   }
 
   .budr-landing .nav-links {
     position: fixed;
     left: 0;
     right: 0;
-    top: var(--budr-nav-drawer-top, 69px);
+    top: calc(var(--budr-nav-drawer-top, 64px) + env(safe-area-inset-top, 0px));
     bottom: 0;
     margin: 0;
     margin-left: 0;
@@ -3260,8 +3502,9 @@ html {
     flex-wrap: nowrap;
     align-items: stretch;
     gap: 0;
-    padding: 12px clamp(22px, 4vw, 52px) max(32px, env(safe-area-inset-bottom, 0));
-    background: rgba(10, 14, 20, 0.97);
+    padding: 12px max(22px, env(safe-area-inset-right, 0px)) max(32px, env(safe-area-inset-bottom, 0px))
+      max(22px, env(safe-area-inset-left, 0px));
+    background: rgba(10, 22, 20, 0.97);
     backdrop-filter: blur(20px) saturate(1.1);
     -webkit-backdrop-filter: blur(20px) saturate(1.1);
     z-index: 502;
@@ -3323,19 +3566,22 @@ html {
 
 @media (max-width: 960px) {
   .budr-landing .nav-inner {
-    padding: 12px 22px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+    padding-bottom: 12px;
+    padding-left: max(22px, env(safe-area-inset-left, 0px));
+    padding-right: max(22px, env(safe-area-inset-right, 0px));
   }
 
   .budr-landing section,
   .budr-landing .stats-bar,
   .budr-landing .cta-section,
   .budr-landing footer {
-    padding-left: 22px;
-    padding-right: 22px;
+    padding-left: max(22px, env(safe-area-inset-left, 0px));
+    padding-right: max(22px, env(safe-area-inset-right, 0px));
   }
 
   .budr-landing .hero {
-    padding: 110px 22px 70px;
+    padding: 110px max(22px, env(safe-area-inset-left, 0px)) 70px max(22px, env(safe-area-inset-right, 0px));
   }
 
   .budr-landing .hero-inner,
@@ -3362,7 +3608,7 @@ html {
   }
 
   .budr-landing .live-demo-strip {
-    padding: 64px 22px 72px;
+    padding: 64px max(22px, env(safe-area-inset-left, 0px)) 72px max(22px, env(safe-area-inset-right, 0px));
   }
 
   .budr-landing .lys-flow-track {
@@ -3434,21 +3680,38 @@ html {
   }
 
   .budr-landing .social-proof-section {
-    padding-left: 22px;
-    padding-right: 22px;
+    padding-left: max(22px, env(safe-area-inset-left, 0px));
+    padding-right: max(22px, env(safe-area-inset-right, 0px));
   }
 
   .budr-landing .usp-section {
-    padding: 64px 22px 72px;
+    padding: 64px max(22px, env(safe-area-inset-left, 0px)) 72px max(22px, env(safe-area-inset-right, 0px));
   }
 
   .budr-landing .smart-hl-section {
-    padding: 56px 22px 64px;
+    padding: 56px max(22px, env(safe-area-inset-left, 0px)) 64px max(22px, env(safe-area-inset-right, 0px));
   }
 
   .budr-landing .comparison-section {
-    padding-left: 22px;
-    padding-right: 22px;
+    padding-left: max(22px, env(safe-area-inset-left, 0px));
+    padding-right: max(22px, env(safe-area-inset-right, 0px));
+  }
+
+  .budr-landing .hurtig-oversigt {
+    padding: 40px max(22px, env(safe-area-inset-left, 0px)) 44px max(22px, env(safe-area-inset-right, 0px));
+  }
+
+  .budr-landing .section-cta-band {
+    padding: 28px max(22px, env(safe-area-inset-left, 0px)) 28px max(22px, env(safe-area-inset-right, 0px));
+  }
+
+  .budr-landing .section-cta-band-inner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .budr-landing .usp-grid--six {
+    grid-template-columns: 1fr 1fr;
   }
 
   .budr-landing .smart-hl-grid {
@@ -3467,8 +3730,8 @@ html {
   }
 
   .budr-landing .tryghed-section {
-    padding-left: 22px;
-    padding-right: 22px;
+    padding-left: max(22px, env(safe-area-inset-left, 0px));
+    padding-right: max(22px, env(safe-area-inset-right, 0px));
   }
 }
 
@@ -3477,8 +3740,39 @@ html {
     grid-template-columns: 1fr;
   }
 
+  .budr-landing .usp-grid--six {
+    grid-template-columns: 1fr;
+  }
+
   .budr-landing .smart-hl-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* Fuld bredde på primære handlinger — lettere at ramme på touch */
+  .budr-landing .hero-actions,
+  .budr-landing .section-cta-actions,
+  .budr-landing .cta-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .budr-landing .hero-actions .btn-primary,
+  .budr-landing .hero-actions .btn-ghost,
+  .budr-landing .section-cta-actions .btn-primary,
+  .budr-landing .section-cta-actions .btn-ghost,
+  .budr-landing .cta-actions .btn-primary,
+  .budr-landing .cta-actions .btn-ghost {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .budr-landing .hero-track-links {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .budr-landing .hero-track-sep {
+    display: none;
   }
 }
 
