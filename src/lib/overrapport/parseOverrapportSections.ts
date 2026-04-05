@@ -21,7 +21,7 @@ export function parseOverrapportDocument(raw: string): ParsedOverrapportDocument
   const lines = text.split('\n');
   let headline: string | null = null;
   const first = lines[0]?.trim() ?? '';
-  if (/^vagtskifterapport\s/i.test(first)) {
+  if (/^(vagtskifterapport|tilsynsrapport)\b/i.test(first)) {
     headline = first;
     lines.shift();
     if (lines[0] === '') lines.shift();

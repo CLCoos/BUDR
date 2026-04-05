@@ -304,7 +304,11 @@ export default function DashboardDemoMain() {
         onClose={() => setOverrapportPanelOpen(false)}
       />
       <IndsatsModal open={indsatsOpen} onClose={() => setIndsatsOpen(false)} />
-      <TilsynsrapportModal open={tilsynsrapportOpen} onClose={() => setTilsynsrapportOpen(false)} />
+      <TilsynsrapportModal
+        open={tilsynsrapportOpen}
+        onClose={() => setTilsynsrapportOpen(false)}
+        preferDemoWhenNoResidents
+      />
     </div>
   );
 }

@@ -11,50 +11,9 @@ import {
 } from '@/lib/overrapport/composeStructuredReport';
 import { getDemoOverrapportResidents } from '@/lib/overrapport/demoResidentSummaries';
 import { parseOverrapportDocument } from '@/lib/overrapport/parseOverrapportSections';
+import FormattedNumberedReportBody from '@/app/care-portal-dashboard/components/FormattedNumberedReportBody';
 
 type ResidentSummary = OverrapportResidentInput;
-
-function FormattedReportBody({ body }: { body: string }) {
-  const trimmed = body.trim();
-  if (!trimmed) return null;
-  const blocks = trimmed.split(/\n\n+/);
-  return (
-    <div className="space-y-3 text-[15px] leading-[1.55] text-gray-700">
-      {blocks.map((block, i) => {
-        const lines = block
-          .split('\n')
-          .map((l) => l.trim())
-          .filter(Boolean);
-        const allBullet =
-          lines.length > 0 &&
-          lines.every(
-            (l) =>
-              l.startsWith('· ') || l.startsWith('·') || l.startsWith('• ') || l.startsWith('- ')
-          );
-        if (allBullet) {
-          return (
-            <ul key={i} className="list-none space-y-2.5">
-              {lines.map((l, j) => (
-                <li key={j} className="flex gap-3">
-                  <span
-                    className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#0F6E56]"
-                    aria-hidden
-                  />
-                  <span className="min-w-0">{l.replace(/^[-·•]\s*/, '')}</span>
-                </li>
-              ))}
-            </ul>
-          );
-        }
-        return (
-          <p key={i} className="text-[15px] leading-[1.55] text-gray-700">
-            {block}
-          </p>
-        );
-      })}
-    </div>
-  );
-}
 
 type Props = {
   open: boolean;
@@ -425,7 +384,7 @@ Max ca. 280 ord. Afslut IKKE med metatekst om AI.`,
                           ) : null}
                         </div>
                       </div>
-                      <FormattedReportBody body={sec.body} />
+                      <FormattedNumberedReportBody body={sec.body} />
                     </article>
                   );
                 })}
