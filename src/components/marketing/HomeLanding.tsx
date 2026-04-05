@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BudrLogo } from '@/components/brand/BudrLogo';
@@ -30,8 +31,20 @@ import {
   IconUser,
   IconWarning,
 } from '@/components/marketing/LandingIcons';
-import { LandingInteractiveDemo } from '@/components/marketing/LandingInteractiveDemo';
 import { ResidentInitialsAbbr } from '@/components/marketing/ResidentInitialsAbbr';
+
+const LandingInteractiveDemo = dynamic(
+  () =>
+    import('@/components/marketing/LandingInteractiveDemo').then((m) => ({
+      default: m.LandingInteractiveDemo,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="live-demo-skeleton" role="status" aria-label="Indlæser interaktiv demo" />
+    ),
+  }
+);
 
 type HomeLandingProps = {
   className?: string;
@@ -52,13 +65,20 @@ const LANDING_NAV_IDS = [
 
 type LandingNavSectionId = (typeof LANDING_NAV_IDS)[number];
 
+type LandingScrollUi = {
+  activeNav: LandingNavSectionId;
+  arcChapter: 'problem' | 'losning' | null;
+};
+
 export default function HomeLanding({ className = '' }: HomeLandingProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const scrollSpyTicking = useRef(false);
+  const scrollProgressRef = useRef<HTMLDivElement>(null);
   const [navOpen, setNavOpen] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [activeNavSection, setActiveNavSection] = useState<LandingNavSectionId>(LANDING_NAV_IDS[0]);
-  const [arcChapter, setArcChapter] = useState<'problem' | 'losning' | null>(null);
+  const [scrollUi, setScrollUi] = useState<LandingScrollUi>({
+    activeNav: LANDING_NAV_IDS[0],
+    arcChapter: null,
+  });
   const closeNav = useCallback(() => setNavOpen(false), []);
 
   /** Mål fast header så mobil-drawer får korrekt top / højde (viewport, ikke klippet bar) */
@@ -94,19 +114,37 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
     return () => obs.disconnect();
   }, []);
 
+  /** Pause hero-mesh når hero ikke ses (undgår konstant animation i baggrunden). */
   useEffect(() => {
-    const onScroll = () => {
-      const el = document.documentElement;
-      const doc = el.scrollHeight - el.clientHeight;
-      setScrollProgress(doc > 0 ? Math.min(1, Math.max(0, el.scrollTop / doc)) : 0);
-    };
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
-    };
+    const root = rootRef.current;
+    if (!root) return;
+    const hero = root.querySelector('.hero');
+    const bg = root.querySelector('.hero-bg');
+    if (!hero || !bg) return;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        bg.classList.toggle('hero-bg--paused', !e.isIntersecting);
+      },
+      { threshold: 0, rootMargin: '0px' }
+    );
+    io.observe(hero);
+    return () => io.disconnect();
+  }, []);
+
+  /** Pause Lys↔portal-loop når sektionen er ude af viewport. */
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const lys = root.querySelector('.lys-section');
+    if (!lys) return;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        lys.classList.toggle('lys-section--anims-paused', !e.isIntersecting);
+      },
+      { threshold: 0, rootMargin: '100px 0px' }
+    );
+    io.observe(lys);
+    return () => io.disconnect();
   }, []);
 
   useEffect(() => {
@@ -132,7 +170,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
     return () => mq.removeEventListener('change', onChange);
   }, []);
 
-  /** Scroll-spy til topnav + kapitel-rail (én rAF pr. frame, ingen tunge libs). */
+  /** Scroll-spy, kapitel-rail og læsefremdrift — én listener + rAF; progress uden React state. */
   useEffect(() => {
     const run = () => {
       scrollSpyTicking.current = false;
@@ -140,13 +178,17 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
       const navBottom = navEl ? navEl.getBoundingClientRect().bottom : 88;
       const marker = navBottom + 28;
 
+      const docEl = document.documentElement;
+      const scrollable = docEl.scrollHeight - docEl.clientHeight;
+      const prog = scrollable > 0 ? Math.min(1, Math.max(0, docEl.scrollTop / scrollable)) : 0;
+      scrollProgressRef.current?.style.setProperty('transform', `scaleX(${prog})`);
+
       let active: LandingNavSectionId = LANDING_NAV_IDS[0];
       for (const id of LANDING_NAV_IDS) {
         const section = document.getElementById(id);
         if (!section) continue;
         if (section.getBoundingClientRect().top <= marker) active = id;
       }
-      setActiveNavSection(active);
 
       const arcEl = document.getElementById('problem-losning');
       const problemEl = document.getElementById('problem');
@@ -159,7 +201,11 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
           chapter = losningEl.getBoundingClientRect().top <= marker ? 'losning' : 'problem';
         }
       }
-      setArcChapter(chapter);
+
+      setScrollUi((prev) => {
+        if (prev.activeNav === active && prev.arcChapter === chapter) return prev;
+        return { activeNav: active, arcChapter: chapter };
+      });
     };
 
     const onScrollOrResize = () => {
@@ -209,8 +255,8 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               <a
                 href="#hvad-er-budr"
                 onClick={closeNav}
-                className={activeNavSection === 'hvad-er-budr' ? 'nav-link--active' : undefined}
-                {...(activeNavSection === 'hvad-er-budr'
+                className={scrollUi.activeNav === 'hvad-er-budr' ? 'nav-link--active' : undefined}
+                {...(scrollUi.activeNav === 'hvad-er-budr'
                   ? { 'aria-current': 'location' as const }
                   : {})}
               >
@@ -221,8 +267,10 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               <a
                 href="#problem-losning"
                 onClick={closeNav}
-                className={activeNavSection === 'problem-losning' ? 'nav-link--active' : undefined}
-                {...(activeNavSection === 'problem-losning'
+                className={
+                  scrollUi.activeNav === 'problem-losning' ? 'nav-link--active' : undefined
+                }
+                {...(scrollUi.activeNav === 'problem-losning'
                   ? { 'aria-current': 'location' as const }
                   : {})}
               >
@@ -233,8 +281,8 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               <a
                 href="#sammenligning"
                 onClick={closeNav}
-                className={activeNavSection === 'sammenligning' ? 'nav-link--active' : undefined}
-                {...(activeNavSection === 'sammenligning'
+                className={scrollUi.activeNav === 'sammenligning' ? 'nav-link--active' : undefined}
+                {...(scrollUi.activeNav === 'sammenligning'
                   ? { 'aria-current': 'location' as const }
                   : {})}
               >
@@ -245,8 +293,10 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               <a
                 href="#fordele"
                 onClick={closeNav}
-                className={activeNavSection === 'fordele' ? 'nav-link--active' : undefined}
-                {...(activeNavSection === 'fordele' ? { 'aria-current': 'location' as const } : {})}
+                className={scrollUi.activeNav === 'fordele' ? 'nav-link--active' : undefined}
+                {...(scrollUi.activeNav === 'fordele'
+                  ? { 'aria-current': 'location' as const }
+                  : {})}
               >
                 Højdepunkter
               </a>
@@ -255,8 +305,8 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               <a
                 href="#features"
                 onClick={closeNav}
-                className={activeNavSection === 'features' ? 'nav-link--active' : undefined}
-                {...(activeNavSection === 'features'
+                className={scrollUi.activeNav === 'features' ? 'nav-link--active' : undefined}
+                {...(scrollUi.activeNav === 'features'
                   ? { 'aria-current': 'location' as const }
                   : {})}
               >
@@ -267,8 +317,10 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               <a
                 href="#tryghed"
                 onClick={closeNav}
-                className={activeNavSection === 'tryghed' ? 'nav-link--active' : undefined}
-                {...(activeNavSection === 'tryghed' ? { 'aria-current': 'location' as const } : {})}
+                className={scrollUi.activeNav === 'tryghed' ? 'nav-link--active' : undefined}
+                {...(scrollUi.activeNav === 'tryghed'
+                  ? { 'aria-current': 'location' as const }
+                  : {})}
               >
                 Tryghed
               </a>
@@ -277,8 +329,8 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               <a
                 href="#prover-selv"
                 onClick={closeNav}
-                className={activeNavSection === 'prover-selv' ? 'nav-link--active' : undefined}
-                {...(activeNavSection === 'prover-selv'
+                className={scrollUi.activeNav === 'prover-selv' ? 'nav-link--active' : undefined}
+                {...(scrollUi.activeNav === 'prover-selv'
                   ? { 'aria-current': 'location' as const }
                   : {})}
               >
@@ -292,11 +344,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
             </li>
           </ul>
         </div>
-        <div
-          className="nav-scroll-progress"
-          style={{ transform: `scaleX(${scrollProgress})` }}
-          aria-hidden
-        />
+        <div ref={scrollProgressRef} className="nav-scroll-progress" aria-hidden />
       </nav>
 
       <div className="budr-landing-content">
@@ -523,16 +571,20 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
             <nav className="problem-losning-rail-nav">
               <a
                 href="#problem"
-                className={arcChapter === 'problem' ? 'is-active' : undefined}
-                {...(arcChapter === 'problem' ? { 'aria-current': 'location' as const } : {})}
+                className={scrollUi.arcChapter === 'problem' ? 'is-active' : undefined}
+                {...(scrollUi.arcChapter === 'problem'
+                  ? { 'aria-current': 'location' as const }
+                  : {})}
               >
                 <span className="problem-losning-rail-n">1</span>
                 <span className="problem-losning-rail-txt">Signalerne</span>
               </a>
               <a
                 href="#losning"
-                className={arcChapter === 'losning' ? 'is-active' : undefined}
-                {...(arcChapter === 'losning' ? { 'aria-current': 'location' as const } : {})}
+                className={scrollUi.arcChapter === 'losning' ? 'is-active' : undefined}
+                {...(scrollUi.arcChapter === 'losning'
+                  ? { 'aria-current': 'location' as const }
+                  : {})}
               >
                 <span className="problem-losning-rail-n">2</span>
                 <span className="problem-losning-rail-txt">Lys → portal</span>

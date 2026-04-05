@@ -3,6 +3,12 @@ html {
   scroll-behavior: smooth;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 .budr-landing {
   --ink: #0c1118;
   --ink-mid: #141e2a;
@@ -49,7 +55,8 @@ html {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
   pointer-events: none;
   z-index: 2;
-  opacity: 0.5;
+  /* Lavere opacity = mindre lag-på-lag maleri over hele viewport */
+  opacity: 0.32;
 }
 
 .budr-landing nav {
@@ -61,9 +68,10 @@ html {
   isolation: isolate;
   padding: 0;
   border-bottom: 1px solid rgba(133, 183, 235, 0.12);
-  background: rgba(10, 22, 20, 0.97);
-  backdrop-filter: blur(16px) saturate(1.2);
-  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  /* Lidt tættere baggrund + mindre blur = billigere end 16px backdrop på store skærme */
+  background: rgba(10, 22, 20, 0.985);
+  backdrop-filter: blur(10px) saturate(1.1);
+  -webkit-backdrop-filter: blur(10px) saturate(1.1);
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
   /* Ingen transform her: ellers bliver fixed-afkom (mobil drawer) klippet til nav-højden */
   overflow: visible;
@@ -78,7 +86,6 @@ html {
   height: 2px;
   transform-origin: 0 50%;
   transform: scaleX(0);
-  will-change: transform;
   background: linear-gradient(
     90deg,
     var(--budr-teal) 0%,
@@ -221,8 +228,13 @@ html {
     radial-gradient(circle at 78% 22%, rgba(93, 202, 165, 0.045) 0%, transparent 40%),
     radial-gradient(circle at 82% 18%, rgba(133, 183, 235, 0.1) 0%, transparent 38%),
     radial-gradient(circle at 48% 88%, rgba(93, 202, 165, 0.04) 0%, transparent 46%);
-  animation: budr-mesh 22s ease-in-out infinite alternate;
+  /* Længere cyklus = færre kompositor-opdateringer pr. minut */
+  animation: budr-mesh 40s ease-in-out infinite alternate;
   pointer-events: none;
+}
+
+.budr-landing .hero-bg.hero-bg--paused::before {
+  animation-play-state: paused;
 }
 
 @keyframes budr-mesh {
@@ -383,7 +395,7 @@ html {
 }
 
 .budr-landing .portal-hero-mock--hero.fi.vis {
-  animation: budr-hero-mock-float 9s ease-in-out infinite;
+  animation: budr-hero-mock-float 14s ease-in-out infinite;
 }
 
 .budr-landing .portal-hero-mock--hero.fi.vis:hover {
@@ -1899,11 +1911,53 @@ html {
   }
 }
 
+/* Når Lys/portal-afsnittet er ude af synsfeltet: stop loop-animationer (spar CPU) */
+.budr-landing .lys-section.lys-section--anims-paused.fi.vis .lys-sync-dot,
+.budr-landing .lys-section.lys-section--anims-paused.fi.vis .lys-sync-source .chat-notif,
+.budr-landing .lys-section.lys-section--anims-paused .lys-flow-connector::after,
+.budr-landing .lys-section.lys-section--anims-paused.fi.vis .lys-flow-node.n1 .lys-flow-ring,
+.budr-landing .lys-section.lys-section--anims-paused.fi.vis .lys-flow-node.n2 .lys-flow-ring,
+.budr-landing .lys-section.lys-section--anims-paused.fi.vis .lys-flow-node.n3 .lys-flow-ring,
+.budr-landing .lys-section.lys-section--anims-paused.fi.vis .lys-portal-highlight,
+.budr-landing .lys-section.lys-section--anims-paused.fi.vis .lys-alert-pulse {
+  animation-play-state: paused !important;
+}
+
 /* Live demo strip — interaktiv Lys ↔ portal */
 .budr-landing .live-demo-strip {
   padding: 88px 52px 96px;
   background: var(--ink);
   border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.budr-landing .live-demo-skeleton {
+  min-height: 420px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.02) 0%,
+    rgba(255, 255, 255, 0.06) 40%,
+    rgba(255, 255, 255, 0.02) 80%
+  );
+  background-size: 200% 100%;
+  animation: budr-demo-skel 1.4s ease-in-out infinite;
+}
+
+@keyframes budr-demo-skel {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .budr-landing .live-demo-skeleton {
+    animation: none;
+    background: rgba(255, 255, 255, 0.03);
+  }
 }
 
 .budr-landing .interactive-demo-wrap {
