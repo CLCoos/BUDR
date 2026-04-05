@@ -57,6 +57,41 @@ function fmt(iso: string) {
   return new Date(iso).toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
 }
 
+function PanelSectionHeader({
+  step,
+  title,
+  hint,
+  icon: Icon,
+  right,
+}: {
+  step: string;
+  title: string;
+  hint: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  right?: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-3 mb-3">
+      <span
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#0F1B2D] text-xs font-bold text-white"
+        aria-hidden
+      >
+        {step}
+      </span>
+      <div className="min-w-0 flex-1 pt-0.5">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Icon size={16} className="text-[#0F6E56] shrink-0" aria-hidden />
+            <h3 className="text-sm font-semibold text-gray-900 leading-tight">{title}</h3>
+          </div>
+          {right}
+        </div>
+        <p className="text-[11px] text-gray-500 mt-1 leading-snug">{hint}</p>
+      </div>
+    </div>
+  );
+}
+
 // ── Component ──────────────────────────────────────────────────────────────────
 
 type Props = { open: boolean; onClose: () => void };
@@ -289,19 +324,21 @@ export default function OverrapportPanel({ open, onClose }: Props) {
         className={`fixed top-0 right-0 h-full z-50 flex flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
-        style={{ width: 480 }}
+        style={{ width: 520 }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0 bg-gradient-to-r from-gray-50/90 to-white">
           <div>
-            <h2 className="font-bold text-gray-900">Overrapport</h2>
-            <p className="text-xs text-gray-500">
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900">Overrapport</h2>
+            <p className="text-xs text-gray-500 mt-0.5 leading-snug">
+              Hurtigt overblik over dagvagten — tal, journal og stemning
+            </p>
+            <p className="text-[11px] text-gray-400 mt-1">
               {new Date().toLocaleDateString('da-DK', {
                 weekday: 'long',
                 day: 'numeric',
                 month: 'long',
               })}
-              {' · Dagvagt'}
             </p>
           </div>
           <button
@@ -329,15 +366,15 @@ export default function OverrapportPanel({ open, onClose }: Props) {
               <p className="text-sm">Henter vagtoverblik…</p>
             </div>
           ) : (
-            <div className="px-6 py-5 space-y-6">
+            <div className="px-6 py-5 space-y-8">
               {/* ── Sektion A: Vagtoverblik ──────────────────── */}
-              <section>
-                <div className="flex items-center gap-2 mb-3">
-                  <Users size={14} className="text-gray-400" />
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Vagtoverblik
-                  </h3>
-                </div>
+              <section className="rounded-2xl border border-gray-100 bg-white px-4 py-4 shadow-sm">
+                <PanelSectionHeader
+                  step="1"
+                  title="Vagtoverblik"
+                  hint="Tre tal der viser kapacitet og pres lige nu"
+                  icon={Users}
+                />
                 <div className="grid grid-cols-3 gap-3">
                   {[
                     {
@@ -379,14 +416,16 @@ export default function OverrapportPanel({ open, onClose }: Props) {
               </section>
 
               {/* ── Sektion B: Journalnotater ────────────────── */}
-              <section>
-                <div className="flex items-center gap-2 mb-3">
-                  <BookOpen size={14} className="text-gray-400" />
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Journalnotater i dag
-                  </h3>
-                  <span className="ml-auto text-xs text-gray-400">{journals.length} noter</span>
-                </div>
+              <section className="rounded-2xl border border-gray-100 bg-white px-4 py-4 shadow-sm">
+                <PanelSectionHeader
+                  step="2"
+                  title="Journal i dag"
+                  hint="Godkendte notater — grupperet pr. beboer"
+                  icon={BookOpen}
+                  right={
+                    <span className="text-xs text-gray-400 tabular-nums">{journals.length}</span>
+                  }
+                />
                 {journals.length === 0 ? (
                   <p className="text-sm text-gray-400 text-center py-4">
                     Ingen journalnotater i dag
@@ -426,13 +465,13 @@ export default function OverrapportPanel({ open, onClose }: Props) {
               </section>
 
               {/* ── Sektion C: Stemningsoverblik ─────────────── */}
-              <section>
-                <div className="flex items-center gap-2 mb-3">
-                  <Activity size={14} className="text-gray-400" />
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Stemningsoverblik
-                  </h3>
-                </div>
+              <section className="rounded-2xl border border-gray-100 bg-white px-4 py-4 shadow-sm">
+                <PanelSectionHeader
+                  step="3"
+                  title="Stemning & trafiklys"
+                  hint="Gul/rød først — derefter grønne check-ins"
+                  icon={Activity}
+                />
                 {attentionCheckins.length === 0 ? (
                   <div className="rounded-xl bg-green-50 px-4 py-3 text-xs text-green-700 font-medium">
                     Alle beboere med check-in har grønt trafiklys ✓
@@ -493,14 +532,16 @@ export default function OverrapportPanel({ open, onClose }: Props) {
 
               {/* ── Sektion D: Åbne opgaver ───────────────────── */}
               {openTasks.length > 0 && (
-                <section>
-                  <div className="flex items-center gap-2 mb-3">
-                    <ClipboardList size={14} className="text-gray-400" />
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                      Åbne opgaver
-                    </h3>
-                    <span className="ml-auto text-xs text-gray-400">{openTasks.length}</span>
-                  </div>
+                <section className="rounded-2xl border border-gray-100 bg-white px-4 py-4 shadow-sm">
+                  <PanelSectionHeader
+                    step="4"
+                    title="Åbne opgaver"
+                    hint="Fra daglige planer — ikke afsluttet endnu"
+                    icon={ClipboardList}
+                    right={
+                      <span className="text-xs text-gray-400 tabular-nums">{openTasks.length}</span>
+                    }
+                  />
                   <div className="space-y-1.5">
                     {openTasks.map((t, i) => (
                       <div

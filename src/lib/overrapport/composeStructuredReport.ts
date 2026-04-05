@@ -62,10 +62,23 @@ export function composeStructuredOverrapport(
     return [
       `Vagtskifterapport — ${ctx.dateStr}, kl. ${ctx.timeStr}`,
       '',
-      'Der er ingen beboerdata at bygge rapport på i øjeblikket.',
+      '1. Kort overblik',
       '',
-      'Opmærksomhedspunkter til næste vagt:',
+      'Der er ingen beboerdata at bygge rapport på lige nu — rapporten kan ikke fylde fagligt indhold ud endnu.',
+      '',
+      '2. Borgere med særlig fokus',
+      '',
+      'Ingen — ingen data.',
+      '',
+      '3. Øvrige borgere',
+      '',
+      'Ingen — ingen data.',
+      '',
+      '4. Til næste vagt',
+      '',
       '· Bekræft at borgerlister og dagens check-ins er synkroniseret i systemet.',
+      '',
+      '— Udkast genereret automatisk ud fra strukturerede data (uden AI). Teksten kan frit redigeres før den deles.',
     ].join('\n');
   }
 
@@ -77,20 +90,24 @@ export function composeStructuredOverrapport(
   const lines: string[] = [];
   lines.push(`Vagtskifterapport — ${ctx.dateStr}, kl. ${ctx.timeStr}`);
   lines.push('');
-  lines.push('1. Generelt overblik');
+  lines.push('1. Kort overblik');
   lines.push('');
   lines.push(
-    `Dagen samlet: ${withCheckin} af ${residents.length} borgere har check-in registreret i dag. ` +
-      (noCheckin.length > 0
-        ? `${noCheckin.length} borger${noCheckin.length > 1 ? 'e' : ''} mangler endnu check-in — følg op i løbet af vagten eller ved skift. `
-        : '') +
-      (attention.length > 0
-        ? `Der er ${attention.length} borger${attention.length > 1 ? 'e' : ''}, som bør have ekstra opmærksomhed i den kommende vagt.`
-        : 'Ingen registrerede røde eller gule trafiklys kombineret med åbne beskeder giver anledning til akut eskalering ud over sædvanlig tilsyn.')
+    [
+      `Check-in: ${withCheckin}/${residents.length} borgere.`,
+      noCheckin.length > 0
+        ? `${noCheckin.length} mangler stadig check-in — følg op i vagten eller ved skift.`
+        : null,
+      attention.length > 0
+        ? `${attention.length} bør have ekstra fokus i næste vagt (trafiklys, humør eller åbne beskeder).`
+        : 'Ingen røde/gule trafiklys eller åbne beskeder peger ud over sædvanligt tilsyn.',
+    ]
+      .filter(Boolean)
+      .join(' ')
   );
 
   lines.push('');
-  lines.push('2. Borgere der kræver særlig opmærksomhed');
+  lines.push('2. Borgere med særlig fokus');
   lines.push('');
   if (attention.length === 0) {
     lines.push('Ingen ud over det sædvanlige tilsyn ifølge dagens registreringer.');
@@ -104,7 +121,7 @@ export function composeStructuredOverrapport(
   lines.push('3. Øvrige borgere');
   lines.push('');
   if (rest.length === 0) {
-    lines.push('Alle borgere er nævnt under særlig opmærksomhed.');
+    lines.push('Alle borgere er nævnt under særlig fokus.');
   } else {
     for (const r of rest) {
       lines.push(`· ${shortResidentLine(r)}`);
@@ -112,7 +129,7 @@ export function composeStructuredOverrapport(
   }
 
   lines.push('');
-  lines.push('4. Opmærksomhedspunkter til næste vagt');
+  lines.push('4. Til næste vagt');
   lines.push('');
   const bullets: string[] = [];
   if (noCheckin.length > 0) {
