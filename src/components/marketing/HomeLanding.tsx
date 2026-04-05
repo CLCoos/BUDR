@@ -42,6 +42,7 @@ const BOOK_MAIL = 'mailto:hej@budrcare.dk?subject=Demo%20af%20BUDR%20Care' as co
 export default function HomeLanding({ className = '' }: HomeLandingProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [navOpen, setNavOpen] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const closeNav = useCallback(() => setNavOpen(false), []);
 
   /** Mål fast header så mobil-drawer får korrekt top / højde (viewport, ikke klippet bar) */
@@ -71,10 +72,25 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
           if (e.isIntersecting) e.target.classList.add('vis');
         });
       },
-      { threshold: 0.08 }
+      { threshold: 0.06, rootMargin: '0px 0px -6% 0px' }
     );
     els.forEach((el) => obs.observe(el));
     return () => obs.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const el = document.documentElement;
+      const doc = el.scrollHeight - el.clientHeight;
+      setScrollProgress(doc > 0 ? Math.min(1, Math.max(0, el.scrollTop / doc)) : 0);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
   }, []);
 
   useEffect(() => {
@@ -195,7 +211,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               </p>
             </div>
             <div className="intro-grid">
-              <div className="intro-card">
+              <div className="intro-card fi fi-d1">
                 <div className="intro-card-ic" aria-hidden>
                   <IconSyncSend size={22} className="landing-icon" />
                 </div>
@@ -210,7 +226,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                   Se Lys og portal →
                 </a>
               </div>
-              <div className="intro-card">
+              <div className="intro-card fi fi-d2">
                 <div className="intro-card-ic" aria-hidden>
                   <IconPhoneCheckin size={22} className="landing-icon" />
                 </div>
@@ -224,7 +240,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                   Åbn Lys →
                 </Link>
               </div>
-              <div className="intro-card">
+              <div className="intro-card fi fi-d3">
                 <div className="intro-card-ic" aria-hidden>
                   <IconMonitorPortal size={22} className="landing-icon" />
                 </div>
@@ -246,7 +262,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
         <section className="hero hero--after-intro">
           <div className="hero-bg" aria-hidden />
           <div className="hero-inner shell">
-            <div>
+            <div className="hero-copy fi">
               <h1>
                 Tryghed, borgeren kan mærke. <em>Overblik, personalet kan handle på.</em>
               </h1>
@@ -281,7 +297,10 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               </div>
             </div>
 
-            <div className="portal-hero-mock" aria-label="Illustration: dagsoverblik i Care Portal">
+            <div
+              className="portal-hero-mock portal-hero-mock--hero fi fi-d1"
+              aria-label="Illustration: dagsoverblik i Care Portal"
+            >
               <div className="pmh-top">
                 <span className="pmh-title">Care Portal · Dagsoverblik</span>
                 <span className="pmh-date">I dag · 08:12</span>
@@ -342,6 +361,15 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               </div>
             </div>
           </div>
+          <a
+            href="#hurtig-oversigt"
+            className="hero-scroll-cue"
+            aria-label="Fortsæt til næste afsnit"
+          >
+            <span className="hero-scroll-cue-mouse" aria-hidden>
+              <span className="hero-scroll-cue-wheel" />
+            </span>
+          </a>
         </section>
 
         <section
