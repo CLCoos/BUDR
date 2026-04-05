@@ -85,6 +85,30 @@ NEXT_PUBLIC_SITE_URL=
 # AI keys as needed for features that call LLMs
 ```
 
+### Netlify (production)
+
+In **Site configuration → Environment variables**, set at least the following for **Production** (and **Preview** if previews should talk to the real Supabase project):
+
+| Variable | Notes |
+|----------|--------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Must match production project, e.g. `https://olszwyeikwbtjcoopfid.supabase.co`. |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Anon key from the same Supabase project (Settings → API). |
+| `SUPABASE_SERVICE_ROLE_KEY` | **Service role** secret (same screen). **Server-only** — never prefix with `NEXT_PUBLIC_`. Required so cookie-based residents (`budr_resident_id`) can use **`/api/park/garden-plot`**, **`/api/park/daily-checkin`**, **`/api/park/resident-me`**, **`/api/park/lys-plan-proposal`**, **`/api/park/message-staff`**, park-hub SSR, proposal approve/reject, and staff audit paths. If this is missing, the app falls back to the anon key and those routes often fail with RLS or empty writes. |
+| `NEXT_PUBLIC_SITE_URL` | Public site origin (canonical URLs, links). |
+
+There are **no extra env vars** specific to Haven beyond the Supabase trio above.
+
+After changing variables, trigger a **new deploy** so Next.js picks them up.
+
+### Post-deploy smoke (Min have / Lys)
+
+1. **Lys (live):** Open `/park-hub` as a resident with `budr_resident_id` set (PIN flow or demo). In **Min have**, add a plant, water it, remove it. In DevTools → **Network**, confirm **`/api/park/garden-plot`** returns **200** (GET/POST/PATCH/DELETE) and response JSON is not an RLS error string.
+2. **360° Haven (live):** Staff login → `/resident-360-view/[residentId]` → **Haven** tab; same plant/water/remove if the resident uses cloud haven for that id.
+3. **Demo:** `/care-portal-demo/residents/[demoId]?tab=haven` — UI is simulated; optional check that navigation and copy match expectations.
+
+**Local quick API check** (dev server on port 4028, valid `.env.local`):  
+`curl -H "Cookie: budr_resident_id=<id>" http://127.0.0.1:4028/api/park/garden-plot` → `{"data":[...]}`. Then POST/PATCH/DELETE with JSON as in `src/app/api/park/garden-plot/route.ts`.
+
 ---
 
 ## Quality gates
