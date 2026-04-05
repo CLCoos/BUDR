@@ -88,6 +88,11 @@ export default function ResidentsDemoGrid() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'alle' | TrafficUi | 'ingen'>('alle');
 
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q != null) setSearch(q);
+  }, [searchParams]);
+
   const focusProfile = focusResident ? careDemoProfileById(focusResident) : undefined;
   const tabTitle = TAB_LABEL[focusTab] ?? focusTab;
   const tabBlurb = TAB_BLURB[focusTab] ?? TAB_BLURB.overview;

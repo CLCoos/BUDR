@@ -52,6 +52,7 @@ export default async function ParkHubPage() {
             initials="AM"
             residentId={DEMO_RESIDENT_ID}
             facilityId={null}
+            isDemoMode
           />
         </div>
       </>

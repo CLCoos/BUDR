@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { parseBudrFollowUpsBlock } from '@/lib/portalStaffAssistantFollowUps';
 
 function getServiceClient() {
   return createClient(
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
   // Fetch resident context
   const { data: residents } = await service
     .from('care_residents')
-    .select('display_name, onboarding_data')
+    .select('user_id, display_name, onboarding_data')
     .order('display_name');
 
   // Fetch recent journal entries for context (last 7 days, capped at 15)
@@ -56,7 +57,8 @@ export async function POST(req: NextRequest) {
   // Build resident list
   const residentLines = (residents ?? []).map((r) => {
     const od = r.onboarding_data as Record<string, string> | null;
-    const parts = [`• ${r.display_name as string}`];
+    const uid = r.user_id as string;
+    const parts = [`• ${r.display_name as string} (beboer-id: ${uid})`];
     if (od?.move_in_date) parts.push(`indflyttet ${od.move_in_date}`);
     if (od?.primary_contact) {
       const rel = od.primary_contact_relation ? ` (${od.primary_contact_relation})` : '';
@@ -114,7 +116,26 @@ BEBOERE PÅ DETTE BOSTED:
 ${residentContext}
 ${journalContext}
 
-VIGTIG GRÆNSE: Du erstatter ikke supervision, lægefaglig vurdering eller akut hjælp (112). Hvis noget er akut eller alvorligt, sig det klart og opfordr til at kontakte leder eller politi/ambulance.`;
+VIGTIG GRÆNSE: Du erstatter ikke supervision, lægefaglig vurdering eller akut hjælp (112). Hvis noget er akut eller alvorligt, sig det klart og opfordr til at kontakte leder eller politi/ambulance.
+
+GENVEJE I BUDR (påkrævet i hvert svar):
+Brugeren skal altid kunne gå videre til konkrete steder i BUDR-portalen. Når du nævner dokumenter, aftaler, handleplaner, husets retningslinjer, pædagogiske planer, importfiler eller lignende, skal du inkludere mindst én relevant genvej.
+
+Efter dit almindelige svar til kollegaen skal du — uden at forklare dette i brødteksten — tilføje PRÆCIST ét ekstra afsnit bestående af følgende XML-blok (ingen markdown omkring, ingen ekstra tekst efter blokken):
+
+<budr_followups>[{"key":"indsatsdok","reason":"kort dansk grund"}]</budr_followups>
+
+Regler for JSON inde i blokken:
+- Et array med 1–4 objekter. Hvert objekt skal mindst have "key" (string) og "reason" (kort streng på dansk, max ca. 12 ord).
+- Valgfrie felter (brug kun når det giver klar mening):
+  - "searchQuery": kort søgetekst der forudfylder dokumentsøgning i topbaren via URL (?q=), fx medicinnavn eller dokumenttitel.
+  - "resident360Id": præcis UUID fra listen "BEBOERE" ovenfor (beboer-id), kun sammen med key "beboere" eller "journal" når svaret handler om én konkret beboer.
+  - "residentTab": ved dybt link til 360°: brug én af overblik, medicin, dagsplan, plan, haven (små bogstaver som vist).
+- Tilladte key-værdier: indsatsdok, dataimport, beboere, journal, handover, tilsyn, settings.
+- Vælg kun keys der matcher det du skrev: fx aftaler og husets dokumenter → indsatsdok og/eller dataimport; beboerspecifikke aftaler → beboere; journalnotater → journal; vagtskifte → handover; tilsyn → tilsyn; organisatorisk → settings.
+- Hvis intet passer, brug tom array: <budr_followups>[]</budr_followups>
+
+Brødteksten før blokken må ikke nævne XML, JSON eller "budr_followups".`;
 
   // Call Anthropic API directly (same pattern as lys-chat which works on Netlify)
   const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -126,7 +147,7 @@ VIGTIG GRÆNSE: Du erstatter ikke supervision, lægefaglig vurdering eller akut 
     },
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 700,
+      max_tokens: 900,
       system,
       messages,
     }),
@@ -146,5 +167,10 @@ VIGTIG GRÆNSE: Du erstatter ikke supervision, lægefaglig vurdering eller akut 
     return NextResponse.json({ error: 'Tomt svar fra AI' }, { status: 502 });
   }
 
-  return NextResponse.json({ text });
+  const { text: cleanText, followUps } = parseBudrFollowUpsBlock(text);
+
+  return NextResponse.json({
+    text: cleanText || text.replace(/<budr_followups>[\s\S]*?<\/budr_followups>/gi, '').trim(),
+    followUps,
+  });
 }

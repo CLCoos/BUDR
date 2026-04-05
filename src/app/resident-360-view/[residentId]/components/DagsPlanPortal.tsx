@@ -75,17 +75,6 @@ function formatTimestamp(iso: string): string {
   });
 }
 
-async function getStaffId(): Promise<string | null> {
-  try {
-    const supabase = createClient();
-    if (!supabase) return null;
-    const { data } = await supabase.auth.getUser();
-    return data.user?.id ?? null;
-  } catch {
-    return null;
-  }
-}
-
 // ── Compact plan timeline (read-only) ─────────────────────────────────────────
 
 function PlanTimeline({ items, compact = false }: { items: PlanItem[]; compact?: boolean }) {
@@ -231,11 +220,11 @@ export default function DagsPlanPortal({
     setErrors((prev) => ({ ...prev, [proposal.id]: '' }));
 
     try {
-      const staffId = await getStaffId();
       const res = await fetch('/api/portal/approve-proposal', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ proposalId: proposal.id, staffId }),
+        credentials: 'same-origin',
+        body: JSON.stringify({ proposalId: proposal.id }),
       });
 
       if (!res.ok) {
@@ -265,11 +254,11 @@ export default function DagsPlanPortal({
     setErrors((prev) => ({ ...prev, [proposalId]: '' }));
 
     try {
-      const staffId = await getStaffId();
       const res = await fetch('/api/portal/reject-proposal', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ proposalId, staffId }),
+        credentials: 'same-origin',
+        body: JSON.stringify({ proposalId }),
       });
 
       if (!res.ok) throw new Error();

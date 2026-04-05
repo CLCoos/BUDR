@@ -471,7 +471,13 @@ export default function ResidentDemoPage() {
 
       {/* Offset for banner */}
       <div className="pt-8">
-        <LysShell firstName="Anders" initials="AM" residentId={RESIDENT_ID} facilityId={null} />
+        <LysShell
+          firstName="Anders"
+          initials="AM"
+          residentId={RESIDENT_ID}
+          facilityId={null}
+          isDemoMode
+        />
       </div>
     </div>
   );

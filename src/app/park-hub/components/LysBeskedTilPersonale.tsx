@@ -95,6 +95,10 @@ export default function LysBeskedTilPersonale({
         aria-live="assertive"
       >
         <p className="text-sm font-bold mb-1">Send denne besked til personalet?</p>
+        <p className="text-xs mb-3 leading-relaxed" style={{ color: 'var(--lys-muted)' }}>
+          Den vises i deres portal, så de kan reagere i løbet af vagten — som når du rækker hånden
+          op.
+        </p>
         <p
           className="text-sm rounded-xl px-3 py-2.5 mb-4 leading-relaxed"
           style={{ backgroundColor: inputBg, border: `1px solid ${borderCol}` }}

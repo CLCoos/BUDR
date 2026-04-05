@@ -6,6 +6,12 @@ const DEMO_RESIDENT_ID = 'demo-resident-001';
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
+/** I production: ingen auto-demo-cookie. Sæt til `true` på staging/preview hvis I bevidst vil beholde demo-fallback. */
+function allowParkDemoCookie(): boolean {
+  if (process.env.NODE_ENV !== 'production') return true;
+  return process.env.BUDR_ALLOW_PARK_DEMO_COOKIE === 'true';
+}
+
 // ── Route matchers ────────────────────────────────────────────
 
 function isCarePortalRoute(pathname: string): boolean {
@@ -77,7 +83,11 @@ export async function middleware(req: NextRequest) {
   if (isResidentRoute(pathname)) {
     const residentId = req.cookies.get(RESIDENT_COOKIE)?.value;
     if (!residentId) {
-      // No resident cookie — auto-set demo user so the app is always previewable
+      if (!allowParkDemoCookie()) {
+        const home = new URL('/', req.url);
+        home.searchParams.set('park', 'login');
+        return NextResponse.redirect(home);
+      }
       req.cookies.set(RESIDENT_COOKIE, DEMO_RESIDENT_ID);
       const response = NextResponse.next({ request: req });
       response.cookies.set(RESIDENT_COOKIE, DEMO_RESIDENT_ID, {

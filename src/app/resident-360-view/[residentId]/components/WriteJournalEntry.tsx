@@ -5,7 +5,15 @@ import { useRouter } from 'next/navigation';
 import { Plus, X, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
-const CATEGORIES = ['Observation', 'Hændelse', 'Samtale', 'Medicin', 'Stemning', 'Andet'];
+const CATEGORIES = [
+  'Observation',
+  'Hændelse',
+  'Samtale',
+  'Medicin',
+  'Helbred',
+  'Stemning',
+  'Andet',
+];
 
 interface Props {
   residentId: string;

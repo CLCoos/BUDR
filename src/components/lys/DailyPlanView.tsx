@@ -342,7 +342,10 @@ export default function DailyPlanView({ residentId, plan, pendingProposal }: Pro
             }}
           >
             <span className="text-base">⏳</span>
-            <p style={{ color: accent }}>Du har et forslag til behandling hos personalet</p>
+            <p style={{ color: accent }}>
+              Dit planforslag afventer personalet — de godkender det i deres portal, og så opdateres
+              din plan her
+            </p>
           </div>
         )}
 
@@ -359,10 +362,11 @@ export default function DailyPlanView({ residentId, plan, pendingProposal }: Pro
             <p className="text-6xl mb-5 leading-none select-none">🌿</p>
             <p className="text-xl font-black mb-3">Din dag er fri</p>
             <p
-              className="text-sm leading-relaxed max-w-[220px] mx-auto"
+              className="text-sm leading-relaxed max-w-[260px] mx-auto"
               style={{ color: tokens.textMuted }}
             >
-              Personalet arbejder på din plan — den dukker op her
+              Personalet sætter din plan — den dukker op her, når den er klar. Du kan også foreslå
+              en ændring nedenfor — så ser personalet den i deres portal.
             </p>
           </div>
         ) : (

@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Menu } from 'lucide-react';
+import Link from 'next/link';
+import { Menu, Sparkles } from 'lucide-react';
 import DemoPortalSidebar from '@/components/demo/DemoPortalSidebar';
 import DokumentSøgning from '@/components/DokumentSøgning';
 
@@ -43,6 +44,17 @@ export default function DemoPortalMobileNav({ children }: Props) {
         <div className="w-full min-w-0 sm:hidden" aria-label="Dokumentsøgning">
           <DokumentSøgning carePortalDark linkTarget="demo" />
         </div>
+        <Link
+          href="/resident-demo"
+          className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-white transition-opacity active:opacity-90"
+          style={{
+            background: 'linear-gradient(135deg, #8b84e8 0%, #5E56C0 55%, #4c3d91 100%)',
+            boxShadow: '0 4px 18px rgba(94, 86, 192, 0.35)',
+          }}
+        >
+          <Sparkles className="h-4 w-4 shrink-0 opacity-95" aria-hidden />
+          Åbn borger-app (Lys-demo)
+        </Link>
       </header>
 
       {mobileNavOpen && (

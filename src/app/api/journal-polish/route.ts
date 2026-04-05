@@ -1,13 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 const SYSTEM = `Du er en professionel pædagog på et socialpsykiatrisk bosted. Din opgave er at omskrive følgende rånotat til en professionel, klar og empatisk journalnotat. Bevar alle faktuelle oplysninger. Fjern talesprog og gentagelser. Brug fagligt dansk. Max 150 ord.`;
 
 /**
  * POST /api/journal-polish
  * Body: { text: string }
- * Requires ANTHROPIC_API_KEY on the server.
+ * Kræver indlogget portal-bruger + ANTHROPIC_API_KEY.
  */
 export async function POST(req: NextRequest) {
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) {
     return NextResponse.json(

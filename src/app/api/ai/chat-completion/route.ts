@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { completion } from '@rocketnew/llm-sdk';
 import { createClient } from '@supabase/supabase-js';
 import { ANTHROPIC_CHAT_MODEL } from '@/lib/ai/anthropicModel';
+import { checkApiRateLimit, getClientIp } from '@/lib/apiRateLimit';
 
 const API_KEYS: Record<string, string | undefined> = {
   OPEN_AI: process.env.OPENAI_API_KEY,
@@ -11,6 +12,8 @@ const API_KEYS: Record<string, string | undefined> = {
 };
 
 const DAILY_AI_LIMIT = Number(process.env.AI_DAILY_LIMIT ?? 20);
+const AI_COMPLETION_RL_LIMIT = Number(process.env.API_RL_AI_COMPLETION_PER_MIN ?? 48);
+const AI_COMPLETION_RL_WINDOW_MS = 60_000;
 
 async function consumeDailyAiCall(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -132,6 +135,23 @@ function formatErrorResponse(error: unknown, provider?: string) {
 }
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request);
+  const ipRl = checkApiRateLimit(
+    'ai-chat-completion',
+    ip,
+    AI_COMPLETION_RL_LIMIT,
+    AI_COMPLETION_RL_WINDOW_MS
+  );
+  if (!ipRl.ok) {
+    return NextResponse.json(
+      { error: 'too_many_requests', details: 'Rate limit exceeded' },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(ipRl.retryAfterSec) },
+      }
+    );
+  }
+
   let body: Record<string, unknown> = {};
 
   try {

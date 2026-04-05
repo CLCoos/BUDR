@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Plus, X, Droplets, ChevronLeft } from 'lucide-react';
+import { Plus, X, Droplets, ChevronLeft, Sparkles } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { useResidentSession } from '@/hooks/useResidentSession';
@@ -13,6 +13,9 @@ import {
 } from '@/lib/havenWaterCredits';
 import { HavenGardenScene } from '@/components/haven/HavenGardenScene';
 import { HavenPlantSvg } from '@/components/haven/HavenPlantSvg';
+import { HavenShareMoment } from '@/components/haven/HavenShareMoment';
+import { HavenStyleStudio } from '@/components/haven/HavenStyleStudio';
+import { HavenTopHud } from '@/components/haven/HavenTopHud';
 import {
   getHavenAmbientPeriod,
   HAVEN_PLANT_ACCENTS,
@@ -22,6 +25,26 @@ import {
 } from '@/components/haven/havenConstants';
 import type { HavenAmbientPeriod } from '@/components/haven/havenConstants';
 import type { HavenPlantType } from '@/components/haven/havenConstants';
+import {
+  HAVEN_DEFAULT_CUSTOMIZATION,
+  havenFrameClass,
+  loadHavenCustomization,
+  resolveHavenSkyGradient,
+  type HavenCustomization,
+} from '@/lib/havenCustomization';
+import {
+  computeHavenQuests,
+  gardenerTitleForLevel,
+  markWateredToday,
+  readHavenStreak,
+  registerHavenWaterStreak,
+  xpToNextLevel,
+} from '@/lib/havenGamification';
+import {
+  syncBadgesAfterGardenPlots,
+  syncBadgesAfterHavenWaterStreak,
+} from '@/lib/residentBadgeSync';
+import type { XpData } from '@/types/local';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -79,6 +102,15 @@ function HavenView() {
   const [saving, setSaving] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
 
+  const [havenStyle, setHavenStyle] = useState<HavenCustomization>(() => ({
+    ...HAVEN_DEFAULT_CUSTOMIZATION,
+  }));
+  const [styleOpen, setStyleOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [xpData, setXpData] = useState<XpData>({ total_xp: 0, level: 1 });
+  const [streakDays, setStreakDays] = useState(0);
+  const [shareNickname, setShareNickname] = useState('Jeg');
+
   // Resolve activeId: URL param wins (passed from LysHome), then session.
   // Treat empty-string param (?r=) the same as no param — it means guest mode.
   const rawParam = searchParams.get('r');
@@ -122,6 +154,27 @@ function HavenView() {
   useEffect(() => {
     if (activeId) void load();
   }, [activeId, load]);
+
+  useEffect(() => {
+    if (!activeId) return;
+    setHavenStyle(loadHavenCustomization(activeId));
+    setStreakDays(readHavenStreak(activeId).days);
+  }, [activeId]);
+
+  const refreshProgress = useCallback(async () => {
+    if (!activeId) return;
+    const [xp, profile] = await Promise.all([
+      dataService.getXp(mode, activeId),
+      dataService.getProfile(mode, activeId),
+    ]);
+    setXpData(xp);
+    const nick = profile.nickname?.trim();
+    setShareNickname(nick && nick.length > 0 ? nick : 'Jeg');
+  }, [activeId, mode]);
+
+  useEffect(() => {
+    void refreshProgress();
+  }, [activeId, load, refreshProgress]);
 
   const refreshWaterCredits = useCallback(() => {
     if (!activeId) {
@@ -168,6 +221,26 @@ function HavenView() {
       await dataService.addXp(mode, activeId, 'haven_water', 10);
       consumeWaterCredit(activeId);
       refreshWaterCredits();
+
+      markWateredToday(activeId);
+      const st = registerHavenWaterStreak(activeId);
+      setStreakDays(st.days);
+      void syncBadgesAfterHavenWaterStreak(mode, activeId, st.days);
+      void refreshProgress();
+
+      if (newStage === 4) {
+        try {
+          const badges = await dataService.getBadges(mode, activeId);
+          if (!badges.some((b) => b.badge_key === 'haven_full_bloom')) {
+            await dataService.earnBadge(mode, activeId, 'haven_full_bloom');
+            toast.success('🏆 Badge: Fuld blomst!', {
+              description: 'Del dit øjeblik — du har groet noget helt ud.',
+            });
+          }
+        } catch {
+          /* badge-tabeller kan mangle i ældre miljøer */
+        }
+      }
 
       setWaterPulseSlot(selected.slot_index);
       window.setTimeout(() => setWaterPulseSlot(null), 1000);
@@ -216,6 +289,12 @@ function HavenView() {
     setNewGoal('');
     setAddError(null);
     await load();
+    try {
+      const rows = await dataService.getGardenPlots(mode, activeId);
+      void syncBadgesAfterGardenPlots(mode, activeId, rows.length);
+    } catch {
+      /* ignore */
+    }
   };
 
   const handleDeletePlot = async (id: string) => {
@@ -244,6 +323,13 @@ function HavenView() {
     plant_name: p.plant_name,
     growth_stage: p.growth_stage,
   }));
+
+  const skyForScene = resolveHavenSkyGradient(havenStyle.skyMood, ambient);
+  const frameClass = havenStyle.frame === 'none' ? '' : havenFrameClass(havenStyle.frame);
+  const quests = computeHavenQuests(activeId ?? '', plots);
+  const xpBar = xpToNextLevel(xpData.total_xp);
+  const gardener = gardenerTitleForLevel(xpBar.level);
+  const matureCount = plots.filter((p) => p.growth_stage >= 4).length;
 
   const accent = selected ? HAVEN_PLANT_ACCENTS[selected.plant_type] : '#10B981';
   const nextThreshold = selected
@@ -275,8 +361,31 @@ function HavenView() {
           <h1 className="text-xl font-black tracking-tight text-white drop-shadow">Min Have 🌿</h1>
           <p className="text-xs text-white/70 capitalize">{ambient.label}</p>
         </div>
-        <div className="w-16" />
+        <div className="w-16 flex justify-end">
+          <span
+            className="rounded-full bg-white/10 p-2 text-amber-200/90"
+            title="Din have — dit udtryk"
+          >
+            <Sparkles className="h-4 w-4" aria-hidden />
+          </span>
+        </div>
       </div>
+
+      {activeId && (
+        <HavenTopHud
+          gardenerTitle={gardener.title}
+          gardenerSub={gardener.sub}
+          level={xpBar.level}
+          xpPct={xpBar.pct}
+          totalXp={xpData.total_xp}
+          nextXp={xpBar.next}
+          streakDays={streakDays}
+          waterCredits={waterCredits}
+          quests={quests}
+          onStyle={() => setStyleOpen(true)}
+          onShare={() => setShareOpen(true)}
+        />
+      )}
 
       {/* Garden scene — altid rig atmosfære; animationer respekterer prefers-reduced-motion */}
       <div className="relative flex-1 px-3 pb-2" style={{ minHeight: '52vh' }}>
@@ -287,6 +396,9 @@ function HavenView() {
           showcase
           reducedMotion={reducedMotion}
           pulseSlotIndex={waterPulseSlot}
+          skyBackgroundOverride={skyForScene}
+          decorativeFrameClass={frameClass}
+          showButterflies={havenStyle.butterflies}
           onSlotClick={(slot, plot) => {
             if (plot) {
               const full = plots.find((p) => p.id === plot.id) ?? null;
@@ -434,6 +546,30 @@ function HavenView() {
             </div>
           </div>
         </div>
+      )}
+
+      {activeId && (
+        <>
+          <HavenStyleStudio
+            open={styleOpen}
+            onClose={() => setStyleOpen(false)}
+            residentId={activeId}
+            value={havenStyle}
+            onApply={setHavenStyle}
+          />
+          <HavenShareMoment
+            open={shareOpen}
+            onClose={() => setShareOpen(false)}
+            displayName={shareNickname}
+            vibeLine={havenStyle.vibeLine}
+            plantCount={plots.length}
+            maturePlants={matureCount}
+            streakDays={streakDays}
+            gardenerTitle={gardener.title}
+            level={xpBar.level}
+            totalXp={xpData.total_xp}
+          />
+        </>
       )}
     </div>
   );

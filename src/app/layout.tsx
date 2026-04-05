@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Metadata, Viewport } from 'next';
+import AnalyticsGate from '@/components/AnalyticsGate';
 import SonnerToaster from '@/components/SonnerToaster';
 import './globals.css';
 
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="da">
       <body>
+        <AnalyticsGate />
         {children}
         <SonnerToaster />
       </body>

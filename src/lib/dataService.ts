@@ -4,6 +4,7 @@
 import { createClient } from '@/lib/supabase/client';
 import * as ls from '@/lib/localStore';
 import { LOCAL_KEYS } from '@/types/local';
+import { isResidentUuidForCloud } from '@/lib/residentUuid';
 import type {
   StorageMode,
   CheckIn,
@@ -88,19 +89,59 @@ export async function getCheckins(mode: StorageMode, activeId: string): Promise<
 
 // ── Journal ───────────────────────────────────────────────────────────────────
 
+/** Lys-journal i Supabase (cookie-beboer med rigtig uuid) — ellers localStorage. */
+export function shouldUseCloudJournal(mode: StorageMode, activeId: string): boolean {
+  return mode === 'supabase' && isResidentUuidForCloud(activeId);
+}
+
 export async function saveJournalEntry(
   mode: StorageMode,
-  _activeId: string,
+  activeId: string,
   entry: Omit<JournalEntry, 'id'>
-): Promise<void> {
-  // Journal is always localStorage-first (existing behavior)
+): Promise<{ lysEntryCount?: number }> {
+  if (shouldUseCloudJournal(mode, activeId)) {
+    const res = await fetch('/api/park/resident-journal', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: entry.text,
+        mode: entry.mode,
+        mood: entry.mood,
+        feelings: entry.feelings,
+        privacy: entry.privacy ?? 'private',
+        prompt: entry.prompt ?? null,
+      }),
+    });
+    const data = (await res.json().catch(() => ({}))) as {
+      ok?: boolean;
+      lysEntryCount?: number;
+      error?: string;
+    };
+    if (!res.ok) {
+      throw new Error(data.error ?? 'Kunne ikke gemme journalen');
+    }
+    return { lysEntryCount: data.lysEntryCount };
+  }
+
   const entries = ls.getItem<JournalEntry[]>(LOCAL_KEYS.journal) ?? [];
   entries.unshift({ id: crypto.randomUUID(), ...entry });
   ls.setItem(LOCAL_KEYS.journal, entries.slice(0, 50));
-  void mode; // Supabase journal persistence not implemented yet
+  return {};
 }
 
-export async function getJournalEntries(): Promise<JournalEntry[]> {
+export async function getJournalEntries(
+  mode: StorageMode = 'local',
+  activeId = ''
+): Promise<JournalEntry[]> {
+  if (shouldUseCloudJournal(mode, activeId)) {
+    const res = await fetch('/api/park/resident-journal', { credentials: 'include' });
+    if (!res.ok) {
+      return [];
+    }
+    const data = (await res.json().catch(() => ({}))) as { data?: JournalEntry[] };
+    return data.data ?? [];
+  }
   return ls.getItem<JournalEntry[]>(LOCAL_KEYS.journal) ?? [];
 }
 

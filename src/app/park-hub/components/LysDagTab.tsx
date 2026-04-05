@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useResident } from '../context/ResidentContext';
 import { useResidentSession } from '@/hooks/useResidentSession';
 import * as dataService from '@/lib/dataService';
+import { syncPlannerBadgeProgress } from '@/lib/residentBadgeSync';
 import { grantWaterCredit, revokeWaterCredit } from '@/lib/havenWaterCredits';
 import type { LysThemeTokens } from '../lib/lysTheme';
 
@@ -374,6 +375,7 @@ export default function LysDagTab({ tokens, accent }: Props) {
       notify_minutes_before: 10,
     });
     void loadItems();
+    void syncPlannerBadgeProgress(storageMode, residentId);
   };
 
   const allItems = items ?? [];

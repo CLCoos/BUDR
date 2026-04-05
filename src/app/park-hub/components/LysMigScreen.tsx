@@ -5,6 +5,11 @@ import { createClient } from '@/lib/supabase/client';
 import { useResident } from '../context/ResidentContext';
 import { useResidentSession } from '@/hooks/useResidentSession';
 import * as dataService from '@/lib/dataService';
+import {
+  RESIDENT_BADGE_DEFS,
+  normalizeBadgeKeyForDisplay,
+  type ResidentBadgeDef,
+} from '@/lib/residentBadges';
 import type { LysThemeTokens } from '../lib/lysTheme';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -15,80 +20,6 @@ const LEVEL_INFO = [
   { level: 3, name: 'Plante', emoji: '🌾', min: 250, max: 499 },
   { level: 4, name: 'Blomst', emoji: '🌸', min: 500, max: 999 },
   { level: 5, name: 'Træ', emoji: '🌳', min: 1000, max: 9999 },
-];
-
-// Match keys used in DemoSeeder
-const BADGE_DEFS: { key: string; name: string; desc: string; emoji: string; hint: string }[] = [
-  {
-    key: 'first_checkin',
-    name: 'Første tjek-ind',
-    desc: 'Registrerede stemning for første gang',
-    emoji: '🌅',
-    hint: 'Tjek ind én gang',
-  },
-  {
-    key: 'week_streak',
-    name: 'Ugens helt',
-    desc: '7 dage i træk med daglig tjek-ind',
-    emoji: '🔥',
-    hint: '7 dages streak',
-  },
-  {
-    key: 'journal_debut',
-    name: 'Forfatter',
-    desc: 'Skrev den første journalindgang',
-    emoji: '📝',
-    hint: 'Skriv én journal',
-  },
-  {
-    key: 'garden_first',
-    name: 'Grøn tommelfinger',
-    desc: 'Plantede det første mål i haven',
-    emoji: '🌱',
-    hint: 'Opret ét mål i haven',
-  },
-  {
-    key: 'krap_master',
-    name: 'Tankemester',
-    desc: 'Udfordrede en negativ tanke med KRAP',
-    emoji: '🧠',
-    hint: 'Brug tankefanger',
-  },
-  {
-    key: 'calm_week',
-    name: 'Ro i sindet',
-    desc: 'Gennemsnitlig energi over 6 i en hel uge',
-    emoji: '🌊',
-    hint: 'Høj energi hele ugen',
-  },
-  {
-    key: 'consistent_7',
-    name: 'Konsistent',
-    desc: '7 dage i træk med humørtjek',
-    emoji: '⚡',
-    hint: '7 dages streak',
-  },
-  {
-    key: 'first_chat',
-    name: 'Åben',
-    desc: 'Første samtale med Lys',
-    emoji: '💬',
-    hint: 'Tal med Lys',
-  },
-  {
-    key: 'planner_5',
-    name: 'Planlægger',
-    desc: '5 egne planpunkter oprettet',
-    emoji: '📅',
-    hint: 'Tilføj 5 aktiviteter',
-  },
-  {
-    key: 'brave',
-    name: 'Modig',
-    desc: 'Delt noget svært i journalen',
-    emoji: '💙',
-    hint: 'Del noget svært',
-  },
 ];
 
 const THEMES = [
@@ -148,7 +79,7 @@ export default function LysMigScreen({
   const [savingNick, setSavingNick] = useState(false);
   const [colorTheme, setColorTheme] = useState('purple');
   const [selectedMoodDay, setSelectedMoodDay] = useState<MoodPoint | null>(null);
-  const [selectedBadge, setSelectedBadge] = useState<(typeof BADGE_DEFS)[0] | null>(null);
+  const [selectedBadge, setSelectedBadge] = useState<ResidentBadgeDef | null>(null);
   const [selectedTrend, setSelectedTrend] = useState<string | null>(null);
   const [staffMsg, setStaffMsg] = useState('');
   const [sendState, setSendState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
@@ -164,6 +95,15 @@ export default function LysMigScreen({
         body: JSON.stringify({ message: staffMsg }),
       });
       if (res.ok) {
+        try {
+          const cur = await dataService.getBadges(mode, activeId);
+          if (!cur.some((b) => b.badge_key === 'staff_bridge')) {
+            await dataService.earnBadge(mode, activeId, 'staff_bridge');
+          }
+          void dataService.getBadges(mode, activeId).then((d) => setBadges(d as BadgeRow[]));
+        } catch {
+          /* ignore */
+        }
         setSendState('sent');
         setStaffMsg('');
         setTimeout(() => setSendState('idle'), 4000);
@@ -292,8 +232,9 @@ export default function LysMigScreen({
   const cardBg = isDarkish ? 'rgba(255,255,255,0.07)' : tokens.cardBg;
   const subtext = isDarkish ? 'rgba(255,255,255,0.45)' : tokens.textMuted;
 
-  const earnedBadges = BADGE_DEFS.filter((b) => badges.some((r) => r.badge_key === b.key));
-  const lockedBadges = BADGE_DEFS.filter((b) => !badges.some((r) => r.badge_key === b.key));
+  const earnedNormalizedKeys = new Set(badges.map((r) => normalizeBadgeKeyForDisplay(r.badge_key)));
+  const earnedBadges = RESIDENT_BADGE_DEFS.filter((b) => earnedNormalizedKeys.has(b.key));
+  const lockedBadges = RESIDENT_BADGE_DEFS.filter((b) => !earnedNormalizedKeys.has(b.key));
 
   // Energy level → visual height percentage (1-10 or 1-5 scale)
   function energyToPct(val: number | null): number {
@@ -614,7 +555,7 @@ export default function LysMigScreen({
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-bold">Badges</h2>
           <span className="text-xs font-semibold" style={{ color: accent }}>
-            {earnedBadges.length}/{BADGE_DEFS.length}
+            {earnedBadges.length}/{RESIDENT_BADGE_DEFS.length}
           </span>
         </div>
 
@@ -622,7 +563,11 @@ export default function LysMigScreen({
         {earnedBadges.length > 0 && (
           <div className="grid grid-cols-3 gap-2.5 mb-4">
             {earnedBadges.map((b) => {
-              const earnedRow = badges.find((r) => r.badge_key === b.key);
+              const earnedRow = badges
+                .filter((r) => normalizeBadgeKeyForDisplay(r.badge_key) === b.key)
+                .sort(
+                  (a, c) => new Date(a.earned_at).getTime() - new Date(c.earned_at).getTime()
+                )[0];
               const earnedDate = earnedRow
                 ? new Date(earnedRow.earned_at).toLocaleDateString('da-DK', {
                     day: 'numeric',
@@ -688,7 +633,7 @@ export default function LysMigScreen({
               Kommende
             </p>
             <div className="grid grid-cols-4 gap-2">
-              {lockedBadges.slice(0, 4).map((b) => (
+              {lockedBadges.slice(0, 8).map((b) => (
                 <button
                   key={b.key}
                   type="button"

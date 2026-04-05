@@ -123,10 +123,18 @@ function seedLocalStorage() {
 
   const badges = [
     { badge_key: 'first_checkin', earned_at: daysAgo(13) },
+    { badge_key: 'checkin_streak_3', earned_at: daysAgo(12) },
     { badge_key: 'week_streak', earned_at: daysAgo(7) },
     { badge_key: 'journal_debut', earned_at: daysAgo(10) },
+    { badge_key: 'journal_5', earned_at: daysAgo(5) },
     { badge_key: 'garden_first', earned_at: daysAgo(8) },
+    { badge_key: 'haven_water_streak_3', earned_at: daysAgo(3) },
     { badge_key: 'krap_master', earned_at: daysAgo(4) },
+    { badge_key: 'first_chat', earned_at: daysAgo(6) },
+    { badge_key: 'planner_first', earned_at: daysAgo(9) },
+    { badge_key: 'planner_5', earned_at: daysAgo(2) },
+    { badge_key: 'xp_100', earned_at: daysAgo(11) },
+    { badge_key: 'xp_250', earned_at: daysAgo(8) },
     { badge_key: 'calm_week', earned_at: daysAgo(1) },
   ];
   localStorage.setItem('budr_badges', JSON.stringify(badges));

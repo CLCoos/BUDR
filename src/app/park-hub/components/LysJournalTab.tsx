@@ -2,10 +2,12 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronDown, ChevronUp, Mic, MicOff, Pen } from 'lucide-react';
+import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { useResident } from '../context/ResidentContext';
 import { useResidentSession } from '@/hooks/useResidentSession';
 import * as dataService from '@/lib/dataService';
+import { syncBadgesAfterJournal } from '@/lib/residentBadgeSync';
 import { getLysPhase, phaseDaLabel } from '../lib/lysTheme';
 import type { LysThemeTokens } from '../lib/lysTheme';
 import { ANTHROPIC_CHAT_MODEL } from '@/lib/ai/anthropicModel';
@@ -116,6 +118,12 @@ export default function LysJournalTab({ tokens, accent }: Props) {
   const session = useResidentSession();
   const residentId = ctxResidentId || session.activeId;
   const storageMode = ctxResidentId ? ('supabase' as const) : session.storageMode;
+  const journalMode: 'local' | 'supabase' = dataService.shouldUseCloudJournal(
+    session.storageMode,
+    residentId
+  )
+    ? 'supabase'
+    : 'local';
 
   const [section, setSection] = useState<JournalSection>('dagbog');
   const [mode, setMode] = useState<Mode>('write');
@@ -160,12 +168,13 @@ export default function LysJournalTab({ tokens, accent }: Props) {
     };
   }, []);
 
-  // Load journal entries
+  // Load journal entries (Supabase for rigtige beboere, ellers localStorage)
   useEffect(() => {
-    dataService.getJournalEntries().then((e) => {
+    if (!residentId) return;
+    void dataService.getJournalEntries(journalMode, residentId).then((e) => {
       if (mountedRef.current) setEntries(e);
     });
-  }, []);
+  }, [journalMode, residentId]);
 
   // Load self-letters
   useEffect(() => {
@@ -355,20 +364,36 @@ export default function LysJournalTab({ tokens, accent }: Props) {
     setSaving(true);
     setLysMsg(null);
 
-    await dataService.saveJournalEntry(storageMode, residentId, {
-      date: new Date().toISOString(),
-      mode,
-      text: content,
-      mood,
-      feelings: feelings.length > 0 ? feelings : undefined,
-      privacy,
-      prompt: mode === 'write' ? getDailyPrompt(mood) : undefined,
-    });
+    let saveMeta: { lysEntryCount?: number };
+    try {
+      saveMeta = await dataService.saveJournalEntry(journalMode, residentId, {
+        date: new Date().toISOString(),
+        mode,
+        text: content,
+        mood,
+        feelings: feelings.length > 0 ? feelings : undefined,
+        privacy,
+        prompt: mode === 'write' ? getDailyPrompt(mood) : undefined,
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Prøv igen om lidt';
+      toast.error('Kunne ikke gemme journalen', { description: msg });
+      setSaving(false);
+      return;
+    }
 
-    const updated = await dataService.getJournalEntries();
+    const updated = await dataService.getJournalEntries(journalMode, residentId);
     if (mountedRef.current) setEntries(updated);
 
-    if (ctxResidentId) {
+    const entryCountForBadges = saveMeta.lysEntryCount ?? updated.length;
+    void syncBadgesAfterJournal(
+      session.storageMode,
+      residentId,
+      entryCountForBadges,
+      content.length
+    );
+
+    if (journalMode === 'supabase') {
       const supabase = createClient();
       void supabase?.rpc('award_xp', {
         p_resident_id: residentId,

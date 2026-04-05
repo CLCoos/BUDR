@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import AppLogo from '@/components/ui/AppLogo';
+import { trackEvent } from '@/lib/analytics';
 import { createClient } from '@/lib/supabase/client';
 
 function CarePortalLoginContent() {
@@ -51,6 +52,8 @@ function CarePortalLoginContent() {
       setError('Forkert email eller adgangskode');
       return;
     }
+
+    trackEvent('staff_portal_login_success');
 
     try {
       await fetch('/api/portal/staff-login-audit', {

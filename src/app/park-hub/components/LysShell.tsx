@@ -2,6 +2,9 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { useResidentSession } from '@/hooks/useResidentSession';
+import { trackEvent } from '@/lib/analytics';
+import { tryEarnFirstChatBadge } from '@/lib/residentBadgeSync';
 import { getLysPhase, lysTheme } from '../lib/lysTheme';
 import type { LysFlowOverlay } from '../lib/lysOverlay';
 import { useLysConversation } from '../hooks/useLysConversation';
@@ -19,12 +22,16 @@ import LysMaaltrappe from './LysMaaltrappe';
 import LysDagligSejr from './LysDagligSejr';
 import LysSansekasse from './LysSansekasse';
 import LysAACBoard from './LysAACBoard';
+import LysOnboarding from './LysOnboarding';
+import LysStatusChrome from './LysStatusChrome';
 
 type Props = {
   firstName: string;
   initials: string;
   residentId: string;
   facilityId: string | null;
+  /** Sandt i demo-tilstand — viser tydelig markering */
+  isDemoMode?: boolean;
 };
 
 export default function LysShell({
@@ -32,6 +39,7 @@ export default function LysShell({
   initials,
   residentId,
   facilityId: _facilityId,
+  isDemoMode = false,
 }: Props) {
   const [now, setNow] = useState(() => new Date());
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -46,10 +54,17 @@ export default function LysShell({
   const tokens = useMemo(() => lysTheme(phase), [phase]);
   const accent = tokens.accent;
 
+  const session = useResidentSession();
+
+  const onLysAssistantSuccess = useCallback(() => {
+    void tryEarnFirstChatBadge(session.storageMode, session.activeId);
+  }, [session.storageMode, session.activeId]);
+
   const { messages, loading, sendToLys, sendCounterThought } = useLysConversation({
     firstName,
     phase,
     moodLabel,
+    onAssistantSuccess: onLysAssistantSuccess,
   });
 
   const { speak } = useSpeech();
@@ -67,6 +82,18 @@ export default function LysShell({
     return () => mq.removeEventListener('change', fn);
   }, []);
 
+  useEffect(() => {
+    if (!residentId) return;
+    try {
+      const k = `budr_ga_lys_session:${residentId}`;
+      if (sessionStorage.getItem(k)) return;
+      sessionStorage.setItem(k, '1');
+      trackEvent('lys_park_session_start', { demo_mode: isDemoMode ? 1 : 0 });
+    } catch {
+      /* ignore */
+    }
+  }, [residentId, isDemoMode]);
+
   const speakSafe = useCallback((t: string) => speak(t, reducedMotion), [speak, reducedMotion]);
 
   const handleMoodComplete = async (payload: {
@@ -77,6 +104,8 @@ export default function LysShell({
     setMoodLabel(payload.label);
     setMoodTraffic(payload.traffic);
     setMoodRegisteredToday(true);
+
+    trackEvent('lys_mood_registered', { traffic: payload.traffic });
 
     toast.success(`📋 Sendt til portalen: Stemning registreret for ${firstName}`);
 
@@ -95,6 +124,7 @@ export default function LysShell({
         className="min-h-dvh font-sans transition-colors duration-300"
         style={{ backgroundColor: tokens.bg, color: tokens.text }}
       >
+        <LysStatusChrome tokens={tokens} isDemoMode={isDemoMode} />
         <div
           className="mx-auto max-w-lg transition-all duration-200"
           style={{ paddingBottom: 'calc(5rem + max(1rem, env(safe-area-inset-bottom, 0px)))' }}
@@ -205,6 +235,8 @@ export default function LysShell({
               reducedMotion={reducedMotion}
               speak={speakSafe}
               sendCounterThought={sendCounterThought}
+              storageMode={session.storageMode}
+              activeId={session.activeId}
               onBack={() => setOverlay(null)}
             />
           </div>
@@ -267,6 +299,15 @@ export default function LysShell({
           onChange={setTab}
           showDagReminderDot={!moodRegisteredToday}
           hidden={!!overlay}
+        />
+
+        <LysOnboarding
+          residentId={residentId}
+          tokens={tokens}
+          accent={accent}
+          reducedMotion={reducedMotion}
+          hidden={!!overlay}
+          skip={isDemoMode}
         />
       </div>
     </ResidentProvider>

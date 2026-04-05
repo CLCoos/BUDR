@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { Volume2 } from 'lucide-react';
+import type { StorageMode } from '@/types/local';
+import { tryEarnKrapMasterBadge } from '@/lib/residentBadgeSync';
 import type { LysThemeTokens } from '../lib/lysTheme';
 
 const FEELINGS = ['Trist', 'Bange', 'Vred', 'Tom', 'Rastløs', 'Skam', 'Let', 'Håbefuld'];
@@ -19,6 +21,8 @@ type Props = {
     thought?: string;
     feeling?: string;
   }) => Promise<string | null>;
+  storageMode: StorageMode;
+  activeId: string;
   onBack: () => void;
 };
 
@@ -29,6 +33,8 @@ export default function LysTankefanger({
   reducedMotion,
   speak,
   sendCounterThought,
+  storageMode,
+  activeId,
   onBack,
 }: Props) {
   const [step, setStep] = useState(0);
@@ -58,6 +64,7 @@ export default function LysTankefanger({
 
   const finish = () => {
     if (!closing.trim()) return;
+    void tryEarnKrapMasterBadge(storageMode, activeId);
     setStep(5);
   };
 

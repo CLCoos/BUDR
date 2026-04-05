@@ -1,37 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
+/**
+ * Godkender planforslag som **indlogget portal-personale** (Supabase JWT + RLS).
+ * Bruger ikke service role — `care_staff_can_access_resident` håndhæves af databasen.
+ */
 export async function POST(req: NextRequest) {
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceRoleKey) {
-    return NextResponse.json({ error: 'Server ikke konfigureret' }, { status: 503 });
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: { proposalId?: string; staffId?: string };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  let body: { proposalId?: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: 'Ugyldig JSON' }, { status: 400 });
   }
 
-  const { proposalId, staffId } = body;
-  if (!proposalId) {
+  const proposalId = body.proposalId;
+  if (!proposalId || typeof proposalId !== 'string') {
     return NextResponse.json({ error: 'Mangler proposalId' }, { status: 400 });
   }
 
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey, {
-    auth: { persistSession: false },
-  });
-
-  // 1. Fetch the pending proposal
   const { data: proposal, error: fetchErr } = await supabase
     .from('plan_proposals')
     .select('id, resident_id, plan_date, proposed_items')
     .eq('id', proposalId)
     .eq('status', 'pending')
-    .single();
+    .maybeSingle();
 
-  if (fetchErr || !proposal) {
+  if (fetchErr) {
+    console.error('approve-proposal fetch', fetchErr);
+    return NextResponse.json({ error: 'Kunne ikke hente forslag' }, { status: 500 });
+  }
+  if (!proposal) {
     return NextResponse.json(
       { error: 'Forslag ikke fundet eller allerede behandlet' },
       { status: 404 }
@@ -39,8 +49,8 @@ export async function POST(req: NextRequest) {
   }
 
   const now = new Date().toISOString();
+  const staffKey = user.id;
 
-  // 2. Upsert to daily_plans — this triggers Supabase Realtime for the Lys app
   const { data: updatedPlan, error: upsertErr } = await supabase
     .from('daily_plans')
     .upsert(
@@ -48,7 +58,7 @@ export async function POST(req: NextRequest) {
         resident_id: proposal.resident_id as string,
         plan_date: proposal.plan_date as string,
         plan_items: proposal.proposed_items,
-        created_by: staffId ?? null,
+        created_by: staffKey,
         updated_at: now,
       },
       { onConflict: 'resident_id,plan_date' }
@@ -61,15 +71,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Kunne ikke opdatere dagsplanen' }, { status: 500 });
   }
 
-  // 3. Mark proposal as approved
   const { error: updateErr } = await supabase
     .from('plan_proposals')
     .update({
       status: 'approved',
-      reviewed_by: staffId ?? null,
+      reviewed_by: staffKey,
       reviewed_at: now,
     })
-    .eq('id', proposalId);
+    .eq('id', proposalId)
+    .eq('status', 'pending');
 
   if (updateErr) {
     console.error('approve-proposal update error', updateErr);

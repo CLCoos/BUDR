@@ -11,8 +11,10 @@ import ResidentHavenTab from './components/ResidentHavenTab';
 import ResidentOverblikTab from './components/ResidentOverblikTab';
 import ResidentMedicinTab from './components/ResidentMedicinTab';
 import WriteJournalEntry from './components/WriteJournalEntry';
+import ResidentExportModule from './components/ResidentExportModule';
 import type { DailyPlan, PendingProposal } from './components/DagsPlanPortal';
 import type { MedDefinition } from './components/types';
+import type { ResidentExportInput } from '@/lib/residentExport/types';
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -42,7 +44,18 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
   const today = new Date().toISOString().slice(0, 10);
   const todayStart = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
 
-  const [residentRes, checkinRes, planRes, proposalsRes, journalRes, medsRes] = await Promise.all([
+  const exportJournalSince = new Date(Date.now() - 90 * 86400000).toISOString();
+
+  const [
+    residentRes,
+    checkinRes,
+    planRes,
+    proposalsRes,
+    journalRes,
+    journalExportRes,
+    medsRes,
+    concernRes,
+  ] = await Promise.all([
     supabase
       .from('care_residents')
       .select('user_id, display_name, onboarding_data')
@@ -76,10 +89,23 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
       .order('created_at', { ascending: false })
       .limit(20),
     supabase
+      .from('journal_entries')
+      .select('id, staff_name, entry_text, category, created_at, journal_status, approved_at')
+      .eq('resident_id', residentId)
+      .gte('created_at', exportJournalSince)
+      .order('created_at', { ascending: false })
+      .limit(80),
+    supabase
       .from('resident_medications')
       .select('id, name, dose, frequency, time_label, time_group, prescribed_by, notes, status')
       .eq('resident_id', residentId)
       .order('created_at', { ascending: true }),
+    supabase
+      .from('care_concern_notes')
+      .select('id, note, category, severity, staff_name, created_at')
+      .eq('resident_id', residentId)
+      .order('created_at', { ascending: false })
+      .limit(25),
   ]);
 
   if (residentRes.error || !residentRes.data) return null;
@@ -129,6 +155,23 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
       journal_status: string;
       approved_at: string | null;
     }[],
+    journalEntriesForExport: (journalExportRes.data ?? []) as {
+      id: string;
+      staff_name: string;
+      entry_text: string;
+      category: string;
+      created_at: string;
+      journal_status: string;
+      approved_at: string | null;
+    }[],
+    concernNotesForExport: (concernRes.data ?? []) as {
+      id: string;
+      note: string;
+      category: string;
+      severity: number;
+      staff_name: string;
+      created_at: string;
+    }[],
     todayPlanItems: planItems,
     medications: (medsRes.data ?? []) as MedDefinition[],
   };
@@ -168,8 +211,57 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
   const data = await fetchResidentData(supabase, residentId);
   if (!data) notFound();
 
-  const { resident, checkinNote, plan, proposals, journalEntries, todayPlanItems, medications } =
-    data;
+  const {
+    resident,
+    checkinNote,
+    plan,
+    proposals,
+    journalEntries,
+    journalEntriesForExport,
+    concernNotesForExport,
+    todayPlanItems,
+    medications,
+  } = data;
+
+  const exportInput: ResidentExportInput = {
+    residentId,
+    generatedAtIso: new Date().toISOString(),
+    resident: {
+      name: resident.name,
+      room: resident.room,
+      trafficLight: resident.trafficLight,
+      moodScore: resident.moodScore,
+      lastCheckin: resident.lastCheckin,
+      moveInDate: resident.moveInDate,
+      primaryContact: resident.primaryContact,
+      primaryContactPhone: resident.primaryContactPhone,
+      primaryContactRelation: resident.primaryContactRelation,
+    },
+    checkinNote,
+    medications,
+    journalEntries: journalEntriesForExport.map((e) => ({
+      id: e.id,
+      staff_name: e.staff_name,
+      entry_text: e.entry_text,
+      category: e.category,
+      created_at: e.created_at,
+      journal_status: e.journal_status,
+    })),
+    concernNotes: concernNotesForExport.map((c) => ({
+      id: c.id,
+      note: c.note,
+      category: c.category,
+      severity: c.severity,
+      staff_name: c.staff_name ?? '',
+      created_at: c.created_at,
+    })),
+    todayPlanItems: todayPlanItems.map((p) => ({
+      title: p.title,
+      done: p.done,
+      time: p.time,
+    })),
+    pendingProposalsCount: proposals.length,
+  };
 
   return (
     <PortalShell>
@@ -191,7 +283,8 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
         />
 
         {/* Action bar */}
-        <div className="flex items-center justify-end mt-4">
+        <div className="flex flex-wrap items-center justify-end gap-2 mt-4">
+          <ResidentExportModule exportInput={exportInput} />
           <WriteJournalEntry residentId={residentId} residentName={resident.name} />
         </div>
 

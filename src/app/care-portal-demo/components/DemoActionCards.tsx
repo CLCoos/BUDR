@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Home, Building2, Plus } from 'lucide-react';
+import { Home, Building2, Plus, Sparkles } from 'lucide-react';
 
 type Props = {
   onOpenOverrapport: () => void;
@@ -14,7 +14,7 @@ export default function DemoActionCards({ onOpenOverrapport }: Props) {
   return (
     <div
       className="mb-6 grid gap-[10px]"
-      style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}
+      style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))' }}
     >
       <button
         type="button"
@@ -136,6 +136,47 @@ export default function DemoActionCards({ onOpenOverrapport }: Props) {
         </div>
         <div className="mt-0.5 text-xs" style={{ color: 'var(--cp-muted)' }}>
           Autogenerer pakke til tilsyn
+        </div>
+      </button>
+
+      <button
+        type="button"
+        onClick={() => router.push('/resident-demo')}
+        className="group rounded-xl px-4 py-[14px] text-left transition-all duration-150"
+        style={{
+          backgroundColor: 'var(--cp-bg2)',
+          border: '1px solid var(--cp-border)',
+          borderRadius: 12,
+          borderTop: '2px solid #8b84e8',
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLElement).style.borderColor = 'var(--cp-border2)';
+          (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLElement).style.borderColor = 'var(--cp-border)';
+          (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+        }}
+      >
+        <div className="mb-3 flex items-start justify-between">
+          <div
+            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg"
+            style={{ backgroundColor: 'rgba(139, 132, 232, 0.2)' }}
+          >
+            <Sparkles size={18} style={{ color: '#a5a0e8' }} />
+          </div>
+          <span
+            className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+            style={{ backgroundColor: 'rgba(139, 132, 232, 0.2)', color: '#c4bffc' }}
+          >
+            Test som borger
+          </span>
+        </div>
+        <div className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+          Borger-app (Lys)
+        </div>
+        <div className="mt-0.5 text-xs" style={{ color: 'var(--cp-muted)' }}>
+          Samme demo som “Prøv borger-app” — journal, haven, badges
         </div>
       </button>
     </div>

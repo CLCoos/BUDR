@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { getResidentBadgeDef } from '@/lib/residentBadges';
 
 type PlanItem = {
   id: string;
@@ -31,14 +32,6 @@ const LEVEL_INFO = [
   { level: 4, name: 'Blomst', emoji: '🌸' },
   { level: 5, name: 'Træ', emoji: '🌳' },
 ];
-
-const BADGE_DEFS: Record<string, { name: string; emoji: string }> = {
-  first_journal: { name: 'Første skridt', emoji: '📝' },
-  consistent_7: { name: 'Konsistent', emoji: '🔥' },
-  first_chat: { name: 'Åben', emoji: '💬' },
-  planner_5: { name: 'Planlægger', emoji: '📅' },
-  brave: { name: 'Modig', emoji: '💙' },
-};
 
 const RECURRENCE_LABEL: Record<string, string> = {
   none: 'Engangsevent',
@@ -148,13 +141,13 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
           ) : (
             <div className="flex flex-wrap gap-2">
               {earnedBadges.map((b) => {
-                const def = BADGE_DEFS[b.badge_key];
+                const def = getResidentBadgeDef(b.badge_key);
                 return (
                   <span
                     key={b.badge_key}
                     className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 border border-violet-200 px-3 py-1 text-xs font-semibold text-violet-700"
                   >
-                    {def?.emoji} {def?.name ?? b.badge_key}
+                    {def?.emoji ?? '🏅'} {def?.name ?? b.badge_key}
                   </span>
                 );
               })}

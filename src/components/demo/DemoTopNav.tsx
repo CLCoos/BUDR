@@ -45,13 +45,15 @@ export default function DemoTopNav() {
         <DokumentSøgning carePortalDark linkTarget="demo" />
       </div>
 
-      <div className="ml-auto flex shrink-0 items-center gap-2">
+      <div className="ml-auto flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2">
         <Link
           href="/resident-demo"
-          className="hidden rounded-lg px-2 py-1.5 text-xs font-medium transition-colors sm:block"
+          className="truncate rounded-lg px-2 py-1.5 text-[11px] font-semibold transition-colors hover:opacity-90 sm:text-xs"
           style={{ color: 'var(--cp-blue)' }}
+          title="Åbn Lys / borger-app i demo (lokal data)"
         >
-          Prøv borger-app →
+          <span className="sm:hidden">Borger-app</span>
+          <span className="hidden sm:inline">Prøv borger-app (Lys) →</span>
         </Link>
         <Link
           href="/care-portal-login"

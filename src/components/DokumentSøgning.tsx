@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { FileText, Search, User, X } from 'lucide-react';
 
 type CategoryKey = 'journal' | 'handleplan' | 'medicin' | 'bekymringsnotater' | 'aftaler';
@@ -14,13 +14,22 @@ const CATEGORY_LABEL: Record<CategoryKey, string> = {
   aftaler: 'Aftaler',
 };
 
-/** Maps document category to existing resident-360 tab ids. */
-const CATEGORY_TO_TAB: Record<CategoryKey, string> = {
+/** Demo 360°: tab-query som ResidentDemo360Client forventer. */
+const CATEGORY_TO_TAB_DEMO: Record<CategoryKey, string> = {
   journal: 'notes',
   handleplan: 'goals',
   medicin: 'medication',
   bekymringsnotater: 'notes',
   aftaler: 'overview',
+};
+
+/** Live 360°: danske faner på /resident-360-view/[id]. */
+const CATEGORY_TO_TAB_LIVE: Record<CategoryKey, string> = {
+  journal: 'overblik',
+  handleplan: 'plan',
+  medicin: 'medicin',
+  bekymringsnotater: 'overblik',
+  aftaler: 'plan',
 };
 
 interface MockDoc {
@@ -138,17 +147,48 @@ export type DokumentSøgningProps = {
   linkTarget?: 'live' | 'demo';
 };
 
-export default function DokumentSøgning({
+function DokumentSøgningFallback({ carePortalDark }: { carePortalDark?: boolean }) {
+  const dark = carePortalDark ?? false;
+  const shellCls = dark
+    ? 'border border-[var(--cp-border)] bg-[var(--cp-bg3)]'
+    : 'border border-transparent bg-gray-100';
+  return (
+    <div className="relative w-full max-w-md min-w-0 flex-1">
+      <div
+        className={`flex h-[42px] items-center gap-2 rounded-full px-3 ${shellCls} animate-pulse`}
+        aria-hidden
+      />
+    </div>
+  );
+}
+
+function DokumentSøgningInner({
   carePortalDark = false,
   linkTarget = 'live',
 }: DokumentSøgningProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const dark = carePortalDark;
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const categoryTab = useCallback(
+    (cat: CategoryKey) =>
+      linkTarget === 'live' ? CATEGORY_TO_TAB_LIVE[cat] : CATEGORY_TO_TAB_DEMO[cat],
+    [linkTarget]
+  );
+
+  const defaultResidentTab = linkTarget === 'live' ? 'overblik' : 'overview';
+
+  useEffect(() => {
+    const raw = searchParams.get('q');
+    if (raw == null) return;
+    setQuery(raw);
+    if (raw.trim().length >= 1) setOpen(true);
+  }, [searchParams]);
 
   const q = query.trim();
 
@@ -185,30 +225,31 @@ export default function DokumentSøgning({
 
   const navigateTo = useCallback(
     (residentId: string, tab: string) => {
+      const qKeep = query.trim() ? `&q=${encodeURIComponent(query.trim())}` : '';
       if (linkTarget === 'demo') {
-        const q = tab ? `?tab=${encodeURIComponent(tab)}` : '';
-        router.push(`/care-portal-demo/residents/${encodeURIComponent(residentId)}${q}`);
+        const qs = `?tab=${encodeURIComponent(tab)}${qKeep}`;
+        router.push(`/care-portal-demo/residents/${encodeURIComponent(residentId)}${qs}`);
       } else {
         router.push(
-          `/resident-360-view?id=${encodeURIComponent(residentId)}&tab=${encodeURIComponent(tab)}`
+          `/resident-360-view/${encodeURIComponent(residentId)}?tab=${encodeURIComponent(tab)}${qKeep}`
         );
       }
       setOpen(false);
       setQuery('');
     },
-    [router, linkTarget]
+    [router, linkTarget, query]
   );
 
   const activateEntry = useCallback(
     (entry: NavEntry) => {
       if (entry.kind === 'resident') {
-        navigateTo(entry.resident.id, 'overview');
+        navigateTo(entry.resident.id, defaultResidentTab);
       } else {
-        const tab = CATEGORY_TO_TAB[entry.doc.category] ?? 'overview';
+        const tab = categoryTab(entry.doc.category);
         navigateTo(entry.resident.id, tab);
       }
     },
-    [navigateTo]
+    [navigateTo, defaultResidentTab, categoryTab]
   );
 
   useEffect(() => {
@@ -396,7 +437,7 @@ export default function DokumentSøgning({
                         <button
                           type="button"
                           onMouseEnter={() => setActiveIndex(globalIdx)}
-                          onClick={() => navigateTo(r.id, 'overview')}
+                          onClick={() => navigateTo(r.id, defaultResidentTab)}
                           className="flex w-full items-start gap-3 px-3 py-2.5 text-left"
                         >
                           <div
@@ -426,7 +467,7 @@ export default function DokumentSøgning({
                                 type="button"
                                 onClick={(ev) => {
                                   ev.stopPropagation();
-                                  navigateTo(r.id, CATEGORY_TO_TAB[cat]);
+                                  navigateTo(r.id, categoryTab(cat));
                                 }}
                                 className={chipCls}
                               >
@@ -459,7 +500,7 @@ export default function DokumentSøgning({
                         role="option"
                         aria-selected={active}
                         onMouseEnter={() => setActiveIndex(globalIdx)}
-                        onClick={() => navigateTo(resident.id, CATEGORY_TO_TAB[doc.category])}
+                        onClick={() => navigateTo(resident.id, categoryTab(doc.category))}
                         className={`flex w-full items-start gap-2 rounded-lg px-3 py-2 text-left transition-all duration-200 ${rowActive(active)}`}
                       >
                         <FileText className={fileIconCls} aria-hidden />
@@ -479,5 +520,13 @@ export default function DokumentSøgning({
         </div>
       ) : null}
     </div>
+  );
+}
+
+export default function DokumentSøgning(props: DokumentSøgningProps) {
+  return (
+    <Suspense fallback={<DokumentSøgningFallback carePortalDark={props.carePortalDark} />}>
+      <DokumentSøgningInner {...props} />
+    </Suspense>
   );
 }

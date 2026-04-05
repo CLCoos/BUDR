@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useResidentSession } from '@/hooks/useResidentSession';
 import * as dataService from '@/lib/dataService';
+import { syncBadgesAfterCheckin } from '@/lib/residentBadgeSync';
 import type { LysChatMessage } from '@/app/api/lys-chat/route';
 import type { LysFlowOverlay } from '../lib/lysOverlay';
 import type { LysPhase, LysThemeTokens } from '../lib/lysTheme';
@@ -312,6 +313,7 @@ export default function LysHome({
         label,
       });
       await dataService.addXp(session.storageMode, session.activeId || residentId, 'hum_check', 10);
+      void syncBadgesAfterCheckin(session.storageMode, session.activeId || residentId);
       setCheckInSaving(false);
       void sendToLys(`Jeg har det sådan her: ${label}.`).then(() => setShowLysCard(true));
     },

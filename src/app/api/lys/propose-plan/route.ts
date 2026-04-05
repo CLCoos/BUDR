@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getResidentId } from '@/lib/residentAuth';
 
 export type PlanItem = {
   id: string;
@@ -18,6 +19,11 @@ const SYSTEM_PROMPT =
   '{ "proposed_items": [{"id": "...", "time": "HH:MM", "title": "...", "description": "...", "category": "mad|medicin|aktivitet|hvile|social"}], "ai_reasoning": "..." }';
 
 export async function POST(req: NextRequest) {
+  const sessionResidentId = await getResidentId();
+  if (!sessionResidentId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: 'AI ikke konfigureret' }, { status: 503 });
@@ -35,10 +41,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Ugyldig JSON' }, { status: 400 });
   }
 
-  const { residentId, userMessage, currentPlan } = body;
-  if (!residentId || !userMessage?.trim()) {
+  const { residentId: bodyResidentId, userMessage, currentPlan } = body;
+  if (!bodyResidentId || !userMessage?.trim()) {
     return NextResponse.json({ error: 'Mangler påkrævede felter' }, { status: 400 });
   }
+  if (bodyResidentId !== sessionResidentId) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+  const residentId = sessionResidentId;
 
   const userContent =
     `Nuværende dagsplan:\n${JSON.stringify(currentPlan ?? [], null, 2)}\n\n` +
@@ -87,12 +97,23 @@ export async function POST(req: NextRequest) {
     auth: { persistSession: false },
   });
 
+  const { data: residentRow, error: resErr } = await supabase
+    .from('care_residents')
+    .select('org_id')
+    .eq('user_id', residentId)
+    .maybeSingle();
+
+  if (resErr || !residentRow) {
+    return NextResponse.json({ error: 'Beboer ikke fundet' }, { status: 404 });
+  }
+
   const today = new Date().toISOString().slice(0, 10);
 
   const { data: proposal, error: dbError } = await supabase
     .from('plan_proposals')
     .insert({
       resident_id: residentId,
+      org_id: (residentRow as { org_id: string | null }).org_id ?? null,
       plan_date: today,
       user_message: userMessage.trim(),
       proposed_items: parsed.proposed_items,

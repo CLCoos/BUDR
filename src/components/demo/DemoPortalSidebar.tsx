@@ -18,6 +18,7 @@ import {
   BrainCircuit,
   CalendarClock,
   MessageSquare,
+  Sparkles,
 } from 'lucide-react';
 
 type NavItem = {
@@ -75,10 +76,14 @@ const staticNavItems: NavItem[] = [
   },
   { icon: Upload, label: 'Dataimport', href: '/care-portal-demo/import', badge: 0 },
   { icon: BrainCircuit, label: 'Faglig støtte', href: '/care-portal-demo/assistant', badge: 0 },
+  { icon: Sparkles, label: 'Borger-app (Lys)', href: '/resident-demo', badge: 0 },
   { icon: Settings, label: 'Indstillinger', href: '/care-portal-demo/settings', badge: 0 },
 ];
 
 function navItemActive(pathname: string, searchParams: URLSearchParams, item: NavItem): boolean {
+  if (item.href === '/resident-demo') {
+    return pathname === '/resident-demo';
+  }
   if (item.cpActiveTab !== undefined && item.cpActiveTab !== null) {
     return (
       pathname === '/care-portal-demo' && (searchParams.get('tab') ?? null) === item.cpActiveTab

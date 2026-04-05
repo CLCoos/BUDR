@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { BookOpen, RefreshCw } from 'lucide-react';
+import Link from 'next/link';
+import { BookOpen, RefreshCw, Sparkles } from 'lucide-react';
 import AlertPanel from '@/app/care-portal-dashboard/components/AlertPanel';
 import StatCards from '@/app/care-portal-dashboard/components/StatCards';
 import MedicationWidget from '@/app/care-portal-dashboard/components/MedicationWidget';
@@ -245,6 +246,18 @@ export default function DashboardDemoMain() {
             </span>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Link
+              href="/resident-demo"
+              className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors hover:opacity-90"
+              style={{
+                borderColor: 'rgba(139, 132, 232, 0.45)',
+                color: '#c4bffc',
+                backgroundColor: 'rgba(139, 132, 232, 0.12)',
+              }}
+            >
+              <Sparkles size={14} aria-hidden />
+              Borger-app
+            </Link>
             <ToolbarButton onClick={() => setOverrapportOpen(true)}>Overrapport</ToolbarButton>
             <ToolbarButton onClick={() => setIndsatsOpen(true)} variant="danger">
               Indsatsdok.

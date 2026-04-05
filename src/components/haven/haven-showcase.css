@@ -194,3 +194,118 @@
     opacity: 0.85;
   }
 }
+
+/* Rammer — “story”-venlige kanter */
+.haven-frame-inner {
+  border-radius: 1.35rem;
+  overflow: hidden;
+  height: 100%;
+}
+
+.haven-frame-gold {
+  padding: 3px;
+  border-radius: 1.45rem;
+  background: linear-gradient(
+    135deg,
+    #fde68a 0%,
+    #fbbf24 25%,
+    #f59e0b 50%,
+    #fcd34d 75%,
+    #fef3c7 100%
+  );
+  background-size: 200% 200%;
+  animation: havenFrameShine 8s ease infinite;
+  box-shadow:
+    0 0 40px rgba(251, 191, 36, 0.35),
+    0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.haven-frame-neon {
+  padding: 3px;
+  border-radius: 1.45rem;
+  background: linear-gradient(135deg, #4ade80, #22d3ee, #a78bfa, #4ade80);
+  background-size: 300% 300%;
+  animation: havenFrameShine 6s linear infinite;
+  box-shadow:
+    0 0 32px rgba(34, 211, 238, 0.45),
+    0 0 60px rgba(74, 222, 128, 0.2);
+}
+
+.haven-frame-opal {
+  padding: 3px;
+  border-radius: 1.45rem;
+  background: linear-gradient(
+    130deg,
+    rgba(255, 255, 255, 0.65) 0%,
+    rgba(167, 243, 208, 0.5) 35%,
+    rgba(196, 181, 253, 0.55) 65%,
+    rgba(255, 255, 255, 0.5) 100%
+  );
+  box-shadow:
+    0 0 24px rgba(255, 255, 255, 0.15),
+    0 16px 48px rgba(0, 0, 0, 0.25);
+}
+
+@keyframes havenFrameShine {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .haven-frame-gold,
+  .haven-frame-neon {
+    animation: none;
+  }
+}
+
+/* Sommerfugle — dekorative */
+.haven-butterfly-layer {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow: hidden;
+}
+
+.haven-butterfly {
+  position: absolute;
+  font-size: 1.25rem;
+  opacity: 0.85;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+  animation: havenButterflyFloat 14s ease-in-out infinite;
+}
+
+.haven-showcase--motion .haven-butterfly {
+  animation: havenButterflyFloat 14s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .haven-butterfly {
+    animation: none !important;
+  }
+}
+
+@keyframes havenButterflyFloat {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(-6deg) scale(1);
+    opacity: 0.5;
+  }
+  25% {
+    transform: translate(12px, -18px) rotate(8deg) scale(1.08);
+    opacity: 0.95;
+  }
+  50% {
+    transform: translate(-8px, -28px) rotate(-4deg) scale(1);
+    opacity: 0.75;
+  }
+  75% {
+    transform: translate(18px, -10px) rotate(10deg) scale(1.05);
+    opacity: 0.9;
+  }
+}

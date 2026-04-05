@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
+import { HavenButterflies } from '@/components/haven/HavenButterflies';
 import { HavenPlantSvg } from '@/components/haven/HavenPlantSvg';
 import type { HavenGrowthStage } from '@/components/haven/HavenPlantSvg';
 import type { HavenAmbientPeriod, HavenPlantType } from '@/components/haven/havenConstants';
@@ -30,6 +31,12 @@ type Props = {
   className?: string;
   /** Lavere min-højde i indlejret portal-visning */
   compact?: boolean;
+  /** Erstatter tidsbaseret himmel (fx bruger-valgt “mood”) */
+  skyBackgroundOverride?: string | null;
+  /** Ekstra ramme — klasser fra haven-showcase.css */
+  decorativeFrameClass?: string;
+  /** Let sommerfugle / glimt */
+  showButterflies?: boolean;
 };
 
 function Fireflies({ active }: { active: boolean }) {
@@ -259,6 +266,9 @@ export function HavenGardenScene({
   onSlotClick,
   className = '',
   compact = false,
+  skyBackgroundOverride = null,
+  decorativeFrameClass = '',
+  showButterflies = false,
 }: Props) {
   const slots = Array.from({ length: 6 }, (_, i) => plots.find((p) => p.slot_index === i) ?? null);
   const backRow = slots.slice(0, 3);
@@ -278,11 +288,13 @@ export function HavenGardenScene({
     return () => clearInterval(id);
   }, []);
 
-  return (
+  const sky = skyBackgroundOverride ?? ambient.sky;
+
+  const scene = (
     <div
-      className={`relative overflow-hidden rounded-3xl shadow-[inset_0_0_100px_rgba(0,0,0,0.08)] ring-1 ring-inset ring-white/20 ${rootClass}`}
+      className={`haven-frame-inner relative overflow-hidden rounded-3xl shadow-[inset_0_0_100px_rgba(0,0,0,0.08)] ring-1 ring-inset ring-white/20 ${rootClass}`}
       style={{
-        background: ambient.sky,
+        background: sky,
         transition: 'background 2s ease',
         color: ambient.textColor,
         minHeight: compact ? 220 : 280,
@@ -298,6 +310,7 @@ export function HavenGardenScene({
         />
       )}
       <Fireflies active={motionOn} />
+      <HavenButterflies active={Boolean(showButterflies && rich)} />
 
       {(title || subtitle) && (
         <div className="relative z-[4] px-5 pb-2 pt-4">
@@ -357,4 +370,10 @@ export function HavenGardenScene({
       </div>
     </div>
   );
+
+  if (decorativeFrameClass) {
+    return <div className={`${decorativeFrameClass} ${className}`.trim()}>{scene}</div>;
+  }
+
+  return <div className={className.trim()}>{scene}</div>;
 }
