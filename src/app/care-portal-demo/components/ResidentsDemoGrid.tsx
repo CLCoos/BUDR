@@ -63,6 +63,7 @@ const TAB_LABEL: Record<string, string> = {
   notes: 'Journal',
   goals: 'Handleplan',
   medication: 'Medicin',
+  haven: 'Haven',
 };
 
 const TAB_BLURB: Record<string, string> = {
@@ -74,6 +75,8 @@ const TAB_BLURB: Record<string, string> = {
     'Handleplan og mål opdateres af tværfagligt team. Her vises et uddrag som i den rigtige portal.',
   medication:
     'Medicinkort, dosering og PN. Link fra dokumentsøgning lander på den tilsvarende fane (demo).',
+  haven:
+    'Samme have som i Lys — med demo-animationer, så teamet kan vise borgerens fremskridt visuelt.',
 };
 
 export default function ResidentsDemoGrid() {

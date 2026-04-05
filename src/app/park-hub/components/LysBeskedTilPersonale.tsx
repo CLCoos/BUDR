@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { MessageCircle } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 import type { LysThemeTokens } from '../lib/lysTheme';
 
 type Props = {
@@ -51,24 +50,15 @@ export default function LysBeskedTilPersonale({
     setSaving(true);
     try {
       if (residentId) {
-        const supabase = createClient();
-        if (supabase) {
-          const { data: residentRow } = await supabase
-            .from('care_residents')
-            .select('org_id')
-            .eq('user_id', residentId)
-            .maybeSingle();
-          const today = new Date().toISOString().slice(0, 10);
-          await supabase.from('plan_proposals').insert({
-            resident_id: residentId,
-            org_id: residentRow?.org_id ?? null,
-            plan_date: today,
+        await fetch('/api/park/lys-plan-proposal', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
             user_message: pending,
             proposed_items: [{ title: pending, preset_type: pendingKey ?? null }],
-            ai_reasoning: null,
-            status: 'pending',
-          });
-        }
+          }),
+        });
       }
     } catch (err) {
       console.error('LysBeskedTilPersonale save failed', err);

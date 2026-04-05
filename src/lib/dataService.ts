@@ -182,8 +182,37 @@ export async function getBadges(mode: StorageMode, activeId: string): Promise<Ba
 
 // ── Haven / Garden ────────────────────────────────────────────────────────────
 
+/** Borger med `budr_resident_id` har ikke altid Supabase JWT som samme bruger — brug server-API. */
+function shouldUseResidentGardenApi(activeId: string, mode: StorageMode): boolean {
+  if (mode !== 'supabase') return false;
+  if (typeof document === 'undefined') return false;
+  const m = document.cookie.match(/budr_resident_id=([^;]+)/);
+  if (!m?.[1]) return false;
+  try {
+    return decodeURIComponent(m[1]) === activeId;
+  } catch {
+    return m[1] === activeId;
+  }
+}
+
+async function gardenApiJson<T>(
+  url: string,
+  init?: RequestInit
+): Promise<{ ok: boolean; status: number; body: T }> {
+  const res = await fetch(url, { credentials: 'include', ...init });
+  const body = (await res.json().catch(() => ({}))) as T;
+  return { ok: res.ok, status: res.status, body };
+}
+
 export async function getGardenPlots(mode: StorageMode, activeId: string): Promise<GardenPlot[]> {
   if (mode === 'supabase') {
+    if (shouldUseResidentGardenApi(activeId, mode)) {
+      const { ok, body } = await gardenApiJson<{ data?: GardenPlot[]; error?: string }>(
+        '/api/park/garden-plot'
+      );
+      if (!ok) throw new Error(body.error ?? 'Kunne ikke hente haven');
+      return (body.data ?? []) as GardenPlot[];
+    }
     const supabase = createClient();
     if (!supabase) return [];
     const { data } = await supabase
@@ -203,6 +232,24 @@ export async function savePlot(
   data: Omit<GardenPlot, 'id' | 'resident_id' | 'created_at'>
 ): Promise<void> {
   if (mode === 'supabase') {
+    if (shouldUseResidentGardenApi(activeId, mode)) {
+      const { ok, body } = await gardenApiJson<{ error?: string }>('/api/park/garden-plot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slot_index: data.slot_index,
+          plant_type: data.plant_type,
+          plant_name: data.plant_name,
+          goal_text: data.goal_text,
+          growth_stage: data.growth_stage,
+          total_water: data.total_water,
+          last_watered_at: data.last_watered_at,
+          is_park_linked: data.is_park_linked,
+        }),
+      });
+      if (!ok) throw new Error(body.error ?? 'Kunne ikke gemme planten');
+      return;
+    }
     const supabase = createClient();
     if (!supabase) return;
     const { error } = await supabase
@@ -233,9 +280,19 @@ export async function updatePlot(
   data: Partial<GardenPlot>
 ): Promise<void> {
   if (mode === 'supabase') {
+    if (shouldUseResidentGardenApi(activeId, mode)) {
+      const { ok, body } = await gardenApiJson<{ error?: string }>('/api/park/garden-plot', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...data }),
+      });
+      if (!ok) throw new Error(body.error ?? 'Kunne ikke opdatere planten');
+      return;
+    }
     const supabase = createClient();
     if (!supabase) return;
-    await supabase.from('garden_plots').update(data).eq('id', id);
+    const { error } = await supabase.from('garden_plots').update(data).eq('id', id);
+    if (error) throw new Error(error.message);
     return;
   }
   const plots = ls.getItem<GardenPlot[]>(LOCAL_KEYS.garden) ?? [];
@@ -248,9 +305,18 @@ export async function updatePlot(
 
 export async function deletePlot(mode: StorageMode, activeId: string, id: string): Promise<void> {
   if (mode === 'supabase') {
+    if (shouldUseResidentGardenApi(activeId, mode)) {
+      const { ok, body } = await gardenApiJson<{ error?: string }>(
+        `/api/park/garden-plot?id=${encodeURIComponent(id)}`,
+        { method: 'DELETE' }
+      );
+      if (!ok) throw new Error(body.error ?? 'Kunne ikke slette planten');
+      return;
+    }
     const supabase = createClient();
     if (!supabase) return;
-    await supabase.from('garden_plots').delete().eq('id', id);
+    const { error } = await supabase.from('garden_plots').delete().eq('id', id);
+    if (error) throw new Error(error.message);
     return;
   }
   const plots = ls.getItem<GardenPlot[]>(LOCAL_KEYS.garden) ?? [];
@@ -334,19 +400,24 @@ export async function getConversations(
 // ── Profile ───────────────────────────────────────────────────────────────────
 
 export async function getProfile(mode: StorageMode, activeId: string): Promise<LocalProfile> {
+  void activeId;
   if (mode === 'supabase') {
-    const supabase = createClient();
-    if (!supabase) return { nickname: '', theme: 'purple', avatar: null };
-    const { data } = await supabase
-      .from('care_residents')
-      .select('nickname, color_theme')
-      .eq('user_id', activeId)
-      .maybeSingle();
-    return {
-      nickname: (data as { nickname?: string | null } | null)?.nickname ?? '',
-      theme: (data as { color_theme?: string | null } | null)?.color_theme ?? 'purple',
-      avatar: null,
-    };
+    try {
+      const res = await fetch('/api/park/resident-me', { credentials: 'include' });
+      if (!res.ok) return { nickname: '', theme: 'purple', avatar: null };
+      const data = (await res.json()) as {
+        nickname?: string | null;
+        color_theme?: string | null;
+        avatar_url?: string | null;
+      };
+      return {
+        nickname: data.nickname ?? '',
+        theme: data.color_theme ?? 'purple',
+        avatar: data.avatar_url ?? null,
+      };
+    } catch {
+      return { nickname: '', theme: 'purple', avatar: null };
+    }
   }
   return (
     ls.getItem<LocalProfile>(LOCAL_KEYS.profile) ?? { nickname: '', theme: 'purple', avatar: null }
@@ -358,13 +429,21 @@ export async function saveProfile(
   activeId: string,
   data: Partial<LocalProfile>
 ): Promise<void> {
+  void activeId;
   if (mode === 'supabase') {
-    const supabase = createClient();
-    if (!supabase) return;
-    await supabase
-      .from('care_residents')
-      .update({ nickname: data.nickname, color_theme: data.theme })
-      .eq('user_id', activeId);
+    try {
+      await fetch('/api/park/resident-me', {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          nickname: data.nickname,
+          color_theme: data.theme,
+        }),
+      });
+    } catch {
+      /* ignore */
+    }
     return;
   }
   const current = ls.getItem<LocalProfile>(LOCAL_KEYS.profile) ?? {

@@ -1,0 +1,196 @@
+/* Haven demo/showcase — respekteres via .haven-showcase--motion på container */
+
+@media (prefers-reduced-motion: reduce) {
+  .haven-showcase--motion .haven-drift-slow,
+  .haven-showcase--motion .haven-drift-med,
+  .haven-showcase--motion .haven-bob,
+  .haven-showcase--motion .haven-bob-delayed,
+  .haven-showcase--motion .haven-twinkle,
+  .haven-showcase--motion .haven-glow-pulse,
+  .haven-showcase--motion .haven-ripple-ring,
+  .haven-showcase--motion .haven-sky-shimmer,
+  .haven-showcase--motion .haven-parallax-far {
+    animation: none !important;
+  }
+}
+
+.haven-drift-slow {
+  animation: havenCloudDrift 90s linear infinite;
+}
+
+.haven-drift-med {
+  animation: havenCloudDrift 65s linear infinite reverse;
+}
+
+.haven-bob {
+  animation: havenPlantBob 3.2s ease-in-out infinite;
+}
+
+.haven-bob-delayed {
+  animation: havenPlantBob 3.8s ease-in-out infinite;
+  animation-delay: -1.2s;
+}
+
+.haven-twinkle {
+  animation: havenFirefly 5s ease-in-out infinite;
+}
+
+.haven-glow-pulse {
+  animation: havenGlowPulse 4s ease-in-out infinite;
+}
+
+.haven-ripple-ring {
+  animation: havenRippleExpand 1s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes havenCloudDrift {
+  0% {
+    transform: translateX(-8%) translateY(0);
+  }
+  50% {
+    transform: translateX(8%) translateY(-3px);
+  }
+  100% {
+    transform: translateX(-8%) translateY(0);
+  }
+}
+
+@keyframes havenPlantBob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-0.5deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(0.5deg);
+  }
+}
+
+@keyframes havenFirefly {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.85);
+  }
+  35% {
+    opacity: 0.95;
+    transform: scale(1.15);
+  }
+  70% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+}
+
+@keyframes havenGlowPulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    filter: blur(12px);
+  }
+  50% {
+    opacity: 0.65;
+    filter: blur(18px);
+  }
+}
+
+@keyframes havenRippleExpand {
+  0% {
+    transform: scale(0.4);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+.haven-parallax-far {
+  will-change: transform;
+}
+
+.haven-showcase--motion .haven-parallax-far {
+  animation: havenParallaxFar 24s ease-in-out infinite;
+}
+
+@keyframes havenParallaxFar {
+  0%,
+  100% {
+    transform: translateY(0) scale(1.02);
+  }
+  50% {
+    transform: translateY(-6px) scale(1.03);
+  }
+}
+
+.haven-sparkle {
+  animation: havenSparkle 2.4s ease-in-out infinite;
+}
+
+@keyframes havenSparkle {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: rotate(0deg) scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: rotate(180deg) scale(1.1);
+  }
+}
+
+/* Jord — furer / tekstur (altid synlig) */
+.haven-ground-furrows {
+  background-image:
+    repeating-linear-gradient(
+      95deg,
+      transparent 0,
+      transparent 14px,
+      rgba(0, 0, 0, 0.07) 14px,
+      rgba(0, 0, 0, 0.07) 16px
+    ),
+    repeating-linear-gradient(
+      -88deg,
+      transparent 0,
+      transparent 22px,
+      rgba(255, 255, 255, 0.04) 22px,
+      rgba(255, 255, 255, 0.04) 23px
+    );
+}
+
+/* Tom plads — “bed” i stedet for generisk kasse */
+.haven-plot-empty {
+  background: linear-gradient(
+    168deg,
+    rgba(45, 80, 40, 0.55) 0%,
+    rgba(25, 50, 28, 0.72) 45%,
+    rgba(15, 35, 22, 0.85) 100%
+  );
+  border: 2px dashed rgba(253, 230, 138, 0.45);
+  box-shadow:
+    inset 0 3px 12px rgba(0, 0, 0, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(4px);
+}
+
+.haven-plot-empty:hover {
+  border-color: rgba(253, 230, 138, 0.65);
+  box-shadow:
+    inset 0 3px 12px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+/* Let glimt i himlen (kun med motion) */
+.haven-sky-shimmer {
+  animation: havenSkyShimmer 18s ease-in-out infinite;
+}
+
+@keyframes havenSkyShimmer {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}

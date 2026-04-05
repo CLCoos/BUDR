@@ -23,6 +23,7 @@ import {
   Stethoscope,
   Layers,
   Smartphone,
+  Sprout,
   Target,
   User,
   Users,
@@ -32,6 +33,8 @@ import {
   getResidentDemoDetail,
   SITUATION_TEMPLATES,
 } from '@/lib/careDemoResidentDetail';
+import { HavenGardenScene } from '@/components/haven/HavenGardenScene';
+import { getHavenAmbientPeriod } from '@/components/haven/havenConstants';
 import type {
   BorgerAppActivityKind,
   JournalDemo,
@@ -63,6 +66,7 @@ const TAB_TO_SECTION: Record<string, string> = {
   goals: 'maal',
   medication: 'medicin',
   aftaler: 'aftaler',
+  haven: 'haven',
 };
 
 const NAV = [
@@ -77,6 +81,7 @@ const NAV = [
   { id: 'aftaler', label: 'Aftaler' },
   { id: 'medicin', label: 'Medicin' },
   { id: 'planer', label: 'Planer' },
+  { id: 'haven', label: 'Haven 🌿' },
   { id: 'maal', label: 'Mål' },
   { id: 'journal', label: 'Journal' },
   { id: 'dokumenter', label: 'Dokumenter' },
@@ -178,6 +183,7 @@ export default function ResidentDemo360Client({ residentId }: { residentId: stri
   const [activeNav, setActiveNav] = useState<string>('status');
   /** Demo: lokalt godkendte kladde-id → flyttes til godkendt journal */
   const [journalApprovedIds, setJournalApprovedIds] = useState<Record<string, true>>({});
+  const [havenReducedMotion, setHavenReducedMotion] = useState(false);
 
   const scrollTo = useCallback((sectionId: string) => {
     document.getElementById(`section-${sectionId}`)?.scrollIntoView({
@@ -199,6 +205,14 @@ export default function ResidentDemo360Client({ residentId }: { residentId: stri
   useEffect(() => {
     setJournalApprovedIds({});
   }, [residentId]);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setHavenReducedMotion(mq.matches);
+    const on = () => setHavenReducedMotion(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
 
   const journalEffective: JournalDemo[] = useMemo(() => {
     if (!detail) return [];
@@ -238,7 +252,7 @@ export default function ResidentDemo360Client({ residentId }: { residentId: stri
     standardEvents,
     situationRecommendation,
   } = detail;
-  const { goalsResident, goalsStaff, agreements, extras } = detail;
+  const { goalsResident, goalsStaff, agreements, extras, gardenPlots } = detail;
 
   const ts = trafficStyle(traffic);
 
@@ -1107,6 +1121,32 @@ export default function ResidentDemo360Client({ residentId }: { residentId: stri
               </ul>
             </SectionCard>
           </div>
+
+          <SectionCard id="haven" title="Haven (Lys)" icon={Sprout}>
+            <p className="mb-4 text-sm" style={{ color: 'var(--cp-muted)' }}>
+              Samme visuelle have som borgeren ser i Lys — her i demo med animationer, så I kan vise
+              stolt frem overfor team og borgere.
+            </p>
+            {gardenPlots.length === 0 ? (
+              <p
+                className="rounded-xl border border-dashed p-8 text-center text-sm"
+                style={{ color: 'var(--cp-muted)' }}
+              >
+                Ingen planter i demo for denne profil — i app’en vises haven, når borgeren opretter
+                mål/planter.
+              </p>
+            ) : (
+              <HavenGardenScene
+                plots={gardenPlots}
+                ambient={getHavenAmbientPeriod(new Date().getHours())}
+                showcase
+                reducedMotion={havenReducedMotion}
+                compact
+                title={`${profile.displayName.split(' ')[0]}s have`}
+                subtitle="Spejlet fra Lys (demo)"
+              />
+            )}
+          </SectionCard>
 
           <SectionCard id="maal" title="Mål — borger & personale" icon={Target}>
             <div className="grid gap-5 md:grid-cols-2">

@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { ArrowLeft, Send } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 import type { LysThemeTokens } from '../lib/lysTheme';
 
 // ── Symbol grid ───────────────────────────────────────────────────────────────
@@ -185,23 +184,15 @@ export default function LysAACBoard({ tokens, accent, residentId, onClose }: Pro
     setSending(true);
     try {
       if (residentId) {
-        const supabase = createClient();
-        if (supabase) {
-          const { data: resident } = await supabase
-            .from('care_residents')
-            .select('org_id')
-            .eq('user_id', residentId)
-            .maybeSingle();
-          await supabase.from('plan_proposals').insert({
-            resident_id: residentId,
-            org_id: resident?.org_id ?? null,
-            plan_date: new Date().toISOString().slice(0, 10),
+        await fetch('/api/park/lys-plan-proposal', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
             user_message: selected.message,
             proposed_items: [{ title: selected.message, preset_type: `aac_${selected.id}` }],
-            ai_reasoning: null,
-            status: 'pending',
-          });
-        }
+          }),
+        });
       }
     } catch {
       /* ignore */

@@ -8,6 +8,7 @@ import OpgaveWidget from './OpgaveWidget';
 import ResidentList from './ResidentList';
 import StatCards from './StatCards';
 import HurtigJournalModal from './HurtigJournalModal';
+import JournalOverblikWidget from './JournalOverblikWidget';
 import OverrapportModal from './OverrapportModal';
 import OverrapportPanel from './OverrapportPanel';
 import IndsatsModal from './IndsatsModal';
@@ -191,6 +192,7 @@ function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
       {/* 2-col fluid widget grid */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-6">
         {medicationWidget}
+        <JournalOverblikWidget />
         <BekymringsnotatWidget />
         <KalenderWidget />
         <OpgaveWidget />

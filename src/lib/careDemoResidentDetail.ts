@@ -223,6 +223,18 @@ export const SITUATION_TEMPLATES: SituationTemplateDemo[] = [
   },
 ];
 
+/** Lys “Min have” — spejles i portal-demo under Haven-fanen (samme logik som borger-app). */
+export type HavenDemoPlot = {
+  id: string;
+  slot_index: number;
+  plant_type: 'tree' | 'flower' | 'herb' | 'bush' | 'vegetable';
+  plant_name: string;
+  goal_text: string;
+  growth_stage: 0 | 1 | 2 | 3 | 4;
+  total_water: number;
+  last_watered_at: string | null;
+};
+
 export type ResidentDemoDetail = ResidentDemoDetailSeed & {
   borgerApp: BorgerAppSnapshot;
   standardEvents: StandardEventDemo[];
@@ -230,10 +242,89 @@ export type ResidentDemoDetail = ResidentDemoDetailSeed & {
     templateId: SituationTemplateId;
     reason: string;
   };
+  gardenPlots: HavenDemoPlot[];
 };
 
 function hashId(id: string): number {
   return id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+}
+
+function isoDaysAgo(n: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  d.setHours(12, 0, 0, 0);
+  return d.toISOString();
+}
+
+/** Deterministisk have pr. demo-beboer — rig udgave for res-001 (Anders). */
+export function synthesizeGardenPlots(residentId: string): HavenDemoPlot[] {
+  if (residentId === 'res-001') {
+    return [
+      {
+        id: `${residentId}-g1`,
+        slot_index: 0,
+        plant_type: 'flower',
+        plant_name: 'Solsikke',
+        goal_text: 'Gå en tur udenfor hver dag',
+        growth_stage: 4,
+        total_water: 210,
+        last_watered_at: isoDaysAgo(0),
+      },
+      {
+        id: `${residentId}-g2`,
+        slot_index: 1,
+        plant_type: 'tree',
+        plant_name: 'Egetræ',
+        goal_text: 'Tage bussen alene til butikken',
+        growth_stage: 2,
+        total_water: 45,
+        last_watered_at: isoDaysAgo(1),
+      },
+      {
+        id: `${residentId}-g3`,
+        slot_index: 2,
+        plant_type: 'herb',
+        plant_name: 'Mynte',
+        goal_text: 'Sove igennem natten 5 gange på rad',
+        growth_stage: 3,
+        total_water: 72,
+        last_watered_at: isoDaysAgo(0),
+      },
+      {
+        id: `${residentId}-g4`,
+        slot_index: 3,
+        plant_type: 'vegetable',
+        plant_name: 'Tomat',
+        goal_text: 'Ringe til min søster én gang om ugen',
+        growth_stage: 1,
+        total_water: 18,
+        last_watered_at: isoDaysAgo(3),
+      },
+    ];
+  }
+
+  const h = hashId(residentId);
+  const count = h % 5;
+  if (count === 0) return [];
+
+  const types: HavenDemoPlot['plant_type'][] = ['flower', 'tree', 'herb', 'bush', 'vegetable'];
+  const names = ['Lavendel', 'Birk', 'Basilikum', 'Hindbær', 'Gulerod'];
+  const goals = ['Finde ro før sengetid', 'Gå 10 minutter dagligt', 'Snakke med én om dagen'];
+  const out: HavenDemoPlot[] = [];
+  for (let i = 0; i < count; i++) {
+    const ti = types[(h + i) % types.length]!;
+    out.push({
+      id: `${residentId}-g-${i}`,
+      slot_index: i,
+      plant_type: ti,
+      plant_name: names[(h + i) % names.length]!,
+      goal_text: goals[(h + i) % goals.length]!,
+      growth_stage: Math.min(4, (h + i) % 5) as 0 | 1 | 2 | 3 | 4,
+      total_water: 10 + ((h * (i + 3)) % 180),
+      last_watered_at: isoDaysAgo((h + i) % 5),
+    });
+  }
+  return out;
 }
 
 function fallbackDetail(profile: CareDemoResidentProfile): ResidentDemoDetailSeed {
@@ -968,6 +1059,7 @@ export function getResidentDemoDetail(residentId: string): ResidentDemoDetail | 
     borgerApp: synthesizeBorgerApp(seed),
     standardEvents: synthesizeStandardEvents(seed),
     situationRecommendation: synthesizeSituationRecommendation(seed),
+    gardenPlots: synthesizeGardenPlots(profile.id),
   };
 }
 
@@ -1139,6 +1231,31 @@ export function buildUnifiedResidentStatus(d: ResidentDemoDetail): {
       tone: goalsTone,
       goToSection: 'maal',
     },
+    (() => {
+      const g = d.gardenPlots;
+      const n = g.length;
+      const tone: UnifiedStatusTone = n >= 3 ? 'ok' : n >= 1 ? 'neutral' : 'neutral';
+      return {
+        id: 'haven',
+        label: 'Haven (Lys)',
+        value:
+          n === 0
+            ? 'Ingen planter endnu i demo'
+            : `${n} ${n === 1 ? 'plante' : 'planter'} — samme som borgeren ser`,
+        hint:
+          n > 0
+            ? clip(
+                g
+                  .slice(0, 2)
+                  .map((p) => p.plant_name)
+                  .join(', ') + (n > 2 ? '…' : ''),
+                88
+              )
+            : undefined,
+        tone,
+        goToSection: 'haven',
+      };
+    })(),
   ];
 
   return {

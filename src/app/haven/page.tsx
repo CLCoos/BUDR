@@ -5,87 +5,31 @@ import { Plus, X, Droplets, ChevronLeft } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useResidentSession } from '@/hooks/useResidentSession';
 import * as dataService from '@/lib/dataService';
-import TreePlant from '@/components/haven/plants/TreePlant';
-import FlowerPlant from '@/components/haven/plants/FlowerPlant';
-import HerbPlant from '@/components/haven/plants/HerbPlant';
-import BushPlant from '@/components/haven/plants/BushPlant';
-import VegetablePlant from '@/components/haven/plants/VegetablePlant';
+import { HavenGardenScene } from '@/components/haven/HavenGardenScene';
+import { HavenPlantSvg } from '@/components/haven/HavenPlantSvg';
+import {
+  getHavenAmbientPeriod,
+  HAVEN_PLANT_ACCENTS,
+  HAVEN_PLANT_LABELS,
+  HAVEN_STAGE_LABELS,
+  HAVEN_WATER_THRESHOLDS,
+} from '@/components/haven/havenConstants';
+import type { HavenAmbientPeriod } from '@/components/haven/havenConstants';
+import type { HavenPlantType } from '@/components/haven/havenConstants';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-
-type PlantType = 'tree' | 'flower' | 'herb' | 'bush' | 'vegetable';
 
 type GardenPlot = {
   id: string;
   resident_id: string;
   slot_index: number;
-  plant_type: PlantType;
+  plant_type: HavenPlantType;
   plant_name: string;
   goal_text: string;
   growth_stage: 0 | 1 | 2 | 3 | 4;
   total_water: number;
   last_watered_at: string | null;
 };
-
-// ── Ambient light system ──────────────────────────────────────────────────────
-
-type AmbientPeriod = {
-  label: string;
-  sky: string;
-  ground: string;
-  horizon: string;
-  textColor: string;
-};
-
-function getAmbientPeriod(h: number): AmbientPeriod {
-  if (h >= 5 && h < 8)
-    return {
-      label: 'tidlig morgen',
-      sky: 'linear-gradient(180deg, #1a1060 0%, #f97316 60%, #fde68a 100%)',
-      ground: '#2d4a1e',
-      horizon: '#f97316',
-      textColor: '#fff',
-    };
-  if (h >= 8 && h < 12)
-    return {
-      label: 'formiddag',
-      sky: 'linear-gradient(180deg, #38bdf8 0%, #7dd3fc 60%, #e0f2fe 100%)',
-      ground: '#2d6a1e',
-      horizon: '#bae6fd',
-      textColor: '#0f172a',
-    };
-  if (h >= 12 && h < 16)
-    return {
-      label: 'eftermiddag',
-      sky: 'linear-gradient(180deg, #1d4ed8 0%, #60a5fa 60%, #bfdbfe 100%)',
-      ground: '#1e5216',
-      horizon: '#93c5fd',
-      textColor: '#0f172a',
-    };
-  if (h >= 16 && h < 19)
-    return {
-      label: 'sen eftermiddag',
-      sky: 'linear-gradient(180deg, #9333ea 0%, #f97316 50%, #fbbf24 100%)',
-      ground: '#1a3d12',
-      horizon: '#f97316',
-      textColor: '#fff',
-    };
-  if (h >= 19 && h < 22)
-    return {
-      label: 'aften',
-      sky: 'linear-gradient(180deg, #0f172a 0%, #1e3a5f 50%, #374151 100%)',
-      ground: '#0f2309',
-      horizon: '#1e3a5f',
-      textColor: '#e2e8f0',
-    };
-  return {
-    label: 'nat',
-    sky: 'linear-gradient(180deg, #020617 0%, #0f172a 60%, #1e293b 100%)',
-    ground: '#0a1806',
-    horizon: '#1e293b',
-    textColor: '#cbd5e1',
-  };
-}
 
 function stageFromWater(w: number): 0 | 1 | 2 | 3 | 4 {
   if (w >= 200) return 4;
@@ -94,43 +38,6 @@ function stageFromWater(w: number): 0 | 1 | 2 | 3 | 4 {
   if (w >= 20) return 1;
   return 0;
 }
-
-// ── Plant component selector ──────────────────────────────────────────────────
-
-const PLANT_ACCENTS: Record<PlantType, string> = {
-  tree: '#1D9E75',
-  flower: '#F59E0B',
-  herb: '#10B981',
-  bush: '#7F77DD',
-  vegetable: '#EF4444',
-};
-
-const PLANT_LABELS: Record<PlantType, string> = {
-  tree: 'Træ',
-  flower: 'Blomst',
-  herb: 'Urt',
-  bush: 'Busk',
-  vegetable: 'Grøntsag',
-};
-
-function PlantSvg({ type, stage }: { type: PlantType; stage: 0 | 1 | 2 | 3 | 4 }) {
-  const accent = PLANT_ACCENTS[type];
-  switch (type) {
-    case 'tree':
-      return <TreePlant stage={stage} accent={accent} />;
-    case 'flower':
-      return <FlowerPlant stage={stage} accent={accent} />;
-    case 'herb':
-      return <HerbPlant stage={stage} accent={accent} />;
-    case 'bush':
-      return <BushPlant stage={stage} accent={accent} />;
-    case 'vegetable':
-      return <VegetablePlant stage={stage} accent={accent} />;
-  }
-}
-
-const STAGE_LABELS = ['Frø 🌱', 'Spire 🌿', 'Ung 🌾', 'Moden 🌸', 'Fuld 🌳'];
-const WATER_THRESHOLDS = [0, 20, 60, 120, 200];
 
 // ── Main component ────────────────────────────────────────────────────────────
 
@@ -148,16 +55,18 @@ function HavenView() {
   const session = useResidentSession();
 
   const [plots, setPlots] = useState<GardenPlot[]>([]);
-  const [ambient, setAmbient] = useState<AmbientPeriod>(() =>
-    getAmbientPeriod(new Date().getHours())
+  const [ambient, setAmbient] = useState<HavenAmbientPeriod>(() =>
+    getHavenAmbientPeriod(new Date().getHours())
   );
   const [selected, setSelected] = useState<GardenPlot | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [addSlot, setAddSlot] = useState<number>(0);
   const [watering, setWatering] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const [waterPulseSlot, setWaterPulseSlot] = useState<number | null>(null);
 
   // Add modal state
-  const [newType, setNewType] = useState<PlantType>('flower');
+  const [newType, setNewType] = useState<HavenPlantType>('flower');
   const [newName, setNewName] = useState('');
   const [newGoal, setNewGoal] = useState('');
   const [saving, setSaving] = useState(false);
@@ -178,17 +87,29 @@ function HavenView() {
   const ambientRef = useRef<ReturnType<typeof setInterval> | null>(null);
   useEffect(() => {
     ambientRef.current = setInterval(() => {
-      setAmbient(getAmbientPeriod(new Date().getHours()));
+      setAmbient(getHavenAmbientPeriod(new Date().getHours()));
     }, 60_000);
     return () => {
       if (ambientRef.current) clearInterval(ambientRef.current);
     };
   }, []);
 
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReducedMotion(mq.matches);
+    const on = () => setReducedMotion(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+
   const load = useCallback(async () => {
     if (!activeId) return;
-    const data = await dataService.getGardenPlots(mode, activeId);
-    setPlots(data as GardenPlot[]);
+    try {
+      const data = await dataService.getGardenPlots(mode, activeId);
+      setPlots(data as GardenPlot[]);
+    } catch {
+      setPlots([]);
+    }
   }, [activeId, mode]);
 
   useEffect(() => {
@@ -202,21 +123,28 @@ function HavenView() {
     const newTotal = selected.total_water + 10;
     const newStage = stageFromWater(newTotal);
 
-    await dataService.updatePlot(mode, activeId, selected.id, {
-      total_water: newTotal,
-      growth_stage: newStage,
-      last_watered_at: new Date().toISOString(),
-    });
-    await dataService.addXp(mode, activeId, 'haven_water', 10);
+    try {
+      await dataService.updatePlot(mode, activeId, selected.id, {
+        total_water: newTotal,
+        growth_stage: newStage,
+        last_watered_at: new Date().toISOString(),
+      });
+      await dataService.addXp(mode, activeId, 'haven_water', 10);
 
-    setWatering(false);
-    const updated = {
-      ...selected,
-      total_water: newTotal,
-      growth_stage: newStage as GardenPlot['growth_stage'],
-    };
-    setSelected(updated);
-    setPlots((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+      setWaterPulseSlot(selected.slot_index);
+      window.setTimeout(() => setWaterPulseSlot(null), 1000);
+      const updated = {
+        ...selected,
+        total_water: newTotal,
+        growth_stage: newStage as GardenPlot['growth_stage'],
+      };
+      setSelected(updated);
+      setPlots((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+    } catch {
+      /* XP eller DB — vis ikke modal; brugeren kan prøve igen */
+    } finally {
+      setWatering(false);
+    }
   };
 
   const handleAddPlant = async () => {
@@ -238,8 +166,9 @@ function HavenView() {
         last_watered_at: null,
         is_park_linked: false,
       });
-    } catch {
-      setAddError('Noget gik galt. Prøv igen.');
+    } catch (e) {
+      const detail = e instanceof Error ? e.message : '';
+      setAddError(detail ? `Kunne ikke gemme planten. ${detail}` : 'Noget gik galt. Prøv igen.');
       setSaving(false);
       return;
     }
@@ -270,23 +199,25 @@ function HavenView() {
   // Build 6 slots
   const slots = Array.from({ length: 6 }, (_, i) => plots.find((p) => p.slot_index === i) ?? null);
 
-  // Perspective rows: back row slots 0-2 (smaller), front row 3-5 (larger)
-  const backRow = slots.slice(0, 3);
-  const frontRow = slots.slice(3, 6);
+  const scenePlots = plots.map((p) => ({
+    id: p.id,
+    slot_index: p.slot_index,
+    plant_type: p.plant_type,
+    plant_name: p.plant_name,
+    growth_stage: p.growth_stage,
+  }));
 
-  const accent = selected ? PLANT_ACCENTS[selected.plant_type] : '#10B981';
+  const accent = selected ? HAVEN_PLANT_ACCENTS[selected.plant_type] : '#10B981';
   const nextThreshold = selected
-    ? (WATER_THRESHOLDS[Math.min(selected.growth_stage + 1, 4)] ?? 200)
+    ? (HAVEN_WATER_THRESHOLDS[Math.min(selected.growth_stage + 1, 4)] ?? 200)
     : 200;
   const waterProgress = selected ? Math.min((selected.total_water / nextThreshold) * 100, 100) : 0;
 
   return (
     <div
-      className="relative min-h-screen overflow-hidden flex flex-col"
+      className="relative min-h-screen overflow-hidden flex flex-col bg-[#0b1220]"
       style={{
-        background: ambient.sky,
         transition: 'background 2s ease',
-        color: ambient.textColor,
       }}
     >
       {/* Header */}
@@ -309,51 +240,22 @@ function HavenView() {
         <div className="w-16" />
       </div>
 
-      {/* Garden scene */}
-      <div className="relative flex-1 flex flex-col justify-end" style={{ minHeight: '60vh' }}>
-        {/* Horizon glow */}
-        <div
-          className="absolute left-0 right-0 h-24 pointer-events-none"
-          style={{
-            bottom: '35%',
-            background: `radial-gradient(ellipse 80% 50% at 50% 100%, ${ambient.horizon}44 0%, transparent 100%)`,
-            transition: 'background 2s ease',
+      {/* Garden scene — altid rig atmosfære; animationer respekterer prefers-reduced-motion */}
+      <div className="relative flex-1 px-3 pb-2" style={{ minHeight: '52vh' }}>
+        <HavenGardenScene
+          className="min-h-[52vh] shadow-xl"
+          plots={scenePlots}
+          ambient={ambient}
+          showcase
+          reducedMotion={reducedMotion}
+          pulseSlotIndex={waterPulseSlot}
+          onSlotClick={(slot, plot) => {
+            if (plot) {
+              const full = plots.find((p) => p.id === plot.id) ?? null;
+              if (full) setSelected(full);
+            } else openAdd(slot);
           }}
         />
-
-        {/* Ground */}
-        <div
-          className="relative px-4 pb-6 pt-4"
-          style={{
-            background: `linear-gradient(180deg, ${ambient.ground}00 0%, ${ambient.ground} 30%)`,
-            transition: 'background 2s ease',
-          }}
-        >
-          {/* Back row */}
-          <div className="flex justify-around items-end mb-2 px-4">
-            {backRow.map((plot, i) => (
-              <PlotSlot
-                key={`back-${i}`}
-                plot={plot}
-                size="sm"
-                onClick={() => (plot ? setSelected(plot) : openAdd(i))}
-                ambient={ambient}
-              />
-            ))}
-          </div>
-          {/* Front row */}
-          <div className="flex justify-around items-end px-0">
-            {frontRow.map((plot, i) => (
-              <PlotSlot
-                key={`front-${i}`}
-                plot={plot}
-                size="lg"
-                onClick={() => (plot ? setSelected(plot) : openAdd(i + 3))}
-                ambient={ambient}
-              />
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* FAB */}
@@ -410,21 +312,23 @@ function HavenView() {
             <div>
               <p className="text-xs font-bold uppercase tracking-wide text-gray-700 mb-2">Type</p>
               <div className="grid grid-cols-5 gap-2">
-                {(Object.keys(PLANT_LABELS) as PlantType[]).map((t) => (
+                {(Object.keys(HAVEN_PLANT_LABELS) as HavenPlantType[]).map((t) => (
                   <button
                     key={t}
                     type="button"
                     onClick={() => setNewType(t)}
                     className="flex flex-col items-center gap-1 rounded-2xl py-3 transition-all duration-150"
                     style={{
-                      backgroundColor: newType === t ? `${PLANT_ACCENTS[t]}18` : '#f9fafb',
-                      border: `2px solid ${newType === t ? PLANT_ACCENTS[t] : '#e5e7eb'}`,
+                      backgroundColor: newType === t ? `${HAVEN_PLANT_ACCENTS[t]}18` : '#f9fafb',
+                      border: `2px solid ${newType === t ? HAVEN_PLANT_ACCENTS[t] : '#e5e7eb'}`,
                     }}
                   >
                     <div className="w-10 h-10">
-                      <PlantSvg type={t} stage={2} />
+                      <HavenPlantSvg type={t} stage={2} />
                     </div>
-                    <span className="text-[10px] font-bold text-gray-600">{PLANT_LABELS[t]}</span>
+                    <span className="text-[10px] font-bold text-gray-600">
+                      {HAVEN_PLANT_LABELS[t]}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -438,7 +342,7 @@ function HavenView() {
                 type="text"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                placeholder={`F.eks. "Min ${PLANT_LABELS[newType].toLowerCase()}"…`}
+                placeholder={`F.eks. "Min ${HAVEN_PLANT_LABELS[newType].toLowerCase()}"…`}
                 className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-green-400"
                 autoFocus
               />
@@ -482,7 +386,7 @@ function HavenView() {
                 disabled={!newName.trim() || saving}
                 className="flex-1 rounded-xl py-3 text-sm font-bold text-white disabled:opacity-40"
                 style={{
-                  background: `linear-gradient(135deg, ${PLANT_ACCENTS[newType]}, ${PLANT_ACCENTS[newType]}bb)`,
+                  background: `linear-gradient(135deg, ${HAVEN_PLANT_ACCENTS[newType]}, ${HAVEN_PLANT_ACCENTS[newType]}bb)`,
                 }}
               >
                 {saving ? 'Planter…' : 'Plant den!'}
@@ -490,90 +394,6 @@ function HavenView() {
             </div>
           </div>
         </div>
-      )}
-    </div>
-  );
-}
-
-// ── PlotSlot ──────────────────────────────────────────────────────────────────
-
-function PlotSlot({
-  plot,
-  size,
-  onClick,
-  ambient,
-}: {
-  plot: GardenPlot | null;
-  size: 'sm' | 'lg';
-  onClick: () => void;
-  ambient: AmbientPeriod;
-}) {
-  const dim = size === 'sm' ? 'w-20 h-20' : 'w-28 h-28';
-  const moundW = size === 'sm' ? 72 : 96;
-  const moundH = size === 'sm' ? 14 : 18;
-
-  return (
-    <div
-      className="flex flex-col items-center"
-      style={{ filter: size === 'sm' ? 'brightness(0.85)' : 'none' }}
-    >
-      <button
-        type="button"
-        onClick={onClick}
-        className={`${dim} relative flex items-end justify-center transition-transform duration-150 active:scale-95`}
-        aria-label={plot ? plot.plant_name : 'Tom planteplads'}
-      >
-        {plot ? (
-          <>
-            <div className="absolute inset-0 flex items-end justify-center pb-1">
-              <PlantSvg type={plot.plant_type} stage={plot.growth_stage} />
-            </div>
-            {/* Water drop indicator */}
-            <div
-              className="absolute top-0 right-0 h-5 w-5 rounded-full flex items-center justify-center text-white"
-              style={{
-                background: PLANT_ACCENTS[plot.plant_type],
-                fontSize: 9,
-                fontWeight: 'bold',
-              }}
-            >
-              {plot.growth_stage + 1}
-            </div>
-          </>
-        ) : (
-          <div className="w-full h-full rounded-2xl flex items-center justify-center border-2 border-dashed border-white/40 bg-white/10">
-            <Plus className="h-5 w-5 text-white/60" />
-          </div>
-        )}
-      </button>
-      {/* Mound */}
-      <svg
-        width={moundW}
-        height={moundH}
-        viewBox={`0 0 ${moundW} ${moundH}`}
-        fill="none"
-        className="-mt-1"
-        style={{ overflow: 'visible' }}
-      >
-        <ellipse
-          cx={moundW / 2}
-          cy={moundH / 2}
-          rx={moundW / 2}
-          ry={moundH / 2}
-          fill={ambient.ground}
-        />
-        <ellipse
-          cx={moundW / 2}
-          cy={moundH / 2 - 2}
-          rx={moundW / 2 - 4}
-          ry={moundH / 2 - 2}
-          fill={`${ambient.ground}88`}
-        />
-      </svg>
-      {plot && (
-        <p className="text-[10px] font-bold mt-0.5 max-w-[80px] text-center truncate text-white drop-shadow">
-          {plot.plant_name}
-        </p>
       )}
     </div>
   );
@@ -600,7 +420,7 @@ function PlotDetailPanel({
   nextThreshold: number;
   accent: string;
 }) {
-  const stageLabel = STAGE_LABELS[plot.growth_stage] ?? '';
+  const stageLabel = HAVEN_STAGE_LABELS[plot.growth_stage] ?? '';
   const isFull = plot.growth_stage === 4;
   const waterNeeded = Math.max(0, nextThreshold - plot.total_water);
 
@@ -627,13 +447,13 @@ function PlotDetailPanel({
               style={{ backgroundColor: `${accent}18` }}
             >
               <div className="w-10 h-10">
-                <PlantSvg type={plot.plant_type} stage={plot.growth_stage} />
+                <HavenPlantSvg type={plot.plant_type} stage={plot.growth_stage} />
               </div>
             </div>
             <div>
               <h2 className="text-xl font-black text-gray-900">{plot.plant_name}</h2>
               <p className="text-sm font-medium text-gray-600">
-                {PLANT_LABELS[plot.plant_type]} · {stageLabel}
+                {HAVEN_PLANT_LABELS[plot.plant_type]} · {stageLabel}
               </p>
             </div>
           </div>
@@ -681,7 +501,7 @@ function PlotDetailPanel({
             </div>
           )}
           <div className="flex justify-between mt-1.5">
-            {STAGE_LABELS.map((l, i) => (
+            {HAVEN_STAGE_LABELS.map((l, i) => (
               <span
                 key={i}
                 className="text-[9px] font-semibold"

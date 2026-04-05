@@ -257,7 +257,12 @@ export default function LysMigScreen({
       const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
       const url = urlData.publicUrl;
       setAvatarUrl(url);
-      await supabase.from('care_residents').update({ avatar_url: url }).eq('user_id', residentId);
+      await fetch('/api/park/resident-me', {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ avatar_url: url }),
+      });
     }
     setUploadingAvatar(false);
   };

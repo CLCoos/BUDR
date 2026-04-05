@@ -95,24 +95,35 @@ function PlantSvg() {
   );
 }
 
-function HavenWidget({ residentId, onNavigate }: { residentId: string; onNavigate: () => void }) {
+function HavenWidget({
+  residentId,
+  storageMode,
+  onNavigate,
+}: {
+  residentId: string;
+  storageMode: 'supabase' | 'local';
+  onNavigate: () => void;
+}) {
   const [plots, setPlots] = useState<GardenPlotMini[]>([]);
 
   useEffect(() => {
     if (!residentId) return;
-    const supabase = createClient();
-    if (!supabase) return;
-    supabase
-      .from('garden_plots')
-      .select('id, plant_type, plant_name, growth_stage')
-      .eq('resident_id', residentId)
-      .order('slot_index')
-      .limit(2)
-      .then(
-        ({ data }) => setPlots((data ?? []) as GardenPlotMini[]),
-        () => {}
-      );
-  }, [residentId]);
+    void (async () => {
+      try {
+        const rows = await dataService.getGardenPlots(storageMode, residentId);
+        setPlots(
+          rows.map((r) => ({
+            id: r.id,
+            plant_type: r.plant_type,
+            plant_name: r.plant_name,
+            growth_stage: r.growth_stage,
+          }))
+        );
+      } catch {
+        setPlots([]);
+      }
+    })();
+  }, [residentId, storageMode]);
 
   return (
     <button
@@ -499,6 +510,7 @@ export default function LysHome({
         {/* Haven widget */}
         <HavenWidget
           residentId={residentId}
+          storageMode={session.storageMode}
           onNavigate={() => router.push(residentId ? `/haven?r=${residentId}` : '/haven')}
         />
 

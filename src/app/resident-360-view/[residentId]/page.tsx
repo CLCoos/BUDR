@@ -1,8 +1,9 @@
 import React from 'react';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
-import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import PortalShell from '@/components/PortalShell';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import ResidentHeader from '../components/ResidentHeader';
 import DagsPlanPortal from './components/DagsPlanPortal';
 import ResidentPlanTab from './components/ResidentPlanTab';
@@ -24,14 +25,6 @@ const DB_TO_UI: Record<TrafficDb, TrafficUi> = {
   rød: 'roed',
 };
 
-function getServiceClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false } }
-  );
-}
-
 function formatCheckin(iso: string): string {
   const date = new Date(iso);
   const now = new Date();
@@ -45,8 +38,7 @@ function formatCheckin(iso: string): string {
 
 // ── Data fetching ─────────────────────────────────────────────
 
-async function fetchResidentData(residentId: string) {
-  const supabase = getServiceClient();
+async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
   const today = new Date().toISOString().slice(0, 10);
   const todayStart = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
 
@@ -90,7 +82,7 @@ async function fetchResidentData(residentId: string) {
       .order('created_at', { ascending: true }),
   ]);
 
-  if (!residentRes.data) return null;
+  if (residentRes.error || !residentRes.data) return null;
 
   const r = residentRes.data;
   const od = (r.onboarding_data as Record<string, string> | null) ?? {};
@@ -165,7 +157,15 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
   const { tab = 'overblik' } = (await searchParams) as { tab?: string };
   const activeTab = (ALL_TABS as readonly string[]).includes(tab) ? (tab as TabId) : 'overblik';
 
-  const data = await fetchResidentData(residentId);
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) redirect('/care-portal-login?err=config');
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect('/care-portal-login');
+
+  const data = await fetchResidentData(supabase, residentId);
   if (!data) notFound();
 
   const { resident, checkinNote, plan, proposals, journalEntries, todayPlanItems, medications } =

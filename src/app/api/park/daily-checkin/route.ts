@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getResidentId } from '@/lib/residentAuth';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 function getServiceClient() {
   return createClient(
@@ -46,7 +45,8 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Invalid traffic_light value' }, { status: 422 });
   }
 
-  const supabase = await createServerSupabaseClient();
+  // Service role: RLS på park_daily_checkin tillader ikke anon/uden staff-JWT indsættelse
+  const supabase = getServiceClient();
   if (!supabase) {
     return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
   }

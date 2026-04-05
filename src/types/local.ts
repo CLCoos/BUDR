@@ -103,7 +103,7 @@ export type LysConversation = {
 export type LocalProfile = {
   nickname: string;
   theme: string;
-  avatar: null;
+  avatar: string | null;
 };
 
 // ── localStorage keys ─────────────────────────────────────────────────────────

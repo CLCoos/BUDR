@@ -1,7 +1,9 @@
 import React from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { redirect } from 'next/navigation';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import PortalShell from '@/components/PortalShell';
 import ResidentOverviewGrid from './components/ResidentOverviewGrid';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -29,16 +31,7 @@ export type ResidentItem = {
 
 // ── Data fetching ─────────────────────────────────────────────
 
-function getServiceClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false } }
-  );
-}
-
-async function fetchResidentsOverview(): Promise<ResidentItem[]> {
-  const supabase = getServiceClient();
+async function fetchResidentsOverview(supabase: SupabaseClient): Promise<ResidentItem[]> {
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
 
@@ -114,7 +107,14 @@ async function fetchResidentsOverview(): Promise<ResidentItem[]> {
 // ── Page ──────────────────────────────────────────────────────
 
 export default async function Resident360ViewPage() {
-  const residents = await fetchResidentsOverview();
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) redirect('/care-portal-login?err=config');
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect('/care-portal-login');
+
+  const residents = await fetchResidentsOverview(supabase);
 
   return (
     <PortalShell>
