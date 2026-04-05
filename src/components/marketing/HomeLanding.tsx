@@ -186,6 +186,11 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
             </li>
           </ul>
         </div>
+        <div
+          className="nav-scroll-progress"
+          style={{ transform: `scaleX(${scrollProgress})` }}
+          aria-hidden
+        />
       </nav>
 
       <div className="budr-landing-content">

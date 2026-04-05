@@ -149,7 +149,8 @@ function HavenView() {
     if (!selected || !activeId || watering) return;
     if (getWaterCredits(activeId) < 1) {
       toast.message('Ingen vand lige nu', {
-        description: 'Fuldfør opgaver under Din dag i Lys — hver fuldført opgave giver ét vand til haven.',
+        description:
+          'Fuldfør opgaver under Din dag i Lys — hver fuldført opgave giver ét vand til haven.',
       });
       return;
     }
@@ -400,8 +401,9 @@ function HavenView() {
             </div>
 
             <p className="text-xs text-gray-600 bg-green-50 border border-green-200 rounded-xl p-3">
-              Du får <strong>ét vand</strong> hver gang du fuldfører en opgave på <strong>Din dag</strong>{' '}
-              i Lys. Brug vandet her for at vokse planten og optjene XP — det er ikke et ubegrænset tryk.
+              Du får <strong>ét vand</strong> hver gang du fuldfører en opgave på{' '}
+              <strong>Din dag</strong> i Lys. Brug vandet her for at vokse planten og optjene XP —
+              det er ikke et ubegrænset tryk.
             </p>
 
             {addError && (
@@ -577,7 +579,9 @@ function PlotDetailPanel({
             {waterCredits > 0 ? (
               <>
                 {waterCredits === 1 ? (
-                  <>Du har <strong className="text-gray-900">ét vand</strong> tilbage</>
+                  <>
+                    Du har <strong className="text-gray-900">ét vand</strong> tilbage
+                  </>
                 ) : (
                   <>
                     Du har <strong className="text-gray-900">{waterCredits}</strong> vand tilbage

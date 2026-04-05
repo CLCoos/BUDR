@@ -2,7 +2,15 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { AlertTriangle, CheckCircle2, ChevronDown, Loader2, Plus, RefreshCw, X } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ChevronDown,
+  Loader2,
+  Plus,
+  RefreshCw,
+  X,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
@@ -121,7 +129,8 @@ async function staffAuthorLabel(): Promise<string> {
   } = await supabase.auth.getUser();
   if (!user) return '';
   const meta = user.user_metadata as { full_name?: string; initials?: string } | undefined;
-  if (typeof meta?.initials === 'string' && meta.initials.trim()) return meta.initials.trim().slice(0, 6);
+  if (typeof meta?.initials === 'string' && meta.initials.trim())
+    return meta.initials.trim().slice(0, 6);
   if (typeof meta?.full_name === 'string' && meta.full_name.trim()) {
     const parts = meta.full_name.trim().split(/\s+/);
     if (parts.length >= 2) return `${parts[0]![0] ?? ''}${parts[1]![0] ?? ''}`.toUpperCase();
@@ -143,8 +152,8 @@ export default function BekymringsnotatWidget({ demoMode = false }: Props) {
   const [loading, setLoading] = useState(!demoMode);
   const [refreshing, setRefreshing] = useState(false);
   const [scopeError, setScopeError] = useState<string | null>(null);
-  const [residents, setResidents] = useState<{ id: string; name: string }[]>(
-    () => (demoMode ? DEMO_RESIDENTS : [])
+  const [residents, setResidents] = useState<{ id: string; name: string }[]>(() =>
+    demoMode ? DEMO_RESIDENTS : []
   );
   const [showForm, setShowForm] = useState(false);
   const [residentId, setResidentId] = useState('');
@@ -611,7 +620,10 @@ export default function BekymringsnotatWidget({ demoMode = false }: Props) {
                         {n.category}
                       </span>
                     </div>
-                    <p className="mt-1.5 text-sm whitespace-pre-wrap" style={{ color: 'var(--cp-muted)' }}>
+                    <p
+                      className="mt-1.5 text-sm whitespace-pre-wrap"
+                      style={{ color: 'var(--cp-muted)' }}
+                    >
                       {n.note}
                     </p>
                     <div

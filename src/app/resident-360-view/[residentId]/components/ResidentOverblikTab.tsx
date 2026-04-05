@@ -289,10 +289,13 @@ export default function ResidentOverblikTab({
         <div className="rounded-xl border border-amber-200 bg-amber-50/90 px-4 py-3">
           <div className="flex items-center gap-2 mb-2">
             <AlertTriangle size={15} className="text-amber-600 flex-shrink-0" aria-hidden />
-            <span className="text-sm font-semibold text-amber-900">Bekymringsnotater (hurtige)</span>
+            <span className="text-sm font-semibold text-amber-900">
+              Bekymringsnotater (hurtige)
+            </span>
           </div>
           <p className="text-[11px] text-amber-800/90 mb-2">
-            Adskilt fra journal — oprettes fra dashboard. Ved formel dokumentation brug journal nedenfor.
+            Adskilt fra journal — oprettes fra dashboard. Ved formel dokumentation brug journal
+            nedenfor.
           </p>
           <ul className="space-y-2">
             {concernNotes.map((c) => (
