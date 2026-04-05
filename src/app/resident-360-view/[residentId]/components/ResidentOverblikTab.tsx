@@ -37,6 +37,15 @@ interface PlanItem {
   time?: string;
 }
 
+type ConcernNoteRow = {
+  id: string;
+  note: string;
+  category: string;
+  severity: number;
+  staff_name: string;
+  created_at: string;
+};
+
 interface Props {
   residentId: string;
   residentName: string;
@@ -81,6 +90,27 @@ export default function ResidentOverblikTab({
   const tlCfg = trafficLight ? TL_CONFIG[trafficLight] : null;
   const pendingItems = todayPlanItems.filter((i) => !i.done);
   const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [concernNotes, setConcernNotes] = useState<ConcernNoteRow[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const supabase = createClient();
+      if (!supabase) return;
+      const { data, error } = await supabase
+        .from('care_concern_notes')
+        .select('id, note, category, severity, staff_name, created_at')
+        .eq('resident_id', residentId)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      if (cancelled) return;
+      if (!error && data) setConcernNotes(data as ConcernNoteRow[]);
+      else setConcernNotes([]);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [residentId]);
 
   const journalDrafts = journalEntries.filter((e) => e.journal_status === 'kladde');
   const journalGodkendt = journalEntries.filter((e) => e.journal_status !== 'kladde');
@@ -253,6 +283,41 @@ export default function ResidentOverblikTab({
             </div>
           </div>
         </Link>
+      )}
+
+      {concernNotes.length > 0 && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50/90 px-4 py-3">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertTriangle size={15} className="text-amber-600 flex-shrink-0" aria-hidden />
+            <span className="text-sm font-semibold text-amber-900">Bekymringsnotater (hurtige)</span>
+          </div>
+          <p className="text-[11px] text-amber-800/90 mb-2">
+            Adskilt fra journal — oprettes fra dashboard. Ved formel dokumentation brug journal nedenfor.
+          </p>
+          <ul className="space-y-2">
+            {concernNotes.map((c) => (
+              <li
+                key={c.id}
+                className="rounded-lg border border-amber-100 bg-white/80 px-3 py-2 text-xs text-gray-700"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-1 mb-0.5">
+                  <span className="font-semibold text-amber-900">{c.category}</span>
+                  <span className="tabular-nums text-amber-700">Alvor {c.severity}/10</span>
+                </div>
+                <p className="line-clamp-3">{c.note}</p>
+                <p className="mt-1 text-[10px] text-gray-500">
+                  {formatTime(c.created_at)} · {c.staff_name || 'Personale'}
+                </p>
+              </li>
+            ))}
+          </ul>
+          <Link
+            href="/care-portal-dashboard"
+            className="mt-2 inline-block text-[11px] font-medium text-amber-800 underline-offset-2 hover:underline"
+          >
+            Åbn dashboard for at tilføje eller fjerne
+          </Link>
+        </div>
       )}
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">

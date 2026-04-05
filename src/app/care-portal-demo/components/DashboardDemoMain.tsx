@@ -264,7 +264,7 @@ export default function DashboardDemoMain() {
 
       <div className="mb-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
         <MedicationWidget />
-        <BekymringsnotatWidget />
+        <BekymringsnotatWidget demoMode />
         <KalenderWidget />
         <OpgaveWidget />
       </div>

@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import Link from 'next/link';
 import ResidentHandoverCard from './ResidentHandoverCard';
 import { Download } from 'lucide-react';
 import { toast } from 'sonner';
@@ -129,6 +130,38 @@ export default function HandoverClient({ carePortalDark = false }: HandoverClien
 
   return (
     <div className="max-w-screen-2xl p-6">
+      <div
+        className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border px-4 py-3 text-sm"
+        style={
+          pd
+            ? {
+                backgroundColor: 'var(--cp-bg2)',
+                borderColor: 'var(--cp-border)',
+                color: 'var(--cp-muted)',
+              }
+            : { backgroundColor: '#f8fafc', borderColor: '#e2e8f0', color: '#475569' }
+        }
+      >
+        <span className="font-medium" style={{ color: pd ? 'var(--cp-text)' : '#0f172a' }}>
+          Relateret i portalen:
+        </span>
+        <Link
+          href="/care-portal-dashboard"
+          className="underline-offset-2 hover:underline"
+          style={{ color: '#1D9E75' }}
+        >
+          Dashboard — journal og bekymringsnotater
+        </Link>
+        <Link
+          href="/care-portal-demo/beskeder"
+          className="underline-offset-2 hover:underline"
+          style={{ color: '#7F77DD' }}
+        >
+          Demo beskeder
+        </Link>
+        <span className="text-xs opacity-80">(live beskeder — kommende)</span>
+      </div>
+
       {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>

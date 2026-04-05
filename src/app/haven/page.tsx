@@ -3,8 +3,14 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Plus, X, Droplets, ChevronLeft } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
 import { useResidentSession } from '@/hooks/useResidentSession';
 import * as dataService from '@/lib/dataService';
+import {
+  getWaterCredits,
+  consumeWaterCredit,
+  HAVEN_WATER_CREDITS_EVENT,
+} from '@/lib/havenWaterCredits';
 import { HavenGardenScene } from '@/components/haven/HavenGardenScene';
 import { HavenPlantSvg } from '@/components/haven/HavenPlantSvg';
 import {
@@ -64,6 +70,7 @@ function HavenView() {
   const [watering, setWatering] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [waterPulseSlot, setWaterPulseSlot] = useState<number | null>(null);
+  const [waterCredits, setWaterCredits] = useState(0);
 
   // Add modal state
   const [newType, setNewType] = useState<HavenPlantType>('flower');
@@ -116,8 +123,36 @@ function HavenView() {
     if (activeId) void load();
   }, [activeId, load]);
 
+  const refreshWaterCredits = useCallback(() => {
+    if (!activeId) {
+      setWaterCredits(0);
+      return;
+    }
+    setWaterCredits(getWaterCredits(activeId));
+  }, [activeId]);
+
+  useEffect(() => {
+    refreshWaterCredits();
+  }, [refreshWaterCredits]);
+
+  useEffect(() => {
+    const onBankChange = () => refreshWaterCredits();
+    window.addEventListener(HAVEN_WATER_CREDITS_EVENT, onBankChange);
+    window.addEventListener('storage', onBankChange);
+    return () => {
+      window.removeEventListener(HAVEN_WATER_CREDITS_EVENT, onBankChange);
+      window.removeEventListener('storage', onBankChange);
+    };
+  }, [refreshWaterCredits]);
+
   const handleWater = async () => {
     if (!selected || !activeId || watering) return;
+    if (getWaterCredits(activeId) < 1) {
+      toast.message('Ingen vand lige nu', {
+        description: 'Fuldfør opgaver under Din dag i Lys — hver fuldført opgave giver ét vand til haven.',
+      });
+      return;
+    }
     setWatering(true);
 
     const newTotal = selected.total_water + 10;
@@ -130,6 +165,8 @@ function HavenView() {
         last_watered_at: new Date().toISOString(),
       });
       await dataService.addXp(mode, activeId, 'haven_water', 10);
+      consumeWaterCredit(activeId);
+      refreshWaterCredits();
 
       setWaterPulseSlot(selected.slot_index);
       window.setTimeout(() => setWaterPulseSlot(null), 1000);
@@ -141,7 +178,7 @@ function HavenView() {
       setSelected(updated);
       setPlots((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
     } catch {
-      /* XP eller DB — vis ikke modal; brugeren kan prøve igen */
+      toast.error('Kunne ikke gemme vanding — prøv igen');
     } finally {
       setWatering(false);
     }
@@ -285,6 +322,7 @@ function HavenView() {
           waterProgress={waterProgress}
           nextThreshold={nextThreshold}
           accent={accent}
+          waterCredits={waterCredits}
         />
       )}
 
@@ -362,8 +400,8 @@ function HavenView() {
             </div>
 
             <p className="text-xs text-gray-600 bg-green-50 border border-green-200 rounded-xl p-3">
-              Vand din plante for at se den vokse. Hvert vand giver 10 XP og rykker din plante
-              nærmere fuld blomstring.
+              Du får <strong>ét vand</strong> hver gang du fuldfører en opgave på <strong>Din dag</strong>{' '}
+              i Lys. Brug vandet her for at vokse planten og optjene XP — det er ikke et ubegrænset tryk.
             </p>
 
             {addError && (
@@ -410,6 +448,7 @@ function PlotDetailPanel({
   waterProgress,
   nextThreshold,
   accent,
+  waterCredits,
 }: {
   plot: GardenPlot;
   onClose: () => void;
@@ -419,6 +458,7 @@ function PlotDetailPanel({
   waterProgress: number;
   nextThreshold: number;
   accent: string;
+  waterCredits: number;
 }) {
   const stageLabel = HAVEN_STAGE_LABELS[plot.growth_stage] ?? '';
   const isFull = plot.growth_stage === 4;
@@ -532,11 +572,33 @@ function PlotDetailPanel({
           </div>
         </div>
 
-        {/* Water button */}
+        {!isFull && (
+          <p className="mb-2 text-center text-xs text-gray-600">
+            {waterCredits > 0 ? (
+              <>
+                {waterCredits === 1 ? (
+                  <>Du har <strong className="text-gray-900">ét vand</strong> tilbage</>
+                ) : (
+                  <>
+                    Du har <strong className="text-gray-900">{waterCredits}</strong> vand tilbage
+                  </>
+                )}{' '}
+                fra dagens opgaver · ét bruges pr. vanding
+              </>
+            ) : (
+              <>
+                <strong className="text-amber-700">Ingen vand tilbage.</strong> Gå til{' '}
+                <strong>Din dag</strong> i Lys og fuldfør opgaver for at tjene vand.
+              </>
+            )}
+          </p>
+        )}
+
+        {/* Water button — forbruger ét "vand" fra opgave-banken (ikke ubegrænset) */}
         <button
           type="button"
           onClick={onWater}
-          disabled={watering || isFull}
+          disabled={watering || isFull || waterCredits < 1}
           className="w-full flex items-center justify-center gap-2 rounded-2xl py-4 text-base font-bold text-white transition-all duration-200 active:scale-[0.98] disabled:opacity-40 mb-3"
           style={{
             background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
@@ -544,7 +606,13 @@ function PlotDetailPanel({
           }}
         >
           <Droplets className="h-5 w-5" />
-          {watering ? 'Vander…' : isFull ? 'Fuldt vokset 🌳' : 'Vand planten (+10 XP)'}
+          {watering
+            ? 'Vander…'
+            : isFull
+              ? 'Fuldt vokset 🌳'
+              : waterCredits < 1
+                ? 'Fuldfør opgaver for at få vand'
+                : 'Brug vand (+10 XP)'}
         </button>
 
         <button

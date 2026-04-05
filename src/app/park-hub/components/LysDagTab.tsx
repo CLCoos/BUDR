@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useResident } from '../context/ResidentContext';
 import { useResidentSession } from '@/hooks/useResidentSession';
 import * as dataService from '@/lib/dataService';
+import { grantWaterCredit, revokeWaterCredit } from '@/lib/havenWaterCredits';
 import type { LysThemeTokens } from '../lib/lysTheme';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -266,8 +267,10 @@ export default function LysDagTab({ tokens, accent }: Props) {
         const next = new Set(prev);
         if (next.has(id)) {
           next.delete(id);
+          if (residentId) revokeWaterCredit(residentId);
         } else {
           next.add(id);
+          if (residentId) grantWaterCredit(residentId);
           setXpEarned((xp) => xp + 5);
           const supabase = createClient();
           if (supabase && residentId) {

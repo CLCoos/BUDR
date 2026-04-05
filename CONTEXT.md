@@ -33,6 +33,8 @@ Schema is versioned under `supabase/migrations/` (organisations, `org_id` on res
 
 Do **not** commit real project URLs or secrets; use environment variables only.
 
+**`care_concern_notes`:** Bekymringsnotater på live dashboard + 360° overblik (hurtige observationer, ikke journal-godkendelse). Migration: `20260411120000_care_concern_notes.sql`.
+
 **Supabase projects:** Production is **`olszwyeikwbtjcoopfid`** (`https://olszwyeikwbtjcoopfid.supabase.co`). Run `supabase link --project-ref olszwyeikwbtjcoopfid` before `db push` so the CLI targets production. An older unused staging project (`mxlivgnynoagulrmqipf`) can be ignored or deleted in the Supabase dashboard if you do not need it.
 
 ### Journal (`journal_entries`) — kladde → godkendt (2026-04)
@@ -100,9 +102,11 @@ There are **no extra env vars** specific to Haven beyond the Supabase trio above
 
 After changing variables, trigger a **new deploy** so Next.js picks them up.
 
+**Verify (names + runtime):** The Netlify UI is the source of truth for secret values. To confirm keys exist without opening the UI, install the [Netlify CLI](https://docs.netlify.com/cli/get-started/), run `netlify link` in the repo, then `netlify env:list` — you should see `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, and `NEXT_PUBLIC_SUPABASE_ANON_KEY` scoped to Production. A quick runtime check: `curl -s -o /dev/null -w '%{http_code}\n' 'https://<dit-site>/api/park/garden-plot'` → **401** without cookies means the route is live (it does not prove the service role is valid; if the key were wrong, authenticated cookie flows could still return 500).
+
 ### Post-deploy smoke (Min have / Lys)
 
-1. **Lys (live):** Open `/park-hub` as a resident with `budr_resident_id` set (PIN flow or demo). In **Min have**, add a plant, water it, remove it. In DevTools → **Network**, confirm **`/api/park/garden-plot`** returns **200** (GET/POST/PATCH/DELETE) and response JSON is not an RLS error string.
+1. **Lys (live):** Open `/park-hub` with `budr_resident_id` set. **Vand** i Min have forudsætter **vand optjent** ved at fuldføre opgaver på **Din dag** (ét vand pr. fuldført opgave). Tilføj plante → fuldfør mindst én dag-opgave → vand → tjek Network: **`/api/park/garden-plot`** **200**.
 2. **360° Haven (live):** Staff login → `/resident-360-view/[residentId]` → **Haven** tab; same plant/water/remove if the resident uses cloud haven for that id.
 3. **Demo:** `/care-portal-demo/residents/[demoId]?tab=haven` — UI is simulated; optional check that navigation and copy match expectations.
 

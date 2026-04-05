@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { grantWaterCredit } from '@/lib/havenWaterCredits';
 
 export const DEMO_RESIDENT_ID = 'demo-resident-001';
 
@@ -456,6 +457,9 @@ function seedLocalStorage() {
       helpers: ['Sara K. (personale)', 'Min søster Mette: 22 33 44 55'],
     })
   );
+
+  grantWaterCredit(DEMO_RESIDENT_ID);
+  grantWaterCredit(DEMO_RESIDENT_ID);
 
   localStorage.setItem('budr_demo_seeded_v3', DEMO_RESIDENT_ID);
 }

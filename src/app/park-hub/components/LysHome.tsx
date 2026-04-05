@@ -190,7 +190,7 @@ function HavenWidget({
           </p>
         )}
         <p className="text-xs mt-0.5" style={{ color: 'var(--lys-muted)' }}>
-          Tryk for at vande og se vækst
+          Vand ved at fuldføre dagens opgaver — så får du vand til haven
         </p>
       </div>
       <span className="text-sm" style={{ color: 'var(--lys-green)' }}>

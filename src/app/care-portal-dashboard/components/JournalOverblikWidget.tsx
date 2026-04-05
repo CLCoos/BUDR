@@ -176,7 +176,8 @@ export default function JournalOverblikWidget() {
               Journal (7 dage)
             </h2>
             <p className="text-xs" style={{ color: 'var(--cp-muted)' }}>
-              Kladder og godkendte notater på tværs af beboere
+              Kladder og godkendte journalnotater — bekymringsnotater (hurtige obs.) ligger i widget
+              ved siden af
             </p>
           </div>
         </div>
