@@ -39,10 +39,26 @@ type HomeLandingProps = {
 
 const BOOK_MAIL = 'mailto:hej@budrcare.dk?subject=Demo%20af%20BUDR%20Care' as const;
 
+/** Rækkefølge skal matche scroll på siden (scroll-spy i topnav). */
+const LANDING_NAV_IDS = [
+  'hvad-er-budr',
+  'problem-losning',
+  'sammenligning',
+  'fordele',
+  'features',
+  'tryghed',
+  'prover-selv',
+] as const;
+
+type LandingNavSectionId = (typeof LANDING_NAV_IDS)[number];
+
 export default function HomeLanding({ className = '' }: HomeLandingProps) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const scrollSpyTicking = useRef(false);
   const [navOpen, setNavOpen] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [activeNavSection, setActiveNavSection] = useState<LandingNavSectionId>(LANDING_NAV_IDS[0]);
+  const [arcChapter, setArcChapter] = useState<'problem' | 'losning' | null>(null);
   const closeNav = useCallback(() => setNavOpen(false), []);
 
   /** Mål fast header så mobil-drawer får korrekt top / højde (viewport, ikke klippet bar) */
@@ -116,6 +132,51 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
     return () => mq.removeEventListener('change', onChange);
   }, []);
 
+  /** Scroll-spy til topnav + kapitel-rail (én rAF pr. frame, ingen tunge libs). */
+  useEffect(() => {
+    const run = () => {
+      scrollSpyTicking.current = false;
+      const navEl = document.querySelector('.budr-landing nav');
+      const navBottom = navEl ? navEl.getBoundingClientRect().bottom : 88;
+      const marker = navBottom + 28;
+
+      let active: LandingNavSectionId = LANDING_NAV_IDS[0];
+      for (const id of LANDING_NAV_IDS) {
+        const section = document.getElementById(id);
+        if (!section) continue;
+        if (section.getBoundingClientRect().top <= marker) active = id;
+      }
+      setActiveNavSection(active);
+
+      const arcEl = document.getElementById('problem-losning');
+      const problemEl = document.getElementById('problem');
+      const losningEl = document.getElementById('losning');
+      let chapter: 'problem' | 'losning' | null = null;
+      if (arcEl && problemEl && losningEl) {
+        const arcRect = arcEl.getBoundingClientRect();
+        const inView = arcRect.bottom > navBottom + 16 && arcRect.top < window.innerHeight * 0.92;
+        if (inView) {
+          chapter = losningEl.getBoundingClientRect().top <= marker ? 'losning' : 'problem';
+        }
+      }
+      setArcChapter(chapter);
+    };
+
+    const onScrollOrResize = () => {
+      if (scrollSpyTicking.current) return;
+      scrollSpyTicking.current = true;
+      requestAnimationFrame(run);
+    };
+
+    run();
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScrollOrResize);
+      window.removeEventListener('resize', onScrollOrResize);
+    };
+  }, []);
+
   return (
     <div ref={rootRef} className={`budr-landing ${className}`.trim()}>
       <nav aria-label="Primær navigation" className={navOpen ? 'is-open' : undefined}>
@@ -145,37 +206,82 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
           </div>
           <ul className="nav-links" id="primary-nav-panel" role="list">
             <li>
-              <a href="#hvad-er-budr" onClick={closeNav}>
+              <a
+                href="#hvad-er-budr"
+                onClick={closeNav}
+                className={activeNavSection === 'hvad-er-budr' ? 'nav-link--active' : undefined}
+                {...(activeNavSection === 'hvad-er-budr'
+                  ? { 'aria-current': 'location' as const }
+                  : {})}
+              >
                 Om BUDR
               </a>
             </li>
             <li>
-              <a href="#problem-losning" onClick={closeNav}>
+              <a
+                href="#problem-losning"
+                onClick={closeNav}
+                className={activeNavSection === 'problem-losning' ? 'nav-link--active' : undefined}
+                {...(activeNavSection === 'problem-losning'
+                  ? { 'aria-current': 'location' as const }
+                  : {})}
+              >
                 Problem &amp; løsning
               </a>
             </li>
             <li>
-              <a href="#sammenligning" onClick={closeNav}>
+              <a
+                href="#sammenligning"
+                onClick={closeNav}
+                className={activeNavSection === 'sammenligning' ? 'nav-link--active' : undefined}
+                {...(activeNavSection === 'sammenligning'
+                  ? { 'aria-current': 'location' as const }
+                  : {})}
+              >
                 Sammenligning
               </a>
             </li>
             <li>
-              <a href="#fordele" onClick={closeNav}>
+              <a
+                href="#fordele"
+                onClick={closeNav}
+                className={activeNavSection === 'fordele' ? 'nav-link--active' : undefined}
+                {...(activeNavSection === 'fordele' ? { 'aria-current': 'location' as const } : {})}
+              >
                 Højdepunkter
               </a>
             </li>
             <li>
-              <a href="#features" onClick={closeNav}>
+              <a
+                href="#features"
+                onClick={closeNav}
+                className={activeNavSection === 'features' ? 'nav-link--active' : undefined}
+                {...(activeNavSection === 'features'
+                  ? { 'aria-current': 'location' as const }
+                  : {})}
+              >
                 Funktioner
               </a>
             </li>
             <li>
-              <a href="#tryghed" onClick={closeNav}>
+              <a
+                href="#tryghed"
+                onClick={closeNav}
+                className={activeNavSection === 'tryghed' ? 'nav-link--active' : undefined}
+                {...(activeNavSection === 'tryghed' ? { 'aria-current': 'location' as const } : {})}
+              >
                 Tryghed
               </a>
             </li>
             <li>
-              <a href="#prover-selv" onClick={closeNav}>
+              <a
+                href="#prover-selv"
+                onClick={closeNav}
+                className={activeNavSection === 'prover-selv' ? 'nav-link--active' : undefined}
+                {...(activeNavSection === 'prover-selv'
+                  ? { 'aria-current': 'location' as const }
+                  : {})}
+              >
                 Prøv demo
               </a>
             </li>
@@ -238,8 +344,8 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                 <div className="intro-card-label">Borgeren</div>
                 <h3 className="intro-card-h">Lys</h3>
                 <p className="intro-card-p">
-                  En tryg indgang til tjek-in, humør og egne ord — designet til autonomi, samtykke
-                  og hverdagsrytme på bostedet.
+                  En tryg indgang til tjek-in, humør og egne ord — bygget til autonomi, tydeligt
+                  samtykke og en rolig <strong>døgnrytme</strong> i hverdagen på bostedet.
                 </p>
                 <Link className="intro-card-link" href="/app" onClick={closeNav}>
                   Åbn Lys →
@@ -286,17 +392,19 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                   Hvad er Lys?
                 </Link>
               </div>
-              <div className="hero-track" aria-label="Vælg hvordan du vil læse siden">
-                <span className="hero-track-label">Hvordan vil du læse?</span>
+              <div className="hero-track" aria-label="Vælg læsetempo på siden">
+                <span className="hero-track-label">Læsetempo</span>
                 <div className="hero-track-links">
                   <a href="#hurtig-oversigt" className="hero-track-link">
-                    Ca. 2 minutter
+                    Kort spor
+                    <span className="hero-track-hint"> ≈ 2 min.</span>
                   </a>
                   <span className="hero-track-sep" aria-hidden>
                     |
                   </span>
                   <a href="#problem-losning" className="hero-track-link hero-track-link--primary">
-                    Fuld gennemgang
+                    Hele vejen
+                    <span className="hero-track-hint"> kapitel for kapitel</span>
                   </a>
                 </div>
               </div>
@@ -383,7 +491,9 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
           aria-label="Hurtig oversigt på få minutter"
         >
           <div className="shell">
-            <h2 className="hurtig-oversigt-h">På 2 minutter</h2>
+            <h2 className="hurtig-oversigt-h">
+              Kort spor <span className="hurtig-oversigt-h-sub">— på omkring to minutter</span>
+            </h2>
             <ul className="hurtig-oversigt-list">
               <li>
                 <strong>BUDR Care</strong> er borger-appen <strong>Lys</strong> plus{' '}
@@ -408,6 +518,27 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
         </section>
 
         <div id="problem-losning" className="problem-losning-arc">
+          <aside className="problem-losning-rail" aria-label="Afsnit i kapitlet Problem og løsning">
+            <p className="problem-losning-rail-title">Dette kapitel</p>
+            <nav className="problem-losning-rail-nav">
+              <a
+                href="#problem"
+                className={arcChapter === 'problem' ? 'is-active' : undefined}
+                {...(arcChapter === 'problem' ? { 'aria-current': 'location' as const } : {})}
+              >
+                <span className="problem-losning-rail-n">1</span>
+                <span className="problem-losning-rail-txt">Signalerne</span>
+              </a>
+              <a
+                href="#losning"
+                className={arcChapter === 'losning' ? 'is-active' : undefined}
+                {...(arcChapter === 'losning' ? { 'aria-current': 'location' as const } : {})}
+              >
+                <span className="problem-losning-rail-n">2</span>
+                <span className="problem-losning-rail-txt">Lys → portal</span>
+              </a>
+            </nav>
+          </aside>
           {/* 3a. PROBLEM */}
           <section className="switch-section fi" id="problem">
             <div className="shell">

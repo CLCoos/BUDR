@@ -173,6 +173,12 @@ html {
   border-radius: 4px;
 }
 
+.budr-landing .nav-links a.nav-link--active {
+  color: var(--white);
+  font-weight: 600;
+  box-shadow: 0 2px 0 0 rgba(93, 202, 165, 0.85);
+}
+
 .budr-landing .nav-cta {
   background: linear-gradient(135deg, var(--budr-teal) 0%, var(--budr-blue) 100%) !important;
   color: var(--budr-brand-dark) !important;
@@ -290,7 +296,9 @@ html {
 }
 
 .budr-landing .hero-scroll-cue:focus-visible {
-  box-shadow: 0 0 0 2px var(--ink), 0 0 0 4px var(--budr-teal);
+  box-shadow:
+    0 0 0 2px var(--ink),
+    0 0 0 4px var(--budr-teal);
   border-radius: 12px;
   padding: 6px 10px;
 }
@@ -529,6 +537,12 @@ html {
   font-weight: 600;
 }
 
+.budr-landing .hero-track-hint {
+  font-weight: 400;
+  color: var(--fog);
+  font-size: 0.82em;
+}
+
 .budr-landing .hero-track-sep {
   color: rgba(255, 255, 255, 0.2);
   font-size: 0.85rem;
@@ -540,6 +554,24 @@ html {
   background: linear-gradient(180deg, rgba(93, 202, 165, 0.06) 0%, transparent 100%);
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.budr-landing .hurtig-oversigt-h-sub {
+  display: block;
+  font-size: 0.58em;
+  font-weight: 400;
+  color: var(--fog);
+  margin-top: 0.35em;
+  letter-spacing: 0.01em;
+}
+
+@media (min-width: 640px) {
+  .budr-landing .hurtig-oversigt-h-sub {
+    display: inline;
+    font-size: 0.72em;
+    margin-top: 0;
+    margin-left: 0.35em;
+  }
 }
 
 .budr-landing .hurtig-oversigt-h {
@@ -582,6 +614,8 @@ html {
 .budr-landing .problem-losning-arc {
   scroll-margin-top: 88px;
   position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
   background: linear-gradient(
     180deg,
     rgba(93, 202, 165, 0.025) 0%,
@@ -589,6 +623,104 @@ html {
     transparent 82%,
     rgba(133, 183, 235, 0.02) 100%
   );
+}
+
+.budr-landing .problem-losning-rail {
+  display: none;
+}
+
+@media (min-width: 1180px) {
+  .budr-landing .problem-losning-arc {
+    grid-template-columns: minmax(7.5rem, 10rem) minmax(0, 1fr);
+    grid-template-rows: auto auto;
+  }
+
+  .budr-landing .problem-losning-rail {
+    display: block;
+    grid-column: 1;
+    grid-row: 1 / -1;
+    position: sticky;
+    top: max(5.75rem, calc(env(safe-area-inset-top, 0px) + 5rem));
+    align-self: start;
+    padding-left: max(clamp(22px, 4vw, 52px), env(safe-area-inset-left, 0px));
+    padding-top: 2.5rem;
+    padding-bottom: 2rem;
+    max-width: 11rem;
+  }
+
+  .budr-landing .problem-losning-arc > .switch-section {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .budr-landing .problem-losning-arc > .lys-section {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}
+
+.budr-landing .problem-losning-rail-title {
+  margin: 0 0 12px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fog-dim);
+}
+
+.budr-landing .problem-losning-rail-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.budr-landing .problem-losning-rail-nav a {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 10px;
+  margin-left: -10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: var(--fog);
+  text-decoration: none;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+
+.budr-landing .problem-losning-rail-nav a:hover {
+  color: var(--white);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.budr-landing .problem-losning-rail-nav a:focus-visible {
+  outline: 2px solid var(--budr-teal);
+  outline-offset: 2px;
+}
+
+.budr-landing .problem-losning-rail-nav a.is-active {
+  color: var(--white);
+  background: rgba(93, 202, 165, 0.08);
+  border: 1px solid rgba(93, 202, 165, 0.2);
+}
+
+.budr-landing .problem-losning-rail-n {
+  flex-shrink: 0;
+  width: 1.25rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--budr-teal);
+  font-variant-numeric: tabular-nums;
+}
+
+.budr-landing .problem-losning-rail-nav a.is-active .problem-losning-rail-n {
+  color: var(--amber-lt);
+}
+
+.budr-landing .problem-losning-rail-txt {
+  line-height: 1.35;
+  font-weight: 500;
 }
 
 .budr-landing .hurtig-oversigt,
@@ -1358,7 +1490,9 @@ html {
   border-radius: var(--r);
   border: 1px solid rgba(255, 255, 255, 0.07);
   background: var(--glass);
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
 }
 
 .budr-landing .usp-card:hover {
@@ -3710,8 +3844,8 @@ html {
     min-height: calc(100dvh - var(--budr-nav-drawer-top, 72px));
     max-height: calc(100dvh - var(--budr-nav-drawer-top, 72px));
     height: auto;
-    padding: 20px max(22px, env(safe-area-inset-right, 0px)) max(28px, env(safe-area-inset-bottom, 12px))
-      max(22px, env(safe-area-inset-left, 0px));
+    padding: 20px max(22px, env(safe-area-inset-right, 0px))
+      max(28px, env(safe-area-inset-bottom, 12px)) max(22px, env(safe-area-inset-left, 0px));
     /* Uigennemsigtig baggrund — ingen “gennemlysning” af siden under */
     background: rgb(10, 22, 20);
     border-top: 1px solid rgba(133, 183, 235, 0.14);
@@ -3800,7 +3934,8 @@ html {
   }
 
   .budr-landing .hero {
-    padding: 110px max(22px, env(safe-area-inset-left, 0px)) 70px max(22px, env(safe-area-inset-right, 0px));
+    padding: 110px max(22px, env(safe-area-inset-left, 0px)) 70px
+      max(22px, env(safe-area-inset-right, 0px));
   }
 
   .budr-landing .hero-inner,
@@ -3827,7 +3962,8 @@ html {
   }
 
   .budr-landing .live-demo-strip {
-    padding: 64px max(22px, env(safe-area-inset-left, 0px)) 72px max(22px, env(safe-area-inset-right, 0px));
+    padding: 64px max(22px, env(safe-area-inset-left, 0px)) 72px
+      max(22px, env(safe-area-inset-right, 0px));
   }
 
   .budr-landing .lys-flow-track {
@@ -3904,11 +4040,13 @@ html {
   }
 
   .budr-landing .usp-section {
-    padding: 64px max(22px, env(safe-area-inset-left, 0px)) 72px max(22px, env(safe-area-inset-right, 0px));
+    padding: 64px max(22px, env(safe-area-inset-left, 0px)) 72px
+      max(22px, env(safe-area-inset-right, 0px));
   }
 
   .budr-landing .smart-hl-section {
-    padding: 56px max(22px, env(safe-area-inset-left, 0px)) 64px max(22px, env(safe-area-inset-right, 0px));
+    padding: 56px max(22px, env(safe-area-inset-left, 0px)) 64px
+      max(22px, env(safe-area-inset-right, 0px));
   }
 
   .budr-landing .comparison-section {
@@ -3917,11 +4055,13 @@ html {
   }
 
   .budr-landing .hurtig-oversigt {
-    padding: 40px max(22px, env(safe-area-inset-left, 0px)) 44px max(22px, env(safe-area-inset-right, 0px));
+    padding: 40px max(22px, env(safe-area-inset-left, 0px)) 44px
+      max(22px, env(safe-area-inset-right, 0px));
   }
 
   .budr-landing .section-cta-band {
-    padding: 28px max(22px, env(safe-area-inset-left, 0px)) 28px max(22px, env(safe-area-inset-right, 0px));
+    padding: 28px max(22px, env(safe-area-inset-left, 0px)) 28px
+      max(22px, env(safe-area-inset-right, 0px));
   }
 
   .budr-landing .section-cta-band-inner {
@@ -4065,7 +4205,9 @@ html {
   }
 
   .budr-landing .live-demo-card {
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
   }
 
   .budr-landing .live-demo-card:hover {

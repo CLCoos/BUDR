@@ -29,6 +29,7 @@
     "scripts": [
       "dev",
       "build",
+      "clean",
       "start",
       "lint",
       "lint:fix",
@@ -39,6 +40,7 @@
     "warning": "🚨 CRITICAL: DO NOT REMOVE OR MODIFY ABOVE DEPENDENCIES - Required for Next.js 15 TypeScript app functionality"
   },
   "scripts": {
+    "clean": "rm -rf .next",
     "dev": "next dev -p 4028",
     "build": "next build",
     "start": "next dev -p 4028",
