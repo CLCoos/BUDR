@@ -42,3 +42,6 @@ linear-import_1.mjs
 
 # Local Netlify folder
 .netlify
+
+# Supabase CLI local link state (project ref + pooler; use `supabase link` per machine)
+supabase/.temp/

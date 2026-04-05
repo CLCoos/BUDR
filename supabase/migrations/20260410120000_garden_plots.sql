@@ -41,50 +41,50 @@ CREATE POLICY "gp_staff_select"
   ON public.garden_plots
   FOR SELECT
   TO authenticated
-  USING (public.care_staff_can_access_resident(resident_id));
+  USING (public.care_staff_can_access_resident(resident_id::text));
 
 CREATE POLICY "gp_staff_insert"
   ON public.garden_plots
   FOR INSERT
   TO authenticated
-  WITH CHECK (public.care_staff_can_access_resident(resident_id));
+  WITH CHECK (public.care_staff_can_access_resident(resident_id::text));
 
 CREATE POLICY "gp_staff_update"
   ON public.garden_plots
   FOR UPDATE
   TO authenticated
-  USING (public.care_staff_can_access_resident(resident_id))
-  WITH CHECK (public.care_staff_can_access_resident(resident_id));
+  USING (public.care_staff_can_access_resident(resident_id::text))
+  WITH CHECK (public.care_staff_can_access_resident(resident_id::text));
 
 CREATE POLICY "gp_staff_delete"
   ON public.garden_plots
   FOR DELETE
   TO authenticated
-  USING (public.care_staff_can_access_resident(resident_id));
+  USING (public.care_staff_can_access_resident(resident_id::text));
 
 CREATE POLICY "gp_resident_select"
   ON public.garden_plots
   FOR SELECT
   TO authenticated
-  USING (auth.uid()::text = resident_id);
+  USING (auth.uid()::text = resident_id::text);
 
 CREATE POLICY "gp_resident_insert"
   ON public.garden_plots
   FOR INSERT
   TO authenticated
-  WITH CHECK (auth.uid()::text = resident_id);
+  WITH CHECK (auth.uid()::text = resident_id::text);
 
 CREATE POLICY "gp_resident_update"
   ON public.garden_plots
   FOR UPDATE
   TO authenticated
-  USING (auth.uid()::text = resident_id)
-  WITH CHECK (auth.uid()::text = resident_id);
+  USING (auth.uid()::text = resident_id::text)
+  WITH CHECK (auth.uid()::text = resident_id::text);
 
 CREATE POLICY "gp_resident_delete"
   ON public.garden_plots
   FOR DELETE
   TO authenticated
-  USING (auth.uid()::text = resident_id);
+  USING (auth.uid()::text = resident_id::text);
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.garden_plots TO authenticated;

@@ -33,6 +33,8 @@ Schema is versioned under `supabase/migrations/` (organisations, `org_id` on res
 
 Do **not** commit real project URLs or secrets; use environment variables only.
 
+**Supabase projects:** Production is **`olszwyeikwbtjcoopfid`** (`https://olszwyeikwbtjcoopfid.supabase.co`). Run `supabase link --project-ref olszwyeikwbtjcoopfid` before `db push` so the CLI targets production. An older unused staging project (`mxlivgnynoagulrmqipf`) can be ignored or deleted in the Supabase dashboard if you do not need it.
+
 ### Journal (`journal_entries`) — kladde → godkendt (2026-04)
 
 - **Columns (migrations):** `journal_status` (`kladde` | `godkendt`, default `godkendt`), `approved_at`, `approved_by`. Existing rows are backfilled as `godkendt`.
@@ -98,7 +100,7 @@ NEXT_PUBLIC_SITE_URL=
 
 The team is driving toward a **complete care portal** on a short horizon: **one source of truth per resident**, **borger ↔ portal** visibility, **standardiserede hændelser**, **skabeloner pr. situation**, and **kladde → godkendt journal** (demo + live). Work is intentionally sequenced in **small vertical slices** (one finished flow at a time) to avoid many half-done features.
 
-**Supabase CLI:** The repo root `.env.local` must be valid dotenv (every line `KEY=value`). A stray line without `=` breaks `supabase` commands. Run **`supabase db push`** after pulling new migrations; ensure **`supabase link`** project ref matches `NEXT_PUBLIC_SUPABASE_URL`.
+**Supabase CLI:** The repo root `.env.local` must be valid dotenv (every line `KEY=value`). A stray line without `=` breaks `supabase` commands. Run **`supabase db push`** after pulling new migrations; **`supabase link`** must use project ref **`olszwyeikwbtjcoopfid`** (same host as `NEXT_PUBLIC_SUPABASE_URL`). Local link metadata lives under `supabase/.temp/` (gitignored).
 
 ---
 
