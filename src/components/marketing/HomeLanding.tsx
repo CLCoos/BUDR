@@ -793,8 +793,8 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
         <div className="section-cta-band fi" aria-label="Næste skridt">
           <div className="shell section-cta-band-inner">
             <p className="section-cta-band-text">
-              <strong>Godt med stemmer fra kolleger</strong> — næste skridt er at møde løsningen.
-              Book en gennemgang eller prøv demoerne, når det passer jer.
+              <strong>Fagpersoner beskriver allerede forskellen i hverdagen</strong> — vil I se
+              løsningen hos jer selv? Book en gennemgang eller prøv demoerne, når det passer.
             </p>
             <div className="section-cta-actions">
               <a href={BOOK_MAIL} className="btn-primary">
@@ -811,33 +811,37 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
         <section
           className="comparison-section fi"
           id="sammenligning"
-          aria-label="Sammenligning med Planner4You, CitizenOne m.fl."
+          aria-label="Sammenligning: BUDR Care med Lys mod Planner4You, CitizenOne m.fl."
         >
           <div className="shell">
             <div style={{ textAlign: 'center', maxWidth: '46rem', margin: '0 auto' }}>
               <div className="eyebrow" style={{ justifyContent: 'center', display: 'flex' }}>
-                Konkurrenter
+                Sammenligning
               </div>
               <h2 className="section-h" style={{ maxWidth: 'none', margin: '0 auto' }}>
-                Standardsvask eller <em>guldbehandling?</em>
+                Kontor og journal — eller <em>borgeren med hele vejen ind?</em>
               </h2>
               <p className="section-p" style={{ marginTop: 14 }}>
-                <strong>BUDR Care</strong> er &quot;guldprogrammet&quot; i forhold til klassisk
-                journal og drift: borger-app, realtid, AI med godkendelse og kriseplan hos borgeren.
-                De andre kolonner er typiske stærke systemer — primært til personalet.
+                Mange etablerede systemer er stærke til dokumentation og drift for personalet.{' '}
+                <strong>BUDR Care</strong> bygger ovenpå den logik med <strong>Lys</strong>: en
+                egentlig borger-app til tjek-in, humør og tryghed, <strong>realtid</strong> ind i
+                Care Portal og <strong>AI som udkast</strong> (journal, plan, sparring) — altid med
+                faglig godkendelse, før noget låses. Kriseplan og nære signaler ligger tæt på
+                borgeren, ikke kun på skærmen på kontoret.
               </p>
             </div>
             <ul className="comp-teaser">
               <li>
-                <strong>Lys</strong> som dedikeret borger-app — ikke bare mobil adgang til journal.
+                <strong>Lys</strong> er bygget til borgeren — ikke som en mobiludgave af
+                journalfanen.
               </li>
               <li>
-                <strong>Realtid + AI</strong> (journal, plan, sparring) med jeres godkendelse før
-                udgivelse.
+                <strong>Realtid og AI</strong> sparer tid, men I beholder kontrollen: intet udkast
+                bliver endeligt uden jeres godkendelse.
               </li>
               <li>
-                <strong>Fuld tabel</strong> med Planner4You og CitizenOne — åbn herunder når I vil i
-                dybden.
+                <strong>Fuld oversigt</strong> med Planner4You, CitizenOne og øvrige — fold ud
+                herunder, når I vil grave ned i detaljerne.
               </li>
             </ul>
             <details className="comp-full-details" id="fuld-sammenligning-tabel">
