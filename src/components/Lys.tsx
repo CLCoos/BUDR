@@ -14,13 +14,16 @@ interface LysProps {
   userContext?: string;
 }
 
-const moodConfig: Record<LysMood, {
-  core: string;
-  aura: string;
-  outer: string;
-  message: string;
-  speed: string;
-}> = {
+const moodConfig: Record<
+  LysMood,
+  {
+    core: string;
+    aura: string;
+    outer: string;
+    message: string;
+    speed: string;
+  }
+> = {
   calm: {
     core: 'radial-gradient(circle, #A78BFA 0%, #7C3AED 60%, #4C1D95 100%)',
     aura: 'rgba(167, 139, 250, 0.35)',
@@ -98,7 +101,9 @@ function useLysAI(mood: LysMood, userContext?: string) {
 
   useEffect(() => {
     mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
   const requestAiMessage = async () => {
@@ -115,7 +120,8 @@ function useLysAI(mood: LysMood, userContext?: string) {
           messages: [
             {
               role: 'system',
-              content: 'Du er Lys — en varm, empatisk ledsager i en dansk mental sundhedsapp. Du sender korte, personlige trøstebeskeder (max 2 sætninger, max 25 ord). Brug et enkelt emoji til sidst. Vær varm, nærværende og aldrig klichéfyldt.',
+              content:
+                'Du er Lys — en varm, empatisk ledsager i en dansk mental sundhedsapp. Du sender korte, personlige trøstebeskeder (max 2 sætninger, max 25 ord). Brug et enkelt emoji til sidst. Vær varm, nærværende og aldrig klichéfyldt.',
             },
             {
               role: 'user',
@@ -141,7 +147,14 @@ function useLysAI(mood: LysMood, userContext?: string) {
   return { aiMessage, aiLoading, requestAiMessage };
 }
 
-export default function Lys({ mood = 'calm', size = 'md', onTap, showMessage = false, className = '', userContext }: LysProps) {
+export default function Lys({
+  mood = 'calm',
+  size = 'md',
+  onTap,
+  showMessage = false,
+  className = '',
+  userContext,
+}: LysProps) {
   const [message, setMessage] = useState('');
   const [showComfort, setShowComfort] = useState(false);
   const [tapCount, setTapCount] = useState(0);
@@ -188,10 +201,25 @@ export default function Lys({ mood = 'calm', size = 'md', onTap, showMessage = f
         style={{ width: sizes.outer, height: sizes.outer }}
         aria-label="Lys — din ledsager. Tryk for trøst"
       >
-        <div className="absolute rounded-full lys-outer" style={{ width: sizes.outer, height: sizes.outer, background: config.outer }} />
-        <div className="absolute rounded-full lys-aura" style={{ width: sizes.aura, height: sizes.aura, background: config.aura }} />
-        <div className="relative rounded-full lys-core shadow-2xl" style={{ width: sizes.core, height: sizes.core, background: config.core }}>
-          <div className="absolute inset-0 rounded-full opacity-40" style={{ background: 'radial-gradient(circle at 35% 35%, rgba(255,255,255,0.6) 0%, transparent 60%)' }} />
+        <div
+          className="absolute rounded-full lys-outer"
+          style={{ width: sizes.outer, height: sizes.outer, background: config.outer }}
+        />
+        <div
+          className="absolute rounded-full lys-aura"
+          style={{ width: sizes.aura, height: sizes.aura, background: config.aura }}
+        />
+        <div
+          className="relative rounded-full lys-core shadow-2xl"
+          style={{ width: sizes.core, height: sizes.core, background: config.core }}
+        >
+          <div
+            className="absolute inset-0 rounded-full opacity-40"
+            style={{
+              background:
+                'radial-gradient(circle at 35% 35%, rgba(255,255,255,0.6) 0%, transparent 60%)',
+            }}
+          />
         </div>
       </button>
 
@@ -200,11 +228,22 @@ export default function Lys({ mood = 'calm', size = 'md', onTap, showMessage = f
           <p className="text-sm text-midnight-200 leading-relaxed bg-midnight-800/80 backdrop-blur-sm rounded-2xl px-4 py-3 border border-midnight-600/50">
             {aiLoading && showComfort ? (
               <span className="flex items-center gap-2 justify-center">
-                <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <span
+                  className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
+                  style={{ animationDelay: '0ms' }}
+                />
+                <span
+                  className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
+                  style={{ animationDelay: '150ms' }}
+                />
+                <span
+                  className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
+                  style={{ animationDelay: '300ms' }}
+                />
               </span>
-            ) : message}
+            ) : (
+              message
+            )}
           </p>
         </div>
       )}

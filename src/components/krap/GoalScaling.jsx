@@ -80,12 +80,16 @@ export default function GoalScaling({ supabase, profileId }) {
     <section className="w-full bg-midnight-800/40 border border-midnight-600/40 rounded-3xl p-4 sm:p-6">
       <div className="mb-3">
         <h2 className="font-display text-lg font-bold text-midnight-50">Søjle 2: Mål</h2>
-        <p className="text-xs text-midnight-400 mt-1">Skalér hvor du er nu — og vælg det næste lille skridt.</p>
+        <p className="text-xs text-midnight-400 mt-1">
+          Skalér hvor du er nu — og vælg det næste lille skridt.
+        </p>
       </div>
 
       <div className="space-y-4">
         <div className="rounded-2xl border border-midnight-600/40 bg-midnight-900/40 p-4">
-          <label className="block text-xs font-semibold text-midnight-200 mb-2">Hvad vil jeg gerne?</label>
+          <label className="block text-xs font-semibold text-midnight-200 mb-2">
+            Hvad vil jeg gerne?
+          </label>
           <input
             value={goalText}
             onChange={(e) => setGoalText(e.target.value.slice(0, 250))}
@@ -96,7 +100,9 @@ export default function GoalScaling({ supabase, profileId }) {
 
         <div className="rounded-2xl border border-midnight-600/40 bg-midnight-900/40 p-4">
           <div className="flex items-center justify-between gap-3 mb-2">
-            <p className="font-display text-sm font-bold text-midnight-50">Hvor tæt er du på målet? (1-10)</p>
+            <p className="font-display text-sm font-bold text-midnight-50">
+              Hvor tæt er du på målet? (1-10)
+            </p>
             <p className="text-[10px] text-sunrise-300 font-semibold">{currentScore}/10</p>
           </div>
 
@@ -144,16 +150,23 @@ export default function GoalScaling({ supabase, profileId }) {
         <div className="pt-2">
           <div className="flex items-center justify-between gap-3 mb-2">
             <p className="font-display text-sm font-bold text-midnight-50">Aktive mål</p>
-            <p className="text-[10px] text-midnight-500">{loadingGoals ? 'Henter…' : `${activeGoals.length}`}</p>
+            <p className="text-[10px] text-midnight-500">
+              {loadingGoals ? 'Henter…' : `${activeGoals.length}`}
+            </p>
           </div>
 
           {activeGoals.length === 0 && !loadingGoals ? (
-            <p className="text-sm text-midnight-400">Ingen aktive mål endnu — skriv et nyt ovenfor.</p>
+            <p className="text-sm text-midnight-400">
+              Ingen aktive mål endnu — skriv et nyt ovenfor.
+            </p>
           ) : null}
 
           <div className="space-y-2">
             {activeGoals.map((g) => (
-              <div key={g.id} className="rounded-2xl border border-midnight-600/40 bg-midnight-900/40 p-4">
+              <div
+                key={g.id}
+                className="rounded-2xl border border-midnight-600/40 bg-midnight-900/40 p-4"
+              >
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <p className="font-display text-sm font-bold text-midnight-50">{g.goal_text}</p>
                   <span className="text-xs font-semibold px-2 py-1 rounded-full bg-sunrise-400/10 border border-sunrise-400/25 text-sunrise-200">
@@ -161,7 +174,8 @@ export default function GoalScaling({ supabase, profileId }) {
                   </span>
                 </div>
                 <p className="text-sm text-midnight-200 leading-relaxed">
-                  <span className="font-semibold text-midnight-200">Næste skridt:</span> {g.next_step?.trim() ? g.next_step : '—'}
+                  <span className="font-semibold text-midnight-200">Næste skridt:</span>{' '}
+                  {g.next_step?.trim() ? g.next_step : '—'}
                 </p>
               </div>
             ))}
@@ -171,4 +185,3 @@ export default function GoalScaling({ supabase, profileId }) {
     </section>
   );
 }
-

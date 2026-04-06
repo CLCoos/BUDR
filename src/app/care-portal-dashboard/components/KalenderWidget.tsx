@@ -2,16 +2,21 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { CalendarDays, Clock, MapPin, Plus, User } from 'lucide-react';
+import type { CareHouse } from '@/lib/careDemoResidents';
+import {
+  CARE_DEMO_RESIDENT_PROFILES,
+  CARE_HOUSES,
+  careDemoProfileById,
+} from '@/lib/careDemoResidents';
 
-const HOUSES = ['A', 'B', 'C', 'D'] as const;
-export type CareHouse = (typeof HOUSES)[number];
+export type { CareHouse } from '@/lib/careDemoResidents';
 
 const APPT_TYPES = [
-  { id: 'laege', label: 'Læge/Psykiater', dot: 'bg-blue-500' },
-  { id: 'aktivitet', label: 'Aktivitet', dot: 'bg-budr-teal' },
-  { id: 'intern', label: 'Intern møde', dot: 'bg-budr-purple' },
-  { id: 'transport', label: 'Transport', dot: 'bg-amber-500' },
-  { id: 'andet', label: 'Andet', dot: 'bg-gray-400' },
+  { id: 'laege', label: 'Læge/Psykiater', color: 'var(--cp-blue)' },
+  { id: 'aktivitet', label: 'Aktivitet', color: 'var(--cp-green)' },
+  { id: 'intern', label: 'Intern møde', color: 'var(--cp-blue)' },
+  { id: 'transport', label: 'Transport', color: 'var(--cp-amber)' },
+  { id: 'andet', label: 'Andet', color: 'var(--cp-muted)' },
 ] as const;
 
 export type AppointmentTypeId = (typeof APPT_TYPES)[number]['id'];
@@ -29,34 +34,25 @@ export interface CareAppointment {
   responsible: string;
 }
 
-const RESIDENT_OPTIONS: { id: string; name: string; initials: string }[] = [
-  { id: 'res-001', name: 'Anders M.', initials: 'AM' },
-  { id: 'res-002', name: 'Finn L.', initials: 'FL' },
-  { id: 'res-003', name: 'Kirsten R.', initials: 'KR' },
-  { id: 'res-004', name: 'Maja T.', initials: 'MT' },
-  { id: 'res-005', name: 'Thomas B.', initials: 'TB' },
-  { id: 'res-006', name: 'Lena P.', initials: 'LP' },
-];
+const RESIDENT_OPTIONS = CARE_DEMO_RESIDENT_PROFILES.map((r) => ({
+  id: r.id,
+  name: r.displayName,
+  initials: r.initials,
+  house: r.house,
+}));
 
 function formatDanishLongDate(d: Date): string {
   const wd = d.toLocaleDateString('da-DK', { weekday: 'long' });
-  const day = d.getDate();
-  const month = d.toLocaleDateString('da-DK', { month: 'long' });
-  const year = d.getFullYear();
   const cap = wd.charAt(0).toUpperCase() + wd.slice(1);
-  return `${cap} d. ${day}. ${month} ${year}`;
+  return `${cap} d. ${d.getDate()}. ${d.toLocaleDateString('da-DK', { month: 'long' })} ${d.getFullYear()}`;
 }
 
 function formatTime(d: Date): string {
-  return d.toLocaleTimeString('da-DK', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
+  return d.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
-function typeDotClass(type: AppointmentTypeId): string {
-  return APPT_TYPES.find(t => t.id === type)?.dot ?? 'bg-gray-400';
+function typeColor(type: AppointmentTypeId): string {
+  return APPT_TYPES.find((t) => t.id === type)?.color ?? 'var(--cp-muted)';
 }
 
 function todayAt(day: Date, h: number, m: number): Date {
@@ -66,6 +62,7 @@ function todayAt(day: Date, h: number, m: number): Date {
 }
 
 function createMockAppointments(day: Date): CareAppointment[] {
+  const p = (id: string) => careDemoProfileById(id);
   return [
     {
       id: 'cal-001',
@@ -73,9 +70,9 @@ function createMockAppointments(day: Date): CareAppointment[] {
       scheduledAt: todayAt(day, 8, 0),
       type: 'laege',
       residentId: 'res-002',
-      residentName: 'Finn L.',
-      residentInitials: 'FL',
-      house: 'A',
+      residentName: p('res-002')?.displayName ?? null,
+      residentInitials: p('res-002')?.initials ?? null,
+      house: p('res-002')?.house ?? 'A',
       location: 'Regionshospitalet',
       responsible: 'Sara K.',
     },
@@ -97,9 +94,9 @@ function createMockAppointments(day: Date): CareAppointment[] {
       scheduledAt: todayAt(day, 10, 15),
       type: 'laege',
       residentId: 'res-003',
-      residentName: 'Kirsten R.',
-      residentInitials: 'KR',
-      house: 'A',
+      residentName: p('res-003')?.displayName ?? null,
+      residentInitials: p('res-003')?.initials ?? null,
+      house: p('res-003')?.house ?? 'A',
       location: 'Tandklinikken, st.',
       responsible: 'Lena P.',
     },
@@ -121,9 +118,9 @@ function createMockAppointments(day: Date): CareAppointment[] {
       scheduledAt: todayAt(day, 14, 0),
       type: 'transport',
       residentId: 'res-005',
-      residentName: 'Thomas B.',
-      residentInitials: 'TB',
-      house: 'D',
+      residentName: p('res-005')?.displayName ?? null,
+      residentInitials: p('res-005')?.initials ?? null,
+      house: p('res-005')?.house ?? 'D',
       location: 'Rema 1000',
       responsible: 'Henrik S.',
     },
@@ -133,9 +130,9 @@ function createMockAppointments(day: Date): CareAppointment[] {
       scheduledAt: todayAt(day, 15, 30),
       type: 'aktivitet',
       residentId: 'res-004',
-      residentName: 'Maja T.',
-      residentInitials: 'MT',
-      house: 'B',
+      residentName: p('res-004')?.displayName ?? null,
+      residentInitials: p('res-004')?.initials ?? null,
+      house: p('res-004')?.house ?? 'B',
       location: 'Aktivitetsrummet',
       responsible: 'Birgit N.',
     },
@@ -145,14 +142,62 @@ function createMockAppointments(day: Date): CareAppointment[] {
       scheduledAt: todayAt(day, 18, 45),
       type: 'andet',
       residentId: 'res-001',
-      residentName: 'Anders M.',
-      residentInitials: 'AM',
-      house: 'A',
+      residentName: p('res-001')?.displayName ?? null,
+      residentInitials: p('res-001')?.initials ?? null,
+      house: p('res-001')?.house ?? 'A',
       location: 'Telefon / stue 104',
       responsible: 'Sara K.',
     },
+    {
+      id: 'cal-008',
+      title: 'Blodprøve — LAB',
+      scheduledAt: todayAt(day, 11, 0),
+      type: 'laege',
+      residentId: 'res-008',
+      residentName: p('res-008')?.displayName ?? null,
+      residentInitials: p('res-008')?.initials ?? null,
+      house: p('res-008')?.house ?? 'B',
+      location: 'Sygeplejerske / stue',
+      responsible: 'Regionssygeplejerske',
+    },
+    {
+      id: 'cal-009',
+      title: 'Gåtur i parken',
+      scheduledAt: todayAt(day, 13, 15),
+      type: 'aktivitet',
+      residentId: 'res-011',
+      residentName: p('res-011')?.displayName ?? null,
+      residentInitials: p('res-011')?.initials ?? null,
+      house: p('res-011')?.house ?? 'B',
+      location: 'Mødeplads Hus B',
+      responsible: 'Mikkel H.',
+    },
+    {
+      id: 'cal-010',
+      title: 'Netværksmøde — pårørende',
+      scheduledAt: todayAt(day, 16, 0),
+      type: 'intern',
+      residentId: null,
+      residentName: null,
+      residentInitials: null,
+      house: 'A',
+      location: 'Fællesstuen',
+      responsible: 'Leder + team',
+    },
   ];
 }
+
+const INPUT_STYLE: React.CSSProperties = {
+  backgroundColor: 'var(--cp-bg3)',
+  border: '1px solid var(--cp-border2)',
+  color: 'var(--cp-text)',
+  borderRadius: 8,
+  width: '100%',
+  padding: '0.5rem 0.75rem',
+  fontSize: '0.875rem',
+  outline: 'none',
+  colorScheme: 'dark',
+};
 
 export default function KalenderWidget() {
   const [hydrated, setHydrated] = useState(false);
@@ -178,15 +223,9 @@ export default function KalenderWidget() {
   const dateLabel = useMemo(() => formatDanishLongDate(today), [today]);
 
   const filtered = useMemo(() => {
-    let list = [...appointments].sort(
-      (a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime(),
-    );
-    if (houseFilter !== 'alle') {
-      list = list.filter(a => a.house === houseFilter);
-    }
-    if (residentFilter !== 'alle') {
-      list = list.filter(a => a.residentId === residentFilter);
-    }
+    let list = [...appointments].sort((a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime());
+    if (houseFilter !== 'alle') list = list.filter((a) => a.house === houseFilter);
+    if (residentFilter !== 'alle') list = list.filter((a) => a.residentId === residentFilter);
     return list;
   }, [appointments, houseFilter, residentFilter]);
 
@@ -197,22 +236,22 @@ export default function KalenderWidget() {
       const [hh, mm] = formTime.split(':').map(Number);
       const scheduledAt = new Date(today);
       scheduledAt.setHours(hh ?? 12, mm ?? 0, 0, 0);
-      const res = formResidentId
-        ? RESIDENT_OPTIONS.find(r => r.id === formResidentId)
-        : null;
-      const newAppt: CareAppointment = {
-        id: `cal-${Date.now()}`,
-        title: formTitle.trim(),
-        scheduledAt,
-        type: formType,
-        residentId: res?.id ?? null,
-        residentName: res?.name ?? null,
-        residentInitials: res?.initials ?? null,
-        house: houseFilter !== 'alle' ? houseFilter : 'A',
-        location: formLocation.trim() || '—',
-        responsible: formResponsible.trim(),
-      };
-      setAppointments(prev => [...prev, newAppt]);
+      const res = formResidentId ? RESIDENT_OPTIONS.find((r) => r.id === formResidentId) : null;
+      setAppointments((prev) => [
+        ...prev,
+        {
+          id: `cal-${Date.now()}`,
+          title: formTitle.trim(),
+          scheduledAt,
+          type: formType,
+          residentId: res?.id ?? null,
+          residentName: res?.name ?? null,
+          residentInitials: res?.initials ?? null,
+          house: res?.house ?? (houseFilter !== 'alle' ? houseFilter : 'A'),
+          location: formLocation.trim() || '—',
+          responsible: formResponsible.trim(),
+        },
+      ]);
       setFormTitle('');
       setFormTime('12:00');
       setFormType('aktivitet');
@@ -230,17 +269,17 @@ export default function KalenderWidget() {
       formLocation,
       today,
       houseFilter,
-    ],
+    ]
   );
 
   if (!hydrated) {
     return (
-      <div className="mb-6 w-full max-w-2xl animate-pulse rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+      <div className="cp-card-elevated w-full animate-pulse p-5">
         <div className="mb-4 flex justify-between">
-          <div className="h-10 w-56 rounded-lg bg-gray-100" />
-          <div className="h-8 w-24 rounded-lg bg-gray-100" />
+          <div className="h-10 w-56 rounded-lg" style={{ backgroundColor: 'var(--cp-bg3)' }} />
+          <div className="h-8 w-24 rounded-lg" style={{ backgroundColor: 'var(--cp-bg3)' }} />
         </div>
-        <div className="h-32 rounded-xl bg-gray-100" />
+        <div className="h-32 rounded-xl" style={{ backgroundColor: 'var(--cp-bg3)' }} />
       </div>
     );
   }
@@ -248,29 +287,42 @@ export default function KalenderWidget() {
   return (
     <section
       id="budr-planlaegger"
-      className="mb-6 w-full max-w-2xl scroll-mt-24 rounded-xl border border-gray-100 bg-white p-5 shadow-sm"
+      className="cp-card-elevated w-full scroll-mt-24 p-5"
       aria-label="Dagens aftaler"
     >
-      <div className="mb-4 flex flex-col gap-4 border-b border-gray-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
+      {/* Header */}
+      <div
+        className="mb-4 flex flex-col gap-4 pb-4 sm:flex-row sm:items-start sm:justify-between"
+        style={{ borderBottom: '1px solid var(--cp-border)' }}
+      >
         <div className="flex min-w-0 items-start gap-2.5">
-          <CalendarDays className="mt-0.5 h-5 w-5 shrink-0 text-budr-purple" aria-hidden />
+          <CalendarDays
+            className="mt-0.5 h-5 w-5 shrink-0"
+            style={{ color: 'var(--cp-blue)' }}
+            aria-hidden
+          />
           <div>
-            <h2 className="text-sm font-semibold text-gray-900">Dagens aftaler</h2>
-            <p className="text-sm text-gray-500">{dateLabel}</p>
+            <h2 className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+              Dagens aftaler
+            </h2>
+            <p className="text-xs" style={{ color: 'var(--cp-muted)' }}>
+              {dateLabel}
+            </p>
           </div>
         </div>
         <div className="flex flex-col items-stretch gap-2 sm:items-end">
           <button
             type="button"
-            onClick={() => setShowForm(s => !s)}
+            onClick={() => setShowForm((s) => !s)}
             aria-expanded={showForm}
-            className="inline-flex items-center justify-center gap-1 self-start rounded-lg bg-budr-purple px-3 py-1.5 text-sm font-medium text-white transition-all duration-200 hover:opacity-90 sm:self-end"
+            className="inline-flex items-center justify-center gap-1 self-start rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-all duration-200 hover:opacity-90 sm:self-end"
+            style={{ backgroundColor: 'var(--cp-green)' }}
           >
             <Plus className="h-3.5 w-3.5" aria-hidden />
             Tilføj aftale
           </button>
           <div className="flex flex-wrap justify-start gap-1.5 sm:justify-end">
-            {(['alle', ...HOUSES] as const).map(key => {
+            {(['alle', ...CARE_HOUSES] as const).map((key) => {
               const label = key === 'alle' ? 'Alle' : `Hus ${key}`;
               const selected = houseFilter === key;
               return (
@@ -278,11 +330,16 @@ export default function KalenderWidget() {
                   key={label}
                   type="button"
                   onClick={() => setHouseFilter(key)}
-                  className={`rounded-full px-2.5 py-1 text-xs font-medium transition-all duration-200 ${
+                  className="rounded-full px-2.5 py-1 text-xs font-medium transition-all duration-200"
+                  style={
                     selected
-                      ? 'bg-budr-purple text-white shadow-sm'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+                      ? { backgroundColor: 'var(--cp-green)', color: '#fff' }
+                      : {
+                          backgroundColor: 'var(--cp-bg3)',
+                          color: 'var(--cp-muted)',
+                          border: '1px solid var(--cp-border)',
+                        }
+                  }
                 >
                   {label}
                 </button>
@@ -292,18 +349,19 @@ export default function KalenderWidget() {
         </div>
       </div>
 
-      <div className="mb-4">
+      {/* Resident filter */}
+      <div className="mb-4 relative inline-block w-full max-w-xs">
         <label htmlFor="kal-resident-filter" className="sr-only">
           Filtrer efter beboer
         </label>
         <select
           id="kal-resident-filter"
           value={residentFilter}
-          onChange={e => setResidentFilter(e.target.value)}
-          className="w-full max-w-xs rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-8 text-sm text-gray-800 transition-all duration-200 focus:border-budr-teal focus:outline-none focus:ring-1 focus:ring-budr-teal sm:w-auto"
+          onChange={(e) => setResidentFilter(e.target.value)}
+          style={{ ...INPUT_STYLE, paddingRight: '2rem', appearance: 'none' }}
         >
           <option value="alle">Alle beboere</option>
-          {RESIDENT_OPTIONS.map(r => (
+          {RESIDENT_OPTIONS.map((r) => (
             <option key={r.id} value={r.id}>
               {r.name}
             </option>
@@ -311,53 +369,70 @@ export default function KalenderWidget() {
         </select>
       </div>
 
+      {/* Form */}
       <div
         className={`grid transition-all duration-200 ease-out ${showForm ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
       >
         <div className="min-h-0 overflow-hidden">
           <form
             onSubmit={addAppointment}
-            className="mb-4 space-y-3 rounded-xl border border-gray-100 bg-gray-50/60 p-4"
+            className="mb-4 space-y-3 rounded-xl p-4"
+            style={{ backgroundColor: 'var(--cp-bg3)', border: '1px solid var(--cp-border)' }}
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="sm:col-span-2">
-                <label htmlFor="kal-titel" className="mb-1 block text-xs font-medium text-gray-500">
+                <label
+                  htmlFor="kal-titel"
+                  className="mb-1 block text-xs font-medium"
+                  style={{ color: 'var(--cp-muted)' }}
+                >
                   Titel
                 </label>
                 <input
                   id="kal-titel"
                   value={formTitle}
-                  onChange={e => setFormTitle(e.target.value)}
-                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm transition-all duration-200 focus:border-budr-teal focus:outline-none focus:ring-1 focus:ring-budr-teal"
+                  onChange={(e) => setFormTitle(e.target.value)}
+                  style={INPUT_STYLE}
                   placeholder="Fx vagtmøde, lægebesøg…"
                 />
               </div>
               <div>
-                <label htmlFor="kal-tid" className="mb-1 block text-xs font-medium text-gray-500">
+                <label
+                  htmlFor="kal-tid"
+                  className="mb-1 block text-xs font-medium"
+                  style={{ color: 'var(--cp-muted)' }}
+                >
                   Tidspunkt
                 </label>
                 <div className="relative">
-                  <Clock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <Clock
+                    className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+                    style={{ color: 'var(--cp-muted2)' }}
+                  />
                   <input
                     id="kal-tid"
                     type="time"
                     value={formTime}
-                    onChange={e => setFormTime(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm transition-all duration-200 focus:border-budr-teal focus:outline-none focus:ring-1 focus:ring-budr-teal"
+                    onChange={(e) => setFormTime(e.target.value)}
+                    style={{ ...INPUT_STYLE, paddingLeft: '2.25rem' }}
                   />
                 </div>
               </div>
               <div>
-                <label htmlFor="kal-type" className="mb-1 block text-xs font-medium text-gray-500">
+                <label
+                  htmlFor="kal-type"
+                  className="mb-1 block text-xs font-medium"
+                  style={{ color: 'var(--cp-muted)' }}
+                >
                   Type
                 </label>
                 <select
                   id="kal-type"
                   value={formType}
-                  onChange={e => setFormType(e.target.value as AppointmentTypeId)}
-                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm transition-all duration-200 focus:border-budr-teal focus:outline-none focus:ring-1 focus:ring-budr-teal"
+                  onChange={(e) => setFormType(e.target.value as AppointmentTypeId)}
+                  style={{ ...INPUT_STYLE, appearance: 'none' }}
                 >
-                  {APPT_TYPES.map(t => (
+                  {APPT_TYPES.map((t) => (
                     <option key={t.id} value={t.id}>
                       {t.label}
                     </option>
@@ -365,17 +440,21 @@ export default function KalenderWidget() {
                 </select>
               </div>
               <div>
-                <label htmlFor="kal-beboer" className="mb-1 block text-xs font-medium text-gray-500">
+                <label
+                  htmlFor="kal-beboer"
+                  className="mb-1 block text-xs font-medium"
+                  style={{ color: 'var(--cp-muted)' }}
+                >
                   Beboer (valgfri)
                 </label>
                 <select
                   id="kal-beboer"
                   value={formResidentId}
-                  onChange={e => setFormResidentId(e.target.value)}
-                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm transition-all duration-200 focus:border-budr-teal focus:outline-none focus:ring-1 focus:ring-budr-teal"
+                  onChange={(e) => setFormResidentId(e.target.value)}
+                  style={{ ...INPUT_STYLE, appearance: 'none' }}
                 >
                   <option value="">Ingen</option>
-                  {RESIDENT_OPTIONS.map(r => (
+                  {RESIDENT_OPTIONS.map((r) => (
                     <option key={r.id} value={r.id}>
                       {r.name}
                     </option>
@@ -383,31 +462,45 @@ export default function KalenderWidget() {
                 </select>
               </div>
               <div>
-                <label htmlFor="kal-ansv" className="mb-1 block text-xs font-medium text-gray-500">
+                <label
+                  htmlFor="kal-ansv"
+                  className="mb-1 block text-xs font-medium"
+                  style={{ color: 'var(--cp-muted)' }}
+                >
                   Ansvarlig
                 </label>
                 <div className="relative">
-                  <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <User
+                    className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+                    style={{ color: 'var(--cp-muted2)' }}
+                  />
                   <input
                     id="kal-ansv"
                     value={formResponsible}
-                    onChange={e => setFormResponsible(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm transition-all duration-200 focus:border-budr-teal focus:outline-none focus:ring-1 focus:ring-budr-teal"
+                    onChange={(e) => setFormResponsible(e.target.value)}
+                    style={{ ...INPUT_STYLE, paddingLeft: '2.25rem' }}
                     placeholder="Navn"
                   />
                 </div>
               </div>
               <div className="sm:col-span-2">
-                <label htmlFor="kal-lok" className="mb-1 block text-xs font-medium text-gray-500">
+                <label
+                  htmlFor="kal-lok"
+                  className="mb-1 block text-xs font-medium"
+                  style={{ color: 'var(--cp-muted)' }}
+                >
                   Lokation
                 </label>
                 <div className="relative">
-                  <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <MapPin
+                    className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+                    style={{ color: 'var(--cp-muted2)' }}
+                  />
                   <input
                     id="kal-lok"
                     value={formLocation}
-                    onChange={e => setFormLocation(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm transition-all duration-200 focus:border-budr-teal focus:outline-none focus:ring-1 focus:ring-budr-teal"
+                    onChange={(e) => setFormLocation(e.target.value)}
+                    style={{ ...INPUT_STYLE, paddingLeft: '2.25rem' }}
                     placeholder="Fx stue, køretøj…"
                   />
                 </div>
@@ -415,7 +508,8 @@ export default function KalenderWidget() {
             </div>
             <button
               type="submit"
-              className="w-full rounded-lg bg-budr-teal py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:opacity-90"
+              className="w-full rounded-lg py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:opacity-90"
+              style={{ backgroundColor: 'var(--cp-green)' }}
             >
               Gem aftale
             </button>
@@ -423,86 +517,120 @@ export default function KalenderWidget() {
         </div>
       </div>
 
+      {/* List */}
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <CalendarDays className="mb-2 h-10 w-10 text-gray-300" aria-hidden />
-          <p className="text-sm text-gray-400">Ingen aftaler i dag</p>
+          <CalendarDays
+            className="mb-2 h-10 w-10"
+            style={{ color: 'var(--cp-muted2)' }}
+            aria-hidden
+          />
+          <p className="text-sm" style={{ color: 'var(--cp-muted)' }}>
+            Ingen aftaler i dag
+          </p>
         </div>
       ) : (
-        <div className="flex">
-          <div className="w-14 shrink-0">
-            {filtered.map(a => (
-              <div
-                key={`t-${a.id}`}
-                className="py-2.5 font-mono text-sm font-semibold tabular-nums text-gray-900"
-              >
-                {formatTime(a.scheduledAt)}
-              </div>
-            ))}
-          </div>
-          <div className="relative min-w-0 flex-1 border-l-2 border-gray-100 ml-2">
-            {filtered.map(a => (
-              <div
+        <div
+          className="rounded-xl"
+          style={{ border: '1px solid var(--cp-border)', backgroundColor: 'var(--cp-bg3)' }}
+        >
+          <ul className="list-none p-0 m-0">
+            {filtered.map((a) => (
+              <li
                 key={a.id}
-                className="group relative border-b border-gray-50 py-2.5 pl-5 pr-1 transition-all duration-200 last:border-b-0 hover:rounded-lg hover:bg-gray-50"
+                className="group grid grid-cols-[4.25rem_18px_minmax(0,1fr)] gap-x-2 border-b px-2 py-3 transition-colors duration-200 last:border-b-0 sm:grid-cols-[4.25rem_18px_minmax(0,1fr)_10.5rem] sm:gap-x-3 sm:px-3"
+                style={{ borderColor: 'var(--cp-border)' }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--cp-bg2)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.backgroundColor = '';
+                }}
               >
-                <div
-                  className={`absolute left-[-5px] top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-white ${typeDotClass(a.type)}`}
-                  aria-hidden
-                />
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-semibold text-gray-900">{a.title}</span>
-                      {a.residentInitials ? (
-                        <span className="inline-flex items-center rounded-full bg-budr-lavender px-2 py-0.5 text-xs font-medium text-budr-purple">
-                          {a.residentInitials}
-                        </span>
-                      ) : null}
-                    </div>
-                    {a.residentName ? (
-                      <p className="mt-0.5 text-xs text-gray-500">{a.residentName}</p>
-                    ) : null}
+                {/* Kolonne 1: tid — samme række som indhold, vertikalt centreret */}
+                <div className="flex items-center justify-end sm:pr-0.5">
+                  <time
+                    dateTime={a.scheduledAt.toISOString()}
+                    className="font-mono text-[11px] font-semibold tabular-nums leading-none sm:text-xs"
+                    style={{ color: 'var(--cp-text)' }}
+                  >
+                    {formatTime(a.scheduledAt)}
+                  </time>
+                </div>
+
+                {/* Kolonne 2: tidslinje + prik (fuld rækkehøjde) */}
+                <div className="relative flex justify-center">
+                  <div
+                    className="absolute bottom-0 left-1/2 top-0 w-px -translate-x-1/2"
+                    style={{ backgroundColor: 'var(--cp-border2)' }}
+                    aria-hidden
+                  />
+                  <div
+                    className="relative z-[1] my-auto h-2.5 w-2.5 shrink-0 rounded-full shadow-[0_0_0_3px_var(--cp-bg3)] transition-shadow group-hover:shadow-[0_0_0_3px_var(--cp-bg2)]"
+                    style={{
+                      backgroundColor: typeColor(a.type),
+                    }}
+                    aria-hidden
+                  />
+                </div>
+
+                {/* Kolonne 3: titel + beboer */}
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      className="text-sm font-semibold leading-snug"
+                      style={{ color: 'var(--cp-text)' }}
+                    >
+                      {a.title}
+                    </span>
+                    {a.residentInitials && (
+                      <span
+                        title={a.residentName ?? undefined}
+                        className="inline-flex cursor-help items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
+                        style={{
+                          backgroundColor: 'var(--cp-green-dim)',
+                          color: 'var(--cp-green)',
+                        }}
+                      >
+                        {a.residentInitials}
+                      </span>
+                    )}
                   </div>
-                  <div className="max-w-[42%] shrink-0 text-right text-xs leading-snug text-gray-400">
-                    <span className="flex items-start justify-end gap-1">
+                  {/* Meta på smalle skærme under titel */}
+                  <div
+                    className="mt-2 space-y-1 text-xs leading-snug sm:hidden"
+                    style={{ color: 'var(--cp-muted2)' }}
+                  >
+                    <span className="flex items-start gap-1.5">
                       <MapPin className="mt-0.5 h-3 w-3 shrink-0 opacity-80" aria-hidden />
                       <span>{a.location}</span>
                     </span>
-                    <span className="mt-1 flex items-start justify-end gap-1">
+                    <span className="flex items-start gap-1.5">
                       <User className="mt-0.5 h-3 w-3 shrink-0 opacity-80" aria-hidden />
                       <span>{a.responsible}</span>
                     </span>
                   </div>
                 </div>
-              </div>
+
+                {/* Kolonne 4: lokation + ansvarlig (desktop) */}
+                <div
+                  className="hidden min-w-0 flex-col items-end justify-center gap-1.5 text-right text-xs leading-snug sm:flex"
+                  style={{ color: 'var(--cp-muted2)' }}
+                >
+                  <span className="flex items-start justify-end gap-1.5">
+                    <MapPin className="mt-0.5 h-3 w-3 shrink-0 opacity-80" aria-hidden />
+                    <span className="break-words">{a.location}</span>
+                  </span>
+                  <span className="flex items-start justify-end gap-1.5">
+                    <User className="mt-0.5 h-3 w-3 shrink-0 opacity-80" aria-hidden />
+                    <span>{a.responsible}</span>
+                  </span>
+                </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       )}
-
-      {/*
-        Supabase — care_appointments (wire later):
-
-        Columns: id, facility_id, resident_id (nullable), title, scheduled_at, type,
-                 location, responsible_staff, created_at
-
-        1) Fetch today (local or UTC window):
-           const start = startOfDay; const end = endOfDay;
-           supabase.from('care_appointments')
-             .select('*')
-             .gte('scheduled_at', start.toISOString())
-             .lte('scheduled_at', end.toISOString())
-             .in('facility_id', care_visible_facility_ids())
-             .order('scheduled_at', { ascending: true })
-
-        2) Insert on add:
-           supabase.from('care_appointments').insert({
-             facility_id, resident_id, title, scheduled_at, type, location, responsible_staff,
-           })
-
-        3) RLS: facility_id in care_visible_facility_ids() for the current staff session.
-      */}
     </section>
   );
 }

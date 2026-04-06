@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { ArrowLeft, Send } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 import type { LysThemeTokens } from '../lib/lysTheme';
 
 // ── Symbol grid ───────────────────────────────────────────────────────────────
@@ -17,36 +16,144 @@ type Symbol = {
 
 const SYMBOLS: Symbol[] = [
   // Behov
-  { id: 'mad',       emoji: '🍽',  label: 'Mad',       category: 'behov',     message: 'Jeg er sulten og har brug for mad' },
-  { id: 'vand',      emoji: '💧',  label: 'Vand',      category: 'behov',     message: 'Jeg er tørstig og vil gerne have vand' },
-  { id: 'toilet',    emoji: '🚽',  label: 'Toilet',    category: 'behov',     message: 'Jeg har brug for at komme på toilettet' },
-  { id: 'hvile',     emoji: '🛏',  label: 'Hvile',     category: 'behov',     message: 'Jeg har brug for at hvile mig' },
-  { id: 'hjælp',     emoji: '🙋',  label: 'Hjælp',     category: 'behov',     message: 'Jeg har brug for hjælp' },
-  { id: 'ro',        emoji: '🤫',  label: 'Ro',        category: 'behov',     message: 'Jeg har brug for ro og stille omgivelser' },
+  {
+    id: 'mad',
+    emoji: '🍽',
+    label: 'Mad',
+    category: 'behov',
+    message: 'Jeg er sulten og har brug for mad',
+  },
+  {
+    id: 'vand',
+    emoji: '💧',
+    label: 'Vand',
+    category: 'behov',
+    message: 'Jeg er tørstig og vil gerne have vand',
+  },
+  {
+    id: 'toilet',
+    emoji: '🚽',
+    label: 'Toilet',
+    category: 'behov',
+    message: 'Jeg har brug for at komme på toilettet',
+  },
+  {
+    id: 'hvile',
+    emoji: '🛏',
+    label: 'Hvile',
+    category: 'behov',
+    message: 'Jeg har brug for at hvile mig',
+  },
+  {
+    id: 'hjælp',
+    emoji: '🙋',
+    label: 'Hjælp',
+    category: 'behov',
+    message: 'Jeg har brug for hjælp',
+  },
+  {
+    id: 'ro',
+    emoji: '🤫',
+    label: 'Ro',
+    category: 'behov',
+    message: 'Jeg har brug for ro og stille omgivelser',
+  },
   // Følelse
-  { id: 'glad',      emoji: '😊',  label: 'Glad',      category: 'følelse',   message: 'Jeg har det godt og er glad' },
-  { id: 'ked',       emoji: '😢',  label: 'Trist',     category: 'følelse',   message: 'Jeg har det svært og er trist' },
-  { id: 'bange',     emoji: '😨',  label: 'Bange',     category: 'følelse',   message: 'Jeg er bange og utryg' },
-  { id: 'vred',      emoji: '😠',  label: 'Vred',      category: 'følelse',   message: 'Jeg er vred og frustreret' },
-  { id: 'træt',      emoji: '😴',  label: 'Træt',      category: 'følelse',   message: 'Jeg er meget træt' },
-  { id: 'smerte',    emoji: '🤕',  label: 'Smerte',    category: 'følelse',   message: 'Jeg har smerter eller har det fysisk dårligt' },
+  {
+    id: 'glad',
+    emoji: '😊',
+    label: 'Glad',
+    category: 'følelse',
+    message: 'Jeg har det godt og er glad',
+  },
+  {
+    id: 'ked',
+    emoji: '😢',
+    label: 'Trist',
+    category: 'følelse',
+    message: 'Jeg har det svært og er trist',
+  },
+  {
+    id: 'bange',
+    emoji: '😨',
+    label: 'Bange',
+    category: 'følelse',
+    message: 'Jeg er bange og utryg',
+  },
+  {
+    id: 'vred',
+    emoji: '😠',
+    label: 'Vred',
+    category: 'følelse',
+    message: 'Jeg er vred og frustreret',
+  },
+  { id: 'træt', emoji: '😴', label: 'Træt', category: 'følelse', message: 'Jeg er meget træt' },
+  {
+    id: 'smerte',
+    emoji: '🤕',
+    label: 'Smerte',
+    category: 'følelse',
+    message: 'Jeg har smerter eller har det fysisk dårligt',
+  },
   // Aktivitet
-  { id: 'tur',       emoji: '🚶',  label: 'Gå tur',    category: 'aktivitet', message: 'Jeg vil gerne gå en tur' },
-  { id: 'musik',     emoji: '🎵',  label: 'Musik',     category: 'aktivitet', message: 'Jeg vil gerne høre musik' },
-  { id: 'tv',        emoji: '📺',  label: 'TV/Film',   category: 'aktivitet', message: 'Jeg vil gerne se TV eller en film' },
-  { id: 'samtale',   emoji: '💬',  label: 'Snak',      category: 'aktivitet', message: 'Jeg vil gerne have en samtale med nogen' },
+  {
+    id: 'tur',
+    emoji: '🚶',
+    label: 'Gå tur',
+    category: 'aktivitet',
+    message: 'Jeg vil gerne gå en tur',
+  },
+  {
+    id: 'musik',
+    emoji: '🎵',
+    label: 'Musik',
+    category: 'aktivitet',
+    message: 'Jeg vil gerne høre musik',
+  },
+  {
+    id: 'tv',
+    emoji: '📺',
+    label: 'TV/Film',
+    category: 'aktivitet',
+    message: 'Jeg vil gerne se TV eller en film',
+  },
+  {
+    id: 'samtale',
+    emoji: '💬',
+    label: 'Snak',
+    category: 'aktivitet',
+    message: 'Jeg vil gerne have en samtale med nogen',
+  },
   // Sted
-  { id: 'hjem',      emoji: '🏠',  label: 'Mit rum',   category: 'sted',      message: 'Jeg vil gerne gå til mit eget rum' },
-  { id: 'fælles',    emoji: '🛋',  label: 'Fælles',    category: 'sted',      message: 'Jeg vil gerne være i fællesrummet' },
-  { id: 'ude',       emoji: '🌳',  label: 'Udenfor',   category: 'sted',      message: 'Jeg vil gerne ud' },
-  { id: 'køkken',    emoji: '🍳',  label: 'Køkken',    category: 'sted',      message: 'Jeg vil gerne i køkkenet' },
+  {
+    id: 'hjem',
+    emoji: '🏠',
+    label: 'Mit rum',
+    category: 'sted',
+    message: 'Jeg vil gerne gå til mit eget rum',
+  },
+  {
+    id: 'fælles',
+    emoji: '🛋',
+    label: 'Fælles',
+    category: 'sted',
+    message: 'Jeg vil gerne være i fællesrummet',
+  },
+  { id: 'ude', emoji: '🌳', label: 'Udenfor', category: 'sted', message: 'Jeg vil gerne ud' },
+  {
+    id: 'køkken',
+    emoji: '🍳',
+    label: 'Køkken',
+    category: 'sted',
+    message: 'Jeg vil gerne i køkkenet',
+  },
 ];
 
 const CATEGORIES: { key: Symbol['category']; label: string; color: string }[] = [
-  { key: 'behov',     label: 'Behov',      color: '#3b82f6' },
-  { key: 'følelse',   label: 'Følelse',    color: '#8b5cf6' },
-  { key: 'aktivitet', label: 'Aktivitet',  color: '#10b981' },
-  { key: 'sted',      label: 'Sted',       color: '#f59e0b' },
+  { key: 'behov', label: 'Behov', color: '#3b82f6' },
+  { key: 'følelse', label: 'Følelse', color: '#8b5cf6' },
+  { key: 'aktivitet', label: 'Aktivitet', color: '#10b981' },
+  { key: 'sted', label: 'Sted', color: '#f59e0b' },
 ];
 
 type UIState = 'board' | 'confirm' | 'sent';
@@ -64,8 +171,8 @@ export default function LysAACBoard({ tokens, accent, residentId, onClose }: Pro
   const [uiState, setUiState] = useState<UIState>('board');
   const [sending, setSending] = useState(false);
 
-  const filtered = SYMBOLS.filter(s => s.category === activeCategory);
-  const catColor = CATEGORIES.find(c => c.key === activeCategory)?.color ?? accent;
+  const filtered = SYMBOLS.filter((s) => s.category === activeCategory);
+  const catColor = CATEGORIES.find((c) => c.key === activeCategory)?.color ?? accent;
 
   const handleSelect = (sym: Symbol) => {
     setSelected(sym);
@@ -77,30 +184,28 @@ export default function LysAACBoard({ tokens, accent, residentId, onClose }: Pro
     setSending(true);
     try {
       if (residentId) {
-        const supabase = createClient();
-        if (supabase) {
-          const { data: resident } = await supabase
-            .from('care_residents')
-            .select('org_id')
-            .eq('user_id', residentId)
-            .maybeSingle();
-          await supabase.from('plan_proposals').insert({
-            resident_id: residentId,
-            org_id: resident?.org_id ?? null,
-            plan_date: new Date().toISOString().slice(0, 10),
+        await fetch('/api/park/lys-plan-proposal', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
             user_message: selected.message,
             proposed_items: [{ title: selected.message, preset_type: `aac_${selected.id}` }],
-            ai_reasoning: null,
-            status: 'pending',
-          });
-        }
+          }),
+        });
       }
-    } catch { /* ignore */ }
-    finally { setSending(false); }
+    } catch {
+      /* ignore */
+    } finally {
+      setSending(false);
+    }
     setUiState('sent');
   };
 
-  const reset = () => { setSelected(null); setUiState('board'); };
+  const reset = () => {
+    setSelected(null);
+    setUiState('board');
+  };
 
   return (
     <div
@@ -120,7 +225,9 @@ export default function LysAACBoard({ tokens, accent, residentId, onClose }: Pro
         </button>
         <div>
           <h1 className="text-lg font-black tracking-tight">Kommunikationstavle</h1>
-          <p className="text-xs" style={{ color: tokens.textMuted }}>Tryk på et billede for at sende en besked</p>
+          <p className="text-xs" style={{ color: tokens.textMuted }}>
+            Tryk på et billede for at sende en besked
+          </p>
         </div>
       </div>
 
@@ -129,7 +236,9 @@ export default function LysAACBoard({ tokens, accent, residentId, onClose }: Pro
         <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6">
           <span className="text-8xl">{selected.emoji}</span>
           <div className="text-center">
-            <p className="text-xl font-black mb-2" style={{ color: tokens.text }}>{selected.label}</p>
+            <p className="text-xl font-black mb-2" style={{ color: tokens.text }}>
+              {selected.label}
+            </p>
             <p className="text-sm leading-relaxed" style={{ color: tokens.textMuted }}>
               Dette sender til personalet: &ldquo;{selected.message}&rdquo;
             </p>
@@ -162,7 +271,9 @@ export default function LysAACBoard({ tokens, accent, residentId, onClose }: Pro
         <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6 text-center">
           <span className="text-7xl">✅</span>
           <div>
-            <p className="text-xl font-black mb-2" style={{ color: tokens.text }}>Sendt!</p>
+            <p className="text-xl font-black mb-2" style={{ color: tokens.text }}>
+              Sendt!
+            </p>
             <p className="text-sm leading-relaxed" style={{ color: tokens.textMuted }}>
               Personalet ved nu at du har brug for hjælp med: {selected.label.toLowerCase()}
             </p>
@@ -183,7 +294,7 @@ export default function LysAACBoard({ tokens, accent, residentId, onClose }: Pro
         <div className="flex-1 flex flex-col">
           {/* Category tabs */}
           <div className="flex gap-2 px-5 pb-4 shrink-0">
-            {CATEGORIES.map(cat => (
+            {CATEGORIES.map((cat) => (
               <button
                 key={cat.key}
                 type="button"
@@ -201,7 +312,7 @@ export default function LysAACBoard({ tokens, accent, residentId, onClose }: Pro
 
           {/* Symbol grid */}
           <div className="px-5 grid grid-cols-4 gap-3">
-            {filtered.map(sym => (
+            {filtered.map((sym) => (
               <button
                 key={sym.id}
                 type="button"
@@ -210,7 +321,10 @@ export default function LysAACBoard({ tokens, accent, residentId, onClose }: Pro
                 style={{ backgroundColor: tokens.cardBg, boxShadow: tokens.shadow }}
               >
                 <span className="text-4xl leading-none">{sym.emoji}</span>
-                <span className="text-[11px] font-bold text-center leading-tight" style={{ color: tokens.text }}>
+                <span
+                  className="text-[11px] font-bold text-center leading-tight"
+                  style={{ color: tokens.text }}
+                >
                   {sym.label}
                 </span>
               </button>
@@ -218,7 +332,10 @@ export default function LysAACBoard({ tokens, accent, residentId, onClose }: Pro
           </div>
 
           {/* Divider color bar */}
-          <div className="mx-5 mt-4 h-1 rounded-full" style={{ backgroundColor: `${catColor}30` }} />
+          <div
+            className="mx-5 mt-4 h-1 rounded-full"
+            style={{ backgroundColor: `${catColor}30` }}
+          />
         </div>
       )}
     </div>

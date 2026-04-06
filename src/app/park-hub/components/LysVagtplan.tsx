@@ -100,7 +100,7 @@ export default function LysVagtplan({ tokens, accent, reducedMotion }: Props) {
       </div>
 
       <div className="space-y-5">
-        {blocks.map(block => (
+        {blocks.map((block) => (
           <div key={block.label}>
             <div className="mb-2 flex flex-wrap items-center gap-2">
               <p className="text-base font-semibold" style={{ color: tokens.text }}>
@@ -114,7 +114,7 @@ export default function LysVagtplan({ tokens, accent, reducedMotion }: Props) {
               ) : null}
             </div>
             <ul className="flex flex-wrap gap-4">
-              {block.staff.map(s => (
+              {block.staff.map((s) => (
                 <li key={s.id} className="flex min-w-[44px] items-center gap-2">
                   <div
                     className="flex shrink-0 items-center justify-center rounded-full font-semibold text-white transition-transform"
@@ -130,11 +130,17 @@ export default function LysVagtplan({ tokens, accent, reducedMotion }: Props) {
                     {s.initials}
                   </div>
                   <div className="min-w-0">
-                    <p className="flex items-center gap-1 text-base font-semibold" style={{ color: tokens.text }}>
+                    <p
+                      className="flex items-center gap-1 text-base font-semibold"
+                      style={{ color: tokens.text }}
+                    >
                       {s.first} {s.lastInitial}
                       {s.kontaktperson ? (
                         <span className="inline-flex" title="Din kontaktperson">
-                          <Heart className="h-4 w-4 shrink-0 text-rose-400" aria-label="Din kontaktperson" />
+                          <Heart
+                            className="h-4 w-4 shrink-0 text-rose-400"
+                            aria-label="Din kontaktperson"
+                          />
                         </span>
                       ) : null}
                     </p>
@@ -153,7 +159,7 @@ export default function LysVagtplan({ tokens, accent, reducedMotion }: Props) {
 
       <button
         type="button"
-        onClick={() => setExpanded(e => !e)}
+        onClick={() => setExpanded((e) => !e)}
         className="mt-5 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl py-3 text-base font-semibold transition-colors"
         style={{ color: accent, backgroundColor: tokens.accentSoft }}
         aria-expanded={expanded}
@@ -180,11 +186,11 @@ export default function LysVagtplan({ tokens, accent, reducedMotion }: Props) {
             className="mt-4 space-y-2 border-t pt-4 text-base"
             style={{ borderColor: tokens.cardBorder }}
           >
-            {MOCK_WEEK.map(row => (
+            {MOCK_WEEK.map((row) => (
               <li key={row.key} className="flex flex-wrap items-center gap-2">
                 <span className="w-24 shrink-0 font-medium opacity-80">{row.label}</span>
                 <div className="flex flex-wrap gap-1">
-                  {row.pills.map(p => (
+                  {row.pills.map((p) => (
                     <span
                       key={p}
                       className="rounded-full px-2 py-1 font-mono text-base font-semibold text-white"

@@ -99,11 +99,11 @@ export default function StepFocusArea({ data, setData, onNext }: StepProps) {
       {/* Header */}
       <div className="mb-4">
         <h2 className="font-display text-xl sm:text-2xl font-bold text-midnight-50 mb-1.5">
-          Hvad vil du arbejde med,{' '}
-          <span className="text-sunrise-400">{data.name}?</span>
+          Hvad vil du arbejde med, <span className="text-sunrise-400">{data.name}?</span>
         </h2>
         <p className="text-midnight-400 text-sm leading-relaxed">
-          Vælg op til <strong className="text-midnight-200">3 fokusområder</strong>. Du kan altid ændre det senere.
+          Vælg op til <strong className="text-midnight-200">3 fokusområder</strong>. Du kan altid
+          ændre det senere.
         </p>
       </div>
 
@@ -136,11 +136,12 @@ export default function StepFocusArea({ data, setData, onNext }: StepProps) {
               className={`
                 relative flex flex-col items-center text-center p-4 rounded-2xl border-2
                 transition-all duration-200 cursor-pointer bg-midnight-800 min-h-[100px]
-                ${isSelected
-                  ? `${area.selectedBorder} ${area.selectedBg} shadow-md scale-[1.02]`
-                  : isDisabled
-                  ? 'border-midnight-700 opacity-40 cursor-not-allowed'
-                  : `${area.border} hover:border-midnight-500 hover:shadow-md hover:scale-[1.01] active:scale-95`
+                ${
+                  isSelected
+                    ? `${area.selectedBorder} ${area.selectedBg} shadow-md scale-[1.02]`
+                    : isDisabled
+                      ? 'border-midnight-700 opacity-40 cursor-not-allowed'
+                      : `${area.border} hover:border-midnight-500 hover:shadow-md hover:scale-[1.01] active:scale-95`
                 }
               `}
               aria-pressed={isSelected}
@@ -149,7 +150,13 @@ export default function StepFocusArea({ data, setData, onNext }: StepProps) {
               {isSelected && (
                 <div className="absolute top-2 right-2 w-5 h-5 bg-sunrise-400 rounded-full flex items-center justify-center">
                   <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                    <path d="M1 4L3.5 6.5L9 1" stroke="#0f0f1a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path
+                      d="M1 4L3.5 6.5L9 1"
+                      stroke="#0f0f1a"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </div>
               )}
@@ -165,12 +172,14 @@ export default function StepFocusArea({ data, setData, onNext }: StepProps) {
         })}
       </div>
 
-      {error && (
-        <p className="text-rose-400 text-sm font-medium text-center mb-4">{error}</p>
-      )}
+      {error && <p className="text-rose-400 text-sm font-medium text-center mb-4">{error}</p>}
 
       <StickyPrimaryFooter>
-        <button type="button" onClick={handleNext} className="btn-primary w-full text-base py-3.5 min-h-[48px]">
+        <button
+          type="button"
+          onClick={handleNext}
+          className="btn-primary w-full text-base py-3.5 min-h-[48px]"
+        >
           Fortsæt →
         </button>
       </StickyPrimaryFooter>

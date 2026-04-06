@@ -1,13 +1,14 @@
 import React from 'react';
 import { createClient } from '@supabase/supabase-js';
 import LysShell from './components/LysShell';
+import DemoSeeder, { DEMO_RESIDENT_ID } from './components/DemoSeeder';
 import { getResidentId } from '@/lib/residentAuth';
 
 function deriveInitials(displayName: string): string {
   return displayName
     .trim()
     .split(/\s+/)
-    .map(w => w[0] ?? '')
+    .map((w) => w[0] ?? '')
     .join('')
     .toUpperCase()
     .slice(0, 2);
@@ -15,10 +16,10 @@ function deriveInitials(displayName: string): string {
 
 async function getResident(residentId: string) {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    );
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!url || !key) return null;
+    const supabase = createClient(url, key, { auth: { persistSession: false } });
     const { data } = await supabase
       .from('care_residents')
       .select('display_name, onboarding_data, org_id')
@@ -40,7 +41,25 @@ async function getResident(residentId: string) {
 export default async function ParkHubPage() {
   const residentId = await getResidentId();
 
-  const resident = residentId ? await getResident(residentId) : null;
+  // Demo mode — auto-set by middleware when no real cookie exists
+  if (!residentId || residentId === DEMO_RESIDENT_ID) {
+    return (
+      <>
+        <DemoSeeder />
+        <div className="pt-8">
+          <LysShell
+            firstName="Anders"
+            initials="AM"
+            residentId={DEMO_RESIDENT_ID}
+            facilityId={null}
+            isDemoMode
+          />
+        </div>
+      </>
+    );
+  }
+
+  const resident = await getResident(residentId);
 
   const displayName = resident?.name ?? '';
   const firstName = displayName.trim().split(/\s+/)[0] || '';
@@ -50,7 +69,7 @@ export default async function ParkHubPage() {
     <LysShell
       firstName={firstName}
       initials={initials}
-      residentId={residentId ?? ''}
+      residentId={residentId}
       facilityId={resident?.facilityId ?? null}
     />
   );

@@ -2,7 +2,12 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 
-export type CompanionReaction = 'taskComplete' | 'moodChange' | 'energySwing' | 'celebrate' | 'idle';
+export type CompanionReaction =
+  | 'taskComplete'
+  | 'moodChange'
+  | 'energySwing'
+  | 'celebrate'
+  | 'idle';
 
 interface CompanionAvatarProps {
   companion: string;
@@ -91,7 +96,11 @@ const reactionMessages: Record<Exclude<CompanionReaction, 'idle'>, Record<string
     kat: ['Purr... godt klaret 🐱✨', 'Elegant og præcist! 🌸', 'Imponerende! 💗'],
   },
   moodChange: {
-    bjorn: ['Jeg mærker dit humør 🐻🤎', 'Jeg er her uanset hvad! 🌿', 'Dine følelser er vigtige 💛'],
+    bjorn: [
+      'Jeg mærker dit humør 🐻🤎',
+      'Jeg er her uanset hvad! 🌿',
+      'Dine følelser er vigtige 💛',
+    ],
     ræv: ['Alle humører er OK! 🦊', 'Jeg forstår dig 🍂', 'Dine følelser er gyldige ✨'],
     ugle: ['Humøret svinger — det er normalt 🦉', 'Vær tålmodig med dig selv 🌙', 'Jeg ser dig 💜'],
     pingvin: ['Alle dage er forskellige! 🐧', 'Jeg er her for dig ❄️', 'Dine følelser tæller 💙'],
@@ -117,7 +126,10 @@ const reactionMessages: Record<Exclude<CompanionReaction, 'idle'>, Record<string
 };
 
 /** Visual expression overlays per reaction */
-const reactionOverlay: Record<Exclude<CompanionReaction, 'idle'>, { particles: string[]; bg: string; border: string }> = {
+const reactionOverlay: Record<
+  Exclude<CompanionReaction, 'idle'>,
+  { particles: string[]; bg: string; border: string }
+> = {
   taskComplete: {
     particles: ['✅', '⭐', '✨'],
     bg: 'bg-emerald-400/20',
@@ -175,8 +187,12 @@ export default function CompanionAvatar({
   const [showEncouragement, setShowEncouragement] = useState(false);
   const [message, setMessage] = useState('');
   const [bounce, setBounce] = useState(false);
-  const [activeReaction, setActiveReaction] = useState<Exclude<CompanionReaction, 'idle'> | null>(null);
-  const [particles, setParticles] = useState<{ id: number; emoji: string; x: number; y: number }[]>([]);
+  const [activeReaction, setActiveReaction] = useState<Exclude<CompanionReaction, 'idle'> | null>(
+    null
+  );
+  const [particles, setParticles] = useState<{ id: number; emoji: string; x: number; y: number }[]>(
+    []
+  );
   const reactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const particleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -193,7 +209,8 @@ export default function CompanionAvatar({
     if (particleTimerRef.current) clearTimeout(particleTimerRef.current);
 
     const overlay = reactionOverlay[reaction];
-    const reactionMsgs = reactionMessages[reaction][companion] || reactionMessages[reaction]['bjorn'];
+    const reactionMsgs =
+      reactionMessages[reaction][companion] || reactionMessages[reaction]['bjorn'];
     const randomMsg = reactionMsgs[Math.floor(Math.random() * reactionMsgs.length)];
 
     // Spawn floating particles
@@ -221,7 +238,7 @@ export default function CompanionAvatar({
       if (reactionTimerRef.current) clearTimeout(reactionTimerRef.current);
       if (particleTimerRef.current) clearTimeout(particleTimerRef.current);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reaction]);
 
   const handleClick = useCallback(() => {
@@ -307,9 +324,13 @@ export default function CompanionAvatar({
       )}
       {activeReaction && (
         <span className="text-[10px] text-sunrise-400 mt-1 select-none animate-pulse">
-          {activeReaction === 'taskComplete' ? '✅ Klaret!' :
-           activeReaction === 'moodChange' ? '💛 Humør' :
-           activeReaction === 'energySwing' ? '⚡ Energi' : '🎉 Fejrer!'}
+          {activeReaction === 'taskComplete'
+            ? '✅ Klaret!'
+            : activeReaction === 'moodChange'
+              ? '💛 Humør'
+              : activeReaction === 'energySwing'
+                ? '⚡ Energi'
+                : '🎉 Fejrer!'}
         </span>
       )}
     </div>

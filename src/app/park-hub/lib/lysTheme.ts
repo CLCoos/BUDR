@@ -90,9 +90,13 @@ export function lysTheme(phase: LysPhase): LysThemeTokens {
 
 export function phaseDaLabel(phase: LysPhase): string {
   switch (phase) {
-    case 'morning':   return 'morgen';
-    case 'afternoon': return 'eftermiddag';
-    case 'evening':   return 'aften';
-    default:          return 'nat';
+    case 'morning':
+      return 'morgen';
+    case 'afternoon':
+      return 'eftermiddag';
+    case 'evening':
+      return 'aften';
+    default:
+      return 'nat';
   }
 }

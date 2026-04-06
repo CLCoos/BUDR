@@ -11,6 +11,14 @@ interface Notification {
   createdAt: string;
 }
 
+type CelebrationRow = {
+  id: string;
+  message: string;
+  emoji: string;
+  is_read: boolean;
+  created_at: string;
+};
+
 interface CelebrationNotificationsProps {
   contactId: string;
   contactName: string;
@@ -60,7 +68,7 @@ export default function CelebrationNotifications({
           filter: `contact_id=eq.${contactId}`,
         },
         (payload) => {
-          const row = payload.new as any;
+          const row = payload.new as CelebrationRow;
           setNotifications((prev) => [
             {
               id: row.id,
@@ -78,7 +86,7 @@ export default function CelebrationNotifications({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [contactId]);
+  }, [contactId]); // eslint-disable-line react-hooks/exhaustive-deps -- fetchNotifications + supabase
 
   const fetchNotifications = async () => {
     if (!supabase) return;
@@ -93,7 +101,7 @@ export default function CelebrationNotifications({
 
       if (!error && data) {
         setNotifications(
-          data.map((row: any) => ({
+          (data as CelebrationRow[]).map((row) => ({
             id: row.id,
             message: row.message,
             emoji: row.emoji,
@@ -103,7 +111,7 @@ export default function CelebrationNotifications({
         );
       }
     } catch (err) {
-      console.log('Error fetching celebrations:', err);
+      console.warn('Error fetching celebrations:', err);
     } finally {
       setLoading(false);
     }
@@ -125,7 +133,7 @@ export default function CelebrationNotifications({
         setShowCustom(false);
       }
     } catch (err) {
-      console.log('Error sending celebration:', err);
+      console.warn('Error sending celebration:', err);
     } finally {
       setSending(false);
     }
@@ -142,7 +150,7 @@ export default function CelebrationNotifications({
         .eq('is_read', false);
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     } catch (err) {
-      console.log('Error marking read:', err);
+      console.warn('Error marking read:', err);
     }
   };
 
@@ -150,7 +158,12 @@ export default function CelebrationNotifications({
 
   const formatDate = (iso: string) => {
     const d = new Date(iso);
-    return d.toLocaleDateString('da-DK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleDateString('da-DK', {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
   return (
@@ -187,7 +200,11 @@ export default function CelebrationNotifications({
             onClick={() => sendCelebration(t.message, t.emoji)}
             disabled={sending}
             className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium border transition-all active:scale-95 disabled:opacity-50 hover:scale-105"
-            style={{ background: contactBgColor, borderColor: `${contactColor}30`, color: contactColor }}
+            style={{
+              background: contactBgColor,
+              borderColor: `${contactColor}30`,
+              color: contactColor,
+            }}
           >
             {t.emoji}
           </button>
@@ -195,7 +212,11 @@ export default function CelebrationNotifications({
         <button
           onClick={() => setShowCustom(!showCustom)}
           className="rounded-full px-2.5 py-1 text-xs font-medium border transition-all active:scale-95 hover:scale-105"
-          style={{ background: contactBgColor, borderColor: `${contactColor}30`, color: contactColor }}
+          style={{
+            background: contactBgColor,
+            borderColor: `${contactColor}30`,
+            color: contactColor,
+          }}
         >
           ✏️
         </button>
@@ -210,7 +231,9 @@ export default function CelebrationNotifications({
             type="text"
             value={customMsg}
             onChange={(e) => setCustomMsg(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && customMsg.trim() && sendCelebration(customMsg.trim(), '🎊')}
+            onKeyDown={(e) =>
+              e.key === 'Enter' && customMsg.trim() && sendCelebration(customMsg.trim(), '🎊')
+            }
             placeholder="Skriv din fejring…"
             className="flex-1 bg-transparent text-sm text-midnight-100 placeholder-midnight-500 outline-none"
           />
@@ -228,7 +251,10 @@ export default function CelebrationNotifications({
       {/* Notification feed */}
       {loading ? (
         <div className="flex justify-center py-3">
-          <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: contactColor }} />
+          <div
+            className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
+            style={{ borderColor: contactColor }}
+          />
         </div>
       ) : notifications.length === 0 ? (
         <p className="text-xs text-midnight-500 text-center py-2">

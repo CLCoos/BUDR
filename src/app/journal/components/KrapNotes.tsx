@@ -17,10 +17,38 @@ const krapFields: {
   placeholder: string;
   accent: string;
 }[] = [
-  { key: 'krop',   label: 'Krop',   emoji: '🫀', description: 'Hvad mærker du i kroppen?',    placeholder: 'Fx spænding i skuldrene, uro i maven...', accent: '#F472B6' },
-  { key: 'rolle',  label: 'Rolle',  emoji: '🎭', description: 'Hvilken rolle spiller du i dag?', placeholder: 'Fx forælder, kollega, ven, patient...', accent: '#A78BFA' },
-  { key: 'affekt', label: 'Affekt', emoji: '💭', description: 'Hvilke følelser er til stede?',  placeholder: 'Fx vrede, glæde, sorg, angst, lettelse...', accent: '#60A5FA' },
-  { key: 'plan',   label: 'Plan',   emoji: '🗺️', description: 'Hvad vil du gøre med det?',     placeholder: 'Fx hvile, tale med nogen, sætte grænser...', accent: '#34D399' },
+  {
+    key: 'krop',
+    label: 'Krop',
+    emoji: '🫀',
+    description: 'Hvad mærker du i kroppen?',
+    placeholder: 'Fx spænding i skuldrene, uro i maven...',
+    accent: '#F472B6',
+  },
+  {
+    key: 'rolle',
+    label: 'Rolle',
+    emoji: '🎭',
+    description: 'Hvilken rolle spiller du i dag?',
+    placeholder: 'Fx forælder, kollega, ven, patient...',
+    accent: '#A78BFA',
+  },
+  {
+    key: 'affekt',
+    label: 'Affekt',
+    emoji: '💭',
+    description: 'Hvilke følelser er til stede?',
+    placeholder: 'Fx vrede, glæde, sorg, angst, lettelse...',
+    accent: '#60A5FA',
+  },
+  {
+    key: 'plan',
+    label: 'Plan',
+    emoji: '🗺️',
+    description: 'Hvad vil du gøre med det?',
+    placeholder: 'Fx hvile, tale med nogen, sætte grænser...',
+    accent: '#34D399',
+  },
 ];
 
 export default function KrapNotes({ krap, onChange }: KrapNotesProps) {
@@ -30,7 +58,9 @@ export default function KrapNotes({ krap, onChange }: KrapNotesProps) {
 
   useEffect(() => {
     mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
   const handleChange = (key: keyof KrapState, value: string) => {
@@ -44,8 +74,8 @@ export default function KrapNotes({ krap, onChange }: KrapNotesProps) {
     if (typeof window === 'undefined') return;
     setIsLoading(true);
     const parts = krapFields
-      .filter(f => krap[f.key].trim().length > 0)
-      .map(f => `${f.label}: ${krap[f.key].trim()}`)
+      .filter((f) => krap[f.key].trim().length > 0)
+      .map((f) => `${f.label}: ${krap[f.key].trim()}`)
       .join('\n');
 
     fetch('/api/ai/chat-completion', {
@@ -57,7 +87,8 @@ export default function KrapNotes({ krap, onChange }: KrapNotesProps) {
         messages: [
           {
             role: 'system',
-            content: 'Du er en empatisk AI-coach i en dansk mental sundhedsapp. Du analyserer brugerens KRAP-noter (Krop, Rolle, Affekt, Plan) og giver en kort, personlig indsigt. Max 3 sætninger. Vær varm, konkret og undgå klichéer. Peg på sammenhænge og mønstre du ser. Afslut med en opmuntrende bemærkning.',
+            content:
+              'Du er en empatisk AI-coach i en dansk mental sundhedsapp. Du analyserer brugerens KRAP-noter (Krop, Rolle, Affekt, Plan) og giver en kort, personlig indsigt. Max 3 sætninger. Vær varm, konkret og undgå klichéer. Peg på sammenhænge og mønstre du ser. Afslut med en opmuntrende bemærkning.',
           },
           {
             role: 'user',
@@ -68,13 +99,17 @@ export default function KrapNotes({ krap, onChange }: KrapNotesProps) {
         parameters: { max_tokens: 150, temperature: 0.75 },
       }),
     })
-      .then(r => r.ok ? r.json() : null)
-      .then(d => {
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
         const text = d?.choices?.[0]?.message?.content;
         if (text && mountedRef.current) setAiInsight(text.trim());
       })
-      .catch(() => { /* silently fail */ })
-      .finally(() => { if (mountedRef.current) setIsLoading(false); });
+      .catch(() => {
+        /* silently fail */
+      })
+      .finally(() => {
+        if (mountedRef.current) setIsLoading(false);
+      });
   };
 
   return (
@@ -84,15 +119,23 @@ export default function KrapNotes({ krap, onChange }: KrapNotesProps) {
         <h2 className="font-display text-base font-bold text-midnight-50">KRAP-noter</h2>
         <span className="ml-auto text-xs text-midnight-400">{filledCount}/4 udfyldt</span>
       </div>
-      <p className="text-xs text-midnight-500 mb-5">Refleksion og mønsterspotning — krop, rolle, affekt, plan</p>
+      <p className="text-xs text-midnight-500 mb-5">
+        Refleksion og mønsterspotning — krop, rolle, affekt, plan
+      </p>
 
       <div className="space-y-4">
         {krapFields.map(({ key, label, emoji, description, placeholder, accent }) => (
-          <div key={key} className="rounded-2xl border p-4 transition-all duration-200" style={{ borderColor: `${accent}25`, background: `${accent}08` }}>
+          <div
+            key={key}
+            className="rounded-2xl border p-4 transition-all duration-200"
+            style={{ borderColor: `${accent}25`, background: `${accent}08` }}
+          >
             <div className="flex flex-col gap-1 mb-2">
               <div className="flex items-center gap-2">
                 <span className="text-lg">{emoji}</span>
-                <span className="font-display text-sm font-bold" style={{ color: accent }}>{label}</span>
+                <span className="font-display text-sm font-bold" style={{ color: accent }}>
+                  {label}
+                </span>
               </div>
               <span className="text-xs text-midnight-500 pl-1">{description}</span>
             </div>
@@ -104,7 +147,9 @@ export default function KrapNotes({ krap, onChange }: KrapNotesProps) {
               className="w-full bg-midnight-900/60 rounded-xl border border-midnight-600/50 px-3 py-2 text-sm text-midnight-100 placeholder-midnight-600 focus:outline-none focus:border-sunrise-400/50 resize-none transition-colors"
             />
             {krap[key].trim().length > 0 && (
-              <p className="text-xs text-midnight-500 mt-1 text-right">{krap[key].trim().length} tegn</p>
+              <p className="text-xs text-midnight-500 mt-1 text-right">
+                {krap[key].trim().length} tegn
+              </p>
             )}
           </div>
         ))}
@@ -119,12 +164,24 @@ export default function KrapNotes({ krap, onChange }: KrapNotesProps) {
           >
             {isLoading ? (
               <>
-                <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <span
+                  className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
+                  style={{ animationDelay: '0ms' }}
+                />
+                <span
+                  className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
+                  style={{ animationDelay: '150ms' }}
+                />
+                <span
+                  className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
+                  style={{ animationDelay: '300ms' }}
+                />
               </>
             ) : (
-              <><span>🔮</span><span>Analyser mine mønstre med AI</span></>
+              <>
+                <span>🔮</span>
+                <span>Analyser mine mønstre med AI</span>
+              </>
             )}
           </button>
         </div>
@@ -135,11 +192,16 @@ export default function KrapNotes({ krap, onChange }: KrapNotesProps) {
           <div className="flex items-start gap-2">
             <span className="text-base mt-0.5">🔮</span>
             <div>
-              <p className="text-xs text-purple-400 font-semibold mb-1.5">AI-indsigt fra dine noter:</p>
+              <p className="text-xs text-purple-400 font-semibold mb-1.5">
+                AI-indsigt fra dine noter:
+              </p>
               <p className="text-sm text-midnight-200 leading-relaxed">{aiInsight}</p>
             </div>
           </div>
-          <button onClick={() => setAiInsight('')} className="mt-3 text-xs text-midnight-500 hover:text-midnight-300 transition-colors">
+          <button
+            onClick={() => setAiInsight('')}
+            className="mt-3 text-xs text-midnight-500 hover:text-midnight-300 transition-colors"
+          >
             Skjul indsigt
           </button>
         </div>

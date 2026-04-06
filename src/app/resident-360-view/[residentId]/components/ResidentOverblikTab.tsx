@@ -2,7 +2,17 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Pill, FileText, CheckSquare, AlertTriangle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import {
+  CheckCircle2,
+  FilePenLine,
+  Pill,
+  FileText,
+  CheckSquare,
+  AlertTriangle,
+} from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import type { MedDefinition } from './types';
 import WriteJournalEntry from './WriteJournalEntry';
 
@@ -16,6 +26,8 @@ interface JournalEntry {
   entry_text: string;
   category: string;
   created_at: string;
+  journal_status?: string;
+  approved_at?: string | null;
 }
 
 interface PlanItem {
@@ -24,6 +36,15 @@ interface PlanItem {
   done: boolean;
   time?: string;
 }
+
+type ConcernNoteRow = {
+  id: string;
+  note: string;
+  category: string;
+  severity: number;
+  staff_name: string;
+  created_at: string;
+};
 
 interface Props {
   residentId: string;
@@ -43,9 +64,9 @@ const TL_CONFIG: Record<
   NonNullable<TrafficUi>,
   { label: string; color: string; bg: string; border: string }
 > = {
-  groen: { label: 'Grøn',  color: '#1D9E75', bg: '#E1F5EE', border: '#A8DFC9' },
-  gul:   { label: 'Gul',   color: '#C78400', bg: '#FAEEDA', border: '#F5CC85' },
-  roed:  { label: 'Rød',   color: '#C0392B', bg: '#FCEBEB', border: '#F5AAAA' },
+  groen: { label: 'Grøn', color: '#1D9E75', bg: '#E1F5EE', border: '#A8DFC9' },
+  gul: { label: 'Gul', color: '#C78400', bg: '#FAEEDA', border: '#F5CC85' },
+  roed: { label: 'Rød', color: '#C0392B', bg: '#FCEBEB', border: '#F5AAAA' },
 };
 
 function formatTime(iso: string) {
@@ -65,12 +86,75 @@ export default function ResidentOverblikTab({
   todayPlanItems,
   pendingProposals,
 }: Props) {
+  const router = useRouter();
   const tlCfg = trafficLight ? TL_CONFIG[trafficLight] : null;
-  const pendingItems = todayPlanItems.filter(i => !i.done);
+  const pendingItems = todayPlanItems.filter((i) => !i.done);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [concernNotes, setConcernNotes] = useState<ConcernNoteRow[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const supabase = createClient();
+      if (!supabase) return;
+      const { data, error } = await supabase
+        .from('care_concern_notes')
+        .select('id, note, category, severity, staff_name, created_at')
+        .eq('resident_id', residentId)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      if (cancelled) return;
+      if (!error && data) setConcernNotes(data as ConcernNoteRow[]);
+      else setConcernNotes([]);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [residentId]);
+
+  const journalDrafts = journalEntries.filter((e) => e.journal_status === 'kladde');
+  const journalGodkendt = journalEntries.filter((e) => e.journal_status !== 'kladde');
+  const maxJournalLines = 4;
+  const shownDrafts = journalDrafts.slice(0, maxJournalLines);
+  const shownGodkendt = journalGodkendt.slice(0, maxJournalLines - shownDrafts.length);
+
+  async function approveJournalDraft(entryId: string) {
+    const supabase = createClient();
+    if (!supabase) {
+      toast.error('Forbindelsesfejl');
+      return;
+    }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user?.id) {
+      toast.error('Du skal være logget ind');
+      return;
+    }
+    setApprovingId(entryId);
+    const nowIso = new Date().toISOString();
+    const { error } = await supabase
+      .from('journal_entries')
+      .update({
+        journal_status: 'godkendt',
+        approved_at: nowIso,
+        approved_by: user.id,
+      })
+      .eq('id', entryId)
+      .eq('resident_id', residentId)
+      .eq('journal_status', 'kladde');
+    setApprovingId(null);
+    if (error) {
+      toast.error('Kunne ikke godkende — tjek rettigheder eller prøv igen');
+      return;
+    }
+    toast.success('Notat godkendt og synlig som journal');
+    router.refresh();
+  }
 
   // Read given count from localStorage (same key as ResidentMedicinTab)
   const [givenCount, setGivenCount] = useState(0);
-  const activeMeds = medications.filter(m => m.status === 'aktiv');
+  const activeMeds = medications.filter((m) => m.status === 'aktiv');
 
   useEffect(() => {
     try {
@@ -78,13 +162,13 @@ export default function ResidentOverblikTab({
       const raw = localStorage.getItem(`budr_med_v1_${residentId}_${today}`);
       if (raw) {
         const parsed = JSON.parse(raw) as Record<string, { given: boolean }>;
-        const count = activeMeds.filter(m => parsed[m.id]?.given).length;
+        const count = activeMeds.filter((m) => parsed[m.id]?.given).length;
         setGivenCount(count);
       }
     } catch {
       // ignore
     }
-  }, [residentId, activeMeds.length]);
+  }, [residentId, activeMeds]);
 
   const medicationGivenCount = givenCount;
   const medicationTotalCount = activeMeds.length;
@@ -96,13 +180,24 @@ export default function ResidentOverblikTab({
         {/* Traffic light */}
         <div
           className="rounded-xl border p-4 flex flex-col gap-1"
-          style={tlCfg ? { backgroundColor: tlCfg.bg, borderColor: tlCfg.border } : { backgroundColor: '#F9FAFB', borderColor: '#E5E7EB' }}
+          style={
+            tlCfg
+              ? { backgroundColor: tlCfg.bg, borderColor: tlCfg.border }
+              : { backgroundColor: '#F9FAFB', borderColor: '#E5E7EB' }
+          }
         >
-          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Trafiklys</span>
+          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+            Trafiklys
+          </span>
           {tlCfg ? (
             <div className="flex items-center gap-2 mt-1">
-              <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: tlCfg.color }} />
-              <span className="text-xl font-bold" style={{ color: tlCfg.color }}>{tlCfg.label}</span>
+              <div
+                className="w-4 h-4 rounded-full flex-shrink-0"
+                style={{ backgroundColor: tlCfg.color }}
+              />
+              <span className="text-xl font-bold" style={{ color: tlCfg.color }}>
+                {tlCfg.label}
+              </span>
             </div>
           ) : (
             <span className="text-xl font-bold text-gray-400 mt-1">Ingen data</span>
@@ -116,7 +211,9 @@ export default function ResidentOverblikTab({
 
         {/* Mood score */}
         <div className="rounded-xl border border-gray-100 bg-white p-4 flex flex-col gap-1">
-          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Stemning i dag</span>
+          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+            Stemning i dag
+          </span>
           {moodScore !== null ? (
             <div className="mt-1">
               <div className="flex items-end gap-1">
@@ -140,15 +237,28 @@ export default function ResidentOverblikTab({
 
         {/* Medication summary */}
         <Link href={`/resident-360-view/${residentId}?tab=medicin`} className="block">
-          <div className={`rounded-xl border p-4 flex flex-col gap-1 transition-colors hover:border-[#1D9E75] cursor-pointer ${
-            medicationGivenCount === medicationTotalCount
-              ? 'bg-[#E1F5EE] border-[#A8DFC9]'
-              : 'bg-amber-50 border-amber-200'
-          }`}>
-            <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Medicin i dag</span>
+          <div
+            className={`rounded-xl border p-4 flex flex-col gap-1 transition-colors hover:border-[#1D9E75] cursor-pointer ${
+              medicationGivenCount === medicationTotalCount
+                ? 'bg-[#E1F5EE] border-[#A8DFC9]'
+                : 'bg-amber-50 border-amber-200'
+            }`}
+          >
+            <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              Medicin i dag
+            </span>
             <div className="flex items-center gap-2 mt-1">
-              <Pill size={18} className={medicationGivenCount === medicationTotalCount ? 'text-[#1D9E75]' : 'text-amber-500'} />
-              <span className={`text-xl font-bold ${medicationGivenCount === medicationTotalCount ? 'text-[#1D9E75]' : 'text-amber-600'}`}>
+              <Pill
+                size={18}
+                className={
+                  medicationGivenCount === medicationTotalCount
+                    ? 'text-[#1D9E75]'
+                    : 'text-amber-500'
+                }
+              />
+              <span
+                className={`text-xl font-bold ${medicationGivenCount === medicationTotalCount ? 'text-[#1D9E75]' : 'text-amber-600'}`}
+              >
                 {medicationGivenCount}/{medicationTotalCount}
               </span>
               <span className="text-xs text-gray-500">givet</span>
@@ -167,10 +277,50 @@ export default function ResidentOverblikTab({
               <span className="text-sm font-semibold text-amber-800">
                 {pendingProposals} planforslag afventer godkendelse
               </span>
-              <p className="text-xs text-amber-700 mt-0.5">Klik for at åbne Dagsplan og gennemse forslagene.</p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                Klik for at åbne Dagsplan og gennemse forslagene.
+              </p>
             </div>
           </div>
         </Link>
+      )}
+
+      {concernNotes.length > 0 && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50/90 px-4 py-3">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertTriangle size={15} className="text-amber-600 flex-shrink-0" aria-hidden />
+            <span className="text-sm font-semibold text-amber-900">
+              Bekymringsnotater (hurtige)
+            </span>
+          </div>
+          <p className="text-[11px] text-amber-800/90 mb-2">
+            Adskilt fra journal — oprettes fra dashboard. Ved formel dokumentation brug journal
+            nedenfor.
+          </p>
+          <ul className="space-y-2">
+            {concernNotes.map((c) => (
+              <li
+                key={c.id}
+                className="rounded-lg border border-amber-100 bg-white/80 px-3 py-2 text-xs text-gray-700"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-1 mb-0.5">
+                  <span className="font-semibold text-amber-900">{c.category}</span>
+                  <span className="tabular-nums text-amber-700">Alvor {c.severity}/10</span>
+                </div>
+                <p className="line-clamp-3">{c.note}</p>
+                <p className="mt-1 text-[10px] text-gray-500">
+                  {formatTime(c.created_at)} · {c.staff_name || 'Personale'}
+                </p>
+              </li>
+            ))}
+          </ul>
+          <Link
+            href="/care-portal-dashboard"
+            className="mt-2 inline-block text-[11px] font-medium text-amber-800 underline-offset-2 hover:underline"
+          >
+            Åbn dashboard for at tilføje eller fjerne
+          </Link>
+        </div>
       )}
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
@@ -190,20 +340,32 @@ export default function ResidentOverblikTab({
           </div>
           <div className="divide-y divide-gray-50">
             {todayPlanItems.length === 0 ? (
-              <div className="px-4 py-5 text-xs text-gray-400 text-center">Ingen planpunkter i dag</div>
+              <div className="px-4 py-5 text-xs text-gray-400 text-center">
+                Ingen planpunkter i dag
+              </div>
             ) : (
-              todayPlanItems.slice(0, 6).map(item => (
+              todayPlanItems.slice(0, 6).map((item) => (
                 <div key={item.id} className="px-4 py-2.5 flex items-center gap-3">
-                  <div className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 ${
-                    item.done ? 'bg-[#1D9E75]' : 'border-2 border-gray-200'
-                  }`}>
+                  <div
+                    className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 ${
+                      item.done ? 'bg-[#1D9E75]' : 'border-2 border-gray-200'
+                    }`}
+                  >
                     {item.done && (
                       <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                        <path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path
+                          d="M2 5l2.5 2.5L8 3"
+                          stroke="white"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
                       </svg>
                     )}
                   </div>
-                  <span className={`text-sm flex-1 ${item.done ? 'text-gray-400 line-through' : 'text-gray-700'}`}>
+                  <span
+                    className={`text-sm flex-1 ${item.done ? 'text-gray-400 line-through' : 'text-gray-700'}`}
+                  >
                     {item.title}
                   </span>
                   {item.time && (
@@ -225,7 +387,7 @@ export default function ResidentOverblikTab({
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
             <div className="flex items-center gap-2">
               <FileText size={15} className="text-[#378ADD]" />
-              <span className="text-sm font-semibold text-gray-800">Journalnoter i dag</span>
+              <span className="text-sm font-semibold text-gray-800">Journal i dag</span>
               {journalEntries.length > 0 && (
                 <span className="text-xs text-gray-400">{journalEntries.length} noter</span>
               )}
@@ -234,22 +396,78 @@ export default function ResidentOverblikTab({
           </div>
           <div className="divide-y divide-gray-50">
             {journalEntries.length === 0 ? (
-              <div className="px-4 py-5 text-xs text-gray-400 text-center">Ingen journalnoter i dag</div>
+              <div className="px-4 py-5 text-xs text-gray-400 text-center">
+                Ingen journalnoter i dag
+              </div>
             ) : (
-              journalEntries.slice(0, 4).map(entry => (
-                <div key={entry.id} className="px-4 py-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-semibold text-gray-700">{entry.staff_name}</span>
-                    <span className="text-xs text-gray-400">{formatTime(entry.created_at)}</span>
-                  </div>
-                  <p className="text-xs text-gray-600 line-clamp-2">{entry.entry_text}</p>
-                  {entry.category && (
-                    <span className="inline-block mt-1 text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
-                      {entry.category}
+              <>
+                {shownDrafts.length > 0 && (
+                  <div className="px-4 py-2 bg-amber-50/80 border-b border-amber-100">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-800 flex items-center gap-1">
+                      <FilePenLine size={12} aria-hidden />
+                      Kladder
                     </span>
-                  )}
-                </div>
-              ))
+                  </div>
+                )}
+                {shownDrafts.map((entry) => (
+                  <div
+                    key={entry.id}
+                    className="px-4 py-3 border-l-2 border-amber-400 bg-amber-50/40"
+                  >
+                    <div className="flex items-center justify-between mb-1 gap-2 flex-wrap">
+                      <span className="text-xs font-semibold text-gray-700">
+                        {entry.staff_name}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-medium uppercase text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">
+                          Kladde
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {formatTime(entry.created_at)}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-600 line-clamp-3">{entry.entry_text}</p>
+                    {entry.category && (
+                      <span className="inline-block mt-1 text-[10px] bg-white text-gray-500 px-1.5 py-0.5 rounded border border-amber-100">
+                        {entry.category}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      disabled={approvingId === entry.id}
+                      onClick={() => void approveJournalDraft(entry.id)}
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-amber-600 px-2.5 py-1.5 text-[11px] font-semibold text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+                    >
+                      <CheckCircle2 size={12} aria-hidden />
+                      {approvingId === entry.id ? 'Godkender…' : 'Godkend journal'}
+                    </button>
+                  </div>
+                ))}
+                {shownGodkendt.length > 0 && shownDrafts.length > 0 && (
+                  <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+                      Godkendt journal
+                    </span>
+                  </div>
+                )}
+                {shownGodkendt.map((entry) => (
+                  <div key={entry.id} className="px-4 py-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-semibold text-gray-700">
+                        {entry.staff_name}
+                      </span>
+                      <span className="text-xs text-gray-400">{formatTime(entry.created_at)}</span>
+                    </div>
+                    <p className="text-xs text-gray-600 line-clamp-2">{entry.entry_text}</p>
+                    {entry.category && (
+                      <span className="inline-block mt-1 text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
+                        {entry.category}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </>
             )}
           </div>
         </div>

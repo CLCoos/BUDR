@@ -25,7 +25,9 @@ const EMPTY_FORM: FormState = { label: '', phone: '', available_hours: '', sort_
 async function getOrgId(): Promise<string | null> {
   const supabase = createClient();
   if (!supabase) return null;
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return null;
   // For demo: use the test org — in production, look up staff member's org_id
   return 'aaaaaaaa-0000-0000-0000-000000000001';
@@ -55,7 +57,7 @@ export default function FacilityContactsManager() {
   };
 
   useEffect(() => {
-    getOrgId().then(async id => {
+    getOrgId().then(async (id) => {
       setOrgId(id);
       if (id) await load(id);
       setLoading(false);
@@ -83,7 +85,10 @@ export default function FacilityContactsManager() {
     if (!form.label.trim() || !form.phone.trim() || !orgId || saving) return;
     setSaving(true);
     const supabase = createClient();
-    if (!supabase) { setSaving(false); return; }
+    if (!supabase) {
+      setSaving(false);
+      return;
+    }
 
     const payload = {
       facility_id: orgId,
@@ -118,7 +123,6 @@ export default function FacilityContactsManager() {
 
   return (
     <div className="space-y-6">
-
       {/* Section header */}
       <div className="flex items-center justify-between">
         <div>
@@ -145,11 +149,13 @@ export default function FacilityContactsManager() {
         <div className="rounded-2xl border-2 border-dashed border-gray-200 py-14 text-center">
           <p className="text-2xl mb-2">📞</p>
           <p className="text-gray-500 font-semibold">Ingen krisekontakter endnu</p>
-          <p className="text-gray-400 text-sm mt-1">Tilføj kontakter som borgerne kan ringe til i en krise</p>
+          <p className="text-gray-400 text-sm mt-1">
+            Tilføj kontakter som borgerne kan ringe til i en krise
+          </p>
         </div>
       ) : (
         <div className="space-y-2">
-          {contacts.map(c => (
+          {contacts.map((c) => (
             <div
               key={c.id}
               className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white px-4 py-3.5 shadow-sm"
@@ -195,14 +201,20 @@ export default function FacilityContactsManager() {
       {showModal && (
         <div
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/40"
-          onClick={e => { if (e.target === e.currentTarget) setShowModal(false); }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowModal(false);
+          }}
         >
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-gray-900">
                 {editing ? 'Rediger kontakt' : 'Tilføj krisekontakt'}
               </h3>
-              <button type="button" onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -214,7 +226,7 @@ export default function FacilityContactsManager() {
               <input
                 type="text"
                 value={form.label}
-                onChange={e => setForm(f => ({ ...f, label: e.target.value }))}
+                onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
                 placeholder="F.eks. Vagttelefon, Nattevagt…"
                 className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-[#0F1B2D]"
                 autoFocus
@@ -228,7 +240,7 @@ export default function FacilityContactsManager() {
               <input
                 type="tel"
                 value={form.phone}
-                onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
                 placeholder="F.eks. 98 12 34 56"
                 className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-[#0F1B2D]"
               />
@@ -236,12 +248,13 @@ export default function FacilityContactsManager() {
 
             <div>
               <label className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-1">
-                Tilgængelighed <span className="normal-case font-normal text-gray-500">(valgfri)</span>
+                Tilgængelighed{' '}
+                <span className="normal-case font-normal text-gray-500">(valgfri)</span>
               </label>
               <input
                 type="text"
                 value={form.available_hours}
-                onChange={e => setForm(f => ({ ...f, available_hours: e.target.value }))}
+                onChange={(e) => setForm((f) => ({ ...f, available_hours: e.target.value }))}
                 placeholder="F.eks. Alle tider, Hverdage 8–16, 22–07…"
                 className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-[#0F1B2D]"
               />
@@ -255,7 +268,9 @@ export default function FacilityContactsManager() {
                 type="number"
                 min={0}
                 value={form.sort_order}
-                onChange={e => setForm(f => ({ ...f, sort_order: parseInt(e.target.value) || 0 }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, sort_order: parseInt(e.target.value) || 0 }))
+                }
                 className="w-32 rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-[#0F1B2D]"
               />
             </div>
@@ -306,7 +321,6 @@ export default function FacilityContactsManager() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

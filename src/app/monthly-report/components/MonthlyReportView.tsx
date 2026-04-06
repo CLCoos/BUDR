@@ -44,7 +44,9 @@ export default function MonthlyReportView() {
 
   useEffect(() => {
     mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
   const generateReport = async () => {
@@ -89,8 +91,9 @@ Skriv en professionel rapport til brug i personalemøde eller sagsbehandlermøde
           setGenerated(true);
         }
       }
-    } catch { /* silently fail */ }
-    finally {
+    } catch {
+      /* silently fail */
+    } finally {
       if (mountedRef.current) setIsGenerating(false);
     }
   };
@@ -132,15 +135,15 @@ Skriv en professionel rapport til brug i personalemøde eller sagsbehandlermøde
         
         <h2>Ressourceprofil</h2>
         <p>Søvn: ${reportData.avgSleep}/5</p>
-        <div class="bar-container"><div class="bar-fill" style="width:${(reportData.avgSleep/5)*100}%"></div></div>
+        <div class="bar-container"><div class="bar-fill" style="width:${(reportData.avgSleep / 5) * 100}%"></div></div>
         <p>Energi: ${reportData.avgEnergy}/5</p>
-        <div class="bar-container"><div class="bar-fill" style="width:${(reportData.avgEnergy/5)*100}%"></div></div>
+        <div class="bar-container"><div class="bar-fill" style="width:${(reportData.avgEnergy / 5) * 100}%"></div></div>
         
         <h2>Dominerende humørtilstande</h2>
-        <p>${reportData.topMoods.map(m => `<strong>${m}</strong>`).join(', ')}</p>
+        <p>${reportData.topMoods.map((m) => `<strong>${m}</strong>`).join(', ')}</p>
         
         <h2>KRAP-observationer</h2>
-        ${reportData.krapHighlights.map(h => `<div class="highlight">${h}</div>`).join('')}
+        ${reportData.krapHighlights.map((h) => `<div class="highlight">${h}</div>`).join('')}
         
         ${aiSummary ? `<h2>AI-genereret vurdering</h2><div class="ai-summary">${aiSummary}</div>` : ''}
         
@@ -160,7 +163,9 @@ Skriv en professionel rapport til brug i personalemøde eller sagsbehandlermøde
         URL.revokeObjectURL(url);
       };
     }
-    setTimeout(() => { if (mountedRef.current) setIsDownloading(false); }, 1500);
+    setTimeout(() => {
+      if (mountedRef.current) setIsDownloading(false);
+    }, 1500);
   };
 
   const barWidth = (val: number, max: number) => `${Math.round((val / max) * 100)}%`;
@@ -169,8 +174,12 @@ Skriv en professionel rapport til brug i personalemøde eller sagsbehandlermøde
     <div className="min-h-screen gradient-midnight pb-32">
       <div className="sticky top-0 z-20 bg-midnight-900/90 backdrop-blur-xl border-b border-midnight-700/50">
         <div className="max-w-lg mx-auto px-4 py-3">
-          <h1 className="font-display text-lg sm:text-xl font-bold text-midnight-50">📊 Månedlig rapport</h1>
-          <p className="text-xs text-midnight-400 mt-0.5">{reportData.month} · AI-genereret til personalemøder</p>
+          <h1 className="font-display text-lg sm:text-xl font-bold text-midnight-50">
+            📊 Månedlig rapport
+          </h1>
+          <p className="text-xs text-midnight-400 mt-0.5">
+            {reportData.month} · AI-genereret til personalemøder
+          </p>
         </div>
       </div>
 
@@ -179,11 +188,20 @@ Skriv en professionel rapport til brug i personalemøde eller sagsbehandlermøde
         <div className="grid grid-cols-3 gap-2">
           {[
             { value: `${reportData.avgMood}/10`, label: 'Gns. humør', color: '#A78BFA' },
-            { value: `${reportData.checkInDays}/${reportData.totalDays}`, label: 'Check-in', color: '#34D399' },
+            {
+              value: `${reportData.checkInDays}/${reportData.totalDays}`,
+              label: 'Check-in',
+              color: '#34D399',
+            },
             { value: `${reportData.challengesCompleted}`, label: 'Udfordringer', color: '#FB923C' },
           ].map(({ value, label, color }) => (
-            <div key={label} className="bg-midnight-800/50 rounded-2xl border border-midnight-700/50 p-2.5 text-center">
-              <p className="text-lg font-bold" style={{ color }}>{value}</p>
+            <div
+              key={label}
+              className="bg-midnight-800/50 rounded-2xl border border-midnight-700/50 p-2.5 text-center"
+            >
+              <p className="text-lg font-bold" style={{ color }}>
+                {value}
+              </p>
               <p className="text-[10px] text-midnight-400 mt-0.5 leading-tight">{label}</p>
             </div>
           ))}
@@ -200,10 +218,15 @@ Skriv en professionel rapport til brug i personalemøde eller sagsbehandlermøde
             <div key={label} className="mb-3">
               <div className="flex justify-between mb-1">
                 <span className="text-xs text-midnight-300">{label}</span>
-                <span className="text-xs font-bold" style={{ color }}>{value}/{max}</span>
+                <span className="text-xs font-bold" style={{ color }}>
+                  {value}/{max}
+                </span>
               </div>
               <div className="bg-midnight-700 rounded-full h-2">
-                <div className="h-2 rounded-full transition-all duration-700" style={{ width: barWidth(value, max), background: color }} />
+                <div
+                  className="h-2 rounded-full transition-all duration-700"
+                  style={{ width: barWidth(value, max), background: color }}
+                />
               </div>
             </div>
           ))}
@@ -211,13 +234,21 @@ Skriv en professionel rapport til brug i personalemøde eller sagsbehandlermøde
 
         {/* Top moods */}
         <div className="bg-midnight-800/50 rounded-2xl border border-midnight-700/50 p-4">
-          <h3 className="font-display text-sm font-bold text-midnight-100 mb-3">Dominerende humørtilstande</h3>
+          <h3 className="font-display text-sm font-bold text-midnight-100 mb-3">
+            Dominerende humørtilstande
+          </h3>
           <div className="flex flex-wrap gap-2">
             {reportData.topMoods.map((mood, i) => (
-              <span key={mood} className={`text-xs font-semibold rounded-full px-3 py-1.5 border ${
-                i === 0 ? 'bg-aurora-violet/15 text-purple-300 border-aurora-violet/25' :
-                i === 1 ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/25': 'bg-blue-500/15 text-blue-300 border-blue-500/25'
-              }`}>
+              <span
+                key={mood}
+                className={`text-xs font-semibold rounded-full px-3 py-1.5 border ${
+                  i === 0
+                    ? 'bg-aurora-violet/15 text-purple-300 border-aurora-violet/25'
+                    : i === 1
+                      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/25'
+                      : 'bg-blue-500/15 text-blue-300 border-blue-500/25'
+                }`}
+              >
                 {mood}
               </span>
             ))}
@@ -226,10 +257,15 @@ Skriv en professionel rapport til brug i personalemøde eller sagsbehandlermøde
 
         {/* KRAP highlights */}
         <div className="bg-midnight-800/50 rounded-2xl border border-midnight-700/50 p-4">
-          <h3 className="font-display text-sm font-bold text-midnight-100 mb-3">🔍 KRAP-observationer</h3>
+          <h3 className="font-display text-sm font-bold text-midnight-100 mb-3">
+            🔍 KRAP-observationer
+          </h3>
           <div className="space-y-2">
             {reportData.krapHighlights.map((h, i) => (
-              <div key={i} className="flex items-start gap-2 bg-midnight-900/40 rounded-xl px-3 py-2">
+              <div
+                key={i}
+                className="flex items-start gap-2 bg-midnight-900/40 rounded-xl px-3 py-2"
+              >
                 <span className="text-aurora-violet text-sm mt-0.5">•</span>
                 <p className="text-xs text-midnight-200">{h}</p>
               </div>
@@ -246,19 +282,35 @@ Skriv en professionel rapport til brug i personalemøde eller sagsbehandlermøde
           >
             {isGenerating ? (
               <>
-                <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <span
+                  className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
+                  style={{ animationDelay: '0ms' }}
+                />
+                <span
+                  className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
+                  style={{ animationDelay: '150ms' }}
+                />
+                <span
+                  className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
+                  style={{ animationDelay: '300ms' }}
+                />
                 <span className="ml-2">Claude genererer rapport...</span>
               </>
             ) : (
-              <><span>🤖</span><span>Generer AI-opsummering til møde</span></>
+              <>
+                <span>🤖</span>
+                <span>Generer AI-opsummering til møde</span>
+              </>
             )}
           </button>
         ) : (
           <div className="bg-aurora-violet/10 border border-aurora-violet/25 rounded-2xl p-4 animate-slide-up">
-            <p className="text-xs text-purple-400 font-semibold mb-2">🤖 Claude&apos;s vurdering:</p>
-            <p className="text-sm text-midnight-100 leading-relaxed whitespace-pre-wrap">{aiSummary}</p>
+            <p className="text-xs text-purple-400 font-semibold mb-2">
+              🤖 Claude&apos;s vurdering:
+            </p>
+            <p className="text-sm text-midnight-100 leading-relaxed whitespace-pre-wrap">
+              {aiSummary}
+            </p>
           </div>
         )}
 
@@ -268,7 +320,14 @@ Skriv en professionel rapport til brug i personalemøde eller sagsbehandlermøde
           disabled={isDownloading}
           className="w-full flex items-center justify-center gap-2 bg-emerald-500/10 border border-emerald-500/25 rounded-2xl px-4 py-4 text-sm text-emerald-300 font-medium hover:bg-emerald-500/15 transition-all duration-200 disabled:opacity-50"
         >
-          {isDownloading ? '⏳ Forbereder...' : <><span>📄</span><span>Download som PDF (print-venlig)</span></>}
+          {isDownloading ? (
+            '⏳ Forbereder...'
+          ) : (
+            <>
+              <span>📄</span>
+              <span>Download som PDF (print-venlig)</span>
+            </>
+          )}
         </button>
       </div>
 

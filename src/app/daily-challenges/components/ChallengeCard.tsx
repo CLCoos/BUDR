@@ -9,7 +9,11 @@ interface ChallengeCardProps {
   animationDelay: number;
 }
 
-export default function ChallengeCard({ challenge, onComplete, animationDelay }: ChallengeCardProps) {
+export default function ChallengeCard({
+  challenge,
+  onComplete,
+  animationDelay,
+}: ChallengeCardProps) {
   const [pressing, setPressing] = useState(false);
 
   const handleTap = () => {
@@ -40,9 +44,12 @@ export default function ChallengeCard({ challenge, onComplete, animationDelay }:
           pressing ? 'scale-95' : ''
         } ${
           challenge.completed
-            ? 'opacity-60 cursor-default border-midnight-700/30 bg-midnight-900/40' :'border-midnight-600/50 bg-midnight-800/60 hover:border-midnight-500/70 active:scale-[0.98]'
+            ? 'opacity-60 cursor-default border-midnight-700/30 bg-midnight-900/40'
+            : 'border-midnight-600/50 bg-midnight-800/60 hover:border-midnight-500/70 active:scale-[0.98]'
         }`}
-        aria-label={challenge.completed ? `${challenge.title} - gennemført` : `Gennemfør: ${challenge.title}`}
+        aria-label={
+          challenge.completed ? `${challenge.title} - gennemført` : `Gennemfør: ${challenge.title}`
+        }
       >
         {/* Completion circle */}
         <div
@@ -54,7 +61,13 @@ export default function ChallengeCard({ challenge, onComplete, animationDelay }:
         >
           {challenge.completed ? (
             <svg width="18" height="14" viewBox="0 0 18 14" fill="none" className="animate-pop-in">
-              <path d="M1.5 7L6.5 12L16.5 1" stroke="#0f0f1a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M1.5 7L6.5 12L16.5 1"
+                stroke="#0f0f1a"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           ) : (
             <span className="text-xl select-none">{challenge.emoji}</span>
@@ -63,7 +76,9 @@ export default function ChallengeCard({ challenge, onComplete, animationDelay }:
 
         {/* Task info */}
         <div className="flex-1 min-w-0">
-          <span className={`font-semibold text-sm leading-tight ${challenge.completed ? 'line-through text-midnight-500' : 'text-midnight-100'}`}>
+          <span
+            className={`font-semibold text-sm leading-tight ${challenge.completed ? 'line-through text-midnight-500' : 'text-midnight-100'}`}
+          >
             {challenge.title}
           </span>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -75,7 +90,12 @@ export default function ChallengeCard({ challenge, onComplete, animationDelay }:
             <span className="flex items-center gap-0.5 text-xs text-midnight-500">
               <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="flex-shrink-0">
                 <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2" />
-                <path d="M5 2.5V5L6.5 6.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                <path
+                  d="M5 2.5V5L6.5 6.5"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                />
               </svg>
               <span>{formatDuration(challenge.duration)}</span>
             </span>
@@ -89,7 +109,13 @@ export default function ChallengeCard({ challenge, onComplete, animationDelay }:
         {!challenge.completed && (
           <div className="flex-shrink-0 text-midnight-500">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M6 3l5 5-5 5"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </div>
         )}

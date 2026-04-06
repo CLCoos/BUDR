@@ -14,8 +14,13 @@ function useInView(threshold = 0.15) {
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
-      { threshold },
+      ([e]) => {
+        if (e.isIntersecting) {
+          setVisible(true);
+          obs.disconnect();
+        }
+      },
+      { threshold }
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -52,52 +57,17 @@ function Scene({
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Fake QR — same as landing page
-───────────────────────────────────────────────────────────── */
-function FakeQR({ color = '#fff' }: { color?: string }) {
-  const cells = [
-    [1,1,1,1,1,1,1,0,1,0,1,0,1,0,1,1,1,1,1,1,1],
-    [1,0,0,0,0,0,1,0,0,1,0,1,0,0,1,0,0,0,0,0,1],
-    [1,0,1,1,1,0,1,0,1,0,1,0,1,0,1,0,1,1,1,0,1],
-    [1,0,1,1,1,0,1,0,0,0,1,1,0,0,1,0,1,1,1,0,1],
-    [1,0,1,1,1,0,1,0,1,1,0,0,1,0,1,0,1,1,1,0,1],
-    [1,0,0,0,0,0,1,0,0,1,0,1,0,0,1,0,0,0,0,0,1],
-    [1,1,1,1,1,1,1,0,1,0,1,0,1,0,1,1,1,1,1,1,1],
-    [0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0],
-    [1,0,1,1,0,1,1,0,1,0,1,1,0,0,1,0,1,0,1,1,0],
-    [0,1,0,0,1,0,0,0,0,1,0,0,1,0,0,1,0,1,0,0,1],
-    [1,0,1,0,1,1,0,0,1,0,1,1,0,0,1,0,1,0,1,0,1],
-    [0,1,1,1,0,0,1,0,0,0,1,0,1,0,1,1,0,1,1,1,0],
-    [1,1,0,1,1,0,1,0,1,1,0,1,0,0,0,1,1,0,0,1,1],
-    [0,0,0,0,0,0,0,0,0,1,1,0,1,0,0,0,1,0,1,0,0],
-    [1,1,1,1,1,1,1,0,1,0,0,1,0,0,1,1,1,0,0,1,0],
-    [1,0,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,1,0,1,1],
-    [1,0,1,1,1,0,1,0,1,0,1,1,0,0,1,0,1,1,1,0,0],
-    [1,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0,0,0,1,1,1],
-    [1,1,1,1,1,1,1,0,1,0,1,0,0,0,1,1,0,1,0,0,1],
-  ];
-  const c = 4;
-  return (
-    <svg width={21 * c} height={19 * c} viewBox={`0 0 ${21 * c} ${19 * c}`} aria-hidden>
-      {cells.map((row, r) =>
-        row.map((cell, col) =>
-          cell ? <rect key={`${r}-${col}`} x={col * c} y={r * c} width={c} height={c} fill={color} rx={0.4} /> : null
-        )
-      )}
-    </svg>
-  );
-}
-
-/* ─────────────────────────────────────────────────────────────
    The page
 ───────────────────────────────────────────────────────────── */
 export default function AppPage() {
   const [heroVisible, setHeroVisible] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setHeroVisible(true), 80); return () => clearTimeout(t); }, []);
+  useEffect(() => {
+    const t = setTimeout(() => setHeroVisible(true), 80);
+    return () => clearTimeout(t);
+  }, []);
 
   return (
     <div className="bg-[#08080f] text-white antialiased font-sans overflow-x-hidden">
-
       <style>{`
         @keyframes breathe {
           0%, 100% { transform: scale(1); opacity: 0.5; }
@@ -140,7 +110,6 @@ export default function AppPage() {
           SCENE 1 — Hero
       ══════════════════════════════════════════════ */}
       <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 text-center">
-
         {/* Background glow orb */}
         <div
           className="pointer-events-none absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full"
@@ -174,7 +143,9 @@ export default function AppPage() {
             Hvad sker der,{' '}
             <span
               className="bg-clip-text text-transparent"
-              style={{ backgroundImage: 'linear-gradient(135deg, #A78BFA 0%, #7F77DD 40%, #60A5FA 100%)' }}
+              style={{
+                backgroundImage: 'linear-gradient(135deg, #A78BFA 0%, #7F77DD 40%, #60A5FA 100%)',
+              }}
             >
               når borgeren
             </span>{' '}
@@ -204,27 +175,28 @@ export default function AppPage() {
       <section className="relative flex min-h-screen items-center overflow-hidden px-6 py-32">
         <div className="mx-auto max-w-5xl">
           <Scene delay={0}>
-            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em]" style={{ color: '#F472B6' }}>
+            <p
+              className="mb-4 text-sm font-semibold uppercase tracking-[0.2em]"
+              style={{ color: '#F472B6' }}
+            >
               Problemet
             </p>
           </Scene>
           <Scene delay={120}>
             <h2 className="text-4xl font-black leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
-              De svære timer sker
-              <br />
-              <span className="text-white/30">ikke i arbejdstiden.</span>
+              De svære timer sker ikke i <span className="text-white/30">arbejdstiden.</span>
             </h2>
           </Scene>
           <Scene delay={240}>
             <p className="mt-8 max-w-2xl text-xl leading-relaxed text-white/50">
-              Kl. 02:47 om natten. Tankerne kører. Ingen er på vagt. Borgeren sidder alene med noget,
-              der er svært at sætte ord på. Næste morgen er det væk — men det var der.
+              Kl. 02:47 om natten. Tankerne kører. Ingen er på vagt. Borgeren sidder alene med
+              noget, der er svært at sætte ord på. Næste morgen er det væk — men det var der.
             </p>
           </Scene>
           <Scene delay={360}>
             <p className="mt-6 max-w-2xl text-xl leading-relaxed text-white/50">
-              Som pædagog i socialpsykiatrien kender du det. Du kan ikke være der altid. Men din indsats
-              kan godt være det.
+              Som pædagog i socialpsykiatrien kender du det. Du kan ikke være der altid. Men din
+              indsats kan godt være det.
             </p>
           </Scene>
 
@@ -235,7 +207,9 @@ export default function AppPage() {
                 className="flex h-24 w-24 flex-col items-center justify-center rounded-full border border-white/10"
                 style={{ background: 'rgba(244,114,182,0.06)' }}
               >
-                <span className="text-3xl font-black tabular-nums" style={{ color: '#F472B6' }}>02</span>
+                <span className="text-3xl font-black tabular-nums" style={{ color: '#F472B6' }}>
+                  02
+                </span>
                 <span className="text-xs text-white/30 tracking-widest">:47</span>
               </div>
               <div>
@@ -249,7 +223,9 @@ export default function AppPage() {
         {/* Right-side ambient */}
         <div
           className="pointer-events-none absolute right-0 top-1/2 h-[500px] w-[500px] -translate-y-1/2 rounded-full opacity-20"
-          style={{ background: 'radial-gradient(circle, rgba(244,114,182,0.4) 0%, transparent 70%)' }}
+          style={{
+            background: 'radial-gradient(circle, rgba(244,114,182,0.4) 0%, transparent 70%)',
+          }}
         />
       </section>
 
@@ -265,7 +241,8 @@ export default function AppPage() {
           <div
             className="h-64 w-64 rounded-full"
             style={{
-              background: 'radial-gradient(circle, rgba(127,119,221,0.5) 0%, rgba(167,139,250,0.2) 40%, transparent 70%)',
+              background:
+                'radial-gradient(circle, rgba(127,119,221,0.5) 0%, rgba(167,139,250,0.2) 40%, transparent 70%)',
               animation: 'breathe 5s ease-in-out infinite',
             }}
           />
@@ -286,7 +263,10 @@ export default function AppPage() {
         <div className="relative mx-auto max-w-5xl">
           <div className="max-w-lg">
             <Scene delay={0}>
-              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em]" style={{ color: '#A78BFA' }}>
+              <p
+                className="mb-4 text-sm font-semibold uppercase tracking-[0.2em]"
+                style={{ color: '#A78BFA' }}
+              >
                 Løsningen
               </p>
             </Scene>
@@ -303,8 +283,9 @@ export default function AppPage() {
             </Scene>
             <Scene delay={240}>
               <p className="mt-7 text-xl leading-relaxed text-white/60">
-                En AI-assistent bygget specifikt til borgere i socialpsykiatrien. Lys stiller de rigtige
-                spørgsmål, lytter uden at dømme og hjælper borgeren med at sætte ord på det svære.
+                En AI-assistent bygget specifikt til borgere i socialpsykiatrien. Lys stiller de
+                rigtige spørgsmål, lytter uden at dømme og hjælper borgeren med at sætte ord på det
+                svære.
               </p>
             </Scene>
             <Scene delay={360}>
@@ -319,11 +300,14 @@ export default function AppPage() {
                 'Aldrig dømmende. Altid til stede.',
                 'Bygget over evidensbaseret metodik.',
                 'Sender bekymringer direkte til personalet.',
-              ].map(t => (
+              ].map((t) => (
                 <div key={t} className="flex items-center gap-3">
                   <div
                     className="h-1.5 w-1.5 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: '#A78BFA', animation: 'pulse-dot 2s ease-in-out infinite' }}
+                    style={{
+                      backgroundColor: '#A78BFA',
+                      animation: 'pulse-dot 2s ease-in-out infinite',
+                    }}
                   />
                   <span className="text-base text-white/60">{t}</span>
                 </div>
@@ -338,32 +322,32 @@ export default function AppPage() {
       ══════════════════════════════════════════════ */}
       <section className="relative flex min-h-screen items-center overflow-hidden px-6 py-32">
         <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-16 lg:grid-cols-2">
-
           {/* Text */}
           <div>
             <Scene delay={0}>
-              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em]" style={{ color: '#34D399' }}>
-                Realtids-indblik
+              <p
+                className="mb-4 text-sm font-semibold uppercase tracking-[0.2em]"
+                style={{ color: '#34D399' }}
+              >
+                Realtidsindblik
               </p>
             </Scene>
             <Scene delay={120}>
               <h2 className="text-4xl font-black leading-tight text-white sm:text-5xl">
-                Du ser det,
-                <br />
-                <span className="text-white/30">inden det eskalerer.</span>
+                Du ser det, <span className="text-white/30">før det eskalerer.</span>
               </h2>
             </Scene>
             <Scene delay={240}>
               <p className="mt-7 text-lg leading-relaxed text-white/55">
-                Borgeren trykker på et humør. Du modtager et trafiklys i Care Portal. Ingen journaler
-                der skal udfyldes. Ingen ventetid. Bare en direkte, menneskelig forbindelse — formidlet
-                digitalt.
+                Borgeren trykker på et humør. Du modtager et trafiklys i Care Portal. Ingen
+                journaler der skal udfyldes. Ingen ventetid. Bare en direkte, menneskelig
+                forbindelse — formidlet digitalt.
               </p>
             </Scene>
             <Scene delay={360}>
               <p className="mt-5 text-lg leading-relaxed text-white/55">
-                Rød trafiklys aktiverer automatisk kriseberedskabet og sender notifikation til
-                personalet. Systemet sover aldrig.
+                Rødt trafiklys gør uro synlig med det samme, så I kan følge op efter jeres kriseplan
+                — inkl. notifikationer, når det er slået til for jeres bosted.
               </p>
             </Scene>
           </div>
@@ -374,13 +358,20 @@ export default function AppPage() {
               className="rounded-3xl border border-white/8 p-8"
               style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(12px)' }}
             >
-              <p className="mb-6 text-xs font-semibold uppercase tracking-widest text-white/30">Borgers stemning · i dag</p>
+              <p className="mb-6 text-xs font-semibold uppercase tracking-widest text-white/30">
+                Borgers stemning · i dag
+              </p>
               <div className="flex flex-col gap-4">
                 {[
                   { label: 'Godt', color: '#34D399', glow: 'rgba(52,211,153,0.4)', active: false },
                   { label: 'Okay', color: '#FB923C', glow: 'rgba(251,146,60,0.4)', active: true },
-                  { label: 'Svært', color: '#F87171', glow: 'rgba(248,113,113,0.4)', active: false },
-                ].map(item => (
+                  {
+                    label: 'Svært',
+                    color: '#F87171',
+                    glow: 'rgba(248,113,113,0.4)',
+                    active: false,
+                  },
+                ].map((item) => (
                   <div
                     key={item.label}
                     className="flex items-center gap-4 rounded-2xl border px-6 py-4"
@@ -420,12 +411,13 @@ export default function AppPage() {
               </div>
             </div>
           </Scene>
-
         </div>
 
         <div
           className="pointer-events-none absolute left-0 top-1/2 h-[600px] w-[400px] -translate-y-1/2 rounded-full opacity-10"
-          style={{ background: 'radial-gradient(circle, rgba(52,211,153,0.6) 0%, transparent 70%)' }}
+          style={{
+            background: 'radial-gradient(circle, rgba(52,211,153,0.6) 0%, transparent 70%)',
+          }}
         />
       </section>
 
@@ -439,7 +431,10 @@ export default function AppPage() {
         <div className="mx-auto max-w-6xl">
           <div className="max-w-xl">
             <Scene delay={0}>
-              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em]" style={{ color: '#FB923C' }}>
+              <p
+                className="mb-4 text-sm font-semibold uppercase tracking-[0.2em]"
+                style={{ color: '#FB923C' }}
+              >
                 Daglig mestring
               </p>
             </Scene>
@@ -457,9 +452,11 @@ export default function AppPage() {
             </Scene>
             <Scene delay={240}>
               <p className="mt-7 text-lg leading-relaxed text-white/55">
-                Udfordringer tilpasset borgerens energiniveau den dag. Fra "Drik et glas vand" til "Gå
-                en tur på 15 minutter" — altid inden for rækkevidde. Hver gennemført opgave giver XP og
-                en konkret fornemmelse af at rykke sig.
+                Udfordringer tilpasset borgerens energiniveau den dag. Fra{' '}
+                <span className="whitespace-nowrap">«Drik et glas vand»</span> til{' '}
+                <span className="whitespace-nowrap">«Gå en tur på 15 minutter»</span> — altid inden
+                for rækkevidde. Hver gennemført opgave giver XP og en konkret fornemmelse af at
+                rykke sig.
               </p>
             </Scene>
           </div>
@@ -486,7 +483,9 @@ export default function AppPage() {
                 <span className="text-2xl">{c.emoji}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-white truncate">{c.title}</p>
-                  <p className="text-xs" style={{ color: c.color }}>Energi {c.energy}</p>
+                  <p className="text-xs" style={{ color: c.color }}>
+                    Energi {c.energy}
+                  </p>
                 </div>
                 <span
                   className="text-xs font-bold rounded-full px-2 py-0.5 flex-shrink-0"
@@ -501,7 +500,9 @@ export default function AppPage() {
 
         <div
           className="pointer-events-none absolute right-0 top-1/2 h-[500px] w-[400px] -translate-y-1/2 rounded-full opacity-15"
-          style={{ background: 'radial-gradient(circle, rgba(251,146,60,0.5) 0%, transparent 70%)' }}
+          style={{
+            background: 'radial-gradient(circle, rgba(251,146,60,0.5) 0%, transparent 70%)',
+          }}
         />
       </section>
 
@@ -510,7 +511,6 @@ export default function AppPage() {
       ══════════════════════════════════════════════ */}
       <section className="relative flex min-h-screen items-center overflow-hidden px-6 py-32">
         <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-16 lg:grid-cols-2">
-
           {/* Journal mockup */}
           <Scene delay={100} className="order-2 lg:order-1">
             <div
@@ -519,7 +519,10 @@ export default function AppPage() {
             >
               <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-wide" style={{ color: '#A78BFA' }}>
+                  <p
+                    className="text-xs font-bold uppercase tracking-wide"
+                    style={{ color: '#A78BFA' }}
+                  >
                     Journal · i dag
                   </p>
                   <p className="text-sm text-white/40 mt-0.5">Mandag 31. marts</p>
@@ -536,7 +539,8 @@ export default function AppPage() {
                 className="rounded-xl border border-white/6 px-4 py-3 mb-3 text-sm text-white/50 leading-relaxed"
                 style={{ backgroundColor: 'rgba(255,255,255,0.02)' }}
               >
-                &ldquo;I dag gik det faktisk ret godt. Jeg kom ud og tog en tur. Det hjalp mere end jeg troede…&rdquo;
+                &ldquo;I dag gik det faktisk ret godt. Jeg kom ud og tog en tur. Det hjalp mere end
+                jeg troede…&rdquo;
               </div>
 
               <div className="grid grid-cols-2 gap-2">
@@ -545,13 +549,18 @@ export default function AppPage() {
                   { label: 'Affekt', val: 'Rolig', col: '#34D399' },
                   { label: 'Rolle', val: 'Aktiv', col: '#FB923C' },
                   { label: 'Plan', val: 'Gå en tur i morgen', col: '#A78BFA' },
-                ].map(k => (
+                ].map((k) => (
                   <div
                     key={k.label}
                     className="rounded-xl border px-3 py-2"
                     style={{ borderColor: `${k.col}25`, backgroundColor: `${k.col}08` }}
                   >
-                    <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: k.col }}>{k.label}</p>
+                    <p
+                      className="text-[10px] font-bold uppercase tracking-wide"
+                      style={{ color: k.col }}
+                    >
+                      {k.label}
+                    </p>
                     <p className="text-xs text-white/60 mt-0.5">{k.val}</p>
                   </div>
                 ))}
@@ -572,41 +581,48 @@ export default function AppPage() {
           {/* Text */}
           <div className="order-1 lg:order-2">
             <Scene delay={0}>
-              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em]" style={{ color: '#A78BFA' }}>
+              <p
+                className="mb-4 text-sm font-semibold uppercase tracking-[0.2em]"
+                style={{ color: '#A78BFA' }}
+              >
                 Refleksion og dokumentation
               </p>
             </Scene>
             <Scene delay={120}>
               <h2 className="text-4xl font-black leading-tight text-white sm:text-5xl">
-                Borgeren finder
-                <br />
                 <span
                   className="bg-clip-text text-transparent"
                   style={{ backgroundImage: 'linear-gradient(135deg, #A78BFA, #F472B6)' }}
                 >
-                  sine egne ord.
+                  Borgeren finder sine egne ord.
                 </span>
               </h2>
             </Scene>
             <Scene delay={240}>
               <p className="mt-7 text-lg leading-relaxed text-white/55">
-                Daglig journal med KRAP-struktur — krop, rolle, affekt og plan. Borgerne reflekterer over
-                dagen i et sprog, de selv ejer. Lys opsummerer og anerkender.
+                Daglig journal med KRAP-struktur — krop, rolle, affekt og plan. Borgerne reflekterer
+                over dagen i et sprog, de selv ejer. Lys opsummerer og anerkender.
               </p>
             </Scene>
             <Scene delay={360}>
               <p className="mt-5 text-lg leading-relaxed text-white/55">
-                Data der gemmes er data, der kan bruges. Journalen giver pædagogen et solidt
-                dokumentationsgrundlag til §-indsatser og statusmøder — uden ekstra arbejde.
+                Journalnotater kan danne udgangspunkt for faglige samtaler og dokumentation efter
+                gældende regler (fx serviceloven). Det endelige ansvar for indhold, journalføring og
+                myndighedsindberetning ligger hos institutionen — se også{' '}
+                <Link href="/terms" className="text-white/75 underline underline-offset-4">
+                  vilkår og ansvarsfordeling
+                </Link>
+                .
               </p>
             </Scene>
           </div>
-
         </div>
 
         <div
           className="pointer-events-none absolute right-0 top-0 h-[400px] w-[400px] rounded-full opacity-10"
-          style={{ background: 'radial-gradient(circle, rgba(167,139,250,0.5) 0%, transparent 70%)' }}
+          style={{
+            background: 'radial-gradient(circle, rgba(167,139,250,0.5) 0%, transparent 70%)',
+          }}
         />
       </section>
 
@@ -620,7 +636,10 @@ export default function AppPage() {
         <div className="mx-auto max-w-6xl">
           <div className="max-w-xl">
             <Scene delay={0}>
-              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em]" style={{ color: '#34D399' }}>
+              <p
+                className="mb-4 text-sm font-semibold uppercase tracking-[0.2em]"
+                style={{ color: '#34D399' }}
+              >
                 Socialt netværk
               </p>
             </Scene>
@@ -638,15 +657,15 @@ export default function AppPage() {
             </Scene>
             <Scene delay={240}>
               <p className="mt-7 text-lg leading-relaxed text-white/55">
-                Støttecirklen hjælper borgeren med at kortlægge og styrke sit sociale netværk. Pårørende,
-                venner, professionelle — alle samlet ét sted. Med ét tryk kan borgeren sende en opmuntring
-                eller række ud efter kontakt.
+                Støttecirklen hjælper borgeren med at kortlægge og styrke sit sociale netværk.
+                Pårørende, venner, professionelle — alle samlet ét sted. Med ét tryk kan borgeren
+                sende en opmuntring eller række ud efter kontakt.
               </p>
             </Scene>
             <Scene delay={360}>
               <p className="mt-5 text-lg leading-relaxed text-white/55">
-                Lavt tærskel. Høj effekt. Isolation er en af de største risikofaktorer i socialpsykiatrien.
-                Støttecirklen adresserer det direkte.
+                Lavt tærskel. Høj effekt. Isolation er en af de største risikofaktorer i
+                socialpsykiatrien. Støttecirklen adresserer det direkte.
               </p>
             </Scene>
           </div>
@@ -664,9 +683,7 @@ export default function AppPage() {
                 🧑
               </div>
               {/* Ring */}
-              <div
-                className="absolute inset-4 rounded-full border border-dashed border-white/10"
-              />
+              <div className="absolute inset-4 rounded-full border border-dashed border-white/10" />
               {/* Contact dots */}
               {[
                 { emoji: '👩', angle: 0, color: '#FB923C', label: 'Mor' },
@@ -674,7 +691,7 @@ export default function AppPage() {
                 { emoji: '🩺', angle: 144, color: '#34D399', label: 'Terapeut' },
                 { emoji: '🧑', angle: 216, color: '#A78BFA', label: 'Ven' },
                 { emoji: '🧑‍💼', angle: 288, color: '#60A5FA', label: 'Kollega' },
-              ].map(c => {
+              ].map((c) => {
                 const rad = (c.angle - 90) * (Math.PI / 180);
                 const r = 96;
                 const x = 112 + r * Math.cos(rad);
@@ -700,7 +717,9 @@ export default function AppPage() {
 
         <div
           className="pointer-events-none absolute left-1/2 bottom-0 h-[400px] w-[600px] -translate-x-1/2 rounded-full opacity-10"
-          style={{ background: 'radial-gradient(ellipse, rgba(52,211,153,0.5) 0%, transparent 70%)' }}
+          style={{
+            background: 'radial-gradient(ellipse, rgba(52,211,153,0.5) 0%, transparent 70%)',
+          }}
         />
       </section>
 
@@ -710,26 +729,27 @@ export default function AppPage() {
       <section className="relative flex min-h-[60vh] items-center overflow-hidden px-6 py-24">
         <div className="mx-auto max-w-4xl text-center">
           <Scene delay={0}>
-            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em]" style={{ color: '#1D9E75' }}>
+            <p
+              className="mb-4 text-sm font-semibold uppercase tracking-[0.2em]"
+              style={{ color: '#1D9E75' }}
+            >
               Det komplette billede
             </p>
           </Scene>
           <Scene delay={120}>
             <h2 className="text-4xl font-black leading-tight text-white sm:text-5xl">
-              Alt hvad borgeren oplever
-              <br />
               <span
                 className="bg-clip-text text-transparent"
                 style={{ backgroundImage: 'linear-gradient(135deg, #1D9E75, #34D399)' }}
               >
-                lander hos dig. I realtid.
+                Alt hvad borgeren oplever, lander hos dig i realtid.
               </span>
             </h2>
           </Scene>
           <Scene delay={240}>
             <p className="mx-auto mt-7 max-w-2xl text-xl leading-relaxed text-white/55">
-              Care Portal samler stemningsoverblik, trafiklys, opgavegennemførelse og kriseberedskab fra
-              alle borgeres apps i ét professionelt dashboard. Du handler, ikke reagerer.
+              Care Portal samler stemningsoverblik, trafiklys, opgavegennemførelse og kriseberedskab
+              fra alle borgeres apps i ét professionelt dashboard. Du handler, ikke reagerer.
             </p>
           </Scene>
           <Scene delay={360} className="mt-10">
@@ -749,7 +769,10 @@ export default function AppPage() {
 
         <div
           className="pointer-events-none absolute inset-0"
-          style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(29,158,117,0.08) 0%, transparent 65%)' }}
+          style={{
+            background:
+              'radial-gradient(ellipse at 50% 50%, rgba(29,158,117,0.08) 0%, transparent 65%)',
+          }}
         />
       </section>
 
@@ -770,9 +793,11 @@ export default function AppPage() {
                 '🎯 Måltrappe',
                 '🛡️ Kriseberedskab',
                 '🏥 Care Portal integration',
-                '🔒 GDPR-kompatibel',
-              ].map(item => (
-                <span key={item} className="text-sm font-medium text-white/25">{item}</span>
+                '🔒 Persondata efter GDPR',
+              ].map((item) => (
+                <span key={item} className="text-sm font-medium text-white/25">
+                  {item}
+                </span>
               ))}
             </div>
           ))}
@@ -785,7 +810,10 @@ export default function AppPage() {
       <section className="relative overflow-hidden px-6 py-32">
         <div
           className="pointer-events-none absolute inset-0"
-          style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(127,119,221,0.12) 0%, transparent 65%)' }}
+          style={{
+            background:
+              'radial-gradient(ellipse at 50% 50%, rgba(127,119,221,0.12) 0%, transparent 65%)',
+          }}
         />
 
         <div className="relative mx-auto max-w-4xl text-center">
@@ -796,66 +824,58 @@ export default function AppPage() {
                 className="bg-clip-text text-transparent"
                 style={{ backgroundImage: 'linear-gradient(135deg, #A78BFA, #60A5FA)' }}
               >
-                dine borgere
+                dine borgere en bedre hverdag?
               </span>
-              <br />
-              en bedre hverdag?
             </h2>
           </Scene>
 
           <Scene delay={200}>
             <p className="mx-auto mt-6 max-w-xl text-xl leading-relaxed text-white/50">
-              Download BUDR App — og se forskellen fra dag ét.
+              BUDR kører som webapp i browseren (native apps til App Store og Google Play er under
+              udarbejdelse).
             </p>
           </Scene>
 
-          {/* QR + badges */}
-          <Scene delay={300} className="mt-14 flex flex-col items-center gap-10 sm:flex-row sm:justify-center sm:gap-16">
-            <div className="flex flex-col items-center gap-4">
-              <div
-                className="rounded-3xl border border-white/10 p-5"
-                style={{ background: 'rgba(127,119,221,0.08)' }}
-              >
-                <FakeQR color="#A78BFA" />
-              </div>
-              <div className="flex items-center gap-2 rounded-xl bg-white/90 px-4 py-2.5 text-[#08080f]">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden>
-                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-                </svg>
-                <div className="text-left">
-                  <p className="text-[8px] leading-none opacity-60">Download on the</p>
-                  <p className="text-sm font-bold leading-tight">App Store</p>
-                </div>
-              </div>
-              <p className="text-xs text-white/25">Scan med iPhone-kamera</p>
-            </div>
-
-            <div className="hidden h-28 w-px bg-white/8 sm:block" />
-
-            <div className="flex flex-col items-center gap-4">
-              <div
-                className="rounded-3xl border border-white/10 p-5"
-                style={{ background: 'rgba(52,211,153,0.06)' }}
-              >
-                <FakeQR color="#34D399" />
-              </div>
-              <div className="flex items-center gap-2 rounded-xl bg-white/90 px-4 py-2.5 text-[#08080f]">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden>
-                  <path d="M3 20.5v-17c0-.83.94-1.3 1.6-.8l14 8.5c.6.36.6 1.24 0 1.6l-14 8.5c-.66.5-1.6.03-1.6-.8z"/>
-                </svg>
-                <div className="text-left">
-                  <p className="text-[8px] leading-none opacity-60">Get it on</p>
-                  <p className="text-sm font-bold leading-tight">Google Play</p>
-                </div>
-              </div>
-              <p className="text-xs text-white/25">Scan med Android-kamera</p>
-            </div>
+          <Scene
+            delay={300}
+            className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row"
+          >
+            <Link
+              href="/park-hub"
+              className="inline-flex items-center gap-2 rounded-full px-8 py-4 text-base font-bold text-white shadow-lg transition-all hover:scale-[1.02]"
+              style={{
+                background: 'linear-gradient(135deg, #A78BFA, #7F77DD)',
+                boxShadow: '0 0 32px rgba(127,119,221,0.35)',
+              }}
+            >
+              Åbn borger-webapp
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+            <Link
+              href="/care-portal-demo"
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 px-8 py-4 text-base font-semibold text-white/85 transition-all hover:bg-white/5"
+            >
+              Se Care Portal-demo
+            </Link>
           </Scene>
 
           <Scene delay={400}>
-            <p className="mt-12 text-sm text-white/25">
-              Spørgsmål? Kontakt os på{' '}
-              <span className="text-white/40 underline underline-offset-4">hej@budr.dk</span>
+            <p className="mt-12 text-center text-sm text-white/25">
+              Spørgsmål?{' '}
+              <a
+                href="mailto:hej@budrcare.dk"
+                className="text-white/45 underline underline-offset-4"
+              >
+                hej@budrcare.dk
+              </a>
+              {' · '}
+              <Link href="/privacy" className="text-white/45 underline underline-offset-4">
+                Privatliv
+              </Link>
+              {' · '}
+              <Link href="/terms" className="text-white/45 underline underline-offset-4">
+                Vilkår
+              </Link>
             </p>
           </Scene>
         </div>
@@ -863,9 +883,10 @@ export default function AppPage() {
 
       {/* Footer */}
       <div className="border-t border-white/5 px-6 py-8 text-center">
-        <p className="text-xs text-white/20">© 2025 BUDR · Fremtidens socialpsykiatri</p>
+        <p className="text-xs text-white/20">
+          © {new Date().getFullYear()} BUDR · Fremtidens socialpsykiatri
+        </p>
       </div>
-
     </div>
   );
 }

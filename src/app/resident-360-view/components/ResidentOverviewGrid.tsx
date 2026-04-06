@@ -11,19 +11,19 @@ type TrafficUi = 'groen' | 'gul' | 'roed';
 
 const TRAFFIC_DOT: Record<TrafficUi, string> = {
   groen: '#1D9E75',
-  gul:   '#EF9F27',
-  roed:  '#E24B4A',
+  gul: '#EF9F27',
+  roed: '#E24B4A',
 };
 
 const TRAFFIC_LABEL: Record<TrafficUi, string> = {
   groen: 'Grøn',
-  gul:   'Gul',
-  roed:  'Rød',
+  gul: 'Gul',
+  roed: 'Rød',
 };
 
 function avatarStyle(tl: TrafficUi | null): React.CSSProperties {
   if (tl === 'roed') return { backgroundColor: '#FCEBEB', color: '#A32D2D' };
-  if (tl === 'gul')  return { backgroundColor: '#FAEEDA', color: '#854F0B' };
+  if (tl === 'gul') return { backgroundColor: '#FAEEDA', color: '#854F0B' };
   return { backgroundColor: '#E5E7EB', color: '#374151' };
 }
 
@@ -48,19 +48,17 @@ export default function ResidentOverviewGrid({ residents }: Props) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'alle' | TrafficUi | 'ingen'>('alle');
 
-  const filtered = residents.filter(r => {
+  const filtered = residents.filter((r) => {
     const matchSearch =
       r.name.toLowerCase().includes(search.toLowerCase()) ||
       r.room.toLowerCase().includes(search.toLowerCase());
     const matchFilter =
-      filter === 'alle'  ? true :
-      filter === 'ingen' ? !r.trafficLight :
-      r.trafficLight === filter;
+      filter === 'alle' ? true : filter === 'ingen' ? !r.trafficLight : r.trafficLight === filter;
     return matchSearch && matchFilter;
   });
 
-  const checkinCount = residents.filter(r => r.checkinToday).length;
-  const alertCount   = residents.filter(r => r.trafficLight === 'roed').length;
+  const checkinCount = residents.filter((r) => r.checkinToday).length;
+  const alertCount = residents.filter((r) => r.trafficLight === 'roed').length;
 
   return (
     <div className="p-6 max-w-screen-xl">
@@ -82,13 +80,13 @@ export default function ResidentOverviewGrid({ residents }: Props) {
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={(e) => setSearch(e.target.value)}
               placeholder="Søg navn eller værelse…"
               className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#1D9E75] transition-colors"
             />
           </div>
           <div className="flex gap-1">
-            {(['alle', 'roed', 'gul', 'groen', 'ingen'] as const).map(f => (
+            {(['alle', 'roed', 'gul', 'groen', 'ingen'] as const).map((f) => (
               <button
                 key={f}
                 type="button"
@@ -99,7 +97,15 @@ export default function ResidentOverviewGrid({ residents }: Props) {
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                {f === 'alle' ? 'Alle' : f === 'roed' ? '🔴 Rød' : f === 'gul' ? '🟡 Gul' : f === 'groen' ? '🟢 Grøn' : '— Ingen'}
+                {f === 'alle'
+                  ? 'Alle'
+                  : f === 'roed'
+                    ? '🔴 Rød'
+                    : f === 'gul'
+                      ? '🟡 Gul'
+                      : f === 'groen'
+                        ? '🟢 Grøn'
+                        : '— Ingen'}
               </button>
             ))}
           </div>
@@ -110,19 +116,29 @@ export default function ResidentOverviewGrid({ residents }: Props) {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-100">
-                <th className="text-left text-xs font-medium text-gray-500 px-4 py-2.5 w-[220px]">Beboer</th>
-                <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5 w-[90px]">Værelse</th>
-                <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5 w-[110px]">Trafiklys</th>
-                <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5 w-[120px]">Stemning</th>
-                <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5 w-[120px]">Check-in</th>
+                <th className="text-left text-xs font-medium text-gray-500 px-4 py-2.5 w-[220px]">
+                  Beboer
+                </th>
+                <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5 w-[90px]">
+                  Værelse
+                </th>
+                <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5 w-[110px]">
+                  Trafiklys
+                </th>
+                <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5 w-[120px]">
+                  Stemning
+                </th>
+                <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5 w-[120px]">
+                  Check-in
+                </th>
                 <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5">Note</th>
                 <th className="w-10 px-3 py-2.5" />
               </tr>
             </thead>
             <tbody>
-              {filtered.map(r => {
+              {filtered.map((r) => {
                 const dotColor = r.trafficLight ? TRAFFIC_DOT[r.trafficLight] : '#D1D5DB';
-                const avStyle  = avatarStyle(r.trafficLight);
+                const avStyle = avatarStyle(r.trafficLight);
                 return (
                   <tr
                     key={r.id}
@@ -165,7 +181,9 @@ export default function ResidentOverviewGrid({ residents }: Props) {
                             className="rounded-full flex-shrink-0"
                             style={{ width: 10, height: 10, backgroundColor: dotColor }}
                           />
-                          <span className="text-xs text-gray-600">{TRAFFIC_LABEL[r.trafficLight]}</span>
+                          <span className="text-xs text-gray-600">
+                            {TRAFFIC_LABEL[r.trafficLight]}
+                          </span>
                         </div>
                       ) : (
                         <span className="text-xs text-gray-400">—</span>
@@ -183,7 +201,10 @@ export default function ResidentOverviewGrid({ residents }: Props) {
                           <div className="w-10 h-1 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
                             <div
                               className="h-full rounded-full"
-                              style={{ width: `${(r.moodScore / 10) * 100}%`, backgroundColor: dotColor }}
+                              style={{
+                                width: `${(r.moodScore / 10) * 100}%`,
+                                backgroundColor: dotColor,
+                              }}
                             />
                           </div>
                         </div>
@@ -212,7 +233,16 @@ export default function ResidentOverviewGrid({ residents }: Props) {
                     {/* Arrow */}
                     <td className="px-3 py-3">
                       <div className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 group-hover:text-[#1D9E75] group-hover:border-[#1D9E75] transition-all">
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 14 14"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
                           <path d="M5 3l4 4-4 4" />
                         </svg>
                       </div>

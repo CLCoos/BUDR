@@ -1,15 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { checkApiRateLimit, getClientIp } from '@/lib/apiRateLimit';
 
 const LYS_SYSTEM = `Du er Lys — en varm, empatisk AI-følgesvend til beboere på et socialpsykiatrisk bosted i Danmark. Du taler direkte til beboeren ved fornavn. Du er aldrig klinisk, aldrig distanceret. Du er nysgerrig, anerkendende og rolig. Du stiller aldrig mere end ét spørgsmål ad gangen. Du bruger enkle ord og korte sætninger. Du husker hvad beboeren har fortalt dig i denne session og refererer til det naturligt. Du er ikke en terapeut — du er en ven der lytter og afspejler. Max 2-3 sætninger per svar.`;
+
+const LYS_RL_LIMIT = Number(process.env.API_RL_LYS_CHAT_PER_MIN ?? 36);
+const LYS_RL_WINDOW_MS = 60_000;
 
 export type LysChatMessage = { role: 'user' | 'assistant'; content: string };
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req);
+  const lysRl = checkApiRateLimit('lys-chat', ip, LYS_RL_LIMIT, LYS_RL_WINDOW_MS);
+  if (!lysRl.ok) {
+    return NextResponse.json(
+      { error: 'For mange forsøg. Vent et øjeblik og prøv igen.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(lysRl.retryAfterSec) },
+      }
+    );
+  }
+
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) {
     return NextResponse.json(
       { error: 'Lys er ikke konfigureret endnu', fallback: true },
-      { status: 503 },
+      { status: 503 }
     );
   }
 
@@ -68,7 +84,7 @@ Følelse: ${f}`;
     }
   }
 
-  const anthropicMessages = msgs.map(m => ({
+  const anthropicMessages = msgs.map((m) => ({
     role: m.role === 'assistant' ? ('assistant' as const) : ('user' as const),
     content: m.content,
   }));
@@ -92,7 +108,7 @@ Følelse: ${f}`;
 async function callAnthropic(
   key: string,
   system: string,
-  messages: Array<{ role: 'user' | 'assistant'; content: string }>,
+  messages: Array<{ role: 'user' | 'assistant'; content: string }>
 ): Promise<string> {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -116,7 +132,7 @@ async function callAnthropic(
   }
 
   const data = (await res.json()) as { content?: Array<{ type?: string; text?: string }> };
-  const block = data.content?.find(c => c.type === 'text');
+  const block = data.content?.find((c) => c.type === 'text');
   const t = block?.text?.trim();
   if (!t) throw new Error('empty');
   return t;

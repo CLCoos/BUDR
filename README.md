@@ -1,6 +1,8 @@
-# Next.js
+# BUDR (budr-luksus)
 
-A modern Next.js 15 application built with TypeScript and Tailwind CSS.
+**Projektkontekst:** [`CONTEXT.md`](./CONTEXT.md) · **AI/onboarding:** [`AGENTS.md`](./AGENTS.md)
+
+Underneath: Next.js 15 app (TypeScript, Tailwind). Marketing + Care Portal + Lys (`/park-hub`).
 
 ## 🚀 Features
 

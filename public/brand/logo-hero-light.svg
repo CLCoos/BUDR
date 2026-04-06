@@ -1,0 +1,24 @@
+<svg width="320" height="88" viewBox="0 0 320 88" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g" x1="0" y1="44" x2="88" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1D9E75"/>
+      <stop offset="100%" stop-color="#378ADD"/>
+    </linearGradient>
+  </defs>
+  <circle cx="44" cy="44" r="41" stroke="url(#g)" stroke-width="3"/>
+  <path d="M3 44 L20 44 L27 24 L34 64 L42 28 L50 60 L57 44 L85 44"
+    stroke="url(#g)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <circle cx="85" cy="44" r="5.5" fill="#378ADD"/>
+  <text x="104" y="54"
+    font-family="'DM Serif Display', 'Georgia', serif"
+    font-size="42"
+    font-weight="400"
+    letter-spacing="2"
+    fill="#1D9E75">BUDR</text>
+  <text x="106" y="74"
+    font-family="'DM Sans', 'Helvetica Neue', sans-serif"
+    font-size="13"
+    font-weight="300"
+    letter-spacing="5"
+    fill="#378ADD">CARE</text>
+</svg>

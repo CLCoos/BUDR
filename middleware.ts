@@ -2,8 +2,15 @@ import { createServerClient } from '@supabase/ssr';
 import { NextRequest, NextResponse } from 'next/server';
 
 const RESIDENT_COOKIE = 'budr_resident_id';
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const DEMO_RESIDENT_ID = 'demo-resident-001';
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
+
+/** I production: ingen auto-demo-cookie. Sæt til `true` på staging/preview hvis I bevidst vil beholde demo-fallback. */
+function allowParkDemoCookie(): boolean {
+  if (process.env.NODE_ENV !== 'production') return true;
+  return process.env.BUDR_ALLOW_PARK_DEMO_COOKIE === 'true';
+}
 
 // ── Route matchers ────────────────────────────────────────────
 
@@ -29,6 +36,10 @@ function isResidentRoute(pathname: string): boolean {
 async function checkStaffAuth(
   req: NextRequest,
 ): Promise<{ response: NextResponse; authenticated: boolean }> {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    return { response: NextResponse.next({ request: req }), authenticated: false };
+  }
+
   let supabaseResponse = NextResponse.next({ request: req });
 
   const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -59,6 +70,9 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (isCarePortalRoute(pathname)) {
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      return NextResponse.redirect(new URL('/care-portal-login?err=config', req.url));
+    }
     const { response, authenticated } = await checkStaffAuth(req);
     if (!authenticated) {
       return NextResponse.redirect(new URL('/care-portal-login', req.url));
@@ -69,8 +83,21 @@ export async function middleware(req: NextRequest) {
   if (isResidentRoute(pathname)) {
     const residentId = req.cookies.get(RESIDENT_COOKIE)?.value;
     if (!residentId) {
-      // No resident identified — send to root where QR/URL entry sets the cookie
-      return NextResponse.redirect(new URL('/', req.url));
+      if (!allowParkDemoCookie()) {
+        const home = new URL('/', req.url);
+        home.searchParams.set('park', 'login');
+        return NextResponse.redirect(home);
+      }
+      req.cookies.set(RESIDENT_COOKIE, DEMO_RESIDENT_ID);
+      const response = NextResponse.next({ request: req });
+      response.cookies.set(RESIDENT_COOKIE, DEMO_RESIDENT_ID, {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 365,
+        path: '/',
+      });
+      return response;
     }
     return NextResponse.next();
   }

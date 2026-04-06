@@ -6,14 +6,16 @@ import { getChatCompletion, getStreamingChatCompletion } from '@/lib/ai/chatComp
 function normalizeChatError(err: unknown): Error {
   const message = err instanceof Error ? err.message : 'Unknown error';
   if (message.includes('Daily AI limit reached') || message.includes('429')) {
-    return new Error('Du har ramt dagens gratis AI-grænse. Prøv igen i morgen eller opgrader til premium.');
+    return new Error(
+      'Du har ramt dagens gratis AI-grænse. Prøv igen i morgen eller opgrader til premium.'
+    );
   }
   return err instanceof Error ? err : new Error(message);
 }
 
 export function useChat(provider: string, model: string, streaming: boolean = true) {
   const [response, setResponse] = useState('');
-  const [fullResponse, setFullResponse] = useState<any>(null);
+  const [fullResponse, setFullResponse] = useState<unknown>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -31,8 +33,12 @@ export function useChat(provider: string, model: string, streaming: boolean = tr
             model,
             messages,
             (chunk) => {
-              setFullResponse((prev: any[]) => [...prev, chunk]);
-              const content = chunk?.choices?.[0]?.delta?.content;
+              setFullResponse((prev: unknown) => [
+                ...((Array.isArray(prev) ? prev : []) as unknown[]),
+                chunk,
+              ]);
+              const c = chunk as { choices?: { delta?: { content?: string } }[] };
+              const content = c?.choices?.[0]?.delta?.content;
               if (content) setResponse((prev) => prev + content);
             },
             () => setIsLoading(false),
@@ -43,7 +49,9 @@ export function useChat(provider: string, model: string, streaming: boolean = tr
             parameters
           );
         } else {
-          const result = await getChatCompletion(provider, model, messages, parameters);
+          const result = (await getChatCompletion(provider, model, messages, parameters)) as {
+            choices?: { message?: { content?: string } }[];
+          };
           setFullResponse(result);
           setResponse(result?.choices?.[0]?.message?.content || '');
           setIsLoading(false);

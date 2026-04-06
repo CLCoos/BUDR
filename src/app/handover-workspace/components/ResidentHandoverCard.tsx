@@ -7,13 +7,38 @@ import { toast } from 'sonner';
 interface Props {
   entry: HandoverEntry;
   onUpdate: (updates: Partial<HandoverEntry>) => void;
+  carePortalDark?: boolean;
 }
 
 const flagConfig = {
-  groen: { label: 'Grøn', color: '#22C55E', bg: '#F0FDF4', border: '#86EFAC' },
-  gul: { label: 'Gul', color: '#EAB308', bg: '#FEFCE8', border: '#FDE047' },
-  roed: { label: 'Rød', color: '#EF4444', bg: '#FEF2F2', border: '#FECACA' },
-  sort: { label: 'Sort (kritisk)', color: '#1F2937', bg: '#F9FAFB', border: '#D1D5DB' },
+  groen: {
+    label: 'Grøn',
+    color: '#22C55E',
+    bg: '#F0FDF4',
+    border: '#86EFAC',
+    darkBg: 'rgba(34,197,94,0.16)',
+  },
+  gul: {
+    label: 'Gul',
+    color: '#EAB308',
+    bg: '#FEFCE8',
+    border: '#FDE047',
+    darkBg: 'rgba(234,179,8,0.14)',
+  },
+  roed: {
+    label: 'Rød',
+    color: '#EF4444',
+    bg: '#FEF2F2',
+    border: '#FECACA',
+    darkBg: 'rgba(239,68,68,0.14)',
+  },
+  sort: {
+    label: 'Sort (kritisk)',
+    color: '#1F2937',
+    bg: '#F9FAFB',
+    border: '#D1D5DB',
+    darkBg: 'rgba(148,163,184,0.12)',
+  },
 };
 
 const aiHandoverSuggestions = [
@@ -25,19 +50,22 @@ const aiHandoverSuggestions = [
   'Lena P. har det godt. Deltog aktivt i fællesaktiviteter. Grøn trafiklys, stemning 8/10. Ingen bekymringer.',
 ];
 
-export default function ResidentHandoverCard({ entry, onUpdate }: Props) {
+export default function ResidentHandoverCard({ entry, onUpdate, carePortalDark = false }: Props) {
+  const pd = carePortalDark;
   const [expanded, setExpanded] = useState(entry.flagColor === 'roed');
   const [loadingAI, setLoadingAI] = useState(false);
   const [recording, setRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
 
-  const residentIndex = ['res-001','res-002','res-003','res-004','res-005','res-006'].indexOf(entry.residentId);
+  const residentIndex = ['res-001', 'res-002', 'res-003', 'res-004', 'res-005', 'res-006'].indexOf(
+    entry.residentId
+  );
   const aiSuggestion = aiHandoverSuggestions[Math.max(0, residentIndex)];
 
   const handleGenerateAI = async () => {
     setLoadingAI(true);
     // Backend: POST /api/portal/ai/handover with resident PARK context
-    await new Promise(r => setTimeout(r, 1600));
+    await new Promise((r) => setTimeout(r, 1600));
     onUpdate({ note: aiSuggestion });
     setLoadingAI(false);
     toast.success('AI-vagtnotat genereret');
@@ -48,14 +76,20 @@ export default function ResidentHandoverCard({ entry, onUpdate }: Props) {
       setRecording(false);
       setRecordingSeconds(0);
       // Backend: Send audio to Supabase Edge Function voice-to-krap → Whisper + Claude
-      await new Promise(r => setTimeout(r, 1000));
-      onUpdate({ note: `[Transskription] ${entry.residentName} havde en rolig morgen. Spiste morgenmad og virkede afslappet. Ingen bekymringer observeret.` });
+      await new Promise((r) => setTimeout(r, 1000));
+      onUpdate({
+        note: `[Transskription] ${entry.residentName} havde en rolig morgen. Spiste morgenmad og virkede afslappet. Ingen bekymringer observeret.`,
+      });
       toast.success('Lydnotat transskriberet');
     } else {
       setRecording(true);
       const interval = setInterval(() => {
-        setRecordingSeconds(s => {
-          if (s >= 30) { clearInterval(interval); setRecording(false); return 0; }
+        setRecordingSeconds((s) => {
+          if (s >= 30) {
+            clearInterval(interval);
+            setRecording(false);
+            return 0;
+          }
           return s + 1;
         });
       }, 1000);
@@ -66,15 +100,40 @@ export default function ResidentHandoverCard({ entry, onUpdate }: Props) {
 
   return (
     <div
-      className={`bg-white rounded-lg border overflow-hidden transition-all ${
-        entry.flagColor === 'roed' ? 'border-red-200' :
-        entry.flagColor === 'gul'? 'border-yellow-200' : 'border-gray-100'
+      className={`rounded-lg border overflow-hidden transition-all ${
+        entry.flagColor === 'roed'
+          ? 'border-red-200'
+          : entry.flagColor === 'gul'
+            ? 'border-yellow-200'
+            : pd
+              ? ''
+              : 'border-gray-100'
       }`}
+      style={
+        pd
+          ? {
+              backgroundColor: 'var(--cp-bg2)',
+              borderColor:
+                entry.flagColor === 'roed'
+                  ? 'rgba(245,101,101,0.35)'
+                  : entry.flagColor === 'gul'
+                    ? 'rgba(246,173,85,0.35)'
+                    : 'var(--cp-border)',
+            }
+          : { backgroundColor: '#fff' }
+      }
     >
       {/* Card header */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors text-left"
+        className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors"
+        style={pd ? { color: 'var(--cp-text)' } : undefined}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLElement).style.backgroundColor = pd ? 'var(--cp-bg3)' : '#f9fafb';
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLElement).style.backgroundColor = '';
+        }}
       >
         <div
           className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
@@ -84,46 +143,95 @@ export default function ResidentHandoverCard({ entry, onUpdate }: Props) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-gray-800">{entry.residentName}</span>
+            <span
+              className="text-sm font-semibold"
+              style={{ color: pd ? 'var(--cp-text)' : '#1f2937' }}
+            >
+              {entry.residentName}
+            </span>
             {fc && (
               <span
                 className="text-xs px-2 py-0.5 rounded font-medium"
-                style={{ backgroundColor: fc.bg, color: fc.color }}
+                style={{
+                  backgroundColor: pd ? flagConfig[entry.flagColor!].darkBg : fc.bg,
+                  color: entry.flagColor === 'sort' && pd ? '#F3F4F6' : fc.color,
+                }}
               >
                 {fc.label}
               </span>
             )}
             {!entry.flagColor && (
-              <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-400">Ingen flag</span>
+              <span
+                className="rounded px-2 py-0.5 text-xs"
+                style={
+                  pd
+                    ? { backgroundColor: 'var(--cp-bg3)', color: 'var(--cp-muted2)' }
+                    : { backgroundColor: '#f3f4f6', color: '#9ca3af' }
+                }
+              >
+                Ingen flag
+              </span>
             )}
           </div>
           {entry.note ? (
-            <div className="text-xs text-gray-500 truncate mt-0.5">{entry.note.slice(0, 80)}...</div>
+            <div
+              className="mt-0.5 truncate text-xs"
+              style={{ color: pd ? 'var(--cp-muted)' : '#6b7280' }}
+            >
+              {entry.note.slice(0, 80)}...
+            </div>
           ) : (
-            <div className="text-xs text-gray-400 mt-0.5">Ingen note endnu</div>
+            <div className="mt-0.5 text-xs" style={{ color: pd ? 'var(--cp-muted2)' : '#9ca3af' }}>
+              Ingen note endnu
+            </div>
           )}
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {entry.note && <div className="w-2 h-2 rounded-full bg-green-400" />}
-          {expanded ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
+        <div className="flex flex-shrink-0 items-center gap-2">
+          {entry.note && <div className="h-2 w-2 rounded-full bg-green-400" />}
+          {expanded ? (
+            <ChevronUp size={16} style={{ color: pd ? 'var(--cp-muted)' : '#9ca3af' }} />
+          ) : (
+            <ChevronDown size={16} style={{ color: pd ? 'var(--cp-muted)' : '#9ca3af' }} />
+          )}
         </div>
       </button>
 
       {expanded && (
-        <div className="border-t border-gray-100 px-4 py-4 space-y-4">
+        <div
+          className="space-y-4 border-t px-4 py-4"
+          style={{ borderColor: pd ? 'var(--cp-border)' : '#f3f4f6' }}
+        >
           {/* Previous shift note */}
           {entry.previousNote && (
-            <div className="bg-gray-50 rounded-lg p-3">
-              <div className="text-xs font-medium text-gray-500 mb-1.5">Forrige vagt: {entry.previousShift}</div>
-              <div className="text-sm text-gray-600 leading-relaxed">{entry.previousNote}</div>
+            <div
+              className="rounded-lg p-3"
+              style={{ backgroundColor: pd ? 'var(--cp-bg3)' : '#f9fafb' }}
+            >
+              <div
+                className="mb-1.5 text-xs font-medium"
+                style={{ color: pd ? 'var(--cp-muted)' : '#6b7280' }}
+              >
+                Forrige vagt: {entry.previousShift}
+              </div>
+              <div
+                className="text-sm leading-relaxed"
+                style={{ color: pd ? 'var(--cp-text)' : '#4b5563' }}
+              >
+                {entry.previousNote}
+              </div>
             </div>
           )}
 
           {/* Flag selector */}
           <div>
-            <label className="text-xs font-medium text-gray-600 mb-2 block">Flag-farve</label>
+            <label
+              className="mb-2 block text-xs font-medium"
+              style={{ color: pd ? 'var(--cp-muted)' : '#4b5563' }}
+            >
+              Flag-farve
+            </label>
             <div className="flex gap-2">
-              {(Object.keys(flagConfig) as FlagColor[]).filter(Boolean).map(f => {
+              {(Object.keys(flagConfig) as FlagColor[]).filter(Boolean).map((f) => {
                 const cfg = flagConfig[f!];
                 return (
                   <button
@@ -134,8 +242,8 @@ export default function ResidentHandoverCard({ entry, onUpdate }: Props) {
                     }`}
                     style={{
                       borderColor: entry.flagColor === f ? cfg.color : 'transparent',
-                      backgroundColor: cfg.bg,
-                      color: cfg.color,
+                      backgroundColor: pd ? cfg.darkBg : cfg.bg,
+                      color: f === 'sort' && pd ? '#F3F4F6' : cfg.color,
                     }}
                   >
                     {cfg.label}
@@ -147,19 +255,34 @@ export default function ResidentHandoverCard({ entry, onUpdate }: Props) {
 
           {/* Shift label */}
           <div>
-            <label className="text-xs font-medium text-gray-600 mb-2 block">Vagttype</label>
+            <label
+              className="mb-2 block text-xs font-medium"
+              style={{ color: pd ? 'var(--cp-muted)' : '#4b5563' }}
+            >
+              Vagttype
+            </label>
             <div className="flex gap-2">
-              {(['dag', 'aften', 'nat'] as ShiftLabel[]).map(s => (
+              {(['dag', 'aften', 'nat'] as ShiftLabel[]).map((s) => (
                 <button
                   key={`shiftlabel-${entry.residentId}-${s}`}
                   onClick={() => onUpdate({ shiftLabel: s })}
-                  className={`flex-1 py-2 rounded-lg text-xs font-medium border transition-all capitalize ${
-                    entry.shiftLabel === s
-                      ? 'bg-[#0F1B2D] text-white border-[#0F1B2D]'
-                      : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                  className={`flex-1 rounded-lg border py-2 text-xs font-medium capitalize transition-all ${
+                    entry.shiftLabel === s ? 'border-[#0F1B2D] bg-[#0F1B2D] text-white' : ''
                   }`}
+                  style={
+                    pd && entry.shiftLabel !== s
+                      ? {
+                          backgroundColor: 'var(--cp-bg3)',
+                          borderColor: 'var(--cp-border)',
+                          color: 'var(--cp-muted)',
+                        }
+                      : !pd && entry.shiftLabel !== s
+                        ? { backgroundColor: '#fff', borderColor: '#e5e7eb', color: '#4b5563' }
+                        : undefined
+                  }
                 >
-                  {s === 'dag' ? '☀️' : s === 'aften' ? '🌙' : '🌃'} {s.charAt(0).toUpperCase() + s.slice(1)}
+                  {s === 'dag' ? '☀️' : s === 'aften' ? '🌙' : '🌃'}{' '}
+                  {s.charAt(0).toUpperCase() + s.slice(1)}
                 </button>
               ))}
             </div>
@@ -167,16 +290,33 @@ export default function ResidentHandoverCard({ entry, onUpdate }: Props) {
 
           {/* Note textarea */}
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-medium text-gray-600">Vagtnotat</label>
+            <div className="mb-2 flex items-center justify-between">
+              <label
+                className="text-xs font-medium"
+                style={{ color: pd ? 'var(--cp-muted)' : '#4b5563' }}
+              >
+                Vagtnotat
+              </label>
               <div className="flex gap-2">
                 {/* Voice recorder */}
                 <button
                   onClick={handleRecord}
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all ${
                     recording
-                      ? 'bg-red-50 border-red-300 text-red-600' :'bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-400'
+                      ? 'bg-red-50 border-red-300 text-red-600'
+                      : pd
+                        ? ''
+                        : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-400'
                   }`}
+                  style={
+                    !recording && pd
+                      ? {
+                          backgroundColor: 'var(--cp-bg3)',
+                          borderColor: 'var(--cp-border)',
+                          color: 'var(--cp-muted)',
+                        }
+                      : undefined
+                  }
                 >
                   {recording ? (
                     <>
@@ -184,7 +324,7 @@ export default function ResidentHandoverCard({ entry, onUpdate }: Props) {
                       Stop ({recordingSeconds}s)
                       {/* Waveform bars */}
                       <div className="flex gap-0.5 items-end h-4">
-                        {[1,2,3,4,5].map(b => (
+                        {[1, 2, 3, 4, 5].map((b) => (
                           <div
                             key={`wave-${b}`}
                             className="w-0.5 bg-red-400 rounded-full waveform-bar"
@@ -204,22 +344,41 @@ export default function ResidentHandoverCard({ entry, onUpdate }: Props) {
                 <button
                   onClick={handleGenerateAI}
                   disabled={loadingAI}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-[#1D9E75]/30 bg-[#E6F7F2] text-[#1D9E75] hover:bg-[#1D9E75]/20 transition-all disabled:opacity-50"
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all disabled:opacity-50 ${
+                    pd
+                      ? 'border-[rgba(45,212,160,0.35)] bg-[rgba(45,212,160,0.08)] text-[var(--cp-green)] hover:bg-[rgba(45,212,160,0.14)]'
+                      : 'border-[#1D9E75]/30 bg-[#E6F7F2] text-[#1D9E75] hover:bg-[#1D9E75]/20'
+                  }`}
                 >
-                  {loadingAI ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
+                  {loadingAI ? (
+                    <Loader2 size={10} className="animate-spin" />
+                  ) : (
+                    <Sparkles size={10} />
+                  )}
                   Generer med AI
                 </button>
               </div>
             </div>
             <textarea
               value={entry.note}
-              onChange={e => onUpdate({ note: e.target.value })}
+              onChange={(e) => onUpdate({ note: e.target.value })}
               placeholder="Skriv observationer, hændelser og anbefalinger til næste vagt..."
-              className="w-full text-sm border border-gray-200 rounded-lg p-3 resize-none focus:outline-none focus:border-[#1D9E75] transition-colors text-gray-700 placeholder-gray-400"
+              className="w-full resize-none rounded-lg border p-3 text-sm transition-colors focus:outline-none focus:border-[#1D9E75] focus:ring-1 focus:ring-[rgba(45,212,160,0.25)]"
+              style={
+                pd
+                  ? {
+                      borderColor: 'var(--cp-border)',
+                      backgroundColor: 'var(--cp-bg)',
+                      color: 'var(--cp-text)',
+                    }
+                  : undefined
+              }
               rows={4}
             />
-            <div className="flex justify-end mt-1">
-              <span className="text-xs text-gray-400">{entry.note.length} tegn</span>
+            <div className="mt-1 flex justify-end">
+              <span className="text-xs" style={{ color: pd ? 'var(--cp-muted2)' : '#9ca3af' }}>
+                {entry.note.length} tegn
+              </span>
             </div>
           </div>
         </div>

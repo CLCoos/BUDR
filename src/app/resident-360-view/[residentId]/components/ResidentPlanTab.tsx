@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { getResidentBadgeDef } from '@/lib/residentBadges';
 
 type PlanItem = {
   id: string;
@@ -25,33 +26,29 @@ type XPRow = { total_xp: number; level: number };
 type BadgeRow = { badge_key: string; earned_at: string };
 
 const LEVEL_INFO = [
-  { level: 1, name: 'Frø',    emoji: '🌱' },
-  { level: 2, name: 'Spire',  emoji: '🌿' },
+  { level: 1, name: 'Frø', emoji: '🌱' },
+  { level: 2, name: 'Spire', emoji: '🌿' },
   { level: 3, name: 'Plante', emoji: '🌾' },
   { level: 4, name: 'Blomst', emoji: '🌸' },
-  { level: 5, name: 'Træ',    emoji: '🌳' },
+  { level: 5, name: 'Træ', emoji: '🌳' },
 ];
 
-const BADGE_DEFS: Record<string, { name: string; emoji: string }> = {
-  first_journal: { name: 'Første skridt', emoji: '📝' },
-  consistent_7:  { name: 'Konsistent',    emoji: '🔥' },
-  first_chat:    { name: 'Åben',          emoji: '💬' },
-  planner_5:     { name: 'Planlægger',    emoji: '📅' },
-  brave:         { name: 'Modig',         emoji: '💙' },
-};
-
 const RECURRENCE_LABEL: Record<string, string> = {
-  none:     'Engangsevent',
-  daily:    'Daglig',
-  weekly:   'Ugentlig',
+  none: 'Engangsevent',
+  daily: 'Daglig',
+  weekly: 'Ugentlig',
   biweekly: 'Hver 2. uge',
-  custom:   'Udvalgte dage',
+  custom: 'Udvalgte dage',
 };
 
 const DAYS = ['Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'];
 
 const CATEGORY_EMOJI: Record<string, string> = {
-  mad: '🍽', medicin: '💊', aktivitet: '⚡', hvile: '😌', social: '👥',
+  mad: '🍽',
+  medicin: '💊',
+  aktivitet: '⚡',
+  hvile: '😌',
+  social: '👥',
 };
 
 type Props = { residentId: string; residentName: string };
@@ -63,17 +60,19 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
   const [showAdd, setShowAdd] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newTime, setNewTime] = useState('09:00');
-  const [newCategory, setNewCategory] = useState('aktivitet');
+  const newCategory = 'aktivitet';
   const [newRecurrence, setNewRecurrence] = useState<'none' | 'daily'>('none');
   const [saving, setSaving] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const supabase = createClient();
     if (!supabase) return;
     const [itemsRes, xpRes, badgesRes] = await Promise.all([
       supabase
         .from('resident_plan_items')
-        .select('id, title, category, emoji, time_of_day, recurrence, recurrence_days, notify, notify_minutes_before, created_by, staff_suggestion, approved_by_resident, active_from, created_at')
+        .select(
+          'id, title, category, emoji, time_of_day, recurrence, recurrence_days, notify, notify_minutes_before, created_by, staff_suggestion, approved_by_resident, active_from, created_at'
+        )
         .eq('resident_id', residentId)
         .order('time_of_day'),
       supabase
@@ -81,17 +80,16 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
         .select('total_xp, level')
         .eq('resident_id', residentId)
         .maybeSingle(),
-      supabase
-        .from('resident_badges')
-        .select('badge_key, earned_at')
-        .eq('resident_id', residentId),
+      supabase.from('resident_badges').select('badge_key, earned_at').eq('resident_id', residentId),
     ]);
     setItems((itemsRes.data ?? []) as PlanItem[]);
     setXp((xpRes.data as XPRow | null) ?? null);
     setEarnedBadges((badgesRes.data ?? []) as BadgeRow[]);
-  };
+  }, [residentId]);
 
-  useEffect(() => { void load(); }, [residentId]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const handleAddSuggestion = async () => {
     if (!newTitle.trim()) return;
@@ -104,7 +102,7 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
       emoji: CATEGORY_EMOJI[newCategory] ?? '📌',
       time_of_day: newTime,
       recurrence: newRecurrence,
-      recurrence_days: newRecurrence === 'daily' ? [0,1,2,3,4,5,6] : [],
+      recurrence_days: newRecurrence === 'daily' ? [0, 1, 2, 3, 4, 5, 6] : [],
       created_by: 'staff',
       staff_suggestion: true,
       approved_by_resident: false,
@@ -123,11 +121,10 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
     void load();
   };
 
-  const levelInfo = LEVEL_INFO.find(l => l.level === (xp?.level ?? 1)) ?? LEVEL_INFO[0]!;
+  const levelInfo = LEVEL_INFO.find((l) => l.level === (xp?.level ?? 1)) ?? LEVEL_INFO[0]!;
 
   return (
     <div className="space-y-6">
-
       {/* XP + Level sidebar card */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
@@ -143,14 +140,14 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
             <p className="text-sm text-gray-400">Ingen badges optjent endnu</p>
           ) : (
             <div className="flex flex-wrap gap-2">
-              {earnedBadges.map(b => {
-                const def = BADGE_DEFS[b.badge_key];
+              {earnedBadges.map((b) => {
+                const def = getResidentBadgeDef(b.badge_key);
                 return (
                   <span
                     key={b.badge_key}
                     className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 border border-violet-200 px-3 py-1 text-xs font-semibold text-violet-700"
                   >
-                    {def?.emoji} {def?.name ?? b.badge_key}
+                    {def?.emoji ?? '🏅'} {def?.name ?? b.badge_key}
                   </span>
                 );
               })}
@@ -177,12 +174,18 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
         {showAdd && (
           <div
             className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/40"
-            onClick={e => { if (e.target === e.currentTarget) setShowAdd(false); }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowAdd(false);
+            }}
           >
             <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-gray-800">Foreslå planpunkt</h3>
-                <button type="button" onClick={() => setShowAdd(false)} className="text-gray-400 hover:text-gray-600">
+                <button
+                  type="button"
+                  onClick={() => setShowAdd(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -191,7 +194,7 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
                 <input
                   type="text"
                   value={newTitle}
-                  onChange={e => setNewTitle(e.target.value)}
+                  onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="F.eks. Morgengymnastik…"
                   className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-[#0F1B2D]"
                   autoFocus
@@ -199,19 +202,23 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 block mb-1">Tidspunkt</label>
+                  <label className="text-xs font-semibold text-gray-500 block mb-1">
+                    Tidspunkt
+                  </label>
                   <input
                     type="time"
                     value={newTime}
-                    onChange={e => setNewTime(e.target.value)}
+                    onChange={(e) => setNewTime(e.target.value)}
                     className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 block mb-1">Gentagelse</label>
+                  <label className="text-xs font-semibold text-gray-500 block mb-1">
+                    Gentagelse
+                  </label>
                   <select
                     value={newRecurrence}
-                    onChange={e => setNewRecurrence(e.target.value as 'none' | 'daily')}
+                    onChange={(e) => setNewRecurrence(e.target.value as 'none' | 'daily')}
                     className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none"
                   >
                     <option value="none">Ingen</option>
@@ -251,7 +258,7 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
           </div>
         ) : (
           <div className="space-y-2">
-            {items.map(item => (
+            {items.map((item) => (
               <div
                 key={item.id}
                 className={`flex items-center gap-3 rounded-2xl border px-4 py-3.5 ${
@@ -282,7 +289,7 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
                     {' · '}
                     {RECURRENCE_LABEL[item.recurrence] ?? item.recurrence}
                     {item.recurrence_days && item.recurrence_days.length > 0 && (
-                      <> · {item.recurrence_days.map(d => DAYS[d]).join(', ')}</>
+                      <> · {item.recurrence_days.map((d) => DAYS[d]).join(', ')}</>
                     )}
                     {' · '}
                     {item.created_by === 'staff' ? '👩‍⚕️ Personale' : '👤 Borger'}

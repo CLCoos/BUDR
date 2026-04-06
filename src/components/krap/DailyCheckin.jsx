@@ -93,7 +93,10 @@ export default function DailyCheckin({ supabase, profileId }) {
       };
 
       if (existingRowId) {
-        const { error } = await supabase.from('daily_checkins').update(payload).eq('id', existingRowId);
+        const { error } = await supabase
+          .from('daily_checkins')
+          .update(payload)
+          .eq('id', existingRowId);
         if (error) throw error;
       } else {
         const { error } = await supabase.from('daily_checkins').insert(payload);
@@ -114,7 +117,9 @@ export default function DailyCheckin({ supabase, profileId }) {
       <div className="flex items-start justify-between gap-3 mb-3">
         <div>
           <h2 className="font-display text-lg font-bold text-midnight-50">Søjle 1: Registrering</h2>
-          <p className="text-xs text-midnight-400 mt-1">Et roligt overblik over, hvad der fyldte i dag.</p>
+          <p className="text-xs text-midnight-400 mt-1">
+            Et roligt overblik over, hvad der fyldte i dag.
+          </p>
         </div>
         {isCheckedInToday ? (
           <div className="shrink-0 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5">
@@ -135,7 +140,9 @@ export default function DailyCheckin({ supabase, profileId }) {
         <div className="rounded-2xl border border-midnight-600/40 bg-midnight-900/40 p-4">
           <div className="flex items-center justify-between gap-3 mb-2">
             <div className="flex items-center gap-2">
-              <span className="text-xl" aria-hidden>🌿</span>
+              <span className="text-xl" aria-hidden>
+                🌿
+              </span>
               <p className="font-display text-sm font-bold text-midnight-50">Humørskala (1-10)</p>
             </div>
             <p className="text-xs font-semibold text-sunrise-300">
@@ -164,7 +171,9 @@ export default function DailyCheckin({ supabase, profileId }) {
         <div className="rounded-2xl border border-midnight-600/40 bg-midnight-900/40 p-4">
           <div className="flex items-start justify-between gap-3 mb-2">
             <p className="font-display text-sm font-bold text-midnight-50">Hvad fyldte i dag?</p>
-            <p className="text-[10px] text-midnight-500 mt-0.5">{whatFilledToday.trim().length}/500</p>
+            <p className="text-[10px] text-midnight-500 mt-0.5">
+              {whatFilledToday.trim().length}/500
+            </p>
           </div>
 
           <textarea
@@ -185,10 +194,13 @@ export default function DailyCheckin({ supabase, profileId }) {
             {loading ? 'Gemmer…' : isCheckedInToday ? 'Opdater registrering' : 'Gem registrering'}
           </button>
           {saveError ? <p className="text-sm text-rose-300 mt-2">{saveError}</p> : null}
-          {saveOk ? <p className="text-sm text-emerald-200 mt-2">Tak. Det er registreret — og det tæller.</p> : null}
+          {saveOk ? (
+            <p className="text-sm text-emerald-200 mt-2">
+              Tak. Det er registreret — og det tæller.
+            </p>
+          ) : null}
         </div>
       </div>
     </section>
   );
 }
-

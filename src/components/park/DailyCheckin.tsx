@@ -1,36 +1,57 @@
-'use client'
+'use client';
 // BUDR App – Flow 1: Daglig check-in
 // PARK-metodik | KRAP-inspireret: Skalering (#23) + Trafiklys (#28)
 
-import { useState } from 'react'
-import { submitCheckin } from '@/lib/park-queries'
-import type { TrafficLight } from '@/types/park'
+import { useState } from 'react';
+import { submitCheckin } from '@/lib/park-queries';
+import type { TrafficLight } from '@/types/park';
 
-const MOOD_LABELS = ['Meget svært', 'Svært', 'Lidt svært', 'Okay', 'Nogenlunde', 'Fint', 'Godt', 'Rigtigt godt', 'Super godt', 'Fantastisk']
+const MOOD_LABELS = [
+  'Meget svært',
+  'Svært',
+  'Lidt svært',
+  'Okay',
+  'Nogenlunde',
+  'Fint',
+  'Godt',
+  'Rigtigt godt',
+  'Super godt',
+  'Fantastisk',
+];
 
 const TRAFFIC_OPTIONS: { value: TrafficLight; label: string; desc: string; color: string }[] = [
-  { value: 'green',  label: '🟢 Grøn',  desc: 'Det går godt. Jeg har det fint.',              color: '#22c55e' },
-  { value: 'yellow', label: '🟡 Gul',   desc: 'Det er lidt svært. Jeg har brug for lidt støtte.', color: '#eab308' },
-  { value: 'red',    label: '🔴 Rød',   desc: 'Det er meget svært. Jeg har brug for hjælp nu.', color: '#ef4444' },
-]
+  { value: 'green', label: '🟢 Grøn', desc: 'Det går godt. Jeg har det fint.', color: '#22c55e' },
+  {
+    value: 'yellow',
+    label: '🟡 Gul',
+    desc: 'Det er lidt svært. Jeg har brug for lidt støtte.',
+    color: '#eab308',
+  },
+  {
+    value: 'red',
+    label: '🔴 Rød',
+    desc: 'Det er meget svært. Jeg har brug for hjælp nu.',
+    color: '#ef4444',
+  },
+];
 
 interface Props {
-  residentId: string
-  onComplete?: () => void
+  residentId: string;
+  onComplete?: () => void;
 }
 
 export default function DailyCheckin({ residentId, onComplete }: Props) {
-  const [step, setStep] = useState<'score' | 'traffic' | 'text' | 'done'>('score')
-  const [score, setScore] = useState<number>(5)
-  const [traffic, setTraffic] = useState<TrafficLight | null>(null)
-  const [text, setText] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [step, setStep] = useState<'score' | 'traffic' | 'text' | 'done'>('score');
+  const [score, setScore] = useState<number>(5);
+  const [traffic, setTraffic] = useState<TrafficLight | null>(null);
+  const [text, setText] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const moodLabel = MOOD_LABELS[score - 1]
+  const moodLabel = MOOD_LABELS[score - 1];
 
   async function handleSubmit() {
-    if (!traffic) return
-    setLoading(true)
+    if (!traffic) return;
+    setLoading(true);
     try {
       await submitCheckin({
         resident_id: residentId,
@@ -38,13 +59,13 @@ export default function DailyCheckin({ residentId, onComplete }: Props) {
         mood_label: moodLabel,
         free_text: text || undefined,
         traffic_light: traffic,
-      })
-      setStep('done')
-      onComplete?.()
+      });
+      setStep('done');
+      onComplete?.();
     } catch (e) {
-      console.error(e)
+      console.error(e);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -55,7 +76,7 @@ export default function DailyCheckin({ residentId, onComplete }: Props) {
         <h2>Tak for i dag</h2>
         <p>Din check-in er gemt.</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -64,7 +85,7 @@ export default function DailyCheckin({ residentId, onComplete }: Props) {
         {['score', 'traffic', 'text'].map((s, i) => (
           <div
             key={s}
-            className={`park-flow__dot ${step === s ? 'active' : ['score','traffic','text'].indexOf(step) > i ? 'done' : ''}`}
+            className={`park-flow__dot ${step === s ? 'active' : ['score', 'traffic', 'text'].indexOf(step) > i ? 'done' : ''}`}
           />
         ))}
       </div>
@@ -84,7 +105,7 @@ export default function DailyCheckin({ residentId, onComplete }: Props) {
             min={1}
             max={10}
             value={score}
-            onChange={e => setScore(Number(e.target.value))}
+            onChange={(e) => setScore(Number(e.target.value))}
             className="park-slider"
           />
 
@@ -105,7 +126,7 @@ export default function DailyCheckin({ residentId, onComplete }: Props) {
           <p className="park-subtitle">Vælg det der føles rigtigt</p>
 
           <div className="park-traffic-options">
-            {TRAFFIC_OPTIONS.map(opt => (
+            {TRAFFIC_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
                 className={`park-traffic-btn ${traffic === opt.value ? 'selected' : ''}`}
@@ -125,7 +146,9 @@ export default function DailyCheckin({ residentId, onComplete }: Props) {
           )}
 
           <div className="park-btn-row">
-            <button className="park-btn park-btn--secondary" onClick={() => setStep('score')}>Tilbage</button>
+            <button className="park-btn park-btn--secondary" onClick={() => setStep('score')}>
+              Tilbage
+            </button>
             <button
               className="park-btn park-btn--primary"
               disabled={!traffic}
@@ -146,12 +169,14 @@ export default function DailyCheckin({ residentId, onComplete }: Props) {
             className="park-textarea"
             placeholder="Hvad fylder mest for dig i dag?"
             value={text}
-            onChange={e => setText(e.target.value)}
+            onChange={(e) => setText(e.target.value)}
             rows={4}
           />
 
           <div className="park-btn-row">
-            <button className="park-btn park-btn--secondary" onClick={() => setStep('traffic')}>Tilbage</button>
+            <button className="park-btn park-btn--secondary" onClick={() => setStep('traffic')}>
+              Tilbage
+            </button>
             <button
               className="park-btn park-btn--primary"
               disabled={loading}
@@ -163,5 +188,5 @@ export default function DailyCheckin({ residentId, onComplete }: Props) {
         </div>
       )}
     </div>
-  )
+  );
 }

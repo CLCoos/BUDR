@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -10,9 +11,9 @@ type TrafficUi = 'groen' | 'gul' | 'roed';
 type TrafficDb = 'grøn' | 'gul' | 'rød';
 
 const DB_TO_UI: Record<TrafficDb, TrafficUi> = {
-  'grøn': 'groen',
-  'gul':  'gul',
-  'rød':  'roed',
+  grøn: 'groen',
+  gul: 'gul',
+  rød: 'roed',
 };
 
 interface Resident {
@@ -46,16 +47,23 @@ interface CareResidentRow {
 
 /** Dot + progress-bar colours per traffic light */
 const TRAFFIC_DOT: Record<TrafficUi, string> = {
-  groen: '#1D9E75',
-  gul:   '#EF9F27',
-  roed:  '#E24B4A',
+  groen: 'var(--cp-green)',
+  gul: 'var(--cp-amber)',
+  roed: 'var(--cp-red)',
+};
+
+const TRAFFIC_DOT_SHADOW: Record<TrafficUi, string> = {
+  groen: '0 0 5px rgba(45,212,160,0.5)',
+  gul: '0 0 5px rgba(246,173,85,0.5)',
+  roed: '0 0 5px rgba(245,101,101,0.5)',
 };
 
 /** Avatar background + text per traffic light */
 function avatarStyle(tl: TrafficUi | null): React.CSSProperties {
-  if (tl === 'roed') return { backgroundColor: '#FCEBEB', color: '#A32D2D' };
-  if (tl === 'gul')  return { backgroundColor: '#FAEEDA', color: '#854F0B' };
-  return { backgroundColor: '#9CA3AF', color: '#fff' };
+  if (tl === 'roed') return { backgroundColor: 'var(--cp-red-dim)', color: 'var(--cp-red)' };
+  if (tl === 'gul') return { backgroundColor: 'var(--cp-amber-dim)', color: 'var(--cp-amber)' };
+  if (tl === 'groen') return { backgroundColor: 'var(--cp-green-dim)', color: 'var(--cp-green)' };
+  return { backgroundColor: 'rgba(255,255,255,0.08)', color: 'var(--cp-muted)' };
 }
 
 // ── Helpers ──────────────────────────────────────────────────
@@ -74,7 +82,11 @@ function formatLastCheckin(isoString: string): string {
 function isToday(isoString: string): boolean {
   const d = new Date(isoString);
   const n = new Date();
-  return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+  return (
+    d.getFullYear() === n.getFullYear() &&
+    d.getMonth() === n.getMonth() &&
+    d.getDate() === n.getDate()
+  );
 }
 
 function applyCheckin(resident: Resident, row: CheckinRow): Resident {
@@ -94,18 +106,19 @@ export default function ResidentList() {
   const router = useRouter();
   const [residents, setResidents] = useState<Resident[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [orgScopeError, setOrgScopeError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'alle' | TrafficUi | 'ingen'>('alle');
 
   const handleRealtimeInsert = useCallback((row: CheckinRow) => {
-    setResidents(prev =>
-      prev.map(r => (r.id === row.resident_id ? applyCheckin(r, row) : r)),
-    );
+    setResidents((prev) => prev.map((r) => (r.id === row.resident_id ? applyCheckin(r, row) : r)));
   }, []);
 
   useEffect(() => {
     const supabase = createClient();
     if (!supabase) {
+      setLoadError('Supabase er ikke konfigureret.');
       setLoading(false);
       return;
     }
@@ -113,12 +126,51 @@ export default function ResidentList() {
     async function load() {
       if (!supabase) return;
 
+      setLoadError(null);
+      setOrgScopeError(null);
+
+      const {
+        orgId,
+        residentIds,
+        error: orgErr,
+        queryMessage,
+      } = await resolveStaffOrgResidents(supabase);
+
+      if (orgErr === 'no_session') {
+        setLoadError('Du er ikke logget ind.');
+        setLoading(false);
+        return;
+      }
+
+      if (orgErr === 'no_org') {
+        setOrgScopeError(
+          'Din bruger mangler org_id i profilen. Tilføj organisationens UUID under bruger-metadata i Supabase Auth.'
+        );
+        setResidents([]);
+        setLoading(false);
+        return;
+      }
+
+      if (orgErr === 'query_failed') {
+        setLoadError(queryMessage ?? 'Kunne ikke hente beboere.');
+        setLoading(false);
+        return;
+      }
+
+      if (!orgId || residentIds.length === 0) {
+        setResidents([]);
+        setLoading(false);
+        return;
+      }
+
       const { data: careResidents, error: resErr } = await supabase
         .from('care_residents')
         .select('user_id, display_name, onboarding_data')
+        .eq('org_id', orgId)
         .order('display_name');
 
-      if (resErr || !careResidents) {
+      if (resErr) {
+        setLoadError(resErr.message);
         setLoading(false);
         return;
       }
@@ -126,17 +178,20 @@ export default function ResidentList() {
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
 
-      const [checkinsResult, proposalsResult] = await Promise.all([
-        supabase
-          .from('park_daily_checkin')
-          .select('resident_id, mood_score, traffic_light, note, created_at')
-          .gte('created_at', todayStart.toISOString())
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('plan_proposals')
-          .select('resident_id')
-          .eq('status', 'pending'),
-      ]);
+      const proposalsQuery = supabase
+        .from('plan_proposals')
+        .select('resident_id')
+        .eq('status', 'pending')
+        .in('resident_id', residentIds);
+
+      const checkinsResult = await supabase
+        .from('park_daily_checkin')
+        .select('resident_id, mood_score, traffic_light, note, created_at')
+        .gte('created_at', todayStart.toISOString())
+        .in('resident_id', residentIds)
+        .order('created_at', { ascending: false });
+
+      const proposalsResult = await proposalsQuery;
 
       const checkins = checkinsResult.data;
 
@@ -152,7 +207,7 @@ export default function ResidentList() {
         pendingByResident.set(p.resident_id, (pendingByResident.get(p.resident_id) ?? 0) + 1);
       }
 
-      const merged: Resident[] = (careResidents as CareResidentRow[]).map(r => {
+      const merged: Resident[] = ((careResidents ?? []) as CareResidentRow[]).map((r) => {
         const od = r.onboarding_data ?? {};
         const base: Resident = {
           id: r.user_id,
@@ -181,41 +236,85 @@ export default function ResidentList() {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'park_daily_checkin' },
-        payload => { handleRealtimeInsert(payload.new as CheckinRow); },
+        (payload) => {
+          handleRealtimeInsert(payload.new as CheckinRow);
+        }
       )
       .subscribe();
 
-    return () => { void supabase.removeChannel(channel); };
+    return () => {
+      void supabase.removeChannel(channel);
+    };
   }, [handleRealtimeInsert]);
 
   // ── Filter + search ────────────────────────────────────────
 
-  const filtered = residents.filter(r => {
+  const filtered = residents.filter((r) => {
     const matchSearch =
       r.name.toLowerCase().includes(search.toLowerCase()) || r.room.includes(search);
     const matchFilter =
-      filter === 'alle'  ? true :
-      filter === 'ingen' ? !r.trafficLight :
-      r.trafficLight === filter;
+      filter === 'alle' ? true : filter === 'ingen' ? !r.trafficLight : r.trafficLight === filter;
     return matchSearch && matchFilter;
   });
 
-  const checkinTodayCount = residents.filter(r => r.checkinToday).length;
+  const checkinTodayCount = residents.filter((r) => r.checkinToday).length;
 
   // ── Render ─────────────────────────────────────────────────
 
   return (
-    <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
-      <div className="px-4 py-3 border-b border-gray-100">
+    <div
+      className="overflow-hidden"
+      style={{
+        backgroundColor: 'var(--cp-bg2)',
+        border: '1px solid var(--cp-border)',
+        borderRadius: 12,
+      }}
+    >
+      <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--cp-border)' }}>
+        {loadError && (
+          <div
+            className="mb-3 rounded-lg px-3 py-2 text-xs font-medium"
+            style={{ backgroundColor: 'var(--cp-red-dim)', color: 'var(--cp-red)' }}
+          >
+            {loadError}
+          </div>
+        )}
+        {orgScopeError && (
+          <div
+            className="mb-3 rounded-lg px-3 py-2 text-xs font-medium"
+            style={{ backgroundColor: 'var(--cp-amber-dim)', color: 'var(--cp-amber)' }}
+          >
+            {orgScopeError}
+          </div>
+        )}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-gray-800">Beboere</span>
-            <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
-              Live
+            <span className="text-sm font-medium" style={{ color: 'var(--cp-text)', fontSize: 13 }}>
+              Beboere
             </span>
+            {/* Live pill */}
+            <div
+              className="flex items-center gap-1"
+              style={{
+                padding: '3px 8px',
+                borderRadius: 20,
+                backgroundColor: 'var(--cp-green-dim)',
+                border: '1px solid rgba(45,212,160,0.2)',
+              }}
+            >
+              <div
+                style={{
+                  width: 5,
+                  height: 5,
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--cp-green)',
+                  boxShadow: '0 0 5px var(--cp-green)',
+                }}
+              />
+              <span style={{ fontSize: 10, color: 'var(--cp-green)', fontWeight: 500 }}>Live</span>
+            </div>
           </div>
-          <span className="text-xs text-gray-400">
+          <span className="text-xs" style={{ color: 'var(--cp-muted)', fontSize: 11 }}>
             {loading ? (
               <Loader2 size={12} className="animate-spin inline" />
             ) : (
@@ -226,25 +325,55 @@ export default function ResidentList() {
 
         <div className="flex gap-2">
           <div className="flex-1 relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search
+              size={13}
+              className="absolute left-3 top-1/2 -translate-y-1/2"
+              style={{ color: 'var(--cp-muted)' }}
+            />
             <input
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={(e) => setSearch(e.target.value)}
               placeholder="Søg navn eller værelse..."
-              className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#1D9E75] transition-colors"
+              className="w-full pl-8 pr-3 py-2 text-sm focus:outline-none transition-colors"
+              style={{
+                backgroundColor: 'var(--cp-bg3)',
+                border: '1px solid var(--cp-border)',
+                borderRadius: 8,
+                color: 'var(--cp-text)',
+                fontSize: 13,
+              }}
             />
           </div>
           <div className="flex gap-1">
-            {(['alle', 'roed', 'gul', 'groen', 'ingen'] as const).map(f => (
+            {(['alle', 'roed', 'gul', 'groen', 'ingen'] as const).map((f) => (
               <button
                 key={`filter-${f}`}
                 type="button"
                 onClick={() => setFilter(f)}
-                className={`px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
-                  filter === f ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
+                className="px-2.5 py-2 rounded-lg text-xs font-medium transition-all"
+                style={
+                  filter === f
+                    ? {
+                        backgroundColor: 'var(--cp-bg3)',
+                        color: 'var(--cp-text)',
+                        border: '1px solid var(--cp-border2)',
+                      }
+                    : {
+                        backgroundColor: 'transparent',
+                        color: 'var(--cp-muted)',
+                        border: '1px solid var(--cp-border)',
+                      }
+                }
               >
-                {f === 'alle' ? 'Alle' : f === 'roed' ? '🔴' : f === 'gul' ? '🟡' : f === 'groen' ? '🟢' : '—'}
+                {f === 'alle'
+                  ? 'Alle'
+                  : f === 'roed'
+                    ? '🔴'
+                    : f === 'gul'
+                      ? '🟡'
+                      : f === 'groen'
+                        ? '🟢'
+                        : '—'}
               </button>
             ))}
           </div>
@@ -252,49 +381,84 @@ export default function ResidentList() {
       </div>
 
       {loading ? (
-        <div className="py-16 flex flex-col items-center gap-3 text-gray-400">
-          <Loader2 size={20} className="animate-spin" />
-          <span className="text-sm">Henter beboeroversigt…</span>
+        <div className="py-16 flex flex-col items-center gap-3">
+          <Loader2 size={20} className="animate-spin" style={{ color: 'var(--cp-muted)' }} />
+          <span className="text-sm" style={{ color: 'var(--cp-muted)' }}>
+            Henter beboeroversigt…
+          </span>
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-100">
-                <th className="text-left text-xs font-medium text-gray-500 px-4 py-2.5">Beboer</th>
-                <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5">Værelse</th>
-                <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5">Trafiklys</th>
-                <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5">Stemning</th>
-                <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5">Check-in</th>
-                <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5">Note</th>
-                <th className="px-3 py-2.5" />
+              <tr style={{ borderBottom: '1px solid var(--cp-border)' }}>
+                {['Beboer', 'Værelse', 'Trafiklys', 'Stemning', 'Check-in', 'Note', ''].map(
+                  (h, i) => (
+                    <th
+                      key={h || `h-${i}`}
+                      className={`${i === 0 ? 'px-4' : 'px-3'} py-2.5 text-left`}
+                      style={{
+                        fontSize: 9,
+                        fontWeight: 500,
+                        letterSpacing: '0.06em',
+                        textTransform: 'uppercase',
+                        color: 'var(--cp-muted2)',
+                      }}
+                    >
+                      {h}
+                    </th>
+                  )
+                )}
               </tr>
             </thead>
             <tbody>
-              {filtered.map(r => {
-                const dotColor = r.trafficLight ? TRAFFIC_DOT[r.trafficLight] : '#D1D5DB';
+              {filtered.map((r) => {
+                const dotColor = r.trafficLight ? TRAFFIC_DOT[r.trafficLight] : 'var(--cp-muted2)';
+                const dotShadow = r.trafficLight ? TRAFFIC_DOT_SHADOW[r.trafficLight] : 'none';
                 const avStyle = avatarStyle(r.trafficLight);
 
                 return (
                   <tr
                     key={r.id}
                     onClick={() => router.push(`/resident-360-view/${r.id}`)}
-                    className="border-b border-gray-50 hover:bg-gray-50 transition-colors group cursor-pointer"
+                    className="transition-colors group cursor-pointer"
+                    style={{ borderBottom: '1px solid var(--cp-border)' }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--cp-bg3)';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.backgroundColor = '';
+                    }}
                   >
                     {/* Beboer */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
                         <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
                           style={avStyle}
                         >
                           {r.initials}
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-gray-800">{r.name}</span>
+                          <span
+                            className="font-medium"
+                            style={{ color: 'var(--cp-text)', fontSize: 12 }}
+                          >
+                            {r.name}
+                          </span>
                           {r.pendingProposals > 0 && (
-                            <span className="flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full whitespace-nowrap">
-                              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse inline-block" />
+                            <span
+                              className="flex items-center gap-1 text-xs font-medium px-1.5 py-0.5 rounded-full whitespace-nowrap"
+                              style={{
+                                backgroundColor: 'var(--cp-amber-dim)',
+                                color: 'var(--cp-amber)',
+                                fontSize: 10,
+                              }}
+                            >
+                              <span
+                                className="w-1.5 h-1.5 rounded-full animate-pulse inline-block"
+                                style={{ backgroundColor: 'var(--cp-amber)' }}
+                              />
                               ⏳ {r.pendingProposals} forslag
                             </span>
                           )}
@@ -303,25 +467,45 @@ export default function ResidentList() {
                     </td>
 
                     {/* Værelse */}
-                    <td className="px-3 py-3 text-sm text-gray-600">{r.room}</td>
+                    <td
+                      className="px-3 py-3 text-xs"
+                      style={{ color: 'var(--cp-muted)', fontSize: 12 }}
+                    >
+                      {r.room}
+                    </td>
 
-                    {/* Trafiklys — coloured dot */}
+                    {/* Trafiklys */}
                     <td className="px-3 py-3">
                       <div
                         className="rounded-full flex-shrink-0"
-                        style={{ width: 10, height: 10, backgroundColor: dotColor }}
+                        style={{
+                          width: 10,
+                          height: 10,
+                          backgroundColor: dotColor,
+                          boxShadow: dotShadow,
+                        }}
                       />
                     </td>
 
-                    {/* Stemning + mini progress bar */}
+                    {/* Stemning + mini bar */}
                     <td className="px-3 py-3">
                       {r.moodScore !== null ? (
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold tabular-nums text-gray-700">
+                          <span
+                            className="font-bold tabular-nums"
+                            style={{ color: 'var(--cp-text)', fontSize: 12 }}
+                          >
                             {r.moodScore}
-                            <span className="text-xs text-gray-400 font-normal">/10</span>
+                            <span
+                              style={{ fontSize: 10, color: 'var(--cp-muted)', fontWeight: 400 }}
+                            >
+                              /10
+                            </span>
                           </span>
-                          <div className="w-10 h-1 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
+                          <div
+                            className="w-10 h-1 rounded-full overflow-hidden flex-shrink-0"
+                            style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
+                          >
                             <div
                               className="h-full rounded-full"
                               style={{
@@ -332,22 +516,43 @@ export default function ResidentList() {
                           </div>
                         </div>
                       ) : (
-                        <span className="text-xs text-gray-400">—</span>
+                        <span style={{ fontSize: 12, color: 'var(--cp-muted2)' }}>—</span>
                       )}
                     </td>
 
                     {/* Check-in tid */}
-                    <td className="px-3 py-3 text-xs text-gray-500">{r.lastCheckin}</td>
+                    <td className="px-3 py-3" style={{ fontSize: 12, color: 'var(--cp-muted)' }}>
+                      {r.lastCheckin}
+                    </td>
 
                     {/* Note */}
                     <td className="px-3 py-3 max-w-[200px]">
-                      <span className="text-xs text-gray-500 truncate block">{r.notePreview}</span>
+                      <span
+                        className="truncate block"
+                        style={{ fontSize: 12, color: 'var(--cp-muted)' }}
+                      >
+                        {r.notePreview}
+                      </span>
                     </td>
 
                     {/* Arrow */}
                     <td className="px-3 py-3">
-                      <span className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 group-hover:text-[#1D9E75] group-hover:border-[#1D9E75] transition-all">
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3l4 4-4 4"/></svg>
+                      <span
+                        className="opacity-0 group-hover:opacity-100 w-6 h-6 rounded-lg flex items-center justify-center transition-all"
+                        style={{ border: '1px solid var(--cp-border2)', color: 'var(--cp-green)' }}
+                      >
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 14 14"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M5 3l4 4-4 4" />
+                        </svg>
                       </span>
                     </td>
                   </tr>
@@ -356,9 +561,11 @@ export default function ResidentList() {
             </tbody>
           </table>
 
-          {filtered.length === 0 && !loading && (
-            <div className="py-10 text-center text-sm text-gray-400">
-              Ingen beboere matcher søgningen
+          {filtered.length === 0 && !loading && !loadError && (
+            <div className="py-10 text-center text-sm" style={{ color: 'var(--cp-muted)' }}>
+              {residents.length === 0 && !orgScopeError
+                ? 'Ingen beboere registreret for dette bosted endnu.'
+                : 'Ingen beboere matcher søgningen'}
             </div>
           )}
         </div>

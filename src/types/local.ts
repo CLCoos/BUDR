@@ -14,8 +14,8 @@ export type CheckIn = {
 export type SelfLetter = {
   id: string;
   text: string;
-  written_at: string;   // ISO datetime
-  deliver_at: string;   // ISO date (YYYY-MM-DD)
+  written_at: string; // ISO datetime
+  deliver_at: string; // ISO date (YYYY-MM-DD)
   delivered: boolean;
 };
 
@@ -103,22 +103,22 @@ export type LysConversation = {
 export type LocalProfile = {
   nickname: string;
   theme: string;
-  avatar: null;
+  avatar: string | null;
 };
 
 // ── localStorage keys ─────────────────────────────────────────────────────────
 export const LOCAL_KEYS = {
-  guestId:          'budr_guest_id',
-  checkins:         'budr_checkins',
-  journal:          'budr_journal_entries_v1',
-  planItems:        'budr_plan_items',
-  planCompletions:  'budr_plan_completions',
-  xp:               'budr_xp',
-  badges:           'budr_badges',
-  xpLog:            'budr_xp_log',
-  garden:           'budr_garden',
-  conversations:    'budr_lys_conversations',
-  profile:          'budr_profile',
+  guestId: 'budr_guest_id',
+  checkins: 'budr_checkins',
+  journal: 'budr_journal_entries_v1',
+  planItems: 'budr_plan_items',
+  planCompletions: 'budr_plan_completions',
+  xp: 'budr_xp',
+  badges: 'budr_badges',
+  xpLog: 'budr_xp_log',
+  garden: 'budr_garden',
+  conversations: 'budr_lys_conversations',
+  profile: 'budr_profile',
   pushSubscription: 'budr_push_subscription',
-  selfLetters:      'budr_self_letters',
+  selfLetters: 'budr_self_letters',
 } as const;

@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { Volume2 } from 'lucide-react';
+import type { StorageMode } from '@/types/local';
+import { tryEarnKrapMasterBadge } from '@/lib/residentBadgeSync';
 import type { LysThemeTokens } from '../lib/lysTheme';
 
 const FEELINGS = ['Trist', 'Bange', 'Vred', 'Tom', 'Rastløs', 'Skam', 'Let', 'Håbefuld'];
@@ -14,7 +16,13 @@ type Props = {
   firstName: string;
   reducedMotion: boolean;
   speak: (text: string) => void;
-  sendCounterThought: (steps: { situation?: string; thought?: string; feeling?: string }) => Promise<string | null>;
+  sendCounterThought: (steps: {
+    situation?: string;
+    thought?: string;
+    feeling?: string;
+  }) => Promise<string | null>;
+  storageMode: StorageMode;
+  activeId: string;
   onBack: () => void;
 };
 
@@ -25,12 +33,13 @@ export default function LysTankefanger({
   reducedMotion,
   speak,
   sendCounterThought,
+  storageMode,
+  activeId,
   onBack,
 }: Props) {
   const [step, setStep] = useState(0);
   const [situation, setSituation] = useState('');
   const [thought, setThought] = useState('');
-  const [feeling, setFeeling] = useState('');
   const [counter, setCounter] = useState<string | null>(null);
   const [closing, setClosing] = useState('');
   const [loading, setLoading] = useState(false);
@@ -46,7 +55,6 @@ export default function LysTankefanger({
     setStep(2);
   };
   const onFeelingPick = async (f: string) => {
-    setFeeling(f);
     setLoading(true);
     const text = await sendCounterThought({ situation, thought, feeling: f });
     setCounter(text);
@@ -56,6 +64,7 @@ export default function LysTankefanger({
 
   const finish = () => {
     if (!closing.trim()) return;
+    void tryEarnKrapMasterBadge(storageMode, activeId);
     setStep(5);
   };
 
@@ -78,10 +87,14 @@ export default function LysTankefanger({
           <textarea
             id="lys-tf-1"
             value={situation}
-            onChange={e => setSituation(e.target.value)}
+            onChange={(e) => setSituation(e.target.value)}
             rows={4}
             className="w-full rounded-2xl border p-4 text-lg outline-none focus:ring-2"
-            style={{ borderColor: tokens.cardBorder, backgroundColor: tokens.cardBg, color: tokens.text }}
+            style={{
+              borderColor: tokens.cardBorder,
+              backgroundColor: tokens.cardBg,
+              color: tokens.text,
+            }}
           />
           <button
             type="button"
@@ -102,10 +115,14 @@ export default function LysTankefanger({
           <textarea
             id="lys-tf-2"
             value={thought}
-            onChange={e => setThought(e.target.value)}
+            onChange={(e) => setThought(e.target.value)}
             rows={4}
             className="w-full rounded-2xl border p-4 text-lg outline-none focus:ring-2"
-            style={{ borderColor: tokens.cardBorder, backgroundColor: tokens.cardBg, color: tokens.text }}
+            style={{
+              borderColor: tokens.cardBorder,
+              backgroundColor: tokens.cardBg,
+              color: tokens.text,
+            }}
           />
           <button
             type="button"
@@ -122,7 +139,7 @@ export default function LysTankefanger({
         <div>
           <p className="mb-4 text-lg font-semibold">Hvordan føltes det?</p>
           <div className="grid grid-cols-2 gap-2">
-            {FEELINGS.map(f => (
+            {FEELINGS.map((f) => (
               <button
                 key={f}
                 type="button"
@@ -173,10 +190,14 @@ export default function LysTankefanger({
               <textarea
                 id="lys-tf-close"
                 value={closing}
-                onChange={e => setClosing(e.target.value)}
+                onChange={(e) => setClosing(e.target.value)}
                 rows={3}
                 className="w-full rounded-2xl border p-4 text-lg outline-none focus:ring-2"
-                style={{ borderColor: tokens.cardBorder, backgroundColor: tokens.cardBg, color: tokens.text }}
+                style={{
+                  borderColor: tokens.cardBorder,
+                  backgroundColor: tokens.cardBg,
+                  color: tokens.text,
+                }}
               />
               <button
                 type="button"

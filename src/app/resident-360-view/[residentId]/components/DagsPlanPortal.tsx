@@ -75,26 +75,9 @@ function formatTimestamp(iso: string): string {
   });
 }
 
-async function getStaffId(): Promise<string | null> {
-  try {
-    const supabase = createClient();
-    if (!supabase) return null;
-    const { data } = await supabase.auth.getUser();
-    return data.user?.id ?? null;
-  } catch {
-    return null;
-  }
-}
-
 // ── Compact plan timeline (read-only) ─────────────────────────────────────────
 
-function PlanTimeline({
-  items,
-  compact = false,
-}: {
-  items: PlanItem[];
-  compact?: boolean;
-}) {
+function PlanTimeline({ items, compact = false }: { items: PlanItem[]; compact?: boolean }) {
   const sorted = sortByTime(items);
   const now = new Date();
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
@@ -146,7 +129,9 @@ function PlanTimeline({
               {/* Content */}
               <div
                 className={`flex-1 min-w-0 rounded-lg px-3 py-2 transition-colors ${
-                  isCurrent ? 'bg-emerald-50 border border-emerald-100' : 'bg-gray-50 border border-gray-100'
+                  isCurrent
+                    ? 'bg-emerald-50 border border-emerald-100'
+                    : 'bg-gray-50 border border-gray-100'
                 }`}
                 style={{ opacity: isPast ? 0.55 : 1 }}
               >
@@ -208,17 +193,19 @@ export default function DagsPlanPortal({
         (payload) => {
           const row = payload.new as PendingProposal;
           if (row.status !== 'pending') return; // ignore non-pending inserts
-          setProposals(prev => {
+          setProposals((prev) => {
             // Deduplicate by id
-            if (prev.some(p => p.id === row.id)) return prev;
+            if (prev.some((p) => p.id === row.id)) return prev;
             return [row, ...prev];
           });
           toast.info(`Nyt forslag fra ${residentName}`);
-        },
+        }
       )
       .subscribe();
 
-    return () => { void supabase.removeChannel(channel); };
+    return () => {
+      void supabase.removeChannel(channel);
+    };
   }, [residentId, residentName]);
 
   const todayLabel = new Date().toLocaleDateString('da-DK', {
@@ -230,14 +217,14 @@ export default function DagsPlanPortal({
   const handleApprove = async (proposal: PendingProposal) => {
     if (actioningId) return;
     setActioningId(proposal.id);
-    setErrors(prev => ({ ...prev, [proposal.id]: '' }));
+    setErrors((prev) => ({ ...prev, [proposal.id]: '' }));
 
     try {
-      const staffId = await getStaffId();
       const res = await fetch('/api/portal/approve-proposal', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ proposalId: proposal.id, staffId }),
+        credentials: 'same-origin',
+        body: JSON.stringify({ proposalId: proposal.id }),
       });
 
       if (!res.ok) {
@@ -249,10 +236,10 @@ export default function DagsPlanPortal({
 
       // Optimistic update: activate new plan, remove proposal
       setActivePlan(updatedPlan);
-      setProposals(prev => prev.filter(p => p.id !== proposal.id));
+      setProposals((prev) => prev.filter((p) => p.id !== proposal.id));
       toast.success('Dagsplan godkendt og aktiveret i Lys-appen ✓');
     } catch (e) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
         [proposal.id]: e instanceof Error ? e.message : 'Godkendelse fejlede',
       }));
@@ -264,31 +251,31 @@ export default function DagsPlanPortal({
   const handleReject = async (proposalId: string) => {
     if (actioningId) return;
     setActioningId(proposalId);
-    setErrors(prev => ({ ...prev, [proposalId]: '' }));
+    setErrors((prev) => ({ ...prev, [proposalId]: '' }));
 
     try {
-      const staffId = await getStaffId();
       const res = await fetch('/api/portal/reject-proposal', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ proposalId, staffId }),
+        credentials: 'same-origin',
+        body: JSON.stringify({ proposalId }),
       });
 
       if (!res.ok) throw new Error();
 
       toast.success('Forslag afvist');
       // Show "afvist" feedback, then remove after delay
-      setRejectedIds(prev => new Set([...prev, proposalId]));
+      setRejectedIds((prev) => new Set([...prev, proposalId]));
       setTimeout(() => {
-        setProposals(prev => prev.filter(p => p.id !== proposalId));
-        setRejectedIds(prev => {
+        setProposals((prev) => prev.filter((p) => p.id !== proposalId));
+        setRejectedIds((prev) => {
           const s = new Set(prev);
           s.delete(proposalId);
           return s;
         });
       }, 2000);
     } catch {
-      setErrors(prev => ({ ...prev, [proposalId]: 'Afvisning fejlede' }));
+      setErrors((prev) => ({ ...prev, [proposalId]: 'Afvisning fejlede' }));
     } finally {
       setActioningId(null);
     }
@@ -349,7 +336,7 @@ export default function DagsPlanPortal({
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
-            {proposals.map(proposal => {
+            {proposals.map((proposal) => {
               const isActioning = actioningId === proposal.id;
               const isRejected = rejectedIds.has(proposal.id);
               const errorMsg = errors[proposal.id];
@@ -388,7 +375,9 @@ export default function DagsPlanPortal({
                   {proposal.ai_reasoning && (
                     <div className="mb-3 rounded-lg bg-blue-50 border border-blue-100 px-3 py-2.5">
                       <p className="text-xs font-medium text-blue-600 mb-0.5">AI-begrundelse</p>
-                      <p className="text-sm text-blue-800 leading-relaxed">{proposal.ai_reasoning}</p>
+                      <p className="text-sm text-blue-800 leading-relaxed">
+                        {proposal.ai_reasoning}
+                      </p>
                     </div>
                   )}
 
@@ -403,9 +392,7 @@ export default function DagsPlanPortal({
                   </div>
 
                   {/* Error */}
-                  {errorMsg && (
-                    <p className="text-xs text-red-600 mb-3">{errorMsg}</p>
-                  )}
+                  {errorMsg && <p className="text-xs text-red-600 mb-3">{errorMsg}</p>}
 
                   {/* Actions */}
                   {!isRejected && (
