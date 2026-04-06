@@ -54,7 +54,7 @@ export default function ResidentDemoWelcomeOverlay() {
 
   return (
     <div
-      className="fixed inset-0 z-[500] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[10070] flex items-center justify-center p-4"
       style={{ backgroundColor: 'rgba(30, 27, 50, 0.45)', backdropFilter: 'blur(5px)' }}
       onClick={(e) => {
         if (e.target === e.currentTarget) dismiss();

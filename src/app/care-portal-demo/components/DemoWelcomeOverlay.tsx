@@ -75,7 +75,7 @@ export default function DemoWelcomeOverlay({ onOpenOverrapport }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-[500] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[10070] flex items-center justify-center p-4"
       style={{ backgroundColor: 'rgba(10, 13, 20, 0.82)', backdropFilter: 'blur(6px)' }}
       onClick={(e) => {
         if (e.target === e.currentTarget) dismiss();
