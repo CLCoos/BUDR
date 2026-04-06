@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useResidentSession } from '@/hooks/useResidentSession';
 import * as dataService from '@/lib/dataService';
 import { syncBadgesAfterCheckin } from '@/lib/residentBadgeSync';
+import { isLysDemoResidentId } from '@/lib/lysDemoResident';
 import type { LysChatMessage } from '@/app/api/lys-chat/route';
 import type { LysFlowOverlay } from '../lib/lysOverlay';
 import type { LysPhase, LysThemeTokens } from '../lib/lysTheme';
@@ -268,15 +269,33 @@ export default function LysHome({
     }
   }, []);
 
-  // Fetch plan item count
+  // Fetch plan item count (demo: local plan-items fra DemoSeeder; live: daily_plans)
   useEffect(() => {
     if (!residentId) {
       setPlanStats({ total: 0 });
       return;
     }
+    const today = new Date().toISOString().slice(0, 10);
+
+    if (isLysDemoResidentId(residentId)) {
+      void (async () => {
+        try {
+          const all = await dataService.getPlanItems('local', residentId);
+          const cnt = all.filter((p) => {
+            if (p.recurrence === 'none') return p.active_from === today;
+            if (p.recurrence === 'daily') return p.active_from <= today;
+            return p.active_from <= today;
+          }).length;
+          setPlanStats({ total: cnt });
+        } catch {
+          setPlanStats({ total: 0 });
+        }
+      })();
+      return;
+    }
+
     const supabase = createClient();
     if (!supabase) return;
-    const today = new Date().toISOString().slice(0, 10);
     supabase
       .from('daily_plans')
       .select('plan_items')

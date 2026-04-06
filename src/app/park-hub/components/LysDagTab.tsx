@@ -8,6 +8,7 @@ import { useResidentSession } from '@/hooks/useResidentSession';
 import * as dataService from '@/lib/dataService';
 import { syncPlannerBadgeProgress } from '@/lib/residentBadgeSync';
 import { grantWaterCredit, revokeWaterCredit } from '@/lib/havenWaterCredits';
+import { isLysDemoResidentId } from '@/lib/lysDemoResident';
 import type { LysThemeTokens } from '../lib/lysTheme';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -113,7 +114,11 @@ export default function LysDagTab({ tokens, accent }: Props) {
   const session = useResidentSession();
   // Use real residentId if logged in, otherwise fall back to guest activeId
   const residentId = ctxResidentId || session.activeId;
-  const storageMode = ctxResidentId ? ('supabase' as const) : session.storageMode;
+  /** Demo-resident bruger seeded localStorage (DemoSeeder), ikke Supabase. */
+  const storageMode =
+    ctxResidentId && !isLysDemoResidentId(ctxResidentId)
+      ? ('supabase' as const)
+      : ('local' as const);
 
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [items, setItems] = useState<PlanItem[] | null>(null);

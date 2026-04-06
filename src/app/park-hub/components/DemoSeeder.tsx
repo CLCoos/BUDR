@@ -1,8 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { grantWaterCredit } from '@/lib/havenWaterCredits';
+import { LYS_DEMO_RESIDENT_ID } from '@/lib/lysDemoResident';
 
-export const DEMO_RESIDENT_ID = 'demo-resident-001';
+export const DEMO_RESIDENT_ID = LYS_DEMO_RESIDENT_ID;
 
 function daysAgo(n: number, hour = 9, minute = 0): string {
   const d = new Date();

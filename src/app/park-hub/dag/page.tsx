@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { getResidentId } from '@/lib/residentAuth';
 import DailyPlanView from '@/components/lys/DailyPlanView';
 import type { DailyPlan, PendingProposal } from '@/components/lys/DailyPlanView';
+import { buildSimulatedStaffDailyPlan, isLysDemoResidentId } from '@/lib/lysDemoResident';
 
 async function fetchDayData(residentId: string): Promise<{
   plan: DailyPlan | null;
@@ -45,6 +46,15 @@ export default async function DagPage() {
   if (!residentId) redirect('/');
 
   const { plan, pendingProposal } = await fetchDayData(residentId);
+  const today = new Date().toISOString().slice(0, 10);
+  const effectivePlan: DailyPlan | null =
+    plan && Array.isArray(plan.plan_items) && plan.plan_items.length > 0
+      ? plan
+      : isLysDemoResidentId(residentId)
+        ? buildSimulatedStaffDailyPlan(today)
+        : plan;
 
-  return <DailyPlanView residentId={residentId} plan={plan} pendingProposal={pendingProposal} />;
+  return (
+    <DailyPlanView residentId={residentId} plan={effectivePlan} pendingProposal={pendingProposal} />
+  );
 }
