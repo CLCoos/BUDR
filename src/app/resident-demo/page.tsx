@@ -454,7 +454,10 @@ export default function ResidentDemoPage() {
             Demo · Anders M. · Prøv: check ind → dag-opgaver → haven
           </span>
           <div className="flex items-center gap-3">
-            <Link href="/care-portal-demo" className="text-xs font-semibold text-amber-700 hover:underline">
+            <Link
+              href="/care-portal-demo"
+              className="text-xs font-semibold text-amber-700 hover:underline"
+            >
               ← Care Portal
             </Link>
             <button

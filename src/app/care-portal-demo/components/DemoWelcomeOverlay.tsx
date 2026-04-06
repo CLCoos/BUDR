@@ -141,8 +141,8 @@ export default function DemoWelcomeOverlay({ onOpenOverrapport }: Props) {
 
         <p className="mb-5 text-sm leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
           Du er <strong style={{ color: 'var(--cp-text)' }}>Sara K., dagvagt</strong> på Bosted
-          Solhaven — mandag morgen. En beboer er i rød, en er ikke mødt til morgenmad.
-          Prøv trinene herunder, eller udforsk selv.
+          Solhaven — mandag morgen. En beboer er i rød, en er ikke mødt til morgenmad. Prøv trinene
+          herunder, eller udforsk selv.
         </p>
 
         {/* Steps */}
@@ -179,7 +179,10 @@ export default function DemoWelcomeOverlay({ onOpenOverrapport }: Props) {
                   >
                     {step.label}
                   </span>
-                  <span className="block text-xs leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
+                  <span
+                    className="block text-xs leading-relaxed"
+                    style={{ color: 'var(--cp-muted)' }}
+                  >
                     {step.sub}
                   </span>
                 </span>
@@ -212,9 +215,7 @@ export default function DemoWelcomeOverlay({ onOpenOverrapport }: Props) {
             className="rounded-xl px-4 py-2.5 text-sm transition-colors"
             style={{ color: 'var(--cp-muted)' }}
             onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--cp-text)')}
-            onMouseLeave={(e) =>
-              ((e.currentTarget as HTMLElement).style.color = 'var(--cp-muted)')
-            }
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--cp-muted)')}
           >
             Spring over
           </button>
