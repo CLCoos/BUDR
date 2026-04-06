@@ -1,10 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, X } from 'lucide-react';
-
-const STORAGE_KEY = 'budr_demo_welcome_seen_v1';
 
 type Step = {
   num: number;
@@ -46,29 +44,15 @@ const STEPS: Step[] = [
 ];
 
 type Props = {
-  onOpenOverrapport: () => void;
+  /** Kun når overlayet ligger på dashboard-siden; ellers åbnes overrapport via URL. */
+  onOpenOverrapport?: () => void;
 };
 
 export default function DemoWelcomeOverlay({ onOpenOverrapport }: Props) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    try {
-      if (!localStorage.getItem(STORAGE_KEY)) {
-        setOpen(true);
-      }
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
   function dismiss() {
-    try {
-      localStorage.setItem(STORAGE_KEY, '1');
-    } catch {
-      /* ignore */
-    }
     setOpen(false);
   }
 
@@ -79,7 +63,11 @@ export default function DemoWelcomeOverlay({ onOpenOverrapport }: Props) {
     } else if (step.href) {
       router.push(step.href);
     } else if (step.num === 3) {
-      onOpenOverrapport();
+      if (onOpenOverrapport) {
+        onOpenOverrapport();
+      } else {
+        router.push('/care-portal-demo?openOverrapport=1');
+      }
     }
   }
 

@@ -4,6 +4,7 @@ import '@/styles/park-flows.css';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import LysShell from '../park-hub/components/LysShell';
+import ResidentDemoWelcomeOverlay from './ResidentDemoWelcomeOverlay';
 
 // ── Demo data seeder ──────────────────────────────────────────────────────────
 
@@ -448,6 +449,7 @@ export default function ResidentDemoPage() {
 
   return (
     <div className="relative">
+      <ResidentDemoWelcomeOverlay />
       {/* Demo banner */}
       <div className="fixed top-0 left-0 right-0 z-[200] bg-amber-50 border-b border-amber-200">
         <div className="flex items-center justify-between px-4 py-1.5">

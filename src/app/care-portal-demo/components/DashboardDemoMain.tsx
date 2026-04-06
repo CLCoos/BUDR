@@ -13,7 +13,6 @@ import KalenderWidget from '@/app/care-portal-dashboard/components/KalenderWidge
 import OpgaveWidget from '@/app/care-portal-dashboard/components/OpgaveWidget';
 import ResidentListDemo from '@/app/care-portal-dashboard/components/ResidentListDemo';
 import DemoActionCards from './DemoActionCards';
-import DemoWelcomeOverlay from './DemoWelcomeOverlay';
 
 const OverrapportModal = dynamic(
   () => import('@/app/care-portal-dashboard/components/OverrapportModal'),
@@ -211,6 +210,12 @@ export default function DashboardDemoMain() {
     return () => cancelAnimationFrame(frame);
   }, [tab]);
 
+  useEffect(() => {
+    if (searchParams.get('openOverrapport') !== '1') return;
+    setOverrapportPanelOpen(true);
+    router.replace('/care-portal-demo', { scroll: false });
+  }, [searchParams, router]);
+
   const closeJournal = () => {
     setJournalOpen(false);
     if (searchParams.get('tab') === 'journal') {
@@ -323,7 +328,6 @@ export default function DashboardDemoMain() {
         <span className="sm:hidden">Journal</span>
       </button>
 
-      <DemoWelcomeOverlay onOpenOverrapport={() => setOverrapportPanelOpen(true)} />
       <JournalAiDemoModal open={journalOpen} onClose={closeJournal} />
       <OverrapportModal
         open={overrapportOpen}
