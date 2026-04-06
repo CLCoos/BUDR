@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { DM_Sans, DM_Serif_Display } from 'next/font/google';
 import HomeLanding from '@/components/marketing/HomeLanding';
 import ParkLoginNotice from '@/components/marketing/ParkLoginNotice';
+import './budr-landing.css';
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
