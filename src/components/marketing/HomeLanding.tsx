@@ -365,8 +365,8 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               <p className="intro-lead">
                 BUDR Care er en produktfamilie til <strong>socialpsykiatriske botilbud</strong>:
                 borger-appen <strong>Lys</strong> og <strong>Care Portal</strong> til pædagoger og
-                ledere. Det er ét sammenhængende økosystem — ikke to leverandører, der skal
-                integreres bag efter.
+                ledere. Det er ét sammenhængende økosystem — ikke to leverandører, der først skal
+                kobles sammen bagefter.
               </p>
             </div>
             <div className="intro-grid">
@@ -392,8 +392,8 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                 <div className="intro-card-label">Borgeren</div>
                 <h3 className="intro-card-h">Lys</h3>
                 <p className="intro-card-p">
-                  En tryg indgang til tjek-in, humør og egne ord — bygget til autonomi, tydeligt
-                  samtykke og en rolig <strong>døgnrytme</strong> i hverdagen på bostedet.
+                  En tryg indgang til tjek-in, humør og egne ord — bygget til autonomi, tydelige
+                  samtykker og en rolig <strong>døgnrytme</strong> i hverdagen på bostedet.
                 </p>
                 <Link className="intro-card-link" href="/app" onClick={closeNav}>
                   Åbn Lys →
@@ -423,7 +423,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
           <div className="hero-inner shell">
             <div className="hero-copy fi">
               <h1>
-                Tryghed, borgeren kan mærke. <em>Overblik, personalet kan handle på.</em>
+                Tryghed som borgeren kan mærke. <em>Overblik som personalet kan handle på.</em>
               </h1>
               <p className="hero-sub">
                 Borgerne tjekker ind i Lys, når det passer dem — teamet får et samlet overblik i
@@ -546,7 +546,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               <li>
                 <strong>BUDR Care</strong> er borger-appen <strong>Lys</strong> plus{' '}
                 <strong>Care Portal</strong> for personalet — ét økosystem til socialpsykiatriske
-                botilbud, ikke to systemer, der skal tapes sammen.
+                botilbud — ikke to systemer, der skal lappes sammen.
               </li>
               <li>
                 Borgeren tjekker ind i Lys; teamet ser{' '}
@@ -604,8 +604,8 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                     <IconMoodSignal size={22} className="landing-icon" />
                   </div>
                   <div className="pain-text">
-                    <strong>Borgerens humør ændrer sig</strong> — men personalet ved det først ved
-                    samtalen.
+                    <strong>Borgerens humør ændrer sig</strong> — men personalet opdager det ofte
+                    først i personlig kontakt.
                   </div>
                 </div>
                 <div className="pain-item">
@@ -613,7 +613,8 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                     <IconDocMemory size={22} className="landing-icon" />
                   </div>
                   <div className="pain-text">
-                    <strong>Dokumentation sker på hukommelsen</strong> — ikke i øjeblikket.
+                    <strong>Dokumentation bygger på hukommelsen</strong> — ikke på det, der skete
+                    i øjeblikket.
                   </div>
                 </div>
                 <div className="pain-item">
@@ -639,9 +640,10 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                   Ét øjeblik. <em>To overflader.</em>
                 </h2>
                 <p className="intro-lead" style={{ marginTop: 14 }}>
-                  Lys er borgerens trygge indgang til at sige til i hverdagen. Care Portal er
-                  personalets arbejdsflade — overblik, varsler og journalstøtte. BUDR holder de to
-                  synkroniseret, så stemmen fra Lys bliver til handling og dokumentation hos jer.
+                  Lys er borgerens trygge indgang til at sige fra i hverdagen. Care Portal er
+                  personalets arbejdsflade — overblik, varsler og journalstøtte. I BUDR hænger de
+                  to sammen i realtid, så det, borgeren giver i Lys, bliver til handling og
+                  dokumentation hos jer.
                 </p>
               </div>
               <div className="lys-grid lys-sync-grid">
@@ -949,8 +951,8 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                   </div>
                   <div className="comp-row" role="row">
                     <div className="comp-cell feat-label" role="cell">
-                      <strong>AI-faglig sparring</strong> til personalet i portalen (hurtig
-                      kollega-lignende støtte i hverdagen)
+                      <strong>AI-faglig sparring</strong> til personalet i portalen (hurtig støtte i
+                      hverdagen, som når I spørger en kollega)
                     </div>
                     <div className="comp-cell budr-c" role="cell">
                       <span className="yes" aria-label="Ja">
@@ -1042,7 +1044,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                   <div className="comp-row" role="row">
                     <div className="comp-cell feat-label" role="cell">
                       <strong>Journal, medicin, dokumentation</strong> og fagligt overblik over
-                      beboere (baseline “vasken”)
+                      beboere (kernen i de fleste etablerede løsninger)
                     </div>
                     <div className="comp-cell budr-c" role="cell">
                       <span className="yes" aria-label="Ja">
@@ -1123,7 +1125,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
         <div className="section-cta-band fi" aria-label="Efter sammenligning">
           <div className="shell section-cta-band-inner">
             <p className="section-cta-band-text">
-              Tabellen er overskrifter — <strong>book en gennemgang</strong>, hvis I vil dykke ned i
+              Tabellen er et overblik — <strong>book en gennemgang</strong>, hvis I vil dykke ned i
               pasform og sikkerhed.
             </p>
             <div className="section-cta-actions">
@@ -1154,7 +1156,8 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                 className="section-p"
                 style={{ textAlign: 'center', maxWidth: '38rem', margin: '14px auto 0' }}
               >
-                Kerneforskelle samlet — uden at gentage hele funktionslisten længere nede på siden.
+                De vigtigste forskelle samlet — uden at gentage hele funktionslisten længere nede på
+                siden.
               </p>
             </div>
             <div className="usp-grid usp-grid--six">
@@ -1204,8 +1207,8 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                 </div>
                 <h3 className="usp-card-h">Bygget til botilbud</h3>
                 <p className="usp-card-p">
-                  Domæne for socialpsykiatrien — og I kan <strong>prøve demo</strong> af portal og
-                  Lys uden binding, før I beslutter.
+                  Domæne for socialpsykiatrien — og I kan <strong>prøve demoerne</strong> af portal
+                  og Lys uden binding, før I beslutter.
                 </p>
               </div>
               <div className="usp-card">
@@ -1289,7 +1292,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               <p className="section-p live-demo-lead">
                 Udfyld humør, energi og hvad der fylder — tilføj evt. en bemærkning — og send til
                 Care Portal. Til højre ser I, hvordan dagsoverblikket og beskeden til personalet
-                ændrer sig efter jeres valg, som i rigtig drift.
+                ændrer sig efter jeres valg — tæt på, hvordan det opleves i drift.
               </p>
             </div>
             <LandingInteractiveDemo />
@@ -1307,7 +1310,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                 </h2>
                 <p className="section-p">
                   Dagsoverblik pr. beboer,{' '}
-                  <strong>AI der kan sparre jer igennem konkrete situationer</strong>, journal- og
+                  <strong>AI, der kan sparre jer igennem konkrete situationer</strong>, journal- og
                   planudkast I godkender, medicin og profil samlet, varsler fra Lys og manglende
                   tjek — og hos borgeren struktur til <strong>krise og beredskab</strong> i appen.
                   Plus søgning på tværs, roller der matcher jeres team, og ét sted at handle, når
@@ -1368,7 +1371,8 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                     <div>
                       <div className="fpill-title">AI-sparring til personalet</div>
                       <div className="fpill-desc">
-                        Svar og idéer til konkrete udfordringer — som hurtig faglig kollega-hjælp.
+                        Svar og idéer til konkrete udfordringer — som hurtig faglig sparring fra en
+                        kollega.
                       </div>
                     </div>
                   </div>
@@ -1535,7 +1539,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                   <IconShield size={22} className="landing-icon" />
                 </div>
                 <div className="pain-text">
-                  <strong>GDPR-compliant</strong> — data behandles efter dansk og europæisk
+                  <strong>GDPR og dansk praksis</strong> — data behandles efter dansk og europæisk
                   lovgivning.
                 </div>
               </div>
@@ -1544,7 +1548,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                   <IconLock size={22} className="landing-icon" />
                 </div>
                 <div className="pain-text">
-                  <strong>Persondata forlader aldrig platformen</strong> uden samtykke.
+                  <strong>Personoplysninger deles ikke ud af platformen</strong> uden samtykke.
                 </div>
               </div>
               <div className="pain-item">
@@ -1588,7 +1592,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                 <BudrLogo dark size={36} />
               </div>
               <p className="footer-desc">
-                Portal til personalet. Lys til borgeren. Socialpsykiatri og botilbud.
+                Portal til personalet. Lys til borgeren. Udviklet til socialpsykiatri og botilbud.
               </p>
               <a
                 href="mailto:hej@budrcare.dk"

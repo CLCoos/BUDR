@@ -21,11 +21,11 @@ const dmSerifDisplay = DM_Serif_Display({
 export const metadata: Metadata = {
   title: 'BUDR Care — Portal til pædagoger og ledere i socialpsykiatrien',
   description:
-    'Journalstøtte, medicinoverblik, samlet borgerprofil og borgerens egen stemme i Lys — så personalet kan prioritere nuet, og borgerne mødes med værdighed.',
+    'Lys og Care Portal i ét flow: realtid fra borgeren til teamet, journal- og planstøtte, medicinoverblik og AI som udkast med jeres godkendelse — så I kan handle i tide og møde borgeren med værdighed.',
   openGraph: {
-    title: 'BUDR Care — til pædagoger og ledere i botilbud',
+    title: 'BUDR Care — Lys og Care Portal til botilbud',
     description:
-      'Care Portal og Lys: dokumentation, medicin og borgeroplysninger samlet — bygget til socialpsykiatrien.',
+      'Borger-app og portal i samme økosystem: dokumentation, medicin og varsler — til socialpsykiatriske botilbud.',
   },
 };
 
