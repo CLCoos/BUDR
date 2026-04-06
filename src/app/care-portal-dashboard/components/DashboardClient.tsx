@@ -1,5 +1,6 @@
 'use client';
 import React, { Suspense, useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useSearchParams, useRouter } from 'next/navigation';
 import AlertPanel from './AlertPanel';
 import BekymringsnotatWidget from './BekymringsnotatWidget';
@@ -9,12 +10,13 @@ import ResidentList from './ResidentList';
 import StatCards from './StatCards';
 import HurtigJournalModal from './HurtigJournalModal';
 import JournalOverblikWidget from './JournalOverblikWidget';
-import OverrapportModal from './OverrapportModal';
-import OverrapportPanel from './OverrapportPanel';
-import IndsatsModal from './IndsatsModal';
-import TilsynsrapportModal from './TilsynsrapportModal';
 import ActionCards from './ActionCards';
 import { BookOpen, RefreshCw } from 'lucide-react';
+
+const OverrapportModal = dynamic(() => import('./OverrapportModal'), { ssr: false });
+const OverrapportPanel = dynamic(() => import('./OverrapportPanel'), { ssr: false });
+const IndsatsModal = dynamic(() => import('./IndsatsModal'), { ssr: false });
+const TilsynsrapportModal = dynamic(() => import('./TilsynsrapportModal'), { ssr: false });
 
 type DashboardClientProps = {
   medicationWidget?: React.ReactNode;

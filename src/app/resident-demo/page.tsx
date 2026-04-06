@@ -1,5 +1,6 @@
 'use client';
 
+import '@/styles/park-flows.css';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import LysShell from '../park-hub/components/LysShell';

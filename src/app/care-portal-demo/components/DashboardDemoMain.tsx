@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { BookOpen, RefreshCw, Sparkles } from 'lucide-react';
 import AlertPanel from '@/app/care-portal-dashboard/components/AlertPanel';
 import StatCards from '@/app/care-portal-dashboard/components/StatCards';
@@ -11,13 +12,28 @@ import BekymringsnotatWidget from '@/app/care-portal-dashboard/components/Bekymr
 import KalenderWidget from '@/app/care-portal-dashboard/components/KalenderWidget';
 import OpgaveWidget from '@/app/care-portal-dashboard/components/OpgaveWidget';
 import ResidentListDemo from '@/app/care-portal-dashboard/components/ResidentListDemo';
-import OverrapportModal from '@/app/care-portal-dashboard/components/OverrapportModal';
-import OverrapportPanel from '@/app/care-portal-dashboard/components/OverrapportPanel';
-import IndsatsModal from '@/app/care-portal-dashboard/components/IndsatsModal';
-import TilsynsrapportModal from '@/app/care-portal-dashboard/components/TilsynsrapportModal';
-import JournalAiDemoModal from '@/app/care-portal-dashboard/components/JournalAiDemoModal';
 import DemoActionCards from './DemoActionCards';
 import DemoWelcomeOverlay from './DemoWelcomeOverlay';
+
+const OverrapportModal = dynamic(
+  () => import('@/app/care-portal-dashboard/components/OverrapportModal'),
+  { ssr: false }
+);
+const OverrapportPanel = dynamic(
+  () => import('@/app/care-portal-dashboard/components/OverrapportPanel'),
+  { ssr: false }
+);
+const IndsatsModal = dynamic(() => import('@/app/care-portal-dashboard/components/IndsatsModal'), {
+  ssr: false,
+});
+const TilsynsrapportModal = dynamic(
+  () => import('@/app/care-portal-dashboard/components/TilsynsrapportModal'),
+  { ssr: false }
+);
+const JournalAiDemoModal = dynamic(
+  () => import('@/app/care-portal-dashboard/components/JournalAiDemoModal'),
+  { ssr: false }
+);
 
 const DEMO_INDSATS_KEY = 'budr_indsats_records_v1';
 

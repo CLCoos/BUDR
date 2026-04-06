@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import '@/styles/park-flows.css';
 
 export const metadata: Metadata = {
   applicationName: 'BUDR Lys',
