@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { BudrLogo } from '@/components/brand/BudrLogo';
 import type { SeoIntentDefinition } from '@/lib/marketing/seoIntentContent';
 import MarketingContactForm from '@/components/marketing/MarketingContactForm';
+import { useBudrLandingFadeIn } from '@/components/marketing/useBudrLandingFadeIn';
 
 function renderInlineEmphasis(text: string) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
@@ -25,6 +26,8 @@ export default function SeoIntentLanding({ content, className = '' }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [navOpen, setNavOpen] = useState(false);
   const closeNav = useCallback(() => setNavOpen(false), []);
+
+  useBudrLandingFadeIn(rootRef);
 
   useEffect(() => {
     const root = rootRef.current;

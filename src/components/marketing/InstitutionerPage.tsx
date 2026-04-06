@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BudrLogo } from '@/components/brand/BudrLogo';
 import MarketingContactForm from '@/components/marketing/MarketingContactForm';
+import { useBudrLandingFadeIn } from '@/components/marketing/useBudrLandingFadeIn';
 
 const BOOK_MAIL =
   'mailto:hej@budrcare.dk?subject=Henvendelse%20fra%20institution%20—%20BUDR%20Care' as const;
@@ -31,6 +32,8 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
   const [activeNav, setActiveNav] = useState<SectionId>('inst-overblik');
 
   const closeNav = useCallback(() => setNavOpen(false), []);
+
+  useBudrLandingFadeIn(rootRef);
 
   useEffect(() => {
     const root = rootRef.current;

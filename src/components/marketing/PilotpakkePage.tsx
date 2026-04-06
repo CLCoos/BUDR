@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BudrLogo } from '@/components/brand/BudrLogo';
 import MarketingContactForm from '@/components/marketing/MarketingContactForm';
+import { useBudrLandingFadeIn } from '@/components/marketing/useBudrLandingFadeIn';
 import { Printer } from 'lucide-react';
 
 type Props = {
@@ -14,6 +15,8 @@ export default function PilotpakkePage({ className = '' }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [navOpen, setNavOpen] = useState(false);
   const closeNav = useCallback(() => setNavOpen(false), []);
+
+  useBudrLandingFadeIn(rootRef);
 
   useEffect(() => {
     const root = rootRef.current;

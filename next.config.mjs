@@ -34,7 +34,9 @@ const nextConfig = {
   },
 
   async redirects() {
-    return [];
+    return [
+      { source: '/institution', destination: '/institutioner', permanent: true },
+    ];
   },
 };
 export default nextConfig;

@@ -33,6 +33,7 @@ import {
 } from '@/components/marketing/LandingIcons';
 import { ResidentInitialsAbbr } from '@/components/marketing/ResidentInitialsAbbr';
 import MarketingContactForm from '@/components/marketing/MarketingContactForm';
+import { useBudrLandingFadeIn } from '@/components/marketing/useBudrLandingFadeIn';
 
 const LandingInteractiveDemo = dynamic(
   () =>
@@ -101,19 +102,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
     };
   }, []);
 
-  useEffect(() => {
-    const els = Array.from(document.querySelectorAll<HTMLElement>('.budr-landing .fi'));
-    const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) e.target.classList.add('vis');
-        });
-      },
-      { threshold: 0.06, rootMargin: '0px 0px -6% 0px' }
-    );
-    els.forEach((el) => obs.observe(el));
-    return () => obs.disconnect();
-  }, []);
+  useBudrLandingFadeIn(rootRef);
 
   /** Pause hero-mesh når hero ikke ses (undgår konstant animation i baggrunden). */
   useEffect(() => {
