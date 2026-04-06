@@ -422,8 +422,13 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
           <div className="hero-bg" aria-hidden />
           <div className="hero-inner shell">
             <div className="hero-copy fi">
-              <h1>
-                Tryghed som borgeren kan mærke. <em>Overblik som personalet kan handle på.</em>
+              <h1 className="hero-headline">
+                <span className="hero-headline-line hero-headline-line--lead">
+                  Tryghed som borgeren kan mærke.
+                </span>
+                <span className="hero-headline-line hero-headline-line--follow">
+                  <em>Overblik som personalet kan handle på.</em>
+                </span>
               </h1>
               <p className="hero-sub">
                 Borgerne tjekker ind i Lys, når det passer dem — teamet får et samlet overblik i
@@ -459,7 +464,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
             </div>
 
             <div
-              className="portal-hero-mock portal-hero-mock--hero fi fi-d1"
+              className="portal-hero-mock portal-hero-mock--hero fi hero-mock-delay"
               aria-label="Illustration: dagsoverblik i Care Portal"
             >
               <div className="pmh-top">

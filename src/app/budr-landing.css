@@ -248,6 +248,16 @@ html {
   }
 }
 
+/* Ét kort indtoningsbeat på landing (hero under intro) — mesh-layer kører videre under */
+@keyframes budr-hero-bg-land {
+  from {
+    opacity: 0.86;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .budr-landing .shell {
   width: 100%;
   max-width: 1180px;
@@ -473,7 +483,6 @@ html {
   line-height: 1.06;
   letter-spacing: -0.01em;
   text-wrap: balance;
-  animation: budr-fadeUp 0.7s 0.08s ease both;
 }
 
 .budr-landing .hero h1 em {
@@ -1225,6 +1234,46 @@ html {
 
 .budr-landing .hero.hero--after-intro {
   padding-top: 88px;
+}
+
+.budr-landing .hero.hero--after-intro .hero-bg {
+  animation: budr-hero-bg-land 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.budr-landing .hero.hero--after-intro .hero-headline {
+  margin: 0;
+}
+
+.budr-landing .hero.hero--after-intro .hero-headline-line {
+  display: block;
+}
+
+.budr-landing .hero.hero--after-intro .hero-headline-line--follow {
+  margin-top: 0.08em;
+}
+
+.budr-landing .hero.hero--after-intro .hero-headline-line--lead {
+  animation: budr-fadeUp 0.82s 0.05s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.budr-landing .hero.hero--after-intro .hero-headline-line--follow {
+  animation: budr-fadeUp 0.82s 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.budr-landing .hero .portal-hero-mock--hero.fi.hero-mock-delay {
+  transition-delay: 0.34s;
+}
+
+.budr-landing .hero.hero--after-intro .hero-sub {
+  animation: budr-fadeUp 0.78s 0.58s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.budr-landing .hero.hero--after-intro .hero-actions {
+  animation: budr-fadeUp 0.78s 0.72s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.budr-landing .hero.hero--after-intro .hero-track {
+  animation: budr-fadeUp 0.78s 0.82s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .budr-landing .intro-section::before {
@@ -4194,6 +4243,26 @@ html {
     opacity: 1 !important;
     transform: none !important;
     transition: none !important;
+  }
+
+  .budr-landing .hero.hero--after-intro .hero-bg {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  .budr-landing .hero.hero--after-intro .hero-headline-line--lead,
+  .budr-landing .hero.hero--after-intro .hero-headline-line--follow {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .budr-landing .hero.hero--after-intro .hero-sub,
+  .budr-landing .hero.hero--after-intro .hero-actions,
+  .budr-landing .hero.hero--after-intro .hero-track {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 
   .budr-landing .hero-bg::before {
