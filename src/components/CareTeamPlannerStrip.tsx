@@ -18,9 +18,7 @@ export default function CareTeamPlannerStrip() {
     const supabase = createClient();
     if (!supabase) return;
     (async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const start = new Date();
       start.setHours(0, 0, 0, 0);
@@ -44,24 +42,13 @@ export default function CareTeamPlannerStrip() {
 
   return (
     <div className="mb-4 rounded-2xl border border-sunrise-400/25 bg-sunrise-400/10 px-4 py-3">
-      <p className="text-[10px] font-bold uppercase tracking-wide text-sunrise-300/90 mb-2">
-        Fra dit team
-      </p>
+      <p className="text-[10px] font-bold uppercase tracking-wide text-sunrise-300/90 mb-2">Fra dit team</p>
       <ul className="space-y-2">
         {items.map((e) => (
-          <li
-            key={e.id}
-            className="flex flex-wrap items-baseline justify-between gap-2 text-sm text-midnight-100"
-          >
+          <li key={e.id} className="flex flex-wrap items-baseline justify-between gap-2 text-sm text-midnight-100">
             <span className="font-medium">{e.title}</span>
             <span className="text-xs text-midnight-400">
-              {new Date(e.starts_at).toLocaleString('da-DK', {
-                weekday: 'short',
-                day: 'numeric',
-                month: 'short',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}{' '}
+              {new Date(e.starts_at).toLocaleString('da-DK', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}{' '}
               · {e.category}
             </span>
           </li>

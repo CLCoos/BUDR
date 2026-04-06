@@ -55,19 +55,14 @@ export default function LysChat({
   const accRef = useRef('');
 
   const isDarkish =
-    tokens.bg === '#0F1B2D' ||
-    tokens.bg === '#0A1220' ||
-    tokens.text.toLowerCase().includes('e2e8f0');
+    tokens.bg === '#0F1B2D' || tokens.bg === '#0A1220' || tokens.text.toLowerCase().includes('e2e8f0');
 
   const bubbleUser = isDarkish ? 'rgba(255,255,255,0.12)' : `${accent}33`;
   const bubbleLys = isDarkish ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.85)';
   const textPrimary = tokens.text;
 
   useEffect(() => {
-    listRef.current?.scrollTo({
-      top: listRef.current.scrollHeight,
-      behavior: reducedMotion ? 'auto' : 'smooth',
-    });
+    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: reducedMotion ? 'auto' : 'smooth' });
   }, [messages, loading, reducedMotion]);
 
   useEffect(() => {
@@ -152,14 +147,12 @@ export default function LysChat({
   const typing = useMemo(
     () => (
       <div className="flex gap-1 px-2 py-1" aria-hidden>
-        {[0, 1, 2].map((i) => (
+        {[0, 1, 2].map(i => (
           <span
             key={i}
             className="h-2 w-2 rounded-full bg-white/50"
             style={{
-              animation: reducedMotion
-                ? undefined
-                : `lys-bounce 0.9s ease-in-out ${i * 0.15}s infinite`,
+              animation: reducedMotion ? undefined : `lys-bounce 0.9s ease-in-out ${i * 0.15}s infinite`,
             }}
           />
         ))}
@@ -171,14 +164,11 @@ export default function LysChat({
         `}</style>
       </div>
     ),
-    [reducedMotion]
+    [reducedMotion],
   );
 
   return (
-    <div
-      className="flex min-h-[calc(100dvh-5rem)] flex-col font-sans transition-all duration-200"
-      style={{ color: textPrimary }}
-    >
+    <div className="flex min-h-[calc(100dvh-5rem)] flex-col font-sans transition-all duration-200" style={{ color: textPrimary }}>
       <div
         ref={listRef}
         className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pt-4"
@@ -186,10 +176,8 @@ export default function LysChat({
       >
         {empty ? (
           <div className="space-y-3 pt-2">
-            <p className="text-center text-lg opacity-80">
-              Hej {firstName}. Hvad vil du tale med Lys om?
-            </p>
-            {STARTERS.map((s) => (
+            <p className="text-center text-lg opacity-80">Hej {firstName}. Hvad vil du tale med Lys om?</p>
+            {STARTERS.map(s => (
               <button
                 key={s}
                 type="button"
@@ -258,11 +246,7 @@ export default function LysChat({
 
         {loading ? (
           <div className="flex justify-start gap-2">
-            <div
-              className="h-6 w-6 shrink-0 rounded-full"
-              style={{ backgroundColor: accent }}
-              aria-hidden
-            />
+            <div className="h-6 w-6 shrink-0 rounded-full" style={{ backgroundColor: accent }} aria-hidden />
             <div
               className="rounded-2xl rounded-tl-sm px-4 py-3"
               style={{ backgroundColor: bubbleLys }}
@@ -285,8 +269,8 @@ export default function LysChat({
           <input
             type="text"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && void submit(input)}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && void submit(input)}
             placeholder="Skriv til Lys …"
             className="min-h-[48px] flex-1 rounded-full border px-5 text-base outline-none transition-all duration-200"
             style={{

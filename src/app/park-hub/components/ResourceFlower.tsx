@@ -21,14 +21,8 @@ const initialPetals: Petal[] = [
 ];
 
 const petalColors = [
-  '#7F77DD',
-  '#A78BFA',
-  '#C084FC',
-  '#E879F9',
-  '#F472B6',
-  '#FB923C',
-  '#FBBF24',
-  '#34D399',
+  '#7F77DD', '#A78BFA', '#C084FC', '#E879F9',
+  '#F472B6', '#FB923C', '#FBBF24', '#34D399',
 ];
 
 export default function ResourceFlower() {
@@ -37,7 +31,7 @@ export default function ResourceFlower() {
   const [saved, setSaved] = useState(false);
 
   const setScore = (id: string, score: number) => {
-    setPetals((prev) => prev.map((p) => (p.id === id ? { ...p, score } : p)));
+    setPetals(prev => prev.map(p => p.id === id ? { ...p, score } : p));
   };
 
   const handleSave = () => {
@@ -47,7 +41,7 @@ export default function ResourceFlower() {
     setTimeout(() => setSaved(false), 3000);
   };
 
-  const selectedPetal = petals.find((p) => p.id === selected);
+  const selectedPetal = petals.find(p => p.id === selected);
 
   // SVG flower layout - 8 petals arranged in circle
   const cx = 140;
@@ -61,9 +55,7 @@ export default function ResourceFlower() {
     <div className="space-y-4">
       <div className="bg-white rounded-lg p-5 border border-gray-100">
         <div className="text-sm font-semibold text-gray-700 mb-1">Ressourceblomst</div>
-        <div className="text-xs text-gray-500 mb-4">
-          Tryk på et kronblad for at vurdere dine ressourcer (1–5)
-        </div>
+        <div className="text-xs text-gray-500 mb-4">Tryk på et kronblad for at vurdere dine ressourcer (1–5)</div>
 
         {/* SVG Flower */}
         <div className="flex justify-center">
@@ -79,11 +71,7 @@ export default function ResourceFlower() {
               const isSelected = selected === petal.id;
 
               return (
-                <g
-                  key={petal.id}
-                  onClick={() => setSelected(isSelected ? null : petal.id)}
-                  style={{ cursor: 'pointer' }}
-                >
+                <g key={petal.id} onClick={() => setSelected(isSelected ? null : petal.id)} style={{ cursor: 'pointer' }}>
                   {/* Petal background */}
                   <ellipse
                     cx={px}
@@ -133,9 +121,7 @@ export default function ResourceFlower() {
 
             {/* Center circle */}
             <circle cx={cx} cy={cy} r={centerR} fill="#7F77DD" />
-            <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="middle" fontSize={16}>
-              🌸
-            </text>
+            <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="middle" fontSize={16}>🌸</text>
           </svg>
         </div>
 
@@ -150,7 +136,7 @@ export default function ResourceFlower() {
               </div>
             </div>
             <div className="flex gap-2">
-              {[1, 2, 3, 4, 5].map((n) => (
+              {[1,2,3,4,5].map(n => (
                 <button
                   key={`score-${selectedPetal.id}-${n}`}
                   onClick={() => setScore(selectedPetal.id, n)}
@@ -178,12 +164,7 @@ export default function ResourceFlower() {
                   style={{ width: `${(p.score / 5) * 100}%`, backgroundColor: petalColors[i] }}
                 />
               </div>
-              <div
-                className="text-xs font-bold tabular-nums mt-0.5"
-                style={{ color: petalColors[i] }}
-              >
-                {p.score}
-              </div>
+              <div className="text-xs font-bold tabular-nums mt-0.5" style={{ color: petalColors[i] }}>{p.score}</div>
             </div>
           ))}
         </div>

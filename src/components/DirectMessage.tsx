@@ -10,13 +10,6 @@ interface Message {
   createdAt: string;
 }
 
-type SupportMessageRow = {
-  id: string;
-  content: string;
-  is_from_user: boolean;
-  created_at: string;
-};
-
 interface DirectMessageProps {
   contactId: string;
   contactName: string;
@@ -61,7 +54,7 @@ export default function DirectMessage({
           filter: `contact_id=eq.${contactId}`,
         },
         (payload) => {
-          const row = payload.new as SupportMessageRow;
+          const row = payload.new as any;
           setMessages((prev) => [
             ...prev,
             {
@@ -78,7 +71,7 @@ export default function DirectMessage({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [contactId]); // eslint-disable-line react-hooks/exhaustive-deps -- supabase client
+  }, [contactId, supabase]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -100,7 +93,7 @@ export default function DirectMessage({
 
       if (!error && data) {
         setMessages(
-          (data as SupportMessageRow[]).map((row) => ({
+          data.map((row: any) => ({
             id: row.id,
             content: row.content,
             isFromUser: row.is_from_user,
@@ -109,7 +102,7 @@ export default function DirectMessage({
         );
       }
     } catch (err) {
-      console.warn('Error fetching messages:', err);
+      console.log('Error fetching messages:', err);
     } finally {
       setLoading(false);
     }
@@ -129,7 +122,7 @@ export default function DirectMessage({
         setInput('');
       }
     } catch (err) {
-      console.warn('Error sending message:', err);
+      console.log('Error sending message:', err);
     } finally {
       setSending(false);
     }
@@ -169,10 +162,7 @@ export default function DirectMessage({
       <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2">
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <div
-              className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin"
-              style={{ borderColor: contactColor }}
-            />
+            <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: contactColor }} />
           </div>
         ) : messages.length === 0 ? (
           <p className="text-center text-xs text-midnight-500 mt-8">
@@ -227,13 +217,7 @@ export default function DirectMessage({
           aria-label="Send"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13"
-              stroke="#0f0f1a"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="#0f0f1a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
       </div>

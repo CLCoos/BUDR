@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { parseBudrFollowUpsBlock } from '@/lib/portalStaffAssistantFollowUps';
 
 function getServiceClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false } }
+    { auth: { persistSession: false } },
   );
 }
 
@@ -16,9 +16,7 @@ export async function POST(req: NextRequest) {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   let body: { messages?: Array<{ role: 'user' | 'assistant'; content: string }> };
@@ -41,7 +39,7 @@ export async function POST(req: NextRequest) {
   // Fetch resident context
   const { data: residents } = await service
     .from('care_residents')
-    .select('user_id, display_name, onboarding_data')
+    .select('display_name, onboarding_data')
     .order('display_name');
 
   // Fetch recent journal entries for context (last 7 days, capped at 15)
@@ -49,16 +47,14 @@ export async function POST(req: NextRequest) {
   const { data: journal } = await service
     .from('journal_entries')
     .select('entry_text, category, created_at, care_residents(display_name)')
-    .eq('journal_status', 'godkendt')
     .gte('created_at', since)
     .order('created_at', { ascending: false })
     .limit(15);
 
   // Build resident list
-  const residentLines = (residents ?? []).map((r) => {
+  const residentLines = (residents ?? []).map(r => {
     const od = r.onboarding_data as Record<string, string> | null;
-    const uid = r.user_id as string;
-    const parts = [`• ${r.display_name as string} (beboer-id: ${uid})`];
+    const parts = [`• ${r.display_name as string}`];
     if (od?.move_in_date) parts.push(`indflyttet ${od.move_in_date}`);
     if (od?.primary_contact) {
       const rel = od.primary_contact_relation ? ` (${od.primary_contact_relation})` : '';
@@ -67,29 +63,23 @@ export async function POST(req: NextRequest) {
     return parts.join(', ');
   });
 
-  const residentContext =
-    residentLines.length > 0 ? residentLines.join('\n') : 'Ingen beboere registreret endnu.';
+  const residentContext = residentLines.length > 0
+    ? residentLines.join('\n')
+    : 'Ingen beboere registreret endnu.';
 
   // Build journal context — truncated, for background awareness only
-  const journalLines = (journal ?? []).map((j) => {
-    const cr = j.care_residents as { display_name?: string } | { display_name?: string }[] | null;
-    const row = Array.isArray(cr) ? cr[0] : cr;
-    const name = row?.display_name ?? 'Beboer';
-    const date = new Date(j.created_at).toLocaleDateString('da-DK', {
-      day: 'numeric',
-      month: 'short',
-    });
+  const journalLines = (journal ?? []).map(j => {
+    const name = (j.care_residents as { display_name: string } | null)?.display_name ?? 'Beboer';
+    const date = new Date(j.created_at).toLocaleDateString('da-DK', { day: 'numeric', month: 'short' });
     const text = (j.entry_text as string).slice(0, 120);
     return `[${date}] ${name} — ${j.category as string}: ${text}`;
   });
 
-  const journalContext =
-    journalLines.length > 0
-      ? `\nSENESTE JOURNALOBSERVATIONER (brug kun som baggrundskontekst — del ikke specifikt indhold direkte):\n${journalLines.join('\n')}`
-      : '';
+  const journalContext = journalLines.length > 0
+    ? `\nSENESTE JOURNALOBSERVATIONER (brug kun som baggrundskontekst — del ikke specifikt indhold direkte):\n${journalLines.join('\n')}`
+    : '';
 
-  const staffName =
-    (user.user_metadata?.full_name as string | undefined) ?? user.email ?? 'kollega';
+  const staffName = (user.user_metadata?.full_name as string | undefined) ?? user.email ?? 'kollega';
 
   const system = `Du er en erfaren faglig kollega og supervisor på et socialpsykiatrisk bosted i Danmark. Du er ikke en robot eller AI-assistent — du er "den erfarne kollega" der altid har tid og aldrig dømmer.
 
@@ -116,61 +106,43 @@ BEBOERE PÅ DETTE BOSTED:
 ${residentContext}
 ${journalContext}
 
-VIGTIG GRÆNSE: Du erstatter ikke supervision, lægefaglig vurdering eller akut hjælp (112). Hvis noget er akut eller alvorligt, sig det klart og opfordr til at kontakte leder eller politi/ambulance.
+VIGTIG GRÆNSE: Du erstatter ikke supervision, lægefaglig vurdering eller akut hjælp (112). Hvis noget er akut eller alvorligt, sig det klart og opfordr til at kontakte leder eller politi/ambulance.`;
 
-GENVEJE I BUDR (påkrævet i hvert svar):
-Brugeren skal altid kunne gå videre til konkrete steder i BUDR-portalen. Når du nævner dokumenter, aftaler, handleplaner, husets retningslinjer, pædagogiske planer, importfiler eller lignende, skal du inkludere mindst én relevant genvej.
+  // Stream response
+  const anthropic = new Anthropic({ apiKey: key });
 
-Efter dit almindelige svar til kollegaen skal du — uden at forklare dette i brødteksten — tilføje PRÆCIST ét ekstra afsnit bestående af følgende XML-blok (ingen markdown omkring, ingen ekstra tekst efter blokken):
-
-<budr_followups>[{"key":"indsatsdok","reason":"kort dansk grund"}]</budr_followups>
-
-Regler for JSON inde i blokken:
-- Et array med 1–4 objekter. Hvert objekt skal mindst have "key" (string) og "reason" (kort streng på dansk, max ca. 12 ord).
-- Valgfrie felter (brug kun når det giver klar mening):
-  - "searchQuery": kort søgetekst der forudfylder dokumentsøgning i topbaren via URL (?q=), fx medicinnavn eller dokumenttitel.
-  - "resident360Id": præcis UUID fra listen "BEBOERE" ovenfor (beboer-id), kun sammen med key "beboere" eller "journal" når svaret handler om én konkret beboer.
-  - "residentTab": ved dybt link til 360°: brug én af overblik, medicin, dagsplan, plan, haven (små bogstaver som vist).
-- Tilladte key-værdier: indsatsdok, dataimport, beboere, journal, handover, tilsyn, settings.
-- Vælg kun keys der matcher det du skrev: fx aftaler og husets dokumenter → indsatsdok og/eller dataimport; beboerspecifikke aftaler → beboere; journalnotater → journal; vagtskifte → handover; tilsyn → tilsyn; organisatorisk → settings.
-- Hvis intet passer, brug tom array: <budr_followups>[]</budr_followups>
-
-Brødteksten før blokken må ikke nævne XML, JSON eller "budr_followups".`;
-
-  // Call Anthropic API directly (same pattern as lys-chat which works on Netlify)
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 900,
-      system,
-      messages,
-    }),
+  const stream = anthropic.messages.stream({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 700,
+    system,
+    messages,
   });
 
-  if (!res.ok) {
-    const err = await res.text();
-    console.error('[staff-assistant] anthropic error:', res.status, err);
-    return NextResponse.json({ error: 'AI svarer ikke — prøv igen' }, { status: 502 });
-  }
+  const encoder = new TextEncoder();
+  const readable = new ReadableStream({
+    async start(controller) {
+      try {
+        for await (const chunk of stream) {
+          if (
+            chunk.type === 'content_block_delta' &&
+            chunk.delta.type === 'text_delta'
+          ) {
+            controller.enqueue(encoder.encode(chunk.delta.text));
+          }
+        }
+      } catch (e) {
+        console.error('[staff-assistant] stream error:', e);
+      } finally {
+        controller.close();
+      }
+    },
+  });
 
-  const data = (await res.json()) as { content?: Array<{ type?: string; text?: string }> };
-  const block = data.content?.find((c) => c.type === 'text');
-  const text = block?.text?.trim();
-
-  if (!text) {
-    return NextResponse.json({ error: 'Tomt svar fra AI' }, { status: 502 });
-  }
-
-  const { text: cleanText, followUps } = parseBudrFollowUpsBlock(text);
-
-  return NextResponse.json({
-    text: cleanText || text.replace(/<budr_followups>[\s\S]*?<\/budr_followups>/gi, '').trim(),
-    followUps,
+  return new NextResponse(readable, {
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'no-cache',
+      'Transfer-Encoding': 'chunked',
+    },
   });
 }

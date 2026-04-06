@@ -2,17 +2,17 @@
 // POST /api/park/counter-thought
 // Bruges i Flow 2: Tankefanger — Lys foreslår en modtanke
 
-import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { NextRequest, NextResponse } from 'next/server'
+import Anthropic from '@anthropic-ai/sdk'
 
-const client = new Anthropic();
+const client = new Anthropic()
 
 export async function POST(req: NextRequest) {
   try {
-    const { situation, thought, emotion } = await req.json();
+    const { situation, thought, emotion } = await req.json()
 
     if (!situation || !thought) {
-      return NextResponse.json({ error: 'Mangler situation eller tanke' }, { status: 400 });
+      return NextResponse.json({ error: 'Mangler situation eller tanke' }, { status: 400 })
     }
 
     const message = await client.messages.create({
@@ -30,23 +30,23 @@ Regler:
 - Foreslå en konkret, realistisk alternativ tanke
 - Returner KUN modtanken — ingen forklaringer, ingen indledning`,
 
-      messages: [
-        {
-          role: 'user',
-          content: `Situation: ${situation}
+      messages: [{
+        role: 'user',
+        content: `Situation: ${situation}
 Automatisk tanke: ${thought}
 ${emotion ? `Følelse: ${emotion}` : ''}
 
-Foreslå en hjælpsom modtanke.`,
-        },
-      ],
-    });
+Foreslå en hjælpsom modtanke.`
+      }]
+    })
 
-    const suggestion = message.content[0].type === 'text' ? message.content[0].text.trim() : '';
+    const suggestion = message.content[0].type === 'text'
+      ? message.content[0].text.trim()
+      : ''
 
-    return NextResponse.json({ suggestion });
+    return NextResponse.json({ suggestion })
   } catch (error) {
-    console.error('Counter-thought API error:', error);
-    return NextResponse.json({ error: 'Kunne ikke hente forslag' }, { status: 500 });
+    console.error('Counter-thought API error:', error)
+    return NextResponse.json({ error: 'Kunne ikke hente forslag' }, { status: 500 })
   }
 }

@@ -11,7 +11,7 @@ async function fetchDayData(residentId: string): Promise<{
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false } }
+    { auth: { persistSession: false } },
   );
 
   const today = new Date().toISOString().slice(0, 10);
@@ -46,5 +46,11 @@ export default async function DagPage() {
 
   const { plan, pendingProposal } = await fetchDayData(residentId);
 
-  return <DailyPlanView residentId={residentId} plan={plan} pendingProposal={pendingProposal} />;
+  return (
+    <DailyPlanView
+      residentId={residentId}
+      plan={plan}
+      pendingProposal={pendingProposal}
+    />
+  );
 }

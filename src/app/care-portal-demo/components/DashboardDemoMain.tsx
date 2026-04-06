@@ -17,6 +17,7 @@ import IndsatsModal from '@/app/care-portal-dashboard/components/IndsatsModal';
 import TilsynsrapportModal from '@/app/care-portal-dashboard/components/TilsynsrapportModal';
 import JournalAiDemoModal from '@/app/care-portal-dashboard/components/JournalAiDemoModal';
 import DemoActionCards from './DemoActionCards';
+import DemoWelcomeOverlay from './DemoWelcomeOverlay';
 
 const DEMO_INDSATS_KEY = 'budr_indsats_records_v1';
 
@@ -306,6 +307,7 @@ export default function DashboardDemoMain() {
         <span className="sm:hidden">Journal</span>
       </button>
 
+      <DemoWelcomeOverlay onOpenOverrapport={() => setOverrapportPanelOpen(true)} />
       <JournalAiDemoModal open={journalOpen} onClose={closeJournal} />
       <OverrapportModal
         open={overrapportOpen}

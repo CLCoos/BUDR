@@ -20,28 +20,24 @@ type ConfirmState = { label: string; phone: string } | null;
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const PHASES: { phase: BreathPhase; label: string; duration: number; scale: number }[] = [
-  { phase: 'inhale', label: 'Træk vejret ind', duration: 4000, scale: 1.5 },
-  { phase: 'hold-in', label: 'Hold vejret', duration: 4000, scale: 1.5 },
-  { phase: 'exhale', label: 'Pust ud', duration: 6000, scale: 1.0 },
-  { phase: 'hold-out', label: 'Pause', duration: 2000, scale: 1.0 },
+  { phase: 'inhale',   label: 'Træk vejret ind', duration: 4000, scale: 1.5 },
+  { phase: 'hold-in',  label: 'Hold vejret',      duration: 4000, scale: 1.5 },
+  { phase: 'exhale',   label: 'Pust ud',           duration: 6000, scale: 1.0 },
+  { phase: 'hold-out', label: 'Pause',             duration: 2000, scale: 1.0 },
 ];
 
 const HOTLINES = [
-  { name: 'Livslinien', number: '70 201 201', desc: 'Anonym rådgivning døgnet rundt' },
-  {
-    name: 'BørneTelefonen (Røde Kors)',
-    number: '116 111',
-    desc: 'Til dig under 18 — fortrolig linje',
-  },
-  { name: 'Seniortelefonerne', number: '70 278 278', desc: 'Støtte til ældre og ensomme' },
-  { name: 'Selvmordsforebyggelse', number: '70 201 201', desc: 'Specialiseret krisehjælp' },
-  { name: 'Angstlinjen', number: '70 200 120', desc: 'Rådgivning om angst og bekymring' },
+  { name: 'Livslinien',                 number: '70 201 201', desc: 'Anonym rådgivning døgnet rundt' },
+  { name: 'BørneTelefonen (Røde Kors)', number: '116 111',   desc: 'Til dig under 18 — fortrolig linje' },
+  { name: 'Seniortelefonerne',          number: '70 278 278', desc: 'Støtte til ældre og ensomme' },
+  { name: 'Selvmordsforebyggelse',      number: '70 201 201', desc: 'Specialiseret krisehjælp' },
+  { name: 'Angstlinjen',                number: '70 200 120', desc: 'Rådgivning om angst og bekymring' },
 ];
 
-const CARD_BG = 'rgba(255,255,255,0.07)';
+const CARD_BG  = 'rgba(255,255,255,0.07)';
 const CARD_BRD = '1px solid rgba(255,255,255,0.10)';
-const MUTED = 'rgba(255,255,255,0.50)';
-const TEXT = '#F0EEF8';
+const MUTED    = 'rgba(255,255,255,0.50)';
+const TEXT     = '#F0EEF8';
 
 // ── Accordion section ─────────────────────────────────────────────────────────
 
@@ -75,10 +71,7 @@ function Section({
   }, [open]);
 
   return (
-    <div
-      className="rounded-2xl overflow-hidden"
-      style={{ backgroundColor: CARD_BG, border: CARD_BRD }}
-    >
+    <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: CARD_BG, border: CARD_BRD }}>
       <button
         type="button"
         onClick={onToggle}
@@ -86,9 +79,7 @@ function Section({
       >
         <div className="flex items-center gap-3">
           <span className="text-xl">{icon}</span>
-          <span className="text-base font-bold" style={{ color: TEXT }}>
-            {title}
-          </span>
+          <span className="text-base font-bold" style={{ color: TEXT }}>{title}</span>
         </div>
         <ChevronDown
           className="h-5 w-5 shrink-0 transition-transform duration-300"
@@ -137,14 +128,8 @@ function CallRow({
       }}
     >
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold leading-snug" style={{ color: TEXT }}>
-          {label}
-        </p>
-        {sub && (
-          <p className="text-xs mt-0.5" style={{ color: MUTED }}>
-            {sub}
-          </p>
-        )}
+        <p className="text-sm font-bold leading-snug" style={{ color: TEXT }}>{label}</p>
+        {sub && <p className="text-xs mt-0.5" style={{ color: MUTED }}>{sub}</p>}
       </div>
       <div
         className="ml-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
@@ -230,53 +215,36 @@ type Props = {
 };
 
 export default function LysKrisekort({ firstName, facilityId, onClose }: Props) {
-  const [phaseIdx, setPhaseIdx] = useState(0);
+  const [phaseIdx, setPhaseIdx]     = useState(0);
   const [secondsLeft, setSecondsLeft] = useState(PHASES[0]!.duration / 1000);
-  const [openSection, setOpenSection] = useState<'bosted' | 'kriselinjer' | 'noed' | null>(
-    'bosted'
-  );
-  const [contacts, setContacts] = useState<FacilityContact[] | null>(null);
-  const [confirm, setConfirm] = useState<ConfirmState>(null);
+  const [openSection, setOpenSection] = useState<'bosted' | 'kriselinjer' | 'noed' | null>('bosted');
+  const [contacts, setContacts]     = useState<FacilityContact[] | null>(null);
+  const [confirm, setConfirm]       = useState<ConfirmState>(null);
 
   // Breathing
   useEffect(() => {
     const phase = PHASES[phaseIdx]!;
     setSecondsLeft(phase.duration / 1000);
-    const tick = window.setInterval(() => setSecondsLeft((s) => Math.max(0, s - 1)), 1000);
-    const advance = window.setTimeout(
-      () => setPhaseIdx((i) => (i + 1) % PHASES.length),
-      phase.duration
-    );
-    return () => {
-      window.clearInterval(tick);
-      window.clearTimeout(advance);
-    };
+    const tick    = window.setInterval(() => setSecondsLeft(s => Math.max(0, s - 1)), 1000);
+    const advance = window.setTimeout(() => setPhaseIdx(i => (i + 1) % PHASES.length), phase.duration);
+    return () => { window.clearInterval(tick); window.clearTimeout(advance); };
   }, [phaseIdx]);
 
   // Load facility contacts
   useEffect(() => {
-    if (!facilityId) {
-      setContacts([]);
-      return;
-    }
+    if (!facilityId) { setContacts([]); return; }
     const supabase = createClient();
-    if (!supabase) {
-      setContacts([]);
-      return;
-    }
+    if (!supabase) { setContacts([]); return; }
     supabase
       .from('facility_contacts')
       .select('id, label, phone, available_hours')
       .eq('facility_id', facilityId)
       .order('sort_order')
-      .then(
-        ({ data }) => setContacts((data ?? []) as FacilityContact[]),
-        () => setContacts([])
-      );
+      .then(({ data }) => setContacts((data ?? []) as FacilityContact[]), () => setContacts([]));
   }, [facilityId]);
 
   const toggle = (s: 'bosted' | 'kriselinjer' | 'noed') =>
-    setOpenSection((prev) => (prev === s ? null : s));
+    setOpenSection(prev => (prev === s ? null : s));
 
   const current = PHASES[phaseIdx]!;
 
@@ -290,11 +258,7 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
 
       <div
         className="mx-auto flex w-full max-w-lg flex-col"
-        style={{
-          minHeight: '100dvh',
-          color: TEXT,
-          paddingBottom: 'max(2rem, env(safe-area-inset-bottom, 0px))',
-        }}
+        style={{ minHeight: '100dvh', color: TEXT, paddingBottom: 'max(2rem, env(safe-area-inset-bottom, 0px))' }}
       >
         {/* Top bar with back button */}
         <div
@@ -321,27 +285,18 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
             Åndedrætsøvelse
           </p>
 
-          <div
-            className="relative flex items-center justify-center"
-            style={{ width: 200, height: 200 }}
-          >
+          <div className="relative flex items-center justify-center" style={{ width: 200, height: 200 }}>
             {[32, 12, 0].map((offset, i) => (
               <div
                 key={i}
                 className="absolute rounded-full transition-all"
                 style={{
-                  width: `${current.scale * 120 + offset}px`,
+                  width:  `${current.scale * 120 + offset}px`,
                   height: `${current.scale * 120 + offset}px`,
-                  backgroundColor:
-                    i === 0
-                      ? 'rgba(99,102,241,0.08)'
-                      : i === 1
-                        ? 'rgba(99,102,241,0.14)'
-                        : undefined,
-                  background:
-                    i === 2
-                      ? 'linear-gradient(135deg,rgba(99,102,241,0.7) 0%,rgba(139,92,246,0.7) 100%)'
-                      : undefined,
+                  backgroundColor: i === 0 ? 'rgba(99,102,241,0.08)' : i === 1 ? 'rgba(99,102,241,0.14)' : undefined,
+                  background: i === 2
+                    ? 'linear-gradient(135deg,rgba(99,102,241,0.7) 0%,rgba(139,92,246,0.7) 100%)'
+                    : undefined,
                   boxShadow: i === 2 ? '0 0 32px rgba(99,102,241,0.4)' : undefined,
                   transitionDuration: `${current.duration}ms`,
                   transitionTimingFunction: 'cubic-bezier(0.4,0,0.2,1)',
@@ -358,47 +313,33 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
 
           <div className="text-center">
             <p className="text-xl font-bold text-white">{current.label}</p>
-            <p className="text-sm mt-0.5" style={{ color: MUTED }}>
-              {phaseIdx + 1} / {PHASES.length}
-            </p>
+            <p className="text-sm mt-0.5" style={{ color: MUTED }}>{phaseIdx + 1} / {PHASES.length}</p>
           </div>
         </div>
 
         {/* Message */}
-        <div
-          className="mx-5 rounded-2xl px-5 py-4 text-center mb-5"
-          style={{ backgroundColor: CARD_BG }}
-        >
+        <div className="mx-5 rounded-2xl px-5 py-4 text-center mb-5" style={{ backgroundColor: CARD_BG }}>
           <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.80)' }}>
-            Det lyder som en hård stund, {firstName}. Tag det i dit eget tempo — der er ingen
-            forventninger.
+            Det lyder som en hård stund, {firstName}.{' '}
+            Tag det i dit eget tempo — der er ingen forventninger.
           </p>
         </div>
 
         {/* Accordion */}
         <div className="mx-5 space-y-3 mb-5">
+
           {/* A — Bostedet */}
-          <Section
-            icon="🏠"
-            title="Bostedet"
-            open={openSection === 'bosted'}
-            onToggle={() => toggle('bosted')}
-          >
+          <Section icon="🏠" title="Bostedet" open={openSection === 'bosted'} onToggle={() => toggle('bosted')}>
             {contacts === null ? (
-              <p className="text-sm py-2" style={{ color: MUTED }}>
-                Indlæser…
-              </p>
+              <p className="text-sm py-2" style={{ color: MUTED }}>Indlæser…</p>
             ) : contacts.length === 0 ? (
-              <div
-                className="rounded-xl px-4 py-4 text-center"
-                style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
-              >
+              <div className="rounded-xl px-4 py-4 text-center" style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
                 <p className="text-sm" style={{ color: MUTED }}>
                   Personalet har endnu ikke tilføjet kontakter — spørg en medarbejder
                 </p>
               </div>
             ) : (
-              contacts.map((c) => (
+              contacts.map(c => (
                 <CallRow
                   key={c.id}
                   label={c.label}
@@ -411,13 +352,8 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
           </Section>
 
           {/* B — Kriselinjer */}
-          <Section
-            icon="📞"
-            title="Kriselinjer"
-            open={openSection === 'kriselinjer'}
-            onToggle={() => toggle('kriselinjer')}
-          >
-            {HOTLINES.map((h) => (
+          <Section icon="📞" title="Kriselinjer" open={openSection === 'kriselinjer'} onToggle={() => toggle('kriselinjer')}>
+            {HOTLINES.map(h => (
               <CallRow
                 key={h.name}
                 label={h.name}
@@ -429,12 +365,7 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
           </Section>
 
           {/* C — Nødopkald */}
-          <Section
-            icon="🚨"
-            title="Nødopkald"
-            open={openSection === 'noed'}
-            onToggle={() => toggle('noed')}
-          >
+          <Section icon="🚨" title="Nødopkald" open={openSection === 'noed'} onToggle={() => toggle('noed')}>
             <CallRow
               label="112 — Ambulance / Brand / Politi"
               sub="Akut livsfare"
@@ -450,15 +381,13 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
               onConfirm={(l, p) => setConfirm({ label: l, phone: p })}
             />
           </Section>
+
         </div>
 
         {/* Staff note */}
         <div
           className="mx-5 rounded-2xl px-5 py-3.5 mb-5"
-          style={{
-            backgroundColor: 'rgba(99,102,241,0.12)',
-            border: '1px solid rgba(99,102,241,0.25)',
-          }}
+          style={{ backgroundColor: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)' }}
         >
           <p className="text-xs leading-relaxed" style={{ color: 'rgba(199,210,254,0.85)' }}>
             Personalet kan se, at du har haft det svært i dag — de vil gerne støtte dig.
@@ -471,14 +400,12 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
             type="button"
             onClick={onClose}
             className="w-full rounded-2xl py-4 text-sm font-bold text-white transition-all duration-200 active:scale-[0.98]"
-            style={{
-              backgroundColor: 'rgba(255,255,255,0.12)',
-              border: '1px solid rgba(255,255,255,0.2)',
-            }}
+            style={{ backgroundColor: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)' }}
           >
             Tilbage til Lys
           </button>
         </div>
+
       </div>
     </>
   );

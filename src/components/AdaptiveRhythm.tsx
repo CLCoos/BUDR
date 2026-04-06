@@ -18,11 +18,7 @@ interface AdaptiveRhythmProps {
 
 const dayNames = ['Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'];
 
-export default function AdaptiveRhythm({
-  weekMoods = [6, 5, 7, 4, 6, 8, 7],
-  weekEnergy = [3, 2, 4, 2, 3, 4, 4],
-  checkInDays = [true, true, true, false, true, true, true],
-}: AdaptiveRhythmProps) {
+export default function AdaptiveRhythm({ weekMoods = [6, 5, 7, 4, 6, 8, 7], weekEnergy = [3, 2, 4, 2, 3, 4, 4], checkInDays = [true, true, true, false, true, true, true] }: AdaptiveRhythmProps) {
   const [suggestions, setSuggestions] = useState<RhythmSuggestion[]>([]);
   const [summary, setSummary] = useState('');
   const [loading, setLoading] = useState(false);
@@ -31,9 +27,7 @@ export default function AdaptiveRhythm({
 
   useEffect(() => {
     mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
+    return () => { mountedRef.current = false; };
   }, []);
 
   const analyzeRhythm = async () => {
@@ -81,14 +75,11 @@ Giv max 3 suggestions for de mest markante mønstre. Vær specifik og handlingso
               setSuggestions(parsed.suggestions || []);
               setLoaded(true);
             }
-          } catch {
-            /* ignore */
-          }
+          } catch { /* ignore */ }
         }
       }
-    } catch {
-      /* silently fail */
-    } finally {
+    } catch { /* silently fail */ }
+    finally {
       if (mountedRef.current) setLoading(false);
     }
   };
@@ -99,22 +90,14 @@ Giv max 3 suggestions for de mest markante mønstre. Vær specifik og handlingso
   return (
     <div className="insight-card animate-fade-in">
       <div className="flex items-center gap-3 mb-4">
-        <div
-          className="w-10 h-10 rounded-2xl flex items-center justify-center text-lg"
-          style={{
-            background:
-              'linear-gradient(135deg, rgba(251,146,60,0.3) 0%, rgba(167,139,250,0.2) 100%)',
-          }}
-        >
+        <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-lg" style={{ background: 'linear-gradient(135deg, rgba(251,146,60,0.3) 0%, rgba(167,139,250,0.2) 100%)' }}>
           🧠
         </div>
         <div>
           <h3 className="font-display text-base font-bold text-midnight-50">Adaptiv rytme</h3>
           <p className="text-xs text-midnight-400">Claude lærer din ugentlige rytme</p>
         </div>
-        <span className="ml-auto text-xs bg-aurora-violet/15 text-purple-300 border border-aurora-violet/20 rounded-full px-2.5 py-1 font-medium">
-          AI
-        </span>
+        <span className="ml-auto text-xs bg-aurora-violet/15 text-purple-300 border border-aurora-violet/20 rounded-full px-2.5 py-1 font-medium">AI</span>
       </div>
 
       {/* Mini week chart */}
@@ -125,10 +108,7 @@ Giv max 3 suggestions for de mest markante mønstre. Vær specifik og handlingso
           const checkedIn = checkInDays[i] ?? false;
           return (
             <div key={day} className="flex-1 flex flex-col items-center gap-0.5">
-              <div
-                className="w-full flex flex-col items-center justify-end"
-                style={{ height: '36px' }}
-              >
+              <div className="w-full flex flex-col items-center justify-end" style={{ height: '36px' }}>
                 <div
                   className="w-full rounded-t-sm transition-all duration-500"
                   style={{
@@ -149,25 +129,15 @@ Giv max 3 suggestions for de mest markante mønstre. Vær specifik og handlingso
           onClick={analyzeRhythm}
           className="w-full flex items-center justify-center gap-2 bg-sunrise-400/10 border border-sunrise-400/20 rounded-2xl px-4 py-3 text-sm text-sunrise-300 font-medium hover:bg-sunrise-400/15 transition-all duration-200"
         >
-          <span>🧠</span>
-          <span>Analyser min ugentlige rytme</span>
+          <span>🧠</span><span>Analyser min ugentlige rytme</span>
         </button>
       )}
 
       {loading && (
         <div className="flex items-center gap-2 py-2">
-          <span
-            className="inline-block w-1.5 h-1.5 bg-orange-400 rounded-full animate-bounce"
-            style={{ animationDelay: '0ms' }}
-          />
-          <span
-            className="inline-block w-1.5 h-1.5 bg-orange-400 rounded-full animate-bounce"
-            style={{ animationDelay: '150ms' }}
-          />
-          <span
-            className="inline-block w-1.5 h-1.5 bg-orange-400 rounded-full animate-bounce"
-            style={{ animationDelay: '300ms' }}
-          />
+          <span className="inline-block w-1.5 h-1.5 bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+          <span className="inline-block w-1.5 h-1.5 bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+          <span className="inline-block w-1.5 h-1.5 bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
           <span className="text-xs text-midnight-400 ml-1">Claude analyserer din rytme...</span>
         </div>
       )}
@@ -176,16 +146,11 @@ Giv max 3 suggestions for de mest markante mønstre. Vær specifik og handlingso
         <div className="space-y-3 animate-slide-up">
           {summary && (
             <div className="bg-midnight-900/50 rounded-2xl p-3 border border-midnight-700/50">
-              <p className="text-xs text-midnight-200 leading-relaxed italic">
-                &ldquo;{summary}&rdquo;
-              </p>
+              <p className="text-xs text-midnight-200 leading-relaxed italic">&ldquo;{summary}&rdquo;</p>
             </div>
           )}
           {suggestions.map((s, i) => (
-            <div
-              key={i}
-              className="flex items-start gap-3 bg-midnight-900/30 rounded-2xl p-3 border border-midnight-700/30"
-            >
+            <div key={i} className="flex items-start gap-3 bg-midnight-900/30 rounded-2xl p-3 border border-midnight-700/30">
               <span className="text-xl mt-0.5">{s.emoji}</span>
               <div>
                 <p className="text-xs font-semibold text-sunrise-300">{s.day}</p>
@@ -194,11 +159,7 @@ Giv max 3 suggestions for de mest markante mønstre. Vær specifik og handlingso
               </div>
             </div>
           ))}
-          <button
-            onClick={analyzeRhythm}
-            disabled={loading}
-            className="text-xs text-midnight-500 hover:text-midnight-300 transition-colors"
-          >
+          <button onClick={analyzeRhythm} disabled={loading} className="text-xs text-midnight-500 hover:text-midnight-300 transition-colors">
             ↺ Opdater analyse
           </button>
         </div>

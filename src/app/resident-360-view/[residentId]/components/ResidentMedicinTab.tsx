@@ -14,7 +14,7 @@ interface GivenRecord {
 const GROUP_LABELS: Record<MedDefinition['time_group'], string> = {
   morgen: 'Morgen',
   middag: 'Middag',
-  aften: 'Aften',
+  aften:  'Aften',
   behoev: 'Ved behov',
 };
 
@@ -59,7 +59,7 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
   }, [residentId]);
 
   function toggle(medId: string) {
-    setGiven((prev) => {
+    setGiven(prev => {
       const next = { ...prev };
       if (next[medId]?.given) {
         delete next[medId];
@@ -71,8 +71,8 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
     });
   }
 
-  const activeMeds = medications.filter((m) => m.status === 'aktiv');
-  const givenCount = activeMeds.filter((m) => given[m.id]?.given).length;
+  const activeMeds  = medications.filter(m => m.status === 'aktiv');
+  const givenCount  = activeMeds.filter(m => given[m.id]?.given).length;
   const totalActive = activeMeds.length;
 
   if (medications.length === 0) {
@@ -86,21 +86,14 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
   return (
     <div className="space-y-5 max-w-xl">
       {/* Summary bar */}
-      <div
-        className={`rounded-xl border px-4 py-3 flex items-center justify-between ${
-          givenCount === totalActive
-            ? 'bg-[#E1F5EE] border-[#A8DFC9]'
-            : 'bg-amber-50 border-amber-200'
-        }`}
-      >
+      <div className={`rounded-xl border px-4 py-3 flex items-center justify-between ${
+        givenCount === totalActive
+          ? 'bg-[#E1F5EE] border-[#A8DFC9]'
+          : 'bg-amber-50 border-amber-200'
+      }`}>
         <div className="flex items-center gap-2">
-          <Pill
-            size={16}
-            className={givenCount === totalActive ? 'text-[#1D9E75]' : 'text-amber-500'}
-          />
-          <span
-            className={`text-sm font-semibold ${givenCount === totalActive ? 'text-[#1D9E75]' : 'text-amber-700'}`}
-          >
+          <Pill size={16} className={givenCount === totalActive ? 'text-[#1D9E75]' : 'text-amber-500'} />
+          <span className={`text-sm font-semibold ${givenCount === totalActive ? 'text-[#1D9E75]' : 'text-amber-700'}`}>
             {givenCount}/{totalActive} mediciner givet i dag
           </span>
         </div>
@@ -110,8 +103,8 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
       </div>
 
       {/* Groups */}
-      {GROUPS.map((group) => {
-        const meds = medications.filter((m) => m.time_group === group && m.status !== 'stoppet');
+      {GROUPS.map(group => {
+        const meds = medications.filter(m => m.time_group === group && m.status !== 'stoppet');
         if (meds.length === 0) return null;
 
         return (
@@ -122,44 +115,30 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
               </span>
             </div>
             <div className="divide-y divide-gray-50">
-              {meds.map((med) => {
-                const rec = given[med.id];
+              {meds.map(med => {
+                const rec     = given[med.id];
                 const isGiven = rec?.given ?? false;
                 const isPaused = med.status === 'pauseret';
                 const givenAt = rec?.givenAt
-                  ? new Date(rec.givenAt).toLocaleTimeString('da-DK', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })
+                  ? new Date(rec.givenAt).toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' })
                   : null;
 
                 return (
                   <div key={med.id} className="px-4 py-4 flex items-center gap-4">
-                    <div
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                        isGiven ? 'bg-[#E1F5EE]' : isPaused ? 'bg-amber-50' : 'bg-gray-100'
-                      }`}
-                    >
-                      <Pill
-                        size={18}
-                        className={
-                          isGiven ? 'text-[#1D9E75]' : isPaused ? 'text-amber-400' : 'text-gray-400'
-                        }
-                      />
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                      isGiven ? 'bg-[#E1F5EE]' : isPaused ? 'bg-amber-50' : 'bg-gray-100'
+                    }`}>
+                      <Pill size={18} className={isGiven ? 'text-[#1D9E75]' : isPaused ? 'text-amber-400' : 'text-gray-400'} />
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span
-                          className={`text-sm font-semibold ${isGiven ? 'text-gray-400' : 'text-gray-800'}`}
-                        >
+                        <span className={`text-sm font-semibold ${isGiven ? 'text-gray-400' : 'text-gray-800'}`}>
                           {med.name}
                         </span>
                         <span className="text-xs text-gray-500">{med.dose}</span>
                         {isPaused && (
-                          <span className="text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
-                            Pauseret
-                          </span>
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">Pauseret</span>
                         )}
                       </div>
                       <div className="flex items-center gap-1 mt-0.5 text-xs text-gray-500">

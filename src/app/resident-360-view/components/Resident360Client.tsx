@@ -24,7 +24,7 @@ export default function Resident360Client() {
 
   useEffect(() => {
     const t = searchParams.get('tab');
-    if (t && tabs.some((tab) => tab.id === t)) {
+    if (t && tabs.some(tab => tab.id === t)) {
       setActiveTab(t);
     }
   }, [searchParams]);
@@ -47,12 +47,14 @@ export default function Resident360Client() {
       />
       {/* Tab nav */}
       <div className="flex gap-1 bg-white border border-gray-200 rounded-lg p-1 mt-5 mb-5 w-fit">
-        {tabs?.map((tab) => (
+        {tabs?.map(tab => (
           <button
             key={`tab360-${tab?.id}`}
             onClick={() => setActiveTab(tab?.id)}
             className={`px-4 py-2 rounded text-sm font-medium transition-all ${
-              activeTab === tab?.id ? 'bg-[#0F1B2D] text-white' : 'text-gray-600 hover:bg-gray-100'
+              activeTab === tab?.id
+                ? 'bg-[#0F1B2D] text-white'
+                : 'text-gray-600 hover:bg-gray-100'
             }`}
           >
             {tab?.label}

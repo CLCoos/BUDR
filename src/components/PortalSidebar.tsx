@@ -16,6 +16,7 @@ import {
   Upload,
   BrainCircuit,
 } from 'lucide-react';
+import AppLogo from '@/components/ui/AppLogo';
 import { createClient } from '@/lib/supabase/client';
 import { useAlertCount } from '@/hooks/useAlertCount';
 
@@ -28,47 +29,20 @@ type NavItem = {
 };
 
 const staticNavItems: NavItem[] = [
-  {
-    icon: LayoutDashboard,
-    label: 'Dashboard',
-    href: '/care-portal-dashboard',
-    badge: 0,
-    cpActiveTab: null,
-  },
+  { icon: LayoutDashboard, label: 'Dashboard', href: '/care-portal-dashboard', badge: 0, cpActiveTab: null },
   { icon: ClipboardList, label: 'Vagtoverlev.', href: '/handover-workspace', badge: 0 },
   { icon: Users, label: 'Beboere', href: '/resident-360-view', badge: 0 },
-  {
-    icon: Bell,
-    label: 'Advarsler',
-    href: '/care-portal-dashboard?tab=alerts',
-    badge: 0,
-    cpActiveTab: 'alerts',
-  },
-  {
-    icon: Calendar,
-    label: 'Planlægger',
-    href: '/care-portal-dashboard?tab=planner',
-    badge: 0,
-    cpActiveTab: 'planner',
-  },
-  {
-    icon: BookOpen,
-    label: 'Journal',
-    href: '/care-portal-dashboard?tab=journal',
-    badge: 0,
-    cpActiveTab: 'journal',
-  },
-  { icon: Upload, label: 'Dataimport', href: '/care-portal-import', badge: 0 },
+  { icon: Bell, label: 'Advarsler', href: '/care-portal-dashboard?tab=alerts', badge: 0, cpActiveTab: 'alerts' },
+  { icon: Calendar, label: 'Planlægger', href: '/care-portal-dashboard?tab=planner', badge: 0, cpActiveTab: 'planner' },
+  { icon: BookOpen, label: 'Journal', href: '/care-portal-dashboard?tab=journal', badge: 0, cpActiveTab: 'journal' },
+  { icon: Upload,       label: 'Dataimport',   href: '/care-portal-import',     badge: 0 },
   { icon: BrainCircuit, label: 'Faglig støtte', href: '/care-portal-assistant', badge: 0 },
-  { icon: Settings, label: 'Indstillinger', href: '/care-portal-settings', badge: 0 },
+  { icon: Settings,     label: 'Indstillinger', href: '/care-portal-settings',  badge: 0 },
 ];
 
 function navItemActive(pathname: string, searchParams: URLSearchParams, item: NavItem): boolean {
   if (item.cpActiveTab !== undefined) {
-    return (
-      pathname === '/care-portal-dashboard' &&
-      (searchParams.get('tab') ?? null) === item.cpActiveTab
-    );
+    return pathname === '/care-portal-dashboard' && (searchParams.get('tab') ?? null) === item.cpActiveTab;
   }
   return pathname === item.href;
 }
@@ -89,8 +63,8 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
   const [initials, setInitials] = useState<string>('');
   const alertCount = useAlertCount();
 
-  const navItems = staticNavItems.map((item) =>
-    item.cpActiveTab === 'alerts' ? { ...item, badge: alertCount } : item
+  const navItems = staticNavItems.map(item =>
+    item.cpActiveTab === 'alerts' ? { ...item, badge: alertCount } : item,
   );
 
   useEffect(() => {
@@ -105,7 +79,7 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
       setInitials(
         parts.length >= 2
           ? (parts[0][0] + parts[1][0]).toUpperCase()
-          : name.slice(0, 2).toUpperCase()
+          : name.slice(0, 2).toUpperCase(),
       );
     });
   }, []);
@@ -121,73 +95,37 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
   return (
     <aside
       className={`
-        fixed bottom-0 left-0 z-[60] flex shrink-0 flex-col
-        transition-[transform,width] duration-300 top-[52px]
+        fixed bottom-0 left-0 z-[60] flex shrink-0 flex-col bg-[#0F1B2D]
+        transition-[transform,width] duration-300 top-24
         md:static md:top-auto md:bottom-auto md:z-auto md:translate-x-0 md:pointer-events-auto
-        ${collapsed ? 'w-16' : 'w-56'}
+        ${collapsed ? 'w-16' : 'w-64'}
         ${mobileClosed ? '-translate-x-full' : 'translate-x-0'}
         ${mobileClosed ? 'pointer-events-none' : 'pointer-events-auto'}
       `}
-      style={{ backgroundColor: 'var(--cp-bg2)', borderRight: '1px solid var(--cp-border)' }}
     >
       {/* Org branding header */}
-      <div
-        className={`flex shrink-0 items-center ${collapsed ? 'justify-center px-0 py-3' : 'gap-2.5 px-4 py-3'}`}
-        style={{ borderBottom: '1px solid var(--cp-border)' }}
-      >
+      <div className={`flex shrink-0 items-center border-b border-white/10 ${collapsed ? 'justify-center px-0 py-3' : 'gap-2.5 px-4 py-3'}`}>
         {orgLogoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={orgLogoUrl}
             alt={orgName ?? 'Organisation'}
-            className={
-              collapsed ? 'h-6 w-6 object-contain' : 'h-7 w-auto max-w-[120px] object-contain'
-            }
+            className={collapsed ? 'h-6 w-6 object-contain' : 'h-8 w-auto max-w-[140px] object-contain'}
           />
         ) : (
           <>
-            {/* Orb logo */}
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: '50%',
-                flexShrink: 0,
-                background: 'radial-gradient(circle at 35% 35%, #6ee7b7, #059669)',
-                boxShadow: '0 0 12px rgba(45,212,160,0.4)',
-              }}
-            />
+            <AppLogo size={collapsed ? 22 : 26} />
             {!collapsed && (
-              <div className="min-w-0">
-                <div
-                  style={{
-                    fontFamily: "'DM Serif Display', serif",
-                    fontSize: 15,
-                    color: 'var(--cp-text)',
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {orgName ?? 'BUDR'}
-                </div>
-                <div
-                  style={{
-                    fontSize: 10,
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
-                    color: 'var(--cp-muted)',
-                    lineHeight: 1.4,
-                  }}
-                >
-                  Care Portal
-                </div>
-              </div>
+              <span className="truncate text-sm font-bold text-white">
+                {orgName ?? 'BUDR'}
+              </span>
             )}
           </>
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto py-3 scrollbar-hide cp-scroll">
-        {navItems.map((item) => {
+      <div className="flex-1 overflow-y-auto py-4 scrollbar-hide">
+        {navItems.map(item => {
           const active = navItemActive(pathname, searchParams, item);
           return (
             <Link
@@ -197,55 +135,18 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
               onClick={() => onMobileClose()}
             >
               <div
-                className="relative mx-2 mb-0.5 flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 transition-all duration-150"
-                style={
+                className={`mx-2 mb-1 flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${
                   active
-                    ? {
-                        backgroundColor: 'var(--cp-green-dim)',
-                        color: 'var(--cp-green)',
-                      }
-                    : {
-                        color: 'var(--cp-muted)',
-                      }
-                }
-                onMouseEnter={(e) => {
-                  if (!active) {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--cp-bg3)';
-                    (e.currentTarget as HTMLElement).style.color = 'var(--cp-text)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!active) {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = '';
-                    (e.currentTarget as HTMLElement).style.color = 'var(--cp-muted)';
-                  }
-                }}
+                    ? 'bg-[#1D9E75]/20 text-[#1D9E75]'
+                    : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                }`}
               >
-                {active && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: 0,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      width: 2,
-                      height: '60%',
-                      backgroundColor: 'var(--cp-green)',
-                      borderRadius: '0 2px 2px 0',
-                    }}
-                  />
-                )}
-                <item.icon size={16} className="flex-shrink-0" />
+                <item.icon size={18} className="flex-shrink-0" />
                 {!collapsed && (
-                  <span className="flex-1 truncate" style={{ fontSize: 13, fontWeight: 400 }}>
-                    {item.label}
-                  </span>
+                  <span className="flex-1 truncate text-sm font-medium">{item.label}</span>
                 )}
                 {!collapsed && item.badge > 0 && (
-                  <span
-                    className="flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-xs font-bold"
-                    style={{ backgroundColor: 'var(--cp-red-dim)', color: 'var(--cp-red)' }}
-                  >
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#EF4444] text-xs font-bold text-white">
                     {item.badge}
                   </span>
                 )}
@@ -255,22 +156,15 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
         })}
       </div>
 
-      <div className="p-3" style={{ borderTop: '1px solid var(--cp-border)' }}>
+      <div className="border-t border-white/10 p-3">
         {!collapsed && displayName && (
           <div className="mb-3 flex items-center gap-2 px-1">
-            <div
-              className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-              style={{ background: 'linear-gradient(135deg, #2dd4a0, #0694a2)' }}
-            >
+            <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#1D9E75] text-xs font-semibold text-white">
               {initials}
             </div>
             <div className="min-w-0">
-              <div className="truncate text-xs font-medium" style={{ color: 'var(--cp-text)' }}>
-                {displayName}
-              </div>
-              <div className="truncate text-xs" style={{ color: 'var(--cp-muted)' }}>
-                Personale
-              </div>
+              <div className="truncate text-xs font-medium text-white">{displayName}</div>
+              <div className="truncate text-xs text-gray-500">Personale</div>
             </div>
           </div>
         )}
@@ -278,30 +172,13 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
           <button
             type="button"
             onClick={() => void handleLogout()}
-            className="rounded p-1 transition-colors"
-            style={{ color: 'var(--cp-muted)' }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.color = 'var(--cp-text)';
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.color = 'var(--cp-muted)';
-            }}
+            className="rounded p-1 text-gray-500 transition-colors hover:text-gray-300"
             aria-label="Log ud"
           >
             <LogOut size={16} />
           </button>
           {!collapsed && (
-            <button
-              type="button"
-              className="rounded p-1 transition-colors"
-              style={{ color: 'var(--cp-muted)' }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.color = 'var(--cp-text)';
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.color = 'var(--cp-muted)';
-              }}
-            >
+            <button type="button" className="rounded p-1 text-gray-500 transition-colors hover:text-gray-300">
               <Settings size={16} />
             </button>
           )}
@@ -311,12 +188,7 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
       <button
         type="button"
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-6 flex h-6 w-6 items-center justify-center rounded-full transition-colors"
-        style={{
-          border: '1px solid var(--cp-border)',
-          backgroundColor: 'var(--cp-bg2)',
-          color: 'var(--cp-muted)',
-        }}
+        className="absolute -right-3 top-6 flex h-6 w-6 items-center justify-center rounded-full border border-white/10 bg-[#0F1B2D] text-gray-400 transition-colors hover:text-white"
         aria-label={collapsed ? 'Udvid sidemenu' : 'Sammenklap sidemenu'}
       >
         {collapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
@@ -342,12 +214,7 @@ export default function PortalSidebar({
     <Suspense
       fallback={
         <aside
-          className="fixed bottom-0 left-0 z-40 hidden w-56 shrink-0 md:block"
-          style={{
-            top: '52px',
-            backgroundColor: 'var(--cp-bg2)',
-            borderRight: '1px solid var(--cp-border)',
-          }}
+          className="fixed bottom-0 left-0 top-12 z-40 hidden w-64 shrink-0 bg-[#0F1B2D] md:block"
           aria-hidden
         />
       }

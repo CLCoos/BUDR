@@ -33,11 +33,7 @@ export default function PortalMobileNav({ children, orgName, orgLogoUrl }: Props
         <div className="flex items-center gap-2">
           {orgLogoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={orgLogoUrl}
-              alt={orgName ?? 'Organisation'}
-              className="h-7 w-auto object-contain"
-            />
+            <img src={orgLogoUrl} alt={orgName ?? 'Organisation'} className="h-7 w-auto object-contain" />
           ) : (
             <>
               <AppLogo size={28} />

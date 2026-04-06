@@ -5,30 +5,10 @@ import { toast } from 'sonner';
 
 const steps = [
   { id: 1, title: 'Situation', desc: 'Hvad skete der? Beskriv situationen.', field: 'situation' },
-  {
-    id: 2,
-    title: 'Automatisk tanke',
-    desc: 'Hvad tænkte du automatisk i situationen?',
-    field: 'thought',
-  },
-  {
-    id: 3,
-    title: 'Følelse + intensitet',
-    desc: 'Hvilken følelse mærkede du, og hvor stærk var den?',
-    field: 'emotion',
-  },
-  {
-    id: 4,
-    title: 'Modtanke (AI)',
-    desc: 'Lys har genereret en alternativ tanke til dig.',
-    field: 'counter',
-  },
-  {
-    id: 5,
-    title: 'Ny vurdering',
-    desc: 'Hvordan har du det nu? Giv din følelse en ny score.',
-    field: 'new_emotion',
-  },
+  { id: 2, title: 'Automatisk tanke', desc: 'Hvad tænkte du automatisk i situationen?', field: 'thought' },
+  { id: 3, title: 'Følelse + intensitet', desc: 'Hvilken følelse mærkede du, og hvor stærk var den?', field: 'emotion' },
+  { id: 4, title: 'Modtanke (AI)', desc: 'Lys har genereret en alternativ tanke til dig.', field: 'counter' },
+  { id: 5, title: 'Ny vurdering', desc: 'Hvordan har du det nu? Giv din følelse en ny score.', field: 'new_emotion' },
 ];
 
 const mockCounterThoughts = [
@@ -51,10 +31,8 @@ export default function ThoughtCatcher() {
   const generateCounterThought = async () => {
     setLoadingAI(true);
     // Backend: POST /api/park/counter-thought with { situation, thought, emotion, intensity }
-    await new Promise((r) => setTimeout(r, 1800));
-    setCounterThought(
-      mockCounterThoughts?.[Math.floor(Math.random() * mockCounterThoughts?.length)]
-    );
+    await new Promise(r => setTimeout(r, 1800));
+    setCounterThought(mockCounterThoughts?.[Math.floor(Math.random() * mockCounterThoughts?.length)]);
     setLoadingAI(false);
   };
 
@@ -76,10 +54,7 @@ export default function ThoughtCatcher() {
       <div className="bg-white rounded-lg p-6 text-center border border-gray-100">
         <div className="text-4xl mb-3">🧠</div>
         <div className="font-semibold text-gray-800 mb-1">Godt arbejde, Anders!</div>
-        <div className="text-sm text-gray-500 mb-4">
-          Du har gennemført en tankefanger-øvelse. Intensiteten gik fra {intensity} til{' '}
-          {newIntensity}.
-        </div>
+        <div className="text-sm text-gray-500 mb-4">Du har gennemført en tankefanger-øvelse. Intensiteten gik fra {intensity} til {newIntensity}.</div>
         <div className="flex justify-center gap-4 text-sm">
           <div className="text-center">
             <div className="text-2xl font-bold tabular-nums text-red-400">{intensity}</div>
@@ -92,14 +67,7 @@ export default function ThoughtCatcher() {
           </div>
         </div>
         <button
-          onClick={() => {
-            setSaved(false);
-            setStep(1);
-            setSituation('');
-            setThought('');
-            setEmotion('');
-            setCounterThought('');
-          }}
+          onClick={() => { setSaved(false); setStep(1); setSituation(''); setThought(''); setEmotion(''); setCounterThought(''); }}
           className="mt-5 text-sm text-[#7F77DD] hover:underline"
         >
           Start ny tankefanger
@@ -112,37 +80,28 @@ export default function ThoughtCatcher() {
     <div className="space-y-4">
       {/* Progress */}
       <div className="flex items-center gap-2">
-        {steps?.map((s) => (
+        {steps?.map(s => (
           <div key={`step-indicator-${s?.id}`} className="flex items-center gap-2 flex-1">
-            <div
-              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                step > s?.id
-                  ? 'bg-[#7F77DD] text-white'
-                  : step === s?.id
-                    ? 'bg-[#7F77DD] text-white ring-2 ring-[#7F77DD]/30'
-                    : 'bg-gray-200 text-gray-400'
-              }`}
-            >
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+              step > s?.id ? 'bg-[#7F77DD] text-white' :
+              step === s?.id ? 'bg-[#7F77DD] text-white ring-2 ring-[#7F77DD]/30': 'bg-gray-200 text-gray-400'
+            }`}>
               {step > s?.id ? <Check size={10} /> : s?.id}
             </div>
-            {s?.id < 5 && (
-              <div className={`flex-1 h-0.5 ${step > s?.id ? 'bg-[#7F77DD]' : 'bg-gray-200'}`} />
-            )}
+            {s?.id < 5 && <div className={`flex-1 h-0.5 ${step > s?.id ? 'bg-[#7F77DD]' : 'bg-gray-200'}`} />}
           </div>
         ))}
       </div>
       {/* Step card */}
       <div className="bg-white rounded-lg p-5 border border-gray-100">
-        <div className="text-xs font-semibold text-[#7F77DD] uppercase tracking-wider mb-1">
-          Trin {step} / 5
-        </div>
-        <div className="font-semibold text-gray-800 mb-1">{steps?.[step - 1]?.title}</div>
-        <div className="text-xs text-gray-500 mb-4">{steps?.[step - 1]?.desc}</div>
+        <div className="text-xs font-semibold text-[#7F77DD] uppercase tracking-wider mb-1">Trin {step} / 5</div>
+        <div className="font-semibold text-gray-800 mb-1">{steps?.[step-1]?.title}</div>
+        <div className="text-xs text-gray-500 mb-4">{steps?.[step-1]?.desc}</div>
 
         {step === 1 && (
           <textarea
             value={situation}
-            onChange={(e) => setSituation(e?.target?.value)}
+            onChange={e => setSituation(e?.target?.value)}
             placeholder="F.eks. 'Jeg var til møde og sagde noget forkert...'"
             className="w-full text-sm border border-gray-200 rounded-lg p-3 resize-none focus:outline-none focus:border-[#7F77DD] transition-colors"
             rows={4}
@@ -152,7 +111,7 @@ export default function ThoughtCatcher() {
         {step === 2 && (
           <textarea
             value={thought}
-            onChange={(e) => setThought(e?.target?.value)}
+            onChange={e => setThought(e?.target?.value)}
             placeholder="F.eks. 'Alle tænker at jeg er dum...'"
             className="w-full text-sm border border-gray-200 rounded-lg p-3 resize-none focus:outline-none focus:border-[#7F77DD] transition-colors"
             rows={4}
@@ -165,26 +124,20 @@ export default function ThoughtCatcher() {
               <label className="text-xs font-medium text-gray-600 mb-1 block">Følelse</label>
               <input
                 value={emotion}
-                onChange={(e) => setEmotion(e?.target?.value)}
+                onChange={e => setEmotion(e?.target?.value)}
                 placeholder="F.eks. skam, angst, vrede..."
                 className="w-full text-sm border border-gray-200 rounded-lg p-3 focus:outline-none focus:border-[#7F77DD] transition-colors"
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-600 mb-2 block">
-                Intensitet: <span className="font-bold text-[#7F77DD]">{intensity}/10</span>
-              </label>
+              <label className="text-xs font-medium text-gray-600 mb-2 block">Intensitet: <span className="font-bold text-[#7F77DD]">{intensity}/10</span></label>
               <input
-                type="range"
-                min={1}
-                max={10}
-                value={intensity}
-                onChange={(e) => setIntensity(Number(e?.target?.value))}
+                type="range" min={1} max={10} value={intensity}
+                onChange={e => setIntensity(Number(e?.target?.value))}
                 className="w-full accent-[#7F77DD]"
               />
               <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>Svag</span>
-                <span>Meget stærk</span>
+                <span>Svag</span><span>Meget stærk</span>
               </div>
             </div>
           </div>
@@ -205,9 +158,7 @@ export default function ThoughtCatcher() {
                   </div>
                   <div className="text-sm text-gray-700 leading-relaxed">{counterThought}</div>
                 </div>
-                <div className="text-xs text-gray-400">
-                  Genereret af Lys AI · Du kan gemme eller springe over
-                </div>
+                <div className="text-xs text-gray-400">Genereret af Lys AI · Du kan gemme eller springe over</div>
               </div>
             )}
           </div>
@@ -216,31 +167,23 @@ export default function ThoughtCatcher() {
         {step === 5 && (
           <div>
             <label className="text-xs font-medium text-gray-600 mb-2 block">
-              Ny intensitet af {emotion || 'følelsen'}:{' '}
-              <span className="font-bold text-[#7F77DD]">{newIntensity}/10</span>
+              Ny intensitet af {emotion || 'følelsen'}: <span className="font-bold text-[#7F77DD]">{newIntensity}/10</span>
             </label>
             <input
-              type="range"
-              min={1}
-              max={10}
-              value={newIntensity}
-              onChange={(e) => setNewIntensity(Number(e?.target?.value))}
+              type="range" min={1} max={10} value={newIntensity}
+              onChange={e => setNewIntensity(Number(e?.target?.value))}
               className="w-full accent-[#7F77DD]"
             />
             <div className="flex justify-between text-xs text-gray-400 mt-1 mb-4">
-              <span>Svag</span>
-              <span>Meget stærk</span>
+              <span>Svag</span><span>Meget stærk</span>
             </div>
-            <div
-              className={`flex items-center gap-2 p-3 rounded-lg text-sm font-medium ${
-                newIntensity < intensity
-                  ? 'bg-green-50 text-green-700'
-                  : 'bg-amber-50 text-amber-700'
-              }`}
-            >
+            <div className={`flex items-center gap-2 p-3 rounded-lg text-sm font-medium ${
+              newIntensity < intensity ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'
+            }`}>
               {newIntensity < intensity
                 ? `✅ Intensiteten faldt med ${intensity - newIntensity} point. Godt arbejde!`
-                : `💛 Det er okay — det tager tid. Lys er her for dig.`}
+                : `💛 Det er okay — det tager tid. Lys er her for dig.`
+              }
             </div>
           </div>
         )}

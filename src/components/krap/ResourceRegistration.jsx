@@ -68,9 +68,7 @@ export default function ResourceRegistration({ supabase, profileId }) {
       </div>
 
       <div className="mb-3">
-        <div className="text-xs font-semibold text-midnight-200 mb-2">
-          Vælg kategorier (én eller flere)
-        </div>
+        <div className="text-xs font-semibold text-midnight-200 mb-2">Vælg kategorier (én eller flere)</div>
         <div className="grid grid-cols-2 gap-2">
           {categories.map((c) => {
             const active = selectedCategories.includes(c);
@@ -113,13 +111,7 @@ export default function ResourceRegistration({ supabase, profileId }) {
       <div className="mt-3">
         <button
           onClick={onSave}
-          disabled={
-            !supabase ||
-            !profileId ||
-            saving ||
-            selectedCategories.length === 0 ||
-            whatWentWell.trim().length === 0
-          }
+          disabled={!supabase || !profileId || saving || selectedCategories.length === 0 || whatWentWell.trim().length === 0}
           className="w-full rounded-2xl py-3 font-display font-bold text-sm transition-all duration-200 active:scale-[0.99] shadow-sm bg-sunrise-400 hover:bg-sunrise-500 text-midnight-900 disabled:opacity-50"
         >
           {saving ? 'Gemmer…' : `Gem ressourcer (uge ${weekNumber})`}
@@ -128,3 +120,4 @@ export default function ResourceRegistration({ supabase, profileId }) {
     </section>
   );
 }
+

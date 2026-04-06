@@ -1,57 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 
-/**
- * Afviser planforslag som **indlogget portal-personale** (Supabase JWT + RLS).
- */
 export async function POST(req: NextRequest) {
-  const supabase = await createServerSupabaseClient();
-  if (!supabase) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) {
+    return NextResponse.json({ error: 'Server ikke konfigureret' }, { status: 503 });
   }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  let body: { proposalId?: string };
+  let body: { proposalId?: string; staffId?: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: 'Ugyldig JSON' }, { status: 400 });
   }
 
-  const proposalId = body.proposalId;
-  if (!proposalId || typeof proposalId !== 'string') {
+  const { proposalId, staffId } = body;
+  if (!proposalId) {
     return NextResponse.json({ error: 'Mangler proposalId' }, { status: 400 });
   }
 
-  const { data: existing, error: fetchErr } = await supabase
-    .from('plan_proposals')
-    .select('id')
-    .eq('id', proposalId)
-    .eq('status', 'pending')
-    .maybeSingle();
-
-  if (fetchErr) {
-    console.error('reject-proposal fetch', fetchErr);
-    return NextResponse.json({ error: 'Kunne ikke hente forslag' }, { status: 500 });
-  }
-  if (!existing) {
-    return NextResponse.json(
-      { error: 'Forslag ikke fundet eller allerede behandlet' },
-      { status: 404 }
-    );
-  }
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    serviceRoleKey,
+    { auth: { persistSession: false } },
+  );
 
   const { error } = await supabase
     .from('plan_proposals')
     .update({
       status: 'rejected',
-      reviewed_by: user.id,
+      reviewed_by: staffId ?? null,
       reviewed_at: new Date().toISOString(),
     })
     .eq('id', proposalId)

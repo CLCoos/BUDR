@@ -64,22 +64,16 @@ export default function OnboardingFlow() {
 
   const stepProps = { data, setData, onNext: goNext, onBack: goBack, onComplete: handleComplete };
 
-  const transitionClass =
-    mounted && isTransitioning
-      ? transitionDirection === 'forward'
-        ? 'opacity-0 translate-x-4'
-        : 'opacity-0 -translate-x-4'
-      : 'opacity-100 translate-x-0';
+  const transitionClass = mounted && isTransitioning
+    ? transitionDirection === 'forward'
+      ? 'opacity-0 translate-x-4' :'opacity-0 -translate-x-4' :'opacity-100 translate-x-0';
 
   return (
     <div suppressHydrationWarning className="min-h-screen gradient-midnight flex flex-col">
       <Toaster position="top-center" />
 
       {/* Top Bar */}
-      <div
-        suppressHydrationWarning
-        className="sticky top-0 z-20 bg-midnight-900/90 backdrop-blur-xl border-b border-midnight-700/50"
-      >
+      <div suppressHydrationWarning className="sticky top-0 z-20 bg-midnight-900/90 backdrop-blur-xl border-b border-midnight-700/50">
         <div className="max-w-lg mx-auto px-4 py-3">
           <div className="flex items-center justify-between mb-3">
             {currentStep > 1 && currentStep < TOTAL_STEPS ? (

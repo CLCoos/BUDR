@@ -26,150 +26,18 @@ export interface Task {
 }
 
 const initialTasks: Task[] = [
-  {
-    id: 'task-001',
-    title: 'Stå op og stræk dig',
-    emoji: '🌅',
-    duration: '5 min',
-    category: 'Krop',
-    timeBlock: 'morgen',
-    status: 'completed',
-    isRecommended: true,
-    difficulty: 'let',
-    energy: 1,
-  },
-  {
-    id: 'task-002',
-    title: 'Spis morgenmad',
-    emoji: '🍳',
-    duration: '20 min',
-    category: 'Mad',
-    timeBlock: 'morgen',
-    status: 'completed',
-    isRecommended: true,
-    difficulty: 'let',
-    energy: 1,
-  },
-  {
-    id: 'task-003',
-    title: 'Tag din medicin',
-    emoji: '💊',
-    duration: '2 min',
-    category: 'Sundhed',
-    timeBlock: 'morgen',
-    status: 'in-progress',
-    isRecommended: true,
-    difficulty: 'let',
-    energy: 1,
-  },
-  {
-    id: 'task-004',
-    title: 'Tjek din dagplan',
-    emoji: '📋',
-    duration: '5 min',
-    category: 'Struktur',
-    timeBlock: 'morgen',
-    status: 'pending',
-    isRecommended: true,
-    difficulty: 'let',
-    energy: 1,
-  },
-  {
-    id: 'task-005',
-    title: 'Gå en lille tur',
-    emoji: '🚶',
-    duration: '20 min',
-    category: 'Bevægelse',
-    timeBlock: 'eftermiddag',
-    status: 'pending',
-    isRecommended: true,
-    difficulty: 'normal',
-    energy: 3,
-  },
-  {
-    id: 'task-006',
-    title: 'Spis frokost',
-    emoji: '🥗',
-    duration: '25 min',
-    category: 'Mad',
-    timeBlock: 'eftermiddag',
-    status: 'pending',
-    isRecommended: true,
-    difficulty: 'let',
-    energy: 1,
-  },
-  {
-    id: 'task-007',
-    title: 'Ring til en ven',
-    emoji: '📞',
-    duration: '15 min',
-    category: 'Social',
-    timeBlock: 'eftermiddag',
-    status: 'pending',
-    isRecommended: false,
-    difficulty: 'normal',
-    energy: 3,
-  },
-  {
-    id: 'task-008',
-    title: 'Hvil 20 minutter',
-    emoji: '😴',
-    duration: '20 min',
-    category: 'Hvile',
-    timeBlock: 'eftermiddag',
-    status: 'pending',
-    isRecommended: true,
-    difficulty: 'let',
-    energy: 1,
-  },
-  {
-    id: 'task-009',
-    title: 'Kreativ aktivitet',
-    emoji: '🎨',
-    duration: '30 min',
-    category: 'Kreativitet',
-    timeBlock: 'eftermiddag',
-    status: 'pending',
-    isRecommended: false,
-    difficulty: 'normal',
-    energy: 3,
-  },
-  {
-    id: 'task-010',
-    title: 'Spis aftensmad',
-    emoji: '🍽️',
-    duration: '30 min',
-    category: 'Mad',
-    timeBlock: 'aften',
-    status: 'pending',
-    isRecommended: true,
-    difficulty: 'let',
-    energy: 1,
-  },
-  {
-    id: 'task-011',
-    title: 'Skriv i din journal',
-    emoji: '📓',
-    duration: '10 min',
-    category: 'Refleksion',
-    timeBlock: 'aften',
-    status: 'pending',
-    isRecommended: true,
-    difficulty: 'let',
-    energy: 2,
-  },
-  {
-    id: 'task-012',
-    title: 'Aftenroutine og seng',
-    emoji: '🌙',
-    duration: '20 min',
-    category: 'Søvn',
-    timeBlock: 'aften',
-    status: 'pending',
-    isRecommended: true,
-    difficulty: 'let',
-    energy: 1,
-  },
+  { id: 'task-001', title: 'Stå op og stræk dig', emoji: '🌅', duration: '5 min', category: 'Krop', timeBlock: 'morgen', status: 'completed', isRecommended: true, difficulty: 'let', energy: 1 },
+  { id: 'task-002', title: 'Spis morgenmad', emoji: '🍳', duration: '20 min', category: 'Mad', timeBlock: 'morgen', status: 'completed', isRecommended: true, difficulty: 'let', energy: 1 },
+  { id: 'task-003', title: 'Tag din medicin', emoji: '💊', duration: '2 min', category: 'Sundhed', timeBlock: 'morgen', status: 'in-progress', isRecommended: true, difficulty: 'let', energy: 1 },
+  { id: 'task-004', title: 'Tjek din dagplan', emoji: '📋', duration: '5 min', category: 'Struktur', timeBlock: 'morgen', status: 'pending', isRecommended: true, difficulty: 'let', energy: 1 },
+  { id: 'task-005', title: 'Gå en lille tur', emoji: '🚶', duration: '20 min', category: 'Bevægelse', timeBlock: 'eftermiddag', status: 'pending', isRecommended: true, difficulty: 'normal', energy: 3 },
+  { id: 'task-006', title: 'Spis frokost', emoji: '🥗', duration: '25 min', category: 'Mad', timeBlock: 'eftermiddag', status: 'pending', isRecommended: true, difficulty: 'let', energy: 1 },
+  { id: 'task-007', title: 'Ring til en ven', emoji: '📞', duration: '15 min', category: 'Social', timeBlock: 'eftermiddag', status: 'pending', isRecommended: false, difficulty: 'normal', energy: 3 },
+  { id: 'task-008', title: 'Hvil 20 minutter', emoji: '😴', duration: '20 min', category: 'Hvile', timeBlock: 'eftermiddag', status: 'pending', isRecommended: true, difficulty: 'let', energy: 1 },
+  { id: 'task-009', title: 'Kreativ aktivitet', emoji: '🎨', duration: '30 min', category: 'Kreativitet', timeBlock: 'eftermiddag', status: 'pending', isRecommended: false, difficulty: 'normal', energy: 3 },
+  { id: 'task-010', title: 'Spis aftensmad', emoji: '🍽️', duration: '30 min', category: 'Mad', timeBlock: 'aften', status: 'pending', isRecommended: true, difficulty: 'let', energy: 1 },
+  { id: 'task-011', title: 'Skriv i din journal', emoji: '📓', duration: '10 min', category: 'Refleksion', timeBlock: 'aften', status: 'pending', isRecommended: true, difficulty: 'let', energy: 2 },
+  { id: 'task-012', title: 'Aftenroutine og seng', emoji: '🌙', duration: '20 min', category: 'Søvn', timeBlock: 'aften', status: 'pending', isRecommended: true, difficulty: 'let', energy: 1 },
 ];
 
 type ViewMode = 'energiflod' | 'stotte' | 'monster';
@@ -221,6 +89,7 @@ export default function DailyStructureView() {
   const [viewMode, setViewMode] = useState<ViewMode>('energiflod');
   const [showBareEtSkridt, setShowBareEtSkridt] = useState(false);
   const [showLysMessage, setShowLysMessage] = useState(false);
+  const [lastCompletedTaskId, setLastCompletedTaskId] = useState<string | undefined>(undefined);
   const [allDoneReaction, setAllDoneReaction] = useState<CompanionReaction>('idle');
   const [companion, setCompanion] = useState('bjorn');
 
@@ -248,12 +117,15 @@ export default function DailyStructureView() {
   const handleCompleteTask = (taskId: string) => {
     setTasks((prev) =>
       prev.map((t) =>
-        t.id === taskId ? { ...t, status: t.status === 'completed' ? 'pending' : 'completed' } : t
+        t.id === taskId
+          ? { ...t, status: t.status === 'completed' ? 'pending' : 'completed' }
+          : t
       )
     );
     const task = tasks.find((t) => t.id === taskId);
     if (task && task.status !== 'completed') {
       toast.success(`${task.emoji} ${task.title} klaret! +10 XP`, { duration: 2000 });
+      setLastCompletedTaskId(taskId);
     }
   };
 
@@ -271,11 +143,7 @@ export default function DailyStructureView() {
   const eftermiddagTasks = tasks.filter((t) => t.timeBlock === 'eftermiddag');
   const aftenTasks = tasks.filter((t) => t.timeBlock === 'aften');
 
-  const today = new Date().toLocaleDateString('da-DK', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
+  const today = new Date().toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long' });
 
   return (
     <div className="min-h-screen gradient-midnight pb-28">
@@ -286,12 +154,8 @@ export default function DailyStructureView() {
         <div className="max-w-lg mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="font-display text-base sm:text-lg font-bold text-midnight-50 capitalize">
-                {today}
-              </h1>
-              <p className="text-xs text-midnight-400 mt-0.5">
-                {completed} af {total} gennemført
-              </p>
+              <h1 className="font-display text-base sm:text-lg font-bold text-midnight-50 capitalize">{today}</h1>
+              <p className="text-xs text-midnight-400 mt-0.5">{completed} af {total} gennemført</p>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="streak-badge text-xs px-2 py-0.5">🔥 7</div>
@@ -301,20 +165,17 @@ export default function DailyStructureView() {
 
           {/* View mode tabs */}
           <div className="flex gap-1.5 mt-3">
-            {(
-              [
-                { key: 'energiflod', label: 'Min dag', shortLabel: 'Min dag' },
-                { key: 'stotte', label: 'Min støtte', shortLabel: 'Støtte' },
-                { key: 'monster', label: 'Min fremgang', shortLabel: 'Fremgang' },
-              ] as { key: ViewMode; label: string; shortLabel: string }[]
-            ).map((tab) => (
+            {([
+              { key: 'energiflod', label: 'Min dag', shortLabel: 'Min dag' },
+              { key: 'stotte', label: 'Min støtte', shortLabel: 'Støtte' },
+              { key: 'monster', label: 'Min fremgang', shortLabel: 'Fremgang' },
+            ] as { key: ViewMode; label: string; shortLabel: string }[]).map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setViewMode(tab.key)}
                 className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all duration-200 min-h-[36px] truncate px-1 ${
                   viewMode === tab.key
-                    ? 'bg-sunrise-400/20 text-sunrise-300 border border-sunrise-400/30'
-                    : 'bg-midnight-800 text-midnight-400 border border-midnight-700 hover:text-midnight-200'
+                    ? 'bg-sunrise-400/20 text-sunrise-300 border border-sunrise-400/30' :'bg-midnight-800 text-midnight-400 border border-midnight-700 hover:text-midnight-200'
                 }`}
               >
                 <span className="hidden sm:inline">{tab.label}</span>
@@ -335,17 +196,11 @@ export default function DailyStructureView() {
             onTap={() => setShowLysMessage(true)}
           />
           <div className="flex-1 min-w-0">
-            <p className="font-display text-sm font-semibold text-midnight-100 mb-0.5">
-              Lys er med dig
-            </p>
+            <p className="font-display text-sm font-semibold text-midnight-100 mb-0.5">Lys er med dig</p>
             <p className="text-xs text-midnight-400 leading-relaxed">
-              {percent >= 80
-                ? 'Fantastisk dag! Du strålende! ✨'
-                : percent >= 50
-                  ? 'Du er godt på vej. Bliv ved! 💪'
-                  : percent >= 20
-                    ? 'Tag det i dit eget tempo. 🌱'
-                    : 'Bare ét skridt ad gangen. 🫂'}
+              {percent >= 80 ? 'Fantastisk dag! Du strålende! ✨' :
+               percent >= 50 ? 'Du er godt på vej. Bliv ved! 💪' :
+               percent >= 20 ? 'Tag det i dit eget tempo. 🌱' : 'Bare ét skridt ad gangen. 🫂'}
             </p>
             <button
               onClick={() => setShowBareEtSkridt(true)}
@@ -386,9 +241,7 @@ export default function DailyStructureView() {
         {isRestDay ? (
           <div className="bg-midnight-800/60 rounded-3xl border border-aurora-violet/20 p-8 flex flex-col items-center text-center">
             <div className="animate-float text-5xl mb-4">🌙</div>
-            <h2 className="font-display text-xl font-bold text-midnight-50 mb-2">
-              Det er din hviledag
-            </h2>
+            <h2 className="font-display text-xl font-bold text-midnight-50 mb-2">Det er din hviledag</h2>
             <p className="text-midnight-400 text-sm leading-relaxed max-w-xs">
               Du behøver ikke gøre noget i dag. Hvile er også fremgang.
             </p>
@@ -398,10 +251,7 @@ export default function DailyStructureView() {
           <div className="flex flex-col items-center text-center py-10 px-4 bg-midnight-800/40 rounded-3xl border border-emerald-400/20 animate-slide-up">
             <div className="relative mb-4">
               {/* Confetti ring */}
-              <div
-                className="absolute inset-0 rounded-full animate-ping opacity-20 bg-emerald-400/30"
-                style={{ animationDuration: '2s' }}
-              />
+              <div className="absolute inset-0 rounded-full animate-ping opacity-20 bg-emerald-400/30" style={{ animationDuration: '2s' }} />
               <CompanionAvatar
                 companion={companion}
                 size="xl"
@@ -412,25 +262,14 @@ export default function DailyStructureView() {
                 onReactionEnd={() => setAllDoneReaction('idle')}
               />
               <span className="absolute -top-3 -right-3 text-2xl animate-bounce">🎉</span>
-              <span
-                className="absolute -bottom-2 -left-3 text-xl animate-bounce"
-                style={{ animationDelay: '0.3s' }}
-              >
-                ⭐
-              </span>
-              <span
-                className="absolute top-0 -left-4 text-lg animate-bounce"
-                style={{ animationDelay: '0.6s' }}
-              >
-                ✨
-              </span>
+              <span className="absolute -bottom-2 -left-3 text-xl animate-bounce" style={{ animationDelay: '0.3s' }}>⭐</span>
+              <span className="absolute top-0 -left-4 text-lg animate-bounce" style={{ animationDelay: '0.6s' }}>✨</span>
             </div>
             <h2 className="font-display text-xl font-bold text-midnight-50 mb-2">
               Alle opgaver klaret! 🏆
             </h2>
             <p className="text-sm text-midnight-400 leading-relaxed max-w-xs mb-4">
-              Du har gennemført hele dagen. Det er noget at fejre — tryk på din ledsager for en
-              hilsen!
+              Du har gennemført hele dagen. Det er noget at fejre — tryk på din ledsager for en hilsen!
             </p>
             <div className="flex gap-2 flex-wrap justify-center">
               <span className="bg-emerald-400/15 border border-emerald-400/30 text-emerald-300 text-xs font-semibold px-3 py-1 rounded-full">
@@ -457,7 +296,9 @@ export default function DailyStructureView() {
                 <Støttecirklen />
               </div>
             )}
-            {viewMode === 'monster' && <Mønsterspejlet />}
+            {viewMode === 'monster' && (
+              <Mønsterspejlet />
+            )}
           </>
         )}
       </div>
@@ -466,15 +307,11 @@ export default function DailyStructureView() {
       {showBareEtSkridt && (
         <BareEtSkridt
           onClose={() => setShowBareEtSkridt(false)}
-          nextTask={
-            nextPendingTask
-              ? {
-                  emoji: nextPendingTask.emoji,
-                  title: nextPendingTask.title,
-                  duration: nextPendingTask.duration,
-                }
-              : undefined
-          }
+          nextTask={nextPendingTask ? {
+            emoji: nextPendingTask.emoji,
+            title: nextPendingTask.title,
+            duration: nextPendingTask.duration,
+          } : undefined}
         />
       )}
 
@@ -492,13 +329,7 @@ interface EnergiflodProps {
   onSkip: (id: string) => void;
 }
 
-function Energiflod({
-  morgenTasks,
-  eftermiddagTasks,
-  aftenTasks,
-  onComplete,
-  onSkip,
-}: EnergiflodProps) {
+function Energiflod({ morgenTasks, eftermiddagTasks, aftenTasks, onComplete, onSkip }: EnergiflodProps) {
   const blocks = [
     { tasks: morgenTasks, config: timeBlockConfig.morgen },
     { tasks: eftermiddagTasks, config: timeBlockConfig.eftermiddag },
@@ -523,17 +354,13 @@ function Energiflod({
           <div
             key={config.label}
             className={`rounded-3xl border ${config.border} overflow-hidden`}
-            style={{
-              background: `linear-gradient(135deg, ${config.accentLight} 0%, rgba(15,15,35,0.8) 100%)`,
-            }}
+            style={{ background: `linear-gradient(135deg, ${config.accentLight} 0%, rgba(15,15,35,0.8) 100%)` }}
           >
             {/* Block header */}
             <div className="flex items-center justify-between px-5 pt-4 pb-3">
               <div className="flex items-center gap-2">
                 <span className="text-xl">{config.emoji}</span>
-                <span className="font-display text-sm font-bold text-midnight-100">
-                  {config.label}
-                </span>
+                <span className="font-display text-sm font-bold text-midnight-100">{config.label}</span>
                 <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${config.pill}`}>
                   {blockCompleted}/{blockTotal}
                 </span>
@@ -586,8 +413,7 @@ function RiverTask({ task, accent, onComplete, onSkip }: RiverTaskProps) {
         isCompleted
           ? 'bg-midnight-900/40 border-midnight-700/30 opacity-60'
           : isSkipped
-            ? 'bg-midnight-900/20 border-midnight-700/20 opacity-40'
-            : 'bg-midnight-900/60 border-midnight-700/40 hover:border-midnight-600/60'
+          ? 'bg-midnight-900/20 border-midnight-700/20 opacity-40' :'bg-midnight-900/60 border-midnight-700/40 hover:border-midnight-600/60'
       }`}
     >
       {/* Complete button */}
@@ -602,13 +428,7 @@ function RiverTask({ task, accent, onComplete, onSkip }: RiverTaskProps) {
       >
         {isCompleted && (
           <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-            <path
-              d="M1 4L3.5 6.5L9 1"
-              stroke="#0f0f1a"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            <path d="M1 4L3.5 6.5L9 1" stroke="#0f0f1a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         )}
       </button>
@@ -618,14 +438,14 @@ function RiverTask({ task, accent, onComplete, onSkip }: RiverTaskProps) {
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <p
-          className={`text-sm font-medium leading-tight ${isCompleted || isSkipped ? 'line-through text-midnight-500' : 'text-midnight-100'}`}
-        >
+        <p className={`text-sm font-medium leading-tight ${isCompleted || isSkipped ? 'line-through text-midnight-500' : 'text-midnight-100'}`}>
           {task.title}
         </p>
         <div className="flex items-center gap-2 mt-0.5">
           <span className="text-xs text-midnight-500">{task.duration}</span>
-          {task.isRecommended && <span className="text-xs text-sunrise-400/70">★</span>}
+          {task.isRecommended && (
+            <span className="text-xs text-sunrise-400/70">★</span>
+          )}
         </div>
       </div>
 

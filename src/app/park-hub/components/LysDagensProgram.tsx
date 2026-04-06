@@ -43,18 +43,12 @@ type RawPlanItem = {
 
 function categoryToType(cat?: string): ProgramItemType {
   switch (cat) {
-    case 'aktivitet':
-      return 'aktivitet';
-    case 'social':
-      return 'aktivitet';
-    case 'mad':
-      return 'struktur';
-    case 'medicin':
-      return 'struktur';
-    case 'hvile':
-      return 'andet';
-    default:
-      return 'struktur';
+    case 'aktivitet': return 'aktivitet';
+    case 'social':    return 'aktivitet';
+    case 'mad':       return 'struktur';
+    case 'medicin':   return 'struktur';
+    case 'hvile':     return 'andet';
+    default:          return 'struktur';
   }
 }
 
@@ -144,43 +138,39 @@ export default function LysDagensProgram({
 
   const formatter = useMemo(
     () => new Intl.DateTimeFormat('da-DK', { weekday: 'long', day: 'numeric', month: 'long' }),
-    []
+    [],
   );
   const dateLine = formatter.format(now);
   const dateLineCap = dateLine.charAt(0).toUpperCase() + dateLine.slice(1);
 
   const displayItems = items ?? [];
-  const allPast = displayItems.every((i) => parseTime(i.time) < nowMin);
-  const nextIdx = displayItems.findIndex((i) => parseTime(i.time) >= nowMin);
+  const allPast = displayItems.every(i => parseTime(i.time) < nowMin);
+  const nextIdx = displayItems.findIndex(i => parseTime(i.time) >= nowMin);
   const placeholders = nextIdx >= 0 ? Math.min(2, displayItems.length - nextIdx - 1) : 0;
 
   const isDarkish =
-    tokens.bg === '#0F1B2D' ||
-    tokens.bg === '#0A1220' ||
-    tokens.text.toLowerCase().includes('e2e8f0');
+    tokens.bg === '#0F1B2D' || tokens.bg === '#0A1220' || tokens.text.toLowerCase().includes('e2e8f0');
 
   const toggleExpand = useCallback((id: string) => {
-    setExpandedId((cur) => (cur === id ? null : id));
+    setExpandedId(cur => (cur === id ? null : id));
   }, []);
 
   const setNote = useCallback((itemId: string, value: string) => {
-    setNotes((n) => ({ ...n, [itemId]: value.slice(0, 100) }));
+    setNotes(n => ({ ...n, [itemId]: value.slice(0, 100) }));
   }, []);
 
   const confirmRegular = useCallback(
     (item: ProgramItem) => {
-      setResponses((r) => ({ ...r, [item.id]: { kind: 'bekræftet' } }));
+      setResponses(r => ({ ...r, [item.id]: { kind: 'bekræftet' } }));
       setExpandedId(null);
-      toast.success(
-        `📋 Sendt til portalen: "${firstName} har bekræftet ${item.title} kl. ${item.time}"`
-      );
+      toast.success(`📋 Sendt til portalen: "${firstName} har bekræftet ${item.title} kl. ${item.time}"`);
     },
-    [firstName]
+    [firstName],
   );
 
   const specialReaction = useCallback(
     (item: ProgramItem, kind: 'klar' | 'nervøs' | 'afmelding') => {
-      setResponses((r) => ({ ...r, [item.id]: { kind } }));
+      setResponses(r => ({ ...r, [item.id]: { kind } }));
       setExpandedId(null);
       const tid = item.time;
       const tit = item.title;
@@ -192,7 +182,7 @@ export default function LysDagensProgram({
         toast.success(`📋 Sendt til portalen: "${firstName} vil afmelde ${tit} kl. ${tid}"`);
       }
     },
-    [firstName]
+    [firstName],
   );
 
   const sendNote = useCallback(
@@ -200,11 +190,11 @@ export default function LysDagensProgram({
       const n = (notes[item.id] ?? '').trim();
       if (!n) return;
       toast.success(
-        `Sendt til personalet ✓ — 📋 Portal: note om "${item.title}" (${n.slice(0, 40)}${n.length > 40 ? '…' : ''})`
+        `Sendt til personalet ✓ — 📋 Portal: note om "${item.title}" (${n.slice(0, 40)}${n.length > 40 ? '…' : ''})`,
       );
       setNote(item.id, '');
     },
-    [notes, setNote]
+    [notes, setNote],
   );
 
   const badgeFor = (itemId: string) => {
@@ -250,10 +240,7 @@ export default function LysDagensProgram({
         style={{ marginTop: open ? 8 : 0 }}
       >
         <div className="overflow-hidden">
-          <div
-            className="space-y-3 border-t pt-3 transition-all duration-200"
-            style={{ borderColor: tokens.cardBorder }}
-          >
+          <div className="space-y-3 border-t pt-3 transition-all duration-200" style={{ borderColor: tokens.cardBorder }}>
             {!special ? (
               <button
                 type="button"
@@ -295,25 +282,18 @@ export default function LysDagensProgram({
                     ✗ Jeg vil afmelde
                   </button>
                 </div>
-                <label
-                  className="block text-sm font-medium opacity-90"
-                  style={{ color: tokens.text }}
-                >
+                <label className="block text-sm font-medium opacity-90" style={{ color: tokens.text }}>
                   Skriv en note til personalet
                   <textarea
                     value={notes[item.id] ?? ''}
-                    onChange={(e) => setNote(item.id, e.target.value)}
+                    onChange={e => setNote(item.id, e.target.value)}
                     maxLength={100}
                     rows={2}
                     placeholder="Fortæl personalet noget om denne aftale..."
                     className="mt-1 w-full rounded-xl border border-white/20 bg-white/10 p-3 text-sm text-white placeholder:text-white/40 outline-none transition-all duration-200"
                     style={
                       !isDarkish
-                        ? {
-                            borderColor: tokens.cardBorder,
-                            backgroundColor: 'rgba(255,255,255,0.85)',
-                            color: tokens.text,
-                          }
+                        ? { borderColor: tokens.cardBorder, backgroundColor: 'rgba(255,255,255,0.85)', color: tokens.text }
                         : undefined
                     }
                   />
@@ -359,7 +339,7 @@ export default function LysDagensProgram({
       {items === null && (
         <div className="flex justify-center py-8">
           <div className="flex gap-1.5">
-            {[0, 150, 300].map((delay) => (
+            {[0, 150, 300].map(delay => (
               <div
                 key={delay}
                 className="w-2 h-2 rounded-full animate-bounce"
@@ -423,21 +403,14 @@ export default function LysDagensProgram({
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2">
-                            <p
-                              className="mb-1 font-mono text-base font-semibold"
-                              style={{ color: accent }}
-                            >
+                            <p className="mb-1 font-mono text-base font-semibold" style={{ color: accent }}>
                               {item.time}
                             </p>
                             {badgeFor(item.id)}
                           </div>
-                          <p className="text-lg font-bold" style={{ color: tokens.text }}>
-                            {item.title}
-                          </p>
+                          <p className="text-lg font-bold" style={{ color: tokens.text }}>{item.title}</p>
                           {item.subtitle ? (
-                            <p className="mt-1 text-base opacity-60" style={{ color: tokens.text }}>
-                              {item.subtitle}
-                            </p>
+                            <p className="mt-1 text-base opacity-60" style={{ color: tokens.text }}>{item.subtitle}</p>
                           ) : null}
                           <p className="mt-2 text-base">
                             <span aria-hidden>{TYPE_DOT[item.type]}</span>{' '}
@@ -475,9 +448,7 @@ export default function LysDagensProgram({
                       >
                         {item.time}
                       </span>
-                      <span className="text-lg font-semibold" style={{ color: tokens.text }}>
-                        {item.title}
-                      </span>
+                      <span className="text-lg font-semibold" style={{ color: tokens.text }}>{item.title}</span>
                       <span className="text-base" aria-label={TYPE_LABEL[item.type]}>
                         <span aria-hidden>{TYPE_DOT[item.type]}</span>
                       </span>

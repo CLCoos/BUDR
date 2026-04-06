@@ -14,68 +14,19 @@ interface GoalEntry {
 }
 
 const INITIAL_GOALS: GoalEntry[] = [
-  {
-    id: 'goal-1',
-    text: 'Drik 2 liter vand dagligt',
-    category: 'Sundhed',
-    emoji: '💧',
-    completedDays: 18,
-    totalDays: 23,
-    active: true,
-    addedDate: '1. marts',
-  },
-  {
-    id: 'goal-2',
-    text: 'Gå en tur hver dag',
-    category: 'Bevægelse',
-    emoji: '🚶',
-    completedDays: 14,
-    totalDays: 23,
-    active: true,
-    addedDate: '1. marts',
-  },
-  {
-    id: 'goal-3',
-    text: 'Skriv i journalen',
-    category: 'Refleksion',
-    emoji: '📓',
-    completedDays: 20,
-    totalDays: 23,
-    active: true,
-    addedDate: '1. marts',
-  },
-  {
-    id: 'goal-4',
-    text: 'Ring til en ven om ugen',
-    category: 'Social',
-    emoji: '📞',
-    completedDays: 3,
-    totalDays: 4,
-    active: true,
-    addedDate: '8. marts',
-  },
-  {
-    id: 'goal-5',
-    text: 'Sov 8 timer',
-    category: 'Søvn',
-    emoji: '😴',
-    completedDays: 10,
-    totalDays: 14,
-    active: false,
-    addedDate: '1. marts',
-  },
+  { id: 'goal-1', text: 'Drik 2 liter vand dagligt', category: 'Sundhed', emoji: '💧', completedDays: 18, totalDays: 23, active: true, addedDate: '1. marts' },
+  { id: 'goal-2', text: 'Gå en tur hver dag', category: 'Bevægelse', emoji: '🚶', completedDays: 14, totalDays: 23, active: true, addedDate: '1. marts' },
+  { id: 'goal-3', text: 'Skriv i journalen', category: 'Refleksion', emoji: '📓', completedDays: 20, totalDays: 23, active: true, addedDate: '1. marts' },
+  { id: 'goal-4', text: 'Ring til en ven om ugen', category: 'Social', emoji: '📞', completedDays: 3, totalDays: 4, active: true, addedDate: '8. marts' },
+  { id: 'goal-5', text: 'Sov 8 timer', category: 'Søvn', emoji: '😴', completedDays: 10, totalDays: 14, active: false, addedDate: '1. marts' },
 ];
 
 const categoryColors: Record<string, { bg: string; border: string; text: string }> = {
-  Sundhed: { bg: 'bg-emerald-500/15', border: 'border-emerald-500/30', text: 'text-emerald-300' },
-  Bevægelse: { bg: 'bg-sunrise-400/15', border: 'border-sunrise-400/30', text: 'text-sunrise-300' },
-  Refleksion: {
-    bg: 'bg-aurora-violet/15',
-    border: 'border-aurora-violet/30',
-    text: 'text-purple-300',
-  },
-  Social: { bg: 'bg-sky-400/15', border: 'border-sky-400/30', text: 'text-sky-300' },
-  Søvn: { bg: 'bg-blue-400/15', border: 'border-blue-400/30', text: 'text-blue-300' },
+  Sundhed:    { bg: 'bg-emerald-500/15', border: 'border-emerald-500/30', text: 'text-emerald-300' },
+  Bevægelse:  { bg: 'bg-sunrise-400/15', border: 'border-sunrise-400/30', text: 'text-sunrise-300' },
+  Refleksion: { bg: 'bg-aurora-violet/15', border: 'border-aurora-violet/30', text: 'text-purple-300' },
+  Social:     { bg: 'bg-sky-400/15',    border: 'border-sky-400/30',    text: 'text-sky-300' },
+  Søvn:       { bg: 'bg-blue-400/15',   border: 'border-blue-400/30',   text: 'text-blue-300' },
 };
 
 export default function GoalHistory() {
@@ -139,8 +90,7 @@ export default function GoalHistory() {
             onClick={() => setFilter(f)}
             className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all duration-200 capitalize ${
               filter === f
-                ? 'bg-sunrise-400/20 text-sunrise-300 border border-sunrise-400/30'
-                : 'bg-midnight-800 border border-midnight-700 text-midnight-400 hover:text-midnight-200'
+                ? 'bg-sunrise-400/20 text-sunrise-300 border border-sunrise-400/30' :'bg-midnight-800 border border-midnight-700 text-midnight-400 hover:text-midnight-200'
             }`}
           >
             {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -157,9 +107,7 @@ export default function GoalHistory() {
       {/* Add form */}
       {showAddForm && (
         <div className="card-dark animate-slide-up">
-          <h3 className="font-display text-sm font-bold text-midnight-100 mb-3">
-            🎯 Tilføj nyt mål
-          </h3>
+          <h3 className="font-display text-sm font-bold text-midnight-100 mb-3">🎯 Tilføj nyt mål</h3>
           <div className="flex gap-2">
             <input
               type="text"
@@ -189,13 +137,8 @@ export default function GoalHistory() {
       )}
 
       {filteredGoals.map((goal) => {
-        const pct =
-          goal.totalDays > 0 ? Math.round((goal.completedDays / goal.totalDays) * 100) : 0;
-        const colors = categoryColors[goal.category] ?? {
-          bg: 'bg-midnight-700',
-          border: 'border-midnight-600',
-          text: 'text-midnight-300',
-        };
+        const pct = goal.totalDays > 0 ? Math.round((goal.completedDays / goal.totalDays) * 100) : 0;
+        const colors = categoryColors[goal.category] ?? { bg: 'bg-midnight-700', border: 'border-midnight-600', text: 'text-midnight-300' };
         const isEditing = editingId === goal.id;
 
         return (
@@ -204,9 +147,7 @@ export default function GoalHistory() {
             className={`card-dark transition-all duration-300 ${!goal.active ? 'opacity-60' : ''}`}
           >
             <div className="flex items-start gap-3">
-              <div
-                className={`w-10 h-10 rounded-2xl ${colors.bg} ${colors.border} border-2 flex items-center justify-center text-xl flex-shrink-0`}
-              >
+              <div className={`w-10 h-10 rounded-2xl ${colors.bg} ${colors.border} border-2 flex items-center justify-center text-xl flex-shrink-0`}>
                 {goal.emoji}
               </div>
               <div className="flex-1 min-w-0">
@@ -234,17 +175,13 @@ export default function GoalHistory() {
                     </button>
                   </div>
                 ) : (
-                  <p
-                    className={`text-sm font-semibold ${goal.active ? 'text-midnight-100' : 'text-midnight-500 line-through'} mb-1`}
-                  >
+                  <p className={`text-sm font-semibold ${goal.active ? 'text-midnight-100' : 'text-midnight-500 line-through'} mb-1`}>
                     {goal.text}
                   </p>
                 )}
 
                 <div className="flex items-center gap-2 mb-2">
-                  <span
-                    className={`text-xs font-medium px-2 py-0.5 rounded-full border ${colors.bg} ${colors.border} ${colors.text}`}
-                  >
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${colors.bg} ${colors.border} ${colors.text}`}>
                     {goal.category}
                   </span>
                   <span className="text-xs text-midnight-500">Tilføjet {goal.addedDate}</span>
@@ -254,9 +191,7 @@ export default function GoalHistory() {
                 {goal.totalDays > 0 && (
                   <div>
                     <div className="flex justify-between text-xs text-midnight-400 mb-1">
-                      <span>
-                        {goal.completedDays}/{goal.totalDays} dage gennemført
-                      </span>
+                      <span>{goal.completedDays}/{goal.totalDays} dage gennemført</span>
                       <span className="font-bold text-sunrise-300">{pct}%</span>
                     </div>
                     <div className="h-2 bg-midnight-700 rounded-full overflow-hidden">
@@ -282,8 +217,7 @@ export default function GoalHistory() {
                 onClick={() => toggleActive(goal.id)}
                 className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors duration-200 active:scale-95 ${
                   goal.active
-                    ? 'bg-midnight-700 text-midnight-400 hover:bg-midnight-600'
-                    : 'bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25'
+                    ? 'bg-midnight-700 text-midnight-400 hover:bg-midnight-600' :'bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25'
                 }`}
               >
                 {goal.active ? '⏸ Pause' : '▶ Genaktiver'}

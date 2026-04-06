@@ -11,18 +11,8 @@ interface DayHeaderProps {
 
 const dayNames = ['Søndag', 'Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lørdag'];
 const monthNames = [
-  'januar',
-  'februar',
-  'marts',
-  'april',
-  'maj',
-  'juni',
-  'juli',
-  'august',
-  'september',
-  'oktober',
-  'november',
-  'december',
+  'januar', 'februar', 'marts', 'april', 'maj', 'juni',
+  'juli', 'august', 'september', 'oktober', 'november', 'december',
 ];
 
 export default function DayHeader({ streak, xp }: DayHeaderProps) {
@@ -46,7 +36,9 @@ export default function DayHeader({ streak, xp }: DayHeaderProps) {
             <AppLogo size={32} />
             <div className="min-w-0">
               <span className="font-display text-base font-bold text-midnight-50">BUDR2.0</span>
-              {dateStr && <p className="text-xs text-midnight-400 -mt-0.5 truncate">{dateStr}</p>}
+              {dateStr && (
+                <p className="text-xs text-midnight-400 -mt-0.5 truncate">{dateStr}</p>
+              )}
             </div>
           </div>
 

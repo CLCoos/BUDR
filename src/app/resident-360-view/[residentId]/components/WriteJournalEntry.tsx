@@ -5,15 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Plus, X, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
-const CATEGORIES = [
-  'Observation',
-  'Hændelse',
-  'Samtale',
-  'Medicin',
-  'Helbred',
-  'Stemning',
-  'Andet',
-];
+const CATEGORIES = ['Observation', 'Hændelse', 'Samtale', 'Medicin', 'Stemning', 'Andet'];
 
 interface Props {
   residentId: string;
@@ -22,18 +14,15 @@ interface Props {
 
 export default function WriteJournalEntry({ residentId, residentName }: Props) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [text, setText] = useState('');
+  const [open, setOpen]         = useState(false);
+  const [text, setText]         = useState('');
   const [category, setCategory] = useState('Observation');
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  /** `kladde` = udkast; `godkendt` = officiel journal med det samme */
-  const [saveMode, setSaveMode] = useState<'kladde' | 'godkendt'>('godkendt');
+  const [saving, setSaving]     = useState(false);
+  const [error, setError]       = useState<string | null>(null);
 
   function handleOpen() {
     setText('');
     setCategory('Observation');
-    setSaveMode('godkendt');
     setError(null);
     setOpen(true);
   }
@@ -50,28 +39,19 @@ export default function WriteJournalEntry({ residentId, residentName }: Props) {
       return;
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     const staffName =
-      (user?.user_metadata?.full_name as string | undefined) ?? user?.email ?? 'Ukendt personale';
+      (user?.user_metadata?.full_name as string | undefined) ??
+      user?.email ??
+      'Ukendt personale';
 
-    const nowIso = new Date().toISOString();
-    const asDraft = saveMode === 'kladde';
-    const insertRow: Record<string, unknown> = {
+    const { error: insertError } = await supabase.from('journal_entries').insert({
       resident_id: residentId,
-      staff_id: user?.id ?? null,
-      staff_name: staffName,
-      entry_text: text.trim(),
+      staff_id:    user?.id ?? null,
+      staff_name:  staffName,
+      entry_text:  text.trim(),
       category,
-      journal_status: asDraft ? 'kladde' : 'godkendt',
-    };
-    if (!asDraft && user?.id) {
-      insertRow.approved_at = nowIso;
-      insertRow.approved_by = user.id;
-    }
-
-    const { error: insertError } = await supabase.from('journal_entries').insert(insertRow);
+    });
 
     if (insertError) {
       setError('Kunne ikke gemme notat — prøv igen');
@@ -81,7 +61,7 @@ export default function WriteJournalEntry({ residentId, residentName }: Props) {
 
     setOpen(false);
     setSaving(false);
-    router.refresh();
+    router.refresh(); // re-run server component to show new entry
   }
 
   return (
@@ -99,9 +79,7 @@ export default function WriteJournalEntry({ residentId, residentName }: Props) {
       {open && (
         <div
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/40"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setOpen(false);
-          }}
+          onClick={e => { if (e.target === e.currentTarget) setOpen(false); }}
         >
           <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl">
             {/* Header */}
@@ -125,7 +103,7 @@ export default function WriteJournalEntry({ residentId, residentName }: Props) {
               <div>
                 <span className="block text-xs font-medium text-gray-500 mb-2">Kategori</span>
                 <div className="flex flex-wrap gap-2">
-                  {CATEGORIES.map((cat) => (
+                  {CATEGORIES.map(cat => (
                     <button
                       key={cat}
                       type="button"
@@ -147,7 +125,7 @@ export default function WriteJournalEntry({ residentId, residentName }: Props) {
                 <span className="block text-xs font-medium text-gray-500 mb-2">Notat</span>
                 <textarea
                   value={text}
-                  onChange={(e) => setText(e.target.value)}
+                  onChange={e => setText(e.target.value)}
                   placeholder="Beskriv observationen, hændelsen eller samtalen…"
                   rows={5}
                   // eslint-disable-next-line jsx-a11y/no-autofocus
@@ -156,49 +134,17 @@ export default function WriteJournalEntry({ residentId, residentName }: Props) {
                 />
               </div>
 
-              <div>
-                <span className="block text-xs font-medium text-gray-500 mb-2">Gem som</span>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setSaveMode('godkendt')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                      saveMode === 'godkendt'
-                        ? 'bg-[#0F1B2D] text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    Godkendt journal
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSaveMode('kladde')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                      saveMode === 'kladde'
-                        ? 'bg-amber-600 text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    Kladde
-                  </button>
-                </div>
-                <p className="text-[11px] text-gray-400 mt-1.5 leading-snug">
-                  Kladder vises på overblikket og kan godkendes senere. Godkendt journal tæller som
-                  officielt notat (fx overdragelse).
-                </p>
-              </div>
-
               {error && (
                 <p className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
               )}
             </div>
 
             {/* Footer */}
-            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 px-5 pb-5">
+            <div className="flex items-center justify-end gap-3 px-5 pb-5">
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors sm:mr-auto"
+                className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
               >
                 Annuller
               </button>
@@ -206,10 +152,10 @@ export default function WriteJournalEntry({ residentId, residentName }: Props) {
                 type="button"
                 disabled={!text.trim() || saving}
                 onClick={() => void handleSave()}
-                className="flex items-center justify-center gap-2 px-5 py-2 bg-[#1D9E75] text-white text-sm font-semibold rounded-xl hover:bg-[#18886a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-5 py-2 bg-[#1D9E75] text-white text-sm font-semibold rounded-xl hover:bg-[#18886a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving && <Loader2 size={14} className="animate-spin" />}
-                {saveMode === 'kladde' ? 'Gem kladde' : 'Gem som godkendt'}
+                Gem notat
               </button>
             </div>
           </div>

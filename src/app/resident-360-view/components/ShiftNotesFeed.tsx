@@ -95,17 +95,15 @@ export default function ShiftNotesFeed() {
   const [search, setSearch] = useState('');
   const [flagFilter, setFlagFilter] = useState<string>('alle');
 
-  const filtered = shiftNotes.filter((n) => {
-    const matchSearch =
-      n.body.toLowerCase().includes(search.toLowerCase()) ||
-      n.staffName.toLowerCase().includes(search.toLowerCase());
+  const filtered = shiftNotes.filter(n => {
+    const matchSearch = n.body.toLowerCase().includes(search.toLowerCase()) || n.staffName.toLowerCase().includes(search.toLowerCase());
     const matchFlag = flagFilter === 'alle' || n.flagColor === flagFilter;
     return matchSearch && matchFlag;
   });
 
   // Group by date
   const grouped: Record<string, ShiftNote[]> = {};
-  filtered.forEach((note) => {
+  filtered.forEach(note => {
     if (!grouped[note.date]) grouped[note.date] = [];
     grouped[note.date].push(note);
   });
@@ -124,20 +122,18 @@ export default function ShiftNotesFeed() {
             <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={e => setSearch(e.target.value)}
               placeholder="Søg i noter..."
               className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#1D9E75] transition-colors"
             />
           </div>
           <div className="flex gap-1">
-            {(['alle', 'groen', 'gul', 'roed'] as const).map((f) => (
+            {(['alle', 'groen', 'gul', 'roed'] as const).map(f => (
               <button
                 key={`notefilter-${f}`}
                 onClick={() => setFlagFilter(f)}
                 className={`px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
-                  flagFilter === f
-                    ? 'bg-gray-800 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  flagFilter === f ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
                 {f === 'alle' ? 'Alle' : f === 'roed' ? '🔴' : f === 'gul' ? '🟡' : '🟢'}
@@ -153,7 +149,7 @@ export default function ShiftNotesFeed() {
             <div className="px-4 py-2 bg-gray-50 sticky top-0">
               <span className="text-xs font-semibold text-gray-500">{date}</span>
             </div>
-            {notes.map((note) => {
+            {notes.map(note => {
               const fc = flagConfig[note.flagColor];
               const sl = shiftLabels[note.shift];
               return (
@@ -164,12 +160,8 @@ export default function ShiftNotesFeed() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                        <span className="text-sm font-semibold text-gray-800">
-                          {note.staffName}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {sl.emoji} {sl.label}
-                        </span>
+                        <span className="text-sm font-semibold text-gray-800">{note.staffName}</span>
+                        <span className="text-xs text-gray-500">{sl.emoji} {sl.label}</span>
                         <span
                           className="text-xs px-2 py-0.5 rounded font-medium"
                           style={{ backgroundColor: fc.bg, color: fc.color }}

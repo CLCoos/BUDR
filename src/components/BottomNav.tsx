@@ -2,18 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import {
-  Sun,
-  LayoutList,
-  BookOpen,
-  Zap,
-  User,
-  Heart,
-  Moon,
-  Users,
-  MoreHorizontal,
-  Flower2,
-} from 'lucide-react';
+import { Sun, LayoutList, BookOpen, Zap, User, Heart, Moon, Users, MoreHorizontal, Flower2 } from 'lucide-react';
 import LysChatFab from '@/components/LysChatFab';
 
 const primaryNavItems = [
@@ -73,9 +62,7 @@ export default function BottomNav() {
                     key={item.key}
                     onClick={() => handleNavClick(item.path, item.key)}
                     className={`flex items-center gap-2.5 p-3 rounded-xl transition-all duration-200 active:scale-95 ${
-                      isActive
-                        ? 'bg-sunrise-400/15 border border-sunrise-400/30'
-                        : 'bg-midnight-700/50 border border-midnight-600/30 hover:bg-midnight-700'
+                      isActive ? 'bg-sunrise-400/15 border border-sunrise-400/30' : 'bg-midnight-700/50 border border-midnight-600/30 hover:bg-midnight-700'
                     }`}
                   >
                     <NavIcon
@@ -83,9 +70,7 @@ export default function BottomNav() {
                       strokeWidth={isActive ? 2.5 : 1.8}
                       className={isActive ? 'text-sunrise-400' : 'text-midnight-400'}
                     />
-                    <span
-                      className={`text-sm font-medium ${isActive ? 'text-sunrise-400' : 'text-midnight-300'}`}
-                    >
+                    <span className={`text-sm font-medium ${isActive ? 'text-sunrise-400' : 'text-midnight-300'}`}>
                       {item.label}
                     </span>
                   </button>
@@ -99,7 +84,7 @@ export default function BottomNav() {
       <nav className="fixed bottom-0 left-0 right-0 z-30 bg-midnight-900/95 backdrop-blur-xl border-t border-midnight-700/50">
         <div className="max-w-lg mx-auto flex items-center justify-around px-1 pb-safe">
           {primaryNavItems?.map((item) => {
-            const isActive = item.path ? pathname === item.path : showMore || isMoreActive;
+            const isActive = item.path ? pathname === item.path : (showMore || isMoreActive);
             const NavIcon = item.icon;
             return (
               <button

@@ -46,10 +46,10 @@ const SSR_INITIAL: ResidentSession = {
 function computeSession(): ResidentSession {
   if (typeof window === 'undefined') return SSR_INITIAL;
   const residentId = readCookieResidentId();
-  const guestId = getOrCreateGuestId();
+  const guestId    = getOrCreateGuestId();
   return residentId
-    ? { isLoggedIn: true, residentId, guestId, storageMode: 'supabase', activeId: residentId }
-    : { isLoggedIn: false, residentId: null, guestId, storageMode: 'local', activeId: guestId };
+    ? { isLoggedIn: true,  residentId, guestId, storageMode: 'supabase', activeId: residentId }
+    : { isLoggedIn: false, residentId: null, guestId, storageMode: 'local',   activeId: guestId  };
 }
 
 export function useResidentSession(): ResidentSession {
@@ -62,7 +62,7 @@ export function useResidentSession(): ResidentSession {
     // SSR_INITIAL (activeId: '') and we need to populate real values.
     const s = computeSession();
     if (s.activeId !== session.activeId) setSession(s);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return session;

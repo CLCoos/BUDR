@@ -22,7 +22,7 @@ export async function getStreamingChatCompletion(
   provider: string,
   model: string,
   messages: object[],
-  onChunk: (chunk: unknown) => void,
+  onChunk: (chunk: any) => void,
   onComplete: () => void,
   onError: (error: Error) => void,
   parameters: object = {}
@@ -49,14 +49,10 @@ export async function getStreamingChatCompletion(
     if (!response.ok) {
       const data = await response.json();
       if (response.status === 429) {
-        throw new Error(
-          'Du har ramt dagens gratis AI-grænse. Prøv igen i morgen eller opgrader til premium.'
-        );
+        throw new Error('Du har ramt dagens gratis AI-grænse. Prøv igen i morgen eller opgrader til premium.');
       }
       const detail =
-        typeof data.details === 'string' && data.details.trim().length > 0
-          ? data.details.trim()
-          : null;
+        typeof data.details === 'string' && data.details.trim().length > 0 ? data.details.trim() : null;
       throw new Error(detail || data.error || `HTTP error: ${response.status}`);
     }
 

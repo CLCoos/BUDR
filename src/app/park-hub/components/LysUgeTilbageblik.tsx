@@ -15,13 +15,7 @@ type Props = {
   reducedMotion: boolean;
 };
 
-export default function LysUgeTilbageblik({
-  tokens,
-  accent,
-  firstName,
-  phase,
-  reducedMotion,
-}: Props) {
+export default function LysUgeTilbageblik({ tokens, accent, firstName, phase, reducedMotion }: Props) {
   const [themeLine, setThemeLine] = useState<string | null>(null);
 
   useEffect(() => {

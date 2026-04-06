@@ -34,15 +34,9 @@ export default function StepWelcome({ data, setData, onNext }: StepProps) {
       </div>
 
       {/* Headline */}
-      <h1
-        suppressHydrationWarning
-        className="font-display text-2xl sm:text-3xl font-bold text-midnight-50 mb-2 leading-tight"
-      >
-        Velkommen til
-        <br />
-        <span suppressHydrationWarning className="gradient-sunrise-text">
-          BUDR2.0
-        </span>
+      <h1 suppressHydrationWarning className="font-display text-2xl sm:text-3xl font-bold text-midnight-50 mb-2 leading-tight">
+        Velkommen til<br />
+        <span suppressHydrationWarning className="gradient-sunrise-text">BUDR2.0</span>
       </h1>
       <p className="text-midnight-400 text-sm sm:text-base mb-6 max-w-xs leading-relaxed">
         Din personlige støtte til en god dag. Struktur, overblik og fremgang — i dit eget tempo.
@@ -50,10 +44,7 @@ export default function StepWelcome({ data, setData, onNext }: StepProps) {
 
       {/* Name Input */}
       <div className="w-full mb-5">
-        <label
-          htmlFor="user-name"
-          className="block text-left text-sm font-semibold text-midnight-300 mb-2"
-        >
+        <label htmlFor="user-name" className="block text-left text-sm font-semibold text-midnight-300 mb-2">
           Hvad hedder du? 👋
         </label>
         <input
@@ -71,9 +62,7 @@ export default function StepWelcome({ data, setData, onNext }: StepProps) {
           }`}
           autoFocus
         />
-        {nameError && (
-          <p className="mt-2 text-sm text-rose-400 text-left font-medium">{nameError}</p>
-        )}
+        {nameError && <p className="mt-2 text-sm text-rose-400 text-left font-medium">{nameError}</p>}
       </div>
 
       {/* Promise bullets */}
@@ -103,16 +92,10 @@ export default function StepWelcome({ data, setData, onNext }: StepProps) {
       </p>
 
       <StickyPrimaryFooter>
-        <button
-          type="button"
-          onClick={handleNext}
-          className="btn-primary w-full text-base py-3.5 min-h-[48px]"
-        >
+        <button type="button" onClick={handleNext} className="btn-primary w-full text-base py-3.5 min-h-[48px]">
           Kom i gang →
         </button>
-        <p className="text-center text-[11px] text-midnight-500 mt-2">
-          Det tager ca. 2 minutter at sætte op
-        </p>
+        <p className="text-center text-[11px] text-midnight-500 mt-2">Det tager ca. 2 minutter at sætte op</p>
       </StickyPrimaryFooter>
     </div>
   );

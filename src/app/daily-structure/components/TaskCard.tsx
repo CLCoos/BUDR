@@ -55,25 +55,17 @@ export default function TaskCard({ task, onComplete, onSkip, isCompleting }: Tas
           className={`
             w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 border-2
             transition-all duration-200 active:scale-90
-            ${
-              isCompleted
-                ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
-                : isSkipped
-                  ? 'bg-midnight-700 border-midnight-600 cursor-not-allowed'
-                  : 'bg-midnight-800 border-midnight-500 hover:border-sunrise-400 hover:bg-midnight-700'
+            ${isCompleted
+              ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
+              : isSkipped
+              ? 'bg-midnight-700 border-midnight-600 cursor-not-allowed' :'bg-midnight-800 border-midnight-500 hover:border-sunrise-400 hover:bg-midnight-700'
             }
           `}
           aria-label={isCompleted ? 'Marker som ikke gennemført' : 'Marker som gennemført'}
         >
           {isCompleted ? (
             <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
-              <path
-                d="M1.5 6L5.5 10L14.5 1"
-                stroke="white"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+              <path d="M1.5 6L5.5 10L14.5 1" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           ) : isSkipped ? (
             <span className="text-midnight-500 text-lg">—</span>
@@ -87,11 +79,7 @@ export default function TaskCard({ task, onComplete, onSkip, isCompleting }: Tas
           <div className="flex items-center gap-2 flex-wrap">
             <span
               className={`font-semibold text-sm truncate ${
-                isCompleted
-                  ? 'line-through text-midnight-500'
-                  : isSkipped
-                    ? 'text-midnight-500 line-through'
-                    : 'text-midnight-100'
+                isCompleted ? 'line-through text-midnight-500' : isSkipped ? 'text-midnight-500 line-through' : 'text-midnight-100'
               }`}
             >
               {task.title}
@@ -107,9 +95,7 @@ export default function TaskCard({ task, onComplete, onSkip, isCompleting }: Tas
             <span className="text-midnight-700">·</span>
             <span className="text-xs text-midnight-500">{task.category}</span>
             <span className="text-midnight-700">·</span>
-            <span
-              className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${difficultyColors[task.difficulty]}`}
-            >
+            <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${difficultyColors[task.difficulty]}`}>
               {difficultyLabels[task.difficulty]}
             </span>
           </div>
@@ -129,13 +115,7 @@ export default function TaskCard({ task, onComplete, onSkip, isCompleting }: Tas
               title="Spring over"
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path
-                  d="M2 7h10M8 3l4 4-4 4"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
+                <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
           )}
@@ -147,20 +127,8 @@ export default function TaskCard({ task, onComplete, onSkip, isCompleting }: Tas
               title="Gendan"
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path
-                  d="M1 1v5h5M13 13V8H8"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M1 6a6 6 0 0 1 10.66-3.77M13 8a6 6 0 0 1-10.66 3.77"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
+                <path d="M1 1v5h5M13 13V8H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M1 6a6 6 0 0 1 10.66-3.77M13 8a6 6 0 0 1-10.66 3.77" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
           )}

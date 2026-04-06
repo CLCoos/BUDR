@@ -10,14 +10,14 @@ const TL_CONFIG: Record<
   NonNullable<TrafficUi>,
   { label: string; color: string; bg: string; dot: string }
 > = {
-  groen: { label: 'Grøn', color: 'text-green-700', bg: 'bg-green-100', dot: 'bg-green-500' },
-  gul: { label: 'Gul', color: 'text-amber-700', bg: 'bg-amber-100', dot: 'bg-amber-400' },
-  roed: { label: 'Rød', color: 'text-red-700', bg: 'bg-red-100', dot: 'bg-red-500' },
+  groen: { label: 'Grøn', color: 'text-green-700', bg: 'bg-green-100',  dot: 'bg-green-500'  },
+  gul:   { label: 'Gul',  color: 'text-amber-700', bg: 'bg-amber-100',  dot: 'bg-amber-400'  },
+  roed:  { label: 'Rød',  color: 'text-red-700',   bg: 'bg-red-100',    dot: 'bg-red-500'    },
 };
 
 function avatarBg(tl: TrafficUi): React.CSSProperties {
   if (tl === 'roed') return { backgroundColor: '#FCEBEB', color: '#A32D2D' };
-  if (tl === 'gul') return { backgroundColor: '#FAEEDA', color: '#854F0B' };
+  if (tl === 'gul')  return { backgroundColor: '#FAEEDA', color: '#854F0B' };
   return { backgroundColor: '#1D9E75', color: '#fff' };
 }
 
@@ -37,7 +37,7 @@ interface Props {
 }
 
 export default function ResidentHeader({
-  residentId: _residentId,
+  residentId,
   name,
   initials,
   room,
@@ -80,9 +80,7 @@ export default function ResidentHeader({
               </div>
               <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
                 {tlCfg ? (
-                  <span
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${tlCfg.bg} ${tlCfg.color} text-sm font-semibold`}
-                  >
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${tlCfg.bg} ${tlCfg.color} text-sm font-semibold`}>
                     <div className={`w-2 h-2 rounded-full ${tlCfg.dot}`} />
                     {tlCfg.label}
                   </span>
@@ -138,7 +136,9 @@ export default function ResidentHeader({
                   {primaryContactPhone}
                 </a>
               )}
-              {primaryContactPhone && <span className="text-gray-200">·</span>}
+              {primaryContactPhone && (
+                <span className="text-gray-200">·</span>
+              )}
               <Link href="/handover-workspace">
                 <button className="flex items-center gap-1.5 text-sm text-[#1D9E75] hover:underline">
                   <Calendar size={14} /> Skriv vagtnotat

@@ -489,16 +489,60 @@ const RICH: Record<string, Omit<ResidentDemoDetailSeed, 'profile'>> = {
     ],
     journal: [
       {
+        id: 'res-001-j-0',
         when: 'I dag 06:50',
         author: 'Morgenvagt · Line',
-        excerpt: 'Vågnede selv, humør let opstemt. Tog morgenmedicin uden problemer.',
+        excerpt: 'Vågnede selv, humør let opstemt. Tog morgenmedicin uden problemer. Spurgte til gåtur efter frokost.',
         type: 'vagt',
+        status: 'godkendt',
       },
       {
+        id: 'res-001-j-kladde',
+        when: 'I dag 10:15',
+        author: 'Dagvagt · kladde',
+        excerpt: 'Udkast: Anders nævnte let smerter i foden efter gåturen. Vil spørge til Panodil ved behov. Afventer godkendelse.',
+        type: 'bekymring',
+        status: 'kladde',
+      },
+      {
+        id: 'res-001-j-1',
         when: 'I går 22:10',
-        author: 'Aftenvagt',
-        excerpt: 'Så film med andre beboere. Gik tidligt i seng.',
+        author: 'Aftenvagt · Maria',
+        excerpt: 'Så film med andre beboere. Gik tidligt i seng. God aftenstemning, deltog aktivt i samtalen.',
         type: 'vagt',
+        status: 'godkendt',
+      },
+      {
+        id: 'res-001-j-2',
+        when: 'I går 14:20',
+        author: 'Dagvagt · Sara',
+        excerpt: 'Gruppe gåtur gennemført. Anders gik hele ruten — 45 min. God samtalepartner for Lena. Ingen smerter rapporteret.',
+        type: 'vagt',
+        status: 'godkendt',
+      },
+      {
+        id: 'res-001-j-3',
+        when: '2 dage siden 09:30',
+        author: 'Læge · videoopkald',
+        excerpt: 'Telefonisk opfølgning med praktiserende læge. Metformin fortsættes uændret. HbA1c næste gang 22. april. Ingen nye ordinationer.',
+        type: 'læge',
+        status: 'godkendt',
+      },
+      {
+        id: 'res-001-j-4',
+        when: '4 dage siden 20:00',
+        author: 'Aftenvagt · Hanne',
+        excerpt: 'Aftensmedicin taget korrekt. Anders i godt humør, snakkede om sin niece der kommer på besøg næste uge.',
+        type: 'vagt',
+        status: 'godkendt',
+      },
+      {
+        id: 'res-001-j-5',
+        when: '6 dage siden 07:10',
+        author: 'Morgenvagt',
+        excerpt: 'Svær opvågning. Energi lav, spiste kun lidt. Tog medicin efter påmindelse. Fulgt til morgenmaden.',
+        type: 'vagt',
+        status: 'godkendt',
       },
     ],
     agreements: [
@@ -571,10 +615,60 @@ const RICH: Record<string, Omit<ResidentDemoDetailSeed, 'profile'>> = {
     ],
     journal: [
       {
+        id: 'res-002-j-kladde',
+        when: 'I dag 07:40',
+        author: 'Morgenvagt · kladde',
+        excerpt: 'Udkast: Finn ikke mødt til morgenmad. Banket på dør — svarede kort. Virker trukket tilbage. Afventer faglig vurdering.',
+        type: 'bekymring',
+        status: 'kladde',
+      },
+      {
+        id: 'res-002-j-0',
         when: 'I nat 02:40',
         author: 'Nat · Hanne',
-        excerpt: 'Meget urolig. Kriseplan aktiveret. Vagtlæge orienteret.',
+        excerpt: 'Meget urolig. Kriseplan aktiveret kl. 02:15. Vagtlæge orienteret telefonisk — ingen indlæggelse på nuværende tidspunkt. Finn faldt til ro ca. 03:30 med støtte.',
         type: 'bekymring',
+        status: 'godkendt',
+      },
+      {
+        id: 'res-002-j-1',
+        when: 'I går 20:15',
+        author: 'Aftenvagt · Mikkel',
+        excerpt: 'Finn afviste fælles aftensmad. Spiste lidt alene på værelset. Kort kontakt — svarede, men ville ikke tale. Urolig adfærd observeret.',
+        type: 'vagt',
+        status: 'godkendt',
+      },
+      {
+        id: 'res-002-j-2',
+        when: 'I går 11:00',
+        author: 'Dagvagt · Sara',
+        excerpt: 'Kort samtale med Finn. Han fortæller om svære tanker. Behandler kontaktet — telefontid booket til fredag. Finn modtog beskeden roligt.',
+        type: 'vagt',
+        status: 'godkendt',
+      },
+      {
+        id: 'res-002-j-3',
+        when: '2 dage siden 14:00',
+        author: 'Behandler · telefon',
+        excerpt: 'Samtale med behandler ved Region. Medicin (Sertralin) fortsættes. Ingen dosisændring. Opfølgning fredag. Finn deltog aktivt i samtalen.',
+        type: 'læge',
+        status: 'godkendt',
+      },
+      {
+        id: 'res-002-j-4',
+        when: '3 dage siden 09:00',
+        author: 'Morgenvagt · Line',
+        excerpt: 'Finn i bedre form end forventet. Spiste morgenmad og deltog kort i fællesskabet. God kontakt. Tog medicin selv.',
+        type: 'vagt',
+        status: 'godkendt',
+      },
+      {
+        id: 'res-002-j-5',
+        when: '5 dage siden 22:00',
+        author: 'Aftenvagt · Hanne',
+        excerpt: 'Rolig aften. Finn sov inden kl. 22. Ingen bemærkninger. Medicin givet og registreret.',
+        type: 'vagt',
+        status: 'godkendt',
       },
     ],
     agreements: [
@@ -638,10 +732,60 @@ const RICH: Record<string, Omit<ResidentDemoDetailSeed, 'profile'>> = {
     goalsStaff: [{ title: 'Dokumentere måltider i journal', progress: 55 }],
     journal: [
       {
-        when: 'I går 18:00',
-        author: 'Aften',
-        excerpt: 'Græd ved aftensmad. Ville ikke tale. Tilbudt samtale — afvist pænt.',
+        id: 'res-003-j-kladde',
+        when: 'I dag 08:20',
+        author: 'Morgenvagt · kladde',
+        excerpt: 'Udkast: Kirsten spiste kun halvt. Lav energi. Svarede kort på spørgsmål. Bør følges tæt i dag — afventer godkendelse.',
+        type: 'bekymring',
+        status: 'kladde',
+      },
+      {
+        id: 'res-003-j-0',
+        when: 'I dag 07:55',
+        author: 'Morgenvagt · Line',
+        excerpt: 'Check-in gennemført kl. 07:55. Kirsten virkede træt men stabil. Spiste lidt havregrød. Stemning 3/10 i Lys. Tæt nærvær anbefalet.',
         type: 'vagt',
+        status: 'godkendt',
+      },
+      {
+        id: 'res-003-j-1',
+        when: 'I går 18:00',
+        author: 'Aftenvagt · Maria',
+        excerpt: 'Kirsten græd ved aftensmad. Ville ikke tale om det. Tilbudt samtale — afvist pænt. Spiste lidt brød. Gik tidligt i seng.',
+        type: 'vagt',
+        status: 'godkendt',
+      },
+      {
+        id: 'res-003-j-2',
+        when: 'I går 10:30',
+        author: 'Dagvagt · Sara',
+        excerpt: 'Kort gåtur i gården — 15 min. Kirsten sagde det hjalp lidt. Lyttede til musik bagefter. Bedre stemning midt på formiddagen.',
+        type: 'vagt',
+        status: 'godkendt',
+      },
+      {
+        id: 'res-003-j-3',
+        when: '2 dage siden 13:20',
+        author: 'Sygehus · ambulant',
+        excerpt: 'Ambulant besøg gennemført. Risperidon fortsættes uændret. Ernæringsplan justeret — tilbud om næringsdrik 2× dagligt. Næste opfølgning 10. april.',
+        type: 'læge',
+        status: 'godkendt',
+      },
+      {
+        id: 'res-003-j-4',
+        when: '4 dage siden 19:00',
+        author: 'Aftenvagt · Hanne',
+        excerpt: 'Kirsten deltog i håndarbejdegruppen i 30 min. Smilede et par gange. Det er fremgang. Medicin taget kl. 20:30.',
+        type: 'vagt',
+        status: 'godkendt',
+      },
+      {
+        id: 'res-003-j-5',
+        when: '6 dage siden 08:00',
+        author: 'Morgenvagt',
+        excerpt: 'Sov dårligt natten over. Ville ikke stå op. Personale sad hos hende 20 min — kom op og drak kaffe på værelset. Ingen måltid.',
+        type: 'vagt',
+        status: 'godkendt',
       },
     ],
     agreements: [{ title: 'Indlæggelsesaftale', updated: '1. feb. 2026', status: 'aktiv' }],
@@ -1016,6 +1160,11 @@ export function prepareJournalForDemo(seed: ResidentDemoDetailSeed): JournalDemo
     status: j.status ?? ('godkendt' as const),
   }));
 
+  // Hvis seeden allerede har en kladde-entry, brug dem som de er
+  const hasExplicitKladde = withIds.some((j) => j.status === 'kladde');
+  if (hasExplicitKladde) return withIds;
+
+  // Ellers: tilføj en auto-genereret kladde øverst
   if (h % 3 === 0) {
     return [
       {

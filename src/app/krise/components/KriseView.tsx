@@ -108,15 +108,15 @@ export default function KriseView() {
     };
   }, [breathingActive]);
 
-  const currentPhase = breathingPhases[phaseIndex];
+  let currentPhase = breathingPhases[phaseIndex];
   const circleScale = breathingActive
     ? phaseIndex === 0
       ? 1 + phaseProgress * 0.4
       : phaseIndex === 1
-        ? 1.4
-        : phaseIndex === 2
-          ? 1.4 - phaseProgress * 0.4
-          : 1.0
+      ? 1.4
+      : phaseIndex === 2
+      ? 1.4 - phaseProgress * 0.4
+      : 1.0
     : 1.0;
 
   return (
@@ -138,6 +138,7 @@ export default function KriseView() {
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-5 space-y-5">
+
         {/* Companion message */}
         <div className="rounded-2xl bg-midnight-800/60 border border-midnight-700/40 p-4 flex items-start gap-3">
           <CompanionAvatar companion={companion} size="sm" mood="happy" />
@@ -159,10 +160,7 @@ export default function KriseView() {
 
           <div className="flex flex-col items-center py-6 px-4">
             {/* Breathing circle */}
-            <div
-              className="relative flex items-center justify-center mb-6"
-              style={{ width: 180, height: 180 }}
-            >
+            <div className="relative flex items-center justify-center mb-6" style={{ width: 180, height: 180 }}>
               {/* Outer glow ring */}
               <div
                 className="absolute rounded-full transition-all duration-1000"
@@ -187,13 +185,7 @@ export default function KriseView() {
                 }}
               >
                 <span className="text-3xl select-none">
-                  {breathingActive
-                    ? phaseIndex === 2
-                      ? '💨'
-                      : phaseIndex === 0
-                        ? '🌬️'
-                        : '✨'
-                    : '🌬️'}
+                  {breathingActive ? (phaseIndex === 2 ? '💨' : phaseIndex === 0 ? '🌬️' : '✨') : '🌬️'}
                 </span>
               </div>
             </div>
@@ -202,16 +194,12 @@ export default function KriseView() {
             <div className="text-center mb-4 min-h-[40px]">
               {breathingActive ? (
                 <>
-                  <p
-                    className="font-display font-bold text-base"
-                    style={{ color: currentPhase.color }}
-                  >
+                  <p className="font-display font-bold text-base" style={{ color: currentPhase.color }}>
                     {currentPhase.label}
                   </p>
                   <p className="text-xs text-midnight-400 mt-0.5">
                     {currentPhase.duration} sekunder
-                    {cycleCount > 0 &&
-                      ` · ${cycleCount} ${cycleCount === 1 ? 'runde' : 'runder'} gennemført`}
+                    {cycleCount > 0 && ` · ${cycleCount} ${cycleCount === 1 ? 'runde' : 'runder'} gennemført`}
                   </p>
                 </>
               ) : (
@@ -250,9 +238,7 @@ export default function KriseView() {
         <div className="rounded-2xl bg-midnight-800/60 border border-midnight-700/40 p-4">
           <div className="flex items-center gap-2 mb-3">
             <Heart size={16} className="text-aurora-pink" />
-            <h2 className="font-display font-bold text-sm text-midnight-100">
-              Ring til en du stoler på
-            </h2>
+            <h2 className="font-display font-bold text-sm text-midnight-100">Ring til en du stoler på</h2>
           </div>
           <div className="grid grid-cols-2 gap-2">
             {quickContacts.map((contact) => (
@@ -324,8 +310,8 @@ export default function KriseView() {
         <div className="rounded-2xl bg-aurora-violet/8 border border-aurora-violet/20 p-4">
           <p className="text-xs font-semibold text-purple-300 mb-2">🌿 Husk</p>
           <p className="text-sm text-midnight-200 leading-relaxed">
-            Du behøver ikke klare det alene. At række ud er et tegn på styrke — ikke svaghed. Alle
-            de ovenstående linjer er gratis og fortrolige.
+            Du behøver ikke klare det alene. At række ud er et tegn på styrke — ikke svaghed.
+            Alle de ovenstående linjer er gratis og fortrolige.
           </p>
         </div>
       </div>

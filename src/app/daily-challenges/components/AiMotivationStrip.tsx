@@ -30,30 +30,24 @@ export default function AiMotivationStrip({ energy, energyLabel, challengeCount 
     if (error) toast.error(error.message);
   }, [error]);
 
-  const fetchMotivation = useCallback(
-    (level: EnergyLevel, label: string, count: number) => {
-      sendMessage(
-        [
-          {
-            role: 'system',
-            content: `Du er Lys — en varm ledsager i en dansk mental sundhedsapp. Skriv en kort, personlig motivationsbesked til brugeren baseret på deres energiniveau. Max 2 sætninger, max 25 ord. Vær specifik og opmuntrende. Afslut med ét emoji.`,
-          },
-          {
-            role: 'user',
-            content: `Brugeren har valgt energiniveau: ${label} (${level}/5). Der er ${count} udfordringer tilgængelige for dem i dag. Giv dem en personlig motivationsbesked.`,
-          },
-        ],
-        { max_tokens: 70, temperature: 0.8 }
-      );
-    },
-    [sendMessage]
-  );
+  const fetchMotivation = useCallback((level: EnergyLevel, label: string, count: number) => {
+    sendMessage([
+      {
+        role: 'system',
+        content: `Du er Lys — en varm ledsager i en dansk mental sundhedsapp. Skriv en kort, personlig motivationsbesked til brugeren baseret på deres energiniveau. Max 2 sætninger, max 25 ord. Vær specifik og opmuntrende. Afslut med ét emoji.`,
+      },
+      {
+        role: 'user',
+        content: `Brugeren har valgt energiniveau: ${label} (${level}/5). Der er ${count} udfordringer tilgængelige for dem i dag. Giv dem en personlig motivationsbesked.`,
+      },
+    ], { max_tokens: 70, temperature: 0.8 });
+  }, [sendMessage]);
 
   // Fetch on mount
   useEffect(() => {
     fetchMotivation(energy, energyLabel, challengeCount);
     setLastEnergy(energy);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Refetch when energy changes
@@ -79,18 +73,9 @@ export default function AiMotivationStrip({ energy, energyLabel, challengeCount 
       <div className="flex-1">
         {isLoading && !aiMotivation ? (
           <div className="flex items-center gap-1.5 py-1">
-            <span
-              className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
-              style={{ animationDelay: '0ms' }}
-            />
-            <span
-              className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
-              style={{ animationDelay: '150ms' }}
-            />
-            <span
-              className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
-              style={{ animationDelay: '300ms' }}
-            />
+            <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+            <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+            <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
           </div>
         ) : (
           <p className="text-sm text-midnight-200 leading-relaxed">{aiMotivation}</p>

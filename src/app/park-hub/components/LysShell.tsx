@@ -2,9 +2,6 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { useResidentSession } from '@/hooks/useResidentSession';
-import { trackEvent } from '@/lib/analytics';
-import { tryEarnFirstChatBadge } from '@/lib/residentBadgeSync';
 import { getLysPhase, lysTheme } from '../lib/lysTheme';
 import type { LysFlowOverlay } from '../lib/lysOverlay';
 import { useLysConversation } from '../hooks/useLysConversation';
@@ -20,27 +17,19 @@ import LysBlomst from './LysBlomst';
 import LysTankefanger from './LysTankefanger';
 import LysMaaltrappe from './LysMaaltrappe';
 import LysDagligSejr from './LysDagligSejr';
+import LysKrisekort from './LysKrisekort';
 import LysSansekasse from './LysSansekasse';
+import LysKrisePlan from './LysKrisePlan';
 import LysAACBoard from './LysAACBoard';
-import LysOnboarding from './LysOnboarding';
-import LysStatusChrome from './LysStatusChrome';
 
 type Props = {
   firstName: string;
   initials: string;
   residentId: string;
   facilityId: string | null;
-  /** Sandt i demo-tilstand — viser tydelig markering */
-  isDemoMode?: boolean;
 };
 
-export default function LysShell({
-  firstName,
-  initials,
-  residentId,
-  facilityId: _facilityId,
-  isDemoMode = false,
-}: Props) {
+export default function LysShell({ firstName, initials, residentId, facilityId }: Props) {
   const [now, setNow] = useState(() => new Date());
   const [reducedMotion, setReducedMotion] = useState(false);
   const [tab, setTab] = useState<LysNavTab>('hjem');
@@ -54,17 +43,10 @@ export default function LysShell({
   const tokens = useMemo(() => lysTheme(phase), [phase]);
   const accent = tokens.accent;
 
-  const session = useResidentSession();
-
-  const onLysAssistantSuccess = useCallback(() => {
-    void tryEarnFirstChatBadge(session.storageMode, session.activeId);
-  }, [session.storageMode, session.activeId]);
-
   const { messages, loading, sendToLys, sendCounterThought } = useLysConversation({
     firstName,
     phase,
     moodLabel,
-    onAssistantSuccess: onLysAssistantSuccess,
   });
 
   const { speak } = useSpeech();
@@ -82,18 +64,6 @@ export default function LysShell({
     return () => mq.removeEventListener('change', fn);
   }, []);
 
-  useEffect(() => {
-    if (!residentId) return;
-    try {
-      const k = `budr_ga_lys_session:${residentId}`;
-      if (sessionStorage.getItem(k)) return;
-      sessionStorage.setItem(k, '1');
-      trackEvent('lys_park_session_start', { demo_mode: isDemoMode ? 1 : 0 });
-    } catch {
-      /* ignore */
-    }
-  }, [residentId, isDemoMode]);
-
   const speakSafe = useCallback((t: string) => speak(t, reducedMotion), [speak, reducedMotion]);
 
   const handleMoodComplete = async (payload: {
@@ -105,75 +75,81 @@ export default function LysShell({
     setMoodTraffic(payload.traffic);
     setMoodRegisteredToday(true);
 
-    trackEvent('lys_mood_registered', { traffic: payload.traffic });
-
     toast.success(`📋 Sendt til portalen: Stemning registreret for ${firstName}`);
 
     if (payload.label === 'Meget svært' || payload.traffic === 'roed') {
       toast.success('📋 Sendt til portalen: Personalet ser, at du har haft det svært');
+      setOverlay('crisis');
+      return;
     }
     setOverlay(null);
     const note = payload.note ? ` Jeg skrev også: ${payload.note}` : '';
     await sendToLys(`Jeg har det sådan her: ${payload.label}.${note}`);
-    setMoodTick((t) => t + 1);
+    setMoodTick(t => t + 1);
   };
+
+  const closeCrisis = () => setOverlay(null);
+
+  const lightBar = phase === 'morning' || phase === 'afternoon';
 
   return (
     <ResidentProvider firstName={firstName} initials={initials} residentId={residentId}>
+    <div className="min-h-dvh font-sans transition-colors duration-300" style={{ backgroundColor: tokens.bg, color: tokens.text }}>
       <div
-        className="min-h-dvh font-sans transition-colors duration-300"
-        style={{ backgroundColor: tokens.bg, color: tokens.text }}
+        className="mx-auto max-w-lg transition-all duration-200"
+        style={{ paddingBottom: 'calc(5rem + max(1rem, env(safe-area-inset-bottom, 0px)))' }}
       >
-        <LysStatusChrome tokens={tokens} isDemoMode={isDemoMode} />
         <div
-          className="mx-auto max-w-lg transition-all duration-200"
-          style={{ paddingBottom: 'calc(5rem + max(1rem, env(safe-area-inset-bottom, 0px)))' }}
+          key={tab}
+          style={{ animation: reducedMotion ? undefined : 'lysTabIn 0.22s ease-out' }}
         >
-          <div
-            key={tab}
-            style={{ animation: reducedMotion ? undefined : 'lysTabIn 0.22s ease-out' }}
-          >
-            {tab === 'hjem' && (
-              <LysHome
-                firstName={firstName}
-                initials={initials}
-                residentId={residentId}
-                tokens={tokens}
-                accent={accent}
-                phase={phase}
-                now={now}
-                reducedMotion={reducedMotion}
-                messages={messages}
-                loading={loading}
-                sendToLys={sendToLys}
-                speakSafe={speakSafe}
-                onOpenFlow={setOverlay}
-                onSwitchTab={setTab}
-                moodLabel={moodLabel}
-                moodTraffic={moodTraffic}
-                moodTick={moodTick}
-              />
-            )}
+          {tab === 'hjem' && (
+            <LysHome
+              firstName={firstName}
+              initials={initials}
+              residentId={residentId}
+              tokens={tokens}
+              accent={accent}
+              phase={phase}
+              now={now}
+              reducedMotion={reducedMotion}
+              messages={messages}
+              loading={loading}
+              sendToLys={sendToLys}
+              speakSafe={speakSafe}
+              onOpenFlow={setOverlay}
+              onSwitchTab={setTab}
+              moodLabel={moodLabel}
+              moodTraffic={moodTraffic}
+              moodTick={moodTick}
+            />
+          )}
 
-            {tab === 'dag' && <LysDagTab tokens={tokens} accent={accent} />}
+          {tab === 'dag' && (
+            <LysDagTab tokens={tokens} accent={accent} />
+          )}
 
-            {tab === 'journal' && <LysJournalTab tokens={tokens} accent={accent} />}
+          {tab === 'journal' && (
+            <LysJournalTab tokens={tokens} accent={accent} />
+          )}
 
-            {tab === 'mig' && (
-              <LysMigScreen
-                tokens={tokens}
-                accent={accent}
-                firstName={firstName}
-                initials={initials}
-                reducedMotion={reducedMotion}
-                flowerFilledThisWeek={false}
-                onOpenBlomst={() => setOverlay('flower')}
-              />
-            )}
-          </div>
+          {tab === 'mig' && (
+            <LysMigScreen
+              tokens={tokens}
+              accent={accent}
+              firstName={firstName}
+              initials={initials}
+              reducedMotion={reducedMotion}
+              flowerFilledThisWeek={false}
+              onOpenBlomst={() => setOverlay('flower')}
+              onOpenCrisis={() => setOverlay('crisis')}
+              onOpenKrisePlan={() => setOverlay('kriseplan')}
+            />
+          )}
         </div>
+      </div>
 
-        <style>{`
+      <style>{`
         @keyframes lysTabIn {
           from { opacity: 0; transform: translateY(8px); }
           to   { opacity: 1; transform: translateY(0); }
@@ -191,125 +167,102 @@ export default function LysShell({
         .lys-pop        { animation: lysPop 0.18s ease-out; }
       `}</style>
 
-        {overlay === 'mood' && (
-          <div
-            className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: tokens.bg }}
-          >
-            <LysStemningskort
-              tokens={tokens}
-              accent={accent}
-              firstName={firstName}
-              reducedMotion={reducedMotion}
-              onBack={() => setOverlay(null)}
-              onComplete={handleMoodComplete}
-            />
-          </div>
-        )}
+      {overlay === 'mood' && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: tokens.bg }}>
+          <LysStemningskort
+            tokens={tokens}
+            accent={accent}
+            firstName={firstName}
+            reducedMotion={reducedMotion}
+            onBack={() => setOverlay(null)}
+            onComplete={handleMoodComplete}
+          />
+        </div>
+      )}
 
-        {overlay === 'flower' && (
-          <div
-            className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: tokens.bg }}
-          >
-            <LysBlomst
-              tokens={tokens}
-              accent={accent}
-              firstName={firstName}
-              reducedMotion={reducedMotion}
-              onBack={() => setOverlay(null)}
-              onDone={() => setOverlay(null)}
-            />
-          </div>
-        )}
+      {overlay === 'flower' && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: tokens.bg }}>
+          <LysBlomst
+            tokens={tokens}
+            accent={accent}
+            firstName={firstName}
+            reducedMotion={reducedMotion}
+            onBack={() => setOverlay(null)}
+            onDone={() => setOverlay(null)}
+          />
+        </div>
+      )}
 
-        {overlay === 'thought' && (
-          <div
-            className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: tokens.bg }}
-          >
-            <LysTankefanger
-              tokens={tokens}
-              accent={accent}
-              firstName={firstName}
-              reducedMotion={reducedMotion}
-              speak={speakSafe}
-              sendCounterThought={sendCounterThought}
-              storageMode={session.storageMode}
-              activeId={session.activeId}
-              onBack={() => setOverlay(null)}
-            />
-          </div>
-        )}
+      {overlay === 'thought' && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: tokens.bg }}>
+          <LysTankefanger
+            tokens={tokens}
+            accent={accent}
+            firstName={firstName}
+            reducedMotion={reducedMotion}
+            speak={speakSafe}
+            sendCounterThought={sendCounterThought}
+            onBack={() => setOverlay(null)}
+          />
+        </div>
+      )}
 
-        {overlay === 'goals' && (
-          <div
-            className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: tokens.bg }}
-          >
-            <LysMaaltrappe
-              tokens={tokens}
-              accent={accent}
-              firstName={firstName}
-              reducedMotion={reducedMotion}
-              onBack={() => setOverlay(null)}
-            />
-          </div>
-        )}
+      {overlay === 'goals' && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: tokens.bg }}>
+          <LysMaaltrappe
+            tokens={tokens}
+            accent={accent}
+            firstName={firstName}
+            reducedMotion={reducedMotion}
+            onBack={() => setOverlay(null)}
+          />
+        </div>
+      )}
 
-        {overlay === 'dailyWin' && (
-          <div
-            className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: tokens.bg }}
-          >
-            <LysDagligSejr
-              tokens={tokens}
-              accent={accent}
-              firstName={firstName}
-              onBack={() => setOverlay(null)}
-            />
-          </div>
-        )}
+      {overlay === 'dailyWin' && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: tokens.bg }}>
+          <LysDagligSejr tokens={tokens} accent={accent} firstName={firstName} onBack={() => setOverlay(null)} />
+        </div>
+      )}
 
-        {overlay === 'sanser' && (
-          <div
-            className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: tokens.bg }}
-          >
-            <LysSansekasse tokens={tokens} accent={accent} onClose={() => setOverlay(null)} />
-          </div>
-        )}
+      {overlay === 'crisis' && (
+        <div
+          className="fixed inset-0 z-50 overflow-y-auto"
+          style={{ backgroundColor: '#0B1220' }}
+        >
+          <LysKrisekort firstName={firstName} facilityId={facilityId} onClose={closeCrisis} />
+        </div>
+      )}
 
-        {overlay === 'aac' && (
-          <div
-            className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: tokens.bg }}
-          >
-            <LysAACBoard
-              tokens={tokens}
-              accent={accent}
-              residentId={residentId}
-              onClose={() => setOverlay(null)}
-            />
-          </div>
-        )}
+      {overlay === 'sanser' && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: tokens.bg }}>
+          <LysSansekasse tokens={tokens} accent={accent} onClose={() => setOverlay(null)} />
+        </div>
+      )}
 
-        <LysBottomNav
-          active={tab}
-          onChange={setTab}
-          showDagReminderDot={!moodRegisteredToday}
-          hidden={!!overlay}
-        />
+      {overlay === 'kriseplan' && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: tokens.bg }}>
+          <LysKrisePlan tokens={tokens} accent={accent} firstName={firstName} onClose={() => setOverlay(null)} />
+        </div>
+      )}
 
-        <LysOnboarding
-          residentId={residentId}
-          tokens={tokens}
-          accent={accent}
-          reducedMotion={reducedMotion}
-          hidden={!!overlay}
-          skip={isDemoMode}
-        />
-      </div>
+      {overlay === 'aac' && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: tokens.bg }}>
+          <LysAACBoard tokens={tokens} accent={accent} residentId={residentId} onClose={() => setOverlay(null)} />
+        </div>
+      )}
+
+
+      <LysBottomNav
+        active={tab}
+        onChange={setTab}
+        tokens={tokens}
+        accent={accent}
+        showDagReminderDot={!moodRegisteredToday}
+        hidden={!!overlay}
+        lightBar={lightBar}
+      />
+    </div>
     </ResidentProvider>
   );
 }

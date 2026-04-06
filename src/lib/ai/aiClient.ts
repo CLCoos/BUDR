@@ -23,9 +23,7 @@ export async function callAIEndpoint(endpoint: string, payload: object) {
 
     if (!response.ok || data.error) {
       const detail =
-        typeof data.details === 'string' && data.details.trim().length > 0
-          ? data.details.trim()
-          : null;
+        typeof data.details === 'string' && data.details.trim().length > 0 ? data.details.trim() : null;
       const friendlyMessage =
         response.status === 429
           ? 'Du har ramt dagens gratis AI-grænse. Prøv igen i morgen eller opgrader til premium.'

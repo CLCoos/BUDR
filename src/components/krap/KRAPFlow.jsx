@@ -42,8 +42,7 @@ export default function KRAPFlow() {
         // I denne app matcher user_profiles.id = auth.uid(), så profil-ID er samme som bruger-ID.
         if (mounted) setProfileId(userIdFromSession);
       } catch (e) {
-        if (mounted)
-          setProfileError(e instanceof Error ? e.message : 'Kunne ikke starte KRAP-flow.');
+        if (mounted) setProfileError(e instanceof Error ? e.message : 'Kunne ikke starte KRAP-flow.');
       } finally {
         if (mounted) setProfileLoading(false);
       }
@@ -51,7 +50,7 @@ export default function KRAPFlow() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [supabase]);
 
   return (
     <div className="min-h-screen gradient-midnight pb-28">
@@ -59,9 +58,7 @@ export default function KRAPFlow() {
         <div className="max-w-lg mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h1 className="font-display text-lg sm:text-xl font-bold text-midnight-50">
-                Mit udviklingsværktøj
-              </h1>
+              <h1 className="font-display text-lg sm:text-xl font-bold text-midnight-50">Mit udviklingsværktøj</h1>
               <p className="text-xs text-midnight-400 mt-0.5">
                 En varm måde at registrere, skalere og tænke hjælpsomt på.
               </p>
@@ -102,24 +99,19 @@ export default function KRAPFlow() {
           </div>
         ) : profileError ? (
           <div className="rounded-3xl border border-rose-500/20 bg-rose-500/10 p-6">
-            <p className="text-sm text-rose-100 font-semibold">
-              Kunne ikke starte dit udviklingsværktøj
-            </p>
+            <p className="text-sm text-rose-100 font-semibold">Kunne ikke starte dit udviklingsværktøj</p>
             <p className="text-sm text-rose-200 mt-2">{profileError}</p>
           </div>
         ) : (
           <>
             {activeTab === 1 ? <DailyCheckin supabase={supabase} profileId={profileId} /> : null}
-            {activeTab === 2 ? (
-              <ResourceRegistration supabase={supabase} profileId={profileId} />
-            ) : null}
+            {activeTab === 2 ? <ResourceRegistration supabase={supabase} profileId={profileId} /> : null}
             {activeTab === 3 ? <GoalScaling supabase={supabase} profileId={profileId} /> : null}
             {activeTab === 4 ? <ThoughtCheck supabase={supabase} profileId={profileId} /> : null}
 
             <div className="rounded-3xl border border-midnight-700/40 bg-midnight-800/25 p-4">
               <p className="text-xs text-midnight-400 leading-relaxed">
-                Husk: Du kan altid starte i det små. Det vigtigste er at være venlig mod dig selv,
-                mens du registrerer.
+                Husk: Du kan altid starte i det små. Det vigtigste er at være venlig mod dig selv, mens du registrerer.
               </p>
             </div>
           </>
@@ -130,3 +122,4 @@ export default function KRAPFlow() {
     </div>
   );
 }
+

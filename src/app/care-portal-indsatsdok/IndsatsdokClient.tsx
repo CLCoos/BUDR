@@ -4,11 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import IndsatsModal from '../care-portal-dashboard/components/IndsatsModal';
 
-type Props = {
-  returnHref?: string;
-};
-
-export default function IndsatsdokClient({ returnHref = '/care-portal-dashboard' }: Props) {
+export default function IndsatsdokClient() {
   const router = useRouter();
   const [open, setOpen] = useState(true);
 
@@ -17,7 +13,7 @@ export default function IndsatsdokClient({ returnHref = '/care-portal-dashboard'
       open={open}
       onClose={() => {
         setOpen(false);
-        router.push(returnHref);
+        router.push('/care-portal-dashboard');
       }}
     />
   );

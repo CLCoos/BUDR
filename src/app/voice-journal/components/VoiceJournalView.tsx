@@ -69,10 +69,7 @@ export default function VoiceJournalView() {
   const startRecording = () => {
     if (typeof window === 'undefined') return;
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-      setSupported(false);
-      return;
-    }
+    if (!SR) { setSupported(false); return; }
 
     setError('');
     setTranscript('');
@@ -97,7 +94,7 @@ export default function VoiceJournalView() {
         }
       }
       if (final && mountedRef.current) {
-        setTranscript((prev) => prev + final);
+        setTranscript(prev => prev + final);
       }
       if (mountedRef.current) setInterimTranscript(interim);
     };
@@ -123,7 +120,7 @@ export default function VoiceJournalView() {
     setIsRecording(true);
 
     timerRef.current = setInterval(() => {
-      if (mountedRef.current) setRecordingSeconds((s) => s + 1);
+      if (mountedRef.current) setRecordingSeconds(s => s + 1);
     }, 1000);
   };
 
@@ -187,30 +184,21 @@ Hvis et felt ikke nævnes, skriv en kort empatisk observation baseret på kontek
     setTimeout(() => setSaved(false), 2500);
   };
 
-  const formatTime = (s: number) =>
-    `${Math.floor(s / 60)
-      .toString()
-      .padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
+  const formatTime = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
   return (
     <div className="min-h-screen gradient-midnight pb-32">
       <div className="sticky top-0 z-20 bg-midnight-900/90 backdrop-blur-xl border-b border-midnight-700/50">
         <div className="max-w-lg mx-auto px-4 py-3">
-          <h1 className="font-display text-lg sm:text-xl font-bold text-midnight-50">
-            🎙️ Stemmejournal
-          </h1>
-          <p className="text-xs text-midnight-400 mt-0.5">
-            Tal — Claude transskriberer og analyserer automatisk
-          </p>
+          <h1 className="font-display text-lg sm:text-xl font-bold text-midnight-50">🎙️ Stemmejournal</h1>
+          <p className="text-xs text-midnight-400 mt-0.5">Tal — Claude transskriberer og analyserer automatisk</p>
         </div>
       </div>
 
       <div className="max-w-lg mx-auto px-4 pt-5 space-y-4">
         {!supported && (
           <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-4">
-            <p className="text-sm text-rose-300">
-              Din browser understøtter ikke stemmeindtastning. Prøv Chrome eller Edge.
-            </p>
+            <p className="text-sm text-rose-300">Din browser understøtter ikke stemmeindtastning. Prøv Chrome eller Edge.</p>
           </div>
         )}
 
@@ -241,19 +229,13 @@ Hvis et felt ikke nævnes, skriv en kort empatisk observation baseret på kontek
           {isRecording && (
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 bg-rose-400 rounded-full animate-pulse" />
-              <span className="text-sm font-mono text-rose-300">
-                {formatTime(recordingSeconds)}
-              </span>
+              <span className="text-sm font-mono text-rose-300">{formatTime(recordingSeconds)}</span>
               <span className="text-xs text-midnight-400">optager...</span>
             </div>
           )}
 
           {!isRecording && !transcript && (
-            <p className="text-sm text-midnight-400 text-center leading-relaxed">
-              Tryk for at starte optagelse.
-              <br />
-              Tal frit om din dag, dine følelser, din krop.
-            </p>
+            <p className="text-sm text-midnight-400 text-center leading-relaxed">Tryk for at starte optagelse.<br />Tal frit om din dag, dine følelser, din krop.</p>
           )}
         </div>
 
@@ -279,25 +261,13 @@ Hvis et felt ikke nævnes, skriv en kort empatisk observation baseret på kontek
           >
             {isAnalyzing ? (
               <>
-                <span
-                  className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
-                  style={{ animationDelay: '0ms' }}
-                />
-                <span
-                  className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
-                  style={{ animationDelay: '150ms' }}
-                />
-                <span
-                  className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
-                  style={{ animationDelay: '300ms' }}
-                />
+                <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                 <span className="ml-2">Claude analyserer...</span>
               </>
             ) : (
-              <>
-                <span>🔮</span>
-                <span>Analyser med Claude — udtræk KRAP-noter</span>
-              </>
+              <><span>🔮</span><span>Analyser med Claude — udtræk KRAP-noter</span></>
             )}
           </button>
         )}
@@ -306,12 +276,8 @@ Hvis et felt ikke nævnes, skriv en kort empatisk observation baseret på kontek
         {krapAnalysis && (
           <div className="space-y-3 animate-slide-up">
             <div className="bg-aurora-violet/10 border border-aurora-violet/25 rounded-2xl p-4">
-              <p className="text-xs text-purple-400 font-semibold mb-2">
-                🔮 Claude&apos;s opsummering:
-              </p>
-              <p className="text-sm text-midnight-100 leading-relaxed italic">
-                &ldquo;{krapAnalysis.summary}&rdquo;
-              </p>
+              <p className="text-xs text-purple-400 font-semibold mb-2">🔮 Claude&apos;s opsummering:</p>
+              <p className="text-sm text-midnight-100 leading-relaxed italic">&ldquo;{krapAnalysis.summary}&rdquo;</p>
             </div>
 
             {[
@@ -320,20 +286,12 @@ Hvis et felt ikke nævnes, skriv en kort empatisk observation baseret på kontek
               { key: 'affekt', label: 'Affekt', emoji: '💭', color: '#60A5FA' },
               { key: 'plan', label: 'Plan', emoji: '🗺️', color: '#34D399' },
             ].map(({ key, label, emoji, color }) => (
-              <div
-                key={key}
-                className="rounded-2xl border p-4"
-                style={{ borderColor: `${color}25`, background: `${color}08` }}
-              >
+              <div key={key} className="rounded-2xl border p-4" style={{ borderColor: `${color}25`, background: `${color}08` }}>
                 <div className="flex items-center gap-2 mb-1">
                   <span>{emoji}</span>
-                  <span className="text-sm font-bold" style={{ color }}>
-                    {label}
-                  </span>
+                  <span className="text-sm font-bold" style={{ color }}>{label}</span>
                 </div>
-                <p className="text-sm text-midnight-200">
-                  {krapAnalysis[key as keyof KrapAnalysis]}
-                </p>
+                <p className="text-sm text-midnight-200">{krapAnalysis[key as keyof KrapAnalysis]}</p>
               </div>
             ))}
 
@@ -341,8 +299,7 @@ Hvis et felt ikke nævnes, skriv en kort empatisk observation baseret på kontek
               onClick={handleSave}
               className={`w-full py-4 rounded-2xl font-semibold text-sm transition-all duration-300 ${
                 saved
-                  ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
-                  : 'bg-sunrise-400/20 border border-sunrise-400/30 text-sunrise-300 hover:bg-sunrise-400/25'
+                  ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300' :'bg-sunrise-400/20 border border-sunrise-400/30 text-sunrise-300 hover:bg-sunrise-400/25'
               }`}
             >
               {saved ? '✅ Gemt i journalen!' : '💾 Gem stemmejournal'}

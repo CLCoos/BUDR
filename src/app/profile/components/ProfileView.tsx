@@ -15,9 +15,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function ProfileView() {
   const [activeTab, setActiveTab] = useState<'oversigt' | 'mål' | 'mønstre'>('oversigt');
-  const [coachMessage, setCoachMessage] = useState(
-    'Godt arbejde denne uge! Du har holdt din streak i 7 dage 🔥'
-  );
+  const [coachMessage, setCoachMessage] = useState('Godt arbejde denne uge! Du har holdt din streak i 7 dage 🔥');
   const [coachLoading, setCoachLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -25,9 +23,7 @@ export default function ProfileView() {
 
   useEffect(() => {
     mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
+    return () => { mountedRef.current = false; };
   }, []);
 
   useEffect(() => {
@@ -47,30 +43,24 @@ export default function ProfileView() {
         messages: [
           {
             role: 'system',
-            content:
-              'Du er en varm, personlig life-coach i en dansk mental sundhedsapp. Skriv en kort, personlig ugentlig anerkendelse til brugeren. Max 2 sætninger, max 30 ord. Vær specifik, varm og inspirerende. Afslut med ét emoji.',
+            content: 'Du er en varm, personlig life-coach i en dansk mental sundhedsapp. Skriv en kort, personlig ugentlig anerkendelse til brugeren. Max 2 sætninger, max 30 ord. Vær specifik, varm og inspirerende. Afslut med ét emoji.',
           },
           {
             role: 'user',
-            content:
-              'Brugeren har holdt en streak på 7 dage i træk. De har gennemført check-ins, journalindlæg og udfordringer. Giv dem en personlig anerkendelse og opmuntring til at fortsætte.',
+            content: 'Brugeren har holdt en streak på 7 dage i træk. De har gennemført check-ins, journalindlæg og udfordringer. Giv dem en personlig anerkendelse og opmuntring til at fortsætte.',
           },
         ],
         stream: false,
         parameters: { max_tokens: 80, temperature: 0.8 },
       }),
     })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
         const text = d?.choices?.[0]?.message?.content;
         if (text && mountedRef.current) setCoachMessage(text.trim());
       })
-      .catch(() => {
-        /* keep fallback */
-      })
-      .finally(() => {
-        if (mountedRef.current) setCoachLoading(false);
-      });
+      .catch(() => { /* keep fallback */ })
+      .finally(() => { if (mountedRef.current) setCoachLoading(false); });
   }, []);
 
   return (
@@ -90,20 +80,17 @@ export default function ProfileView() {
 
           {/* Tabs */}
           <div className="flex gap-1.5 mt-3">
-            {(
-              [
-                { key: 'oversigt', label: '📊 Oversigt' },
-                { key: 'mål', label: '🎯 Mål' },
-                { key: 'mønstre', label: '🔮 Mønstre' },
-              ] as { key: 'oversigt' | 'mål' | 'mønstre'; label: string }[]
-            ).map((tab) => (
+            {([
+              { key: 'oversigt', label: '📊 Oversigt' },
+              { key: 'mål', label: '🎯 Mål' },
+              { key: 'mønstre', label: '🔮 Mønstre' },
+            ] as { key: 'oversigt' | 'mål' | 'mønstre'; label: string }[]).map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all duration-200 min-h-[36px] ${
                   activeTab === tab.key
-                    ? 'bg-sunrise-400/20 text-sunrise-300 border border-sunrise-400/30'
-                    : 'bg-midnight-800 text-midnight-400 border border-midnight-700 hover:text-midnight-200'
+                    ? 'bg-sunrise-400/20 text-sunrise-300 border border-sunrise-400/30' :'bg-midnight-800 text-midnight-400 border border-midnight-700 hover:text-midnight-200'
                 }`}
               >
                 {tab.label}
@@ -120,24 +107,13 @@ export default function ProfileView() {
           <div className="flex-1 min-w-0">
             {coachLoading ? (
               <div className="flex items-center gap-1.5 py-1">
-                <span
-                  className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
-                  style={{ animationDelay: '0ms' }}
-                />
-                <span
-                  className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
-                  style={{ animationDelay: '150ms' }}
-                />
-                <span
-                  className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
-                  style={{ animationDelay: '300ms' }}
-                />
+                <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             ) : (
               <>
-                <p className="font-display text-sm font-semibold text-midnight-100 leading-snug">
-                  {coachMessage}
-                </p>
+                <p className="font-display text-sm font-semibold text-midnight-100 leading-snug">{coachMessage}</p>
                 <p className="text-xs text-purple-400 mt-1">✨ Din personlige coach</p>
               </>
             )}
@@ -172,9 +148,7 @@ export default function ProfileView() {
           >
             <span className="text-xl flex-shrink-0">📊</span>
             <div className="text-left min-w-0">
-              <p className="text-sm font-medium text-midnight-200 leading-tight">
-                Månedlig rapport
-              </p>
+              <p className="text-sm font-medium text-midnight-200 leading-tight">Månedlig rapport</p>
               <p className="text-xs text-midnight-500">PDF til møder</p>
             </div>
           </button>

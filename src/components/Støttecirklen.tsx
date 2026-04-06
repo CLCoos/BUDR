@@ -22,38 +22,10 @@ interface StøttecirklenProps {
 }
 
 const defaultContacts: SupportContact[] = [
-  {
-    id: 'c1',
-    name: 'Mor',
-    emoji: '👩',
-    role: 'Familie',
-    color: '#FB923C',
-    bgColor: 'rgba(251,146,60,0.15)',
-  },
-  {
-    id: 'c2',
-    name: 'Bedste ven',
-    emoji: '🧑',
-    role: 'Ven',
-    color: '#A78BFA',
-    bgColor: 'rgba(167,139,250,0.15)',
-  },
-  {
-    id: 'c3',
-    name: 'Terapeut',
-    emoji: '🩺',
-    role: 'Professionel',
-    color: '#34D399',
-    bgColor: 'rgba(52,211,153,0.15)',
-  },
-  {
-    id: 'c4',
-    name: 'Søster',
-    emoji: '👧',
-    role: 'Familie',
-    color: '#F472B6',
-    bgColor: 'rgba(244,114,182,0.15)',
-  },
+  { id: 'c1', name: 'Mor', emoji: '👩', role: 'Familie', color: '#FB923C', bgColor: 'rgba(251,146,60,0.15)' },
+  { id: 'c2', name: 'Bedste ven', emoji: '🧑', role: 'Ven', color: '#A78BFA', bgColor: 'rgba(167,139,250,0.15)' },
+  { id: 'c3', name: 'Terapeut', emoji: '🩺', role: 'Professionel', color: '#34D399', bgColor: 'rgba(52,211,153,0.15)' },
+  { id: 'c4', name: 'Søster', emoji: '👧', role: 'Familie', color: '#F472B6', bgColor: 'rgba(244,114,182,0.15)' },
 ];
 
 const orbitAngles = [0, 90, 180, 270];
@@ -95,16 +67,11 @@ export default function Støttecirklen({ contacts = defaultContacts }: Støtteci
       {/* Header */}
       <div className="text-center mb-6">
         <h3 className="font-display text-base font-bold text-midnight-50">Støttecirklen</h3>
-        <p className="text-xs text-midnight-400 mt-1">
-          Dine vigtigste mennesker — skriv fra Social med forvalgt kontakt
-        </p>
+        <p className="text-xs text-midnight-400 mt-1">Dine vigtigste mennesker — skriv fra Social med forvalgt kontakt</p>
       </div>
 
       {/* Orbit visualization */}
-      <div
-        className="relative flex items-center justify-center"
-        style={{ width: 220, height: 220 }}
-      >
+      <div className="relative flex items-center justify-center" style={{ width: 220, height: 220 }}>
         {/* Orbit ring */}
         <div
           className="absolute rounded-full border border-midnight-600/40"
@@ -211,7 +178,10 @@ export default function Støttecirklen({ contacts = defaultContacts }: Støtteci
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b" style={{ borderColor: `${selectedContact.color}15` }}>
+          <div
+            className="flex border-b"
+            style={{ borderColor: `${selectedContact.color}15` }}
+          >
             {tabs.map((tab) => (
               <button
                 key={tab.key}
@@ -219,10 +189,7 @@ export default function Støttecirklen({ contacts = defaultContacts }: Støtteci
                 className="flex-1 py-2.5 text-xs font-medium transition-all duration-200"
                 style={{
                   color: activeTab === tab.key ? selectedContact.color : '#64748b',
-                  borderBottom:
-                    activeTab === tab.key
-                      ? `2px solid ${selectedContact.color}`
-                      : '2px solid transparent',
+                  borderBottom: activeTab === tab.key ? `2px solid ${selectedContact.color}` : '2px solid transparent',
                   background: activeTab === tab.key ? `${selectedContact.color}08` : 'transparent',
                 }}
               >
@@ -288,8 +255,7 @@ export default function Støttecirklen({ contacts = defaultContacts }: Støtteci
             className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border transition-all duration-200 hover:scale-105"
             style={{
               background: contact.bgColor,
-              borderColor:
-                selectedContact?.id === contact.id ? contact.color : `${contact.color}40`,
+              borderColor: selectedContact?.id === contact.id ? contact.color : `${contact.color}40`,
               color: contact.color,
             }}
           >

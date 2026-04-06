@@ -448,24 +448,26 @@ export default function ResidentDemoPage() {
   return (
     <div className="relative">
       {/* Demo banner */}
-      <div className="fixed top-0 left-0 right-0 z-[200] flex items-center justify-between px-4 py-1.5 bg-amber-50 border-b border-amber-200">
-        <span className="text-xs font-medium text-amber-800">
-          Demo-tilstand · Anders M. · Data gemt lokalt i browser
-        </span>
-        <div className="flex items-center gap-3">
-          <Link href="/care-portal-demo" className="text-xs text-amber-700 hover:underline">
-            Se Care Portal demo →
-          </Link>
-          <button
-            type="button"
-            onClick={() => {
-              localStorage.removeItem('budr_demo_seeded_v1');
-              window.location.reload();
-            }}
-            className="text-xs text-amber-600 hover:underline"
-          >
-            Nulstil demo
-          </button>
+      <div className="fixed top-0 left-0 right-0 z-[200] bg-amber-50 border-b border-amber-200">
+        <div className="flex items-center justify-between px-4 py-1.5">
+          <span className="text-xs font-medium text-amber-800">
+            Demo · Anders M. · Prøv: check ind → dag-opgaver → haven
+          </span>
+          <div className="flex items-center gap-3">
+            <Link href="/care-portal-demo" className="text-xs font-semibold text-amber-700 hover:underline">
+              ← Care Portal
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                localStorage.removeItem('budr_demo_seeded_v1');
+                window.location.reload();
+              }}
+              className="text-xs text-amber-600 hover:underline"
+            >
+              Nulstil
+            </button>
+          </div>
         </div>
       </div>
 

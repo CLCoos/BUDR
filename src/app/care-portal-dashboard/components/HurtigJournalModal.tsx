@@ -124,8 +124,8 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
         else interim += t;
       }
       accumulatedRef.current += addFinal;
-      const combined = (accumulatedRef.current + interim).replace(/\s+/g, (m) =>
-        m.length > 1 ? ' ' : m
+      const combined = (accumulatedRef.current + interim).replace(/\s+/g, m =>
+        m.length > 1 ? ' ' : m,
       );
       setNote(combined.trimStart());
     };
@@ -179,7 +179,7 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
   }, [note]);
 
   const save = useCallback(() => {
-    const res = RESIDENTS.find((r) => r.id === residentId);
+    const res = RESIDENTS.find(r => r.id === residentId);
     if (!res || !note.trim()) {
       toast.error('Vælg beboer og skriv et notat');
       return;
@@ -200,7 +200,7 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm"
       style={{ backgroundColor: 'rgb(15 23 42 / 0.45)' }}
       role="presentation"
-      onClick={(e) => {
+      onClick={e => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
@@ -210,7 +210,7 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
         aria-modal="true"
         aria-labelledby="hurtig-journal-title"
         className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-gray-100 bg-white p-5 shadow-xl transition-all duration-200"
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
       >
         <button
           type="button"
@@ -229,20 +229,17 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
         </div>
 
         <div className="mb-4">
-          <label
-            htmlFor="hurtig-journal-resident"
-            className="mb-1 block text-xs font-medium text-gray-500"
-          >
+          <label htmlFor="hurtig-journal-resident" className="mb-1 block text-xs font-medium text-gray-500">
             Beboer
           </label>
           <select
             id="hurtig-journal-resident"
             value={residentId}
-            onChange={(e) => setResidentId(e.target.value)}
+            onChange={e => setResidentId(e.target.value)}
             className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm transition-all duration-200 focus:border-budr-purple/50 focus:outline-none focus:ring-2 focus:ring-budr-purple/20"
           >
             <option value="">Vælg beboer</option>
-            {RESIDENTS.map((r) => (
+            {RESIDENTS.map(r => (
               <option key={r.id} value={r.id}>
                 {r.name}
               </option>
@@ -257,7 +254,7 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
           <textarea
             id="hurtig-journal-note"
             value={note}
-            onChange={(e) => setNote(e.target.value)}
+            onChange={e => setNote(e.target.value)}
             rows={5}
             placeholder="Skriv eller diktér en observation..."
             className={`min-h-32 w-full resize-y rounded-xl border border-gray-200 px-3 py-3 text-sm text-gray-900 placeholder:text-gray-400 transition-all duration-200 focus:border-budr-purple/40 focus:outline-none focus:ring-2 focus:ring-budr-purple/15 ${

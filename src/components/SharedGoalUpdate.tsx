@@ -12,15 +12,6 @@ interface SharedGoal {
   createdAt: string;
 }
 
-type SharedGoalRow = {
-  id: string;
-  title: string;
-  description: string | null;
-  progress: number;
-  is_completed: boolean;
-  created_at: string;
-};
-
 interface SharedGoalUpdateProps {
   contactId: string;
   contactName: string;
@@ -68,7 +59,7 @@ export default function SharedGoalUpdate({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [contactId]); // eslint-disable-line react-hooks/exhaustive-deps -- supabase client
+  }, [contactId, supabase]);
 
   const fetchGoals = async () => {
     if (!supabase) return;
@@ -82,10 +73,10 @@ export default function SharedGoalUpdate({
 
       if (!error && data) {
         setGoals(
-          (data as SharedGoalRow[]).map((row) => ({
+          data.map((row: any) => ({
             id: row.id,
             title: row.title,
-            description: row.description ?? undefined,
+            description: row.description,
             progress: row.progress,
             isCompleted: row.is_completed,
             createdAt: row.created_at,
@@ -93,7 +84,7 @@ export default function SharedGoalUpdate({
         );
       }
     } catch (err) {
-      console.warn('Error fetching shared goals:', err);
+      console.log('Error fetching shared goals:', err);
     } finally {
       setLoading(false);
     }
@@ -117,7 +108,7 @@ export default function SharedGoalUpdate({
         setShowAdd(false);
       }
     } catch (err) {
-      console.warn('Error adding goal:', err);
+      console.log('Error adding goal:', err);
     } finally {
       setSaving(false);
     }
@@ -132,17 +123,21 @@ export default function SharedGoalUpdate({
         .eq('id', goalId)
         .eq('user_id', userId);
     } catch (err) {
-      console.warn('Error updating progress:', err);
+      console.log('Error updating progress:', err);
     }
   };
 
   const deleteGoal = async (goalId: string) => {
     if (!supabase) return;
     try {
-      await supabase.from('shared_goals').delete().eq('id', goalId).eq('user_id', userId);
+      await supabase
+        .from('shared_goals')
+        .delete()
+        .eq('id', goalId)
+        .eq('user_id', userId);
       setGoals((prev) => prev.filter((g) => g.id !== goalId));
     } catch (err) {
-      console.warn('Error deleting goal:', err);
+      console.log('Error deleting goal:', err);
     }
   };
 
@@ -194,10 +189,7 @@ export default function SharedGoalUpdate({
 
       {loading ? (
         <div className="flex justify-center py-4">
-          <div
-            className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
-            style={{ borderColor: contactColor }}
-          />
+          <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: contactColor }} />
         </div>
       ) : goals.length === 0 ? (
         <p className="text-xs text-midnight-500 text-center py-3">
@@ -213,8 +205,7 @@ export default function SharedGoalUpdate({
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-midnight-100 truncate">
-                  {goal.isCompleted ? '✅ ' : ''}
-                  {goal.title}
+                  {goal.isCompleted ? '✅ ' : ''}{goal.title}
                 </p>
                 {goal.description && (
                   <p className="text-xs text-midnight-400 mt-0.5 truncate">{goal.description}</p>

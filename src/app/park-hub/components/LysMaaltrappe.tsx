@@ -25,12 +25,12 @@ export default function LysMaaltrappe({ tokens, accent, firstName, reducedMotion
   const [steps, setSteps] = useState(MOCK_STEPS);
   const [celebrate, setCelebrate] = useState(false);
 
-  const activeIdx = steps.findIndex((s) => s.active);
+  const activeIdx = steps.findIndex(s => s.active);
   const canComplete = activeIdx >= 0 && !steps[activeIdx]!.done;
 
   const completeActive = () => {
     if (!canComplete) return;
-    setSteps((prev) => {
+    setSteps(prev => {
       const next = prev.map((s, i) => {
         if (i === activeIdx) return { ...s, done: true, active: false };
         return s;
@@ -45,11 +45,7 @@ export default function LysMaaltrappe({ tokens, accent, firstName, reducedMotion
 
   return (
     <div className="relative min-h-[70vh] p-6" style={{ color: tokens.text }}>
-      <button
-        type="button"
-        onClick={onBack}
-        className="relative z-10 mb-6 min-h-[44px] text-lg opacity-80"
-      >
+      <button type="button" onClick={onBack} className="relative z-10 mb-6 min-h-[44px] text-lg opacity-80">
         ← Tilbage
       </button>
 
@@ -74,26 +70,11 @@ export default function LysMaaltrappe({ tokens, accent, firstName, reducedMotion
                 className="flex w-10 shrink-0 flex-col items-center"
                 style={{ color: locked ? tokens.textMuted : accent }}
               >
-                <div
-                  className="min-h-[24px] flex-1 border-s-2 border-dashed"
-                  style={{ borderColor: `${accent}44` }}
-                />
-                <div
-                  className="my-1 flex h-10 w-10 items-center justify-center rounded-full border-2"
-                  style={{ borderColor: accent }}
-                >
-                  {s.done ? (
-                    <Check className="h-5 w-5" aria-label="Klaret" />
-                  ) : locked ? (
-                    <Lock className="h-5 w-5" aria-hidden />
-                  ) : (
-                    <span className="font-bold">{i + 1}</span>
-                  )}
+                <div className="min-h-[24px] flex-1 border-s-2 border-dashed" style={{ borderColor: `${accent}44` }} />
+                <div className="my-1 flex h-10 w-10 items-center justify-center rounded-full border-2" style={{ borderColor: accent }}>
+                  {s.done ? <Check className="h-5 w-5" aria-label="Klaret" /> : locked ? <Lock className="h-5 w-5" aria-hidden /> : <span className="font-bold">{i + 1}</span>}
                 </div>
-                <div
-                  className="min-h-[24px] flex-1 border-s-2 border-dashed"
-                  style={{ borderColor: `${accent}44` }}
-                />
+                <div className="min-h-[24px] flex-1 border-s-2 border-dashed" style={{ borderColor: `${accent}44` }} />
               </div>
               <div
                 className="flex-1 rounded-2xl border p-4 transition-shadow"
@@ -127,16 +108,10 @@ export default function LysMaaltrappe({ tokens, accent, firstName, reducedMotion
           role="status"
         >
           <ConfettiBurst reducedMotion={reducedMotion} accent={accent} />
-          <div
-            className="mt-8 flex h-20 w-20 items-center justify-center rounded-full text-white"
-            style={{ backgroundColor: accent }}
-          >
+          <div className="mt-8 flex h-20 w-20 items-center justify-center rounded-full text-white" style={{ backgroundColor: accent }}>
             <Check className="h-10 w-10" strokeWidth={3} aria-hidden />
           </div>
-          <p
-            className="mt-8 max-w-sm text-center text-2xl font-bold leading-snug"
-            style={{ color: tokens.text }}
-          >
+          <p className="mt-8 max-w-sm text-center text-2xl font-bold leading-snug" style={{ color: tokens.text }}>
             Det her er stort, {firstName}. Du tog et skridt fremad i dag. 🎉
           </p>
         </div>
@@ -154,7 +129,7 @@ function ConfettiBurst({ reducedMotion, accent }: { reducedMotion: boolean; acce
   }));
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-      {pieces.map((p) => (
+      {pieces.map(p => (
         <span
           key={p.id}
           className={`absolute top-1/2 h-3 w-3 rounded-sm ${reducedMotion ? 'opacity-40' : 'animate-lys-confetti'}`}

@@ -13,7 +13,8 @@ export default function LysChatFab() {
   const pathname = usePathname() ?? '';
 
   const hide =
-    HIDDEN_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`)) || pathname === '/';
+    HIDDEN_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`)) ||
+    pathname === '/';
 
   if (hide) return null;
 

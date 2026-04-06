@@ -30,10 +30,7 @@ export default function OfflineIndicator() {
       // Trigger background sync
       if ('serviceWorker' in navigator && 'SyncManager' in window) {
         navigator.serviceWorker.ready.then((reg) => {
-          const sw = reg as ServiceWorkerRegistration & {
-            sync?: { register: (tag: string) => Promise<void> };
-          };
-          sw.sync?.register('sync-journal').catch(() => {});
+          (reg as any).sync?.register('sync-journal').catch(() => {});
         });
       }
     };
@@ -61,8 +58,7 @@ export default function OfflineIndicator() {
     <div
       className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-2 py-2 px-4 text-xs font-semibold transition-all duration-500 ${
         isOnline
-          ? 'bg-emerald-500/90 text-white'
-          : 'bg-midnight-800/95 text-rose-300 border-b border-rose-500/30'
+          ? 'bg-emerald-500/90 text-white' :'bg-midnight-800/95 text-rose-300 border-b border-rose-500/30'
       }`}
     >
       {isOnline ? (

@@ -1,5 +1,23 @@
 # BUDR – Project Context
 
+**Til AI/assistenter:** Læs denne fil først. Kort indgang: [`AGENTS.md`](./AGENTS.md).
+
+**Sidst opdateret (manuelt):** 2026-04-06 — beskriver repo efter seneste marketing-, portal-, Lys-journal- og org-RLS-ændringer.
+
+---
+
+## Status snapshot (hvor projektet står)
+
+- **Marketing / budrcare.dk:** `src/components/marketing/HomeLanding.tsx` + `src/app/budr-landing.css` — dansk copy (bl.a. CTA og sammenligning), **hero** med let baggrunds-indtoning og **to-trins overskrift** (borger → team); `src/app/page.tsx` med strammere `metadata` / Open Graph.
+- **Dokumentsøgning:** `src/components/DokumentSøgning.tsx` — `?q=` i URL forudfylder feltet (Suspense omkring `useSearchParams`). **Live:** push til `/resident-360-view/[residentId]?tab=<overblik|medicin|dagsplan|plan|haven>` (+ valgfri `q`). **Demo:** `/care-portal-demo/residents/[id]?tab=…`; `ResidentsDemoGrid` læser også `q`.
+- **Faglig støtte (Care Portal):** `src/lib/portalStaffAssistantFollowUps.ts` — strukturerede follow-ups med valgfri `searchQuery`, `resident360Id`, `residentTab`; `staffAssistantFollowUpHref()` bygger href inkl. dybe 360°-links. `POST /api/portal/staff-assistant` beriger kontekst med **`care_residents.user_id`** (til model-output). UI: `AssistantClient.tsx` (demo + live).
+- **Lys — journal mod Supabase (live beboere):** `GET`/`POST` `src/app/api/park/resident-journal/route.ts` (service role + beboer-cookie), `src/lib/residentUuid.ts`, `src/lib/dataService.ts` (`shouldUseCloudJournal`, `saveJournalEntry`, `getJournalEntries`), `LysJournalTab.tsx` — kategori **Lys journal**; **kladde** vs **godkendt**. Badge-logik: `residentBadges.ts`, `residentBadgeSync.ts` (koblet til journal-/plan-forløb).
+- **Haven / Lys-oplevelse:** `havenGamification.ts`, `havenCustomization.ts`, udvidet haven-UI (`HavenGardenScene` m.fl.), **Lys**-layouts/onboarding/chrome (`park-hub/layout.tsx`, `LysOnboarding`, `LysStatusChrome`, `useOnlineStatus`).
+- **Analytics:** `AnalyticsGate.tsx`, `Ga4Scripts.tsx`, `src/lib/analyticsConsent.ts` / `analytics.ts` — GA4 kun når måling er tilladt; `NEXT_PUBLIC_GA_MEASUREMENT_ID` (valgfrit), `NEXT_PUBLIC_GA_BYPASS_CONSENT` til test.
+- **Øvrigt:** `src/lib/apiRateLimit.ts` på udvalgte API-ruter, `public/manifest.webmanifest`, demo-navigation (`DemoTopNav`, `DemoPortalMobileNav`).
+
+---
+
 ## Overview
 
 **BUDR** is a Danish wellbeing platform for residents in social psychiatric care facilities and the staff who support them. It includes:
@@ -44,6 +62,11 @@ Do **not** commit real project URLs or secrets; use environment variables only.
 - **App behaviour:** Staff can save a note as **kladde** or **godkendt** from `WriteJournalEntry` on `/resident-360-view/...`. Overblik lists drafts with **Godkend journal**. **OverrapportPanel** (vagtoverblik) and **staff-assistant** context only load **`journal_status = godkendt`**. Beboerbeskeder indsættes som godkendt med `approved_at`.
 - **Resident 360 (live):** `/resident-360-view` and `/resident-360-view/[residentId]` use **`createServerSupabaseClient()`** (staff JWT). Data is filtered by **RLS**; ukendt `residentId` uden for org giver tom data → **404**.
 
+### Lys journal (`/api/park/resident-journal`) — cloud for rigtige beboere
+
+- **Rolle:** Beboer-session (cookie / identitet som øvrige park-API’er) + **service role** på serveren; gemmer/læser rækker i **`journal_entries`** når cloud-mode er aktiv for det aktive resident-id.
+- **App:** `shouldUseCloudJournal` i `dataService.ts` styrer om `LysJournalTab` kalder API eller lokalt lager; kategori **Lys journal**; status **kladde** / **godkendt** matcher portal-journal flows.
+
 ### Org-RLS (`care_residents` m.fl.) — 2026-04
 
 - **Migration:** `20260406130000_staff_org_rls.sql` — helper `care_staff_can_access_resident(text)`, **RLS** på `care_residents` (staff: `org_id` i JWT; beboer: `auth.uid() = user_id` for SELECT/UPDATE egen række), `park_daily_checkin` (staff SELECT), `daily_plans` / `plan_proposals` (staff CRUD via org-beboer), `resident_medications` (staff SELECT hvis tabellen findes).
@@ -61,7 +84,7 @@ Do **not** commit real project URLs or secrets; use environment variables only.
 
 **Demo routes** (all under `/care-portal-demo/…`): dashboard (tabs `journal` / `planner` / `alerts`), handover, residents, import, assistant, settings, indsatsdokumentation, tilsynsrapport, **vagtplan** (+ `/vagtplan/loen` for hours, vacation, estimated gross pay; shifts stored in `localStorage`), **beskeder** (internal + Lys-style mock threads). Shared clients (`HandoverClient`, `AssistantClient`, indsats/tilsyn) accept `carePortalDark` and demo `returnHref` where relevant.
 
-**Dokumentsøgning** (`DokumentSøgning`): live top nav uses mock index → `resident-360-view`. In the demo, `linkTarget="demo"` sends results to `/care-portal-demo/residents?resident=…&tab=…` with a short on-page context panel. Search appears in the fixed demo top bar from `sm` and up, and in the **mobile sub-header** below `sm` so narrow phones still have search.
+**Dokumentsøgning** — se **Status snapshot** (URL’er, `q`, Suspense). Mock data i komponenten; live 360° bruger de rigtige app-ruter med danske `tab`-navne.
 
 **Demo 360° (`/care-portal-demo/residents/[residentId]`, `ResidentDemo360Client`):** Simulated resident detail from `getResidentDemoDetail` / `careDemoResidentDetail.ts`. Includes **situation templates** (`SITUATION_TEMPLATES`: nat, weekend, nyindflytning, udskrivning, …), **standard events**, unified status, and **journal** split into **Kladder** vs **Godkendt journal** with local demo approval (toast + `journalApprovedIds`). Medication demo uses **PN** (medicin efter behov), not “PRN”. Hooks for journal approval run **before** any early return so React hook order stays valid.
 
@@ -84,7 +107,13 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=   # server only — audit log, imports, APIs
 NEXT_PUBLIC_SITE_URL=
-# AI keys as needed for features that call LLMs
+
+# Valgfrit — GA4 efter samtykke (AnalyticsGate)
+NEXT_PUBLIC_GA_MEASUREMENT_ID=
+NEXT_PUBLIC_GA_BYPASS_CONSENT=   # "true" kun til test uden cookie-banner
+
+# Server — Faglig støtte (Anthropic)
+ANTHROPIC_API_KEY=
 ```
 
 ### Netlify (production)
@@ -95,10 +124,11 @@ In **Site configuration → Environment variables**, set at least the following 
 |----------|--------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Must match production project, e.g. `https://olszwyeikwbtjcoopfid.supabase.co`. |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Anon key from the same Supabase project (Settings → API). |
-| `SUPABASE_SERVICE_ROLE_KEY` | **Service role** secret (same screen). **Server-only** — never prefix with `NEXT_PUBLIC_`. Required so cookie-based residents (`budr_resident_id`) can use **`/api/park/garden-plot`**, **`/api/park/daily-checkin`**, **`/api/park/resident-me`**, **`/api/park/lys-plan-proposal`**, **`/api/park/message-staff`**, park-hub SSR, proposal approve/reject, and staff audit paths. If this is missing, the app falls back to the anon key and those routes often fail with RLS or empty writes. |
+| `SUPABASE_SERVICE_ROLE_KEY` | **Service role** secret (same screen). **Server-only** — never prefix with `NEXT_PUBLIC_`. Required so cookie-based residents (`budr_resident_id`) can use **`/api/park/garden-plot`**, **`/api/park/daily-checkin`**, **`/api/park/resident-me`**, **`/api/park/resident-journal`**, **`/api/park/lys-plan-proposal`**, **`/api/park/message-staff`**, park-hub SSR, proposal approve/reject, and staff audit paths. If this is missing, the app falls back to the anon key and those routes often fail with RLS or empty writes. |
+| `ANTHROPIC_API_KEY` | Påkrævet for **`/api/portal/staff-assistant`** (Faglig støtte i portalen). |
 | `NEXT_PUBLIC_SITE_URL` | Public site origin (canonical URLs, links). |
 
-There are **no extra env vars** specific to Haven beyond the Supabase trio above.
+Ud over **Haven** (kun Supabase-trio på serveren) kan **GA4** og **Anthropic** tilføjes — se miljølisten ovenfor.
 
 After changing variables, trigger a **new deploy** so Next.js picks them up.
 
@@ -126,7 +156,10 @@ After changing variables, trigger a **new deploy** so Next.js picks them up.
 
 ## Current product focus (short)
 
-The team is driving toward a **complete care portal** on a short horizon: **one source of truth per resident**, **borger ↔ portal** visibility, **standardiserede hændelser**, **skabeloner pr. situation**, and **kladde → godkendt journal** (demo + live). Work is intentionally sequenced in **small vertical slices** (one finished flow at a time) to avoid many half-done features.
+Leveringsmønster: **små vertikale skiver** (ét gennemført flow ad gangen). Seneste spor: **marketing** (troværdig copy + rolig hero-indgang), **portal-navigation** (dokumentsøgning med `q`, dybe links fra Faglig støtte), **Lys journal i skyen** for rigtige beboere, **badges/haven** for engagement og demo/kvalitet.
+
+
+Mål på mellemlang sigt: **én sandhed pr. beboer**, tydelig **borger ↔ portal**-synlighed, **kladde → godkendt journal** på tværs af demo og live, og skærpede **RLS**-grænser på flere tabeller.
 
 **Supabase CLI:** The repo root `.env.local` must be valid dotenv (every line `KEY=value`). A stray line without `=` breaks `supabase` commands. Run **`supabase db push`** after pulling new migrations; **`supabase link`** must use project ref **`olszwyeikwbtjcoopfid`** (same host as `NEXT_PUBLIC_SUPABASE_URL`). Local link metadata lives under `supabase/.temp/` (gitignored).
 
@@ -134,7 +167,8 @@ The team is driving toward a **complete care portal** on a short horizon: **one 
 
 ## Known gaps (non-exhaustive)
 
-- **RLS** on other tables (`care_residents`, `daily_plans`, …) still needs the same rigour as `journal_entries` where staff/resident separation matters.
-- **Resident 360 server fetch** (service role) — align with org-scoped user client when ready.
-- **AI** features may be partial or mocked in places — verify before clinical claims.
-- **Lockout** and rate limits: combine client UX with server-side enforcement where security-critical.
+- **RLS** — `journal_entries` og dele af org-model er på plads; **`resident_plan_items` / `resident_badges`** m.fl. bør gennemgås (se migrations-noter). Andre tabeller kan stadig mangle staff/beboer-adskillelse.
+- **Resident 360 / service role** — nogle beboerflows bruger service role bevidst; dokumentér og harmonisér med org-scoped klienter løbende.
+- **AI** (journal, plan, Faglig støtte) — alt output er **udkast** indtil faglig godkendelse; ingen kliniske påstande uden menneskelig vurdering.
+- **Rate limits** — `apiRateLimit` på udvalgte ruter; udvid/hårdnål hvor misbrug er relevant.
+- **Middleware preview** — demo-resident cookie til `/park-hub` skal **strammes eller fra** i ægte produktion (se Authentication).

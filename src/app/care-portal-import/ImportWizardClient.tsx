@@ -1,18 +1,8 @@
 'use client';
 
 import React, { useCallback, useState } from 'react';
-import Link from 'next/link';
 import * as XLSX from 'xlsx';
-import {
-  Upload,
-  ChevronRight,
-  ChevronLeft,
-  CheckCircle2,
-  AlertCircle,
-  Loader2,
-  FileSpreadsheet,
-  X,
-} from 'lucide-react';
+import { Upload, ChevronRight, ChevronLeft, CheckCircle2, AlertCircle, Loader2, FileSpreadsheet, X } from 'lucide-react';
 import { importResidentsAction, type ImportRow, type ImportResult } from './actions';
 
 // ── Types ─────────────────────────────────────────────────────
@@ -27,82 +17,22 @@ interface BudrField {
 }
 
 const BUDR_FIELDS: BudrField[] = [
-  { key: 'display_name', label: 'Navn', required: true, hint: 'Beboerens fulde navn' },
-  { key: 'room', label: 'Værelse', required: false, hint: 'Værelsesnummer eller betegnelse' },
-  {
-    key: 'move_in_date',
-    label: 'Indflyttet',
-    required: false,
-    hint: 'Dato for indflytning, fx 14/03/2023',
-  },
-  {
-    key: 'primary_contact',
-    label: 'Primær kontakt',
-    required: false,
-    hint: 'Kontaktpersonens navn',
-  },
-  {
-    key: 'primary_contact_phone',
-    label: 'Kontakt telefon',
-    required: false,
-    hint: 'Telefonnummer',
-  },
-  {
-    key: 'primary_contact_relation',
-    label: 'Relation',
-    required: false,
-    hint: 'Fx Mor, Bror, Ægtefælle',
-  },
+  { key: 'display_name',           label: 'Navn',             required: true,  hint: 'Beboerens fulde navn' },
+  { key: 'room',                   label: 'Værelse',          required: false, hint: 'Værelsesnummer eller betegnelse' },
+  { key: 'move_in_date',           label: 'Indflyttet',       required: false, hint: 'Dato for indflytning, fx 14/03/2023' },
+  { key: 'primary_contact',        label: 'Primær kontakt',   required: false, hint: 'Kontaktpersonens navn' },
+  { key: 'primary_contact_phone',  label: 'Kontakt telefon',  required: false, hint: 'Telefonnummer' },
+  { key: 'primary_contact_relation',label:'Relation',         required: false, hint: 'Fx Mor, Bror, Ægtefælle' },
 ];
 
 // Known column aliases per BUDR field for auto-detection
 const ALIASES: Record<keyof ImportRow, string[]> = {
-  display_name: [
-    'navn',
-    'name',
-    'beboer',
-    'borger',
-    'resident',
-    'fulde navn',
-    'full name',
-    'cpr navn',
-    'person',
-  ],
-  room: ['værelse', 'rum', 'room', 'bolig', 'lejlighed', 'nr.', 'nummer', 'værelses'],
-  move_in_date: [
-    'indflyttet',
-    'indflytningsdato',
-    'startdato',
-    'move in',
-    'move-in',
-    'dato',
-    'indflytning',
-  ],
-  primary_contact: [
-    'primær kontakt',
-    'kontakt',
-    'pårørende',
-    'kontakt navn',
-    'kontaktperson',
-    'contact',
-    'nærmeste pårørende',
-  ],
-  primary_contact_phone: [
-    'kontakt telefon',
-    'telefon',
-    'tlf',
-    'tlf.',
-    'mobil',
-    'phone',
-    'kontakt tlf',
-  ],
-  primary_contact_relation: [
-    'relation',
-    'kontaktrelation',
-    'pårørenderelation',
-    'slægtskab',
-    'tilknytning',
-  ],
+  display_name:             ['navn', 'name', 'beboer', 'borger', 'resident', 'fulde navn', 'full name', 'cpr navn', 'person'],
+  room:                     ['værelse', 'rum', 'room', 'bolig', 'lejlighed', 'nr.', 'nummer', 'værelses'],
+  move_in_date:             ['indflyttet', 'indflytningsdato', 'startdato', 'move in', 'move-in', 'dato', 'indflytning'],
+  primary_contact:          ['primær kontakt', 'kontakt', 'pårørende', 'kontakt navn', 'kontaktperson', 'contact', 'nærmeste pårørende'],
+  primary_contact_phone:    ['kontakt telefon', 'telefon', 'tlf', 'tlf.', 'mobil', 'phone', 'kontakt tlf'],
+  primary_contact_relation: ['relation', 'kontaktrelation', 'pårørenderelation', 'slægtskab', 'tilknytning'],
 };
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -112,7 +42,7 @@ function autoMap(headers: string[]): Record<keyof ImportRow, string> {
   for (const field of BUDR_FIELDS) {
     for (const header of headers) {
       const h = header.toLowerCase().trim();
-      if (ALIASES[field.key].some((alias) => h.includes(alias) || alias.includes(h))) {
+      if (ALIASES[field.key].some(alias => h.includes(alias) || alias.includes(h))) {
         result[field.key] = header;
         break;
       }
@@ -122,21 +52,16 @@ function autoMap(headers: string[]): Record<keyof ImportRow, string> {
   return result;
 }
 
-async function parseFile(
-  file: File
-): Promise<{ headers: string[]; rows: Record<string, string>[] }> {
+async function parseFile(file: File): Promise<{ headers: string[]; rows: Record<string, string>[] }> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = e => {
       try {
-        const data = e.target?.result;
+        const data     = e.target?.result;
         const workbook = XLSX.read(data, { type: 'array' });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, { defval: '' });
-        if (!json.length) {
-          reject(new Error('Filen er tom eller kan ikke læses'));
-          return;
-        }
+        const sheet    = workbook.Sheets[workbook.SheetNames[0]];
+        const json     = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, { defval: '' });
+        if (!json.length) { reject(new Error('Filen er tom eller kan ikke læses')); return; }
         resolve({ headers: Object.keys(json[0]), rows: json });
       } catch {
         reject(new Error('Filen kunne ikke læses — prøv at gemme som .xlsx eller .csv'));
@@ -147,26 +72,21 @@ async function parseFile(
   });
 }
 
-function applyMapping(
-  rows: Record<string, string>[],
-  mapping: Record<keyof ImportRow, string>
-): ImportRow[] {
-  return rows
-    .map((row) => {
-      const get = (key: keyof ImportRow) => {
-        const col = mapping[key];
-        return col ? String(row[col] ?? '').trim() : '';
-      };
-      return {
-        display_name: get('display_name'),
-        room: get('room'),
-        move_in_date: get('move_in_date'),
-        primary_contact: get('primary_contact'),
-        primary_contact_phone: get('primary_contact_phone'),
-        primary_contact_relation: get('primary_contact_relation'),
-      };
-    })
-    .filter((r) => r.display_name); // drop blank-name rows
+function applyMapping(rows: Record<string, string>[], mapping: Record<keyof ImportRow, string>): ImportRow[] {
+  return rows.map(row => {
+    const get = (key: keyof ImportRow) => {
+      const col = mapping[key];
+      return col ? String(row[col] ?? '').trim() : '';
+    };
+    return {
+      display_name:             get('display_name'),
+      room:                     get('room'),
+      move_in_date:             get('move_in_date'),
+      primary_contact:          get('primary_contact'),
+      primary_contact_phone:    get('primary_contact_phone'),
+      primary_contact_relation: get('primary_contact_relation'),
+    };
+  }).filter(r => r.display_name); // drop blank-name rows
 }
 
 // ── Step indicators ───────────────────────────────────────────
@@ -181,19 +101,17 @@ const STEPS = [
 // ── Component ────────────────────────────────────────────────
 
 export default function ImportWizardClient() {
-  const [step, setStep] = useState<Step>(1);
+  const [step, setStep]         = useState<Step>(1);
   const [dragging, setDragging] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
+  const [file, setFile]         = useState<File | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
-  const [headers, setHeaders] = useState<string[]>([]);
-  const [rawRows, setRawRows] = useState<Record<string, string>[]>([]);
-  const [mapping, setMapping] = useState<Record<keyof ImportRow, string>>(
-    {} as Record<keyof ImportRow, string>
-  );
+  const [headers, setHeaders]   = useState<string[]>([]);
+  const [rawRows, setRawRows]   = useState<Record<string, string>[]>([]);
+  const [mapping, setMapping]   = useState<Record<keyof ImportRow, string>>({} as Record<keyof ImportRow, string>);
   const [mappedRows, setMappedRows] = useState<ImportRow[]>([]);
   const [previewPage, setPreviewPage] = useState(0);
   const [importing, setImporting] = useState(false);
-  const [result, setResult] = useState<ImportResult | null>(null);
+  const [result, setResult]     = useState<ImportResult | null>(null);
 
   // ── Step 1: File upload ──────────────────────────────────────
 
@@ -247,7 +165,7 @@ export default function ImportWizardClient() {
 
   const PAGE_SIZE = 8;
   const totalPages = Math.ceil(mappedRows.length / PAGE_SIZE);
-  const pageRows = mappedRows.slice(previewPage * PAGE_SIZE, (previewPage + 1) * PAGE_SIZE);
+  const pageRows   = mappedRows.slice(previewPage * PAGE_SIZE, (previewPage + 1) * PAGE_SIZE);
 
   const namesMapped = !!mapping.display_name;
 
@@ -268,24 +186,16 @@ export default function ImportWizardClient() {
         {STEPS.map((s, i) => (
           <React.Fragment key={s.n}>
             <div className="flex items-center gap-2">
-              <div
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all ${
-                  step > s.n
-                    ? 'bg-[#1D9E75] text-white'
-                    : step === s.n
-                      ? 'bg-[#0F1B2D] text-white'
-                      : 'bg-gray-100 text-gray-400'
-                }`}
-              >
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all ${
+                step > s.n  ? 'bg-[#1D9E75] text-white' :
+                step === s.n? 'bg-[#0F1B2D] text-white' :
+                              'bg-gray-100 text-gray-400'
+              }`}>
                 {step > s.n ? <CheckCircle2 size={14} /> : s.n}
               </div>
-              <span
-                className={`text-xs font-medium whitespace-nowrap ${
-                  step === s.n ? 'text-gray-800' : 'text-gray-400'
-                }`}
-              >
-                {s.label}
-              </span>
+              <span className={`text-xs font-medium whitespace-nowrap ${
+                step === s.n ? 'text-gray-800' : 'text-gray-400'
+              }`}>{s.label}</span>
             </div>
             {i < STEPS.length - 1 && (
               <div className={`flex-1 h-px mx-3 ${step > s.n ? 'bg-[#1D9E75]' : 'bg-gray-200'}`} />
@@ -299,16 +209,11 @@ export default function ImportWizardClient() {
         <div className="space-y-5">
           {/* Drop zone */}
           <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragging(true);
-            }}
+            onDragOver={e => { e.preventDefault(); setDragging(true); }}
             onDragLeave={() => setDragging(false)}
             onDrop={onDrop}
             className={`rounded-2xl border-2 border-dashed transition-all p-12 flex flex-col items-center gap-4 ${
-              dragging
-                ? 'border-[#1D9E75] bg-[#E1F5EE]'
-                : 'border-gray-200 bg-gray-50 hover:border-gray-300'
+              dragging ? 'border-[#1D9E75] bg-[#E1F5EE]' : 'border-gray-200 bg-gray-50 hover:border-gray-300'
             }`}
           >
             <div className="w-14 h-14 rounded-2xl bg-white border border-gray-200 flex items-center justify-center shadow-sm">
@@ -320,12 +225,7 @@ export default function ImportWizardClient() {
             </div>
             <label className="cursor-pointer px-5 py-2 bg-[#0F1B2D] text-white text-sm font-semibold rounded-xl hover:bg-[#1a2d47] transition-colors">
               Vælg fil
-              <input
-                type="file"
-                className="hidden"
-                accept=".xlsx,.xls,.csv"
-                onChange={onFileInput}
-              />
+              <input type="file" className="hidden" accept=".xlsx,.xls,.csv" onChange={onFileInput} />
             </label>
           </div>
 
@@ -338,9 +238,7 @@ export default function ImportWizardClient() {
 
           {/* Format hint */}
           <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-            <p className="text-xs font-semibold text-blue-700 mb-2">
-              Sådan eksporterer du fra Planner4You
-            </p>
+            <p className="text-xs font-semibold text-blue-700 mb-2">Sådan eksporterer du fra Planner4You</p>
             <ol className="text-xs text-blue-600 space-y-1 list-decimal list-inside">
               <li>Åbn Planner4You → Administration → Beboere</li>
               <li>Klik &ldquo;Eksporter&rdquo; og vælg Excel (.xlsx) eller CSV</li>
@@ -360,16 +258,11 @@ export default function ImportWizardClient() {
             <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
               <div>
                 <span className="text-sm font-semibold text-gray-800">Kolonne-mapping</span>
-                <span className="ml-2 text-xs text-gray-400">
-                  {rawRows.length} rækker fundet i {file?.name}
-                </span>
+                <span className="ml-2 text-xs text-gray-400">{rawRows.length} rækker fundet i {file?.name}</span>
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  setFile(null);
-                  setStep(1);
-                }}
+                onClick={() => { setFile(null); setStep(1); }}
                 className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1"
               >
                 <X size={12} /> Skift fil
@@ -377,7 +270,7 @@ export default function ImportWizardClient() {
             </div>
 
             <div className="divide-y divide-gray-50">
-              {BUDR_FIELDS.map((field) => (
+              {BUDR_FIELDS.map(field => (
                 <div key={field.key} className="px-4 py-3 flex items-center gap-4">
                   <div className="w-40 flex-shrink-0">
                     <div className="flex items-center gap-1.5">
@@ -389,16 +282,12 @@ export default function ImportWizardClient() {
                   <ChevronRight size={14} className="text-gray-300 flex-shrink-0" />
                   <select
                     value={mapping[field.key] ?? ''}
-                    onChange={(e) =>
-                      setMapping((prev) => ({ ...prev, [field.key]: e.target.value }))
-                    }
+                    onChange={e => setMapping(prev => ({ ...prev, [field.key]: e.target.value }))}
                     className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#1D9E75] transition-colors bg-white"
                   >
                     <option value="">— Ignorér dette felt —</option>
-                    {headers.map((h) => (
-                      <option key={h} value={h}>
-                        {h}
-                      </option>
+                    {headers.map(h => (
+                      <option key={h} value={h}>{h}</option>
                     ))}
                   </select>
                   {mapping[field.key] ? (
@@ -429,9 +318,7 @@ export default function ImportWizardClient() {
             </button>
           </div>
           {!namesMapped && (
-            <p className="text-xs text-red-500 text-right">
-              Feltet &ldquo;Navn&rdquo; skal mappes for at fortsætte
-            </p>
+            <p className="text-xs text-red-500 text-right">Feltet &ldquo;Navn&rdquo; skal mappes for at fortsætte</p>
           )}
         </div>
       )}
@@ -444,36 +331,21 @@ export default function ImportWizardClient() {
               <span className="text-sm font-semibold text-gray-800">
                 Forhåndsvisning — {mappedRows.length} beboere klar til import
               </span>
-              <span className="text-xs text-gray-400">
-                Side {previewPage + 1} / {totalPages}
-              </span>
+              <span className="text-xs text-gray-400">Side {previewPage + 1} / {totalPages}</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-100">
-                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-2.5">
-                      Navn
-                    </th>
-                    <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5">
-                      Værelse
-                    </th>
-                    <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5">
-                      Indflyttet
-                    </th>
-                    <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5">
-                      Kontakt
-                    </th>
+                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-2.5">Navn</th>
+                    <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5">Værelse</th>
+                    <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5">Indflyttet</th>
+                    <th className="text-left text-xs font-medium text-gray-500 px-3 py-2.5">Kontakt</th>
                   </tr>
                 </thead>
                 <tbody>
                   {pageRows.map((row, i) => {
-                    const initials = row.display_name
-                      .split(/\s+/)
-                      .filter(Boolean)
-                      .slice(0, 2)
-                      .map((p) => p[0].toUpperCase())
-                      .join('');
+                    const initials = row.display_name.split(/\s+/).filter(Boolean).slice(0, 2).map(p => p[0].toUpperCase()).join('');
                     return (
                       <tr key={i} className="border-b border-gray-50">
                         <td className="px-4 py-2.5">
@@ -502,7 +374,7 @@ export default function ImportWizardClient() {
                 <button
                   type="button"
                   disabled={previewPage === 0}
-                  onClick={() => setPreviewPage((p) => p - 1)}
+                  onClick={() => setPreviewPage(p => p - 1)}
                   className="px-3 py-1 text-xs rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   ← Forrige
@@ -510,7 +382,7 @@ export default function ImportWizardClient() {
                 <button
                   type="button"
                   disabled={previewPage === totalPages - 1}
-                  onClick={() => setPreviewPage((p) => p + 1)}
+                  onClick={() => setPreviewPage(p => p + 1)}
                   className="px-3 py-1 text-xs rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   Næste →
@@ -534,9 +406,7 @@ export default function ImportWizardClient() {
               className="flex items-center gap-2 px-6 py-2.5 bg-[#1D9E75] text-white text-sm font-semibold rounded-xl hover:bg-[#18886a] transition-colors disabled:opacity-60"
             >
               {importing ? (
-                <>
-                  <Loader2 size={15} className="animate-spin" /> Importerer…
-                </>
+                <><Loader2 size={15} className="animate-spin" /> Importerer…</>
               ) : (
                 <>
                   <Upload size={15} />
@@ -552,13 +422,11 @@ export default function ImportWizardClient() {
       {step === 4 && result && (
         <div className="space-y-4">
           {/* Summary card */}
-          <div
-            className={`rounded-2xl border p-6 text-center ${
-              result.errors.length === 0
-                ? 'bg-[#E1F5EE] border-[#A8DFC9]'
-                : 'bg-amber-50 border-amber-200'
-            }`}
-          >
+          <div className={`rounded-2xl border p-6 text-center ${
+            result.errors.length === 0
+              ? 'bg-[#E1F5EE] border-[#A8DFC9]'
+              : 'bg-amber-50 border-amber-200'
+          }`}>
             {result.errors.length === 0 ? (
               <CheckCircle2 size={36} className="text-[#1D9E75] mx-auto mb-3" />
             ) : (
@@ -595,9 +463,7 @@ export default function ImportWizardClient() {
               </div>
               <div className="divide-y divide-red-50 max-h-48 overflow-y-auto">
                 {result.errors.map((e, i) => (
-                  <div key={i} className="px-4 py-2 text-xs text-red-600">
-                    {e}
-                  </div>
+                  <div key={i} className="px-4 py-2 text-xs text-red-600">{e}</div>
                 ))}
               </div>
             </div>
@@ -605,19 +471,15 @@ export default function ImportWizardClient() {
 
           {/* Actions */}
           <div className="flex gap-3">
-            <Link
+            <a
               href="/resident-360-view"
               className="flex-1 text-center py-2.5 bg-[#0F1B2D] text-white text-sm font-semibold rounded-xl hover:bg-[#1a2d47] transition-colors"
             >
               Se importerede beboere →
-            </Link>
+            </a>
             <button
               type="button"
-              onClick={() => {
-                setStep(1);
-                setFile(null);
-                setResult(null);
-              }}
+              onClick={() => { setStep(1); setFile(null); setResult(null); }}
               className="px-4 py-2.5 border border-gray-200 text-sm text-gray-600 rounded-xl hover:bg-gray-50 transition-colors"
             >
               Ny import

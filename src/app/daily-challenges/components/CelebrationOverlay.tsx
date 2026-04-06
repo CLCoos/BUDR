@@ -21,10 +21,7 @@ interface ConfettiPiece {
   rotation: number;
 }
 
-export default function CelebrationOverlay({
-  challenge,
-  companion = 'bjorn',
-}: CelebrationOverlayProps) {
+export default function CelebrationOverlay({ challenge, companion = 'bjorn' }: CelebrationOverlayProps) {
   const [confetti] = useState<ConfettiPiece[]>(() =>
     Array.from({ length: CONFETTI_COUNT }, (_, i) => ({
       id: i,
@@ -42,11 +39,7 @@ export default function CelebrationOverlay({
         <div
           key={`confetti-${piece.id}`}
           className="absolute top-0 animate-confetti"
-          style={{
-            left: `${piece.left}%`,
-            animationDelay: `${piece.delay}ms`,
-            animationDuration: '1.6s',
-          }}
+          style={{ left: `${piece.left}%`, animationDelay: `${piece.delay}ms`, animationDuration: '1.6s' }}
         >
           <div
             style={{
@@ -63,11 +56,14 @@ export default function CelebrationOverlay({
       {/* Toast card */}
       <div className="animate-pop-in bg-midnight-800 rounded-3xl shadow-2xl border border-midnight-600 px-5 py-4 flex items-center gap-3 max-w-xs w-full mx-4">
         {/* Companion celebrating */}
-        <CompanionAvatar companion={companion} size="sm" mood="excited" reaction="celebrate" />
+        <CompanionAvatar
+          companion={companion}
+          size="sm"
+          mood="excited"
+          reaction="celebrate"
+        />
         <div className="flex-1 min-w-0">
-          <p className="font-display font-bold text-midnight-50 text-sm leading-tight">
-            {challenge.title}
-          </p>
+          <p className="font-display font-bold text-midnight-50 text-sm leading-tight">{challenge.title}</p>
           <p className="text-xs text-emerald-400 font-semibold mt-0.5">✅ Gennemført!</p>
           <div className="flex items-center gap-1.5 mt-1.5">
             <span className="text-xs font-bold text-aurora-teal bg-aurora-teal/10 px-2 py-0.5 rounded-full">

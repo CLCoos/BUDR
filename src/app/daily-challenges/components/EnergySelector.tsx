@@ -32,9 +32,7 @@ export default function EnergySelector({ energy, onSelect }: EnergySelectorProps
               aria-pressed={isActive}
               aria-label={level.label}
             >
-              <span
-                className={`text-xl transition-transform duration-200 ${isActive ? 'scale-110' : ''}`}
-              >
+              <span className={`text-xl transition-transform duration-200 ${isActive ? 'scale-110' : ''}`}>
                 {level.emoji}
               </span>
               <div className="flex gap-0.5">
@@ -42,14 +40,7 @@ export default function EnergySelector({ energy, onSelect }: EnergySelectorProps
                   <div
                     key={`dot-${level.value}-${dot}`}
                     className="w-1 h-1 rounded-full transition-all duration-200"
-                    style={{
-                      background:
-                        dot <= level.value
-                          ? isActive
-                            ? '#FB923C'
-                            : 'rgba(251,146,60,0.4)'
-                          : 'rgba(255,255,255,0.1)',
-                    }}
+                    style={{ background: dot <= level.value ? (isActive ? '#FB923C' : 'rgba(251,146,60,0.4)') : 'rgba(255,255,255,0.1)' }}
                   />
                 ))}
               </div>

@@ -8,54 +8,12 @@ interface ResourceCheckInProps {
   onChange: (r: ResourceState) => void;
 }
 
-const resourceItems: {
-  key: keyof ResourceState;
-  label: string;
-  emoji: string;
-  lowLabel: string;
-  highLabel: string;
-  accent: string;
-}[] = [
-  {
-    key: 'sleep',
-    label: 'Søvn',
-    emoji: '😴',
-    lowLabel: 'Dårlig',
-    highLabel: 'Fantastisk',
-    accent: '#60A5FA',
-  },
-  {
-    key: 'food',
-    label: 'Mad',
-    emoji: '🥗',
-    lowLabel: 'Sprang over',
-    highLabel: 'Spiste godt',
-    accent: '#34D399',
-  },
-  {
-    key: 'movement',
-    label: 'Bevægelse',
-    emoji: '🚶',
-    lowLabel: 'Ingen',
-    highLabel: 'Aktiv dag',
-    accent: '#FB923C',
-  },
-  {
-    key: 'social',
-    label: 'Social',
-    emoji: '👥',
-    lowLabel: 'Isoleret',
-    highLabel: 'Forbundet',
-    accent: '#F472B6',
-  },
-  {
-    key: 'stress',
-    label: 'Stress',
-    emoji: '🧘',
-    lowLabel: 'Meget',
-    highLabel: 'Ingen',
-    accent: '#A78BFA',
-  },
+const resourceItems: { key: keyof ResourceState; label: string; emoji: string; lowLabel: string; highLabel: string; accent: string }[] = [
+  { key: 'sleep',    label: 'Søvn',      emoji: '😴', lowLabel: 'Dårlig',      highLabel: 'Fantastisk', accent: '#60A5FA' },
+  { key: 'food',     label: 'Mad',       emoji: '🥗', lowLabel: 'Sprang over', highLabel: 'Spiste godt', accent: '#34D399' },
+  { key: 'movement', label: 'Bevægelse', emoji: '🚶', lowLabel: 'Ingen',       highLabel: 'Aktiv dag',  accent: '#FB923C' },
+  { key: 'social',   label: 'Social',    emoji: '👥', lowLabel: 'Isoleret',    highLabel: 'Forbundet',  accent: '#F472B6' },
+  { key: 'stress',   label: 'Stress',    emoji: '🧘', lowLabel: 'Meget',       highLabel: 'Ingen',      accent: '#A78BFA' },
 ];
 
 export default function ResourceCheckIn({ resources, onChange }: ResourceCheckInProps) {

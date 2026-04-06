@@ -37,10 +37,7 @@ export default function CheckInStepIntention({ data, setData, onNext }: Props) {
 
   const handleNext = () => {
     const intent = data.intention.trim() || customIntention.trim();
-    if (!intent) {
-      setError('Sæt en intention for din dag for at fortsætte');
-      return;
-    }
+    if (!intent) { setError('Sæt en intention for din dag for at fortsætte'); return; }
     setData((d) => ({ ...d, intention: intent }));
     onNext();
   };
@@ -48,9 +45,7 @@ export default function CheckInStepIntention({ data, setData, onNext }: Props) {
   return (
     <div className="max-w-lg mx-auto px-4 pb-28">
       <div className="mb-5 pt-2">
-        <h2 className="font-display text-xl sm:text-2xl font-bold text-midnight-50 mb-2">
-          Sæt en intention 🌱
-        </h2>
+        <h2 className="font-display text-xl sm:text-2xl font-bold text-midnight-50 mb-2">Sæt en intention 🌱</h2>
         <p className="text-midnight-400 text-sm leading-relaxed">
           Vælg <strong className="text-midnight-200">ét fokus</strong> for din dag.
         </p>
@@ -71,21 +66,13 @@ export default function CheckInStepIntention({ data, setData, onNext }: Props) {
               aria-pressed={isSelected}
             >
               <span className="text-xl select-none">{suggestion.emoji}</span>
-              <span
-                className={`text-sm font-medium flex-1 leading-snug ${isSelected ? 'text-emerald-300 font-semibold' : 'text-midnight-200'}`}
-              >
+              <span className={`text-sm font-medium flex-1 leading-snug ${isSelected ? 'text-emerald-300 font-semibold' : 'text-midnight-200'}`}>
                 {suggestion.text}
               </span>
               {isSelected && (
                 <div className="w-5 h-5 bg-emerald-400 rounded-full flex items-center justify-center flex-shrink-0">
                   <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                    <path
-                      d="M1 4L3.5 6.5L9 1"
-                      stroke="#0f0f1a"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
+                    <path d="M1 4L3.5 6.5L9 1" stroke="#0f0f1a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>
               )}
@@ -95,10 +82,7 @@ export default function CheckInStepIntention({ data, setData, onNext }: Props) {
       </div>
 
       <div className="bg-midnight-800/60 rounded-2xl border-2 border-dashed border-midnight-600 p-3.5 mb-4">
-        <label
-          htmlFor="custom-intention"
-          className="block text-xs font-semibold text-midnight-400 mb-2"
-        >
+        <label htmlFor="custom-intention" className="block text-xs font-semibold text-midnight-400 mb-2">
           Skriv din egen intention
         </label>
         <textarea
@@ -122,11 +106,7 @@ export default function CheckInStepIntention({ data, setData, onNext }: Props) {
 
       {error && <p className="text-rose-400 text-sm font-medium text-center mb-4">{error}</p>}
       <StickyPrimaryFooter>
-        <button
-          type="button"
-          onClick={handleNext}
-          className="btn-primary w-full text-base py-3.5 min-h-[48px]"
-        >
+        <button type="button" onClick={handleNext} className="btn-primary w-full text-base py-3.5 min-h-[48px]">
           Fortsæt →
         </button>
       </StickyPrimaryFooter>

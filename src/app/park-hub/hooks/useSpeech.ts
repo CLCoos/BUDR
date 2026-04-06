@@ -97,8 +97,7 @@ export function useSpeech() {
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'da-DK';
     const voices = window.speechSynthesis.getVoices();
-    const da =
-      voices.find((v) => v.lang.startsWith('da')) ?? voices.find((v) => v.lang.includes('DK'));
+    const da = voices.find(v => v.lang.startsWith('da')) ?? voices.find(v => v.lang.includes('DK'));
     if (da) u.voice = da;
     u.rate = reducedMotion ? 1 : 0.95;
     window.speechSynthesis.speak(u);

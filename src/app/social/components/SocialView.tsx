@@ -5,17 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import BottomNav from '@/components/BottomNav';
 import CompanionAvatar from '@/components/CompanionAvatar';
 import { CompanionReaction } from '@/components/CompanionAvatar';
-import {
-  Users,
-  Send,
-  Star,
-  MessageCircle,
-  Clock,
-  CheckCheck,
-  ChevronRight,
-  Smile,
-  History,
-} from 'lucide-react';
+import { Users, Send, Star, MessageCircle, Clock, CheckCheck, ChevronRight, Smile, History } from 'lucide-react';
 
 interface Contact {
   id: string;
@@ -47,51 +37,11 @@ interface EncouragementReactions {
 }
 
 const contacts: Contact[] = [
-  {
-    id: 'c1',
-    name: 'Mor',
-    emoji: '👩',
-    role: 'Familie',
-    color: '#FB923C',
-    bg: 'rgba(251,146,60,0.12)',
-    lastSeen: 'I dag',
-  },
-  {
-    id: 'c2',
-    name: 'Bedste ven',
-    emoji: '🧑',
-    role: 'Ven',
-    color: '#A78BFA',
-    bg: 'rgba(167,139,250,0.12)',
-    lastSeen: 'I går',
-  },
-  {
-    id: 'c3',
-    name: 'Terapeut',
-    emoji: '🩺',
-    role: 'Professionel',
-    color: '#34D399',
-    bg: 'rgba(52,211,153,0.12)',
-    lastSeen: 'Mandag',
-  },
-  {
-    id: 'c4',
-    name: 'Søster',
-    emoji: '👧',
-    role: 'Familie',
-    color: '#F472B6',
-    bg: 'rgba(244,114,182,0.12)',
-    lastSeen: 'I dag',
-  },
-  {
-    id: 'c5',
-    name: 'Kollega',
-    emoji: '🧑‍💼',
-    role: 'Arbejde',
-    color: '#60A5FA',
-    bg: 'rgba(96,165,250,0.12)',
-    lastSeen: 'Tirsdag',
-  },
+  { id: 'c1', name: 'Mor', emoji: '👩', role: 'Familie', color: '#FB923C', bg: 'rgba(251,146,60,0.12)', lastSeen: 'I dag' },
+  { id: 'c2', name: 'Bedste ven', emoji: '🧑', role: 'Ven', color: '#A78BFA', bg: 'rgba(167,139,250,0.12)', lastSeen: 'I går' },
+  { id: 'c3', name: 'Terapeut', emoji: '🩺', role: 'Professionel', color: '#34D399', bg: 'rgba(52,211,153,0.12)', lastSeen: 'Mandag' },
+  { id: 'c4', name: 'Søster', emoji: '👧', role: 'Familie', color: '#F472B6', bg: 'rgba(244,114,182,0.12)', lastSeen: 'I dag' },
+  { id: 'c5', name: 'Kollega', emoji: '🧑‍💼', role: 'Arbejde', color: '#60A5FA', bg: 'rgba(96,165,250,0.12)', lastSeen: 'Tirsdag' },
 ];
 
 const quickMessages = [
@@ -234,7 +184,7 @@ export default function SocialView() {
     setCustomMessage('');
   };
 
-  const sendBeskedWithContact = (msg: (typeof quickMessages)[0], contact: Contact) => {
+  const sendBeskedWithContact = (msg: typeof quickMessages[0], contact: Contact) => {
     const newBesked: SentBesked = {
       contactId: contact.id,
       contactName: contact.name,
@@ -247,11 +197,13 @@ export default function SocialView() {
     sendQuickMessage(contact.id, msg.label);
     // Simulate read after 4s
     setTimeout(() => {
-      setSentBeskeder((prev) => prev.map((b, i) => (i === 0 ? { ...b, read: true } : b)));
+      setSentBeskeder((prev) =>
+        prev.map((b, i) => (i === 0 ? { ...b, read: true } : b))
+      );
     }, 4000);
   };
 
-  const trySendBesked = (msg: (typeof quickMessages)[0]) => {
+  const trySendBesked = (msg: typeof quickMessages[0]) => {
     if (!beskederContact) {
       triggerToast('Vælg først hvem beskeden skal til 💬');
       return;
@@ -297,6 +249,7 @@ export default function SocialView() {
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
+
         {/* Tab bar */}
         <div className="flex gap-1 bg-midnight-800/60 border border-midnight-700/40 rounded-xl p-1">
           {tabs.map((tab) => (
@@ -307,10 +260,7 @@ export default function SocialView() {
               style={{
                 background: activeTab === tab.key ? 'rgba(167,139,250,0.2)' : 'transparent',
                 color: activeTab === tab.key ? '#A78BFA' : '#64748b',
-                border:
-                  activeTab === tab.key
-                    ? '1px solid rgba(167,139,250,0.35)'
-                    : '1px solid transparent',
+                border: activeTab === tab.key ? '1px solid rgba(167,139,250,0.35)' : '1px solid transparent',
               }}
             >
               {tab.icon}
@@ -324,10 +274,7 @@ export default function SocialView() {
           <div className="space-y-3">
             {/* Message History Modal */}
             {historyContact && (
-              <div
-                className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 backdrop-blur-sm"
-                onClick={() => setHistoryContact(null)}
-              >
+              <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 backdrop-blur-sm" onClick={() => setHistoryContact(null)}>
                 <div
                   className="w-full max-w-lg bg-midnight-900 border border-midnight-700/60 rounded-t-3xl p-5 pb-8 space-y-3 animate-slide-up"
                   onClick={(e) => e.stopPropagation()}
@@ -346,41 +293,29 @@ export default function SocialView() {
                     <button
                       onClick={() => setHistoryContact(null)}
                       className="ml-auto text-midnight-400 hover:text-midnight-200 text-lg leading-none"
-                    >
-                      ×
-                    </button>
+                    >×</button>
                   </div>
                   <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
                     {(messageHistory[historyContact.id] || []).length === 0 ? (
-                      <p className="text-xs text-midnight-500 text-center py-6">
-                        Ingen beskeder endnu
-                      </p>
+                      <p className="text-xs text-midnight-500 text-center py-6">Ingen beskeder endnu</p>
                     ) : (
                       [...(messageHistory[historyContact.id] || [])].reverse().map((msg, i) => (
                         <div key={i} className="flex flex-col items-end gap-0.5">
                           <div
                             className="max-w-[85%] px-3 py-2 rounded-2xl rounded-br-sm text-xs text-midnight-100"
-                            style={{
-                              background: historyContact.bg,
-                              border: `1px solid ${historyContact.color}30`,
-                            }}
+                            style={{ background: historyContact.bg, border: `1px solid ${historyContact.color}30` }}
                           >
                             {msg.text}
                           </div>
                           <div className="flex items-center gap-1 px-1">
                             <Clock size={9} className="text-midnight-500" />
-                            <span className="text-[9px] text-midnight-500">
-                              {formatTime(msg.timestamp)}
-                            </span>
+                            <span className="text-[9px] text-midnight-500">{formatTime(msg.timestamp)}</span>
                             {msg.read ? (
                               <CheckCheck size={10} className="text-emerald-400" />
                             ) : (
                               <CheckCheck size={10} className="text-midnight-600" />
                             )}
-                            <span
-                              className="text-[9px]"
-                              style={{ color: msg.read ? '#34D399' : '#475569' }}
-                            >
+                            <span className="text-[9px]" style={{ color: msg.read ? '#34D399' : '#475569' }}>
                               {msg.read ? 'Læst' : 'Sendt'}
                             </span>
                           </div>
@@ -392,9 +327,7 @@ export default function SocialView() {
               </div>
             )}
 
-            <p className="text-xs text-midnight-400 px-1">
-              Tryk på en kontakt for at sende en besked
-            </p>
+            <p className="text-xs text-midnight-400 px-1">Tryk på en kontakt for at sende en besked</p>
             {contacts.map((contact) => {
               const isSelected = selectedContact?.id === contact.id;
               const msgs = messageHistory[contact.id] || [];
@@ -422,23 +355,16 @@ export default function SocialView() {
                     </div>
                     <div className="flex-1 text-left">
                       <p className="text-sm font-semibold text-midnight-100">{contact.name}</p>
-                      <p className="text-xs text-midnight-400">
-                        {contact.role} · {contact.lastSeen}
-                      </p>
+                      <p className="text-xs text-midnight-400">{contact.role} · {contact.lastSeen}</p>
                     </div>
                     {msgCount > 0 && (
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setHistoryContact(contact);
-                        }}
+                        onClick={(e) => { e.stopPropagation(); setHistoryContact(contact); }}
                         className="flex items-center gap-1 px-2 py-1 rounded-full transition-all duration-200 hover:opacity-80"
                         style={{ background: contact.bg }}
                       >
                         <History size={10} style={{ color: contact.color }} />
-                        <span className="text-[10px] font-bold" style={{ color: contact.color }}>
-                          {msgCount}
-                        </span>
+                        <span className="text-[10px] font-bold" style={{ color: contact.color }}>{msgCount}</span>
                         {unreadCount > 0 && (
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 ml-0.5" />
                         )}
@@ -451,14 +377,9 @@ export default function SocialView() {
                   {isSelected && (
                     <div
                       className="mt-1 rounded-2xl border p-3 space-y-2 animate-slide-up"
-                      style={{
-                        background: 'rgba(15,15,26,0.97)',
-                        borderColor: `${contact.color}20`,
-                      }}
+                      style={{ background: 'rgba(15,15,26,0.97)', borderColor: `${contact.color}20` }}
                     >
-                      <p className="text-xs text-midnight-400 mb-2">
-                        Hurtige beskeder til {contact.name}:
-                      </p>
+                      <p className="text-xs text-midnight-400 mb-2">Hurtige beskeder til {contact.name}:</p>
                       <div className="grid grid-cols-2 gap-1.5">
                         {quickMessages.slice(0, 6).map((msg) => (
                           <button
@@ -471,9 +392,7 @@ export default function SocialView() {
                             }}
                           >
                             <span className="text-sm">{msg.emoji}</span>
-                            <span className="text-[10px] text-midnight-300 leading-tight">
-                              {msg.label}
-                            </span>
+                            <span className="text-[10px] text-midnight-300 leading-tight">{msg.label}</span>
                           </button>
                         ))}
                       </div>
@@ -491,11 +410,7 @@ export default function SocialView() {
                         <button
                           onClick={sendCustomMessage}
                           className="px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95"
-                          style={{
-                            background: contact.bg,
-                            color: contact.color,
-                            border: `1px solid ${contact.color}40`,
-                          }}
+                          style={{ background: contact.bg, color: contact.color, border: `1px solid ${contact.color}40` }}
                         >
                           <Send size={13} />
                         </button>
@@ -505,19 +420,14 @@ export default function SocialView() {
                         <button
                           onClick={() => setHistoryContact(contact)}
                           className="w-full flex items-center justify-between px-3 py-2 rounded-xl border transition-all duration-200 hover:opacity-80 mt-1"
-                          style={{
-                            background: 'rgba(255,255,255,0.03)',
-                            borderColor: `${contact.color}20`,
-                          }}
+                          style={{ background: 'rgba(255,255,255,0.03)', borderColor: `${contact.color}20` }}
                         >
                           <div className="flex items-center gap-2">
                             <History size={12} style={{ color: contact.color }} />
                             <span className="text-[10px] text-midnight-400">Se beskedhistorik</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <span className="text-[10px]" style={{ color: contact.color }}>
-                              {messageHistory[contact.id]?.length} beskeder
-                            </span>
+                            <span className="text-[10px]" style={{ color: contact.color }}>{messageHistory[contact.id]?.length} beskeder</span>
                             <ChevronRight size={10} style={{ color: contact.color }} />
                           </div>
                         </button>
@@ -562,11 +472,7 @@ export default function SocialView() {
                         <p className="text-sm font-semibold text-midnight-100">{c.name}</p>
                         <p className="text-xs text-midnight-500">{c.role}</p>
                       </div>
-                      <ChevronRight
-                        className="ml-auto flex-shrink-0"
-                        size={16}
-                        style={{ color: c.color }}
-                      />
+                      <ChevronRight className="ml-auto flex-shrink-0" size={16} style={{ color: c.color }} />
                     </button>
                   ))}
                 </div>
@@ -576,10 +482,7 @@ export default function SocialView() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <button
                     type="button"
-                    onClick={() => {
-                      setOpmuntringTarget(null);
-                      setPendingEnc(null);
-                    }}
+                    onClick={() => { setOpmuntringTarget(null); setPendingEnc(null); }}
                     className="text-xs font-semibold text-sunrise-400 hover:text-sunrise-300 min-h-[44px] px-2"
                   >
                     ← Skift person
@@ -595,14 +498,10 @@ export default function SocialView() {
                 {pendingEnc && (
                   <div
                     className="rounded-2xl border p-4 space-y-3 animate-slide-up"
-                    style={{
-                      background: 'rgba(15,15,26,0.98)',
-                      borderColor: `${opmuntringTarget.color}35`,
-                    }}
+                    style={{ background: 'rgba(15,15,26,0.98)', borderColor: `${opmuntringTarget.color}35` }}
                   >
                     <p className="text-sm text-midnight-100">
-                      Send <span className="font-semibold">&quot;{pendingEnc.text}&quot;</span> til{' '}
-                      {opmuntringTarget.name}?
+                      Send <span className="font-semibold">&quot;{pendingEnc.text}&quot;</span> til {opmuntringTarget.name}?
                     </p>
                     <div className="flex gap-2">
                       <button
@@ -669,9 +568,7 @@ export default function SocialView() {
                             <div className="relative">
                               <button
                                 type="button"
-                                onClick={() =>
-                                  setActiveReactionPicker(isPickerOpen ? null : enc.id)
-                                }
+                                onClick={() => setActiveReactionPicker(isPickerOpen ? null : enc.id)}
                                 className="flex items-center gap-1 px-2 py-1 rounded-full bg-midnight-800/80 border border-midnight-700/40 text-[10px] text-midnight-400 hover:text-midnight-200 transition-all duration-200 min-h-[36px]"
                               >
                                 <Smile size={10} />
@@ -689,9 +586,7 @@ export default function SocialView() {
                                         title={opt.label}
                                       >
                                         <span className="text-lg">{opt.emoji}</span>
-                                        <span className="text-[8px] text-midnight-400">
-                                          {opt.label}
-                                        </span>
+                                        <span className="text-[8px] text-midnight-400">{opt.label}</span>
                                       </button>
                                     ))}
                                   </div>
@@ -765,9 +660,7 @@ export default function SocialView() {
                     className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-bold border transition-all active:scale-95 min-h-[44px]"
                     style={{
                       background: beskederContact?.bg ?? 'rgba(255,255,255,0.05)',
-                      borderColor: beskederContact
-                        ? `${beskederContact.color}45`
-                        : 'rgba(255,255,255,0.1)',
+                      borderColor: beskederContact ? `${beskederContact.color}45` : 'rgba(255,255,255,0.1)',
                       color: beskederContact?.color ?? '#64748b',
                     }}
                   >
@@ -785,14 +678,10 @@ export default function SocialView() {
                       .map((b, i) => (
                         <div key={i} className="flex items-center gap-2">
                           <span className="text-sm">{b.contactEmoji}</span>
-                          <span className="text-[10px] text-midnight-400 flex-1">
-                            {b.contactName}
-                          </span>
+                          <span className="text-[10px] text-midnight-400 flex-1">{b.contactName}</span>
                           <div className="flex items-center gap-1">
                             <Clock size={9} className="text-midnight-500" />
-                            <span className="text-[9px] text-midnight-500">
-                              {formatTime(b.timestamp)}
-                            </span>
+                            <span className="text-[9px] text-midnight-500">{formatTime(b.timestamp)}</span>
                             <CheckCheck
                               size={11}
                               className={b.read ? 'text-emerald-400' : 'text-midnight-600'}

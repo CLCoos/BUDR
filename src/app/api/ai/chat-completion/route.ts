@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { completion } from '@rocketnew/llm-sdk';
 import { createClient } from '@supabase/supabase-js';
 import { ANTHROPIC_CHAT_MODEL } from '@/lib/ai/anthropicModel';
-import { checkApiRateLimit, getClientIp } from '@/lib/apiRateLimit';
 
 const API_KEYS: Record<string, string | undefined> = {
   OPEN_AI: process.env.OPENAI_API_KEY,
@@ -12,8 +11,6 @@ const API_KEYS: Record<string, string | undefined> = {
 };
 
 const DAILY_AI_LIMIT = Number(process.env.AI_DAILY_LIMIT ?? 20);
-const AI_COMPLETION_RL_LIMIT = Number(process.env.API_RL_AI_COMPLETION_PER_MIN ?? 48);
-const AI_COMPLETION_RL_WINDOW_MS = 60_000;
 
 async function consumeDailyAiCall(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -21,11 +18,7 @@ async function consumeDailyAiCall(request: NextRequest) {
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
-    return {
-      ok: false,
-      status: 500,
-      error: 'Supabase environment is not fully configured for AI usage gating',
-    };
+    return { ok: false, status: 500, error: 'Supabase environment is not fully configured for AI usage gating' };
   }
 
   const authHeader = request.headers.get('authorization') || '';
@@ -135,40 +128,15 @@ function formatErrorResponse(error: unknown, provider?: string) {
 }
 
 export async function POST(request: NextRequest) {
-  const ip = getClientIp(request);
-  const ipRl = checkApiRateLimit(
-    'ai-chat-completion',
-    ip,
-    AI_COMPLETION_RL_LIMIT,
-    AI_COMPLETION_RL_WINDOW_MS
-  );
-  if (!ipRl.ok) {
-    return NextResponse.json(
-      { error: 'too_many_requests', details: 'Rate limit exceeded' },
-      {
-        status: 429,
-        headers: { 'Retry-After': String(ipRl.retryAfterSec) },
-      }
-    );
-  }
-
-  let body: Record<string, unknown> = {};
+  let body: any = {};
 
   try {
-    body = (await request.json()) as Record<string, unknown>;
-    const provider = body.provider;
-    const model = body.model;
-    const messages = body.messages;
-    const stream = Boolean(body.stream);
-    const parameters =
-      typeof body.parameters === 'object' && body.parameters !== null ? body.parameters : {};
+    body = await request.json();
+    const { provider, model, messages, stream = false, parameters = {} } = body;
 
-    if (typeof provider !== 'string' || !Array.isArray(messages) || messages.length === 0) {
+    if (!provider || !messages?.length) {
       return NextResponse.json(
-        {
-          error: 'Missing required fields: provider, messages',
-          details: 'Request validation failed',
-        },
+        { error: 'Missing required fields: provider, messages', details: 'Request validation failed' },
         { status: 400 }
       );
     }
@@ -176,9 +144,7 @@ export async function POST(request: NextRequest) {
     const effectiveModel =
       provider === 'ANTHROPIC'
         ? process.env.ANTHROPIC_MODEL?.trim() || ANTHROPIC_CHAT_MODEL
-        : typeof model === 'string'
-          ? model
-          : '';
+        : model;
 
     if (!effectiveModel) {
       return NextResponse.json(
@@ -198,21 +164,18 @@ export async function POST(request: NextRequest) {
     const apiKey = API_KEYS[provider];
     if (!apiKey) {
       return NextResponse.json(
-        {
-          error: `${provider.toUpperCase()} API key is not configured`,
-          details: 'The API key for this provider is missing in environment variables',
-        },
+        { error: `${provider.toUpperCase()} API key is not configured`, details: 'The API key for this provider is missing in environment variables' },
         { status: 400 }
       );
     }
 
     if (stream) {
       const response = await completion({
-        model: effectiveModel,
+        model,
         messages,
         stream: true,
         api_key: apiKey,
-        ...(parameters as Record<string, unknown>),
+        ...parameters,
       });
 
       const encoder = new TextEncoder();
@@ -222,9 +185,7 @@ export async function POST(request: NextRequest) {
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'start' })}\n\n`));
 
             for await (const chunk of response as unknown as AsyncIterable<unknown>) {
-              controller.enqueue(
-                encoder.encode(`data: ${JSON.stringify({ type: 'chunk', chunk })}\n\n`)
-              );
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chunk', chunk })}\n\n`));
             }
 
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));
@@ -237,9 +198,7 @@ export async function POST(request: NextRequest) {
               model: effectiveModel,
             });
             controller.enqueue(
-              encoder.encode(
-                `data: ${JSON.stringify({ type: 'error', error: formatted.details })}\n\n`
-              )
+              encoder.encode(`data: ${JSON.stringify({ type: 'error', error: formatted.details })}\n\n`)
             );
             controller.close();
           }
@@ -261,18 +220,14 @@ export async function POST(request: NextRequest) {
       messages,
       stream: false,
       api_key: apiKey,
-      ...(parameters as Record<string, unknown>),
+      ...parameters,
     });
 
     return NextResponse.json(response, {
-      headers:
-        usage.remaining !== null ? { 'x-ai-remaining-today': String(usage.remaining) } : undefined,
+      headers: usage.remaining !== null ? { 'x-ai-remaining-today': String(usage.remaining) } : undefined,
     });
   } catch (error) {
-    const formatted = formatErrorResponse(
-      error,
-      typeof body?.provider === 'string' ? body.provider : undefined
-    );
+    const formatted = formatErrorResponse(error, body?.provider);
     console.error('API Route Error:', { error: formatted.error, details: formatted.details });
     return NextResponse.json(
       { error: formatted.error, details: formatted.details },

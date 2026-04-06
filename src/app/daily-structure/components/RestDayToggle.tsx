@@ -14,10 +14,9 @@ export default function RestDayToggle({ isRestDay, onToggle }: RestDayToggleProp
         onClick={() => onToggle(!isRestDay)}
         className={`
           w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all duration-300
-          ${
-            isRestDay
-              ? 'bg-aurora-violet/10 border-aurora-violet/40 shadow-sm'
-              : 'bg-midnight-800 border-midnight-600 hover:border-midnight-500 hover:shadow-sm'
+          ${isRestDay
+            ? 'bg-aurora-violet/10 border-aurora-violet/40 shadow-sm'
+            : 'bg-midnight-800 border-midnight-600 hover:border-midnight-500 hover:shadow-sm'
           }
         `}
         aria-pressed={isRestDay}
@@ -25,15 +24,11 @@ export default function RestDayToggle({ isRestDay, onToggle }: RestDayToggleProp
         <div className="flex items-center gap-3">
           <span className="text-2xl select-none">{isRestDay ? '🌙' : '🗓️'}</span>
           <div className="text-left">
-            <p
-              className={`font-display font-bold text-sm ${isRestDay ? 'text-purple-300' : 'text-midnight-200'}`}
-            >
+            <p className={`font-display font-bold text-sm ${isRestDay ? 'text-purple-300' : 'text-midnight-200'}`}>
               {isRestDay ? 'Hviledag aktiveret' : 'Marker som hviledag'}
             </p>
             <p className="text-xs text-midnight-400 mt-0.5">
-              {isRestDay
-                ? 'Ingen pres i dag — du fortjener hvile'
-                : 'Tryk for at tage en pause fra opgaverne'}
+              {isRestDay ? 'Ingen pres i dag — du fortjener hvile' : 'Tryk for at tage en pause fra opgaverne'}
             </p>
           </div>
         </div>

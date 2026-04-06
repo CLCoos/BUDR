@@ -1,30 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 const SYSTEM = `Du er en professionel pædagog på et socialpsykiatrisk bosted. Din opgave er at omskrive følgende rånotat til en professionel, klar og empatisk journalnotat. Bevar alle faktuelle oplysninger. Fjern talesprog og gentagelser. Brug fagligt dansk. Max 150 ord.`;
 
 /**
  * POST /api/journal-polish
  * Body: { text: string }
- * Kræver indlogget portal-bruger + ANTHROPIC_API_KEY.
+ * Requires ANTHROPIC_API_KEY on the server.
  */
 export async function POST(req: NextRequest) {
-  const supabase = await createServerSupabaseClient();
-  if (!supabase) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) {
     return NextResponse.json(
       { error: 'ANTHROPIC_API_KEY er ikke sat på serveren' },
-      { status: 503 }
+      { status: 503 },
     );
   }
 
@@ -59,13 +47,16 @@ export async function POST(req: NextRequest) {
     if (!res.ok) {
       const errText = await res.text();
       console.error('Anthropic error', res.status, errText);
-      return NextResponse.json({ error: 'AI-kald fejlede. Prøv igen senere.' }, { status: 502 });
+      return NextResponse.json(
+        { error: 'AI-kald fejlede. Prøv igen senere.' },
+        { status: 502 },
+      );
     }
 
     const data = (await res.json()) as {
       content?: Array<{ type?: string; text?: string }>;
     };
-    const block = data.content?.find((c) => c.type === 'text');
+    const block = data.content?.find(c => c.type === 'text');
     const polished = block?.text?.trim();
     if (!polished) {
       return NextResponse.json({ error: 'Tomt svar fra AI' }, { status: 502 });

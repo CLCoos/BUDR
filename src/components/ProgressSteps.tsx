@@ -31,10 +31,7 @@ export default function ProgressSteps({ totalSteps, currentStep }: ProgressSteps
               {isCompleted ? (
                 <Check size={14} strokeWidth={2.5} color="#0f0f1a" />
               ) : (
-                <span
-                  className="text-xs font-bold"
-                  style={{ color: isActive ? '#0f0f1a' : 'rgba(255,255,255,0.3)' }}
-                >
+                <span className="text-xs font-bold" style={{ color: isActive ? '#0f0f1a' : 'rgba(255,255,255,0.3)' }}>
                   {stepNum}
                 </span>
               )}

@@ -25,14 +25,7 @@ type Props = {
   onBack: () => void;
 };
 
-export default function LysBlomst({
-  tokens,
-  accent,
-  firstName,
-  reducedMotion,
-  onDone,
-  onBack,
-}: Props) {
+export default function LysBlomst({ tokens, accent, firstName, reducedMotion, onDone, onBack }: Props) {
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [complete, setComplete] = useState(false);
@@ -41,14 +34,11 @@ export default function LysBlomst({
   const progress = index + 1;
   const total = PETALS.length;
 
-  const fillRatio = useMemo(
-    () => (complete ? 1 : (index + Object.keys(answers).length * 0.02) / total),
-    [complete, index, answers, total]
-  );
+  const fillRatio = useMemo(() => (complete ? 1 : (index + Object.keys(answers).length * 0.02) / total), [complete, index, answers, total]);
 
   const pick = (v: string) => {
-    setAnswers((a) => ({ ...a, [petal.id]: v }));
-    if (index < total - 1) setIndex((i) => i + 1);
+    setAnswers(a => ({ ...a, [petal.id]: v }));
+    if (index < total - 1) setIndex(i => i + 1);
     else setComplete(true);
   };
 
@@ -56,18 +46,11 @@ export default function LysBlomst({
 
   if (complete) {
     return (
-      <div
-        className="flex min-h-[60vh] flex-col items-center justify-center p-6 text-center"
-        style={{ color: tokens.text }}
-      >
+      <div className="flex min-h-[60vh] flex-col items-center justify-center p-6 text-center" style={{ color: tokens.text }}>
         <BloomSvg accent={accent} fill={fillRatio} reducedMotion={reducedMotion} />
         <h2 className="mt-8 text-2xl font-bold">Din blomst i dag</h2>
         <p className="mt-2 text-lg opacity-80">
-          {new Intl.DateTimeFormat('da-DK', {
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long',
-          }).format(new Date())}
+          {new Intl.DateTimeFormat('da-DK', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())}
         </p>
         <p className="mx-auto mt-4 max-w-sm text-lg">
           Tak, {firstName}. Lys ser, at du har givet plads til mange dele af livet i dag.
@@ -117,7 +100,7 @@ export default function LysBlomst({
       <p className="mb-10 text-center text-xl font-medium leading-relaxed">{petal.question}</p>
 
       <div className="mx-auto flex max-w-md flex-col gap-3">
-        {(['Godt', 'Okay', 'Svært'] as const).map((opt) => (
+        {(['Godt', 'Okay', 'Svært'] as const).map(opt => (
           <button
             key={opt}
             type="button"

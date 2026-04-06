@@ -50,10 +50,7 @@ export default function WeeklyMoodChart() {
   const [weekIndex, setWeekIndex] = useState(0);
   const days = WEEKS_DATA[weekIndex];
   const validMoods = days.filter((d) => d.mood !== null).map((d) => d.mood as number);
-  const avgMood =
-    validMoods.length > 0
-      ? (validMoods.reduce((a, b) => a + b, 0) / validMoods.length).toFixed(1)
-      : '—';
+  const avgMood = validMoods.length > 0 ? (validMoods.reduce((a, b) => a + b, 0) / validMoods.length).toFixed(1) : '—';
 
   return (
     <div className="card-dark">
@@ -73,8 +70,7 @@ export default function WeeklyMoodChart() {
             onClick={() => setWeekIndex(i)}
             className={`flex-1 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
               weekIndex === i
-                ? 'bg-sunrise-400/20 text-sunrise-300 border border-sunrise-400/30'
-                : 'bg-midnight-700 text-midnight-400 border border-midnight-600 hover:text-midnight-200'
+                ? 'bg-sunrise-400/20 text-sunrise-300 border border-sunrise-400/30' :'bg-midnight-700 text-midnight-400 border border-midnight-600 hover:text-midnight-200'
             }`}
           >
             {label}
@@ -105,11 +101,7 @@ export default function WeeklyMoodChart() {
       </div>
 
       <div className="flex items-center justify-between mt-3 pt-3 border-t border-midnight-700">
-        {[
-          { color: '#F87171', label: 'Lav' },
-          { color: '#FBBF24', label: 'Middel' },
-          { color: '#34D399', label: 'Høj' },
-        ].map((item) => (
+        {[{ color: '#F87171', label: 'Lav' }, { color: '#FBBF24', label: 'Middel' }, { color: '#34D399', label: 'Høj' }].map((item) => (
           <div key={item.label} className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-full" style={{ background: item.color }} />
             <span className="text-xs text-midnight-500">{item.label}</span>

@@ -1,16 +1,11 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, Mic, MicOff, Send, WifiOff } from 'lucide-react';
+import { ArrowLeft, Mic, MicOff, Send } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { useOnlineStatus } from '@/hooks/useOnlineStatus';
-import { trackEvent } from '@/lib/analytics';
-import { tryEarnFirstChatBadge } from '@/lib/residentBadgeSync';
 import { getLysPhase, lysTheme, phaseDaLabel } from '@/app/park-hub/lib/lysTheme';
 import type { LysChatMessage } from '@/app/api/lys-chat/route';
-
-const LYS_CHAT_DRAFT_KEY = 'budr_lys_chat_draft';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -37,7 +32,6 @@ function useResidentId(): string | null {
 export default function LysChatView() {
   const router = useRouter();
   const residentId = useResidentId();
-  const online = useOnlineStatus();
 
   const [now] = useState(() => new Date());
   const phase = useMemo(() => getLysPhase(now), [now]);
@@ -58,43 +52,14 @@ export default function LysChatView() {
   const [voiceMode, setVoiceMode] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const recRef = useRef<{
-    lang: string;
-    continuous: boolean;
-    interimResults: boolean;
-    start: () => void;
-    stop: () => void;
+    lang: string; continuous: boolean; interimResults: boolean;
+    start: () => void; stop: () => void;
     onresult: ((ev: Event) => void) | null;
     onend: (() => void) | null;
   } | null>(null);
   const accRef = useRef('');
 
   const bottomRef = useRef<HTMLDivElement>(null);
-  const draftRestored = useRef(false);
-
-  // Gendan kladde (kun én gang, tom tråd)
-  useEffect(() => {
-    if (draftRestored.current || messages.length > 0) return;
-    draftRestored.current = true;
-    try {
-      const d = localStorage.getItem(LYS_CHAT_DRAFT_KEY);
-      if (d) setInput(d);
-    } catch {
-      /* ignore */
-    }
-  }, [messages.length]);
-
-  // Gem kladde løbende
-  useEffect(() => {
-    const t = window.setTimeout(() => {
-      try {
-        if (input.trim()) localStorage.setItem(LYS_CHAT_DRAFT_KEY, input);
-        else localStorage.removeItem(LYS_CHAT_DRAFT_KEY);
-      } catch {
-        /* ignore */
-      }
-    }, 400);
-    return () => window.clearTimeout(t);
-  }, [input]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -102,125 +67,73 @@ export default function LysChatView() {
   }, [messages, loading]);
 
   // ── Save conversation to Supabase ─────────────────────────────────────────
-  const saveConversation = useCallback(
-    async (msgs: LysChatMessage[], existingId: string | null) => {
-      if (!residentId || msgs.length < 2) return existingId;
-      const supabase = createClient();
-      if (!supabase) return existingId;
-      const title = msgs.find((m) => m.role === 'user')?.content.slice(0, 60) ?? null;
-      if (existingId) {
-        await supabase
-          .from('lys_conversations')
-          .update({ messages: msgs, title, updated_at: new Date().toISOString() })
-          .eq('id', existingId);
-        return existingId;
-      } else {
-        const { data } = await supabase
-          .from('lys_conversations')
-          .insert({ resident_id: residentId, messages: msgs, title })
-          .select('id')
-          .single();
-        return (data as { id: string } | null)?.id ?? null;
-      }
-    },
-    [residentId]
-  );
+  const saveConversation = useCallback(async (msgs: LysChatMessage[], existingId: string | null) => {
+    if (!residentId || msgs.length < 2) return existingId;
+    const supabase = createClient();
+    if (!supabase) return existingId;
+    const title = msgs.find(m => m.role === 'user')?.content.slice(0, 60) ?? null;
+    if (existingId) {
+      await supabase
+        .from('lys_conversations')
+        .update({ messages: msgs, title, updated_at: new Date().toISOString() })
+        .eq('id', existingId);
+      return existingId;
+    } else {
+      const { data } = await supabase
+        .from('lys_conversations')
+        .insert({ resident_id: residentId, messages: msgs, title })
+        .select('id')
+        .single();
+      return (data as { id: string } | null)?.id ?? null;
+    }
+  }, [residentId]);
 
   // ── Send message ──────────────────────────────────────────────────────────
-  const handleSend = useCallback(
-    async (text?: string) => {
-      const trimmed = (text ?? input).trim();
-      if (!trimmed || loading) return;
+  const handleSend = useCallback(async (text?: string) => {
+    const trimmed = (text ?? input).trim();
+    if (!trimmed || loading) return;
+    setInput('');
+    accRef.current = '';
 
-      if (!online) {
-        setInput(trimmed);
-        return;
+    const userMsg: LysChatMessage = { role: 'user', content: trimmed };
+    const next = [...messages, userMsg];
+    setMessages(next);
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/lys-chat', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          messages: next.slice(-12),
+          residentFirstName: '',
+          timeOfDay: phaseDaLabel(phase),
+          mood: null,
+          sessionContext: '',
+        }),
+      });
+      const data = (await res.json()) as { text?: string };
+      const reply = data.text ?? 'Jeg hørte dig. Fortæl mig gerne mere.';
+      const final = [...next, { role: 'assistant' as const, content: reply }];
+      setMessages(final);
+
+      // Award XP if 3+ messages (anti-spam: 1/hour)
+      if (residentId && final.filter(m => m.role === 'user').length >= 3) {
+        const supabase = createClient();
+        void supabase?.rpc('award_xp', { p_resident_id: residentId, p_activity: 'lys_chat', p_xp: 10 });
       }
 
-      setInput('');
-      accRef.current = '';
-
-      const userMsg: LysChatMessage = { role: 'user', content: trimmed };
-      const next = [...messages, userMsg];
-      setMessages(next);
-      setLoading(true);
-
-      try {
-        const res = await fetch('/api/lys-chat', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          credentials: 'same-origin',
-          body: JSON.stringify({
-            messages: next.slice(-12),
-            residentFirstName: '',
-            timeOfDay: phaseDaLabel(phase),
-            mood: null,
-            sessionContext: '',
-          }),
-        });
-        const data = (await res.json().catch(() => ({}))) as { text?: string; error?: string };
-
-        if (!res.ok) {
-          const errReply =
-            res.status === 429
-              ? 'Der blev sendt mange beskeder på kort tid. Vent lidt og prøv igen.'
-              : res.status === 503
-                ? 'Lys er ikke tilgængelig lige nu. Prøv igen om et øjeblik.'
-                : typeof data.error === 'string' && data.error.trim().length > 0
-                  ? data.error
-                  : 'Det lykkedes ikke at få svar. Tjek dit net og prøv igen.';
-          setMessages([...next, { role: 'assistant' as const, content: errReply }]);
-          return;
-        }
-
-        const reply = data.text ?? 'Jeg hørte dig. Fortæl mig gerne mere.';
-        const final = [...next, { role: 'assistant' as const, content: reply }];
-        setMessages(final);
-        try {
-          localStorage.removeItem(LYS_CHAT_DRAFT_KEY);
-        } catch {
-          /* ignore */
-        }
-        trackEvent('lys_chat_exchange', { linked_resident: residentId ? 1 : 0 });
-
-        if (residentId) {
-          void tryEarnFirstChatBadge('supabase', decodeURIComponent(residentId));
-        }
-
-        if (residentId && final.filter((m) => m.role === 'user').length >= 3) {
-          const supabase = createClient();
-          void supabase?.rpc('award_xp', {
-            p_resident_id: residentId,
-            p_activity: 'lys_chat',
-            p_xp: 10,
-          });
-        }
-
-        const newId = await saveConversation(final, convId);
-        if (newId && !convId) setConvId(newId);
-      } catch {
-        setMessages([
-          ...next,
-          {
-            role: 'assistant' as const,
-            content:
-              'Jeg kunne ikke få kontakt til serveren. Tjek dit netværk — eller prøv igen om lidt.',
-          },
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [input, loading, messages, online, phase, residentId, convId, saveConversation]
-  );
+      // Save to Supabase
+      const newId = await saveConversation(final, convId);
+      if (newId && !convId) setConvId(newId);
+    } finally {
+      setLoading(false);
+    }
+  }, [input, loading, messages, phase, residentId, convId, saveConversation]);
 
   // ── Voice ─────────────────────────────────────────────────────────────────
   const stopMic = useCallback(() => {
-    try {
-      recRef.current?.stop();
-    } catch {
-      /* ignore */
-    }
+    try { recRef.current?.stop(); } catch { /* ignore */ }
     recRef.current = null;
     setIsListening(false);
   }, []);
@@ -255,17 +168,9 @@ export default function LysChatView() {
       accRef.current += add;
       setInput((accRef.current + interim).trimStart());
     };
-    rec.onend = () => {
-      setIsListening(false);
-      recRef.current = null;
-    };
+    rec.onend = () => { setIsListening(false); recRef.current = null; };
     recRef.current = rec;
-    try {
-      rec.start();
-      setIsListening(true);
-    } catch {
-      setIsListening(false);
-    }
+    try { rec.start(); setIsListening(true); } catch { setIsListening(false); }
   }, [stopMic]);
 
   const toggleMic = () => {
@@ -305,24 +210,12 @@ export default function LysChatView() {
     setMessages(conv.messages);
     setConvId(conv.id);
     setShowHistory(false);
-    setInput('');
-    try {
-      localStorage.removeItem(LYS_CHAT_DRAFT_KEY);
-    } catch {
-      /* ignore */
-    }
   };
 
   const startNew = () => {
     setMessages([]);
     setConvId(null);
     setShowHistory(false);
-    try {
-      localStorage.removeItem(LYS_CHAT_DRAFT_KEY);
-    } catch {
-      /* ignore */
-    }
-    setInput('');
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -360,17 +253,13 @@ export default function LysChatView() {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex-1 min-w-0">
-          <p className="text-base font-black" style={{ color: accent }}>
-            Lys
-          </p>
-          <p className="text-xs" style={{ color: tokens.textMuted }}>
-            Din ledsager
-          </p>
+          <p className="text-base font-black" style={{ color: accent }}>Lys</p>
+          <p className="text-xs" style={{ color: tokens.textMuted }}>Din ledsager</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setVoiceMode((v) => !v)}
+            onClick={() => setVoiceMode(v => !v)}
             className="flex h-9 w-9 items-center justify-center rounded-full transition-all duration-150 active:scale-90"
             style={{
               backgroundColor: voiceMode ? `${accent}22` : tokens.cardBg,
@@ -402,21 +291,6 @@ export default function LysChatView() {
         </div>
       </header>
 
-      {!online && (
-        <div
-          className="sticky top-0 z-10 flex items-center justify-center gap-2 px-4 py-2 text-center text-xs font-semibold"
-          style={{
-            backgroundColor: 'rgba(180,83,9,0.95)',
-            color: '#fffbeb',
-            borderBottom: '1px solid rgba(255,251,235,0.2)',
-          }}
-          role="status"
-        >
-          <WifiOff className="h-3.5 w-3.5 shrink-0 opacity-90" aria-hidden />
-          <span>Du er offline — beskeder kan ikke sendes, før du har net igen.</span>
-        </div>
-      )}
-
       {/* Messages */}
       <div
         className="flex-1 overflow-y-auto px-4 pt-4 pb-4"
@@ -441,11 +315,6 @@ export default function LysChatView() {
             <p className="text-sm" style={{ color: tokens.textMuted }}>
               Hvad har du på hjerte? Du kan skrive eller tale frit — jeg lytter.
             </p>
-            {!online && (
-              <p className="text-xs mt-3 font-medium" style={{ color: tokens.textMuted }}>
-                Når du er online igen, kan du sende beskeder som vanligt.
-              </p>
-            )}
           </div>
         )}
 
@@ -468,16 +337,8 @@ export default function LysChatView() {
                 className="max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed"
                 style={
                   m.role === 'user'
-                    ? {
-                        backgroundColor: `${accent}22`,
-                        color: tokens.text,
-                        border: `1px solid ${accent}33`,
-                      }
-                    : {
-                        backgroundColor: tokens.cardBg,
-                        color: tokens.text,
-                        boxShadow: tokens.shadow,
-                      }
+                    ? { backgroundColor: `${accent}22`, color: tokens.text, border: `1px solid ${accent}33` }
+                    : { backgroundColor: tokens.cardBg, color: tokens.text, boxShadow: tokens.shadow }
                 }
               >
                 {m.content}
@@ -498,12 +359,8 @@ export default function LysChatView() {
                 className="rounded-2xl px-4 py-3 flex items-center gap-1.5"
                 style={{ backgroundColor: tokens.cardBg, boxShadow: tokens.shadow }}
               >
-                {[0, 120, 240].map((d) => (
-                  <span
-                    key={d}
-                    className="w-1.5 h-1.5 rounded-full animate-bounce"
-                    style={{ backgroundColor: accent, animationDelay: `${d}ms` }}
-                  />
+                {[0, 120, 240].map(d => (
+                  <span key={d} className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: accent, animationDelay: `${d}ms` }} />
                 ))}
               </div>
             </div>
@@ -525,11 +382,7 @@ export default function LysChatView() {
               {input && (
                 <div
                   className="rounded-2xl px-4 py-3 text-sm leading-relaxed"
-                  style={{
-                    backgroundColor: tokens.cardBg,
-                    color: tokens.text,
-                    boxShadow: tokens.shadow,
-                  }}
+                  style={{ backgroundColor: tokens.cardBg, color: tokens.text, boxShadow: tokens.shadow }}
                 >
                   {input}
                 </div>
@@ -538,8 +391,7 @@ export default function LysChatView() {
                 <button
                   type="button"
                   onClick={toggleMic}
-                  disabled={!online && !isListening}
-                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white transition-all duration-200 active:scale-90 disabled:opacity-40"
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white transition-all duration-200 active:scale-90"
                   style={{
                     background: isListening
                       ? `linear-gradient(135deg, ${accent}, ${accent}bb)`
@@ -559,8 +411,8 @@ export default function LysChatView() {
             /* Text mode */
             <textarea
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
                   void handleSend();
@@ -575,7 +427,7 @@ export default function LysChatView() {
                 color: tokens.text,
                 caretColor: accent,
               }}
-              disabled={loading || !online}
+              disabled={loading}
               aria-label="Besked til Lys"
             />
           )}
@@ -583,7 +435,7 @@ export default function LysChatView() {
           <button
             type="button"
             onClick={() => void handleSend()}
-            disabled={loading || !input.trim() || !online}
+            disabled={loading || !input.trim()}
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-white transition-all duration-150 active:scale-90 disabled:opacity-40"
             style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)` }}
             aria-label="Send"
@@ -595,7 +447,10 @@ export default function LysChatView() {
 
       {/* History panel */}
       {showHistory && (
-        <div className="fixed inset-0 z-50 flex flex-col" style={{ backgroundColor: tokens.bg }}>
+        <div
+          className="fixed inset-0 z-50 flex flex-col"
+          style={{ backgroundColor: tokens.bg }}
+        >
           <div
             className="flex items-center gap-3 px-4 py-3 border-b"
             style={{ borderColor: `${accent}14` }}
@@ -628,12 +483,8 @@ export default function LysChatView() {
             {historyLoading && (
               <div className="flex justify-center py-8">
                 <div className="flex gap-1.5">
-                  {[0, 150, 300].map((d) => (
-                    <div
-                      key={d}
-                      className="w-2 h-2 rounded-full animate-bounce"
-                      style={{ backgroundColor: accent, animationDelay: `${d}ms` }}
-                    />
+                  {[0, 150, 300].map(d => (
+                    <div key={d} className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: accent, animationDelay: `${d}ms` }} />
                   ))}
                 </div>
               </div>
@@ -645,7 +496,7 @@ export default function LysChatView() {
               </p>
             )}
 
-            {history.map((conv) => (
+            {history.map(conv => (
               <button
                 key={conv.id}
                 type="button"
@@ -657,10 +508,7 @@ export default function LysChatView() {
                   {conv.title ?? 'Samtale'}
                 </p>
                 <p className="text-xs" style={{ color: tokens.textMuted }}>
-                  {new Date(conv.updated_at).toLocaleDateString('da-DK', {
-                    day: 'numeric',
-                    month: 'short',
-                  })}
+                  {new Date(conv.updated_at).toLocaleDateString('da-DK', { day: 'numeric', month: 'short' })}
                   {' · '}
                   {(conv.messages as LysChatMessage[]).length} beskeder
                 </p>

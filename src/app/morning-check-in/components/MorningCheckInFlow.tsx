@@ -83,16 +83,9 @@ export default function MorningCheckInFlow({ residentId }: Props) {
       const today = new Date().toISOString().slice(0, 10);
       localStorage.setItem(
         'budr_today_checkin',
-        JSON.stringify({
-          date: today,
-          energy: data.energy,
-          mood: data.mood,
-          intention: data.intention,
-        })
+        JSON.stringify({ date: today, energy: data.energy, mood: data.mood, intention: data.intention }),
       );
-    } catch {
-      /* ignore */
-    }
+    } catch { /* ignore */ }
 
     // Save to Supabase — park_daily_checkin
     if (residentId) {
@@ -168,32 +161,22 @@ export default function MorningCheckInFlow({ residentId }: Props) {
                         s.num < step
                           ? 'w-6 h-6 bg-sunrise-400'
                           : s.num === step
-                            ? 'w-7 h-7 bg-sunrise-400 shadow-sunrise'
-                            : 'w-6 h-6 bg-midnight-700'
+                          ? 'w-7 h-7 bg-sunrise-400 shadow-sunrise'
+                          : 'w-6 h-6 bg-midnight-700'
                       }`}
                     >
                       {s.num < step ? (
                         <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                          <path
-                            d="M1 4L3.5 6.5L9 1"
-                            stroke="#0f0f1a"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
+                          <path d="M1 4L3.5 6.5L9 1" stroke="#0f0f1a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                       ) : (
-                        <span
-                          className={`text-xs font-bold ${s.num === step ? 'text-midnight-900' : 'text-midnight-500'}`}
-                        >
+                        <span className={`text-xs font-bold ${s.num === step ? 'text-midnight-900' : 'text-midnight-500'}`}>
                           {s.num}
                         </span>
                       )}
                     </div>
                     {s.num < steps.length && (
-                      <div
-                        className={`w-5 h-0.5 rounded-full ${s.num < step ? 'bg-sunrise-400' : 'bg-midnight-700'}`}
-                      />
+                      <div className={`w-5 h-0.5 rounded-full ${s.num < step ? 'bg-sunrise-400' : 'bg-midnight-700'}`} />
                     )}
                   </div>
                 ))}
@@ -219,8 +202,7 @@ export default function MorningCheckInFlow({ residentId }: Props) {
           </div>
           {step === 1 && (
             <p className="text-center text-xs text-midnight-500 px-6 mt-3 max-w-md leading-relaxed">
-              Lyset skifter fra kolde til varme farver, jo mere energi du viser — så du kan se med
-              det samme, hvor du er.
+              Lyset skifter fra kolde til varme farver, jo mere energi du viser — så du kan se med det samme, hvor du er.
             </p>
           )}
         </div>
