@@ -15,6 +15,8 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import type { MedDefinition } from './types';
 import WriteJournalEntry from './WriteJournalEntry';
+import GoalProgress from '../../components/GoalProgress';
+import ShiftNotesFeed from '../../components/ShiftNotesFeed';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -471,6 +473,11 @@ export default function ResidentOverblikTab({
             )}
           </div>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+        <GoalProgress compact variant="live" residentId={residentId} />
+        <ShiftNotesFeed variant="live" residentId={residentId} />
       </div>
     </div>
   );

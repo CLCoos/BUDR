@@ -199,7 +199,12 @@ const INPUT_STYLE: React.CSSProperties = {
   colorScheme: 'dark',
 };
 
-export default function KalenderWidget() {
+type KalenderWidgetProps = {
+  /** `live` = rigtigt dashboard (viser disclaimer om mock-data). `demo` = skjul banner i portal-demo. */
+  variant?: 'live' | 'demo';
+};
+
+export default function KalenderWidget({ variant = 'live' }: KalenderWidgetProps) {
   const [hydrated, setHydrated] = useState(false);
   const [today, setToday] = useState<Date>(() => new Date());
   const [appointments, setAppointments] = useState<CareAppointment[]>([]);
@@ -308,6 +313,18 @@ export default function KalenderWidget() {
             <p className="text-xs" style={{ color: 'var(--cp-muted)' }}>
               {dateLabel}
             </p>
+            {variant === 'live' && (
+              <p
+                className="mt-1.5 max-w-xl text-[11px] leading-snug rounded-md px-2 py-1.5"
+                style={{
+                  color: 'var(--cp-amber)',
+                  backgroundColor: 'var(--cp-amber-dim)',
+                  border: '1px solid rgba(246,173,85,0.25)',
+                }}
+              >
+                Eksempel-aftaler til layout — ikke jeres rigtige kalender eller EHR endnu.
+              </p>
+            )}
           </div>
         </div>
         <div className="flex flex-col items-stretch gap-2 sm:items-end">

@@ -32,6 +32,7 @@ import {
   IconWarning,
 } from '@/components/marketing/LandingIcons';
 import { ResidentInitialsAbbr } from '@/components/marketing/ResidentInitialsAbbr';
+import MarketingContactForm from '@/components/marketing/MarketingContactForm';
 
 const LandingInteractiveDemo = dynamic(
   () =>
@@ -264,6 +265,11 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               </a>
             </li>
             <li>
+              <Link href="/institutioner" onClick={closeNav}>
+                Institutioner
+              </Link>
+            </li>
+            <li>
               <a
                 href="#problem-losning"
                 onClick={closeNav}
@@ -366,7 +372,10 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
                 BUDR Care er en produktfamilie til <strong>socialpsykiatriske botilbud</strong>:
                 borger-appen <strong>Lys</strong> og <strong>Care Portal</strong> til pædagoger og
                 ledere. Det er ét sammenhængende økosystem — ikke to leverandører, der først skal
-                kobles sammen bagefter.
+                kobles sammen bagefter.{' '}
+                <Link href="/institutioner" style={{ color: 'var(--amber-lt)' }}>
+                  Er I kommune eller botilbud? Læs institutionsstien →
+                </Link>
               </p>
             </div>
             <div className="intro-grid">
@@ -1572,19 +1581,25 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
         </section>
 
         {/* 8. SEKUNDÆR CTA */}
-        <section className="cta-section">
+        <section className="cta-section" id="kontakt" aria-label="Kontakt">
           <div className="cta-bg" aria-hidden />
-          <div style={{ position: 'relative', zIndex: 1 }} className="fi">
+          <div className="shell fi" style={{ position: 'relative', zIndex: 1 }}>
             <h2>Klar til at se det i praksis?</h2>
             <p className="cta-lead">
-              Book en uforpligtende gennemgang — eller prøv demoerne, når det passer jer.
+              Skriv til os her — så mistes henvendelsen ikke i interne mailto-felter. Vi vender
+              typisk tilbage inden for <strong>2 hverdage</strong>. Eller prøv demoerne, når det
+              passer jer.
             </p>
-            <div className="cta-actions">
-              <a href={BOOK_MAIL} className="btn-primary">
-                Book en uforpligtende gennemgang
-              </a>
-              <Link href="/care-portal-demo" className="btn-ghost">
+            <MarketingContactForm source="forsiden" responseWeekdays={2} />
+            <div className="cta-actions" style={{ marginTop: 28 }}>
+              <Link href="/care-portal-demo" className="btn-primary">
                 Prøv demoerne selv
+              </Link>
+              <a href={BOOK_MAIL} className="btn-ghost">
+                Book direkte på e-mail
+              </a>
+              <Link href="/institutioner" className="btn-ghost">
+                Er I kommune eller botilbud? Institutionsstien →
               </Link>
             </div>
           </div>
@@ -1620,6 +1635,13 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
             </div>
             <div className="footer-col">
               <h5>På siden</h5>
+              <Link href="/institutioner">Institutioner</Link>
+              <Link href="/pilotpakke">Pilotpakke</Link>
+              <Link href="/for-botilbud/journal-og-digital-tilsyn">
+                Journal &amp; digitalt tilsyn
+              </Link>
+              <Link href="/for-botilbud/varsling-socialpsykiatri">Varsling socialpsykiatri</Link>
+              <Link href="/for-botilbud/plan-og-medicinoverblik">Plan &amp; medicin</Link>
               <a href="#hvad-er-budr">Om BUDR</a>
               <a href="#hurtig-oversigt">Hurtig oversigt</a>
               <a href="#problem-losning">Problem &amp; løsning</a>
@@ -1629,6 +1651,7 @@ export default function HomeLanding({ className = '' }: HomeLandingProps) {
               <a href="#features">Funktioner</a>
               <a href="#tryghed">Tryghed</a>
               <a href="#prover-selv">Prøv demo</a>
+              <a href="#kontakt">Kontakt</a>
               <a
                 href="https://www.linkedin.com/company/budr"
                 target="_blank"

@@ -1,0 +1,67 @@
+/* Print / “Gem som PDF” — kun indehold, læsbar på hvid baggrund */
+
+@media print {
+  .budr-landing.pilotpakke-page nav,
+  .budr-landing.pilotpakke-page .pilotpakke-no-print,
+  .budr-landing.pilotpakke-page footer {
+    display: none !important;
+  }
+
+  .budr-landing.pilotpakke-page {
+    background: #fff !important;
+    color: #111 !important;
+    font-size: 11pt;
+    line-height: 1.45;
+  }
+
+  .budr-landing.pilotpakke-page .budr-landing-content {
+    padding-top: 0 !important;
+  }
+
+  .budr-landing.pilotpakke-page .intro-section,
+  .budr-landing.pilotpakke-page .cta-section {
+    background: #fff !important;
+    border: none !important;
+    padding: 12pt 0 !important;
+    page-break-inside: avoid;
+  }
+
+  .budr-landing.pilotpakke-page .section-h,
+  .budr-landing.pilotpakke-page h1,
+  .budr-landing.pilotpakke-page h2 {
+    color: #111 !important;
+  }
+
+  .budr-landing.pilotpakke-page .section-p,
+  .budr-landing.pilotpakke-page .intro-lead,
+  .budr-landing.pilotpakke-page li {
+    color: #222 !important;
+  }
+
+  .budr-landing.pilotpakke-page a {
+    color: #0a5 !important;
+    text-decoration: underline;
+  }
+
+  .budr-landing.pilotpakke-page .pilotpakke-table-wrap {
+    border: 1px solid #ccc;
+    border-radius: 0;
+  }
+
+  .budr-landing.pilotpakke-page::after {
+    display: none !important;
+  }
+
+  .pilotpakke-print-footer {
+    display: block !important;
+    margin-top: 24pt;
+    padding-top: 12pt;
+    border-top: 1px solid #999;
+    font-size: 9pt;
+    color: #444 !important;
+  }
+}
+
+.pilotpakke-print-footer {
+  display: none;
+}

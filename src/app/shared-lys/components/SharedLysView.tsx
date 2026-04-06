@@ -114,21 +114,15 @@ export default function SharedLysView() {
         setLoading(false);
         return;
       }
-      const { data: session, error: err } = await supabase
-        .from('shared_lys_sessions')
-        .select('*')
-        .eq('session_code', inputCode.toUpperCase())
-        .eq('is_active', true)
-        .single();
-      if (err || !session) {
+      const { data: joinedRows, error: err } = await supabase.rpc('shared_lys_join_session', {
+        p_session_code: inputCode.trim().toUpperCase(),
+      });
+      const session = Array.isArray(joinedRows) ? joinedRows[0] : joinedRows;
+      if (err || !session?.id) {
         setError('Ugyldig kode. Tjek koden og prøv igen.');
         setLoading(false);
         return;
       }
-      await supabase
-        .from('shared_lys_sessions')
-        .update({ support_user_id: currentUserId })
-        .eq('id', session.id);
       if (mountedRef.current) {
         setSessionCode(session.session_code);
         setSessionId(session.id);

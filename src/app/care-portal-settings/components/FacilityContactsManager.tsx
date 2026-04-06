@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, Pencil, Trash2, X, GripVertical, Phone } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { parseStaffOrgId } from '@/lib/staffOrgScope';
 
 type Contact = {
   id: string;
@@ -29,13 +30,13 @@ async function getOrgId(): Promise<string | null> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
-  // For demo: use the test org — in production, look up staff member's org_id
-  return 'aaaaaaaa-0000-0000-0000-000000000001';
+  return parseStaffOrgId(user.user_metadata?.org_id);
 }
 
 export default function FacilityContactsManager() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [orgId, setOrgId] = useState<string | null>(null);
+  const [orgError, setOrgError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Modal state
@@ -59,7 +60,15 @@ export default function FacilityContactsManager() {
   useEffect(() => {
     getOrgId().then(async (id) => {
       setOrgId(id);
-      if (id) await load(id);
+      if (!id) {
+        setOrgError(
+          'Din konto mangler organisation (org_id i Supabase Auth). Kontakterne kan ikke gemmes, før det er sat.'
+        );
+        setContacts([]);
+      } else {
+        setOrgError(null);
+        await load(id);
+      }
       setLoading(false);
     });
   }, []);
@@ -123,6 +132,11 @@ export default function FacilityContactsManager() {
 
   return (
     <div className="space-y-6">
+      {orgError && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          {orgError}
+        </div>
+      )}
       {/* Section header */}
       <div className="flex items-center justify-between">
         <div>
@@ -137,7 +151,8 @@ export default function FacilityContactsManager() {
         <button
           type="button"
           onClick={openAdd}
-          className="flex items-center gap-1.5 rounded-full bg-[#0F1B2D] px-4 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-80"
+          disabled={!orgId}
+          className="flex items-center gap-1.5 rounded-full bg-[#0F1B2D] px-4 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-80 disabled:opacity-40 disabled:pointer-events-none"
         >
           <Plus className="h-3.5 w-3.5" />
           Tilføj kontakt

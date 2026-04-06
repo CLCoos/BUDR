@@ -1,6 +1,7 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Search, Download } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 interface ShiftNote {
   id: string;
@@ -12,7 +13,7 @@ interface ShiftNote {
   body: string;
 }
 
-const shiftNotes: ShiftNote[] = [
+const mockShiftNotes: ShiftNote[] = [
   {
     id: 'sn-001',
     date: '26/03/2026',
@@ -91,11 +92,110 @@ const shiftLabels = {
   nat: { label: 'Nattevagt', emoji: '🌃' },
 };
 
-export default function ShiftNotesFeed() {
+function staffInitials(name: string): string {
+  const p = name.trim().split(/\s+/).filter(Boolean);
+  if (p.length >= 2) return (p[0]!.slice(0, 1) + p[1]!.slice(0, 1)).toUpperCase();
+  const one = p[0] ?? name;
+  return one.slice(0, 2).toUpperCase() || '?';
+}
+
+function hourToShift(hour: number): 'dag' | 'aften' | 'nat' {
+  if (hour >= 6 && hour < 15) return 'dag';
+  if (hour >= 15 && hour < 22) return 'aften';
+  return 'nat';
+}
+
+function categoryToFlag(category: string): ShiftNote['flagColor'] {
+  const c = category.toLowerCase();
+  if (c.includes('kritisk') || c.includes('krise')) return 'roed';
+  if (c.includes('bekym') || c.includes('advar')) return 'gul';
+  return 'groen';
+}
+
+interface Props {
+  variant?: 'mock' | 'live';
+  residentId?: string;
+}
+
+export default function ShiftNotesFeed({ variant = 'mock', residentId }: Props) {
   const [search, setSearch] = useState('');
   const [flagFilter, setFlagFilter] = useState<string>('alle');
+  const [notes, setNotes] = useState<ShiftNote[]>(() => (variant === 'mock' ? mockShiftNotes : []));
+  const [loading, setLoading] = useState(variant === 'live');
 
-  const filtered = shiftNotes.filter((n) => {
+  useEffect(() => {
+    if (variant === 'mock') {
+      setNotes(mockShiftNotes);
+      setLoading(false);
+      return;
+    }
+
+    if (!residentId?.trim()) {
+      setNotes([]);
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+
+    void (async () => {
+      const supabase = createClient();
+      if (!supabase) {
+        if (!cancelled) {
+          setNotes([]);
+          setLoading(false);
+        }
+        return;
+      }
+
+      const since = new Date(Date.now() - 28 * 86400000).toISOString();
+      const { data, error } = await supabase
+        .from('journal_entries')
+        .select('id, staff_name, entry_text, category, created_at, journal_status')
+        .eq('resident_id', residentId.trim())
+        .eq('journal_status', 'godkendt')
+        .gte('created_at', since)
+        .order('created_at', { ascending: false })
+        .limit(80);
+
+      if (cancelled) return;
+
+      if (error || !data) {
+        setNotes([]);
+        setLoading(false);
+        return;
+      }
+
+      const mapped: ShiftNote[] = data.map((row) => {
+        const created = new Date(row.created_at as string);
+        const dateStr = created.toLocaleDateString('da-DK', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+        });
+        const name = (row.staff_name as string) || 'Personale';
+        return {
+          id: row.id as string,
+          date: dateStr,
+          shift: hourToShift(created.getHours()),
+          staffName: name,
+          staffInitials: staffInitials(name),
+          flagColor: categoryToFlag((row.category as string) ?? ''),
+          body: row.entry_text as string,
+        };
+      });
+
+      setNotes(mapped);
+      setLoading(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [variant, residentId]);
+
+  const filtered = notes.filter((n) => {
     const matchSearch =
       n.body.toLowerCase().includes(search.toLowerCase()) ||
       n.staffName.toLowerCase().includes(search.toLowerCase());
@@ -103,22 +203,45 @@ export default function ShiftNotesFeed() {
     return matchSearch && matchFlag;
   });
 
-  // Group by date
   const grouped: Record<string, ShiftNote[]> = {};
   filtered.forEach((note) => {
     if (!grouped[note.date]) grouped[note.date] = [];
     grouped[note.date].push(note);
   });
 
+  const title = variant === 'live' ? 'Journal (godkendt)' : 'Vagtnotat';
+
+  if (variant === 'live' && loading) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-100">
+          <span className="text-sm font-semibold text-gray-800">{title}</span>
+        </div>
+        <div className="py-10 text-center text-xs text-gray-400">Henter noter…</div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
       <div className="px-4 py-3 border-b border-gray-100">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-semibold text-gray-800">Vagtnotat</span>
-          <button className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg px-2.5 py-1.5 transition-colors">
-            <Download size={12} /> Eksportér
-          </button>
+          <span className="text-sm font-semibold text-gray-800">{title}</span>
+          {variant === 'mock' && (
+            <button
+              type="button"
+              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg px-2.5 py-1.5 transition-colors"
+            >
+              <Download size={12} /> Eksportér
+            </button>
+          )}
         </div>
+        {variant === 'live' && (
+          <p className="text-[10px] text-gray-500 mb-2">
+            Seneste godkendte journalnotater (ikke kladder). Også kort vist under &ldquo;Journal i
+            dag&rdquo; ovenfor.
+          </p>
+        )}
         <div className="flex gap-2">
           <div className="flex-1 relative">
             <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -133,6 +256,7 @@ export default function ShiftNotesFeed() {
             {(['alle', 'groen', 'gul', 'roed'] as const).map((f) => (
               <button
                 key={`notefilter-${f}`}
+                type="button"
                 onClick={() => setFlagFilter(f)}
                 className={`px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
                   flagFilter === f
@@ -148,12 +272,16 @@ export default function ShiftNotesFeed() {
       </div>
 
       <div className="divide-y divide-gray-50 max-h-[600px] overflow-y-auto scrollbar-hide">
-        {Object.entries(grouped).map(([date, notes]) => (
+        {variant === 'live' && !loading && notes.length === 0 && (
+          <div className="py-10 text-center text-xs text-gray-400">Ingen godkendte notater</div>
+        )}
+
+        {Object.entries(grouped).map(([date, dayNotes]) => (
           <div key={`date-group-${date}`}>
             <div className="px-4 py-2 bg-gray-50 sticky top-0">
               <span className="text-xs font-semibold text-gray-500">{date}</span>
             </div>
-            {notes.map((note) => {
+            {dayNotes.map((note) => {
               const fc = flagConfig[note.flagColor];
               const sl = shiftLabels[note.shift];
               return (
@@ -186,7 +314,7 @@ export default function ShiftNotesFeed() {
           </div>
         ))}
 
-        {filtered.length === 0 && (
+        {filtered.length === 0 && notes.length > 0 && (
           <div className="py-12 text-center">
             <div className="text-gray-400 text-sm">Ingen noter matcher søgningen</div>
           </div>

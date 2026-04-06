@@ -1,6 +1,7 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CheckCircle2, Circle, Target, Plus } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 interface GoalStep {
   id: string;
@@ -17,7 +18,7 @@ interface Goal {
   steps: GoalStep[];
 }
 
-const goals: Goal[] = [
+const mockGoals: Goal[] = [
   {
     id: 'gp-001',
     title: 'Komme ud af huset dagligt',
@@ -75,17 +76,150 @@ const goals: Goal[] = [
   },
 ];
 
-interface Props {
-  compact?: boolean;
+function formatDaDate(iso: string) {
+  return new Date(iso).toLocaleDateString('da-DK', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
 }
 
-export default function GoalProgress({ compact }: Props) {
-  const [expanded, setExpanded] = useState<string>('gp-001');
+interface Props {
+  compact?: boolean;
+  variant?: 'mock' | 'live';
+  residentId?: string;
+}
+
+export default function GoalProgress({ compact, variant = 'mock', residentId }: Props) {
+  const [goals, setGoals] = useState<Goal[]>(() => (variant === 'mock' ? mockGoals : []));
+  const [loading, setLoading] = useState(variant === 'live');
+  const [expanded, setExpanded] = useState<string>(() =>
+    variant === 'mock' ? (mockGoals[0]?.id ?? '') : ''
+  );
+
+  useEffect(() => {
+    if (variant === 'mock') {
+      setGoals(mockGoals);
+      setLoading(false);
+      setExpanded(mockGoals[0]?.id ?? '');
+      return;
+    }
+
+    if (!residentId?.trim()) {
+      setGoals([]);
+      setLoading(false);
+      setExpanded('');
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+
+    void (async () => {
+      const supabase = createClient();
+      if (!supabase) {
+        if (!cancelled) {
+          setGoals([]);
+          setLoading(false);
+        }
+        return;
+      }
+
+      const { data: goalRows, error: gErr } = await supabase
+        .from('park_goals')
+        .select('id, title, created_at, status')
+        .eq('resident_id', residentId.trim())
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(8);
+
+      if (cancelled) return;
+
+      if (gErr || !goalRows?.length) {
+        setGoals([]);
+        setLoading(false);
+        setExpanded('');
+        return;
+      }
+
+      const goalIds = goalRows.map((g) => g.id as string);
+      const { data: stepRows, error: sErr } = await supabase
+        .from('park_goal_steps')
+        .select('id, goal_id, step_number, title, completed, completed_at')
+        .in('goal_id', goalIds)
+        .order('step_number');
+
+      if (cancelled) return;
+
+      const stepsByGoal = new Map<string, NonNullable<typeof stepRows>>();
+      if (!sErr && stepRows) {
+        for (const s of stepRows) {
+          const gid = s.goal_id as string;
+          const arr = stepsByGoal.get(gid) ?? [];
+          arr.push(s);
+          stepsByGoal.set(gid, arr);
+        }
+      }
+
+      const mapped: Goal[] = goalRows.map((g) => {
+        const steps = stepsByGoal.get(g.id as string) ?? [];
+        const sorted = [...steps].sort((a, b) => (a.step_number ?? 0) - (b.step_number ?? 0));
+        return {
+          id: g.id as string,
+          title: (g.title as string) ?? '—',
+          createdBy: '—',
+          createdAt: formatDaDate(g.created_at as string),
+          steps: sorted.map((s) => ({
+            id: s.id as string,
+            text: (s.title as string) ?? '',
+            completed: !!s.completed,
+            completedAt: s.completed_at ? formatDaDate(s.completed_at as string) : undefined,
+          })),
+        };
+      });
+
+      if (!cancelled) {
+        setGoals(mapped);
+        setExpanded(mapped[0]?.id ?? '');
+        setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [variant, residentId]);
 
   const getProgress = (goal: Goal) => {
+    const total = goal.steps.length;
     const done = goal.steps.filter((s) => s.completed).length;
-    return { done, total: goal.steps.length, pct: Math.round((done / goal.steps.length) * 100) };
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    return { done, total, pct };
   };
+
+  if (variant === 'live' && loading) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
+          <Target size={15} className="text-[#1D9E75]" />
+          <span className="text-sm font-semibold text-gray-800">Mål</span>
+        </div>
+        <div className="px-4 py-6 text-center text-xs text-gray-400">Henter mål…</div>
+      </div>
+    );
+  }
+
+  if (variant === 'live' && goals.length === 0) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
+          <Target size={15} className="text-[#1D9E75]" />
+          <span className="text-sm font-semibold text-gray-800">Mål</span>
+        </div>
+        <div className="px-4 py-6 text-center text-xs text-gray-400">Ingen aktive mål</div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
@@ -95,8 +229,11 @@ export default function GoalProgress({ compact }: Props) {
           <span className="text-sm font-semibold text-gray-800">Mål</span>
           <span className="text-xs text-gray-400">{goals.length} aktive</span>
         </div>
-        {!compact && (
-          <button className="flex items-center gap-1 text-xs text-[#1D9E75] hover:underline">
+        {!compact && variant === 'mock' && (
+          <button
+            type="button"
+            className="flex items-center gap-1 text-xs text-[#1D9E75] hover:underline"
+          >
             <Plus size={12} /> Tilføj mål
           </button>
         )}
@@ -110,6 +247,7 @@ export default function GoalProgress({ compact }: Props) {
           return (
             <div key={goal.id}>
               <button
+                type="button"
                 onClick={() => !compact && setExpanded(isExpanded ? '' : goal.id)}
                 className={`w-full px-4 py-3 text-left transition-colors ${!compact ? 'hover:bg-gray-50' : ''}`}
               >
@@ -130,7 +268,7 @@ export default function GoalProgress({ compact }: Props) {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="text-xs text-gray-400">
-                    {done}/{total} trin · {goal.createdBy}
+                    {done}/{total} trin{goal.createdBy !== '—' ? ` · ${goal.createdBy}` : ''}
                   </div>
                   <div className="text-xs text-gray-400">{goal.createdAt}</div>
                 </div>

@@ -4345,3 +4345,132 @@ html {
     transition: none;
   }
 }
+
+/* ── Marketing contact form (institutioner / forsiden) ───────────────────── */
+.budr-landing .marketing-contact-form {
+  max-width: 420px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.budr-landing .marketing-contact-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.budr-landing .marketing-contact-form label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fog);
+  margin-bottom: 6px;
+}
+
+.budr-landing .marketing-contact-form input,
+.budr-landing .marketing-contact-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--white);
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(133, 183, 235, 0.22);
+  border-radius: 10px;
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.budr-landing .marketing-contact-form input::placeholder,
+.budr-landing .marketing-contact-form textarea::placeholder {
+  color: var(--fog-dim);
+}
+
+.budr-landing .marketing-contact-form input:focus-visible,
+.budr-landing .marketing-contact-form textarea:focus-visible {
+  border-color: rgba(93, 202, 165, 0.55);
+  box-shadow: 0 0 0 2px rgba(93, 202, 165, 0.2);
+}
+
+.budr-landing .marketing-contact-form textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.budr-landing .marketing-contact-form-hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.budr-landing .marketing-contact-form-submit {
+  margin-top: 6px;
+  width: 100%;
+  padding: 14px 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--ink);
+  background: linear-gradient(135deg, var(--budr-teal), var(--budr-blue));
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.12s ease;
+}
+
+.budr-landing .marketing-contact-form-submit:hover:not(:disabled) {
+  opacity: 0.94;
+  transform: translateY(-1px);
+}
+
+.budr-landing .marketing-contact-form-submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.budr-landing .marketing-contact-form-note {
+  font-size: 0.78rem;
+  color: var(--fog);
+  line-height: 1.55;
+  margin-top: 12px;
+  text-align: center;
+}
+
+.budr-landing .marketing-contact-form-fallback {
+  margin-top: 16px;
+  font-size: 0.82rem;
+  color: var(--fog);
+  text-align: center;
+}
+
+.budr-landing .marketing-contact-form-fallback a {
+  color: var(--amber-lt);
+}
+
+.budr-landing .marketing-contact-form-status {
+  border-radius: 12px;
+  padding: 16px 18px;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  margin-top: 8px;
+}
+
+.budr-landing .marketing-contact-form-status--ok {
+  background: rgba(61, 191, 112, 0.12);
+  border: 1px solid rgba(61, 191, 112, 0.35);
+  color: var(--amber-lt);
+}
+
+.budr-landing .marketing-contact-form-status--err {
+  background: rgba(217, 85, 85, 0.1);
+  border: 1px solid rgba(217, 85, 85, 0.35);
+  color: #f0b4b4;
+}

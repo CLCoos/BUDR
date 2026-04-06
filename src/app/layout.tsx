@@ -10,7 +10,13 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 };
 
+const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'https://budrcare.dk').replace(
+  /\/$/,
+  ''
+);
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: 'BUDR Care — Portal og Lys til socialpsykiatrien',
   description:
     'Care Portal for pædagoger og ledere: overblik, journalstøtte og borgerdata. Lys giver borgeren stemme og tryghed — døgnet rundt.',

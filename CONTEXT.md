@@ -2,7 +2,7 @@
 
 **Til AI/assistenter:** Læs denne fil først. Kort indgang: [`AGENTS.md`](./AGENTS.md).
 
-**Sidst opdateret (manuelt):** 2026-04-06 — beskriver repo efter seneste marketing-, portal-, Lys-journal- og org-RLS-ændringer.
+**Sidst opdateret (manuelt):** 2026-04-06 — inkl. live vagtoverlevering (`/handover-workspace`): beboerliste fra `care_residents` + dagens `park_daily_checkin` til trafiklys; samt live 360° overblik: `GoalProgress` / `ShiftNotesFeed` mod `park_goals` + godkendt `journal_entries` (demo/ prototype `Resident360Client` fortsat `variant="mock"`).
 
 ---
 
@@ -14,6 +14,12 @@
 - **Lys — journal mod Supabase (live beboere):** `GET`/`POST` `src/app/api/park/resident-journal/route.ts` (service role + beboer-cookie), `src/lib/residentUuid.ts`, `src/lib/dataService.ts` (`shouldUseCloudJournal`, `saveJournalEntry`, `getJournalEntries`), `LysJournalTab.tsx` — kategori **Lys journal**; **kladde** vs **godkendt**. Badge-logik: `residentBadges.ts`, `residentBadgeSync.ts` (koblet til journal-/plan-forløb).
 - **Haven / Lys-oplevelse:** `havenGamification.ts`, `havenCustomization.ts`, udvidet haven-UI (`HavenGardenScene` m.fl.), **Lys**-layouts/onboarding/chrome (`park-hub/layout.tsx`, `LysOnboarding`, `LysStatusChrome`, `useOnlineStatus`).
 - **Analytics:** `AnalyticsGate.tsx`, `Ga4Scripts.tsx`, `src/lib/analyticsConsent.ts` / `analytics.ts` — GA4 kun når måling er tilladt; `NEXT_PUBLIC_GA_MEASUREMENT_ID` (valgfrit), `NEXT_PUBLIC_GA_BYPASS_CONSENT` til test.
+- **Vagtoverlevering (live):** `HandoverClient` loader org-beboere via `resolveStaffOrgResidents`; progress og tom/loading-tilstand uden demo-banner når data er reel.
+- **360° overblik (live):** `ResidentOverblikTab` viser kompakte **Mål** (`park_goals` / `park_goal_steps`) og **Journal (godkendt)**-feed (`ShiftNotesFeed` live) under dagsplan/journal-grid.
+- **Marketing / institutioner:** `https://…/institutioner` — institutionssti inkl. anonym case (tillid) og **sikkerhed/governance** til IT/DPO (Netlify, Supabase, RLS, journal kladde/godkendt, Anthropic ved AI); link fra forsidenav og `HomeLanding`-intro.
+- **Marketing / kontakt:** `POST /api/marketing/contact` gemmer henvendelser i `marketing_contact_submissions` (migration `20260406180000_marketing_contact_submissions.sql`); kræver **`SUPABASE_SERVICE_ROLE_KEY`** på serveren. Formular på forsiden (`#kontakt`) og `/institutioner#kontakt`. Privatliv: opdateret afsnit om kontaktformular.
+- **Marketing / SEO-landingssider:** Under `/for-botilbud/` — `journal-og-digital-tilsyn`, `varsling-socialpsykiatri`, `plan-og-medicinoverblik` (indhold i `src/lib/marketing/seoIntentContent.ts`, UI `SeoIntentLanding.tsx`). CTA: demo + `#kontakt` med `formSource` pr. side. `src/app/sitemap.ts` inkluderer dem; root `metadataBase` sættes fra `NEXT_PUBLIC_SITE_URL` (fallback `https://budrcare.dk`) for kanoniske URL’er.
+- **Marketing / pilotpakke:** `/pilotpakke` — produktbeskrivelse (8–12 uger, leverancer, bostedets bidrag, måling med konkrete indikator), print/PDF via browser (`pilotpakke-print.css`). Kontaktformular med `source=pilotpakke`. Link fra institutionsstien og footers.
 - **Øvrigt:** `src/lib/apiRateLimit.ts` på udvalgte API-ruter, `public/manifest.webmanifest`, demo-navigation (`DemoTopNav`, `DemoPortalMobileNav`).
 
 ---
@@ -51,7 +57,15 @@ Schema is versioned under `supabase/migrations/` (organisations, `org_id` on res
 
 Do **not** commit real project URLs or secrets; use environment variables only.
 
-**`care_concern_notes`:** Bekymringsnotater på live dashboard + 360° overblik (hurtige observationer, ikke journal-godkendelse). Migration: `20260411120000_care_concern_notes.sql`.
+**`care_concern_notes`:** Bekymringsnotater på live dashboard + 360° overblik (hurtige observationer, ikke journal-godkendelse). Migrationer: `20260411120000_care_concern_notes.sql` (tabel + SELECT/INSERT/DELETE), `20260412110000_care_concern_notes_staff_update.sql` (staff UPDATE + RLS).
+
+**`care_portal_notifications`:** Dashboard-/AlertPanel notifikationer (service role indsætter fra park-API’er; personale SELECT/UPDATE med org-scope). Migration: `20260413120000_care_portal_notifications_rls.sql` (tabel hvis mangler, indeks, RLS, ingen INSERT for `authenticated`).
+
+**`facility_contacts` + KRAP/park-flow (`park_thought_catch`, `park_resource_profile`, `park_traffic_alerts`, `park_goals`, `park_goal_steps`):** Migration `20260414100000_facility_contacts_park_flow_rls.sql` — staff via `care_visible_facility_ids()` / `care_staff_can_access_resident`; beboer SELECT på kontakter for egen `care_residents.org_id`, egne park-rækker som ved plan-items (`src/lib/park-queries.ts`, krisekort).
+
+**Sociale / planner / delt Lys:** `20260415100000_social_planner_shared_lys_rls.sql` — `shared_goals`, `support_messages`, `celebration_notifications`, `care_challenge_completions`, `care_planner_entries` (beboer: synlige rækker + org-matchende broadcast), `shared_lys_sessions` / `shared_lys_events`, RPC `shared_lys_join_session(code)` til sikker tilslutning. App: `SharedLysView` bruger RPC ved join (`/shared-lys`).
+
+**KRAP + AI-profil:** `20260416100000_krap_user_profiles_ai_usage_rls.sql` — `daily_checkins`, `goals`, `thought_checks`, `resource_registrations` (eje via `profile_id` = `auth.uid()`; staff SELECT via `care_staff_can_access_resident`), `user_profiles` (egen række + staff SELECT for org-beboer), `ai_daily_usage` (kun SELECT egen række for `authenticated`; INSERT/UPDATE forbliver service role i `chat-completion`).
 
 **Supabase projects:** Production is **`olszwyeikwbtjcoopfid`** (`https://olszwyeikwbtjcoopfid.supabase.co`). Run `supabase link --project-ref olszwyeikwbtjcoopfid` before `db push` so the CLI targets production. An older unused staging project (`mxlivgnynoagulrmqipf`) can be ignored or deleted in the Supabase dashboard if you do not need it.
 
@@ -71,7 +85,8 @@ Do **not** commit real project URLs or secrets; use environment variables only.
 
 - **Migration:** `20260406130000_staff_org_rls.sql` — helper `care_staff_can_access_resident(text)`, **RLS** på `care_residents` (staff: `org_id` i JWT; beboer: `auth.uid() = user_id` for SELECT/UPDATE egen række), `park_daily_checkin` (staff SELECT), `daily_plans` / `plan_proposals` (staff CRUD via org-beboer), `resident_medications` (staff SELECT hvis tabellen findes).
 - **Lys uden staff-JWT:** `POST /api/park/daily-checkin` og **`GET`/`PATCH` `/api/park/resident-me`** samt **`POST` `/api/park/lys-plan-proposal`** bruger **service role** + cookie `budr_resident_id` (server validerer ikke PIN her — det er et separat sikkerhedslag). `park-hub` SSR henter beboer med service role.
-- **Still to harden:** `resident_plan_items` / `resident_badges` (Plan-fanen) har ikke RLS i denne migration; øvrige tabeller (notifikationer, osv.) kan tilsvarende strammes.
+- **Plan + badges (RLS):** `20260407120000_resident_plan_items_badges_rls.sql` — `resident_plan_items` / `resident_badges` med samme beboer- og org-staff-model som øvrigt (`care_staff_can_access_resident`, `auth.uid()::text = resident_id` for beboer).
+- **Lys-samtaler (RLS):** `20260412100000_lys_conversations_rls.sql` — tabel `lys_conversations` + RLS parallelt med plan-items (staff i org, beboer egen `resident_id`). Policies bruger `resident_id::text` så både `text` og ældre `uuid`-kolonner virker med `care_staff_can_access_resident(text)`.
 
 ---
 

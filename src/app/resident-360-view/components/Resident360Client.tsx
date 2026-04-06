@@ -66,7 +66,7 @@ export default function Resident360Client() {
             <ParkSummary />
           </div>
           <div className="space-y-5">
-            <GoalProgress compact />
+            <GoalProgress compact variant="mock" />
             <MedicationList compact />
             <OpgaveWidget residentIdFilter={residentIdFromUrl ?? 'res-001'} />
           </div>
@@ -78,9 +78,9 @@ export default function Resident360Client() {
           <ParkSummary />
         </div>
       )}
-      {activeTab === 'goals' && <GoalProgress />}
+      {activeTab === 'goals' && <GoalProgress variant="mock" />}
       {activeTab === 'medication' && <MedicationList />}
-      {activeTab === 'notes' && <ShiftNotesFeed />}
+      {activeTab === 'notes' && <ShiftNotesFeed variant="mock" />}
     </div>
   );
 }

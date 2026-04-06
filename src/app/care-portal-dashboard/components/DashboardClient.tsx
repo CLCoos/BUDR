@@ -2,6 +2,8 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { parseStaffOrgId } from '@/lib/staffOrgScope';
 import AlertPanel from './AlertPanel';
 import BekymringsnotatWidget from './BekymringsnotatWidget';
 import KalenderWidget from './KalenderWidget';
@@ -23,6 +25,7 @@ type DashboardClientProps = {
 };
 
 function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
+  const [headerSubtitle, setHeaderSubtitle] = useState('Care Portal');
   const [lastUpdated, setLastUpdated] = useState(() =>
     new Date()
       .toLocaleString('da-DK', {
@@ -58,6 +61,41 @@ function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tab = searchParams.get('tab');
+
+  useEffect(() => {
+    const supabase = createClient();
+    if (!supabase) return;
+    void (async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const user = session?.user;
+      if (!user) {
+        setHeaderSubtitle('Care Portal');
+        return;
+      }
+      const staffLabel =
+        (typeof user.user_metadata?.display_name === 'string' &&
+        user.user_metadata.display_name.trim().length > 0
+          ? user.user_metadata.display_name.trim()
+          : null) ??
+        user.email?.split('@')[0] ??
+        'Team';
+      const orgId = parseStaffOrgId(user.user_metadata?.org_id);
+      if (!orgId) {
+        setHeaderSubtitle(`${staffLabel} · angiv organisation (org_id) på brugeren`);
+        return;
+      }
+      const { data: org } = await supabase
+        .from('organisations')
+        .select('name')
+        .eq('id', orgId)
+        .maybeSingle();
+      const orgName =
+        typeof org?.name === 'string' && org.name.trim() ? org.name.trim() : 'Organisation';
+      setHeaderSubtitle(`${orgName} · ${staffLabel}`);
+    })();
+  }, []);
 
   useEffect(() => {
     if (tab === 'journal') {
@@ -98,7 +136,7 @@ function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
             Dagsoverblik
           </h1>
           <div className="mt-0.5" style={{ fontSize: 13, color: 'var(--cp-muted)' }}>
-            Bosted Nordlys · Dagvagt · Sara K.
+            {headerSubtitle}
           </div>
         </div>
         <div className="flex items-center gap-2">

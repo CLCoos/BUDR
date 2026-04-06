@@ -57,10 +57,24 @@ export default function ResidentHandoverCard({ entry, onUpdate, carePortalDark =
   const [recording, setRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
 
-  const residentIndex = ['res-001', 'res-002', 'res-003', 'res-004', 'res-005', 'res-006'].indexOf(
-    entry.residentId
+  const DEMO_RESIDENT_ORDER = [
+    'res-001',
+    'res-002',
+    'res-003',
+    'res-004',
+    'res-005',
+    'res-006',
+  ] as const;
+  const demoIdx = DEMO_RESIDENT_ORDER.indexOf(
+    entry.residentId as (typeof DEMO_RESIDENT_ORDER)[number]
   );
-  const aiSuggestion = aiHandoverSuggestions[Math.max(0, residentIndex)];
+  const aiSuggestion =
+    demoIdx >= 0
+      ? aiHandoverSuggestions[demoIdx]!
+      : aiHandoverSuggestions[
+          [...entry.residentId].reduce((acc, ch) => acc + ch.charCodeAt(0), 0) %
+            aiHandoverSuggestions.length
+        ]!;
 
   const handleGenerateAI = async () => {
     setLoadingAI(true);

@@ -1,9 +1,26 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import ResidentHandoverCard from './ResidentHandoverCard';
 import { Download } from 'lucide-react';
 import { toast } from 'sonner';
+import { createClient } from '@/lib/supabase/client';
+import { parseStaffOrgId, resolveStaffOrgResidents } from '@/lib/staffOrgScope';
+
+function formatHandoverFileDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}${m}${day}`;
+}
+
+type HandoverExportMeta = {
+  headerLine: string;
+  facility: string;
+  staff: string;
+  dateLong: string;
+  fileDate: string;
+};
 
 export type FlagColor = 'groen' | 'gul' | 'roed' | 'sort' | null;
 export type ShiftLabel = 'dag' | 'aften' | 'nat';
@@ -89,10 +106,196 @@ type HandoverClientProps = {
   carePortalDark?: boolean;
 };
 
+type TrafficDb = 'grøn' | 'gul' | 'rød';
+
+const DB_TO_FLAG: Record<TrafficDb, FlagColor> = {
+  grøn: 'groen',
+  gul: 'gul',
+  rød: 'roed',
+};
+
+function mapCheckinTraffic(db: string | null | undefined): FlagColor {
+  if (!db?.trim()) return null;
+  const raw = db.trim();
+  const key = raw.toLowerCase();
+  if (key === 'groen' || key === 'grøn') return 'groen';
+  if (key === 'gul') return 'gul';
+  if (key === 'roed' || key === 'rød') return 'roed';
+  return DB_TO_FLAG[raw as TrafficDb] ?? null;
+}
+
 export default function HandoverClient({ carePortalDark = false }: HandoverClientProps) {
-  const [entries, setEntries] = useState<HandoverEntry[]>(initialEntries);
+  const [entries, setEntries] = useState<HandoverEntry[]>(() =>
+    carePortalDark ? initialEntries : []
+  );
+  const [liveListLoading, setLiveListLoading] = useState(!carePortalDark);
   const [currentShift, setCurrentShift] = useState<ShiftLabel>('dag');
   const [saving, setSaving] = useState(false);
+  const [exportMeta, setExportMeta] = useState<HandoverExportMeta>(() => {
+    const d = new Date();
+    const dateLong = d.toLocaleDateString('da-DK', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+    return {
+      headerLine: dateLong,
+      facility: 'Organisation',
+      staff: 'Team',
+      dateLong,
+      fileDate: formatHandoverFileDate(d),
+    };
+  });
+
+  useEffect(() => {
+    const d = new Date();
+    const dateLong = d.toLocaleDateString('da-DK', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+    const fileDate = formatHandoverFileDate(d);
+
+    if (carePortalDark) {
+      setExportMeta({
+        headerLine: `Demo · øvelsesbeboere · ${dateLong}`,
+        facility: 'Demo (fiktivt bosted)',
+        staff: 'Demo-personale',
+        dateLong,
+        fileDate,
+      });
+      return;
+    }
+
+    void (async () => {
+      const supabase = createClient();
+      if (!supabase) {
+        setExportMeta({
+          headerLine: `${dateLong} · log ind for organisationsnavn`,
+          facility: 'Organisation',
+          staff: '—',
+          dateLong,
+          fileDate,
+        });
+        return;
+      }
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const user = session?.user;
+      const staff =
+        (typeof user?.user_metadata?.display_name === 'string' &&
+        user.user_metadata.display_name.trim().length > 0
+          ? user.user_metadata.display_name.trim()
+          : null) ??
+        user?.email?.split('@')[0] ??
+        'Team';
+      const orgId = parseStaffOrgId(user?.user_metadata?.org_id);
+      let facility = 'Organisation';
+      if (orgId) {
+        const { data: org } = await supabase
+          .from('organisations')
+          .select('name')
+          .eq('id', orgId)
+          .maybeSingle();
+        if (typeof org?.name === 'string' && org.name.trim()) facility = org.name.trim();
+      }
+      setExportMeta({
+        headerLine: `${facility} · ${dateLong} · ${staff}`,
+        facility,
+        staff,
+        dateLong,
+        fileDate,
+      });
+    })();
+  }, [carePortalDark]);
+
+  useEffect(() => {
+    if (carePortalDark) {
+      setEntries(initialEntries);
+      setLiveListLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLiveListLoading(true);
+
+    void (async () => {
+      const supabase = createClient();
+      if (!supabase) {
+        if (!cancelled) {
+          setEntries([]);
+          setLiveListLoading(false);
+        }
+        return;
+      }
+
+      const { orgId, residentIds, error } = await resolveStaffOrgResidents(supabase);
+      if (cancelled) return;
+
+      if (error !== null || !orgId || residentIds.length === 0) {
+        setEntries([]);
+        setLiveListLoading(false);
+        return;
+      }
+
+      const { data: rows, error: rowsErr } = await supabase
+        .from('care_residents')
+        .select('user_id, display_name, onboarding_data')
+        .eq('org_id', orgId)
+        .order('display_name');
+
+      if (cancelled || rowsErr || !rows?.length) {
+        setEntries([]);
+        setLiveListLoading(false);
+        return;
+      }
+
+      const ids = rows.map((r) => r.user_id as string);
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
+      const { data: checkins } = await supabase
+        .from('park_daily_checkin')
+        .select('resident_id, traffic_light, created_at')
+        .in('resident_id', ids)
+        .gte('created_at', todayStart.toISOString())
+        .order('created_at', { ascending: false });
+
+      if (cancelled) return;
+
+      const tlByRes = new Map<string, string>();
+      for (const c of checkins ?? []) {
+        const rid = (c as { resident_id: string }).resident_id;
+        if (!tlByRes.has(rid)) {
+          const tl = (c as { traffic_light: string | null }).traffic_light;
+          if (tl) tlByRes.set(rid, tl);
+        }
+      }
+
+      const next: HandoverEntry[] = rows.map((r) => {
+        const od = (r.onboarding_data as Record<string, string> | null) ?? {};
+        const name = (r.display_name as string)?.trim() || '—';
+        return {
+          residentId: r.user_id as string,
+          residentName: name,
+          initials: (od.avatar_initials ?? name.slice(0, 2)).toUpperCase(),
+          flagColor: mapCheckinTraffic(tlByRes.get(r.user_id as string) ?? null),
+          note: '',
+          shiftLabel: 'dag',
+        };
+      });
+
+      setEntries(next);
+      setLiveListLoading(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [carePortalDark]);
 
   const updateEntry = (residentId: string, updates: Partial<HandoverEntry>) => {
     setEntries((prev) => prev.map((e) => (e.residentId === residentId ? { ...e, ...updates } : e)));
@@ -113,18 +316,19 @@ export default function HandoverClient({ carePortalDark = false }: HandoverClien
         (e) =>
           `[${e.flagColor?.toUpperCase() ?? 'INGEN'}] ${e.residentName} · ${e.shiftLabel}vagt\n${e.note}\n`
       );
-    const content = `BUDR Vagtoverleveringsnotat\nBosted Nordlys · ${currentShift}vagt · 26/03/2026\nPersonale: Sara K.\n\n${lines.join('\n')}`;
+    const content = `BUDR Vagtoverleveringsnotat\n${exportMeta.facility} · ${currentShift}vagt · ${exportMeta.dateLong}\nPersonale: ${exportMeta.staff}\n\n${lines.join('\n')}`;
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `vagtnotat-${currentShift}-26032026.txt`;
+    a.download = `vagtnotat-${currentShift}-${exportMeta.fileDate}.txt`;
     a.click();
     URL.revokeObjectURL(url);
     toast.success('Vagtnotat hentet som .txt');
   };
 
   const completedCount = entries.filter((e) => e.note.trim() && e.flagColor).length;
+  const progressPct = entries.length ? (completedCount / entries.length) * 100 : 0;
 
   const pd = carePortalDark;
 
@@ -169,7 +373,7 @@ export default function HandoverClient({ carePortalDark = false }: HandoverClien
             Vagtoverleveringsrum
           </h1>
           <div className="mt-0.5 text-sm" style={{ color: pd ? 'var(--cp-muted)' : '#6b7280' }}>
-            Bosted Nordlys · 26/03/2026 · Sara K.
+            {exportMeta.headerLine}
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -235,6 +439,25 @@ export default function HandoverClient({ carePortalDark = false }: HandoverClien
         </div>
       </div>
 
+      {!carePortalDark && liveListLoading && (
+        <div
+          className="mb-5 rounded-lg border px-4 py-3 text-sm text-gray-600"
+          style={{ backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }}
+        >
+          Henter beboere fra organisationen…
+        </div>
+      )}
+
+      {!carePortalDark && !liveListLoading && entries.length === 0 && (
+        <div
+          className="mb-5 rounded-lg border px-4 py-3 text-sm"
+          style={{ backgroundColor: '#eff6ff', borderColor: '#bfdbfe', color: '#1e3a8a' }}
+        >
+          Ingen beboere fundet for din organisation (eller du er ikke logget ind som personale).
+          Tjek at <code className="text-xs">org_id</code> er sat på brugeren.
+        </div>
+      )}
+
       {/* Progress bar */}
       <div
         className="mb-5 rounded-lg border p-4"
@@ -268,7 +491,7 @@ export default function HandoverClient({ carePortalDark = false }: HandoverClien
           <div
             className="h-full rounded-full transition-all duration-500"
             style={{
-              width: `${(completedCount / entries.length) * 100}%`,
+              width: `${progressPct}%`,
               backgroundColor: '#1D9E75',
             }}
           />

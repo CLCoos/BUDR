@@ -53,6 +53,17 @@ export default function PrivacyPage() {
           databehandleraftale.
         </p>
 
+        <h2>Kontaktformular på websitet</h2>
+        <p>
+          Når du udfylder kontaktformularen (navn, institution, rolle og besked), behandler vi
+          oplysningerne til at besvare henvendelsen og følge op på demo, pilot eller partnerskab.
+          Behandlingen sker som dataansvarlig (BUDR ApS) med hjemmel i GDPR art. 6 stk. 1 litra b
+          (forberedelse til aftale) og/eller litra f (berettiget interesse i at besvare
+          henvendelser). Oplysningerne gemmes i vores database (Supabase) med teknisk adgang
+          begrænset til BUDR; de slettes eller anonymiseres, når samtalen er afsluttet eller efter
+          en rimelig frist, medmindre der indgås aftale, der kræver længere opbevaring.
+        </p>
+
         <h2>Opbevaring</h2>
         <p>
           Oplysninger opbevares så længe, det er nødvendigt for formålet eller efter krav i lov

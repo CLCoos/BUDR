@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { X, Copy, Check, Printer, ClipboardList, Pencil, LayoutList } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { parseStaffOrgId } from '@/lib/staffOrgScope';
 import { ANTHROPIC_CHAT_MODEL } from '@/lib/ai/anthropicModel';
 import {
   composeStructuredTilsynsrapport,
@@ -57,11 +58,29 @@ function toIndsatsLite(rows: IndsatsRecord[]): TilsynsIndsatsRecord[] {
   }));
 }
 
+async function resolveReportFacilityName(explicit?: string): Promise<string> {
+  if (explicit?.trim()) return explicit.trim();
+  const supabase = createClient();
+  if (!supabase) return 'Organisation';
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const orgId = parseStaffOrgId(session?.user?.user_metadata?.org_id);
+  if (!orgId) return 'Organisation';
+  const { data: org } = await supabase
+    .from('organisations')
+    .select('name')
+    .eq('id', orgId)
+    .maybeSingle();
+  const n = org?.name;
+  return typeof n === 'string' && n.trim() ? n.trim() : 'Organisation';
+}
+
 export default function TilsynsrapportModal({
   open,
   onClose,
   preferDemoWhenNoResidents = false,
-  facilityName = 'Bosted Nordlys',
+  facilityName,
 }: Props) {
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -72,6 +91,7 @@ export default function TilsynsrapportModal({
   const [dataSource, setDataSource] = useState<'live' | 'demo'>('live');
   const [viewMode, setViewMode] = useState<'read' | 'edit'>('read');
   const [residentsSnapshot, setResidentsSnapshot] = useState<TilsynsResidentRow[]>([]);
+  const [reportFacilityLabel, setReportFacilityLabel] = useState('Organisation');
   const mountedRef = useRef(true);
 
   const parsedDoc = useMemo(() => parseOverrapportDocument(report), [report]);
@@ -89,6 +109,7 @@ export default function TilsynsrapportModal({
   useEffect(() => {
     if (!open) return;
     setReport('');
+    setReportFacilityLabel('Organisation');
     setEdited(false);
     setReportSource('template');
     setViewMode('read');
@@ -179,6 +200,8 @@ export default function TilsynsrapportModal({
     indsatsRows: IndsatsRecord[],
     _source: 'live' | 'demo'
   ) => {
+    const displayFacility = await resolveReportFacilityName(facilityName);
+    if (mountedRef.current) setReportFacilityLabel(displayFacility);
     setGenerating(true);
     const now = new Date();
     const dateStr = now.toLocaleDateString('da-DK', {
@@ -209,7 +232,7 @@ export default function TilsynsrapportModal({
       setReport(
         composeStructuredTilsynsrapport(residents, indsatsLite, {
           dateStr: dateShort,
-          facilityName,
+          facilityName: displayFacility,
         })
       );
       setReportSource('template');
@@ -263,7 +286,7 @@ Max ca. 450 ord. Afslut IKKE med egen disclaimer om AI.`,
             },
             {
               role: 'user',
-              content: `Tilsynsrapport — ${facilityName} · ${dateStr}
+              content: `Tilsynsrapport — ${displayFacility} · ${dateStr}
 
 Antal borgere i datagrundlag: ${residents.length}
 Trafiklysfordeling: ${trafficCounts.grøn} grøn, ${trafficCounts.gul} gul, ${trafficCounts.rød} rød, ${trafficCounts.ingen} ikke registreret
@@ -324,7 +347,7 @@ Udarbejd tilsynsrapporten.`,
   @media print { body { margin: 20px; } }
 </style>
 </head><body>
-<h1>Tilsynsrapport — ${facilityName}</h1>
+<h1>Tilsynsrapport — ${reportFacilityLabel}</h1>
 <p class="meta">${now}</p>
 <pre>${report.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
 </body></html>`;
