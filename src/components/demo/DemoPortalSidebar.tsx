@@ -112,7 +112,7 @@ function DemoPortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl
       className={`
         fixed bottom-0 left-0 z-[10060] flex shrink-0 flex-col
         transition-[transform,width] duration-300
-        top-[calc(52px+7rem)] sm:top-[calc(52px+3rem)] md:top-[52px]
+        top-[calc(52px+9.5rem)] sm:top-[calc(52px+3.5rem)] md:top-[52px]
         md:static md:top-auto md:bottom-auto md:z-auto md:translate-x-0 md:pointer-events-auto
         ${collapsed ? 'w-16' : 'w-56'}
         ${mobileClosed ? '-translate-x-full md:translate-x-0' : 'translate-x-0'}

@@ -69,6 +69,17 @@ async function checkStaffAuth(
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // Redirect already-authenticated staff away from the login page.
+  if (pathname === '/care-portal-login') {
+    if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+      const { authenticated } = await checkStaffAuth(req);
+      if (authenticated) {
+        return NextResponse.redirect(new URL('/care-portal-dashboard', req.url));
+      }
+    }
+    return NextResponse.next();
+  }
+
   if (isCarePortalRoute(pathname)) {
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
       return NextResponse.redirect(new URL('/care-portal-login?err=config', req.url));
@@ -107,6 +118,7 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
+    '/care-portal-login',
     '/care-portal-dashboard',
     '/care-portal-dashboard/:path*',
     '/care-portal-indsatsdok',

@@ -60,7 +60,7 @@ const staticNavItems: NavItem[] = [
   },
   { icon: Upload, label: 'Dataimport', href: '/care-portal-import', badge: 0 },
   { icon: BrainCircuit, label: 'Faglig støtte', href: '/care-portal-assistant', badge: 0 },
-  { icon: Settings, label: 'Indstillinger', href: '/care-portal-settings', badge: 0 },
+  { icon: Settings, label: 'Indstillinger', href: '/care-portal-dashboard/settings', badge: 0 },
 ];
 
 function navItemActive(pathname: string, searchParams: URLSearchParams, item: NavItem): boolean {
@@ -291,19 +291,22 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
             <LogOut size={16} />
           </button>
           {!collapsed && (
-            <button
-              type="button"
-              className="rounded p-1 transition-colors"
-              style={{ color: 'var(--cp-muted)' }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.color = 'var(--cp-text)';
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.color = 'var(--cp-muted)';
-              }}
-            >
-              <Settings size={16} />
-            </button>
+            <Link href="/care-portal-dashboard/settings" onClick={onMobileClose}>
+              <button
+                type="button"
+                className="rounded p-1 transition-colors"
+                style={{ color: 'var(--cp-muted)' }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.color = 'var(--cp-text)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.color = 'var(--cp-muted)';
+                }}
+                aria-label="Indstillinger"
+              >
+                <Settings size={16} />
+              </button>
+            </Link>
           )}
         </div>
       </div>

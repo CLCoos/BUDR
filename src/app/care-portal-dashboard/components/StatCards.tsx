@@ -67,7 +67,7 @@ type Props = { variant?: 'demo' | 'live' };
 export default function StatCards({ variant = 'live' }: Props) {
   const router = useRouter();
   const pathname = usePathname();
-  const alertCount = useAlertCount();
+  const alertCount = useAlertCount(variant !== 'demo');
   const [live, setLive] = useState<{
     total: number;
     checkinToday: number;

@@ -28,7 +28,20 @@ export type StaffAssistantFollowUp = {
 };
 
 const LIVE_RESIDENT_TABS = new Set(['overblik', 'medicin', 'dagsplan', 'plan', 'haven']);
-const DEMO_RESIDENT_TABS = new Set(['overview', 'notes', 'goals', 'medication', 'aftaler']);
+/** Tilladte ?tab= værdier for dybe demo-links (matcher ResidentDemo360Client TAB_TO_SECTION). */
+const DEMO_RESIDENT_TABS = new Set([
+  'overblik',
+  'overview',
+  'notes',
+  'goals',
+  'medication',
+  'medicin',
+  'aftaler',
+  'dagsplan',
+  'plan',
+  'haven',
+  'journal',
+]);
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -150,7 +163,7 @@ export function staffAssistantFollowUpHref(
     } else {
       path = `/resident-360-view/${encodeURIComponent(rid)}`;
     }
-    const defaultTab = demoMode ? 'overview' : 'overblik';
+    const defaultTab = 'overblik';
     return mergeQueryOntoPath(path, { tab: tab ?? defaultTab, q: qText });
   }
 

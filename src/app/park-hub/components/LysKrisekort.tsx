@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Phone, ChevronDown, PhoneCall } from 'lucide-react';
+import { Phone, ChevronDown, PhoneCall, BellRing } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -16,6 +16,7 @@ type FacilityContact = {
 };
 
 type ConfirmState = { label: string; phone: string } | null;
+type AlertUiState = 'idle' | 'confirming' | 'loading' | 'sent' | 'error';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -237,6 +238,20 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
   );
   const [contacts, setContacts] = useState<FacilityContact[] | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState>(null);
+  const [alertUiState, setAlertUiState] = useState<AlertUiState>('idle');
+
+  async function handleAlertStaff() {
+    setAlertUiState('loading');
+    try {
+      const res = await fetch('/api/park/crisis-alert', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      setAlertUiState(res.ok ? 'sent' : 'error');
+    } catch {
+      setAlertUiState('error');
+    }
+  }
 
   // Breathing
   useEffect(() => {
@@ -287,6 +302,55 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
         onConfirm={() => setConfirm(null)}
         onCancel={() => setConfirm(null)}
       />
+
+      {/* Crisis staff-alert confirm overlay */}
+      {alertUiState === 'confirming' && (
+        <div
+          className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0,0,0,0.70)' }}
+        >
+          <div
+            className="w-full max-w-sm rounded-3xl p-6 space-y-4"
+            style={{ backgroundColor: '#0F1B2D', border: '1px solid rgba(255,255,255,0.15)' }}
+          >
+            <div className="text-center space-y-2">
+              <div className="flex justify-center mb-3">
+                <div
+                  className="h-14 w-14 rounded-full flex items-center justify-center"
+                  style={{ background: 'linear-gradient(135deg, #EF4444, #DC2626)' }}
+                >
+                  <BellRing className="h-7 w-7 text-white" />
+                </div>
+              </div>
+              <p className="text-lg font-black" style={{ color: TEXT }}>
+                Er du sikker?
+              </p>
+              <p className="text-sm leading-relaxed" style={{ color: MUTED }}>
+                Personalet på bostedet modtager en advarsel med det samme.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void handleAlertStaff()}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-base font-black text-white transition-all duration-150 active:scale-[0.97]"
+              style={{
+                background: 'linear-gradient(135deg, #EF4444, #DC2626)',
+                boxShadow: '0 8px 24px rgba(239,68,68,0.40)',
+              }}
+            >
+              <BellRing className="h-5 w-5" /> Ja, tilkald hjælp nu
+            </button>
+            <button
+              type="button"
+              onClick={() => setAlertUiState('idle')}
+              className="w-full rounded-2xl py-3.5 text-sm font-semibold transition-all duration-150"
+              style={{ backgroundColor: 'rgba(255,255,255,0.08)', color: TEXT }}
+            >
+              Nej, gå tilbage
+            </button>
+          </div>
+        </div>
+      )}
 
       <div
         className="mx-auto flex w-full max-w-lg flex-col"
@@ -463,6 +527,63 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
           <p className="text-xs leading-relaxed" style={{ color: 'rgba(199,210,254,0.85)' }}>
             Personalet kan se, at du har haft det svært i dag — de vil gerne støtte dig.
           </p>
+        </div>
+
+        {/* Tilkald hjælp */}
+        <div className="mx-5 mb-5">
+          {alertUiState === 'idle' && (
+            <button
+              type="button"
+              onClick={() => setAlertUiState('confirming')}
+              className="w-full flex items-center justify-center gap-2.5 rounded-2xl py-4 text-base font-black text-white transition-all duration-150 active:scale-[0.97]"
+              style={{
+                background: 'linear-gradient(135deg, #EF4444, #DC2626)',
+                boxShadow: '0 8px 24px rgba(239,68,68,0.35)',
+              }}
+            >
+              <BellRing className="h-5 w-5" />
+              Tilkald hjælp nu
+            </button>
+          )}
+
+          {alertUiState === 'loading' && (
+            <div
+              className="w-full flex items-center justify-center rounded-2xl py-4"
+              style={{ backgroundColor: 'rgba(239,68,68,0.30)' }}
+            >
+              <span className="text-base font-bold text-white opacity-70">Sender…</span>
+            </div>
+          )}
+
+          {alertUiState === 'sent' && (
+            <div
+              className="w-full flex items-center justify-center gap-2 rounded-2xl py-4"
+              style={{
+                backgroundColor: 'rgba(34,197,94,0.12)',
+                border: '1px solid rgba(34,197,94,0.30)',
+              }}
+            >
+              <span className="text-base font-bold" style={{ color: '#22c55e' }}>
+                ✓ Personalet er varslet
+              </span>
+            </div>
+          )}
+
+          {alertUiState === 'error' && (
+            <div className="space-y-2">
+              <p className="text-xs text-center" style={{ color: 'rgba(239,68,68,0.80)' }}>
+                Kunne ikke sende — tjek forbindelsen og prøv igen
+              </p>
+              <button
+                type="button"
+                onClick={() => setAlertUiState('confirming')}
+                className="w-full flex items-center justify-center gap-2 rounded-2xl py-4 text-base font-black text-white active:scale-[0.97]"
+                style={{ background: 'linear-gradient(135deg, #EF4444, #DC2626)' }}
+              >
+                <BellRing className="h-5 w-5" /> Prøv igen
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Back */}

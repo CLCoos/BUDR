@@ -149,6 +149,13 @@ export default function LysJournalTab({ tokens, accent }: Props) {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [editingTranscript, setEditingTranscript] = useState(false);
+  const [hasSpeechSupport, setHasSpeechSupport] = useState(false);
+
+  // PARK AI draft state — reset whenever a new recording clears the transcript
+  type ParkDraftState = 'idle' | 'processing' | 'done' | 'error';
+  const [parkDraftState, setParkDraftState] = useState<ParkDraftState>('idle');
+  const [parkDraftContent, setParkDraftContent] = useState<string | null>(null);
+
   const recRef = useRef<{
     lang: string;
     continuous: boolean;
@@ -167,6 +174,23 @@ export default function LysJournalTab({ tokens, accent }: Props) {
       mountedRef.current = false;
     };
   }, []);
+
+  // Detect SpeechRecognition support once on mount (SSR-safe).
+  useEffect(() => {
+    const w = window as unknown as {
+      SpeechRecognition?: unknown;
+      webkitSpeechRecognition?: unknown;
+    };
+    setHasSpeechSupport(!!(w.SpeechRecognition ?? w.webkitSpeechRecognition));
+  }, []);
+
+  // Reset PARK draft whenever the transcript is cleared (new recording or save).
+  useEffect(() => {
+    if (!transcript) {
+      setParkDraftState('idle');
+      setParkDraftContent(null);
+    }
+  }, [transcript]);
 
   // Load journal entries (Supabase for rigtige beboere, ellers localStorage)
   useEffect(() => {
@@ -303,6 +327,31 @@ export default function LysJournalTab({ tokens, accent }: Props) {
     else startMic();
   };
   useEffect(() => () => stopMic(), [stopMic]);
+
+  // ── PARK AI draft ──────────────────────────────────────────────────────────
+
+  const handleParkDraft = async () => {
+    const t = transcript.trim();
+    if (!t || parkDraftState === 'processing') return;
+    setParkDraftState('processing');
+    setParkDraftContent(null);
+    try {
+      const res = await fetch('/api/park/voice-journal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcript: t }),
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('server_error');
+      const data = (await res.json()) as { entry_id: string; content: string };
+      if (mountedRef.current) {
+        setParkDraftContent(data.content);
+        setParkDraftState('done');
+      }
+    } catch {
+      if (mountedRef.current) setParkDraftState('error');
+    }
+  };
 
   // ── Lys continuity response ────────────────────────────────────────────────
 
@@ -713,6 +762,112 @@ export default function LysJournalTab({ tokens, accent }: Props) {
                   <p className="text-sm font-medium" style={{ color: tokens.textMuted }}>
                     {isListening ? 'Taler… tryk igen for at stoppe' : 'Tryk for at tale'}
                   </p>
+
+                  {/* PARK AI draft — appears when transcript is ready and not currently recording */}
+                  {hasSpeechSupport && transcript.trim() && !isListening && (
+                    <div className="w-full space-y-3">
+                      {parkDraftState === 'idle' && (
+                        <button
+                          type="button"
+                          onClick={() => void handleParkDraft()}
+                          className="w-full flex items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-white transition-all duration-200 active:scale-[0.98]"
+                          style={{
+                            background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
+                            boxShadow: `0 4px 16px ${accent}28`,
+                          }}
+                        >
+                          ✦ Lav PARK-udkast med AI
+                        </button>
+                      )}
+
+                      {parkDraftState === 'processing' && (
+                        <div
+                          className="w-full flex items-center justify-center gap-2 rounded-2xl py-3.5"
+                          style={{
+                            backgroundColor: `${accent}10`,
+                            border: `1px solid ${accent}20`,
+                          }}
+                        >
+                          <span className="flex gap-1">
+                            {[0, 150, 300].map((d) => (
+                              <span
+                                key={d}
+                                className="inline-block h-1.5 w-1.5 rounded-full animate-bounce"
+                                style={{
+                                  backgroundColor: accent,
+                                  animationDelay: `${d}ms`,
+                                  animationDuration: '900ms',
+                                }}
+                              />
+                            ))}
+                          </span>
+                          <span className="text-sm font-medium" style={{ color: accent }}>
+                            Skriver PARK-udkast…
+                          </span>
+                        </div>
+                      )}
+
+                      {parkDraftState === 'done' && parkDraftContent && (
+                        <div
+                          className="rounded-2xl p-4 space-y-3"
+                          style={{
+                            backgroundColor: tokens.cardBg,
+                            boxShadow: tokens.shadow,
+                            border: `1px solid ${accent}20`,
+                          }}
+                        >
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span
+                              className="text-xs font-bold uppercase tracking-wide"
+                              style={{ color: accent }}
+                            >
+                              ✦ PARK-udkast
+                            </span>
+                            <span
+                              className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                              style={{
+                                backgroundColor: `${accent}18`,
+                                color: accent,
+                              }}
+                            >
+                              Afventer godkendelse
+                            </span>
+                          </div>
+                          <div
+                            className="text-sm leading-relaxed whitespace-pre-wrap"
+                            style={{ color: tokens.text }}
+                          >
+                            {parkDraftContent}
+                          </div>
+                          <p
+                            className="text-xs border-t pt-2"
+                            style={{
+                              color: tokens.textMuted,
+                              borderColor: `${accent}15`,
+                            }}
+                          >
+                            Dette er et udkast — personalet gennemgår det.
+                          </p>
+                        </div>
+                      )}
+
+                      {parkDraftState === 'error' && (
+                        <div className="space-y-2">
+                          <p className="text-xs text-center" style={{ color: tokens.textMuted }}>
+                            AI-udkastet fejlede — prøv igen
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setParkDraftState('idle')}
+                            className="w-full rounded-2xl py-3 text-sm font-semibold transition-all active:scale-[0.98]"
+                            style={{ backgroundColor: `${accent}10`, color: accent }}
+                          >
+                            Prøv igen
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {transcript &&
                     (editingTranscript ? (

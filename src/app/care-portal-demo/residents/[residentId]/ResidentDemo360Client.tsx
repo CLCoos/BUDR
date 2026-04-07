@@ -60,13 +60,18 @@ const BORGER_APP_KIND_LABEL: Record<BorgerAppActivityKind, string> = {
   dagsplan: 'Dagsplan',
 };
 
+/** Query ?tab=… → scroll target (section id uden "section-" præfiks). */
 const TAB_TO_SECTION: Record<string, string> = {
-  overview: 'status',
+  overblik: 'oversigt',
+  overview: 'oversigt',
   notes: 'journal',
   goals: 'maal',
   medication: 'medicin',
+  medicin: 'medicin',
   aftaler: 'aftaler',
   haven: 'haven',
+  dagsplan: 'dagsplan',
+  plan: 'planer',
 };
 
 const NAV = [
@@ -237,7 +242,22 @@ export default function ResidentDemo360Client({ residentId }: { residentId: stri
     toast.success('Notat godkendt — nu synlig som journal (demo)');
   }, []);
 
-  if (!detail || !unified) return null;
+  if (!detail || !unified) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-12 text-center">
+        <p className="text-sm" style={{ color: 'var(--cp-muted)' }}>
+          Kunne ikke indlæse demo for denne beboer.
+        </p>
+        <Link
+          href="/care-portal-demo/residents"
+          className="mt-4 inline-block text-sm font-medium underline-offset-4 hover:underline"
+          style={{ color: 'var(--cp-green)' }}
+        >
+          Tilbage til beboere
+        </Link>
+      </div>
+    );
+  }
 
   const {
     profile,
@@ -1142,7 +1162,7 @@ export default function ResidentDemo360Client({ residentId }: { residentId: stri
                 showcase
                 reducedMotion={havenReducedMotion}
                 compact
-                title={`${profile.displayName.split(' ')[0]}s have`}
+                title={`${profile.displayName.split(/\s+/)[0] || 'Borger'}s have`}
                 subtitle="Spejlet fra Lys (demo)"
               />
             )}

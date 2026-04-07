@@ -5,7 +5,13 @@ import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
 
-type AlertType = 'inaktivitet' | 'lav_stemning' | 'krise' | 'besked';
+type AlertType =
+  | 'inaktivitet'
+  | 'lav_stemning'
+  | 'krise'
+  | 'besked'
+  | 'mood_alert'
+  | 'crisis_alert';
 type Severity = 'gul' | 'roed';
 
 interface DbNotification {
@@ -56,6 +62,18 @@ const alertTypeConfig: Record<
     icon: MessageSquare,
     color: 'var(--cp-blue)',
     bg: 'var(--cp-blue-dim)',
+  },
+  mood_alert: {
+    label: 'Lav stemning',
+    icon: Activity,
+    color: 'var(--cp-red)',
+    bg: 'var(--cp-red-dim)',
+  },
+  crisis_alert: {
+    label: 'Krise',
+    icon: AlertTriangle,
+    color: 'var(--cp-red)',
+    bg: 'var(--cp-red-dim)',
   },
 };
 

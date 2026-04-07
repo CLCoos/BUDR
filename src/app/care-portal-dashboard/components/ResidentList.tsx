@@ -16,6 +16,19 @@ const DB_TO_UI: Record<TrafficDb, TrafficUi> = {
   rød: 'roed',
 };
 
+/** Derives traffic light from a 1–5 mood score per task spec. */
+function moodToTrafficLight(score: number): TrafficUi {
+  if (score >= 4) return 'groen';
+  if (score === 3) return 'gul';
+  return 'roed';
+}
+
+/** Returns true when a check-in row indicates a red (low-mood) alert. */
+function isRedCheckin(row: CheckinRow): boolean {
+  if (row.traffic_light) return row.traffic_light === 'rød';
+  return typeof row.mood_score === 'number' && row.mood_score <= 2;
+}
+
 interface Resident {
   id: string;
   name: string;
@@ -90,9 +103,16 @@ function isToday(isoString: string): boolean {
 }
 
 function applyCheckin(resident: Resident, row: CheckinRow): Resident {
+  // Prefer the DB-stored traffic_light; fall back to computing from mood_score.
+  const trafficLight: TrafficUi | null = row.traffic_light
+    ? (DB_TO_UI[row.traffic_light as TrafficDb] ?? null)
+    : typeof row.mood_score === 'number'
+      ? moodToTrafficLight(row.mood_score)
+      : null;
+
   return {
     ...resident,
-    trafficLight: DB_TO_UI[row.traffic_light as TrafficDb] ?? null,
+    trafficLight,
     moodScore: row.mood_score,
     lastCheckin: formatLastCheckin(row.created_at),
     notePreview: row.note?.trim() || 'Ingen note',
@@ -113,6 +133,15 @@ export default function ResidentList() {
 
   const handleRealtimeInsert = useCallback((row: CheckinRow) => {
     setResidents((prev) => prev.map((r) => (r.id === row.resident_id ? applyCheckin(r, row) : r)));
+
+    if (isRedCheckin(row)) {
+      void fetch('/api/portal/mood-alert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resident_id: row.resident_id }),
+        credentials: 'include',
+      });
+    }
   }, []);
 
   useEffect(() => {

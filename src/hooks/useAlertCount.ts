@@ -7,7 +7,7 @@ import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
 // removing a shared channel when one of several consumers unmounts.
 let _instanceId = 0;
 
-export function useAlertCount(): number {
+export function useAlertCount(enabled: boolean = true): number {
   const [count, setCount] = useState(0);
   const instanceId = useRef<number | null>(null);
   if (instanceId.current === null) instanceId.current = ++_instanceId;
@@ -42,6 +42,11 @@ export function useAlertCount(): number {
   }, []);
 
   useEffect(() => {
+    if (!enabled) {
+      setCount(0);
+      return;
+    }
+
     void refresh();
 
     const supabase = createClient();
@@ -66,7 +71,7 @@ export function useAlertCount(): number {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [refresh]);
+  }, [refresh, enabled]);
 
   return count;
 }

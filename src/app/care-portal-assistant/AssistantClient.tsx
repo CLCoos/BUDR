@@ -292,11 +292,14 @@ export default function AssistantClient({
       setMessages((prev) => [...prev, { role: 'assistant', content: '' }]);
 
       try {
-        const res = await fetch('/api/portal/staff-assistant', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: updated }),
-        });
+        const res = await fetch(
+          demoMode ? '/api/portal/staff-assistant-demo' : '/api/portal/staff-assistant',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages: updated }),
+          }
+        );
 
         const data = await res.json().catch(() => ({ error: 'Ugyldigt svar' }));
 
@@ -329,7 +332,7 @@ export default function AssistantClient({
         setStreaming(false);
       }
     },
-    [messages, streaming]
+    [messages, streaming, demoMode]
   );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
