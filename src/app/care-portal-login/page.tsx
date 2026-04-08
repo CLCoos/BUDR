@@ -122,7 +122,9 @@ function CarePortalLoginContent() {
             </div>
           </div>
 
-          <div className="absolute bottom-8 left-10 text-xs font-light text-white/40">budrcare.dk</div>
+          <div className="absolute bottom-8 left-10 text-xs font-light text-white/40">
+            budrcare.dk
+          </div>
         </aside>
 
         <section className="flex min-h-screen items-center justify-center bg-white px-6 py-10 md:col-span-2 md:px-10">
@@ -209,7 +211,10 @@ function CarePortalLoginContent() {
               </div>
 
               <div className="text-right">
-                <Link href="/care-portal-login" className="text-xs text-[var(--cp-green)] hover:underline">
+                <Link
+                  href="/care-portal-login"
+                  className="text-xs text-[var(--cp-green)] hover:underline"
+                >
                   Glemt adgangskode?
                 </Link>
               </div>

@@ -243,9 +243,9 @@ export default function LysHome({
   const [planStats, setPlanStats] = useState<{ total: number } | null>(null);
   const [showLysCard, setShowLysCard] = useState(false);
   const [checkInSaving, setCheckInSaving] = useState(false);
-  const [todayPreview, setTodayPreview] = useState<Array<{ id: string; title: string; time: string }>>(
-    []
-  );
+  const [todayPreview, setTodayPreview] = useState<
+    Array<{ id: string; title: string; time: string }>
+  >([]);
   const [completedToday, setCompletedToday] = useState<Set<string>>(new Set());
 
   const lastAssistant =
@@ -443,7 +443,10 @@ export default function LysHome({
           className="rounded-2xl overflow-hidden"
           style={{ backgroundColor: 'var(--lys-bg3)', border: '1px solid var(--lys-border)' }}
         >
-          <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: '#F0EDE7' }}>
+          <div
+            className="flex items-center justify-between px-4 py-3 border-b"
+            style={{ borderColor: '#F0EDE7' }}
+          >
             <div>
               <p className="text-sm font-semibold" style={{ color: 'var(--lys-text)' }}>
                 {completedToday.size} af {Math.max(todayPreview.length, 1)} gennemført
@@ -509,15 +512,38 @@ export default function LysHome({
 
         {/* Genveje (v3 style) */}
         <section>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] mb-2" style={{ color: '#A09890' }}>
+          <p
+            className="text-[10px] font-semibold uppercase tracking-[0.2em] mb-2"
+            style={{ color: '#A09890' }}
+          >
             Genveje
           </p>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { label: 'Vagtplan', sub: 'Dagens aftaler', icon: '⊙', onClick: () => onSwitchTab('dag') },
-              { label: 'Kriseplan', sub: 'Din sikkerhedsplan', icon: '⚡', onClick: () => onOpenFlow('crisis') },
-              { label: 'Mine mål', sub: 'Se måltrappe', icon: '◇', onClick: () => onOpenFlow('goals') },
-              { label: 'Aktiviteter', sub: 'Dagens program', icon: '✦', onClick: () => onSwitchTab('dag') },
+              {
+                label: 'Vagtplan',
+                sub: 'Dagens aftaler',
+                icon: '⊙',
+                onClick: () => onSwitchTab('dag'),
+              },
+              {
+                label: 'Kriseplan',
+                sub: 'Din sikkerhedsplan',
+                icon: '⚡',
+                onClick: () => onOpenFlow('crisis'),
+              },
+              {
+                label: 'Mine mål',
+                sub: 'Se måltrappe',
+                icon: '◇',
+                onClick: () => onOpenFlow('goals'),
+              },
+              {
+                label: 'Aktiviteter',
+                sub: 'Dagens program',
+                icon: '✦',
+                onClick: () => onSwitchTab('dag'),
+              },
               {
                 label: 'Ro-øvelser',
                 sub: 'Find ro her og nu',
@@ -802,7 +828,6 @@ export default function LysHome({
           </div>
         )}
       </main>
-
     </div>
   );
 }

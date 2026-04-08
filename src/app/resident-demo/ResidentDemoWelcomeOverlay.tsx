@@ -60,7 +60,10 @@ export default function ResidentDemoWelcomeOverlay() {
         if (e.target === e.currentTarget) dismiss();
       }}
     >
-      <div className="relative w-full max-w-lg rounded-2xl border p-7 shadow-2xl" style={{ borderColor: '#E8E3DA', backgroundColor: 'rgba(255,255,255,0.96)' }}>
+      <div
+        className="relative w-full max-w-lg rounded-2xl border p-7 shadow-2xl"
+        style={{ borderColor: '#E8E3DA', backgroundColor: 'rgba(255,255,255,0.96)' }}
+      >
         <button
           type="button"
           onClick={dismiss}
@@ -73,12 +76,18 @@ export default function ResidentDemoWelcomeOverlay() {
 
         <div className="mb-1 flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-[#7F77DD] shadow-[0_0_8px_#7F77DD]" />
-          <span className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: '#6B6459' }}>
+          <span
+            className="text-[11px] font-semibold uppercase tracking-[0.14em]"
+            style={{ color: '#6B6459' }}
+          >
             Demo · Lys (borger-app)
           </span>
         </div>
 
-        <h2 className="mb-1 font-['DM_Serif_Display',serif] text-[1.35rem] font-normal leading-tight" style={{ color: '#1A1814' }}>
+        <h2
+          className="mb-1 font-['DM_Serif_Display',serif] text-[1.35rem] font-normal leading-tight"
+          style={{ color: '#1A1814' }}
+        >
           Velkommen til Lys
         </h2>
 
@@ -96,14 +105,22 @@ export default function ResidentDemoWelcomeOverlay() {
                 className="group flex w-full items-start gap-3 rounded-xl border bg-white/90 px-3.5 py-3 text-left transition-all duration-150 hover:border-[#2D5BE3]/40 hover:shadow-sm"
                 style={{ borderColor: '#E8E3DA' }}
               >
-                <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold" style={{ backgroundColor: '#EBF0FD', color: '#2D5BE3' }}>
+                <span
+                  className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold"
+                  style={{ backgroundColor: '#EBF0FD', color: '#2D5BE3' }}
+                >
                   {step.num}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold leading-snug" style={{ color: '#1A1814' }}>
+                  <span
+                    className="block text-sm font-semibold leading-snug"
+                    style={{ color: '#1A1814' }}
+                  >
                     {step.label}
                   </span>
-                  <span className="block text-xs leading-relaxed" style={{ color: '#6B6459' }}>{step.sub}</span>
+                  <span className="block text-xs leading-relaxed" style={{ color: '#6B6459' }}>
+                    {step.sub}
+                  </span>
                 </span>
                 <ArrowRight
                   size={15}
@@ -119,7 +136,10 @@ export default function ResidentDemoWelcomeOverlay() {
             type="button"
             onClick={dismiss}
             className="flex-1 rounded-xl py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:brightness-110 active:scale-[0.98]"
-            style={{ background: 'linear-gradient(135deg, #2D5BE3, #4A7FF7)', boxShadow: '0 6px 20px rgba(45,91,227,0.28)' }}
+            style={{
+              background: 'linear-gradient(135deg, #2D5BE3, #4A7FF7)',
+              boxShadow: '0 6px 20px rgba(45,91,227,0.28)',
+            }}
           >
             Gå til Lys
           </button>

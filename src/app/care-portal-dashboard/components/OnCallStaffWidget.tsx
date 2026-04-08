@@ -51,9 +51,10 @@ export default function OnCallStaffWidget() {
       setOrgId(foundOrgId);
       setStaffId(user.id);
       const displayName =
-        typeof user.user_metadata?.display_name === 'string' && user.user_metadata.display_name.trim()
+        typeof user.user_metadata?.display_name === 'string' &&
+        user.user_metadata.display_name.trim()
           ? user.user_metadata.display_name.trim()
-          : user.email?.split('@')[0] ?? 'Personale';
+          : (user.email?.split('@')[0] ?? 'Personale');
       setStaffName(displayName);
     })();
     return () => {

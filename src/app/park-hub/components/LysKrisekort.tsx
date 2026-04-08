@@ -550,7 +550,10 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
         </div>
 
         {/* Step 1 - Din kriseplan */}
-        <div className="mx-5 mb-5 rounded-2xl px-4 py-4" style={{ backgroundColor: CARD_BG, border: CARD_BRD }}>
+        <div
+          className="mx-5 mb-5 rounded-2xl px-4 py-4"
+          style={{ backgroundColor: CARD_BG, border: CARD_BRD }}
+        >
           <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: MUTED }}>
             Trin 1 · Din kriseplan
           </p>
@@ -566,7 +569,10 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
             <div className="space-y-3">
               {Array.isArray(crisisPlan.warning_signs) && crisisPlan.warning_signs.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                  <p
+                    className="text-xs font-semibold mb-1"
+                    style={{ color: 'rgba(255,255,255,0.8)' }}
+                  >
                     Advarselstegn
                   </p>
                   <ul className="space-y-1">
@@ -581,7 +587,10 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
               {Array.isArray(crisisPlan.helpful_strategies) &&
                 crisisPlan.helpful_strategies.length > 0 && (
                   <div>
-                    <p className="text-xs font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                    <p
+                      className="text-xs font-semibold mb-1"
+                      style={{ color: 'rgba(255,255,255,0.8)' }}
+                    >
                       Det der kan hjælpe
                     </p>
                     <ul className="space-y-1">
@@ -595,14 +604,23 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
                 )}
               {Array.isArray(crisisPlan.steps) && crisisPlan.steps.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                  <p
+                    className="text-xs font-semibold mb-1"
+                    style={{ color: 'rgba(255,255,255,0.8)' }}
+                  >
                     Kriseskridt
                   </p>
                   <div className="space-y-2">
                     {crisisPlan.steps.map((s, idx) => (
-                      <div key={`step-${idx}`} className="rounded-xl px-3 py-2" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
+                      <div
+                        key={`step-${idx}`}
+                        className="rounded-xl px-3 py-2"
+                        style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}
+                      >
                         <p className="text-sm font-semibold" style={{ color: TEXT }}>
-                          {(s.icon?.trim() || '🧭') + ' ' + (s.title?.trim() || `Skridt ${idx + 1}`)}
+                          {(s.icon?.trim() || '🧭') +
+                            ' ' +
+                            (s.title?.trim() || `Skridt ${idx + 1}`)}
                         </p>
                         {s.description && (
                           <p className="text-xs mt-0.5" style={{ color: MUTED }}>

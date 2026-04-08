@@ -410,7 +410,9 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
           <p className="text-xs text-gray-500 mt-1">
             Brug én linje pr. punkt. Denne plan vises i Lys-appens kriseflow trin 1.
           </p>
-          {crisisPlanId && <p className="text-[11px] text-gray-400 mt-1">Plan-id: {crisisPlanId}</p>}
+          {crisisPlanId && (
+            <p className="text-[11px] text-gray-400 mt-1">Plan-id: {crisisPlanId}</p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

@@ -451,7 +451,10 @@ export default function ResidentDemoPage() {
     <div className="relative">
       <ResidentDemoWelcomeOverlay />
       {/* Demo banner */}
-      <div className="fixed top-0 left-0 right-0 z-[200] border-b bg-[rgba(247,245,241,0.96)]" style={{ borderColor: '#E8E3DA' }}>
+      <div
+        className="fixed top-0 left-0 right-0 z-[200] border-b bg-[rgba(247,245,241,0.96)]"
+        style={{ borderColor: '#E8E3DA' }}
+      >
         <div className="flex items-center justify-between px-4 py-1.5">
           <span className="text-xs font-medium text-[#6B6459]">
             Demo · Anders M. · Prøv: check ind → dag-opgaver → haven

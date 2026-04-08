@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 
@@ -25,7 +25,7 @@ export default function MedicinReminder({ residentId }: Props) {
   const [reminder, setReminder] = useState<ReminderRow | null>(null);
   const [saving, setSaving] = useState(false);
 
-  async function load() {
+  const load = useCallback(async () => {
     if (!residentId) return;
     const supabase = createClient();
     if (!supabase) return;
@@ -44,13 +44,13 @@ export default function MedicinReminder({ residentId }: Props) {
       return diff <= 60 && diff >= -180;
     });
     setReminder(active ?? null);
-  }
+  }, [residentId]);
 
   useEffect(() => {
     void load();
     const timer = window.setInterval(() => void load(), 60_000);
     return () => window.clearInterval(timer);
-  }, [residentId]);
+  }, [load]);
 
   if (!reminder) return null;
 

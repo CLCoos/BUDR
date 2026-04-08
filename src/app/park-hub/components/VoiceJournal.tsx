@@ -156,15 +156,16 @@ export default function VoiceJournal({ onComplete, onSkip }: Props) {
         </button>
       )}
 
-      {(status === 'unsupported' || status === 'error' || status === 'idle') && transcript.trim() && (
-        <button
-          type="button"
-          onClick={() => void saveManual()}
-          className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-[#0F1B2D] px-4 py-2 text-sm font-semibold text-white"
-        >
-          Gem note
-        </button>
-      )}
+      {(status === 'unsupported' || status === 'error' || status === 'idle') &&
+        transcript.trim() && (
+          <button
+            type="button"
+            onClick={() => void saveManual()}
+            className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-[#0F1B2D] px-4 py-2 text-sm font-semibold text-white"
+          >
+            Gem note
+          </button>
+        )}
 
       {status === 'processing' && <p className="text-sm text-gray-500">Et øjeblik...</p>}
 

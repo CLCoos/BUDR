@@ -451,7 +451,10 @@ export default function LysDagTab({ tokens, accent }: Props) {
                 </div>
                 <div className="text-lg font-semibold leading-tight">{d.num}</div>
                 {!isSelected && hasItems && (
-                  <div className="mx-auto mt-1 h-1 w-1 rounded-full" style={{ backgroundColor: accent }} />
+                  <div
+                    className="mx-auto mt-1 h-1 w-1 rounded-full"
+                    style={{ backgroundColor: accent }}
+                  />
                 )}
               </button>
             );

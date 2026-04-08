@@ -50,7 +50,9 @@ export default function JordingPage() {
       >
         Ro-øvelser
       </h1>
-      <p className="text-sm text-[#6B6459] mt-1 mb-4">Disse øvelser kan hjælpe dig til at finde ro</p>
+      <p className="text-sm text-[#6B6459] mt-1 mb-4">
+        Disse øvelser kan hjælpe dig til at finde ro
+      </p>
 
       {active === 'menu' && (
         <div className="space-y-3">

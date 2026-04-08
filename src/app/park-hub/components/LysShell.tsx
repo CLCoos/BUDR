@@ -452,7 +452,10 @@ export default function LysShell({
               className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-lg rounded-t-3xl border px-5 pb-10 pt-3"
               style={{ backgroundColor: '#FFFFFF', borderColor: '#E8E3DA' }}
             >
-              <div className="mx-auto mb-4 h-1 w-10 rounded-full" style={{ backgroundColor: '#E8E3DA' }} />
+              <div
+                className="mx-auto mb-4 h-1 w-10 rounded-full"
+                style={{ backgroundColor: '#E8E3DA' }}
+              />
               <p
                 className="mb-3 text-[10px] font-semibold uppercase tracking-[0.2em]"
                 style={{ color: '#A09890' }}
