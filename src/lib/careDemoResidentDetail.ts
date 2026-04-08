@@ -731,7 +731,7 @@ const RICH: Record<string, Omit<ResidentDemoDetailSeed, 'profile'>> = {
         name: 'Risperidon',
         dose: '1 mg',
         schedule: 'Aften',
-        nextDue: 'I dag 20:30',
+        nextDue: 'I dag 20:00',
       },
     ],
     plans: [

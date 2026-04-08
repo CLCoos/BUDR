@@ -14,6 +14,7 @@ import {
   Timer,
 } from 'lucide-react';
 import { CARE_HOUSES, careDemoProfileById, type CareHouse } from '@/lib/careDemoResidents';
+import { enumerateCivilMedicationSlotDates } from '@/lib/medicationScheduleSlots';
 
 export interface MedicationTask {
   id: string;
@@ -50,27 +51,6 @@ function formatLateDanish(minutes: number): string {
   return `${h} t. ${m} min. forsinket`;
 }
 
-function slotsForDay(baseMidnight: Date): Date[] {
-  const out: Date[] = [];
-  for (let i = 0; i < 48; i++) {
-    const t = new Date(baseMidnight);
-    t.setMinutes(i * 30, 0, 0);
-    out.push(t);
-  }
-  return out;
-}
-
-function enumerateSlotsAround(now: Date): Date[] {
-  const out: Date[] = [];
-  for (let dayOff = -1; dayOff <= 4; dayOff++) {
-    const mid = new Date(now);
-    mid.setHours(0, 0, 0, 0);
-    mid.setDate(mid.getDate() + dayOff);
-    out.push(...slotsForDay(mid));
-  }
-  return out.sort((a, b) => a.getTime() - b.getTime());
-}
-
 function qtyLabel(q: number, unit: MedicationTask['unit']): string {
   if (unit === 'tabletter') return q === 1 ? '1 tablet' : `${q} tabletter`;
   if (unit === 'kapsler') return q === 1 ? '1 kapsel' : `${q} kapsler`;
@@ -98,7 +78,7 @@ function taskForResident(
 
 function createMockEntries(nowMs: number): MedicationTask[] {
   const now = new Date(nowMs);
-  const slots = enumerateSlotsAround(now);
+  const slots = enumerateCivilMedicationSlotDates(now);
   const past = slots.filter((t) => t.getTime() < now.getTime());
   const future = slots.filter((t) => t.getTime() > now.getTime());
   const inTwoHours = future.filter((t) => t.getTime() <= now.getTime() + TWO_HOURS_MS);

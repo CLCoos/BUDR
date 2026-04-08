@@ -5,6 +5,12 @@ import { Pill, CheckCircle2, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { logPortalAudit } from '@/lib/auditClient';
+import {
+  MEDICATION_TIME_SLOTS,
+  formatSlotLabelDa,
+  isAllowedMedicationSlotTime,
+  toScheduledTimeDb,
+} from '@/lib/medicationScheduleSlots';
 import type { MedDefinition } from './types';
 
 // ── Types ─────────────────────────────────────────────────────
@@ -67,7 +73,7 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
   const [reminders, setReminders] = useState<ReminderRow[]>([]);
   const [loadingReminders, setLoadingReminders] = useState(true);
   const [newLabel, setNewLabel] = useState('');
-  const [newTime, setNewTime] = useState('08:00');
+  const [newTime, setNewTime] = useState(MEDICATION_TIME_SLOTS[0]!.time);
   const [savingReminder, setSavingReminder] = useState(false);
 
   useEffect(() => {
@@ -118,6 +124,10 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
   async function createReminder() {
     const label = newLabel.trim();
     if (!label || !newTime) return;
+    if (!isAllowedMedicationSlotTime(newTime)) {
+      toast.error('Vælg et tidspunkt fra listen over faste medicintider');
+      return;
+    }
     const supabase = createClient();
     if (!supabase) return;
     setSavingReminder(true);
@@ -128,7 +138,7 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
     const { error } = await supabase.from('medication_reminders').insert({
       resident_id: residentId,
       label,
-      scheduled_time: `${newTime}:00`,
+      scheduled_time: toScheduledTimeDb(newTime),
       date: today,
       created_by: user?.id ?? null,
     });
@@ -138,7 +148,7 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
       return;
     }
     setNewLabel('');
-    setNewTime('08:00');
+    setNewTime(MEDICATION_TIME_SLOTS[0]!.time);
     void logPortalAudit({
       action: 'daily_plan.created',
       tableName: 'medication_reminders',
@@ -227,14 +237,21 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
               className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-[#0F1B2D]"
             />
           </div>
-          <div className="sm:w-44">
-            <label className="mb-1 block text-xs font-semibold text-gray-500">Tidspunkt</label>
-            <input
-              type="time"
+          <div className="sm:min-w-[220px] sm:flex-1">
+            <label className="mb-1 block text-xs font-semibold text-gray-500">
+              Tidspunkt (faste døgnpunkter)
+            </label>
+            <select
               value={newTime}
               onChange={(e) => setNewTime(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-[#0F1B2D]"
-            />
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#0F1B2D]"
+            >
+              {MEDICATION_TIME_SLOTS.map((slot) => (
+                <option key={slot.id} value={slot.time}>
+                  {formatSlotLabelDa(slot)}
+                </option>
+              ))}
+            </select>
           </div>
           <button
             type="button"
@@ -246,7 +263,8 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
           </button>
         </div>
         <p className="mt-2 text-xs text-gray-500">
-          Dagens status: {remindersTakenCount} taget · {remindersMissingCount} mangler
+          Dagens status: {remindersTakenCount} taget · {remindersMissingCount} mangler. Påmindelser
+          placeres kun på typiske tidspunkter (morgen til sen aften), ikke vilkårlige minutter.
         </p>
       </div>
 
