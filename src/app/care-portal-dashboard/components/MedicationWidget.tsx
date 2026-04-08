@@ -9,6 +9,8 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
+  LayoutGrid,
+  List,
   Pill,
   Shield,
   Timer,
@@ -429,6 +431,111 @@ function createMockEntries(nowMs: number): MedicationTask[] {
   }));
 }
 
+type MedicationViewModel = {
+  pastDue: MedicationTask[];
+  upcoming: MedicationTask[];
+  laterToday: MedicationTask[];
+  stats: {
+    pending: number;
+    overdueN: number;
+    upcomingN: number;
+    laterN: number;
+    doneN: number;
+    totalN: number;
+  };
+  pendingCount: number;
+  prepOverview: { name: string; administrations: number; units: number }[];
+  doseTotals: { tabletter: number; ovrige: number };
+};
+
+function buildMedicationView(entries: MedicationTask[], nowMs: number): MedicationViewModel {
+  const now = nowMs;
+  const pending = entries.filter((e) => e.givenAt === null);
+  const doneN = entries.filter((e) => e.givenAt !== null).length;
+  const totalN = entries.length;
+
+  const pastDueList = entries
+    .filter((e) => e.scheduledAt.getTime() < now)
+    .sort((a, b) => {
+      const aDone = a.givenAt !== null ? 1 : 0;
+      const bDone = b.givenAt !== null ? 1 : 0;
+      if (aDone !== bDone) return aDone - bDone;
+      return a.scheduledAt.getTime() - b.scheduledAt.getTime();
+    });
+
+  const upcomingList = pending
+    .filter((e) => {
+      const t0 = e.scheduledAt.getTime();
+      return t0 > now && t0 <= now + TWO_HOURS_MS;
+    })
+    .sort((a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime());
+
+  const laterList = entries
+    .filter((e) => e.scheduledAt.getTime() > now + TWO_HOURS_MS)
+    .sort((a, b) => {
+      const aDone = a.givenAt !== null ? 1 : 0;
+      const bDone = b.givenAt !== null ? 1 : 0;
+      if (aDone !== bDone) return aDone - bDone;
+      return a.scheduledAt.getTime() - b.scheduledAt.getTime();
+    });
+
+  const byPrep = new Map<string, { administrations: number; units: number }>();
+  let tabletter = 0;
+  let ovrige = 0;
+  for (const e of pending) {
+    const prev = byPrep.get(e.medicationName) ?? { administrations: 0, units: 0 };
+    prev.administrations += 1;
+    prev.units += e.quantity;
+    byPrep.set(e.medicationName, prev);
+    if (e.unit === 'tabletter' || e.unit === 'kapsler') tabletter += e.quantity;
+    else ovrige += e.quantity;
+  }
+  const prepOverviewLocal = [...byPrep.entries()]
+    .map(([name, v]) => ({ name, ...v }))
+    .sort((a, b) => b.units - a.units || b.administrations - a.administrations);
+
+  const overdueOpen = pastDueList.filter((e) => !e.givenAt).length;
+
+  return {
+    pastDue: pastDueList,
+    upcoming: upcomingList,
+    laterToday: laterList,
+    pendingCount: pending.length,
+    prepOverview: prepOverviewLocal,
+    doseTotals: { tabletter, ovrige },
+    stats: {
+      pending: pending.length,
+      overdueN: overdueOpen,
+      upcomingN: upcomingList.length,
+      laterN: laterList.filter((e) => !e.givenAt).length,
+      doneN,
+      totalN,
+    },
+  };
+}
+
+function slotKeyForTask(t: MedicationTask): string {
+  const d = t.scheduledAt;
+  const y = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, '0');
+  const da = String(d.getDate()).padStart(2, '0');
+  const h = String(d.getHours()).padStart(2, '0');
+  const m = String(d.getMinutes()).padStart(2, '0');
+  return `${y}-${mo}-${da}_${h}:${m}`;
+}
+
+function formatSlotHeading(d: Date, now: Date): string {
+  const t = formatTimeMono(d).replace(':', '.');
+  const sameDay = d.toDateString() === now.toDateString();
+  if (sameDay) return `Kl. ${t}`;
+  const dayPart = d.toLocaleDateString('da-DK', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  });
+  return `${dayPart} · kl. ${t}`;
+}
+
 function ResidentAbbr({
   fullName,
   initials,
@@ -453,6 +560,8 @@ function ResidentAbbr({
   );
 }
 
+type TaskFilter = 'alle' | 'ventende' | 'forsinkede';
+
 export default function MedicationWidget() {
   const [entries, setEntries] = useState<MedicationTask[]>([]);
   const [hydrated, setHydrated] = useState(false);
@@ -460,6 +569,8 @@ export default function MedicationWidget() {
   const [prepExpanded, setPrepExpanded] = useState(false);
   const [nowTick, setNowTick] = useState(() => Date.now());
   const [houseFilter, setHouseFilter] = useState<'alle' | CareHouse>('alle');
+  const [taskFilter, setTaskFilter] = useState<TaskFilter>('alle');
+  const [viewMode, setViewMode] = useState<'koe' | 'liste'>('koe');
 
   useEffect(() => {
     setEntries(createMockEntries(Date.now()));
@@ -482,88 +593,76 @@ export default function MedicationWidget() {
     toast.message('Registrering fortrudt');
   }, []);
 
+  const markBatchDelivered = useCallback((ids: string[]) => {
+    const open = ids.filter(Boolean);
+    if (open.length === 0) return;
+    const at = new Date();
+    setEntries((prev) =>
+      prev.map((e) => (open.includes(e.id) && !e.givenAt ? { ...e, givenAt: at } : e))
+    );
+    toast.success(
+      open.length === 1 ? 'Udlevering registreret' : `${open.length} udleveringer registreret`
+    );
+  }, []);
+
+  const unmarkBatchDelivered = useCallback((ids: string[]) => {
+    const xs = ids.filter(Boolean);
+    if (xs.length === 0) return;
+    setEntries((prev) => prev.map((e) => (xs.includes(e.id) ? { ...e, givenAt: null } : e)));
+    toast.message(
+      xs.length === 1 ? 'Registrering fortrudt' : `${xs.length} registreringer fortrudt`
+    );
+  }, []);
+
   const scopedEntries = useMemo(() => {
     if (houseFilter === 'alle') return entries;
     return entries.filter((e) => e.house === houseFilter);
   }, [entries, houseFilter]);
 
-  const { pastDue, upcoming, laterToday, stats, pendingCount, prepOverview, doseTotals } =
-    useMemo(() => {
-      if (!hydrated) {
-        return {
-          pastDue: [] as MedicationTask[],
-          upcoming: [] as MedicationTask[],
-          laterToday: [] as MedicationTask[],
-          stats: { pending: 0, overdueN: 0, upcomingN: 0, laterN: 0, doneN: 0, totalN: 0 },
-          pendingCount: 0,
-          prepOverview: [] as { name: string; administrations: number; units: number }[],
-          doseTotals: { tabletter: 0, ovrige: 0 },
-        };
-      }
-      const now = nowTick;
-      const pending = scopedEntries.filter((e) => e.givenAt === null);
-      const doneN = scopedEntries.filter((e) => e.givenAt !== null).length;
-      const totalN = scopedEntries.length;
+  const filteredEntries = useMemo(() => {
+    const now = nowTick;
+    if (taskFilter === 'ventende') return scopedEntries.filter((e) => !e.givenAt);
+    if (taskFilter === 'forsinkede')
+      return scopedEntries.filter((e) => !e.givenAt && e.scheduledAt.getTime() < now);
+    return scopedEntries;
+  }, [scopedEntries, taskFilter, nowTick]);
 
-      const pastDueList = scopedEntries
-        .filter((e) => e.scheduledAt.getTime() < now)
-        .sort((a, b) => {
-          const aDone = a.givenAt !== null ? 1 : 0;
-          const bDone = b.givenAt !== null ? 1 : 0;
-          if (aDone !== bDone) return aDone - bDone;
-          return a.scheduledAt.getTime() - b.scheduledAt.getTime();
-        });
+  const scopedView = useMemo(
+    () => buildMedicationView(scopedEntries, nowTick),
+    [scopedEntries, nowTick]
+  );
 
-      const upcomingList = pending
-        .filter((e) => {
-          const t0 = e.scheduledAt.getTime();
-          return t0 > now && t0 <= now + TWO_HOURS_MS;
-        })
-        .sort((a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime());
+  const listView = useMemo(
+    () => buildMedicationView(filteredEntries, nowTick),
+    [filteredEntries, nowTick]
+  );
 
-      const laterList = scopedEntries
-        .filter((e) => e.scheduledAt.getTime() > now + TWO_HOURS_MS)
-        .sort((a, b) => {
-          const aDone = a.givenAt !== null ? 1 : 0;
-          const bDone = b.givenAt !== null ? 1 : 0;
-          if (aDone !== bDone) return aDone - bDone;
-          return a.scheduledAt.getTime() - b.scheduledAt.getTime();
-        });
+  const { pastDue, upcoming, laterToday, stats: listStats } = listView;
+  const { stats, pendingCount, prepOverview, doseTotals } = scopedView;
 
-      const byPrep = new Map<string, { administrations: number; units: number }>();
-      let tabletter = 0;
-      let ovrige = 0;
-      for (const e of pending) {
-        const prev = byPrep.get(e.medicationName) ?? { administrations: 0, units: 0 };
-        prev.administrations += 1;
-        prev.units += e.quantity;
-        byPrep.set(e.medicationName, prev);
-        if (e.unit === 'tabletter' || e.unit === 'kapsler') tabletter += e.quantity;
-        else ovrige += e.quantity;
-      }
-      const prepOverviewLocal = [...byPrep.entries()]
-        .map(([name, v]) => ({ name, ...v }))
-        .sort((a, b) => b.units - a.units || b.administrations - a.administrations);
-
-      const overdueOpen = pastDueList.filter((e) => !e.givenAt).length;
-
-      return {
-        pastDue: pastDueList,
-        upcoming: upcomingList,
-        laterToday: laterList,
-        pendingCount: pending.length,
-        prepOverview: prepOverviewLocal,
-        doseTotals: { tabletter, ovrige },
-        stats: {
-          pending: pending.length,
-          overdueN: overdueOpen,
-          upcomingN: upcomingList.length,
-          laterN: laterList.filter((e) => !e.givenAt).length,
-          doneN,
-          totalN,
-        },
-      };
-    }, [scopedEntries, hydrated, nowTick]);
+  const groupedTimeline = useMemo(() => {
+    const now = new Date(nowTick);
+    const sorted = [...filteredEntries].sort(
+      (a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime()
+    );
+    const map = new Map<string, MedicationTask[]>();
+    for (const t of sorted) {
+      const k = slotKeyForTask(t);
+      const arr = map.get(k) ?? [];
+      arr.push(t);
+      map.set(k, arr);
+    }
+    return [...map.entries()].map(([key, items]) => ({
+      key,
+      timeLabel: formatSlotHeading(items[0]!.scheduledAt, now),
+      items: [...items].sort((a, b) => {
+        const ad = a.givenAt ? 1 : 0;
+        const bd = b.givenAt ? 1 : 0;
+        if (ad !== bd) return ad - bd;
+        return a.residentName.localeCompare(b.residentName, 'da');
+      }),
+    }));
+  }, [filteredEntries, nowTick]);
 
   const uniqueResidentsPending = useMemo(() => {
     const ids = new Set(scopedEntries.filter((e) => e.givenAt === null).map((e) => e.residentId));
@@ -807,9 +906,80 @@ export default function MedicationWidget() {
         </div>
       )}
 
-      {(stats.overdueN > 0 || stats.upcomingN > 0 || stats.laterN > 0) && (
+      <div
+        className="mb-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
+        aria-label="Visning og filter"
+      >
+        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Visning">
+          {(
+            [
+              { mode: 'koe' as const, label: 'Kø', Icon: LayoutGrid },
+              { mode: 'liste' as const, label: 'Liste', Icon: List },
+            ] as const
+          ).map(({ mode, label, Icon }) => {
+            const selected = viewMode === mode;
+            return (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setViewMode(mode)}
+                className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-all duration-200"
+                style={
+                  selected
+                    ? { backgroundColor: 'var(--cp-green)', color: '#fff' }
+                    : {
+                        backgroundColor: 'var(--cp-bg3)',
+                        color: 'var(--cp-muted)',
+                        border: '1px solid var(--cp-border)',
+                      }
+                }
+              >
+                <Icon className="h-3.5 w-3.5" aria-hidden />
+                {label}
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter opgaver">
+          {(
+            [
+              { key: 'alle' as const, label: 'Alle' },
+              { key: 'ventende' as const, label: 'Kun ventende' },
+              { key: 'forsinkede' as const, label: 'Kun forsinkede' },
+            ] as const
+          ).map(({ key, label }) => {
+            const selected = taskFilter === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setTaskFilter(key)}
+                className="rounded-full px-2.5 py-1 text-xs font-medium transition-all duration-200"
+                style={
+                  selected
+                    ? { backgroundColor: 'var(--cp-blue)', color: '#fff' }
+                    : {
+                        backgroundColor: 'var(--cp-bg3)',
+                        color: 'var(--cp-muted)',
+                        border: '1px solid var(--cp-border)',
+                      }
+                }
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      {taskFilter !== 'alle' && scopedEntries.length > 0 && (
+        <p className="mb-4 text-xs" style={{ color: 'var(--cp-muted)' }}>
+          Viser {filteredEntries.length} af {scopedEntries.length} opgaver
+        </p>
+      )}
+
+      {(listStats.overdueN > 0 || listStats.upcomingN > 0 || listStats.laterN > 0) && (
         <div className="mb-6 flex flex-wrap gap-2" role="status" aria-live="polite">
-          {stats.overdueN > 0 && (
+          {listStats.overdueN > 0 && (
             <span
               className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
               style={{
@@ -828,10 +998,10 @@ export default function MedicationWidget() {
                   style={{ backgroundColor: 'var(--cp-red)' }}
                 />
               </span>
-              {stats.overdueN} forfalden{stats.overdueN === 1 ? '' : 'e'}
+              {listStats.overdueN} forfalden{listStats.overdueN === 1 ? '' : 'e'}
             </span>
           )}
-          {stats.upcomingN > 0 && (
+          {listStats.upcomingN > 0 && (
             <span
               className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium"
               style={{
@@ -841,10 +1011,10 @@ export default function MedicationWidget() {
               }}
             >
               <Timer className="h-3 w-3" aria-hidden />
-              {stats.upcomingN} inden for 2 timer
+              {listStats.upcomingN} inden for 2 timer
             </span>
           )}
-          {stats.laterN > 0 && (
+          {listStats.laterN > 0 && (
             <span
               className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium"
               style={{
@@ -854,14 +1024,14 @@ export default function MedicationWidget() {
               }}
             >
               <Clock className="h-3 w-3 opacity-70" aria-hidden />
-              {stats.laterN} senere i dag
+              {listStats.laterN} senere i dag
             </span>
           )}
         </div>
       )}
 
       <div className="flex flex-col gap-6">
-        {pastDue.length > 0 && (
+        {viewMode === 'koe' && pastDue.length > 0 && (
           <div>
             <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
               <div>
@@ -997,16 +1167,16 @@ export default function MedicationWidget() {
           </div>
         )}
 
-        {upcoming.length > 0 && (
+        {viewMode === 'koe' && upcoming.length > 0 && (
           <div
             className="rounded-2xl p-1"
             style={{
               background:
-                stats.overdueN > 0 || pastDue.length === 0
+                listStats.overdueN > 0 || pastDue.length === 0
                   ? 'linear-gradient(135deg, rgba(45,212,160,0.08) 0%, transparent 40%)'
                   : 'transparent',
               border:
-                stats.overdueN > 0 || pastDue.length === 0
+                listStats.overdueN > 0 || pastDue.length === 0
                   ? '1px solid rgba(45,212,160,0.15)'
                   : '1px solid var(--cp-border)',
             }}
@@ -1092,7 +1262,7 @@ export default function MedicationWidget() {
           </div>
         )}
 
-        {laterToday.length > 0 && (
+        {viewMode === 'koe' && laterToday.length > 0 && (
           <div className="rounded-2xl" style={{ border: '1px solid var(--cp-border)' }}>
             <button
               type="button"
@@ -1114,8 +1284,8 @@ export default function MedicationWidget() {
                     color: 'var(--cp-muted)',
                   }}
                 >
-                  {stats.laterN} åbne
-                  {laterToday.length !== stats.laterN ? ` · ${laterToday.length} i alt` : ''}
+                  {listStats.laterN} åbne
+                  {laterToday.length !== listStats.laterN ? ` · ${laterToday.length} i alt` : ''}
                 </span>
               </span>
               {laterExpanded ? (
@@ -1184,6 +1354,163 @@ export default function MedicationWidget() {
                   );
                 })}
               </ul>
+            )}
+          </div>
+        )}
+
+        {viewMode === 'liste' && (
+          <div className="flex flex-col gap-4">
+            {groupedTimeline.length === 0 ? (
+              <p
+                className="rounded-2xl px-4 py-8 text-center text-sm"
+                style={{ color: 'var(--cp-muted)' }}
+              >
+                Ingen opgaver matcher filteret.
+              </p>
+            ) : (
+              groupedTimeline.map((group) => {
+                const pendingIds = group.items.filter((e) => !e.givenAt).map((e) => e.id);
+                const givenIds = group.items.filter((e) => e.givenAt).map((e) => e.id);
+                return (
+                  <div
+                    key={group.key}
+                    className="overflow-hidden rounded-2xl"
+                    style={{ border: '1px solid var(--cp-border)' }}
+                  >
+                    <div
+                      className="flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:py-3.5"
+                      style={{
+                        backgroundColor: 'var(--cp-bg3)',
+                        borderColor: 'var(--cp-border)',
+                      }}
+                    >
+                      <p className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+                        {group.timeLabel}
+                        <span
+                          className="ml-2 text-xs font-normal tabular-nums"
+                          style={{ color: 'var(--cp-muted)' }}
+                        >
+                          {group.items.length} opgave{group.items.length === 1 ? '' : 'r'}
+                        </span>
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {pendingIds.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => markBatchDelivered(pendingIds)}
+                            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all hover:brightness-110 active:scale-[0.98]"
+                            style={{
+                              background: 'linear-gradient(180deg, #2dd4a0 0%, #1D9E75 100%)',
+                              color: '#fff',
+                              boxShadow: '0 2px 10px rgba(45,212,160,0.25)',
+                            }}
+                          >
+                            <Check className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden />
+                            Registrér alle ({pendingIds.length})
+                          </button>
+                        )}
+                        {givenIds.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => unmarkBatchDelivered(givenIds)}
+                            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors hover:opacity-90"
+                            style={{
+                              backgroundColor: 'var(--cp-bg2)',
+                              color: 'var(--cp-muted)',
+                              border: '1px solid var(--cp-border)',
+                            }}
+                          >
+                            <Undo2 className="h-3.5 w-3.5" aria-hidden />
+                            Fortryd gruppe ({givenIds.length})
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <ul className="px-2 py-1 sm:px-3" style={{ backgroundColor: 'var(--cp-bg2)' }}>
+                      {group.items.map((row) => {
+                        const given = !!row.givenAt;
+                        const late =
+                          !given && row.scheduledAt.getTime() < nowTick
+                            ? minutesLate(row.scheduledAt, nowTick)
+                            : null;
+                        return (
+                          <li
+                            key={row.id}
+                            className="grid grid-cols-[3rem_36px_minmax(0,1fr)_auto] items-center gap-2 border-t py-3 first:border-t-0 first:pt-2 sm:grid-cols-[3.5rem_40px_minmax(0,1fr)_auto_auto] sm:gap-3"
+                            style={{ borderColor: 'var(--cp-border)' }}
+                          >
+                            <div className="flex flex-col items-end gap-0.5">
+                              <time
+                                dateTime={row.scheduledAt.toISOString()}
+                                className="font-mono text-xs font-semibold tabular-nums sm:text-sm"
+                                style={{
+                                  color: late != null ? 'var(--cp-red)' : 'var(--cp-green)',
+                                }}
+                              >
+                                {formatTimeMono(row.scheduledAt)}
+                              </time>
+                              {late != null && (
+                                <span
+                                  className="inline-flex max-w-[5rem] items-center gap-0.5 truncate text-[10px] font-semibold sm:max-w-none"
+                                  style={{ color: 'var(--cp-red)' }}
+                                >
+                                  <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden />
+                                  {formatLateDanish(late)}
+                                </span>
+                              )}
+                            </div>
+                            <div
+                              className="flex h-9 w-9 items-center justify-center rounded-xl text-xs font-semibold text-white"
+                              style={{
+                                background: 'linear-gradient(145deg, #63b3ed 0%, #3182ce 100%)',
+                              }}
+                              title={row.residentName}
+                            >
+                              {row.initials}
+                            </div>
+                            <div className="min-w-0">
+                              <p
+                                className="font-semibold leading-snug"
+                                style={{
+                                  color: 'var(--cp-text)',
+                                  textDecoration: given ? 'line-through' : 'none',
+                                }}
+                              >
+                                {row.medicationName}
+                                <span className="font-normal" style={{ color: 'var(--cp-muted)' }}>
+                                  {' '}
+                                  · {qtyLabel(row.quantity, row.unit)} · {row.strengthLabel}
+                                </span>
+                              </p>
+                              <p className="text-xs" style={{ color: 'var(--cp-muted2)' }}>
+                                <ResidentAbbr fullName={row.residentName} initials={row.initials} />{' '}
+                                · Hus {row.house} · {row.room}
+                              </p>
+                            </div>
+                            <span
+                              className="hidden max-w-[4.5rem] truncate rounded-lg px-2 py-1 text-center text-[10px] font-semibold tabular-nums sm:inline-block"
+                              style={{
+                                backgroundColor: 'var(--cp-bg3)',
+                                color: 'var(--cp-muted)',
+                                border: '1px solid var(--cp-border)',
+                              }}
+                            >
+                              {row.routeLabel}
+                            </span>
+                            <DeliveryControls
+                              given={given}
+                              givenAt={row.givenAt}
+                              variant="inline"
+                              onDeliver={() => markDelivered(row.id)}
+                              onUndo={() => unmarkDelivered(row.id)}
+                            />
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                );
+              })
             )}
           </div>
         )}
