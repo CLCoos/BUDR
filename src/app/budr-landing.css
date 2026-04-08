@@ -450,8 +450,14 @@ html {
   color: var(--fog);
   text-decoration: none;
   font-size: clamp(0.8rem, 0.78rem + 0.15vw, 0.88rem);
-  transition: color 0.18s;
+  transition:
+    color 0.18s,
+    border-color 0.18s;
   white-space: nowrap;
+  display: inline-block;
+  padding: 4px 0 6px;
+  border-bottom: 2px solid transparent;
+  vertical-align: bottom;
 }
 
 .budr-landing .nav-links a:hover {
@@ -465,10 +471,10 @@ html {
   border-radius: 4px;
 }
 
-.budr-landing .nav-links a.nav-link--active {
+.budr-landing .nav-links a.nav-link--active:not(.nav-cta) {
   color: var(--white);
   font-weight: 600;
-  box-shadow: 0 2px 0 0 rgba(93, 202, 165, 0.85);
+  border-bottom-color: rgba(93, 202, 165, 0.88);
 }
 
 .budr-landing .nav-cta {
@@ -477,8 +483,15 @@ html {
   font-weight: 600 !important;
   padding: 9px 22px;
   border-radius: 100px;
+  border-bottom: none !important;
   transition: all 0.2s !important;
   flex-shrink: 0;
+}
+
+.budr-landing .nav-links a.nav-cta.nav-link--active {
+  box-shadow:
+    0 0 0 2px rgba(93, 202, 165, 0.5),
+    0 2px 12px rgba(0, 0, 0, 0.35);
 }
 
 .budr-landing .nav-cta:hover {
@@ -545,9 +558,10 @@ html {
 
 .budr-landing .shell {
   width: 100%;
-  max-width: 1180px;
+  max-width: min(1180px, 100%);
   margin-left: auto;
   margin-right: auto;
+  box-sizing: border-box;
 }
 
 .budr-landing .hero-inner {
@@ -1515,6 +1529,85 @@ html {
 .budr-landing .intro-section.intro-section--lead {
   border-top: none;
   padding-top: clamp(102px, 11vw, 130px);
+}
+
+/* Ét læsevenligt søjle-layout: undgå smal venstrestillet .section-h (22ch) vs centreret brødtekst */
+.budr-landing .intro-section .shell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.budr-landing .intro-section .shell > .intro-head {
+  text-align: center;
+}
+
+.budr-landing .intro-section .shell > *:not(.intro-head) {
+  text-align: left;
+}
+
+.budr-landing .intro-section .shell > .section-h {
+  max-width: min(42rem, 100%);
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 0.2rem;
+  text-align: center;
+}
+
+.budr-landing .intro-section .shell > .section-p {
+  max-width: min(42rem, 100%);
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 0.85rem;
+  margin-bottom: 1.2rem;
+  text-align: left;
+}
+
+.budr-landing .intro-section .shell > .section-p + .section-p {
+  margin-top: 0.35rem;
+}
+
+.budr-landing .intro-section .shell > .section-p:has(+ ul.intro-detail-list) {
+  margin-bottom: 1rem;
+}
+
+.budr-landing .intro-section .shell > ul.intro-detail-list {
+  max-width: min(42rem, 100%);
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 0;
+  margin-bottom: 1.75rem;
+  padding-left: 1.25rem;
+  box-sizing: border-box;
+  text-align: left;
+  list-style-position: outside;
+  color: var(--white-dim);
+  line-height: 1.72;
+  font-size: 0.95rem;
+  font-weight: 300;
+}
+
+.budr-landing .intro-section .shell > ul.intro-detail-list > li {
+  margin-bottom: 14px;
+}
+
+.budr-landing .intro-section .shell > ul.intro-detail-list > li:last-child {
+  margin-bottom: 0;
+}
+
+.budr-landing .intro-section .shell > ul.intro-detail-list strong {
+  color: var(--white);
+}
+
+.budr-landing .intro-section .shell > .intro-grid {
+  width: 100%;
+  max-width: min(960px, 100%);
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left;
 }
 
 .budr-landing .hero.hero--after-intro {
@@ -4181,8 +4274,8 @@ html {
   }
 
   .budr-landing .nav-links a {
-    display: inline;
-    padding: 0;
+    display: inline-block;
+    padding: 4px 0 6px;
     font-size: clamp(0.8rem, 0.78rem + 0.15vw, 0.88rem);
     white-space: nowrap;
   }
@@ -4191,6 +4284,7 @@ html {
     margin-top: 0;
     text-align: inherit;
     padding: 9px 22px;
+    border-bottom: none !important;
   }
 }
 
@@ -4276,11 +4370,19 @@ html {
     font-weight: 500;
     white-space: normal;
     color: rgba(245, 243, 239, 0.96);
+    border-bottom: 0;
+    border-radius: 0;
   }
 
   .budr-landing .nav-links a:hover,
   .budr-landing .nav-links a:focus-visible {
     color: var(--budr-teal);
+  }
+
+  .budr-landing .nav-links a.nav-link--active:not(.nav-cta) {
+    border-bottom: 0;
+    box-shadow: inset 3px 0 0 rgba(93, 202, 165, 0.9);
+    padding-left: 12px;
   }
 
   .budr-landing .nav-links a.nav-cta {

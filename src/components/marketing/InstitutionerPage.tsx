@@ -262,13 +262,13 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
             <h2 className="section-h">
               <em>Hvem</em> er løsningen til?
             </h2>
-            <p className="section-p" style={{ maxWidth: '40rem', margin: '0 auto 28px' }}>
+            <p className="section-p">
               BUDR Care er udviklet til <strong>socialpsykiatriske og beslægtede botilbud</strong> —
               dvs. døgntilbud og lignende tilbud, hvor borgere med psykisk sårbarhed har brug for
               struktur, tryghed og fælles dokumentation i hverdagen. Området reguleres bl.a. af
               serviceloven; den præcise ydertype hos jer aftaler I internt som kommune eller tilbud.
             </p>
-            <div className="intro-grid" style={{ maxWidth: '960px', margin: '0 auto' }}>
+            <div className="intro-grid">
               <div className="intro-card fi fi-d1">
                 <div className="intro-card-label">Tilbud</div>
                 <h3 className="intro-card-h">Botilbud og koordinerende miljøer</h3>
@@ -303,39 +303,27 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
             <h2 className="section-h">
               <em>Hvad</em> kræver det af jer?
             </h2>
-            <p className="section-p" style={{ maxWidth: '42rem', margin: '0 auto 32px' }}>
+            <p className="section-p">
               Implementering tilpasses jeres organisering. Nedenfor et typisk mønster —{' '}
               <strong>konkrete datoer og ressourcer</strong> aftaler vi, når I kontakter os.
             </p>
-            <ul
-              className="section-p"
-              style={{
-                maxWidth: '38rem',
-                margin: '0 auto',
-                paddingLeft: '1.25rem',
-                color: 'var(--white-dim)',
-                lineHeight: 1.65,
-              }}
-            >
-              <li style={{ marginBottom: 14 }}>
-                <strong style={{ color: 'var(--white)' }}>Tidsforløb:</strong> Ofte{' '}
-                <strong>2–6 uger</strong> fra beslutning til pilotdrift kan starte (afhænger af IT,
-                godkendelser og oplæringsvinduer).
-              </li>
-              <li style={{ marginBottom: 14 }}>
-                <strong style={{ color: 'var(--white)' }}>Roller:</strong> Institutionsleder eller
-                koordinator som ejer; nøglepersoner fra vagtlag; relevant kontakt til IT eller
-                kvalitet efter jeres governance.
-              </li>
-              <li style={{ marginBottom: 14 }}>
-                <strong style={{ color: 'var(--white)' }}>Oplæring:</strong> Gennemgang af Care
-                Portal (dashboard, journal, plan, 360°), introduktion til Lys for udvalgte borgere —
-                typisk opdelt efter vagtplan.
+            <ul className="intro-detail-list">
+              <li>
+                <strong>Tidsforløb:</strong> Ofte <strong>2–6 uger</strong> fra beslutning til
+                pilotdrift kan starte (afhænger af IT, godkendelser og oplæringsvinduer).
               </li>
               <li>
-                <strong style={{ color: 'var(--white)' }}>Teknisk:</strong> Adgang via browser til
-                portal; standard webtilgang til Lys. Krav til identitet og aftaler om dataroller
-                beskrives i forbindelse med pilot og kontraktgrundlag.
+                <strong>Roller:</strong> Institutionsleder eller koordinator som ejer; nøglepersoner
+                fra vagtlag; relevant kontakt til IT eller kvalitet efter jeres governance.
+              </li>
+              <li>
+                <strong>Oplæring:</strong> Gennemgang af Care Portal (dashboard, journal, plan,
+                360°), introduktion til Lys for udvalgte borgere — typisk opdelt efter vagtplan.
+              </li>
+              <li>
+                <strong>Teknisk:</strong> Adgang via browser til portal; standard webtilgang til
+                Lys. Krav til identitet og aftaler om dataroller beskrives i forbindelse med pilot
+                og kontraktgrundlag.
               </li>
             </ul>
           </div>
@@ -346,38 +334,28 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
             <h2 className="section-h">
               <em>Piloten</em> — hvad indeholder den?
             </h2>
-            <p className="section-p" style={{ maxWidth: '42rem', margin: '0 auto 28px' }}>
+            <p className="section-p">
               En pilot er en <strong>afgrænset periode</strong>, hvor I tester værdien i egen drift
               med aftalt opfølgning. Indhold og længde tilpasses; her er hvad vi typisk enes om:
             </p>
-            <ul
-              className="section-p"
-              style={{
-                maxWidth: '38rem',
-                margin: '0 auto 28px',
-                paddingLeft: '1.25rem',
-                color: 'var(--white-dim)',
-                lineHeight: 1.65,
-              }}
-            >
-              <li style={{ marginBottom: 14 }}>
-                <strong style={{ color: 'var(--white)' }}>Varighed:</strong> Ofte{' '}
-                <strong>8–12 uger</strong>, så teamet når både travle og roligere perioder.
-              </li>
-              <li style={{ marginBottom: 14 }}>
-                <strong style={{ color: 'var(--white)' }}>Succeskriterier:</strong> Fx tydeligere
-                overblik ved vagtskifte, konkret brug af journal/godkendelsesflow, oplevelse af
-                tryghed hos borgere og personale — måles i fællesskab før start.
-              </li>
-              <li style={{ marginBottom: 14 }}>
-                <strong style={{ color: 'var(--white)' }}>Support:</strong> Aftalte kontaktkanaler
-                og forventet responstid i pilotperioden.
+            <ul className="intro-detail-list">
+              <li>
+                <strong>Varighed:</strong> Ofte <strong>8–12 uger</strong>, så teamet når både
+                travle og roligere perioder.
               </li>
               <li>
-                <strong style={{ color: 'var(--white)' }}>Persondata:</strong> Roller som{' '}
-                <strong>dataansvarlig</strong>, eventuel <strong>meddataansvar</strong> og{' '}
-                <strong>underdatabehandlere</strong> reguleres skriftligt i jeres aftalegrundlag.
-                Overordnet ramme findes i vores{' '}
+                <strong>Succeskriterier:</strong> Fx tydeligere overblik ved vagtskifte, konkret
+                brug af journal/godkendelsesflow, oplevelse af tryghed hos borgere og personale —
+                måles i fællesskab før start.
+              </li>
+              <li>
+                <strong>Support:</strong> Aftalte kontaktkanaler og forventet responstid i
+                pilotperioden.
+              </li>
+              <li>
+                <strong>Persondata:</strong> Roller som <strong>dataansvarlig</strong>, eventuel{' '}
+                <strong>meddataansvar</strong> og <strong>underdatabehandlere</strong> reguleres
+                skriftligt i jeres aftalegrundlag. Overordnet ramme findes i vores{' '}
                 <Link href="/privacy" style={{ color: 'var(--amber-lt)' }}>
                   privatlivspolitik
                 </Link>
@@ -412,7 +390,7 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
             <h2 className="section-h">
               <em>Tillid</em> — erfaring uden at navngive
             </h2>
-            <p className="section-p" style={{ maxWidth: '42rem', margin: '0 auto 32px' }}>
+            <p className="section-p">
               I behøver ikke store navne på dag ét. Her er et{' '}
               <strong>sammensat, anonymiseret eksempel</strong> fra tidlig pilotfase med
               socialpsykiatriske botilbud — som illustrerer den problemkæde, vi ofte løser sammen
@@ -493,7 +471,7 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
             <h2 className="section-h">
               <em>Sikkerhed og governance</em> — til IT og DPO
             </h2>
-            <p className="section-p" style={{ maxWidth: '42rem', margin: '0 auto 28px' }}>
+            <p className="section-p">
               Kort oversigt over, hvordan løsningen typisk hænger sammen — så den kan vedlægges en
               intern vurdering. <strong>Juridisk præcision</strong> og fuld underdatabehandlerliste
               leveres i jeres aftale og kan suppleres på{' '}
