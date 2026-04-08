@@ -1,3 +1,288 @@
+/* Care Portal entry split */
+.care-entry-root {
+  min-height: 100dvh;
+  background: var(--cp-bg);
+  color: var(--cp-text);
+  position: relative;
+}
+
+.care-entry-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(255 255 255);
+  opacity: 1;
+  transition: opacity 450ms ease;
+}
+
+.care-entry-splash-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.care-entry-mobile {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  min-height: 100dvh;
+}
+
+.care-entry-mobile-top,
+.care-entry-mobile-bottom {
+  min-height: 50dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.care-entry-mobile-top {
+  background: var(--cp-bg);
+}
+
+.care-entry-mobile-bottom {
+  background: rgb(255 255 255);
+}
+
+.care-entry-desktop {
+  display: none;
+}
+
+.care-entry-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.5rem;
+  max-width: 30rem;
+}
+
+.care-entry-content h1,
+.care-entry-content h2 {
+  margin: 1.5rem 0 0.75rem;
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', serif);
+  font-weight: 400;
+  font-size: clamp(24px, 3vw, 36px);
+  line-height: 1.15;
+}
+
+.care-entry-content h1 {
+  color: rgb(255 255 255);
+}
+
+.care-entry-content h2 {
+  color: var(--cp-bg);
+}
+
+.care-entry-content p {
+  margin: 0 0 2.25rem;
+  font-family: var(--font-landing-body, 'DM Sans', sans-serif);
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+.care-entry-mobile-top .care-entry-content p {
+  color: rgb(255 255 255 / 0.65);
+}
+
+.care-entry-mobile-bottom .care-entry-content p {
+  color: var(--cp-muted);
+}
+
+.care-entry-content button {
+  min-height: 48px;
+  border-radius: 999px;
+  padding: 14px 28px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.care-entry-mobile-top .care-entry-content button {
+  border: 1.5px solid rgb(255 255 255);
+  color: rgb(255 255 255);
+  background: transparent;
+}
+
+.care-entry-mobile-top .care-entry-content button:hover {
+  background: rgb(255 255 255);
+  color: var(--cp-bg);
+}
+
+.care-entry-mobile-bottom .care-entry-content button {
+  border: 0;
+  color: rgb(255 255 255);
+  background: var(--cp-green);
+  box-shadow: 0 4px 20px rgb(45 212 160 / 0.35);
+}
+
+.care-entry-mobile-bottom .care-entry-content button:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+@media (min-width: 768px) {
+  .care-entry-mobile {
+    display: none;
+  }
+
+  .care-entry-desktop {
+    display: flex;
+    min-height: 100dvh;
+    position: relative;
+  }
+
+  .care-entry-left,
+  .care-entry-right {
+    min-width: 0;
+    transition: flex 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .care-entry-left {
+    background: var(--cp-bg);
+    animation: careEntryLeftIn 600ms ease both;
+  }
+
+  .care-entry-right {
+    background: rgb(255 255 255);
+    animation: careEntryRightIn 600ms ease 150ms both;
+  }
+
+  .care-entry-circle-left,
+  .care-entry-circle-right {
+    position: absolute;
+    width: 70%;
+    aspect-ratio: 1 / 1;
+    border-radius: 999px;
+    pointer-events: none;
+  }
+
+  .care-entry-circle-left {
+    right: -20%;
+    top: -20%;
+    background: rgb(255 255 255 / 0.06);
+  }
+
+  .care-entry-circle-right {
+    left: -20%;
+    bottom: -20%;
+    background: rgb(15 17 23 / 0.05);
+  }
+
+  .care-entry-left .care-entry-content p {
+    color: rgb(255 255 255 / 0.65);
+  }
+
+  .care-entry-right .care-entry-content p {
+    color: var(--cp-muted);
+  }
+
+  .care-entry-left .care-entry-content button {
+    border: 1.5px solid rgb(255 255 255);
+    color: rgb(255 255 255);
+    background: transparent;
+  }
+
+  .care-entry-left .care-entry-content button:hover {
+    background: rgb(255 255 255);
+    color: var(--cp-bg);
+  }
+
+  .care-entry-right .care-entry-content button {
+    border: 0;
+    color: rgb(255 255 255);
+    background: var(--cp-green);
+    box-shadow: 0 4px 20px rgb(45 212 160 / 0.35);
+  }
+
+  .care-entry-right .care-entry-content button:hover {
+    opacity: 0.88;
+    transform: translateY(-1px);
+  }
+
+  .care-entry-divider {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    z-index: 10;
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgb(255 255 255 / 0.2) 20%,
+      rgb(255 255 255 / 0.2) 80%,
+      transparent 100%
+    );
+  }
+
+  .care-entry-divider-logo {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 11;
+    width: 52px;
+    height: 52px;
+    border-radius: 999px;
+    background: rgb(255 255 255);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 24px rgb(0 0 0 / 0.12);
+    transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: careEntryLogoIn 400ms ease 400ms both;
+  }
+
+  .care-entry-divider-logo-rotated {
+    transform: translate(-50%, -50%) rotate(180deg);
+  }
+}
+
+@keyframes careEntryLeftIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes careEntryRightIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes careEntryLogoIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
 /* Scoped marketing landing — only applies inside .budr-landing */
 html {
   scroll-behavior: smooth;

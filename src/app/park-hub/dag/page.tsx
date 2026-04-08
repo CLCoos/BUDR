@@ -8,6 +8,7 @@ import { buildSimulatedStaffDailyPlan, isLysDemoResidentId } from '@/lib/lysDemo
 async function fetchDayData(residentId: string): Promise<{
   plan: DailyPlan | null;
   pendingProposal: PendingProposal | null;
+  simpleMode: boolean;
 }> {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,7 +18,7 @@ async function fetchDayData(residentId: string): Promise<{
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const [planRes, proposalRes] = await Promise.all([
+  const [planRes, proposalRes, residentRes] = await Promise.all([
     supabase
       .from('daily_plans')
       .select('id, plan_date, plan_items')
@@ -33,11 +34,13 @@ async function fetchDayData(residentId: string): Promise<{
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase.from('care_residents').select('simple_mode').eq('user_id', residentId).maybeSingle(),
   ]);
 
   return {
     plan: (planRes.data as DailyPlan | null) ?? null,
     pendingProposal: (proposalRes.data as PendingProposal | null) ?? null,
+    simpleMode: Boolean((residentRes.data as { simple_mode?: boolean } | null)?.simple_mode),
   };
 }
 
@@ -45,7 +48,8 @@ export default async function DagPage() {
   const residentId = await getResidentId();
   if (!residentId) redirect('/');
 
-  const { plan, pendingProposal } = await fetchDayData(residentId);
+  const { plan, pendingProposal, simpleMode } = await fetchDayData(residentId);
+  if (simpleMode) redirect('/park-hub');
   const today = new Date().toISOString().slice(0, 10);
   const effectivePlan: DailyPlan | null =
     plan && Array.isArray(plan.plan_items) && plan.plan_items.length > 0

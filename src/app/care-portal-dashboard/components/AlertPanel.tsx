@@ -4,6 +4,7 @@ import { AlertTriangle, Clock, Activity, Shield, MessageSquare } from 'lucide-re
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
+import { logPortalAudit } from '@/lib/auditClient';
 
 type AlertType =
   | 'inaktivitet'
@@ -11,8 +12,12 @@ type AlertType =
   | 'krise'
   | 'besked'
   | 'mood_alert'
-  | 'crisis_alert';
+  | 'crisis_alert'
+  | 'medication_missed'
+  | 'checkin_missing'
+  | 'goal_completed';
 type Severity = 'gul' | 'roed';
+type AlertSource = 'notification' | 'crisis' | 'inactivity';
 
 interface DbNotification {
   id: string;
@@ -32,7 +37,18 @@ interface AlertRow {
   detail: string;
   timestamp: string;
   severity: Severity;
+  source: AlertSource;
   isComputed?: boolean; // inactivity alerts are not stored in DB
+  crisisStatus?: 'active' | 'acknowledged' | 'resolved';
+}
+
+interface CrisisAlertDb {
+  id: string;
+  resident_id: string;
+  triggered_at: string;
+  status: 'active' | 'acknowledged' | 'resolved';
+  trin: number;
+  care_residents: { display_name: string } | null;
 }
 
 const alertTypeConfig: Record<
@@ -75,6 +91,24 @@ const alertTypeConfig: Record<
     color: 'var(--cp-red)',
     bg: 'var(--cp-red-dim)',
   },
+  medication_missed: {
+    label: 'Medicin mangler',
+    icon: AlertTriangle,
+    color: 'var(--cp-red)',
+    bg: 'var(--cp-red-dim)',
+  },
+  checkin_missing: {
+    label: 'Check-in mangler',
+    icon: Clock,
+    color: 'var(--cp-amber)',
+    bg: 'var(--cp-amber-dim)',
+  },
+  goal_completed: {
+    label: 'Mål afsluttet',
+    icon: Shield,
+    color: 'var(--cp-blue)',
+    bg: 'var(--cp-blue-dim)',
+  },
 };
 
 function toInitials(name: string): string {
@@ -103,6 +137,7 @@ const DEMO_ALERT_SEED: AlertRow[] = [
     detail: 'Kriseplan åbnet fra Park Hub — personale tilkaldt.',
     severity: 'roed',
     timestamp: '08:14',
+    source: 'notification',
   },
   {
     id: 'demo-alert-2',
@@ -112,6 +147,7 @@ const DEMO_ALERT_SEED: AlertRow[] = [
     detail: 'Stemning under 4/10 ved morgencheck-in.',
     severity: 'roed',
     timestamp: '07:52',
+    source: 'notification',
   },
   {
     id: 'demo-alert-3',
@@ -121,6 +157,7 @@ const DEMO_ALERT_SEED: AlertRow[] = [
     detail: 'Ingen check-in i over 48 timer',
     severity: 'gul',
     timestamp: '48h+',
+    source: 'inactivity',
     isComputed: true,
   },
 ];
@@ -131,6 +168,7 @@ type AlertPanelProps = { variant?: 'live' | 'demo' };
 
 export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
   const [dbAlerts, setDbAlerts] = useState<AlertRow[]>([]);
+  const [crisisAlerts, setCrisisAlerts] = useState<AlertRow[]>([]);
   const [inactiveAlerts, setInactiveAlerts] = useState<AlertRow[]>([]);
   const [loading, setLoading] = useState(variant !== 'demo');
   const [demoAlerts, setDemoAlerts] = useState<AlertRow[]>(() =>
@@ -174,11 +212,53 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
         detail: n.detail,
         severity: n.severity,
         timestamp: formatTimestamp(n.created_at),
+        source: 'notification',
       };
     });
 
     setDbAlerts(rows);
     setLoading(false);
+  }, []);
+
+  const fetchCrisisAlerts = useCallback(async () => {
+    const supabase = createClient();
+    if (!supabase) return;
+
+    const { orgId, residentIds, error: orgErr } = await resolveStaffOrgResidents(supabase);
+    if (orgErr || !orgId || residentIds.length === 0) {
+      setCrisisAlerts([]);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('crisis_alerts')
+      .select('id, resident_id, triggered_at, status, trin, care_residents(display_name)')
+      .in('resident_id', residentIds)
+      .neq('status', 'resolved')
+      .order('triggered_at', { ascending: false });
+
+    if (error) {
+      console.error('[AlertPanel] fetch crisis alerts error:', error.message);
+      return;
+    }
+
+    const rows: AlertRow[] = ((data ?? []) as unknown as CrisisAlertDb[]).map((n) => {
+      const name = n.care_residents?.display_name ?? 'Ukendt beboer';
+      const isUnacknowledged = n.status === 'active';
+      return {
+        id: n.id,
+        residentName: name,
+        initials: toInitials(name),
+        type: 'crisis_alert',
+        detail: `Krisehjælp aktiveret (trin ${n.trin})`,
+        severity: isUnacknowledged ? 'roed' : 'gul',
+        timestamp: formatTimestamp(n.triggered_at),
+        source: 'crisis',
+        crisisStatus: n.status,
+      };
+    });
+
+    setCrisisAlerts(rows);
   }, []);
 
   const fetchInactivity = useCallback(async () => {
@@ -221,6 +301,7 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
           detail: 'Ingen check-in i over 48 timer',
           severity: 'gul' as Severity,
           timestamp: '48h+',
+          source: 'inactivity' as AlertSource,
           isComputed: true,
         };
       });
@@ -235,12 +316,13 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
     }
 
     void fetchDbAlerts();
+    void fetchCrisisAlerts();
     void fetchInactivity();
 
     const supabase = createClient();
     if (!supabase) return;
 
-    const channel = supabase
+    const notificationsChannel = supabase
       .channel('care_portal_notifications_changes')
       .on(
         'postgres_changes',
@@ -251,13 +333,21 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
       )
       .subscribe();
 
+    const crisisChannel = supabase
+      .channel('crisis_alerts_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'crisis_alerts' }, () => {
+        void fetchCrisisAlerts();
+      })
+      .subscribe();
+
     const timer = setInterval(() => void fetchInactivity(), 5 * 60 * 1000);
 
     return () => {
-      void supabase.removeChannel(channel);
+      void supabase.removeChannel(notificationsChannel);
+      void supabase.removeChannel(crisisChannel);
       clearInterval(timer);
     };
-  }, [variant, fetchDbAlerts, fetchInactivity]);
+  }, [variant, fetchDbAlerts, fetchCrisisAlerts, fetchInactivity]);
 
   const acknowledge = async (alert: AlertRow) => {
     if (variant === 'demo') {
@@ -279,6 +369,40 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
       data: { user },
     } = await supabase.auth.getUser();
 
+    if (alert.source === 'crisis') {
+      const patch =
+        alert.crisisStatus === 'active'
+          ? {
+              status: 'acknowledged',
+              acknowledged_by: user?.id ?? null,
+              acknowledged_at: new Date().toISOString(),
+            }
+          : {
+              acknowledged_by: user?.id ?? null,
+              acknowledged_at: new Date().toISOString(),
+            };
+      const { error } = await supabase.from('crisis_alerts').update(patch).eq('id', alert.id);
+
+      if (error) {
+        toast.error('Kunne ikke kvittere — prøv igen');
+        return;
+      }
+
+      setCrisisAlerts((prev) =>
+        prev.map((item) =>
+          item.id === alert.id ? { ...item, crisisStatus: 'acknowledged', severity: 'gul' } : item
+        )
+      );
+      void logPortalAudit({
+        action: 'daily_plan.updated',
+        tableName: 'crisis_alerts',
+        recordId: alert.id,
+        metadata: { operation: 'acknowledge' },
+      });
+      toast.success('Krise-alarm kvitteret');
+      return;
+    }
+
     const { error } = await supabase
       .from('care_portal_notifications')
       .update({ acknowledged_by: user?.id ?? null, acknowledged_at: new Date().toISOString() })
@@ -290,18 +414,60 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
     }
 
     setDbAlerts((prev) => prev.filter((a) => a.id !== alert.id));
+    void logPortalAudit({
+      action: 'daily_plan.updated',
+      tableName: 'care_portal_notifications',
+      recordId: alert.id,
+      metadata: { operation: 'acknowledge' },
+    });
     toast.success('Advarsel kvitteret');
+  };
+
+  const resolve = async (alert: AlertRow) => {
+    if (variant === 'demo') {
+      setDemoAlerts((prev) => prev.filter((a) => a.id !== alert.id));
+      toast.success('Krise-alarm markeret som løst');
+      return;
+    }
+    if (alert.source !== 'crisis') return;
+
+    const supabase = createClient();
+    if (!supabase) return;
+
+    const patch = {
+      status: 'resolved',
+      resolved_at: new Date().toISOString(),
+      acknowledged_at: new Date().toISOString(),
+    };
+    const { error } = await supabase.from('crisis_alerts').update(patch).eq('id', alert.id);
+    if (error) {
+      toast.error('Kunne ikke markere som løst');
+      return;
+    }
+
+    setCrisisAlerts((prev) => prev.filter((item) => item.id !== alert.id));
+    void logPortalAudit({
+      action: 'daily_plan.updated',
+      tableName: 'crisis_alerts',
+      recordId: alert.id,
+      metadata: { operation: 'resolve' },
+    });
+    toast.success('Krise-alarm markeret som løst');
+  };
+
+  const priority = (alert: AlertRow): number => {
+    if (alert.source === 'crisis' && alert.crisisStatus === 'active') return 0;
+    if (alert.severity === 'roed') return 1;
+    return 2;
   };
 
   const alerts =
     variant === 'demo'
       ? [...demoAlerts].sort((a, b) => {
-          const sev = (s: Severity) => (s === 'roed' ? 0 : 1);
-          return sev(a.severity) - sev(b.severity);
+          return priority(a) - priority(b);
         })
-      : [...dbAlerts, ...inactiveAlerts].sort((a, b) => {
-          const sev = (s: Severity) => (s === 'roed' ? 0 : 1);
-          return sev(a.severity) - sev(b.severity);
+      : [...crisisAlerts, ...dbAlerts, ...inactiveAlerts].sort((a, b) => {
+          return priority(a) - priority(b);
         });
 
   return (
@@ -420,26 +586,42 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
                       {alert.timestamp}
                     </div>
                   </div>
-                  <button
-                    onClick={() => void acknowledge(alert)}
-                    className="flex-shrink-0 px-2.5 py-1.5 rounded text-xs font-medium transition-all active:scale-95"
-                    style={{
-                      border: '1px solid var(--cp-border2)',
-                      backgroundColor: 'transparent',
-                      color: 'var(--cp-muted)',
-                      borderRadius: 6,
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--cp-bg3)';
-                      (e.currentTarget as HTMLElement).style.color = 'var(--cp-text)';
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
-                      (e.currentTarget as HTMLElement).style.color = 'var(--cp-muted)';
-                    }}
-                  >
-                    Kvitter
-                  </button>
+                  <div className="flex flex-col gap-1.5 flex-shrink-0">
+                    <button
+                      onClick={() => void acknowledge(alert)}
+                      className="px-2.5 py-1.5 rounded text-xs font-medium transition-all active:scale-95"
+                      style={{
+                        border: '1px solid var(--cp-border2)',
+                        backgroundColor: 'transparent',
+                        color: 'var(--cp-muted)',
+                        borderRadius: 6,
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--cp-bg3)';
+                        (e.currentTarget as HTMLElement).style.color = 'var(--cp-text)';
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
+                        (e.currentTarget as HTMLElement).style.color = 'var(--cp-muted)';
+                      }}
+                    >
+                      Kvitter
+                    </button>
+                    {alert.source === 'crisis' && (
+                      <button
+                        onClick={() => void resolve(alert)}
+                        className="px-2.5 py-1.5 rounded text-xs font-medium transition-all active:scale-95"
+                        style={{
+                          border: '1px solid var(--cp-red)',
+                          backgroundColor: 'var(--cp-red-dim)',
+                          color: 'var(--cp-red)',
+                          borderRadius: 6,
+                        }}
+                      >
+                        Løst
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             );

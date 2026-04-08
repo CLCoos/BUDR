@@ -13,6 +13,7 @@ import type { LysThemeTokens } from '../lib/lysTheme';
 import { ANTHROPIC_CHAT_MODEL } from '@/lib/ai/anthropicModel';
 import type { JournalEntry, SelfLetter } from '@/types/local';
 import { LOCAL_KEYS } from '@/types/local';
+import { safeRandomUUID } from '@/lib/uuid';
 
 type Mode = 'write' | 'voice';
 type JournalSection = 'dagbog' | 'brev';
@@ -230,7 +231,7 @@ export default function LysJournalTab({ tokens, accent }: Props) {
     const deliverDate = new Date();
     deliverDate.setDate(deliverDate.getDate() + letterWeeks * 7);
     const letter: SelfLetter = {
-      id: crypto.randomUUID(),
+      id: safeRandomUUID(),
       text: letterText.trim(),
       written_at: new Date().toISOString(),
       deliver_at: deliverDate.toISOString().slice(0, 10),

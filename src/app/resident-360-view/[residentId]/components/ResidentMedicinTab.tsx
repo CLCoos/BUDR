@@ -2,6 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { Pill, CheckCircle2, Clock } from 'lucide-react';
+import { toast } from 'sonner';
+import { createClient } from '@/lib/supabase/client';
+import { logPortalAudit } from '@/lib/auditClient';
 import type { MedDefinition } from './types';
 
 // ── Types ─────────────────────────────────────────────────────
@@ -10,6 +13,14 @@ interface GivenRecord {
   given: boolean;
   givenAt: string;
 }
+
+type ReminderRow = {
+  id: string;
+  label: string;
+  scheduled_time: string;
+  date: string;
+  taken_at: string | null;
+};
 
 const GROUP_LABELS: Record<MedDefinition['time_group'], string> = {
   morgen: 'Morgen',
@@ -53,10 +64,128 @@ interface Props {
 
 export default function ResidentMedicinTab({ residentId, medications }: Props) {
   const [given, setGiven] = useState<Record<string, GivenRecord>>({});
+  const [reminders, setReminders] = useState<ReminderRow[]>([]);
+  const [loadingReminders, setLoadingReminders] = useState(true);
+  const [newLabel, setNewLabel] = useState('');
+  const [newTime, setNewTime] = useState('08:00');
+  const [savingReminder, setSavingReminder] = useState(false);
 
   useEffect(() => {
     setGiven(loadGiven(residentId));
   }, [residentId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const supabase = createClient();
+      if (!supabase) {
+        setLoadingReminders(false);
+        return;
+      }
+      const today = new Date().toISOString().slice(0, 10);
+      const { data, error } = await supabase
+        .from('medication_reminders')
+        .select('id, label, scheduled_time, date, taken_at')
+        .eq('resident_id', residentId)
+        .eq('date', today)
+        .order('scheduled_time', { ascending: true });
+      if (cancelled) return;
+      if (error) {
+        setReminders([]);
+      } else {
+        setReminders((data ?? []) as ReminderRow[]);
+      }
+      setLoadingReminders(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [residentId]);
+
+  async function refetchReminders() {
+    const supabase = createClient();
+    if (!supabase) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const { data, error } = await supabase
+      .from('medication_reminders')
+      .select('id, label, scheduled_time, date, taken_at')
+      .eq('resident_id', residentId)
+      .eq('date', today)
+      .order('scheduled_time', { ascending: true });
+    if (!error) setReminders((data ?? []) as ReminderRow[]);
+  }
+
+  async function createReminder() {
+    const label = newLabel.trim();
+    if (!label || !newTime) return;
+    const supabase = createClient();
+    if (!supabase) return;
+    setSavingReminder(true);
+    const today = new Date().toISOString().slice(0, 10);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const { error } = await supabase.from('medication_reminders').insert({
+      resident_id: residentId,
+      label,
+      scheduled_time: `${newTime}:00`,
+      date: today,
+      created_by: user?.id ?? null,
+    });
+    setSavingReminder(false);
+    if (error) {
+      toast.error('Kunne ikke oprette påmindelse');
+      return;
+    }
+    setNewLabel('');
+    setNewTime('08:00');
+    void logPortalAudit({
+      action: 'daily_plan.created',
+      tableName: 'medication_reminders',
+      metadata: { resident_id: residentId, label },
+    });
+    toast.success('Påmindelse oprettet');
+    await refetchReminders();
+  }
+
+  async function toggleTaken(reminder: ReminderRow) {
+    const supabase = createClient();
+    if (!supabase) return;
+    const nextTakenAt = reminder.taken_at ? null : new Date().toISOString();
+    const { error } = await supabase
+      .from('medication_reminders')
+      .update({ taken_at: nextTakenAt })
+      .eq('id', reminder.id);
+    if (error) {
+      toast.error('Kunne ikke opdatere status');
+      return;
+    }
+    void logPortalAudit({
+      action: 'daily_plan.updated',
+      tableName: 'medication_reminders',
+      recordId: reminder.id,
+      metadata: { taken_at: nextTakenAt },
+    });
+    await refetchReminders();
+  }
+
+  async function deleteReminder(reminderId: string) {
+    const supabase = createClient();
+    if (!supabase) return;
+    const { error } = await supabase.from('medication_reminders').delete().eq('id', reminderId);
+    if (error) {
+      toast.error('Kunne ikke slette påmindelse');
+      return;
+    }
+    void logPortalAudit({
+      action: 'daily_plan.updated',
+      tableName: 'medication_reminders',
+      recordId: reminderId,
+      metadata: { operation: 'delete' },
+    });
+    toast.success('Påmindelse slettet');
+    await refetchReminders();
+  }
 
   function toggle(medId: string) {
     setGiven((prev) => {
@@ -74,6 +203,8 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
   const activeMeds = medications.filter((m) => m.status === 'aktiv');
   const givenCount = activeMeds.filter((m) => given[m.id]?.given).length;
   const totalActive = activeMeds.length;
+  const remindersTakenCount = reminders.filter((r) => !!r.taken_at).length;
+  const remindersMissingCount = reminders.filter((r) => !r.taken_at).length;
 
   if (medications.length === 0) {
     return (
@@ -84,7 +215,89 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
   }
 
   return (
-    <div className="space-y-5 max-w-xl">
+    <div className="space-y-5 max-w-3xl">
+      <div className="rounded-xl border border-gray-100 bg-white p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div className="flex-1">
+            <label className="mb-1 block text-xs font-semibold text-gray-500">Medicin-navn</label>
+            <input
+              value={newLabel}
+              onChange={(e) => setNewLabel(e.target.value)}
+              placeholder="Fx Sertralin 50 mg"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-[#0F1B2D]"
+            />
+          </div>
+          <div className="sm:w-44">
+            <label className="mb-1 block text-xs font-semibold text-gray-500">Tidspunkt</label>
+            <input
+              type="time"
+              value={newTime}
+              onChange={(e) => setNewTime(e.target.value)}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-[#0F1B2D]"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => void createReminder()}
+            disabled={savingReminder || !newLabel.trim()}
+            className="rounded-xl bg-[#0F1B2D] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
+          >
+            {savingReminder ? 'Gemmer…' : 'Opret påmindelse'}
+          </button>
+        </div>
+        <p className="mt-2 text-xs text-gray-500">
+          Dagens status: {remindersTakenCount} taget · {remindersMissingCount} mangler
+        </p>
+      </div>
+
+      <div className="rounded-xl border border-gray-100 bg-white">
+        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+          <span className="text-sm font-semibold text-gray-800">Påmindelser i dag</span>
+          {loadingReminders && <span className="text-xs text-gray-400">Indlæser…</span>}
+        </div>
+        {!loadingReminders && reminders.length === 0 ? (
+          <div className="px-4 py-5 text-sm text-gray-400">Ingen påmindelser oprettet i dag.</div>
+        ) : (
+          <div className="divide-y divide-gray-50">
+            {reminders.map((reminder) => {
+              const takenAt = reminder.taken_at
+                ? new Date(reminder.taken_at).toLocaleTimeString('da-DK', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
+                : null;
+              const hhmm = reminder.scheduled_time.slice(0, 5);
+              return (
+                <div key={reminder.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-gray-800">{reminder.label}</p>
+                    <p className="text-xs text-gray-500">Kl. {hhmm}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void toggleTaken(reminder)}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                      reminder.taken_at
+                        ? 'border border-[#A8DFC9] bg-[#E1F5EE] text-[#1D9E75]'
+                        : 'bg-[#0F1B2D] text-white'
+                    }`}
+                  >
+                    {reminder.taken_at ? `Taget ${takenAt}` : 'Markér taget'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void deleteReminder(reminder.id)}
+                    className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600"
+                  >
+                    Slet
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {/* Summary bar */}
       <div
         className={`rounded-xl border px-4 py-3 flex items-center justify-between ${

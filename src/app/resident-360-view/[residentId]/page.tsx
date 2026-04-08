@@ -63,7 +63,7 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
       .single(),
     supabase
       .from('park_daily_checkin')
-      .select('mood_score, traffic_light, note, created_at')
+      .select('mood_score, traffic_light, note, created_at, ai_summary, voice_transcript')
       .eq('resident_id', residentId)
       .gte('created_at', todayStart)
       .order('created_at', { ascending: false })
@@ -144,6 +144,8 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
       primaryContactRelation: od.primary_contact_relation ?? null,
     },
     checkinNote: c ? (c.note as string | null) : null,
+    checkinAiSummary: c ? ((c.ai_summary as string | null) ?? null) : null,
+    checkinVoiceTranscript: c ? ((c.voice_transcript as string | null) ?? null) : null,
     plan: (planRes.data as DailyPlan | null) ?? null,
     proposals: (proposalsRes.data ?? []) as PendingProposal[],
     journalEntries: (journalRes.data ?? []) as {
@@ -214,6 +216,8 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
   const {
     resident,
     checkinNote,
+    checkinAiSummary,
+    checkinVoiceTranscript,
     plan,
     proposals,
     journalEntries,
@@ -318,6 +322,8 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
             trafficLight={resident.trafficLight}
             moodScore={resident.moodScore}
             checkinNote={checkinNote}
+            checkinAiSummary={checkinAiSummary}
+            checkinVoiceTranscript={checkinVoiceTranscript}
             medications={medications}
             journalEntries={journalEntries}
             todayPlanItems={todayPlanItems}

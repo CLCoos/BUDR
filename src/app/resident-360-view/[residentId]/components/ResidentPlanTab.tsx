@@ -2,8 +2,10 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { Plus, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { getResidentBadgeDef } from '@/lib/residentBadges';
+import { logPortalAudit } from '@/lib/auditClient';
 
 type PlanItem = {
   id: string;
@@ -24,6 +26,13 @@ type PlanItem = {
 
 type XPRow = { total_xp: number; level: number };
 type BadgeRow = { badge_key: string; earned_at: string };
+type CrisisStep = { icon: string; title: string; description: string };
+type CrisisPlanRow = {
+  id: string;
+  warning_signs: string[] | null;
+  helpful_strategies: string[] | null;
+  steps: CrisisStep[] | null;
+};
 
 const LEVEL_INFO = [
   { level: 1, name: 'Frø', emoji: '🌱' },
@@ -63,11 +72,16 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
   const newCategory = 'aktivitet';
   const [newRecurrence, setNewRecurrence] = useState<'none' | 'daily'>('none');
   const [saving, setSaving] = useState(false);
+  const [crisisPlanId, setCrisisPlanId] = useState<string | null>(null);
+  const [warningSignsText, setWarningSignsText] = useState('');
+  const [helpfulStrategiesText, setHelpfulStrategiesText] = useState('');
+  const [crisisSteps, setCrisisSteps] = useState<CrisisStep[]>([]);
+  const [savingCrisis, setSavingCrisis] = useState(false);
 
   const load = useCallback(async () => {
     const supabase = createClient();
     if (!supabase) return;
-    const [itemsRes, xpRes, badgesRes] = await Promise.all([
+    const [itemsRes, xpRes, badgesRes, crisisPlanRes] = await Promise.all([
       supabase
         .from('resident_plan_items')
         .select(
@@ -81,10 +95,24 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
         .eq('resident_id', residentId)
         .maybeSingle(),
       supabase.from('resident_badges').select('badge_key, earned_at').eq('resident_id', residentId),
+      supabase
+        .from('crisis_plans')
+        .select('id, warning_signs, helpful_strategies, steps')
+        .eq('resident_id', residentId)
+        .maybeSingle(),
     ]);
     setItems((itemsRes.data ?? []) as PlanItem[]);
     setXp((xpRes.data as XPRow | null) ?? null);
     setEarnedBadges((badgesRes.data ?? []) as BadgeRow[]);
+    const crisis = (crisisPlanRes.data ?? null) as CrisisPlanRow | null;
+    setCrisisPlanId(crisis?.id ?? null);
+    setWarningSignsText((crisis?.warning_signs ?? []).join('\n'));
+    setHelpfulStrategiesText((crisis?.helpful_strategies ?? []).join('\n'));
+    setCrisisSteps(
+      crisis?.steps && crisis.steps.length > 0
+        ? crisis.steps
+        : [{ icon: '🌬️', title: '', description: '' }]
+    );
   }, [residentId]);
 
   useEffect(() => {
@@ -119,6 +147,73 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
     const supabase = createClient();
     await supabase?.from('resident_plan_items').delete().eq('id', id);
     void load();
+  };
+
+  const updateStep = (idx: number, patch: Partial<CrisisStep>) => {
+    setCrisisSteps((prev) => prev.map((s, i) => (i === idx ? { ...s, ...patch } : s)));
+  };
+
+  const addStep = () => {
+    setCrisisSteps((prev) => [...prev, { icon: '🧭', title: '', description: '' }]);
+  };
+
+  const removeStep = (idx: number) => {
+    setCrisisSteps((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const saveCrisisPlan = async () => {
+    const supabase = createClient();
+    if (!supabase) {
+      toast.error('Forbindelsesfejl');
+      return;
+    }
+
+    const warningSigns = warningSignsText
+      .split('\n')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    const helpfulStrategies = helpfulStrategiesText
+      .split('\n')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    const normalizedSteps = crisisSteps
+      .map((s) => ({
+        icon: s.icon.trim() || '🧭',
+        title: s.title.trim(),
+        description: s.description.trim(),
+      }))
+      .filter((s) => s.title.length > 0 || s.description.length > 0);
+
+    setSavingCrisis(true);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const payload = {
+      resident_id: residentId,
+      warning_signs: warningSigns,
+      helpful_strategies: helpfulStrategies,
+      steps: normalizedSteps,
+      updated_at: new Date().toISOString(),
+      updated_by: user?.id ?? null,
+    };
+    const { data, error } = await supabase
+      .from('crisis_plans')
+      .upsert(payload, { onConflict: 'resident_id' })
+      .select('id')
+      .maybeSingle();
+    setSavingCrisis(false);
+    if (error) {
+      toast.error('Kunne ikke gemme kriseplan');
+      return;
+    }
+    setCrisisPlanId((data?.id as string | undefined) ?? crisisPlanId);
+    void logPortalAudit({
+      action: 'daily_plan.updated',
+      tableName: 'crisis_plans',
+      recordId: (data?.id as string | undefined) ?? crisisPlanId,
+      metadata: { resident_id: residentId },
+    });
+    toast.success('Kriseplan gemt');
   };
 
   const levelInfo = LEVEL_INFO.find((l) => l.level === (xp?.level ?? 1)) ?? LEVEL_INFO[0]!;
@@ -307,6 +402,104 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
             ))}
           </div>
         )}
+      </div>
+
+      <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-5">
+        <div className="mb-3">
+          <h2 className="text-base font-bold text-gray-800">Kriseplan</h2>
+          <p className="text-xs text-gray-500 mt-1">
+            Brug én linje pr. punkt. Denne plan vises i Lys-appens kriseflow trin 1.
+          </p>
+          {crisisPlanId && <p className="text-[11px] text-gray-400 mt-1">Plan-id: {crisisPlanId}</p>}
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-gray-600">Advarselstegn</label>
+            <textarea
+              value={warningSignsText}
+              onChange={(e) => setWarningSignsText(e.target.value)}
+              rows={6}
+              placeholder={'Fx\nSover næsten ikke\nTrækker mig fra andre'}
+              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-[#0F1B2D]"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-gray-600">
+              Hjælpende strategier
+            </label>
+            <textarea
+              value={helpfulStrategiesText}
+              onChange={(e) => setHelpfulStrategiesText(e.target.value)}
+              rows={6}
+              placeholder={'Fx\nGå en kort tur\nRing til kontaktperson'}
+              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-[#0F1B2D]"
+            />
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <div className="mb-2 flex items-center justify-between">
+            <label className="text-xs font-semibold text-gray-600">Kriseskridt</label>
+            <button
+              type="button"
+              onClick={addStep}
+              className="rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-700"
+            >
+              + Tilføj skridt
+            </button>
+          </div>
+          <div className="space-y-2">
+            {crisisSteps.map((step, idx) => (
+              <div key={`crisis-step-${idx}`} className="rounded-xl border border-gray-100 p-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-xs font-semibold text-gray-500">Skridt {idx + 1}</p>
+                  {crisisSteps.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeStep(idx)}
+                      className="text-xs font-semibold text-red-600"
+                    >
+                      Fjern
+                    </button>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-[80px_1fr]">
+                  <input
+                    value={step.icon}
+                    onChange={(e) => updateStep(idx, { icon: e.target.value })}
+                    placeholder="🌬️"
+                    className="rounded-lg border border-gray-200 px-2.5 py-2 text-sm"
+                  />
+                  <input
+                    value={step.title}
+                    onChange={(e) => updateStep(idx, { title: e.target.value })}
+                    placeholder="Titel"
+                    className="rounded-lg border border-gray-200 px-2.5 py-2 text-sm"
+                  />
+                </div>
+                <textarea
+                  value={step.description}
+                  onChange={(e) => updateStep(idx, { description: e.target.value })}
+                  rows={2}
+                  placeholder="Beskrivelse"
+                  className="mt-2 w-full rounded-lg border border-gray-200 px-2.5 py-2 text-sm"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={() => void saveCrisisPlan()}
+            disabled={savingCrisis}
+            className="rounded-xl bg-[#0F1B2D] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
+          >
+            {savingCrisis ? 'Gemmer…' : 'Gem kriseplan'}
+          </button>
+        </div>
       </div>
     </div>
   );

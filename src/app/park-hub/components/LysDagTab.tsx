@@ -145,6 +145,17 @@ export default function LysDagTab({ tokens, accent }: Props) {
     month: 'long',
   });
   const isToday = dateStr === toDateStr(new Date());
+  const mondayOffset = (selectedDate.getDay() + 6) % 7;
+  const weekStart = addDays(selectedDate, -mondayOffset);
+  const weekDays = Array.from({ length: 7 }).map((_, i) => {
+    const d = addDays(weekStart, i);
+    return {
+      date: d,
+      key: toDateStr(d),
+      short: d.toLocaleDateString('da-DK', { weekday: 'short' }),
+      num: d.getDate(),
+    };
+  });
 
   // ── Load items for selected date ────────────────────────────────────────
   const loadItems = useCallback(async () => {
@@ -391,12 +402,15 @@ export default function LysDagTab({ tokens, accent }: Props) {
 
   return (
     <div className="font-sans min-h-screen relative" style={{ color: tokens.text }}>
-      {/* Date header with navigation */}
+      {/* Calendar week strip */}
       <div
         className="sticky top-0 z-10 px-5 py-3 backdrop-blur-xl"
         style={{ backgroundColor: `${tokens.bg}E8`, borderBottom: `1px solid ${accent}14` }}
       >
-        <div className="flex items-center gap-3 mb-2">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-lg font-semibold" style={{ color: tokens.text }}>
+            Kalender
+          </p>
           <button
             type="button"
             onClick={() => setSelectedDate((d) => addDays(d, -1))}
@@ -406,14 +420,6 @@ export default function LysDagTab({ tokens, accent }: Props) {
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <div className="flex-1 text-center">
-            <p className="text-base font-black capitalize">{dayLabel}</p>
-            {isToday && (
-              <p className="text-xs font-semibold" style={{ color: accent }}>
-                I dag
-              </p>
-            )}
-          </div>
           <button
             type="button"
             onClick={() => setSelectedDate((d) => addDays(d, 1))}
@@ -423,6 +429,43 @@ export default function LysDagTab({ tokens, accent }: Props) {
           >
             <ChevronRight className="h-4 w-4" />
           </button>
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {weekDays.map((d) => {
+            const isSelected = d.key === dateStr;
+            const hasItems = allItems.some((i) => i.time);
+            return (
+              <button
+                key={d.key}
+                type="button"
+                onClick={() => setSelectedDate(d.date)}
+                className="min-w-[54px] rounded-2xl px-2 py-2 text-center border"
+                style={{
+                  backgroundColor: isSelected ? accent : tokens.cardBg,
+                  borderColor: isSelected ? accent : tokens.cardBorder,
+                  color: isSelected ? '#fff' : tokens.text,
+                }}
+              >
+                <div className="text-[10px] uppercase" style={{ opacity: isSelected ? 0.8 : 0.55 }}>
+                  {d.short.replace('.', '')}
+                </div>
+                <div className="text-lg font-semibold leading-tight">{d.num}</div>
+                {!isSelected && hasItems && (
+                  <div className="mx-auto mt-1 h-1 w-1 rounded-full" style={{ backgroundColor: accent }} />
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex items-center gap-3 mb-2 mt-2">
+          <div className="flex-1">
+            <p className="text-base font-black capitalize">{dayLabel}</p>
+            {isToday && (
+              <p className="text-xs font-semibold" style={{ color: accent }}>
+                I dag
+              </p>
+            )}
+          </div>
           <button
             type="button"
             onClick={() => setShowFab(true)}

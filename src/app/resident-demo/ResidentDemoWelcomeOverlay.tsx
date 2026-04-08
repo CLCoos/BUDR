@@ -55,16 +55,17 @@ export default function ResidentDemoWelcomeOverlay() {
   return (
     <div
       className="fixed inset-0 z-[10070] flex items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(30, 27, 50, 0.45)', backdropFilter: 'blur(5px)' }}
+      style={{ backgroundColor: 'rgba(26, 24, 20, 0.25)', backdropFilter: 'blur(5px)' }}
       onClick={(e) => {
         if (e.target === e.currentTarget) dismiss();
       }}
     >
-      <div className="relative w-full max-w-lg rounded-2xl border border-amber-200/80 bg-amber-50/95 p-7 shadow-2xl">
+      <div className="relative w-full max-w-lg rounded-2xl border p-7 shadow-2xl" style={{ borderColor: '#E8E3DA', backgroundColor: 'rgba(255,255,255,0.96)' }}>
         <button
           type="button"
           onClick={dismiss}
-          className="absolute right-4 top-4 rounded-lg p-1.5 text-amber-700 transition-colors hover:bg-amber-100"
+          className="absolute right-4 top-4 rounded-lg p-1.5 transition-colors hover:bg-[#EBF0FD]"
+          style={{ color: '#6B6459' }}
           aria-label="Luk"
         >
           <X size={18} />
@@ -72,17 +73,17 @@ export default function ResidentDemoWelcomeOverlay() {
 
         <div className="mb-1 flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-[#7F77DD] shadow-[0_0_8px_#7F77DD]" />
-          <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-900/70">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: '#6B6459' }}>
             Demo · Lys (borger-app)
           </span>
         </div>
 
-        <h2 className="mb-1 font-['DM_Serif_Display',serif] text-[1.35rem] font-normal leading-tight text-gray-900">
+        <h2 className="mb-1 font-['DM_Serif_Display',serif] text-[1.35rem] font-normal leading-tight" style={{ color: '#1A1814' }}>
           Velkommen til Lys
         </h2>
 
-        <p className="mb-5 text-sm leading-relaxed text-amber-950/80">
-          Du prøver borgeroplevelsen som <strong className="text-gray-900">Anders M.</strong> —{' '}
+        <p className="mb-5 text-sm leading-relaxed" style={{ color: '#6B6459' }}>
+          Du prøver borgeroplevelsen som <strong style={{ color: '#1A1814' }}>Anders M.</strong> —{' '}
           samme flow som i rigtig drift, men med simulerede data.
         </p>
 
@@ -92,16 +93,17 @@ export default function ResidentDemoWelcomeOverlay() {
               <button
                 type="button"
                 onClick={() => handleStep(step)}
-                className="group flex w-full items-start gap-3 rounded-xl border border-amber-200/90 bg-white/90 px-3.5 py-3 text-left transition-all duration-150 hover:border-[#7F77DD]/40 hover:shadow-sm"
+                className="group flex w-full items-start gap-3 rounded-xl border bg-white/90 px-3.5 py-3 text-left transition-all duration-150 hover:border-[#2D5BE3]/40 hover:shadow-sm"
+                style={{ borderColor: '#E8E3DA' }}
               >
-                <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#7F77DD]/15 text-[11px] font-bold text-[#5a52b8]">
+                <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold" style={{ backgroundColor: '#EBF0FD', color: '#2D5BE3' }}>
                   {step.num}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold leading-snug text-gray-900">
+                  <span className="block text-sm font-semibold leading-snug" style={{ color: '#1A1814' }}>
                     {step.label}
                   </span>
-                  <span className="block text-xs leading-relaxed text-gray-600">{step.sub}</span>
+                  <span className="block text-xs leading-relaxed" style={{ color: '#6B6459' }}>{step.sub}</span>
                 </span>
                 <ArrowRight
                   size={15}
@@ -116,14 +118,16 @@ export default function ResidentDemoWelcomeOverlay() {
           <button
             type="button"
             onClick={dismiss}
-            className="flex-1 rounded-xl bg-gradient-to-br from-[#8b84e8] via-[#5E56C0] to-[#4c3d91] py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#5E56C0]/25 transition-all hover:brightness-110 active:scale-[0.98]"
+            className="flex-1 rounded-xl py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:brightness-110 active:scale-[0.98]"
+            style={{ background: 'linear-gradient(135deg, #2D5BE3, #4A7FF7)', boxShadow: '0 6px 20px rgba(45,91,227,0.28)' }}
           >
             Gå til Lys
           </button>
           <button
             type="button"
             onClick={dismiss}
-            className="rounded-xl px-4 py-2.5 text-sm text-amber-900/70 transition-colors hover:text-amber-950"
+            className="rounded-xl px-4 py-2.5 text-sm transition-colors"
+            style={{ color: '#6B6459' }}
           >
             Spring over
           </button>

@@ -24,6 +24,8 @@ import LysSansekasse from './LysSansekasse';
 import LysAACBoard from './LysAACBoard';
 import LysOnboarding from './LysOnboarding';
 import LysStatusChrome from './LysStatusChrome';
+import LysKrisekort from './LysKrisekort';
+import { createClient } from '@/lib/supabase/client';
 
 type Props = {
   firstName: string;
@@ -38,7 +40,7 @@ export default function LysShell({
   firstName,
   initials,
   residentId,
-  facilityId: _facilityId,
+  facilityId,
   isDemoMode = false,
 }: Props) {
   const [now, setNow] = useState(() => new Date());
@@ -49,6 +51,8 @@ export default function LysShell({
   const [moodTraffic, setMoodTraffic] = useState<'groen' | 'gul' | 'roed' | null>(null);
   const [moodRegisteredToday, setMoodRegisteredToday] = useState(false);
   const [moodTick, setMoodTick] = useState(0);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [simpleMode, setSimpleMode] = useState(false);
 
   const phase = useMemo(() => getLysPhase(now), [now]);
   const tokens = useMemo(() => lysTheme(phase), [phase]);
@@ -94,12 +98,47 @@ export default function LysShell({
     }
   }, [residentId, isDemoMode]);
 
+  useEffect(() => {
+    if (!residentId) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const cacheKey = `budr_simple_mode_${residentId}`;
+        const cached = sessionStorage.getItem(cacheKey);
+        if (cached === '1' || cached === '0') {
+          if (!cancelled) setSimpleMode(cached === '1');
+          return;
+        }
+        const supabase = createClient();
+        if (!supabase) return;
+        const { data } = await supabase
+          .from('care_residents')
+          .select('simple_mode')
+          .eq('user_id', residentId)
+          .maybeSingle();
+        const enabled = Boolean((data as { simple_mode?: boolean } | null)?.simple_mode);
+        if (!cancelled) {
+          setSimpleMode(enabled);
+          sessionStorage.setItem(cacheKey, enabled ? '1' : '0');
+        }
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [residentId]);
+
   const speakSafe = useCallback((t: string) => speak(t, reducedMotion), [speak, reducedMotion]);
 
   const handleMoodComplete = async (payload: {
     label: string;
     traffic: 'groen' | 'gul' | 'roed';
     note: string;
+    moodScore: number;
+    voiceTranscript?: string;
+    aiSummary?: string;
   }) => {
     setMoodLabel(payload.label);
     setMoodTraffic(payload.traffic);
@@ -112,17 +151,46 @@ export default function LysShell({
     if (payload.label === 'Meget svært' || payload.traffic === 'roed') {
       toast.success('📋 Sendt til portalen: Personalet ser, at du har haft det svært');
     }
+    try {
+      await fetch('/api/park/daily-checkin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mood_score: payload.moodScore,
+          traffic_light: payload.traffic,
+          note: payload.note || undefined,
+          voice_transcript: payload.voiceTranscript,
+          ai_summary: payload.aiSummary,
+        }),
+      });
+    } catch {
+      // Best effort: UI flow should continue even if network is unstable.
+    }
     setOverlay(null);
     const note = payload.note ? ` Jeg skrev også: ${payload.note}` : '';
     await sendToLys(`Jeg har det sådan her: ${payload.label}.${note}`);
     setMoodTick((t) => t + 1);
   };
 
+  const openCheckIn = () => {
+    setDrawerOpen(false);
+    setOverlay('mood');
+  };
+
+  const openFromDrawer = (target: 'journal' | 'mig' | 'day' | 'crisis' | 'goals') => {
+    setDrawerOpen(false);
+    if (target === 'journal') setTab('journal');
+    else if (target === 'mig') setTab('mig');
+    else if (target === 'day') setTab('dag');
+    else if (target === 'crisis') setOverlay('crisis');
+    else if (target === 'goals') setOverlay('goals');
+  };
+
   return (
     <ResidentProvider firstName={firstName} initials={initials} residentId={residentId}>
       <div
         className="min-h-dvh font-sans transition-colors duration-300"
-        style={{ backgroundColor: tokens.bg, color: tokens.text }}
+        style={{ backgroundColor: '#F7F5F1', color: '#1A1814' }}
       >
         <LysStatusChrome tokens={tokens} isDemoMode={isDemoMode} />
         <div
@@ -130,8 +198,40 @@ export default function LysShell({
           style={{ paddingBottom: 'calc(5rem + max(1rem, env(safe-area-inset-bottom, 0px)))' }}
         >
           <div
+            className="sticky top-0 z-20 flex items-center justify-between border-b px-5 py-4 backdrop-blur-xl"
+            style={{
+              backgroundColor: 'rgba(247,245,241,0.92)',
+              borderColor: '#E8E3DA',
+            }}
+          >
+            <div
+              style={{
+                fontFamily: "'DM Serif Display', serif",
+                fontSize: 22,
+                color: '#2D5BE3',
+                fontStyle: 'italic',
+                lineHeight: 1,
+              }}
+            >
+              lys
+            </div>
+            <div
+              className="flex h-9 w-9 items-center justify-center rounded-full border text-xs font-semibold"
+              style={{
+                backgroundColor: '#EBF0FD',
+                color: '#1A3FAF',
+                borderColor: 'rgba(45,91,227,0.3)',
+              }}
+            >
+              {initials || 'B'}
+            </div>
+          </div>
+          <div
             key={tab}
-            style={{ animation: reducedMotion ? undefined : 'lysTabIn 0.22s ease-out' }}
+            style={{
+              animation: reducedMotion ? undefined : 'lysTabIn 0.22s ease-out',
+              minHeight: 'calc(100dvh - 76px)',
+            }}
           >
             {tab === 'hjem' && (
               <LysHome
@@ -294,12 +394,105 @@ export default function LysShell({
           </div>
         )}
 
+        {overlay === 'crisis' && (
+          <div
+            className="fixed inset-0 z-50 overflow-y-auto"
+            style={{ backgroundColor: '#0F1B2D' }}
+          >
+            <LysKrisekort
+              firstName={firstName}
+              facilityId={facilityId}
+              onClose={() => setOverlay(null)}
+            />
+          </div>
+        )}
+
+        {!overlay && (
+          <button
+            type="button"
+            onClick={() => setOverlay('crisis')}
+            className="fixed z-[60] h-14 w-14 rounded-full text-white text-2xl font-black shadow-lg active:scale-95"
+            style={{
+              right: 20,
+              bottom: 'calc(88px + env(safe-area-inset-bottom, 0px))',
+              background: 'linear-gradient(135deg, #C0392B, #B91C1C)',
+              boxShadow: '0 4px 20px rgba(192,57,43,0.45)',
+            }}
+            aria-label="Åbn krisehjælp"
+          >
+            ⚡
+          </button>
+        )}
+
         <LysBottomNav
           active={tab}
           onChange={setTab}
+          onCheckIn={openCheckIn}
+          onCrisis={() => {
+            setDrawerOpen(false);
+            setOverlay('crisis');
+          }}
+          onMore={() => setDrawerOpen((v) => !v)}
+          isMoreOpen={drawerOpen}
           showDagReminderDot={!moodRegisteredToday}
           hidden={!!overlay}
+          simpleMode={simpleMode}
         />
+
+        {drawerOpen && !overlay && !simpleMode && (
+          <>
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(false)}
+              className="fixed inset-0 z-40"
+              style={{ backgroundColor: 'rgba(26,24,20,0.35)' }}
+              aria-label="Luk menu"
+            />
+            <div
+              className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-lg rounded-t-3xl border px-5 pb-10 pt-3"
+              style={{ backgroundColor: '#FFFFFF', borderColor: '#E8E3DA' }}
+            >
+              <div className="mx-auto mb-4 h-1 w-10 rounded-full" style={{ backgroundColor: '#E8E3DA' }} />
+              <p
+                className="mb-3 text-[10px] font-semibold uppercase tracking-[0.2em]"
+                style={{ color: '#A09890' }}
+              >
+                Alle sektioner
+              </p>
+              <div className="space-y-2">
+                {[
+                  { label: 'Vagtplan', icon: '⊙', action: () => openFromDrawer('day') },
+                  { label: 'Kriseplan', icon: '⚡', action: () => openFromDrawer('crisis') },
+                  { label: 'Mine mål', icon: '◇', action: () => openFromDrawer('goals') },
+                  { label: 'Aktiviteter', icon: '✦', action: () => openFromDrawer('day') },
+                  { label: 'Journal', icon: '◎', action: () => openFromDrawer('journal') },
+                  { label: 'Profil', icon: '◉', action: () => openFromDrawer('mig') },
+                ].map((item) => (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={item.action}
+                    className="w-full rounded-2xl border px-3 py-3 text-left flex items-center gap-3"
+                    style={{ borderColor: '#E8E3DA', backgroundColor: '#FFFFFF' }}
+                  >
+                    <span
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-xl"
+                      style={{ backgroundColor: '#EBF0FD', color: '#2D5BE3' }}
+                    >
+                      {item.icon}
+                    </span>
+                    <span className="text-[15px]" style={{ color: '#1A1814' }}>
+                      {item.label}
+                    </span>
+                    <span className="ml-auto" style={{ color: '#A09890' }}>
+                      ›
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
 
         <LysOnboarding
           residentId={residentId}

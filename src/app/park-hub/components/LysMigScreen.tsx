@@ -229,8 +229,8 @@ export default function LysMigScreen({
   const activeDays = moodHistory.filter((d) => d.value !== null).length;
 
   const isDarkish = tokens.bg.startsWith('#0');
-  const cardBg = isDarkish ? 'rgba(255,255,255,0.07)' : tokens.cardBg;
-  const subtext = isDarkish ? 'rgba(255,255,255,0.45)' : tokens.textMuted;
+  const cardBg = tokens.cardBg;
+  const subtext = tokens.textMuted;
 
   const earnedNormalizedKeys = new Set(badges.map((r) => normalizeBadgeKeyForDisplay(r.badge_key)));
   const earnedBadges = RESIDENT_BADGE_DEFS.filter((b) => earnedNormalizedKeys.has(b.key));

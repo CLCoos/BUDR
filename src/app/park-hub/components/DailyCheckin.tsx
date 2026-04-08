@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Check, Smile, Frown } from 'lucide-react';
 import { toast } from 'sonner';
+import VoiceJournal from './VoiceJournal';
 
 const moodEmojis = ['😔', '😟', '😕', '😐', '🙂', '😊', '😄', '😃', '🤩', '🥳'];
 
@@ -19,6 +20,8 @@ export default function DailyCheckin() {
   const [note, setNote] = useState('');
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState<string | null>(null);
+  const [voiceSummary, setVoiceSummary] = useState<string | null>(null);
 
   const handleSave = async () => {
     if (!traffic) {
@@ -34,6 +37,8 @@ export default function DailyCheckin() {
           mood_score: mood,
           traffic_light: traffic,
           note: note.trim() || undefined,
+          voice_transcript: voiceTranscript ?? undefined,
+          ai_summary: voiceSummary ?? undefined,
         }),
       });
       if (!res.ok) {
@@ -79,6 +84,9 @@ export default function DailyCheckin() {
             />
             {TRAFFIC_LABELS[traffic]}
           </div>
+        )}
+        {voiceSummary && (
+          <p className="mt-3 text-sm italic text-[#1D9E75]">Du fortalte: {voiceSummary}</p>
         )}
         <button
           type="button"
@@ -203,6 +211,17 @@ export default function DailyCheckin() {
           rows={3}
         />
       </div>
+
+      <VoiceJournal
+        onSkip={() => {
+          setVoiceTranscript(null);
+          setVoiceSummary(null);
+        }}
+        onComplete={(transcript, summary) => {
+          setVoiceTranscript(transcript);
+          setVoiceSummary(summary);
+        }}
+      />
 
       <button
         type="button"

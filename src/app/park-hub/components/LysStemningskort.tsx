@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import type { LysThemeTokens } from '../lib/lysTheme';
+import VoiceJournal from './VoiceJournal';
 
 export type Traffic = 'groen' | 'gul' | 'roed';
 
@@ -19,7 +20,14 @@ type Props = {
   accent: string;
   firstName: string;
   reducedMotion: boolean;
-  onComplete: (payload: { label: string; traffic: Traffic; note: string }) => void;
+  onComplete: (payload: {
+    label: string;
+    traffic: Traffic;
+    note: string;
+    moodScore: number;
+    voiceTranscript?: string;
+    aiSummary?: string;
+  }) => void;
   onBack: () => void;
 };
 
@@ -33,15 +41,27 @@ export default function LysStemningskort({
 }: Props) {
   const [selected, setSelected] = useState<number | null>(null);
   const [note, setNote] = useState('');
+  const [voiceTranscript, setVoiceTranscript] = useState<string | null>(null);
+  const [voiceSummary, setVoiceSummary] = useState<string | null>(null);
 
   const handleSubmit = () => {
     if (selected === null) return;
     const m = MOODS[selected]!;
-    onComplete({ label: m.label, traffic: m.traffic, note: note.trim() });
+    onComplete({
+      label: m.label,
+      traffic: m.traffic,
+      note: note.trim(),
+      moodScore: selected + 1,
+      voiceTranscript: voiceTranscript ?? undefined,
+      aiSummary: voiceSummary ?? undefined,
+    });
   };
 
   return (
-    <div className="min-h-dvh px-5 py-6" style={{ color: tokens.text }}>
+    <div
+      className="min-h-dvh px-4 py-6 sm:px-5"
+      style={{ color: tokens.text, paddingBottom: 'max(6rem, env(safe-area-inset-bottom, 0px))' }}
+    >
       <button
         type="button"
         onClick={onBack}
@@ -57,7 +77,7 @@ export default function LysStemningskort({
         Hej {firstName} — der er ikke nogen forkerte svar.
       </p>
 
-      <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
+      <div className="grid grid-cols-2 gap-2.5 max-w-md mx-auto">
         {MOODS.map((m, i) => {
           const active = selected === i;
           return (
@@ -65,7 +85,7 @@ export default function LysStemningskort({
               key={m.label}
               type="button"
               onClick={() => setSelected(i)}
-              className="flex flex-col items-center justify-center gap-2 rounded-3xl px-3 py-5 text-center transition-all duration-200 active:scale-[0.93]"
+              className="flex min-h-[120px] flex-col items-center justify-center gap-2 rounded-3xl px-2.5 py-4 text-center transition-all duration-200 active:scale-[0.93]"
               style={{
                 background: active
                   ? `linear-gradient(155deg, ${accent}, ${accent}bb)`
@@ -117,7 +137,25 @@ export default function LysStemningskort({
         />
       </div>
 
-      <div className="max-w-md mx-auto mt-5">
+      <div className="max-w-md mx-auto mt-4">
+        <VoiceJournal
+          onSkip={() => {
+            setVoiceTranscript(null);
+            setVoiceSummary(null);
+          }}
+          onComplete={(transcript, summary) => {
+            setVoiceTranscript(transcript);
+            setVoiceSummary(summary);
+          }}
+        />
+      </div>
+
+      <div className="max-w-md mx-auto mt-4 space-y-2">
+        {voiceSummary && (
+          <p className="text-xs" style={{ color: tokens.textMuted }}>
+            Stemmejournal tilføjet: {voiceSummary}
+          </p>
+        )}
         <button
           type="button"
           disabled={selected === null}

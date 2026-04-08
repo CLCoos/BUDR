@@ -430,18 +430,18 @@ export default function ResidentDemoPage() {
 
   if (!ready) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#F5F4FF]">
+      <div className="flex h-screen items-center justify-center bg-[#F7F5F1]">
         <div className="text-center">
           <div className="flex justify-center gap-1.5 mb-4">
             {[0, 150, 300].map((d) => (
               <span
                 key={d}
-                className="w-2.5 h-2.5 bg-[#7F77DD] rounded-full animate-bounce"
+                className="w-2.5 h-2.5 bg-[#2D5BE3] rounded-full animate-bounce"
                 style={{ animationDelay: `${d}ms` }}
               />
             ))}
           </div>
-          <p className="text-sm text-gray-500">Gør demo klar…</p>
+          <p className="text-sm text-[#6B6459]">Gør demo klar…</p>
         </div>
       </div>
     );
@@ -451,15 +451,15 @@ export default function ResidentDemoPage() {
     <div className="relative">
       <ResidentDemoWelcomeOverlay />
       {/* Demo banner */}
-      <div className="fixed top-0 left-0 right-0 z-[200] bg-amber-50 border-b border-amber-200">
+      <div className="fixed top-0 left-0 right-0 z-[200] border-b bg-[rgba(247,245,241,0.96)]" style={{ borderColor: '#E8E3DA' }}>
         <div className="flex items-center justify-between px-4 py-1.5">
-          <span className="text-xs font-medium text-amber-800">
+          <span className="text-xs font-medium text-[#6B6459]">
             Demo · Anders M. · Prøv: check ind → dag-opgaver → haven
           </span>
           <div className="flex items-center gap-3">
             <Link
               href="/care-portal-demo"
-              className="text-xs font-semibold text-amber-700 hover:underline"
+              className="text-xs font-semibold text-[#2D5BE3] hover:underline"
             >
               ← Care Portal
             </Link>
@@ -469,7 +469,7 @@ export default function ResidentDemoPage() {
                 localStorage.removeItem('budr_demo_seeded_v1');
                 window.location.reload();
               }}
-              className="text-xs text-amber-600 hover:underline"
+              className="text-xs text-[#6B6459] hover:underline"
             >
               Nulstil
             </button>

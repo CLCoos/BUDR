@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { X, Save, Printer, AlertTriangle } from 'lucide-react';
+import { safeRandomUUID } from '@/lib/uuid';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -106,7 +107,7 @@ export default function IndsatsModal({ open, onClose }: Props) {
 
   const handleSave = () => {
     const record: IndsatsRecord = {
-      id: crypto.randomUUID(),
+      id: safeRandomUUID(),
       created_at: new Date().toISOString(),
       paragraph: typeOpt.paragraph,
       ...form,

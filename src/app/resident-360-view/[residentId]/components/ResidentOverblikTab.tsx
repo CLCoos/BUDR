@@ -11,8 +11,10 @@ import {
   FileText,
   CheckSquare,
   AlertTriangle,
+  Mic,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { logPortalAudit } from '@/lib/auditClient';
 import type { MedDefinition } from './types';
 import WriteJournalEntry from './WriteJournalEntry';
 import GoalProgress from '../../components/GoalProgress';
@@ -54,6 +56,8 @@ interface Props {
   trafficLight: TrafficUi;
   moodScore: number | null;
   checkinNote: string | null;
+  checkinAiSummary: string | null;
+  checkinVoiceTranscript: string | null;
   medications: MedDefinition[];
   journalEntries: JournalEntry[];
   todayPlanItems: PlanItem[];
@@ -83,6 +87,8 @@ export default function ResidentOverblikTab({
   trafficLight,
   moodScore,
   checkinNote,
+  checkinAiSummary,
+  checkinVoiceTranscript,
   medications,
   journalEntries,
   todayPlanItems,
@@ -93,6 +99,9 @@ export default function ResidentOverblikTab({
   const pendingItems = todayPlanItems.filter((i) => !i.done);
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [concernNotes, setConcernNotes] = useState<ConcernNoteRow[]>([]);
+  const [showVoiceTranscript, setShowVoiceTranscript] = useState(false);
+  const [simpleMode, setSimpleMode] = useState(false);
+  const [savingSimpleMode, setSavingSimpleMode] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -113,6 +122,51 @@ export default function ResidentOverblikTab({
       cancelled = true;
     };
   }, [residentId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const supabase = createClient();
+      if (!supabase) return;
+      const { data, error } = await supabase
+        .from('care_residents')
+        .select('simple_mode')
+        .eq('user_id', residentId)
+        .maybeSingle();
+      if (cancelled) return;
+      if (!error && data) setSimpleMode(Boolean((data as { simple_mode?: boolean }).simple_mode));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [residentId]);
+
+  async function toggleSimpleMode() {
+    const nextValue = !simpleMode;
+    const supabase = createClient();
+    if (!supabase) {
+      toast.error('Forbindelsesfejl');
+      return;
+    }
+    setSavingSimpleMode(true);
+    const { error } = await supabase
+      .from('care_residents')
+      .update({ simple_mode: nextValue })
+      .eq('user_id', residentId);
+    setSavingSimpleMode(false);
+    if (error) {
+      toast.error('Kunne ikke opdatere forenklet visning');
+      return;
+    }
+    setSimpleMode(nextValue);
+    void logPortalAudit({
+      action: 'resident.updated',
+      tableName: 'care_residents',
+      recordId: residentId,
+      metadata: { simple_mode: nextValue },
+    });
+    toast.success(nextValue ? 'Forenklet visning aktiveret' : 'Forenklet visning deaktiveret');
+  }
 
   const journalDrafts = journalEntries.filter((e) => e.journal_status === 'kladde');
   const journalGodkendt = journalEntries.filter((e) => e.journal_status !== 'kladde');
@@ -177,6 +231,25 @@ export default function ResidentOverblikTab({
 
   return (
     <div className="space-y-5">
+      <div className="rounded-xl border border-gray-100 bg-white px-4 py-3 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-gray-800">Forenklet visning</p>
+          <p className="text-xs text-gray-500">
+            Reducerer appen til tre skærme og forstørrer tekst.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => void toggleSimpleMode()}
+          disabled={savingSimpleMode}
+          className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+            simpleMode ? 'bg-[#E1F5EE] text-[#1D9E75]' : 'bg-gray-100 text-gray-600'
+          } disabled:opacity-40`}
+        >
+          {savingSimpleMode ? 'Gemmer…' : simpleMode ? 'Aktiv' : 'Inaktiv'}
+        </button>
+      </div>
+
       {/* ── Critical status row ─────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Traffic light */}
@@ -208,6 +281,27 @@ export default function ResidentOverblikTab({
             <p className="text-xs mt-1 line-clamp-2" style={{ color: tlCfg?.color ?? '#6B7280' }}>
               &ldquo;{checkinNote}&rdquo;
             </p>
+          )}
+          {checkinAiSummary && (
+            <div className="mt-2 rounded-lg border border-[#A8DFC9] bg-[#E1F5EE] px-2.5 py-2">
+              <p className="text-[11px] font-semibold text-[#1D9E75]">AI-opsummering</p>
+              <p className="text-xs text-[#1D9E75] mt-0.5 italic">{checkinAiSummary}</p>
+              {checkinVoiceTranscript && (
+                <button
+                  type="button"
+                  onClick={() => setShowVoiceTranscript((v) => !v)}
+                  className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-[#1D9E75]"
+                >
+                  <Mic size={12} aria-hidden />
+                  {showVoiceTranscript ? 'Skjul transskription' : 'Vis stemmejournal'}
+                </button>
+              )}
+              {showVoiceTranscript && checkinVoiceTranscript && (
+                <p className="text-xs text-gray-700 mt-1.5 whitespace-pre-wrap">
+                  {checkinVoiceTranscript}
+                </p>
+              )}
+            </div>
           )}
         </div>
 

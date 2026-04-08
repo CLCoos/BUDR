@@ -3,10 +3,16 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
-import AppLogo from '@/components/ui/AppLogo';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics';
 import { createClient } from '@/lib/supabase/client';
+import { BudrLogo } from '@/components/brand/BudrLogo';
+
+const LEFT_QUOTES = [
+  'Overblik der giver ro.',
+  'Nærhed på tværs af vagter.',
+  'Bygget til dem der passer på andre.',
+];
 
 function CarePortalLoginContent() {
   const searchParams = useSearchParams();
@@ -14,6 +20,9 @@ function CarePortalLoginContent() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [quoteIdx, setQuoteIdx] = useState(0);
+  const [quoteVisible, setQuoteVisible] = useState(true);
 
   useEffect(() => {
     if (searchParams.get('err') === 'config') {
@@ -22,6 +31,19 @@ function CarePortalLoginContent() {
       );
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    const fadeMs = 600;
+    const showMs = 4000;
+    const timer = window.setInterval(() => {
+      setQuoteVisible(false);
+      window.setTimeout(() => {
+        setQuoteIdx((i) => (i + 1) % LEFT_QUOTES.length);
+        setQuoteVisible(true);
+      }, fadeMs);
+    }, showMs);
+    return () => window.clearInterval(timer);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -68,96 +90,174 @@ function CarePortalLoginContent() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#0F1B2D] px-4">
-      <div className="w-full max-w-sm">
-        <div className="mb-8 flex flex-col items-center">
-          <div className="mb-2 flex items-center gap-2.5">
-            <AppLogo size={36} />
-            <span className="text-2xl font-bold tracking-tight text-white">BUDR</span>
+    <div className="min-h-screen bg-[var(--cp-bg)]">
+      <div className="mx-auto grid min-h-screen grid-cols-1 md:grid-cols-5">
+        <aside className="relative hidden overflow-hidden bg-[var(--cp-bg)] text-white md:col-span-3 md:flex md:flex-col">
+          <div
+            className="pointer-events-none absolute right-[-15%] top-[-15%] aspect-square w-[60%] rounded-full"
+            style={{ backgroundColor: 'rgb(255 255 255 / 0.04)' }}
+          />
+          <div className="px-10 pt-10">
+            <BudrLogo size={36} dark showWordmark />
           </div>
-          <p className="text-sm text-gray-400">Care Portal — Personale login</p>
-        </div>
 
-        <div className="rounded-xl border border-white/10 bg-[#162032] p-6 shadow-2xl">
-          <h1 className="mb-5 text-base font-semibold text-white">Log ind</h1>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="email" className="mb-1.5 block text-xs font-medium text-gray-400">
-                Email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(ev) => setEmail(ev.target.value)}
-                placeholder="din@email.dk"
-                className="w-full rounded-lg border border-white/10 bg-[#0F1B2D] px-3 py-2.5 text-sm text-white placeholder-gray-600 transition-colors focus:border-[#1D9E75] focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="mb-1.5 block text-xs font-medium text-gray-400">
-                Adgangskode
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(ev) => setPassword(ev.target.value)}
-                placeholder="••••••••"
-                className="w-full rounded-lg border border-white/10 bg-[#0F1B2D] px-3 py-2.5 text-sm text-white placeholder-gray-600 transition-colors focus:border-[#1D9E75] focus:outline-none"
-              />
-            </div>
-
-            {error && (
-              <p className="rounded-lg bg-red-400/10 px-3 py-2 text-xs font-medium text-red-400">
-                {error}
+          <div className="flex flex-1 items-center justify-center px-8 text-center">
+            <div className="max-w-[380px]">
+              <p
+                className="italic"
+                style={{
+                  fontFamily: 'var(--font-budr-wordmark, "DM Serif Display", serif)',
+                  fontSize: 'clamp(22px, 2.5vw, 32px)',
+                  lineHeight: 1.4,
+                  opacity: quoteVisible ? 1 : 0,
+                  transition: 'opacity 600ms ease-in-out',
+                }}
+              >
+                {LEFT_QUOTES[quoteIdx]}
               </p>
-            )}
+              <div
+                className="mx-auto mt-5 h-px w-10"
+                style={{ backgroundColor: 'rgb(255 255 255 / 0.3)' }}
+              />
+            </div>
+          </div>
 
-            <button
-              type="submit"
-              disabled={pending}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#1D9E75] py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#18886a] disabled:cursor-not-allowed disabled:opacity-60"
+          <div className="absolute bottom-8 left-10 text-xs font-light text-white/40">budrcare.dk</div>
+        </aside>
+
+        <section className="flex min-h-screen items-center justify-center bg-white px-6 py-10 md:col-span-2 md:px-10">
+          <div className="w-full max-w-[340px]">
+            <div className="mb-9">
+              <BudrLogo size={36} showWordmark />
+            </div>
+
+            <h1
+              className="mb-1"
+              style={{
+                fontFamily: 'var(--font-budr-wordmark, "DM Serif Display", serif)',
+                fontSize: 26,
+                color: 'var(--cp-bg)',
+              }}
             >
-              {pending ? (
-                <>
-                  <Loader2 size={14} className="animate-spin" />
-                  Logger ind…
-                </>
-              ) : (
-                'Log ind'
-              )}
-            </button>
-          </form>
-        </div>
+              Velkommen tilbage
+            </h1>
+            <p className="mb-8 text-[13px] font-light text-[var(--cp-muted)]">
+              Log ind med din arbejdsmailadresse
+            </p>
 
-        <p className="mt-6 text-center text-xs text-gray-600">
-          BUDR Care Platform · Adgang styres af jeres organisationsprofil (
-          <code className="text-gray-500">org_id</code>)
-        </p>
-        <nav className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-gray-500">
-          <Link href="/privacy" className="hover:text-gray-300">
-            Privatliv
-          </Link>
-          <Link href="/cookies" className="hover:text-gray-300">
-            Cookies
-          </Link>
-          <Link href="/terms" className="hover:text-gray-300">
-            Vilkår
-          </Link>
-          <Link href="/care-portal-demo" className="hover:text-gray-300">
-            Demo (uden login)
-          </Link>
-        </nav>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="email"
+                  className="mb-1.5 block text-xs font-medium"
+                  style={{ color: 'var(--cp-bg)' }}
+                >
+                  E-mail
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(ev) => setEmail(ev.target.value)}
+                  placeholder="dit@arbejde.dk"
+                  className="h-[52px] w-full rounded-xl border px-4 text-[15px] outline-none transition-colors"
+                  style={{
+                    borderColor: 'var(--cp-border2)',
+                    backgroundColor: 'rgb(248 249 252)',
+                    color: 'var(--cp-bg)',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="password"
+                  className="mb-1.5 block text-xs font-medium"
+                  style={{ color: 'var(--cp-bg)' }}
+                >
+                  Adgangskode
+                </label>
+                <div className="relative">
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    required
+                    value={password}
+                    onChange={(ev) => setPassword(ev.target.value)}
+                    placeholder="••••••••"
+                    className="h-[52px] w-full rounded-xl border px-4 pr-12 text-[15px] outline-none transition-colors"
+                    style={{
+                      borderColor: 'var(--cp-border2)',
+                      backgroundColor: 'rgb(248 249 252)',
+                      color: 'var(--cp-bg)',
+                    }}
+                  />
+                  <button
+                    type="button"
+                    aria-label={showPassword ? 'Skjul adgangskode' : 'Vis adgangskode'}
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-[var(--cp-muted)]"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="text-right">
+                <Link href="/care-portal-login" className="text-xs text-[var(--cp-green)] hover:underline">
+                  Glemt adgangskode?
+                </Link>
+              </div>
+
+              {error && (
+                <p
+                  aria-live="polite"
+                  className="rounded-[10px] border px-3.5 py-3 text-[13px]"
+                  style={{
+                    backgroundColor: 'rgb(245 101 101 / 0.08)',
+                    borderColor: 'rgb(245 101 101 / 0.5)',
+                    color: 'rgb(153 27 27)',
+                    animation: 'careLoginFadeIn 250ms ease',
+                  }}
+                >
+                  {error}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={pending}
+                className="h-[52px] w-full rounded-xl text-[15px] font-medium text-white transition-all hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-75"
+                style={{ backgroundColor: 'var(--cp-green)' }}
+              >
+                {pending ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Loader2 size={14} className="animate-spin" />
+                    Logger ind...
+                  </span>
+                ) : (
+                  'Log ind'
+                )}
+              </button>
+            </form>
+
+            <div className="mt-5 border-t border-[var(--cp-border)] pt-4 text-center text-[11px] text-[var(--cp-muted)]">
+              Kun for autoriseret personale
+            </div>
+          </div>
+        </section>
       </div>
+      <style>{`
+        @keyframes careLoginFadeIn {
+          from { opacity: 0; transform: translateY(-3px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
@@ -166,8 +266,8 @@ export default function CarePortalLoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-[#0F1B2D]">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-500" aria-hidden />
+        <div className="flex min-h-screen items-center justify-center bg-[var(--cp-bg)]">
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--cp-muted)]" aria-hidden />
         </div>
       }
     >

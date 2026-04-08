@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getItem, setItem } from '@/lib/localStore';
 import { LOCAL_KEYS, type StorageMode } from '@/types/local';
+import { safeRandomUUID } from '@/lib/uuid';
 
 export type ResidentSession = {
   isLoggedIn: boolean;
@@ -24,7 +25,7 @@ function readCookieResidentId(): string | null {
 function getOrCreateGuestId(): string {
   const existing = getItem<string>(LOCAL_KEYS.guestId);
   if (existing) return existing;
-  const id = crypto.randomUUID();
+  const id = safeRandomUUID();
   setItem(LOCAL_KEYS.guestId, id);
   return id;
 }

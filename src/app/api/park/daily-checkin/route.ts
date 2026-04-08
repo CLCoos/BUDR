@@ -20,6 +20,8 @@ interface CheckinBody {
   mood_score: number;
   traffic_light: string;
   note?: string;
+  voice_transcript?: string;
+  ai_summary?: string;
 }
 
 export async function POST(req: Request): Promise<NextResponse> {
@@ -35,7 +37,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { mood_score, traffic_light, note } = body;
+  const { mood_score, traffic_light, note, voice_transcript, ai_summary } = body;
 
   if (typeof mood_score !== 'number' || mood_score < 1 || mood_score > 10) {
     return NextResponse.json({ error: 'mood_score must be 1–10' }, { status: 422 });
@@ -56,6 +58,8 @@ export async function POST(req: Request): Promise<NextResponse> {
     mood_score,
     traffic_light: dbTraffic,
     note: note?.trim() || null,
+    voice_transcript: typeof voice_transcript === 'string' ? voice_transcript.trim() || null : null,
+    ai_summary: typeof ai_summary === 'string' ? ai_summary.trim() || null : null,
     created_at: new Date().toISOString(),
   });
 

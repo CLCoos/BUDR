@@ -8,6 +8,7 @@ import AlertPanel from './AlertPanel';
 import BekymringsnotatWidget from './BekymringsnotatWidget';
 import KalenderWidget from './KalenderWidget';
 import OpgaveWidget from './OpgaveWidget';
+import OnCallStaffWidget from './OnCallStaffWidget';
 import ResidentList from './ResidentList';
 import StatCards from './StatCards';
 import HurtigJournalModal from './HurtigJournalModal';
@@ -235,6 +236,7 @@ function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
         <JournalOverblikWidget />
         <BekymringsnotatWidget />
         <KalenderWidget />
+        <OnCallStaffWidget />
         <OpgaveWidget />
       </div>
 

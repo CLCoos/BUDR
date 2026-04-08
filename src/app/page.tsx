@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { DM_Sans, DM_Serif_Display } from 'next/font/google';
-import HomeLanding from '@/components/marketing/HomeLanding';
-import ParkLoginNotice from '@/components/marketing/ParkLoginNotice';
+import CareEntrySplit from '@/components/marketing/CareEntrySplit';
 import './budr-landing.css';
 
 const dmSans = DM_Sans({
@@ -30,18 +29,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function HomePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ park?: string }>;
-}) {
-  const sp = await searchParams;
-  const showParkLogin = sp.park === 'login';
-
+export default function HomePage() {
   return (
-    <>
-      {showParkLogin ? <ParkLoginNotice /> : null}
-      <HomeLanding className={`${dmSans.variable} ${dmSerifDisplay.variable}`} />
-    </>
+    <div className={`${dmSans.variable} ${dmSerifDisplay.variable}`}>
+      <CareEntrySplit />
+    </div>
   );
 }

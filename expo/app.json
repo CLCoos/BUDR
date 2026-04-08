@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "BUDR Expo",
+    "slug": "budr-expo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#F7F5F1"
+      }
+    }
+  }
+}

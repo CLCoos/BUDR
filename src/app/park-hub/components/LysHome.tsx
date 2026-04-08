@@ -13,8 +13,8 @@ import type { LysFlowOverlay } from '../lib/lysOverlay';
 import type { LysPhase, LysThemeTokens } from '../lib/lysTheme';
 import type { LysNavTab } from './LysBottomNav';
 import LysBeskedTilPersonale from './LysBeskedTilPersonale';
-import LysKrisePlan from './LysKrisePlan';
 import LysKrisePlanCard from './LysKrisePlanCard';
+import MedicinReminder from './MedicinReminder';
 import FlowerPlant from '@/components/haven/plants/FlowerPlant';
 import TreePlant from '@/components/haven/plants/TreePlant';
 
@@ -133,9 +133,9 @@ function HavenWidget({
       onClick={onNavigate}
       className="w-full rounded-2xl px-5 py-4 text-left flex items-center gap-4 transition-all duration-150 active:scale-[0.98]"
       style={{
-        background: 'linear-gradient(135deg, #0a1f14 0%, #0d2a1a 100%)',
-        border: '1px solid rgba(45,212,160,0.15)',
-        boxShadow: '0 2px 20px rgba(45,212,160,0.06)',
+        background: 'linear-gradient(135deg, #FFFFFF 0%, #FDFAF6 100%)',
+        border: '1px solid #E8E3DA',
+        boxShadow: '0 4px 20px rgba(45,91,227,0.08)',
       }}
     >
       {/* Plant preview */}
@@ -144,7 +144,7 @@ function HavenWidget({
           <div
             className="h-14 w-14 rounded-xl flex items-center justify-center"
             style={{
-              backgroundColor: 'rgba(45,212,160,0.08)',
+              backgroundColor: 'rgba(45,91,227,0.08)',
               animation: 'lysPulse 3s ease-in-out infinite',
             }}
           >
@@ -155,7 +155,7 @@ function HavenWidget({
             <div
               key={p.id}
               className="h-14 w-14 rounded-xl flex items-end justify-center overflow-hidden pb-1"
-              style={{ backgroundColor: `${MINI_ACCENTS[p.plant_type] ?? '#2dd4a0'}14` }}
+              style={{ backgroundColor: `${MINI_ACCENTS[p.plant_type] ?? '#2D5BE3'}14` }}
             >
               {p.plant_type === 'tree' ||
               p.plant_type === 'herb' ||
@@ -243,7 +243,10 @@ export default function LysHome({
   const [planStats, setPlanStats] = useState<{ total: number } | null>(null);
   const [showLysCard, setShowLysCard] = useState(false);
   const [checkInSaving, setCheckInSaving] = useState(false);
-  const [krisePlanOpen, setKrisePlanOpen] = useState(false);
+  const [todayPreview, setTodayPreview] = useState<Array<{ id: string; title: string; time: string }>>(
+    []
+  );
+  const [completedToday, setCompletedToday] = useState<Set<string>>(new Set());
 
   const lastAssistant =
     [...messages].reverse().find((m) => m.role === 'assistant')?.content ?? null;
@@ -311,6 +314,30 @@ export default function LysHome({
       );
   }, [residentId]);
 
+  useEffect(() => {
+    const activeId = session.activeId || residentId;
+    if (!activeId) return;
+    const today = new Date().toISOString().slice(0, 10);
+    void dataService.getPlanItems(session.storageMode, activeId).then((all) => {
+      const items = all
+        .filter((p) => p.active_from <= today)
+        .map((p) => ({
+          id: p.id,
+          title: p.title,
+          time: (p.time_of_day || '09:00').slice(0, 5),
+        }))
+        .sort((a, b) => a.time.localeCompare(b.time))
+        .slice(0, 5);
+      setTodayPreview(items);
+    });
+    try {
+      const raw = localStorage.getItem(`budr_dag_completed_${today}`);
+      setCompletedToday(new Set(raw ? (JSON.parse(raw) as string[]) : []));
+    } catch {
+      setCompletedToday(new Set());
+    }
+  }, [residentId, session.activeId, session.storageMode, moodTick]);
+
   // moodTick effect
   useEffect(() => {
     if (moodTick > 0) setShowLysCard(true);
@@ -356,18 +383,27 @@ export default function LysHome({
   void moodLabel;
 
   return (
-    <div className="relative" style={{ color: 'var(--lys-text)' }}>
+    <div
+      className="relative"
+      style={
+        {
+          color: 'var(--lys-text)',
+          '--lys-text': '#1A1814',
+          '--lys-muted': '#6B6459',
+          '--lys-green': '#2D5BE3',
+          '--lys-green-dim': '#EBF0FD',
+          '--lys-bg3': '#FFFFFF',
+          '--lys-bg4': '#FDFAF6',
+          '--lys-border': '#E8E3DA',
+        } as React.CSSProperties
+      }
+    >
       {/* Header */}
       <header className="flex items-center justify-between px-5 pt-6 pb-3">
         <div>
           <h1
             className="leading-tight"
-            style={{
-              fontFamily: "'Fraunces', serif",
-              fontSize: 26,
-              fontWeight: 400,
-              color: 'var(--lys-text)',
-            }}
+            style={{ fontFamily: "'DM Serif Display', serif", fontSize: 30, fontWeight: 400 }}
           >
             {greeting.static}
             <em>{greeting.italic}</em>
@@ -380,8 +416,8 @@ export default function LysHome({
           <div
             className="h-10 w-10 shrink-0 rounded-full flex items-center justify-center text-sm font-black text-white"
             style={{
-              background: 'linear-gradient(135deg, var(--lys-green), rgba(45,212,160,0.6))',
-              boxShadow: '0 2px 8px rgba(45,212,160,0.3)',
+              background: 'linear-gradient(135deg, #2D5BE3, #4A7FF7)',
+              boxShadow: '0 6px 18px rgba(45,91,227,0.28)',
             }}
             aria-hidden
           >
@@ -400,6 +436,119 @@ export default function LysHome({
       </header>
 
       <main className="space-y-4 px-5 pb-4">
+        <MedicinReminder residentId={residentId} />
+
+        {/* Dagens plan (v3 style) */}
+        <section
+          className="rounded-2xl overflow-hidden"
+          style={{ backgroundColor: 'var(--lys-bg3)', border: '1px solid var(--lys-border)' }}
+        >
+          <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: '#F0EDE7' }}>
+            <div>
+              <p className="text-sm font-semibold" style={{ color: 'var(--lys-text)' }}>
+                {completedToday.size} af {Math.max(todayPreview.length, 1)} gennemført
+              </p>
+              <p className="text-xs" style={{ color: 'var(--lys-muted)' }}>
+                Flot arbejde i dag
+              </p>
+            </div>
+            <div
+              className="h-10 w-10 rounded-full flex items-center justify-center text-[11px] font-bold"
+              style={{ backgroundColor: '#EBF0FD', color: '#2D5BE3' }}
+            >
+              {Math.round((completedToday.size / Math.max(todayPreview.length, 1)) * 100)}%
+            </div>
+          </div>
+          <div>
+            {(todayPreview.length > 0
+              ? todayPreview
+              : [
+                  { id: 's1', title: 'Morgenmøde', time: '09:30' },
+                  { id: 's2', title: 'Gåtur i parken', time: '11:00' },
+                  { id: 's3', title: 'Hvile / Egentid', time: '14:00' },
+                  { id: 's4', title: 'Aftensmad', time: '16:30' },
+                ]
+            ).map((item, idx) => {
+              const done = completedToday.has(item.id);
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => onSwitchTab('dag')}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left"
+                  style={{
+                    borderBottom:
+                      idx < (todayPreview.length > 0 ? todayPreview.length : 4) - 1
+                        ? '1px solid #F0EDE7'
+                        : 'none',
+                    backgroundColor: done ? '#FDFAF6' : 'transparent',
+                    opacity: done ? 0.55 : 1,
+                  }}
+                >
+                  <span
+                    className="h-2 w-2 rounded-full shrink-0"
+                    style={{ backgroundColor: done ? '#C8C0B6' : '#2D5BE3' }}
+                  />
+                  <span
+                    className="flex-1 text-sm"
+                    style={{
+                      color: 'var(--lys-text)',
+                      textDecoration: done ? 'line-through' : 'none',
+                    }}
+                  >
+                    {item.title}
+                  </span>
+                  <span className="text-xs" style={{ color: 'var(--lys-muted)' }}>
+                    {item.time}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Genveje (v3 style) */}
+        <section>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] mb-2" style={{ color: '#A09890' }}>
+            Genveje
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: 'Vagtplan', sub: 'Dagens aftaler', icon: '⊙', onClick: () => onSwitchTab('dag') },
+              { label: 'Kriseplan', sub: 'Din sikkerhedsplan', icon: '⚡', onClick: () => onOpenFlow('crisis') },
+              { label: 'Mine mål', sub: 'Se måltrappe', icon: '◇', onClick: () => onOpenFlow('goals') },
+              { label: 'Aktiviteter', sub: 'Dagens program', icon: '✦', onClick: () => onSwitchTab('dag') },
+              {
+                label: 'Ro-øvelser',
+                sub: 'Find ro her og nu',
+                icon: '🌬️',
+                onClick: () => router.push('/park-hub/jording'),
+              },
+            ].map((q) => (
+              <button
+                key={q.label}
+                type="button"
+                onClick={q.onClick}
+                className="rounded-2xl border p-4 text-left"
+                style={{ borderColor: 'var(--lys-border)', backgroundColor: 'var(--lys-bg3)' }}
+              >
+                <div
+                  className="mb-2 h-8 w-8 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: '#EBF0FD', color: '#2D5BE3' }}
+                >
+                  {q.icon}
+                </div>
+                <p className="text-sm font-semibold" style={{ color: 'var(--lys-text)' }}>
+                  {q.label}
+                </p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--lys-muted)' }}>
+                  {q.sub}
+                </p>
+              </button>
+            ))}
+          </div>
+        </section>
+
         {/* Lys companion card */}
         <section
           className="rounded-2xl px-5 py-4 transition-all duration-500"
@@ -445,7 +594,7 @@ export default function LysHome({
             style={{
               backgroundColor: 'var(--lys-green-dim)',
               color: 'var(--lys-green)',
-              border: '1px solid rgba(45,212,160,0.2)',
+              border: '1px solid rgba(45,91,227,0.2)',
             }}
           >
             Skriv til Lys →
@@ -481,7 +630,7 @@ export default function LysHome({
                 style={{
                   backgroundColor:
                     lastCheckIn?.level === opt.level ? 'var(--lys-green-dim)' : 'var(--lys-bg4)',
-                  border: `1px solid ${lastCheckIn?.level === opt.level ? 'rgba(45,212,160,0.3)' : 'var(--lys-border)'}`,
+                  border: `1px solid ${lastCheckIn?.level === opt.level ? 'rgba(45,91,227,0.3)' : 'var(--lys-border)'}`,
                 }}
                 title={opt.label}
               >
@@ -536,7 +685,7 @@ export default function LysHome({
         />
 
         {/* Kriseplan card */}
-        <LysKrisePlanCard onOpen={() => setKrisePlanOpen(true)} />
+        <LysKrisePlanCard onOpen={() => onOpenFlow('crisis')} />
 
         {/* Besked til personalet */}
         <LysBeskedTilPersonale
@@ -654,12 +803,6 @@ export default function LysHome({
         )}
       </main>
 
-      {/* Kriseplan bottom sheet */}
-      <LysKrisePlan
-        open={krisePlanOpen}
-        onClose={() => setKrisePlanOpen(false)}
-        firstName={firstName}
-      />
     </div>
   );
 }

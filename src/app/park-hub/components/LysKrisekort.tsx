@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Phone, ChevronDown, PhoneCall, BellRing } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { useRouter } from 'next/navigation';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -13,6 +14,17 @@ type FacilityContact = {
   label: string;
   phone: string;
   available_hours: string | null;
+};
+type OnCallRow = {
+  id: string;
+  phone: string;
+  shift: 'day' | 'evening' | 'night';
+};
+type CrisisStep = { icon?: string; title?: string; description?: string };
+type CrisisPlanRow = {
+  warning_signs: string[] | null;
+  helpful_strategies: string[] | null;
+  steps: CrisisStep[] | null;
 };
 
 type ConfirmState = { label: string; phone: string } | null;
@@ -231,14 +243,19 @@ type Props = {
 };
 
 export default function LysKrisekort({ firstName, facilityId, onClose }: Props) {
+  const router = useRouter();
   const [phaseIdx, setPhaseIdx] = useState(0);
   const [secondsLeft, setSecondsLeft] = useState(PHASES[0]!.duration / 1000);
+  const [breathingActive, setBreathingActive] = useState(false);
   const [openSection, setOpenSection] = useState<'bosted' | 'kriselinjer' | 'noed' | null>(
     'bosted'
   );
   const [contacts, setContacts] = useState<FacilityContact[] | null>(null);
+  const [onCall, setOnCall] = useState<OnCallRow | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState>(null);
   const [alertUiState, setAlertUiState] = useState<AlertUiState>('idle');
+  const [crisisPlan, setCrisisPlan] = useState<CrisisPlanRow | null>(null);
+  const [crisisPlanLoading, setCrisisPlanLoading] = useState(true);
 
   async function handleAlertStaff() {
     setAlertUiState('loading');
@@ -253,8 +270,9 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
     }
   }
 
-  // Breathing
+  // Breathing (only when explicitly started)
   useEffect(() => {
+    if (!breathingActive) return;
     const phase = PHASES[phaseIdx]!;
     setSecondsLeft(phase.duration / 1000);
     const tick = window.setInterval(() => setSecondsLeft((s) => Math.max(0, s - 1)), 1000);
@@ -266,7 +284,7 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
       window.clearInterval(tick);
       window.clearTimeout(advance);
     };
-  }, [phaseIdx]);
+  }, [phaseIdx, breathingActive]);
 
   // Load facility contacts
   useEffect(() => {
@@ -287,6 +305,75 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
       .then(
         ({ data }) => setContacts((data ?? []) as FacilityContact[]),
         () => setContacts([])
+      );
+  }, [facilityId]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    if (!supabase) {
+      setCrisisPlanLoading(false);
+      setCrisisPlan(null);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          if (!cancelled) {
+            setCrisisPlan(null);
+            setCrisisPlanLoading(false);
+          }
+          return;
+        }
+        const { data } = await supabase
+          .from('crisis_plans')
+          .select('warning_signs, helpful_strategies, steps')
+          .eq('resident_id', user.id)
+          .maybeSingle();
+        if (!cancelled) {
+          setCrisisPlan((data as CrisisPlanRow | null) ?? null);
+          setCrisisPlanLoading(false);
+        }
+      } catch {
+        if (!cancelled) {
+          setCrisisPlan(null);
+          setCrisisPlanLoading(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!facilityId) {
+      setOnCall(null);
+      return;
+    }
+    const supabase = createClient();
+    if (!supabase) {
+      setOnCall(null);
+      return;
+    }
+    const now = new Date();
+    const hour = now.getHours();
+    const shift: 'day' | 'evening' | 'night' =
+      hour >= 6 && hour < 14 ? 'day' : hour >= 14 && hour < 22 ? 'evening' : 'night';
+    const today = now.toISOString().slice(0, 10);
+    supabase
+      .from('on_call_staff')
+      .select('id, phone, shift')
+      .eq('org_id', facilityId)
+      .eq('date', today)
+      .eq('shift', shift)
+      .maybeSingle()
+      .then(
+        ({ data }) => setOnCall((data as OnCallRow | null) ?? null),
+        () => setOnCall(null)
       );
   }, [facilityId]);
 
@@ -384,48 +471,71 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
           <p className="text-xs font-bold tracking-widest uppercase" style={{ color: MUTED }}>
             Åndedrætsøvelse
           </p>
-
-          <div
-            className="relative flex items-center justify-center"
-            style={{ width: 200, height: 200 }}
-          >
-            {[32, 12, 0].map((offset, i) => (
+          {!breathingActive ? (
+            <button
+              type="button"
+              onClick={() => {
+                setPhaseIdx(0);
+                setBreathingActive(true);
+              }}
+              className="rounded-2xl px-4 py-2.5 text-sm font-semibold"
+              style={{ backgroundColor: 'rgba(255,255,255,0.10)', color: TEXT }}
+            >
+              Start øvelse
+            </button>
+          ) : (
+            <>
               <div
-                key={i}
-                className="absolute rounded-full transition-all"
-                style={{
-                  width: `${current.scale * 120 + offset}px`,
-                  height: `${current.scale * 120 + offset}px`,
-                  backgroundColor:
-                    i === 0
-                      ? 'rgba(99,102,241,0.08)'
-                      : i === 1
-                        ? 'rgba(99,102,241,0.14)'
-                        : undefined,
-                  background:
-                    i === 2
-                      ? 'linear-gradient(135deg,rgba(99,102,241,0.7) 0%,rgba(139,92,246,0.7) 100%)'
-                      : undefined,
-                  boxShadow: i === 2 ? '0 0 32px rgba(99,102,241,0.4)' : undefined,
-                  transitionDuration: `${current.duration}ms`,
-                  transitionTimingFunction: 'cubic-bezier(0.4,0,0.2,1)',
-                }}
+                className="relative flex items-center justify-center"
+                style={{ width: 200, height: 200 }}
               >
-                {i === 2 && (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <p className="text-3xl font-black text-white">{secondsLeft}</p>
+                {[32, 12, 0].map((offset, i) => (
+                  <div
+                    key={i}
+                    className="absolute rounded-full transition-all"
+                    style={{
+                      width: `${current.scale * 120 + offset}px`,
+                      height: `${current.scale * 120 + offset}px`,
+                      backgroundColor:
+                        i === 0
+                          ? 'rgba(99,102,241,0.08)'
+                          : i === 1
+                            ? 'rgba(99,102,241,0.14)'
+                            : undefined,
+                      background:
+                        i === 2
+                          ? 'linear-gradient(135deg,rgba(99,102,241,0.7) 0%,rgba(139,92,246,0.7) 100%)'
+                          : undefined,
+                      boxShadow: i === 2 ? '0 0 32px rgba(99,102,241,0.4)' : undefined,
+                      transitionDuration: `${current.duration}ms`,
+                      transitionTimingFunction: 'cubic-bezier(0.4,0,0.2,1)',
+                    }}
+                  >
+                    {i === 2 && (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <p className="text-3xl font-black text-white">{secondsLeft}</p>
+                      </div>
+                    )}
                   </div>
-                )}
+                ))}
               </div>
-            ))}
-          </div>
 
-          <div className="text-center">
-            <p className="text-xl font-bold text-white">{current.label}</p>
-            <p className="text-sm mt-0.5" style={{ color: MUTED }}>
-              {phaseIdx + 1} / {PHASES.length}
-            </p>
-          </div>
+              <div className="text-center">
+                <p className="text-xl font-bold text-white">{current.label}</p>
+                <p className="text-sm mt-0.5" style={{ color: MUTED }}>
+                  {phaseIdx + 1} / {PHASES.length}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setBreathingActive(false)}
+                  className="mt-2 text-xs font-semibold"
+                  style={{ color: MUTED }}
+                >
+                  Stop øvelse
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Message */}
@@ -437,6 +547,75 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
             Det lyder som en hård stund, {firstName}. Tag det i dit eget tempo — der er ingen
             forventninger.
           </p>
+        </div>
+
+        {/* Step 1 - Din kriseplan */}
+        <div className="mx-5 mb-5 rounded-2xl px-4 py-4" style={{ backgroundColor: CARD_BG, border: CARD_BRD }}>
+          <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: MUTED }}>
+            Trin 1 · Din kriseplan
+          </p>
+          {crisisPlanLoading ? (
+            <p className="text-sm" style={{ color: MUTED }}>
+              Indlæser din kriseplan...
+            </p>
+          ) : !crisisPlan ? (
+            <p className="text-sm" style={{ color: MUTED }}>
+              Der er endnu ikke oprettet en kriseplan. Du kan stadig tilkalde hjælp nedenfor.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {Array.isArray(crisisPlan.warning_signs) && crisisPlan.warning_signs.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                    Advarselstegn
+                  </p>
+                  <ul className="space-y-1">
+                    {crisisPlan.warning_signs.map((item, idx) => (
+                      <li key={`warning-${idx}`} className="text-sm" style={{ color: TEXT }}>
+                        • {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {Array.isArray(crisisPlan.helpful_strategies) &&
+                crisisPlan.helpful_strategies.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                      Det der kan hjælpe
+                    </p>
+                    <ul className="space-y-1">
+                      {crisisPlan.helpful_strategies.map((item, idx) => (
+                        <li key={`help-${idx}`} className="text-sm" style={{ color: TEXT }}>
+                          • {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              {Array.isArray(crisisPlan.steps) && crisisPlan.steps.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                    Kriseskridt
+                  </p>
+                  <div className="space-y-2">
+                    {crisisPlan.steps.map((s, idx) => (
+                      <div key={`step-${idx}`} className="rounded-xl px-3 py-2" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
+                        <p className="text-sm font-semibold" style={{ color: TEXT }}>
+                          {(s.icon?.trim() || '🧭') + ' ' + (s.title?.trim() || `Skridt ${idx + 1}`)}
+                        </p>
+                        {s.description && (
+                          <p className="text-xs mt-0.5" style={{ color: MUTED }}>
+                            {s.description}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Accordion */}
@@ -453,24 +632,46 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
                 Indlæser…
               </p>
             ) : contacts.length === 0 ? (
-              <div
-                className="rounded-xl px-4 py-4 text-center"
-                style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
-              >
-                <p className="text-sm" style={{ color: MUTED }}>
-                  Personalet har endnu ikke tilføjet kontakter — spørg en medarbejder
-                </p>
-              </div>
+              <>
+                {onCall && (
+                  <CallRow
+                    label="Vagthavende personale"
+                    sub="Ring direkte nu"
+                    phone={onCall.phone}
+                    onConfirm={(l, p) => setConfirm({ label: l, phone: p })}
+                  />
+                )}
+                {!onCall && (
+                  <div
+                    className="rounded-xl px-4 py-4 text-center"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
+                  >
+                    <p className="text-sm" style={{ color: MUTED }}>
+                      Personalet har endnu ikke tilføjet kontakter — spørg en medarbejder
+                    </p>
+                  </div>
+                )}
+              </>
             ) : (
-              contacts.map((c) => (
-                <CallRow
-                  key={c.id}
-                  label={c.label}
-                  sub={c.available_hours ?? undefined}
-                  phone={c.phone}
-                  onConfirm={(l, p) => setConfirm({ label: l, phone: p })}
-                />
-              ))
+              <>
+                {onCall && (
+                  <CallRow
+                    label="Vagthavende personale"
+                    sub="Ring direkte nu"
+                    phone={onCall.phone}
+                    onConfirm={(l, p) => setConfirm({ label: l, phone: p })}
+                  />
+                )}
+                {contacts.map((c) => (
+                  <CallRow
+                    key={c.id}
+                    label={c.label}
+                    sub={c.available_hours ?? undefined}
+                    phone={c.phone}
+                    onConfirm={(l, p) => setConfirm({ label: l, phone: p })}
+                  />
+                ))}
+              </>
             )}
           </Section>
 
@@ -527,6 +728,20 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
           <p className="text-xs leading-relaxed" style={{ color: 'rgba(199,210,254,0.85)' }}>
             Personalet kan se, at du har haft det svært i dag — de vil gerne støtte dig.
           </p>
+          <button
+            type="button"
+            onClick={() => {
+              router.push('/park-hub/jording');
+            }}
+            className="mt-2 rounded-xl px-3 py-2 text-xs font-semibold"
+            style={{
+              backgroundColor: 'rgba(255,255,255,0.14)',
+              color: '#E0E7FF',
+              border: '1px solid rgba(224,231,255,0.35)',
+            }}
+          >
+            🌬️ Prøv en ro-øvelse i stedet
+          </button>
         </div>
 
         {/* Tilkald hjælp */}

@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import * as ls from '@/lib/localStore';
 import { LOCAL_KEYS } from '@/types/local';
 import { isResidentUuidForCloud } from '@/lib/residentUuid';
+import { safeRandomUUID } from '@/lib/uuid';
 import type {
   StorageMode,
   CheckIn,
@@ -62,7 +63,7 @@ export async function saveCheckin(
   }
   const entries = ls.getItem<CheckIn[]>(LOCAL_KEYS.checkins) ?? [];
   entries.unshift({
-    id: crypto.randomUUID(),
+    id: safeRandomUUID(),
     resident_id: activeId,
     check_in_date: new Date().toISOString().slice(0, 10),
     energy_level: data.energy_level,
@@ -125,7 +126,7 @@ export async function saveJournalEntry(
   }
 
   const entries = ls.getItem<JournalEntry[]>(LOCAL_KEYS.journal) ?? [];
-  entries.unshift({ id: crypto.randomUUID(), ...entry });
+  entries.unshift({ id: safeRandomUUID(), ...entry });
   ls.setItem(LOCAL_KEYS.journal, entries.slice(0, 50));
   return {};
 }
@@ -304,7 +305,7 @@ export async function savePlot(
     (p) => p.resident_id === activeId && p.slot_index === data.slot_index
   );
   const plot: GardenPlot = {
-    id: idx >= 0 ? plots[idx]!.id : crypto.randomUUID(),
+    id: idx >= 0 ? plots[idx]!.id : safeRandomUUID(),
     resident_id: activeId,
     created_at: idx >= 0 ? plots[idx]!.created_at : new Date().toISOString(),
     ...data,
@@ -408,7 +409,7 @@ export async function saveConversation(
     }
   } else {
     convs.unshift({
-      id: crypto.randomUUID(),
+      id: safeRandomUUID(),
       resident_id: activeId,
       title: data.title,
       messages: data.messages,
@@ -525,7 +526,7 @@ export async function savePlanItem(
   }
   const items = ls.getItem<PlanItem[]>(LOCAL_KEYS.planItems) ?? [];
   items.push({
-    id: crypto.randomUUID(),
+    id: safeRandomUUID(),
     resident_id: activeId,
     created_at: new Date().toISOString(),
     ...data,
@@ -555,7 +556,7 @@ export async function completePlanItem(
   );
   if (!exists) {
     completions.push({
-      id: crypto.randomUUID(),
+      id: safeRandomUUID(),
       resident_id: activeId,
       plan_item_id: planItemId,
       completion_date: date,
