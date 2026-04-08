@@ -2,6 +2,9 @@
 node_modules/
 package-lock.json
 
+# Legacy / experimental app shell (not part of Next.js deploy)
+expo/
+
 # Next.js build output
 .next/
 out/
@@ -45,3 +48,6 @@ linear-import_1.mjs
 
 # Supabase CLI local link state (project ref + pooler; use `supabase link` per machine)
 supabase/.temp/
+
+# iCloud Drive placeholder files (never commit)
+*.icloud
