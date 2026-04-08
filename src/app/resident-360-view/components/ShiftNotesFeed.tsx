@@ -115,9 +115,11 @@ function categoryToFlag(category: string): ShiftNote['flagColor'] {
 interface Props {
   variant?: 'mock' | 'live';
   residentId?: string;
+  carePortalDark?: boolean;
 }
 
-export default function ShiftNotesFeed({ variant = 'mock', residentId }: Props) {
+export default function ShiftNotesFeed({ variant = 'mock', residentId, carePortalDark }: Props) {
+  const d = carePortalDark === true;
   const [search, setSearch] = useState('');
   const [flagFilter, setFlagFilter] = useState<string>('alle');
   const [notes, setNotes] = useState<ShiftNote[]>(() => (variant === 'mock' ? mockShiftNotes : []));
@@ -213,43 +215,93 @@ export default function ShiftNotesFeed({ variant = 'mock', residentId }: Props) 
 
   if (variant === 'live' && loading) {
     return (
-      <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-100">
-          <span className="text-sm font-semibold text-gray-800">{title}</span>
+      <div
+        className={`overflow-hidden rounded-xl border ${d ? '' : 'rounded-lg border-gray-100 bg-white'}`}
+        style={
+          d ? { backgroundColor: 'var(--cp-bg2)', borderColor: 'var(--cp-border)' } : undefined
+        }
+      >
+        <div
+          className={`border-b px-4 py-3 ${d ? '' : 'border-gray-100'}`}
+          style={d ? { borderColor: 'var(--cp-border)' } : undefined}
+        >
+          <span
+            className={`text-sm font-semibold ${d ? '' : 'text-gray-800'}`}
+            style={d ? { color: 'var(--cp-text)' } : undefined}
+          >
+            {title}
+          </span>
         </div>
-        <div className="py-10 text-center text-xs text-gray-400">Henter noter…</div>
+        <div
+          className={`py-10 text-center text-xs ${d ? '' : 'text-gray-400'}`}
+          style={d ? { color: 'var(--cp-muted)' } : undefined}
+        >
+          Henter noter…
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
-      <div className="px-4 py-3 border-b border-gray-100">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-semibold text-gray-800">{title}</span>
+    <div
+      className={`overflow-hidden rounded-xl border ${d ? '' : 'rounded-lg border-gray-100 bg-white'}`}
+      style={d ? { backgroundColor: 'var(--cp-bg2)', borderColor: 'var(--cp-border)' } : undefined}
+    >
+      <div
+        className={`border-b px-4 py-3 ${d ? '' : 'border-gray-100'}`}
+        style={d ? { borderColor: 'var(--cp-border)' } : undefined}
+      >
+        <div className="mb-3 flex items-center justify-between">
+          <span
+            className={`text-sm font-semibold ${d ? '' : 'text-gray-800'}`}
+            style={d ? { color: 'var(--cp-text)' } : undefined}
+          >
+            {title}
+          </span>
           {variant === 'mock' && (
             <button
               type="button"
-              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg px-2.5 py-1.5 transition-colors"
+              className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs transition-colors ${
+                d
+                  ? 'border-[var(--cp-border)] text-[var(--cp-muted)] hover:bg-white/5'
+                  : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700'
+              }`}
             >
               <Download size={12} /> Eksportér
             </button>
           )}
         </div>
         {variant === 'live' && (
-          <p className="text-[10px] text-gray-500 mb-2">
+          <p
+            className={`mb-2 text-[10px] ${d ? '' : 'text-gray-500'}`}
+            style={d ? { color: 'var(--cp-muted2)' } : undefined}
+          >
             Seneste godkendte journalnotater (ikke kladder). Også kort vist under &ldquo;Journal i
             dag&rdquo; ovenfor.
           </p>
         )}
         <div className="flex gap-2">
-          <div className="flex-1 relative">
-            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <div className="relative flex-1">
+            <Search
+              size={13}
+              className={`absolute left-3 top-1/2 -translate-y-1/2 ${d ? 'text-[var(--cp-muted2)]' : 'text-gray-400'}`}
+            />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Søg i noter..."
-              className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#1D9E75] transition-colors"
+              className={`w-full rounded-lg border py-2 pl-8 pr-3 text-sm focus:outline-none ${
+                d ? '' : 'border-gray-200 focus:border-[#1D9E75]'
+              }`}
+              style={
+                d
+                  ? {
+                      borderColor: 'var(--cp-border)',
+                      backgroundColor: 'var(--cp-bg3)',
+                      color: 'var(--cp-text)',
+                    }
+                  : undefined
+              }
             />
           </div>
           <div className="flex gap-1">
@@ -258,11 +310,24 @@ export default function ShiftNotesFeed({ variant = 'mock', residentId }: Props) 
                 key={`notefilter-${f}`}
                 type="button"
                 onClick={() => setFlagFilter(f)}
-                className={`px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
-                  flagFilter === f
-                    ? 'bg-gray-800 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                className={`rounded-lg px-2.5 py-2 text-xs font-medium transition-all ${
+                  d
+                    ? flagFilter === f
+                      ? ''
+                      : 'bg-[var(--cp-bg3)] text-[var(--cp-muted)] hover:bg-white/5'
+                    : flagFilter === f
+                      ? 'bg-gray-800 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
+                style={
+                  d && flagFilter === f
+                    ? {
+                        backgroundColor: 'var(--cp-green-dim)',
+                        color: 'var(--cp-green)',
+                        boxShadow: '0 0 0 1px rgba(45,212,160,0.2)',
+                      }
+                    : undefined
+                }
               >
                 {f === 'alle' ? 'Alle' : f === 'roed' ? '🔴' : f === 'gul' ? '🟡' : '🟢'}
               </button>
@@ -271,41 +336,80 @@ export default function ShiftNotesFeed({ variant = 'mock', residentId }: Props) 
         </div>
       </div>
 
-      <div className="divide-y divide-gray-50 max-h-[600px] overflow-y-auto scrollbar-hide">
+      <div
+        className={`max-h-[600px] divide-y overflow-y-auto scrollbar-hide ${d ? 'divide-[var(--cp-border)]' : 'divide-gray-50'}`}
+      >
         {variant === 'live' && !loading && notes.length === 0 && (
-          <div className="py-10 text-center text-xs text-gray-400">Ingen godkendte notater</div>
+          <div
+            className={`py-10 text-center text-xs ${d ? '' : 'text-gray-400'}`}
+            style={d ? { color: 'var(--cp-muted)' } : undefined}
+          >
+            Ingen godkendte notater
+          </div>
         )}
 
         {Object.entries(grouped).map(([date, dayNotes]) => (
           <div key={`date-group-${date}`}>
-            <div className="px-4 py-2 bg-gray-50 sticky top-0">
-              <span className="text-xs font-semibold text-gray-500">{date}</span>
+            <div
+              className={`sticky top-0 px-4 py-2 ${d ? '' : 'bg-gray-50'}`}
+              style={d ? { backgroundColor: 'var(--cp-bg3)' } : undefined}
+            >
+              <span
+                className={`text-xs font-semibold ${d ? '' : 'text-gray-500'}`}
+                style={d ? { color: 'var(--cp-muted)' } : undefined}
+              >
+                {date}
+              </span>
             </div>
             {dayNotes.map((note) => {
               const fc = flagConfig[note.flagColor];
               const sl = shiftLabels[note.shift];
               return (
-                <div key={note.id} className="px-4 py-4 hover:bg-gray-50 transition-colors">
+                <div
+                  key={note.id}
+                  className={`px-4 py-4 transition-colors ${d ? 'hover:bg-white/[0.03]' : 'hover:bg-gray-50'}`}
+                >
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[#0F1B2D] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                    <div
+                      className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                      style={
+                        d
+                          ? {
+                              background:
+                                'linear-gradient(135deg, rgba(45,212,160,0.9) 0%, #0d9488 100%)',
+                            }
+                          : { backgroundColor: '#0F1B2D' }
+                      }
+                    >
                       {note.staffInitials}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                        <span className="text-sm font-semibold text-gray-800">
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                        <span
+                          className={`text-sm font-semibold ${d ? '' : 'text-gray-800'}`}
+                          style={d ? { color: 'var(--cp-text)' } : undefined}
+                        >
                           {note.staffName}
                         </span>
-                        <span className="text-xs text-gray-500">
+                        <span
+                          className={`text-xs ${d ? '' : 'text-gray-500'}`}
+                          style={d ? { color: 'var(--cp-muted)' } : undefined}
+                        >
                           {sl.emoji} {sl.label}
                         </span>
                         <span
-                          className="text-xs px-2 py-0.5 rounded font-medium"
+                          className="rounded px-2 py-0.5 text-xs font-medium"
                           style={{ backgroundColor: fc.bg, color: fc.color }}
                         >
                           {fc.label}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-700 leading-relaxed">{note.body}</p>
+                      <p
+                        className={`text-sm leading-relaxed ${d ? '' : 'text-gray-700'}`}
+                        style={d ? { color: 'var(--cp-muted)' } : undefined}
+                      >
+                        {note.body}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -316,7 +420,12 @@ export default function ShiftNotesFeed({ variant = 'mock', residentId }: Props) 
 
         {filtered.length === 0 && notes.length > 0 && (
           <div className="py-12 text-center">
-            <div className="text-gray-400 text-sm">Ingen noter matcher søgningen</div>
+            <div
+              className={`text-sm ${d ? '' : 'text-gray-400'}`}
+              style={d ? { color: 'var(--cp-muted)' } : undefined}
+            >
+              Ingen noter matcher søgningen
+            </div>
           </div>
         )}
       </div>

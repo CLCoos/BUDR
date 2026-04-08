@@ -79,7 +79,20 @@ const TAB_BLURB: Record<string, string> = {
     'Samme have som i Lys — med demo-animationer, så teamet kan vise borgerens fremskridt visuelt.',
 };
 
-export default function ResidentsDemoGrid() {
+export type ResidentsDemoGridProps = {
+  /** Sti til beboerlisten (router.push ved luk af fokus) */
+  residentsListPath?: string;
+  /** Byg sti til enkel beboer inkl. base */
+  residentPath?: (residentId: string) => string;
+};
+
+const DEFAULT_RESIDENTS_LIST = '/care-portal-demo/residents';
+const defaultResidentPath = (id: string) => `/care-portal-demo/residents/${id}`;
+
+export default function ResidentsDemoGrid({
+  residentsListPath = DEFAULT_RESIDENTS_LIST,
+  residentPath = defaultResidentPath,
+}: ResidentsDemoGridProps = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const focusResident = searchParams.get('resident');
@@ -183,7 +196,7 @@ export default function ResidentsDemoGrid() {
             </div>
             <div className="flex shrink-0 flex-col items-stretch gap-2 sm:flex-row sm:items-center">
               <Link
-                href={`/care-portal-demo/residents/${focusResident}${focusTab ? `?tab=${encodeURIComponent(focusTab)}` : ''}`}
+                href={`${residentPath(focusResident)}${focusTab ? `?tab=${encodeURIComponent(focusTab)}` : ''}`}
                 className="inline-flex items-center justify-center gap-1 rounded-lg px-3 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90"
                 style={{
                   background: 'linear-gradient(135deg, #2dd4a0 0%, #0d9488 100%)',
@@ -195,7 +208,7 @@ export default function ResidentsDemoGrid() {
               </Link>
               <button
                 type="button"
-                onClick={() => router.push('/care-portal-demo/residents')}
+                onClick={() => router.push(residentsListPath)}
                 className="inline-flex items-center justify-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-[rgba(255,255,255,0.04)]"
                 style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-muted)' }}
               >
@@ -264,7 +277,7 @@ export default function ResidentsDemoGrid() {
           {filtered.map((r) => (
             <li key={r.id} id={`demo-resident-row-${r.id}`}>
               <Link
-                href={`/care-portal-demo/residents/${r.id}`}
+                href={residentPath(r.id)}
                 className={`flex min-h-[52px] items-center gap-4 px-4 py-3 transition-colors hover:bg-[rgba(255,255,255,0.04)] active:bg-[rgba(255,255,255,0.06)] ${
                   focusResident === r.id
                     ? 'ring-1 ring-inset ring-[rgba(45,212,160,0.35)] bg-[rgba(45,212,160,0.06)]'

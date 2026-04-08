@@ -269,7 +269,10 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
 
   return (
     <PortalShell>
-      <div className="p-6 max-w-screen-lg">
+      <div
+        className="mx-auto max-w-5xl px-4 py-6 pb-28 sm:px-6 lg:px-8"
+        style={{ color: 'var(--cp-text)' }}
+      >
         {/* Dynamic header */}
         <ResidentHeader
           residentId={residentId}
@@ -287,31 +290,48 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
         />
 
         {/* Action bar */}
-        <div className="flex flex-wrap items-center justify-end gap-2 mt-4">
-          <ResidentExportModule exportInput={exportInput} />
-          <WriteJournalEntry residentId={residentId} residentName={resident.name} />
+        <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
+          <ResidentExportModule exportInput={exportInput} carePortalDark />
+          <WriteJournalEntry residentId={residentId} residentName={resident.name} carePortalDark />
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-0.5 mt-3 mb-5 border-b border-gray-200 overflow-x-auto">
-          {ALL_TABS.map((t) => (
-            <Link
-              key={t}
-              href={`/resident-360-view/${residentId}?tab=${t}`}
-              className={`px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap ${
-                activeTab === t
-                  ? 'border-[#0F1B2D] text-[#0F1B2D]'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              {TAB_LABELS[t]}
-              {t === 'dagsplan' && proposals.length > 0 && (
-                <span className="ml-1.5 w-4 h-4 rounded-full bg-amber-400 text-white text-[10px] font-bold inline-flex items-center justify-center">
-                  {proposals.length}
-                </span>
-              )}
-            </Link>
-          ))}
+        {/* Tabs — matcher mørk portal / demo */}
+        <div
+          className="mb-6 mt-4 flex gap-1 overflow-x-auto rounded-xl border p-1"
+          style={{
+            borderColor: 'var(--cp-border)',
+            backgroundColor: 'var(--cp-bg3)',
+          }}
+        >
+          {ALL_TABS.map((t) => {
+            const on = activeTab === t;
+            return (
+              <Link
+                key={t}
+                href={`/resident-360-view/${residentId}?tab=${t}`}
+                className="whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium transition-all sm:px-4"
+                style={
+                  on
+                    ? {
+                        backgroundColor: 'var(--cp-green-dim)',
+                        color: 'var(--cp-green)',
+                        boxShadow: '0 0 0 1px rgba(45,212,160,0.2)',
+                      }
+                    : { color: 'var(--cp-muted)' }
+                }
+              >
+                {TAB_LABELS[t]}
+                {t === 'dagsplan' && proposals.length > 0 && (
+                  <span
+                    className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
+                    style={{ backgroundColor: 'var(--cp-amber)' }}
+                  >
+                    {proposals.length}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
         </div>
 
         {/* Tab content */}

@@ -181,7 +181,25 @@ function SectionCard({
   );
 }
 
-export default function ResidentDemo360Client({ residentId }: { residentId: string }) {
+export type ResidentDemo360NavLinks = {
+  residentsList: string;
+  assistant: string;
+  handover: string;
+};
+
+const DEFAULT_DEMO_NAV: ResidentDemo360NavLinks = {
+  residentsList: '/care-portal-demo/residents',
+  assistant: '/care-portal-demo/assistant',
+  handover: '/care-portal-demo/handover',
+};
+
+export default function ResidentDemo360Client({
+  residentId,
+  navLinks = DEFAULT_DEMO_NAV,
+}: {
+  residentId: string;
+  navLinks?: ResidentDemo360NavLinks;
+}) {
   const detail = useMemo(() => getResidentDemoDetail(residentId), [residentId]);
   const unified = useMemo(() => (detail ? buildUnifiedResidentStatus(detail) : null), [detail]);
   const searchParams = useSearchParams();
@@ -249,7 +267,7 @@ export default function ResidentDemo360Client({ residentId }: { residentId: stri
           Kunne ikke indlæse demo for denne beboer.
         </p>
         <Link
-          href="/care-portal-demo/residents"
+          href={navLinks.residentsList}
           className="mt-4 inline-block text-sm font-medium underline-offset-4 hover:underline"
           style={{ color: 'var(--cp-green)' }}
         >
@@ -280,7 +298,7 @@ export default function ResidentDemo360Client({ residentId }: { residentId: stri
     <div className="pb-24 pt-2 sm:pb-10">
       <div className="mx-auto max-w-5xl px-3 sm:px-6">
         <Link
-          href="/care-portal-demo/residents"
+          href={navLinks.residentsList}
           className="mb-4 inline-flex items-center gap-2 text-sm font-medium transition-opacity hover:opacity-80"
           style={{ color: 'var(--cp-muted)' }}
         >
@@ -751,7 +769,7 @@ export default function ResidentDemo360Client({ residentId }: { residentId: stri
                     </button>
                   ))}
                   <Link
-                    href="/care-portal-demo/assistant"
+                    href={navLinks.assistant}
                     className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-white transition-opacity hover:opacity-90 sm:text-sm"
                     style={{
                       background: 'linear-gradient(135deg, #2dd4a0 0%, #0d9488 100%)',
@@ -1025,11 +1043,11 @@ export default function ResidentDemo360Client({ residentId }: { residentId: stri
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               <Link
-                href="/care-portal-demo/handover"
+                href={navLinks.handover}
                 className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors hover:bg-[rgba(255,255,255,0.04)]"
                 style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-muted)' }}
               >
-                Åbn vagtoverdragelse (demo)
+                Åbn vagtoverdragelse
               </Link>
               <button
                 type="button"

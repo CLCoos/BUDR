@@ -88,9 +88,18 @@ interface Props {
   compact?: boolean;
   variant?: 'mock' | 'live';
   residentId?: string;
+  /** Mørke kort som live Care Portal / demo */
+  carePortalDark?: boolean;
 }
 
-export default function GoalProgress({ compact, variant = 'mock', residentId }: Props) {
+export default function GoalProgress({
+  compact,
+  variant = 'mock',
+  residentId,
+  carePortalDark,
+}: Props) {
+  const d = carePortalDark === true;
+  const accent = d ? 'var(--cp-green)' : '#1D9E75';
   const [goals, setGoals] = useState<Goal[]>(() => (variant === 'mock' ? mockGoals : []));
   const [loading, setLoading] = useState(variant === 'live');
   const [expanded, setExpanded] = useState<string>(() =>
@@ -199,47 +208,104 @@ export default function GoalProgress({ compact, variant = 'mock', residentId }: 
 
   if (variant === 'live' && loading) {
     return (
-      <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
-          <Target size={15} className="text-[#1D9E75]" />
-          <span className="text-sm font-semibold text-gray-800">Mål</span>
+      <div
+        className={`overflow-hidden rounded-xl border ${d ? '' : 'rounded-lg border-gray-100 bg-white'}`}
+        style={
+          d ? { backgroundColor: 'var(--cp-bg2)', borderColor: 'var(--cp-border)' } : undefined
+        }
+      >
+        <div
+          className={`flex items-center gap-2 border-b px-4 py-3 ${d ? '' : 'border-gray-100'}`}
+          style={d ? { borderColor: 'var(--cp-border)' } : undefined}
+        >
+          <Target size={15} style={{ color: accent }} />
+          <span
+            className={`text-sm font-semibold ${d ? '' : 'text-gray-800'}`}
+            style={d ? { color: 'var(--cp-text)' } : undefined}
+          >
+            Mål
+          </span>
         </div>
-        <div className="px-4 py-6 text-center text-xs text-gray-400">Henter mål…</div>
+        <div
+          className={`px-4 py-6 text-center text-xs ${d ? '' : 'text-gray-400'}`}
+          style={d ? { color: 'var(--cp-muted)' } : undefined}
+        >
+          Henter mål…
+        </div>
       </div>
     );
   }
 
   if (variant === 'live' && goals.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
-          <Target size={15} className="text-[#1D9E75]" />
-          <span className="text-sm font-semibold text-gray-800">Mål</span>
+      <div
+        className={`overflow-hidden rounded-xl border ${d ? '' : 'rounded-lg border-gray-100 bg-white'}`}
+        style={
+          d ? { backgroundColor: 'var(--cp-bg2)', borderColor: 'var(--cp-border)' } : undefined
+        }
+      >
+        <div
+          className={`flex items-center gap-2 border-b px-4 py-3 ${d ? '' : 'border-gray-100'}`}
+          style={d ? { borderColor: 'var(--cp-border)' } : undefined}
+        >
+          <Target size={15} style={{ color: accent }} />
+          <span
+            className={`text-sm font-semibold ${d ? '' : 'text-gray-800'}`}
+            style={d ? { color: 'var(--cp-text)' } : undefined}
+          >
+            Mål
+          </span>
         </div>
-        <div className="px-4 py-6 text-center text-xs text-gray-400">Ingen aktive mål</div>
+        <div
+          className={`px-4 py-6 text-center text-xs ${d ? '' : 'text-gray-400'}`}
+          style={d ? { color: 'var(--cp-muted)' } : undefined}
+        >
+          Ingen aktive mål
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+    <div
+      className={`overflow-hidden rounded-xl border ${d ? '' : 'rounded-lg border-gray-100 bg-white'}`}
+      style={d ? { backgroundColor: 'var(--cp-bg2)', borderColor: 'var(--cp-border)' } : undefined}
+    >
+      <div
+        className={`flex items-center justify-between border-b px-4 py-3 ${d ? '' : 'border-gray-100'}`}
+        style={d ? { borderColor: 'var(--cp-border)' } : undefined}
+      >
         <div className="flex items-center gap-2">
-          <Target size={15} className="text-[#1D9E75]" />
-          <span className="text-sm font-semibold text-gray-800">Mål</span>
-          <span className="text-xs text-gray-400">{goals.length} aktive</span>
+          <Target size={15} style={{ color: accent }} />
+          <span
+            className={`text-sm font-semibold ${d ? '' : 'text-gray-800'}`}
+            style={d ? { color: 'var(--cp-text)' } : undefined}
+          >
+            Mål
+          </span>
+          <span
+            className={`text-xs ${d ? '' : 'text-gray-400'}`}
+            style={d ? { color: 'var(--cp-muted)' } : undefined}
+          >
+            {goals.length} aktive
+          </span>
         </div>
         {!compact && variant === 'mock' && (
           <button
             type="button"
-            className="flex items-center gap-1 text-xs text-[#1D9E75] hover:underline"
+            className={`flex items-center gap-1 text-xs hover:underline ${d ? '' : 'text-[#1D9E75]'}`}
+            style={d ? { color: 'var(--cp-green)' } : undefined}
           >
             <Plus size={12} /> Tilføj mål
           </button>
         )}
       </div>
 
-      <div className={compact ? '' : 'divide-y divide-gray-50'}>
+      <div
+        className={
+          compact ? '' : d ? 'divide-y divide-[var(--cp-border)]' : 'divide-y divide-gray-50'
+        }
+      >
         {goals.map((goal) => {
           const { done, total, pct } = getProgress(goal);
           const isExpanded = !compact && expanded === goal.id;
@@ -249,66 +315,127 @@ export default function GoalProgress({ compact, variant = 'mock', residentId }: 
               <button
                 type="button"
                 onClick={() => !compact && setExpanded(isExpanded ? '' : goal.id)}
-                className={`w-full px-4 py-3 text-left transition-colors ${!compact ? 'hover:bg-gray-50' : ''}`}
+                className={`w-full px-4 py-3 text-left transition-colors ${
+                  !compact && !d ? 'hover:bg-gray-50' : ''
+                } ${!compact && d ? 'hover:bg-white/[0.04]' : ''}`}
               >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="text-sm font-medium text-gray-800 leading-snug">{goal.title}</div>
+                <div className="mb-2 flex items-start justify-between gap-2">
+                  <div
+                    className={`text-sm font-medium leading-snug ${d ? '' : 'text-gray-800'}`}
+                    style={d ? { color: 'var(--cp-text)' } : undefined}
+                  >
+                    {goal.title}
+                  </div>
                   <span
-                    className="text-xs font-bold tabular-nums flex-shrink-0"
-                    style={{ color: '#1D9E75' }}
+                    className="flex-shrink-0 text-xs font-bold tabular-nums"
+                    style={{ color: accent }}
                   >
                     {pct}%
                   </span>
                 </div>
-                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mb-1.5">
+                <div
+                  className={`mb-1.5 h-1.5 overflow-hidden rounded-full ${d ? '' : 'bg-gray-100'}`}
+                  style={d ? { backgroundColor: 'var(--cp-bg3)' } : undefined}
+                >
                   <div
                     className="h-full rounded-full transition-all duration-500"
-                    style={{ width: `${pct}%`, backgroundColor: '#1D9E75' }}
+                    style={{ width: `${pct}%`, backgroundColor: accent }}
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <div className="text-xs text-gray-400">
+                  <div
+                    className={`text-xs ${d ? '' : 'text-gray-400'}`}
+                    style={d ? { color: 'var(--cp-muted)' } : undefined}
+                  >
                     {done}/{total} trin{goal.createdBy !== '—' ? ` · ${goal.createdBy}` : ''}
                   </div>
-                  <div className="text-xs text-gray-400">{goal.createdAt}</div>
+                  <div
+                    className={`text-xs ${d ? '' : 'text-gray-400'}`}
+                    style={d ? { color: 'var(--cp-muted)' } : undefined}
+                  >
+                    {goal.createdAt}
+                  </div>
                 </div>
               </button>
 
               {isExpanded && (
-                <div className="px-4 pb-4 border-t border-gray-50">
+                <div
+                  className={`border-t px-4 pb-4 ${d ? '' : 'border-gray-50'}`}
+                  style={d ? { borderColor: 'var(--cp-border)' } : undefined}
+                >
                   <div className="relative pt-2">
-                    <div className="absolute left-3 top-4 bottom-2 w-0.5 bg-gray-100" />
+                    <div
+                      className={`absolute bottom-2 left-3 top-4 w-0.5 ${d ? '' : 'bg-gray-100'}`}
+                      style={d ? { backgroundColor: 'var(--cp-border)' } : undefined}
+                    />
                     <div className="space-y-2.5">
                       {goal.steps.map((step, idx) => {
                         const isLocked = idx > 0 && !goal.steps[idx - 1].completed;
                         return (
                           <div key={step.id} className="flex items-start gap-3 relative">
                             <div
-                              className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 z-10 ${
+                              className={`z-10 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full ${
                                 step.completed
-                                  ? 'bg-[#1D9E75]'
+                                  ? ''
                                   : isLocked
-                                    ? 'bg-gray-100'
-                                    : 'bg-white border-2 border-[#1D9E75]/40'
+                                    ? d
+                                      ? ''
+                                      : 'bg-gray-100'
+                                    : d
+                                      ? 'border-2'
+                                      : 'border-2 border-[#1D9E75]/40 bg-white'
                               }`}
+                              style={
+                                step.completed
+                                  ? { backgroundColor: accent }
+                                  : isLocked
+                                    ? d
+                                      ? { backgroundColor: 'var(--cp-bg3)' }
+                                      : undefined
+                                    : d
+                                      ? {
+                                          borderColor: 'rgba(45,212,160,0.45)',
+                                          backgroundColor: 'var(--cp-bg2)',
+                                        }
+                                      : undefined
+                              }
                             >
                               {step.completed ? (
                                 <CheckCircle2 size={12} className="text-white" />
                               ) : (
                                 <Circle
                                   size={12}
-                                  className={isLocked ? 'text-gray-300' : 'text-[#1D9E75]/40'}
+                                  className={
+                                    isLocked
+                                      ? d
+                                        ? 'text-[var(--cp-muted2)]'
+                                        : 'text-gray-300'
+                                      : d
+                                        ? ''
+                                        : 'text-[#1D9E75]/40'
+                                  }
+                                  style={
+                                    !isLocked && d ? { color: 'rgba(45,212,160,0.5)' } : undefined
+                                  }
                                 />
                               )}
                             </div>
                             <div className={`flex-1 pt-0.5 ${isLocked ? 'opacity-40' : ''}`}>
                               <div
-                                className={`text-xs ${step.completed ? 'line-through text-gray-400' : 'text-gray-700'}`}
+                                className={`text-xs ${
+                                  step.completed
+                                    ? d
+                                      ? 'text-[var(--cp-muted)] line-through'
+                                      : 'line-through text-gray-400'
+                                    : d
+                                      ? 'text-[var(--cp-text)]'
+                                      : 'text-gray-700'
+                                }`}
                               >
                                 {step.text}
                               </div>
                               {step.completedAt && (
-                                <div className="text-xs text-[#1D9E75] mt-0.5">
+                                <div className="mt-0.5 text-xs" style={{ color: accent }}>
                                   ✓ {step.completedAt}
                                 </div>
                               )}

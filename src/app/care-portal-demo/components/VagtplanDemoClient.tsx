@@ -33,7 +33,14 @@ function labelType(t: DemoShiftType): string {
   }
 }
 
-export default function VagtplanDemoClient() {
+type VagtplanDemoClientProps = {
+  /** Rodsti uden trailing slash, fx `/care-portal-demo/vagtplan` eller `/care-portal-vagtplan` */
+  basePath?: string;
+};
+
+export default function VagtplanDemoClient({
+  basePath = '/care-portal-demo/vagtplan',
+}: VagtplanDemoClientProps) {
   const [shifts, setShifts] = useState<DemoShift[]>([]);
   const [mounted, setMounted] = useState(false);
   const [addDate, setAddDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -118,7 +125,7 @@ export default function VagtplanDemoClient() {
             Demo-data gemmes i denne browser. Tilføj eller fjern vagter — lønberegningen opdateres
             på siden{' '}
             <Link
-              href="/care-portal-demo/vagtplan/loen"
+              href={`${basePath}/loen`}
               className="font-medium underline-offset-2 hover:underline"
               style={{ color: 'var(--cp-blue)' }}
             >
@@ -128,7 +135,7 @@ export default function VagtplanDemoClient() {
           </p>
         </div>
         <Link
-          href="/care-portal-demo/vagtplan/loen"
+          href={`${basePath}/loen`}
           className="inline-flex items-center gap-2 self-start rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors"
           style={{
             borderColor: 'var(--cp-border)',

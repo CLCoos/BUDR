@@ -22,6 +22,10 @@ function isCarePortalRoute(pathname: string): boolean {
     pathname.startsWith('/care-portal-settings') ||
     pathname.startsWith('/care-portal-import') ||
     pathname.startsWith('/care-portal-assistant') ||
+    pathname.startsWith('/care-portal-vagtplan') ||
+    pathname.startsWith('/care-portal-beskeder') ||
+    pathname.startsWith('/care-portal-residents') ||
+    pathname.startsWith('/care-portal-resident-preview') ||
     pathname.startsWith('/handover-workspace') ||
     pathname.startsWith('/resident-360-view')
   );
@@ -131,6 +135,14 @@ export const config = {
     '/care-portal-import/:path*',
     '/care-portal-assistant',
     '/care-portal-assistant/:path*',
+    '/care-portal-vagtplan',
+    '/care-portal-vagtplan/:path*',
+    '/care-portal-beskeder',
+    '/care-portal-beskeder/:path*',
+    '/care-portal-residents',
+    '/care-portal-residents/:path*',
+    '/care-portal-resident-preview',
+    '/care-portal-resident-preview/:path*',
     '/handover-workspace',
     '/handover-workspace/:path*',
     '/resident-360-view',

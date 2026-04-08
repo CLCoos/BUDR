@@ -1,6 +1,8 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { parseStaffOrgId } from '@/lib/staffOrgScope';
 
 export interface ImportRow {
   display_name: string;
@@ -26,10 +28,36 @@ function getServiceClient() {
 }
 
 export async function importResidentsAction(rows: ImportRow[]): Promise<ImportResult> {
-  const supabase = getServiceClient();
+  const server = await createServerSupabaseClient();
+  if (!server) {
+    return {
+      inserted: 0,
+      skipped: 0,
+      errors: ['Serveren er ikke konfigureret til Supabase (mangler URL/nøgle).'],
+    };
+  }
+  const {
+    data: { user },
+  } = await server.auth.getUser();
+  if (!user) {
+    return {
+      inserted: 0,
+      skipped: 0,
+      errors: ['Du skal være logget ind i Care Portal for at importere.'],
+    };
+  }
+  const orgId = parseStaffOrgId(user.user_metadata?.org_id);
+  if (!orgId) {
+    return {
+      inserted: 0,
+      skipped: 0,
+      errors: [
+        'Din bruger mangler gyldig org_id i Supabase Auth (User metadata). Uden organisation kan vi ikke knytte beboere til jeres bosted.',
+      ],
+    };
+  }
 
-  const { data: org } = await supabase.from('organisations').select('id').limit(1).maybeSingle();
-  const orgId = org?.id ?? null;
+  const supabase = getServiceClient();
 
   let inserted = 0;
   let skipped = 0;

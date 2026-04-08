@@ -357,13 +357,13 @@ export default function HandoverClient({ carePortalDark = false }: HandoverClien
           Dashboard — journal og bekymringsnotater
         </Link>
         <Link
-          href="/care-portal-demo/beskeder"
+          href="/care-portal-beskeder"
           className="underline-offset-2 hover:underline"
           style={{ color: '#7F77DD' }}
         >
-          Demo beskeder
+          Beskeder
         </Link>
-        <span className="text-xs opacity-80">(live beskeder — kommende)</span>
+        <span className="text-xs opacity-80">(simulerede tråde — som i portal-demo)</span>
       </div>
 
       {/* Header */}

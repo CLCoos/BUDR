@@ -13,7 +13,13 @@ import {
   formatKr,
 } from '@/lib/demoShiftPlan';
 
-export default function LoenDemoClient() {
+type LoenDemoClientProps = {
+  basePath?: string;
+};
+
+export default function LoenDemoClient({
+  basePath = '/care-portal-demo/vagtplan',
+}: LoenDemoClientProps) {
   const [shifts, setShifts] = useState<DemoShift[]>([]);
   const [vacation, setVacation] = useState<DemoVacationDay[]>([]);
   const [mounted, setMounted] = useState(false);
@@ -47,7 +53,7 @@ export default function LoenDemoClient() {
   return (
     <div className="mx-auto max-w-2xl p-6">
       <Link
-        href="/care-portal-demo/vagtplan"
+        href={basePath}
         className="text-xs font-medium hover:underline"
         style={{ color: 'var(--cp-blue)' }}
       >

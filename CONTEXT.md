@@ -2,7 +2,9 @@
 
 **Til AI/assistenter:** Læs denne fil først. Kort indgang: [`AGENTS.md`](./AGENTS.md).
 
-**Sidst opdateret (manuelt):** 2026-04-06 — inkl. live vagtoverlevering (`/handover-workspace`): beboerliste fra `care_residents` + dagens `park_daily_checkin` til trafiklys; samt live 360° overblik: `GoalProgress` / `ShiftNotesFeed` mod `park_goals` + godkendt `journal_entries` (demo/ prototype `Resident360Client` fortsat `variant="mock"`).
+**Sidst opdateret (manuelt):** 2026-04-09 — **Live 360°** (`/resident-360-view/[id]`): **mørkt Care Portal-design** (`var(--cp-*)`) på header, overblikskort, tabs og widgets; hurtige genveje (vagtoverlevering, faglig støtte, dagsplan, vagtnotat). **Dataimport** (`importResidentsAction`): beboere knyttes til den **loggede medarbejders `org_id`**. **Testbosted:** `scripts/seed-bingbong-demo.sql` + `user_metadata.org_id`; `NEXT_PUBLIC_CARE_PORTAL_SIMULATED_DATA=false` for DB-drevet dashboard/360°.
+
+**Forrige:** Live Care Portal (`PortalShell`) matcher demo-skallen: `CarePortalTopNav` (glas + dokumentsøgning), mørk mobil-header, sidemenu med **Vagtplan**, **Beskeder**, **Borger-app (Lys)**; nye ruter `/care-portal-vagtplan`, `/care-portal-beskeder`, `/care-portal-residents`, `/care-portal-resident-preview/[id]` (sidstnævnte: demo 360° bag login). **Pilot-simulering:** `NEXT_PUBLIC_CARE_PORTAL_SIMULATED_DATA` (`true` / `false`); uden værdi er det **kun i development** simuleret dashboard som demo — i **production** skal pilot sætte `=true` for demo-widgets + simuleret beboer-grid. Se `src/lib/carePortalPilotSimulated.ts`.
 
 ---
 
@@ -15,7 +17,7 @@
 - **Haven / Lys-oplevelse:** `havenGamification.ts`, `havenCustomization.ts`, udvidet haven-UI (`HavenGardenScene` m.fl.), **Lys**-layouts/onboarding/chrome (`park-hub/layout.tsx`, `LysOnboarding`, `LysStatusChrome`, `useOnlineStatus`).
 - **Analytics:** `AnalyticsGate.tsx`, `Ga4Scripts.tsx`, `src/lib/analyticsConsent.ts` / `analytics.ts` — GA4 kun når måling er tilladt; `NEXT_PUBLIC_GA_MEASUREMENT_ID` (valgfrit), `NEXT_PUBLIC_GA_BYPASS_CONSENT` til test.
 - **Vagtoverlevering (live):** `HandoverClient` loader org-beboere via `resolveStaffOrgResidents`; progress og tom/loading-tilstand uden demo-banner når data er reel.
-- **360° overblik (live):** `ResidentOverblikTab` viser kompakte **Mål** (`park_goals` / `park_goal_steps`) og **Journal (godkendt)**-feed (`ShiftNotesFeed` live) under dagsplan/journal-grid.
+- **360° overblik (live):** `ResidentHeader`, `ResidentOverblikTab`, `GoalProgress` / `ShiftNotesFeed` (valgfri `carePortalDark`), eksport og **Skriv notat** matcher **PortalShell**-paletten; data som før (**Mål** fra `park_goals` / `park_goal_steps`, godkendt journal i `ShiftNotesFeed`).
 - **Marketing / institutioner:** `https://…/institutioner` — institutionssti inkl. anonym case (tillid) og **sikkerhed/governance** til IT/DPO (Netlify, Supabase, RLS, journal kladde/godkendt, Anthropic ved AI); link fra forsidenav og `HomeLanding`-intro.
 - **Marketing / kontakt:** `POST /api/marketing/contact` gemmer henvendelser i `marketing_contact_submissions` (migration `20260406180000_marketing_contact_submissions.sql`); kræver **`SUPABASE_SERVICE_ROLE_KEY`** på serveren. Formular på forsiden (`#kontakt`) og `/institutioner#kontakt`. Privatliv: opdateret afsnit om kontaktformular.
 - **Marketing / SEO-landingssider:** Under `/for-botilbud/` — `journal-og-digital-tilsyn`, `varsling-socialpsykiatri`, `plan-og-medicinoverblik` (indhold i `src/lib/marketing/seoIntentContent.ts`, UI `SeoIntentLanding.tsx`). CTA: demo + `#kontakt` med `formSource` pr. side. `src/app/sitemap.ts` inkluderer dem; root `metadataBase` sættes fra `NEXT_PUBLIC_SITE_URL` (fallback `https://budrcare.dk`) for kanoniske URL’er.

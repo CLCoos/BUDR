@@ -1,5 +1,5 @@
 'use client';
-import React, { Suspense, useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -15,9 +15,13 @@ import {
   ChevronRight,
   Upload,
   BrainCircuit,
+  CalendarClock,
+  MessageSquare,
+  Sparkles,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useAlertCount } from '@/hooks/useAlertCount';
+import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 
 type NavItem = {
   icon: typeof LayoutDashboard;
@@ -25,52 +29,49 @@ type NavItem = {
   href: string;
   badge: number;
   cpActiveTab?: string | null;
+  /** Særlig markering af aktiv side (fx Beboere dækker flere routes) */
+  activeMatch?: 'residents' | 'vagtplan' | 'park';
 };
 
-const staticNavItems: NavItem[] = [
-  {
-    icon: LayoutDashboard,
-    label: 'Dashboard',
-    href: '/care-portal-dashboard',
-    badge: 0,
-    cpActiveTab: null,
-  },
-  { icon: ClipboardList, label: 'Vagtoverlev.', href: '/handover-workspace', badge: 0 },
-  { icon: Users, label: 'Beboere', href: '/resident-360-view', badge: 0 },
-  {
-    icon: Bell,
-    label: 'Advarsler',
-    href: '/care-portal-dashboard?tab=alerts',
-    badge: 0,
-    cpActiveTab: 'alerts',
-  },
-  {
-    icon: Calendar,
-    label: 'Planlægger',
-    href: '/care-portal-dashboard?tab=planner',
-    badge: 0,
-    cpActiveTab: 'planner',
-  },
-  {
-    icon: BookOpen,
-    label: 'Journal',
-    href: '/care-portal-dashboard?tab=journal',
-    badge: 0,
-    cpActiveTab: 'journal',
-  },
-  { icon: Upload, label: 'Dataimport', href: '/care-portal-import', badge: 0 },
-  { icon: BrainCircuit, label: 'Faglig støtte', href: '/care-portal-assistant', badge: 0 },
-  { icon: Settings, label: 'Indstillinger', href: '/care-portal-dashboard/settings', badge: 0 },
-];
+function pathFromHref(href: string): string {
+  const i = href.indexOf('?');
+  return i === -1 ? href : href.slice(0, i);
+}
 
-function navItemActive(pathname: string, searchParams: URLSearchParams, item: NavItem): boolean {
-  if (item.cpActiveTab !== undefined) {
+function navItemActive(
+  pathname: string,
+  searchParams: URLSearchParams,
+  item: NavItem,
+  pilot: boolean
+): boolean {
+  if (item.cpActiveTab !== undefined && item.cpActiveTab !== null) {
     return (
       pathname === '/care-portal-dashboard' &&
       (searchParams.get('tab') ?? null) === item.cpActiveTab
     );
   }
-  return pathname === item.href;
+  if (item.cpActiveTab === null) {
+    return pathname === '/care-portal-dashboard' && (searchParams.get('tab') ?? null) === null;
+  }
+  if (item.activeMatch === 'residents') {
+    if (pilot) {
+      return (
+        pathname === '/care-portal-residents' ||
+        pathname.startsWith('/care-portal-resident-preview/')
+      );
+    }
+    return pathname.startsWith('/resident-360-view');
+  }
+  if (item.activeMatch === 'vagtplan') {
+    return pathname.startsWith('/care-portal-vagtplan');
+  }
+  if (item.activeMatch === 'park') {
+    return pathname.startsWith('/park-hub') || pathname.startsWith('/park/');
+  }
+  const p = pathFromHref(item.href);
+  if (pathname === p) return true;
+  if (p !== '/' && pathname.startsWith(`${p}/`)) return true;
+  return false;
 }
 
 type InnerProps = {
@@ -88,10 +89,76 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
   const [displayName, setDisplayName] = useState<string>('');
   const [initials, setInitials] = useState<string>('');
   const alertCount = useAlertCount();
+  const pilot = carePortalPilotSimulatedData();
 
-  const navItems = staticNavItems.map((item) =>
-    item.cpActiveTab === 'alerts' ? { ...item, badge: alertCount } : item
-  );
+  const navItems = useMemo((): NavItem[] => {
+    const residentsHref = pilot ? '/care-portal-residents' : '/resident-360-view';
+    const msgBadge = pilot ? 2 : 0;
+    const base: NavItem[] = [
+      {
+        icon: LayoutDashboard,
+        label: 'Dashboard',
+        href: '/care-portal-dashboard',
+        badge: 0,
+        cpActiveTab: null,
+      },
+      { icon: ClipboardList, label: 'Vagtoverlev.', href: '/handover-workspace', badge: 0 },
+      {
+        icon: Users,
+        label: 'Beboere',
+        href: residentsHref,
+        badge: 0,
+        activeMatch: 'residents',
+      },
+      {
+        icon: Bell,
+        label: 'Advarsler',
+        href: '/care-portal-dashboard?tab=alerts',
+        badge: 0,
+        cpActiveTab: 'alerts',
+      },
+      {
+        icon: Calendar,
+        label: 'Planlægger',
+        href: '/care-portal-dashboard?tab=planner',
+        badge: 0,
+        cpActiveTab: 'planner',
+      },
+      {
+        icon: CalendarClock,
+        label: 'Vagtplan',
+        href: '/care-portal-vagtplan',
+        badge: 0,
+        activeMatch: 'vagtplan',
+      },
+      {
+        icon: MessageSquare,
+        label: 'Beskeder',
+        href: '/care-portal-beskeder',
+        badge: msgBadge,
+      },
+      {
+        icon: BookOpen,
+        label: 'Journal',
+        href: '/care-portal-dashboard?tab=journal',
+        badge: 0,
+        cpActiveTab: 'journal',
+      },
+      { icon: Upload, label: 'Dataimport', href: '/care-portal-import', badge: 0 },
+      { icon: BrainCircuit, label: 'Faglig støtte', href: '/care-portal-assistant', badge: 0 },
+      {
+        icon: Sparkles,
+        label: 'Borger-app (Lys)',
+        href: '/park-hub',
+        badge: 0,
+        activeMatch: 'park',
+      },
+      { icon: Settings, label: 'Indstillinger', href: '/care-portal-dashboard/settings', badge: 0 },
+    ];
+    return base.map((item) =>
+      item.cpActiveTab === 'alerts' ? { ...item, badge: alertCount } : item
+    );
+  }, [pilot, alertCount]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -121,12 +188,13 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
   return (
     <aside
       className={`
-        fixed bottom-0 left-0 z-[60] flex shrink-0 flex-col
-        transition-[transform,width] duration-300 top-[52px]
+        fixed bottom-0 left-0 z-[10060] flex shrink-0 flex-col
+        transition-[transform,width] duration-300
+        top-[calc(52px+9.5rem)] sm:top-[calc(52px+3.5rem)] md:top-[52px]
         md:static md:top-auto md:bottom-auto md:z-auto md:translate-x-0 md:pointer-events-auto
         ${collapsed ? 'w-16' : 'w-56'}
-        ${mobileClosed ? '-translate-x-full' : 'translate-x-0'}
-        ${mobileClosed ? 'pointer-events-none' : 'pointer-events-auto'}
+        ${mobileClosed ? '-translate-x-full md:translate-x-0' : 'translate-x-0'}
+        ${mobileClosed ? 'pointer-events-none md:pointer-events-auto' : 'pointer-events-auto'}
       `}
       style={{ backgroundColor: 'var(--cp-bg2)', borderRight: '1px solid var(--cp-border)' }}
     >
@@ -188,7 +256,7 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
 
       <div className="flex-1 overflow-y-auto py-3 scrollbar-hide cp-scroll">
         {navItems.map((item) => {
-          const active = navItemActive(pathname, searchParams, item);
+          const active = navItemActive(pathname, searchParams, item, pilot);
           return (
             <Link
               key={item.label}
@@ -314,7 +382,7 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
       <button
         type="button"
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-6 flex h-6 w-6 items-center justify-center rounded-full transition-colors"
+        className="absolute -right-3 top-6 hidden h-6 w-6 items-center justify-center rounded-full transition-colors md:flex"
         style={{
           border: '1px solid var(--cp-border)',
           backgroundColor: 'var(--cp-bg2)',

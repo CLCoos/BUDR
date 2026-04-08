@@ -2,23 +2,59 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ChevronLeft, Phone, Calendar } from 'lucide-react';
+import {
+  ChevronLeft,
+  Phone,
+  Calendar,
+  BrainCircuit,
+  ClipboardList,
+  FilePenLine,
+} from 'lucide-react';
 
 type TrafficUi = 'groen' | 'gul' | 'roed' | null;
 
-const TL_CONFIG: Record<
-  NonNullable<TrafficUi>,
-  { label: string; color: string; bg: string; dot: string }
-> = {
-  groen: { label: 'Grøn', color: 'text-green-700', bg: 'bg-green-100', dot: 'bg-green-500' },
-  gul: { label: 'Gul', color: 'text-amber-700', bg: 'bg-amber-100', dot: 'bg-amber-400' },
-  roed: { label: 'Rød', color: 'text-red-700', bg: 'bg-red-100', dot: 'bg-red-500' },
+const TL_LABEL: Record<NonNullable<TrafficUi>, string> = {
+  groen: 'Grøn',
+  gul: 'Gul',
+  roed: 'Rød',
 };
 
+function trafficStyle(tl: TrafficUi): { bg: string; border: string; label: string; dot: string } {
+  if (tl === 'roed')
+    return {
+      bg: 'rgba(245,101,101,0.12)',
+      border: 'rgba(245,101,101,0.4)',
+      label: TL_LABEL.roed,
+      dot: 'var(--cp-red)',
+    };
+  if (tl === 'gul')
+    return {
+      bg: 'rgba(246,173,85,0.12)',
+      border: 'rgba(246,173,85,0.4)',
+      label: TL_LABEL.gul,
+      dot: 'var(--cp-amber)',
+    };
+  if (tl === 'groen')
+    return {
+      bg: 'rgba(45,212,160,0.1)',
+      border: 'rgba(45,212,160,0.35)',
+      label: TL_LABEL.groen,
+      dot: 'var(--cp-green)',
+    };
+  return {
+    bg: 'var(--cp-bg3)',
+    border: 'var(--cp-border)',
+    label: 'Ingen trafiklys',
+    dot: 'var(--cp-muted2)',
+  };
+}
+
 function avatarBg(tl: TrafficUi): React.CSSProperties {
-  if (tl === 'roed') return { backgroundColor: '#FCEBEB', color: '#A32D2D' };
-  if (tl === 'gul') return { backgroundColor: '#FAEEDA', color: '#854F0B' };
-  return { backgroundColor: '#1D9E75', color: '#fff' };
+  if (tl === 'roed') return { backgroundColor: 'rgba(245,101,101,0.2)', color: 'var(--cp-red)' };
+  if (tl === 'gul') return { backgroundColor: 'rgba(246,173,85,0.2)', color: 'var(--cp-amber)' };
+  if (tl === 'groen')
+    return { background: 'linear-gradient(135deg, #2dd4a0, #0d9488)', color: '#fff' };
+  return { backgroundColor: 'var(--cp-bg3)', color: 'var(--cp-muted)' };
 }
 
 interface Props {
@@ -37,7 +73,7 @@ interface Props {
 }
 
 export default function ResidentHeader({
-  residentId: _residentId,
+  residentId,
   name,
   initials,
   room,
@@ -50,99 +86,170 @@ export default function ResidentHeader({
   primaryContactPhone,
   primaryContactRelation,
 }: Props) {
-  const tlCfg = trafficLight ? TL_CONFIG[trafficLight] : null;
+  const ts = trafficStyle(trafficLight);
 
   return (
     <div>
-      <Link href="/resident-360-view">
-        <button className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-4 transition-colors">
-          <ChevronLeft size={16} /> Alle beboere
-        </button>
+      <Link
+        href="/resident-360-view"
+        className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium transition-opacity hover:opacity-80"
+        style={{ color: 'var(--cp-muted)' }}
+      >
+        <ChevronLeft size={16} aria-hidden />
+        Alle beboere
       </Link>
 
-      <div className="bg-white rounded-lg border border-gray-100 p-5">
-        <div className="flex items-start gap-5">
-          {/* Avatar */}
+      <div
+        className="relative overflow-hidden rounded-2xl border p-5 sm:p-7"
+        style={{
+          backgroundColor: 'var(--cp-bg2)',
+          borderColor: 'var(--cp-border)',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
+        }}
+      >
+        <div
+          className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full opacity-[0.07]"
+          style={{ background: 'radial-gradient(circle, #2dd4a0 0%, transparent 70%)' }}
+          aria-hidden
+        />
+
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-start">
           <div
-            className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold flex-shrink-0"
+            className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full text-xl font-bold"
             style={avatarBg(trafficLight)}
           >
             {initials}
           </div>
 
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            {/* Name row */}
-            <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h1 className="text-xl font-bold text-gray-900">{name}</h1>
-                <div className="text-sm text-gray-500 mt-0.5">Beboer · Værelse {room}</div>
+                <h1
+                  className="text-xl font-normal sm:text-2xl"
+                  style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--cp-text)' }}
+                >
+                  {name}
+                </h1>
+                <p className="mt-0.5 text-sm" style={{ color: 'var(--cp-muted)' }}>
+                  Beboer · Værelse {room}
+                </p>
               </div>
-              <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
-                {tlCfg ? (
+              <div className="flex flex-shrink-0 flex-wrap items-center gap-2">
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-semibold"
+                  style={{
+                    backgroundColor: ts.bg,
+                    borderColor: ts.border,
+                    color: 'var(--cp-text)',
+                  }}
+                >
                   <span
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${tlCfg.bg} ${tlCfg.color} text-sm font-semibold`}
-                  >
-                    <div className={`w-2 h-2 rounded-full ${tlCfg.dot}`} />
-                    {tlCfg.label}
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-100 text-gray-500 text-sm font-semibold">
-                    Ingen trafiklys
-                  </span>
-                )}
+                    className="h-2 w-2 flex-shrink-0 rounded-full"
+                    style={{ backgroundColor: ts.dot }}
+                  />
+                  {ts.label}
+                </span>
                 {pendingProposals > 0 && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 text-sm font-semibold">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse inline-block" />
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-semibold"
+                    style={{
+                      backgroundColor: 'var(--cp-amber-dim)',
+                      borderColor: 'rgba(246,173,85,0.35)',
+                      color: 'var(--cp-amber)',
+                    }}
+                  >
+                    <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
                     {pendingProposals} forslag
                   </span>
                 )}
               </div>
             </div>
 
-            {/* 4-cell info grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-              <div className="bg-gray-50 rounded-lg p-3">
-                <div className="text-xs text-gray-500 mb-0.5">Indflyttet</div>
-                <div className="text-sm font-medium text-gray-800">{moveInDate ?? '—'}</div>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-3">
-                <div className="text-xs text-gray-500 mb-0.5">
-                  Primær kontakt
-                  {primaryContactRelation && (
-                    <span className="ml-1 text-gray-400">· {primaryContactRelation}</span>
-                  )}
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {[
+                { k: 'Indflyttet', v: moveInDate ?? '—' },
+                {
+                  k: primaryContactRelation
+                    ? `Primær kontakt · ${primaryContactRelation}`
+                    : 'Primær kontakt',
+                  v: primaryContact ?? '—',
+                },
+                { k: 'Sidst check-in', v: lastCheckin ?? '—' },
+                { k: 'Stemning', v: moodScore !== null ? `${moodScore}/10` : '—' },
+              ].map((cell) => (
+                <div
+                  key={cell.k}
+                  className="rounded-xl border px-3 py-2.5"
+                  style={{
+                    backgroundColor: 'var(--cp-bg3)',
+                    borderColor: 'var(--cp-border)',
+                  }}
+                >
+                  <div
+                    className="text-[11px] font-medium uppercase tracking-wide"
+                    style={{ color: 'var(--cp-muted2)' }}
+                  >
+                    {cell.k}
+                  </div>
+                  <div className="mt-0.5 text-sm font-medium" style={{ color: 'var(--cp-text)' }}>
+                    {cell.v}
+                  </div>
                 </div>
-                <div className="text-sm font-medium text-gray-800">{primaryContact ?? '—'}</div>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-3">
-                <div className="text-xs text-gray-500 mb-0.5">Sidst check-in</div>
-                <div className="text-sm font-medium text-gray-800">{lastCheckin ?? '—'}</div>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-3">
-                <div className="text-xs text-gray-500 mb-0.5">Stemning</div>
-                <div className="text-sm font-medium text-gray-800">
-                  {moodScore !== null ? `${moodScore}/10` : '—'}
-                </div>
-              </div>
+              ))}
             </div>
 
-            {/* Contact + action links */}
-            <div className="flex items-center gap-4 mt-3 flex-wrap">
+            <div className="mt-4 flex flex-wrap items-center gap-3">
               {primaryContactPhone && (
                 <a
                   href={`tel:${primaryContactPhone.replace(/\s/g, '')}`}
-                  className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#1D9E75] transition-colors"
+                  className="inline-flex items-center gap-1.5 text-sm transition-colors hover:opacity-90"
+                  style={{ color: 'var(--cp-green)' }}
                 >
-                  <Phone size={14} />
+                  <Phone size={14} aria-hidden />
                   {primaryContactPhone}
                 </a>
               )}
-              {primaryContactPhone && <span className="text-gray-200">·</span>}
-              <Link href="/handover-workspace">
-                <button className="flex items-center gap-1.5 text-sm text-[#1D9E75] hover:underline">
-                  <Calendar size={14} /> Skriv vagtnotat
-                </button>
+              <Link
+                href="/handover-workspace"
+                className="inline-flex items-center gap-1.5 text-sm font-medium transition-opacity hover:opacity-90"
+                style={{ color: 'var(--cp-muted)' }}
+              >
+                <FilePenLine size={14} aria-hidden />
+                Skriv vagtnotat
+              </Link>
+            </div>
+
+            {/* Genveje — samme familien som demo-portalen */}
+            <div
+              className="mt-4 flex flex-wrap gap-2 border-t pt-4"
+              style={{ borderColor: 'var(--cp-border)' }}
+            >
+              <Link
+                href="/handover-workspace"
+                className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors hover:bg-[rgba(255,255,255,0.04)]"
+                style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-muted)' }}
+              >
+                <ClipboardList className="h-3.5 w-3.5" aria-hidden />
+                Vagtoverlevering
+              </Link>
+              <Link
+                href="/care-portal-assistant"
+                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90"
+                style={{
+                  background: 'linear-gradient(135deg, #2dd4a0 0%, #0d9488 100%)',
+                  boxShadow: '0 2px 12px rgba(45,212,160,0.25)',
+                }}
+              >
+                <BrainCircuit className="h-3.5 w-3.5" aria-hidden />
+                Faglig støtte
+              </Link>
+              <Link
+                href={`/resident-360-view/${residentId}?tab=dagsplan`}
+                className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors hover:bg-[rgba(255,255,255,0.04)]"
+                style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-muted)' }}
+              >
+                <Calendar className="h-3.5 w-3.5" aria-hidden />
+                Dagsplan
               </Link>
             </div>
           </div>

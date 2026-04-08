@@ -70,9 +70,24 @@ const TL_CONFIG: Record<
   NonNullable<TrafficUi>,
   { label: string; color: string; bg: string; border: string }
 > = {
-  groen: { label: 'Grøn', color: '#1D9E75', bg: '#E1F5EE', border: '#A8DFC9' },
-  gul: { label: 'Gul', color: '#C78400', bg: '#FAEEDA', border: '#F5CC85' },
-  roed: { label: 'Rød', color: '#C0392B', bg: '#FCEBEB', border: '#F5AAAA' },
+  groen: {
+    label: 'Grøn',
+    color: 'var(--cp-green)',
+    bg: 'rgba(45,212,160,0.12)',
+    border: 'rgba(45,212,160,0.35)',
+  },
+  gul: {
+    label: 'Gul',
+    color: 'var(--cp-amber)',
+    bg: 'rgba(246,173,85,0.12)',
+    border: 'rgba(246,173,85,0.4)',
+  },
+  roed: {
+    label: 'Rød',
+    color: 'var(--cp-red)',
+    bg: 'rgba(245,101,101,0.12)',
+    border: 'rgba(245,101,101,0.4)',
+  },
 };
 
 function formatTime(iso: string) {
@@ -231,10 +246,18 @@ export default function ResidentOverblikTab({
 
   return (
     <div className="space-y-5">
-      <div className="rounded-xl border border-gray-100 bg-white px-4 py-3 flex items-center justify-between gap-3">
+      <div
+        className="flex items-center justify-between gap-3 rounded-xl border px-4 py-3"
+        style={{
+          backgroundColor: 'var(--cp-bg2)',
+          borderColor: 'var(--cp-border)',
+        }}
+      >
         <div>
-          <p className="text-sm font-semibold text-gray-800">Forenklet visning</p>
-          <p className="text-xs text-gray-500">
+          <p className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+            Forenklet visning
+          </p>
+          <p className="text-xs" style={{ color: 'var(--cp-muted)' }}>
             Reducerer appen til tre skærme og forstørrer tekst.
           </p>
         </div>
@@ -242,9 +265,15 @@ export default function ResidentOverblikTab({
           type="button"
           onClick={() => void toggleSimpleMode()}
           disabled={savingSimpleMode}
-          className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-            simpleMode ? 'bg-[#E1F5EE] text-[#1D9E75]' : 'bg-gray-100 text-gray-600'
-          } disabled:opacity-40`}
+          className="rounded-full px-3 py-1.5 text-xs font-semibold disabled:opacity-40"
+          style={
+            simpleMode
+              ? {
+                  backgroundColor: 'var(--cp-green-dim)',
+                  color: 'var(--cp-green)',
+                }
+              : { backgroundColor: 'var(--cp-bg3)', color: 'var(--cp-muted)' }
+          }
         >
           {savingSimpleMode ? 'Gemmer…' : simpleMode ? 'Aktiv' : 'Inaktiv'}
         </button>
@@ -254,20 +283,26 @@ export default function ResidentOverblikTab({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Traffic light */}
         <div
-          className="rounded-xl border p-4 flex flex-col gap-1"
+          className="flex flex-col gap-1 rounded-xl border p-4"
           style={
             tlCfg
               ? { backgroundColor: tlCfg.bg, borderColor: tlCfg.border }
-              : { backgroundColor: '#F9FAFB', borderColor: '#E5E7EB' }
+              : {
+                  backgroundColor: 'var(--cp-bg3)',
+                  borderColor: 'var(--cp-border)',
+                }
           }
         >
-          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+          <span
+            className="text-xs font-medium uppercase tracking-wide"
+            style={{ color: 'var(--cp-muted2)' }}
+          >
             Trafiklys
           </span>
           {tlCfg ? (
-            <div className="flex items-center gap-2 mt-1">
+            <div className="mt-1 flex items-center gap-2">
               <div
-                className="w-4 h-4 rounded-full flex-shrink-0"
+                className="h-4 w-4 flex-shrink-0 rounded-full"
                 style={{ backgroundColor: tlCfg.color }}
               />
               <span className="text-xl font-bold" style={{ color: tlCfg.color }}>
@@ -275,29 +310,43 @@ export default function ResidentOverblikTab({
               </span>
             </div>
           ) : (
-            <span className="text-xl font-bold text-gray-400 mt-1">Ingen data</span>
+            <span className="mt-1 text-xl font-bold" style={{ color: 'var(--cp-muted)' }}>
+              Ingen data
+            </span>
           )}
           {checkinNote && (
-            <p className="text-xs mt-1 line-clamp-2" style={{ color: tlCfg?.color ?? '#6B7280' }}>
+            <p
+              className="mt-1 line-clamp-2 text-xs"
+              style={{ color: tlCfg?.color ?? 'var(--cp-muted)' }}
+            >
               &ldquo;{checkinNote}&rdquo;
             </p>
           )}
           {checkinAiSummary && (
-            <div className="mt-2 rounded-lg border border-[#A8DFC9] bg-[#E1F5EE] px-2.5 py-2">
-              <p className="text-[11px] font-semibold text-[#1D9E75]">AI-opsummering</p>
-              <p className="text-xs text-[#1D9E75] mt-0.5 italic">{checkinAiSummary}</p>
+            <div
+              className="mt-2 rounded-lg border px-2.5 py-2"
+              style={{
+                borderColor: 'rgba(45,212,160,0.35)',
+                backgroundColor: 'var(--cp-green-dim)',
+              }}
+            >
+              <p className="text-[11px] font-semibold text-[var(--cp-green)]">AI-opsummering</p>
+              <p className="mt-0.5 text-xs italic text-[var(--cp-green)]">{checkinAiSummary}</p>
               {checkinVoiceTranscript && (
                 <button
                   type="button"
                   onClick={() => setShowVoiceTranscript((v) => !v)}
-                  className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-[#1D9E75]"
+                  className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--cp-green)]"
                 >
                   <Mic size={12} aria-hidden />
                   {showVoiceTranscript ? 'Skjul transskription' : 'Vis stemmejournal'}
                 </button>
               )}
               {showVoiceTranscript && checkinVoiceTranscript && (
-                <p className="text-xs text-gray-700 mt-1.5 whitespace-pre-wrap">
+                <p
+                  className="mt-1.5 whitespace-pre-wrap text-xs"
+                  style={{ color: 'var(--cp-text)' }}
+                >
                   {checkinVoiceTranscript}
                 </p>
               )}
@@ -306,60 +355,98 @@ export default function ResidentOverblikTab({
         </div>
 
         {/* Mood score */}
-        <div className="rounded-xl border border-gray-100 bg-white p-4 flex flex-col gap-1">
-          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+        <div
+          className="flex flex-col gap-1 rounded-xl border p-4"
+          style={{
+            backgroundColor: 'var(--cp-bg2)',
+            borderColor: 'var(--cp-border)',
+          }}
+        >
+          <span
+            className="text-xs font-medium uppercase tracking-wide"
+            style={{ color: 'var(--cp-muted2)' }}
+          >
             Stemning i dag
           </span>
           {moodScore !== null ? (
             <div className="mt-1">
               <div className="flex items-end gap-1">
-                <span className="text-3xl font-extrabold text-gray-900">{moodScore}</span>
-                <span className="text-sm text-gray-400 mb-1">/10</span>
+                <span className="text-3xl font-extrabold" style={{ color: 'var(--cp-text)' }}>
+                  {moodScore}
+                </span>
+                <span className="mb-1 text-sm" style={{ color: 'var(--cp-muted)' }}>
+                  /10
+                </span>
               </div>
-              <div className="mt-2 h-2 rounded-full bg-gray-100 overflow-hidden">
+              <div
+                className="mt-2 h-2 overflow-hidden rounded-full"
+                style={{ backgroundColor: 'var(--cp-bg3)' }}
+              >
                 <div
                   className="h-full rounded-full transition-all"
                   style={{
                     width: `${(moodScore / 10) * 100}%`,
-                    backgroundColor: tlCfg?.color ?? '#9CA3AF',
+                    backgroundColor: tlCfg?.color ?? 'var(--cp-muted2)',
                   }}
                 />
               </div>
             </div>
           ) : (
-            <span className="text-xl font-bold text-gray-400 mt-1">Ingen check-in</span>
+            <span className="mt-1 text-xl font-bold" style={{ color: 'var(--cp-muted)' }}>
+              Ingen check-in
+            </span>
           )}
         </div>
 
         {/* Medication summary */}
         <Link href={`/resident-360-view/${residentId}?tab=medicin`} className="block">
           <div
-            className={`rounded-xl border p-4 flex flex-col gap-1 transition-colors hover:border-[#1D9E75] cursor-pointer ${
+            className="flex cursor-pointer flex-col gap-1 rounded-xl border p-4 transition-colors hover:opacity-95"
+            style={
               medicationGivenCount === medicationTotalCount
-                ? 'bg-[#E1F5EE] border-[#A8DFC9]'
-                : 'bg-amber-50 border-amber-200'
-            }`}
+                ? {
+                    borderColor: 'rgba(45,212,160,0.35)',
+                    backgroundColor: 'rgba(45,212,160,0.08)',
+                  }
+                : {
+                    borderColor: 'rgba(246,173,85,0.4)',
+                    backgroundColor: 'rgba(246,173,85,0.08)',
+                  }
+            }
           >
-            <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+            <span
+              className="text-xs font-medium uppercase tracking-wide"
+              style={{ color: 'var(--cp-muted2)' }}
+            >
               Medicin i dag
             </span>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="mt-1 flex items-center gap-2">
               <Pill
                 size={18}
                 className={
                   medicationGivenCount === medicationTotalCount
-                    ? 'text-[#1D9E75]'
-                    : 'text-amber-500'
+                    ? 'text-[var(--cp-green)]'
+                    : 'text-[var(--cp-amber)]'
                 }
               />
               <span
-                className={`text-xl font-bold ${medicationGivenCount === medicationTotalCount ? 'text-[#1D9E75]' : 'text-amber-600'}`}
+                className="text-xl font-bold"
+                style={{
+                  color:
+                    medicationGivenCount === medicationTotalCount
+                      ? 'var(--cp-green)'
+                      : 'var(--cp-amber)',
+                }}
               >
                 {medicationGivenCount}/{medicationTotalCount}
               </span>
-              <span className="text-xs text-gray-500">givet</span>
+              <span className="text-xs" style={{ color: 'var(--cp-muted)' }}>
+                givet
+              </span>
             </div>
-            <span className="text-xs text-[#1D9E75] mt-1 font-medium">→ Administrer medicin</span>
+            <span className="mt-1 text-xs font-medium text-[var(--cp-green)]">
+              → Administrer medicin
+            </span>
           </div>
         </Link>
       </div>
@@ -367,13 +454,19 @@ export default function ResidentOverblikTab({
       {/* ── Pending proposals alert ───────────────────────────── */}
       {pendingProposals > 0 && (
         <Link href={`/resident-360-view/${residentId}?tab=dagsplan`}>
-          <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 cursor-pointer hover:bg-amber-100 transition-colors">
-            <AlertTriangle size={15} className="text-amber-500 mt-0.5 flex-shrink-0" />
+          <div
+            className="flex cursor-pointer items-start gap-2.5 rounded-xl border px-4 py-3 transition-opacity hover:opacity-95"
+            style={{
+              borderColor: 'rgba(246,173,85,0.4)',
+              backgroundColor: 'rgba(246,173,85,0.1)',
+            }}
+          >
+            <AlertTriangle size={15} className="mt-0.5 flex-shrink-0 text-[var(--cp-amber)]" />
             <div>
-              <span className="text-sm font-semibold text-amber-800">
+              <span className="text-sm font-semibold text-[var(--cp-amber)]">
                 {pendingProposals} planforslag afventer godkendelse
               </span>
-              <p className="text-xs text-amber-700 mt-0.5">
+              <p className="mt-0.5 text-xs" style={{ color: 'var(--cp-muted)' }}>
                 Klik for at åbne Dagsplan og gennemse forslagene.
               </p>
             </div>
@@ -382,14 +475,20 @@ export default function ResidentOverblikTab({
       )}
 
       {concernNotes.length > 0 && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50/90 px-4 py-3">
-          <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle size={15} className="text-amber-600 flex-shrink-0" aria-hidden />
-            <span className="text-sm font-semibold text-amber-900">
+        <div
+          className="rounded-xl border px-4 py-3"
+          style={{
+            borderColor: 'rgba(246,173,85,0.4)',
+            backgroundColor: 'rgba(246,173,85,0.08)',
+          }}
+        >
+          <div className="mb-2 flex items-center gap-2">
+            <AlertTriangle size={15} className="flex-shrink-0 text-[var(--cp-amber)]" aria-hidden />
+            <span className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
               Bekymringsnotater (hurtige)
             </span>
           </div>
-          <p className="text-[11px] text-amber-800/90 mb-2">
+          <p className="mb-2 text-[11px]" style={{ color: 'var(--cp-muted)' }}>
             Adskilt fra journal — oprettes fra dashboard. Ved formel dokumentation brug journal
             nedenfor.
           </p>
@@ -397,14 +496,19 @@ export default function ResidentOverblikTab({
             {concernNotes.map((c) => (
               <li
                 key={c.id}
-                className="rounded-lg border border-amber-100 bg-white/80 px-3 py-2 text-xs text-gray-700"
+                className="rounded-lg border px-3 py-2 text-xs"
+                style={{
+                  borderColor: 'var(--cp-border)',
+                  backgroundColor: 'var(--cp-bg2)',
+                  color: 'var(--cp-text)',
+                }}
               >
-                <div className="flex flex-wrap items-center justify-between gap-1 mb-0.5">
-                  <span className="font-semibold text-amber-900">{c.category}</span>
-                  <span className="tabular-nums text-amber-700">Alvor {c.severity}/10</span>
+                <div className="mb-0.5 flex flex-wrap items-center justify-between gap-1">
+                  <span className="font-semibold text-[var(--cp-amber)]">{c.category}</span>
+                  <span className="tabular-nums text-[var(--cp-muted)]">Alvor {c.severity}/10</span>
                 </div>
                 <p className="line-clamp-3">{c.note}</p>
-                <p className="mt-1 text-[10px] text-gray-500">
+                <p className="mt-1 text-[10px]" style={{ color: 'var(--cp-muted2)' }}>
                   {formatTime(c.created_at)} · {c.staff_name || 'Personale'}
                 </p>
               </li>
@@ -412,40 +516,52 @@ export default function ResidentOverblikTab({
           </ul>
           <Link
             href="/care-portal-dashboard"
-            className="mt-2 inline-block text-[11px] font-medium text-amber-800 underline-offset-2 hover:underline"
+            className="mt-2 inline-block text-[11px] font-medium text-[var(--cp-green)] underline-offset-2 hover:underline"
           >
             Åbn dashboard for at tilføje eller fjerne
           </Link>
         </div>
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
         {/* ── Today's plan items ─────────────────────────────── */}
-        <div className="bg-white rounded-xl border border-gray-100">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+        <div
+          className="rounded-xl border"
+          style={{
+            backgroundColor: 'var(--cp-bg2)',
+            borderColor: 'var(--cp-border)',
+          }}
+        >
+          <div
+            className="flex items-center justify-between border-b px-4 py-3"
+            style={{ borderColor: 'var(--cp-border)' }}
+          >
             <div className="flex items-center gap-2">
-              <CheckSquare size={15} className="text-[#7F77DD]" />
-              <span className="text-sm font-semibold text-gray-800">Dagsplan i dag</span>
+              <CheckSquare size={15} className="text-[#a89ff7]" />
+              <span className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+                Dagsplan i dag
+              </span>
             </div>
             <Link
               href={`/resident-360-view/${residentId}?tab=dagsplan`}
-              className="text-xs text-[#7F77DD] hover:underline font-medium"
+              className="text-xs font-medium text-[#a89ff7] hover:underline"
             >
               Åbn →
             </Link>
           </div>
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-[var(--cp-border)]">
             {todayPlanItems.length === 0 ? (
-              <div className="px-4 py-5 text-xs text-gray-400 text-center">
+              <div className="px-4 py-5 text-center text-xs" style={{ color: 'var(--cp-muted)' }}>
                 Ingen planpunkter i dag
               </div>
             ) : (
               todayPlanItems.slice(0, 6).map((item) => (
-                <div key={item.id} className="px-4 py-2.5 flex items-center gap-3">
+                <div key={item.id} className="flex items-center gap-3 px-4 py-2.5">
                   <div
-                    className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 ${
-                      item.done ? 'bg-[#1D9E75]' : 'border-2 border-gray-200'
+                    className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded ${
+                      item.done ? 'bg-[var(--cp-green)]' : 'border-2'
                     }`}
+                    style={!item.done ? { borderColor: 'var(--cp-border)' } : undefined}
                   >
                     {item.done && (
                       <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
@@ -460,18 +576,24 @@ export default function ResidentOverblikTab({
                     )}
                   </div>
                   <span
-                    className={`text-sm flex-1 ${item.done ? 'text-gray-400 line-through' : 'text-gray-700'}`}
+                    className="flex-1 text-sm"
+                    style={{
+                      color: item.done ? 'var(--cp-muted2)' : 'var(--cp-text)',
+                      textDecoration: item.done ? 'line-through' : undefined,
+                    }}
                   >
                     {item.title}
                   </span>
                   {item.time && (
-                    <span className="text-xs text-gray-400 flex-shrink-0">{item.time}</span>
+                    <span className="flex-shrink-0 text-xs" style={{ color: 'var(--cp-muted)' }}>
+                      {item.time}
+                    </span>
                   )}
                 </div>
               ))
             )}
             {pendingItems.length > 6 && (
-              <div className="px-4 py-2 text-xs text-gray-400 text-center">
+              <div className="px-4 py-2 text-center text-xs" style={{ color: 'var(--cp-muted)' }}>
                 +{pendingItems.length - 6} flere punkter
               </div>
             )}
@@ -479,27 +601,46 @@ export default function ResidentOverblikTab({
         </div>
 
         {/* ── Today's journal entries ───────────────────────── */}
-        <div className="bg-white rounded-xl border border-gray-100">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+        <div
+          className="rounded-xl border"
+          style={{
+            backgroundColor: 'var(--cp-bg2)',
+            borderColor: 'var(--cp-border)',
+          }}
+        >
+          <div
+            className="flex items-center justify-between border-b px-4 py-3"
+            style={{ borderColor: 'var(--cp-border)' }}
+          >
             <div className="flex items-center gap-2">
-              <FileText size={15} className="text-[#378ADD]" />
-              <span className="text-sm font-semibold text-gray-800">Journal i dag</span>
+              <FileText size={15} className="text-[#6cb8f5]" />
+              <span className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+                Journal i dag
+              </span>
               {journalEntries.length > 0 && (
-                <span className="text-xs text-gray-400">{journalEntries.length} noter</span>
+                <span className="text-xs" style={{ color: 'var(--cp-muted)' }}>
+                  {journalEntries.length} noter
+                </span>
               )}
             </div>
-            <WriteJournalEntry residentId={residentId} residentName={residentName} />
+            <WriteJournalEntry residentId={residentId} residentName={residentName} carePortalDark />
           </div>
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-[var(--cp-border)]">
             {journalEntries.length === 0 ? (
-              <div className="px-4 py-5 text-xs text-gray-400 text-center">
+              <div className="px-4 py-5 text-center text-xs" style={{ color: 'var(--cp-muted)' }}>
                 Ingen journalnoter i dag
               </div>
             ) : (
               <>
                 {shownDrafts.length > 0 && (
-                  <div className="px-4 py-2 bg-amber-50/80 border-b border-amber-100">
-                    <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-800 flex items-center gap-1">
+                  <div
+                    className="border-b px-4 py-2"
+                    style={{
+                      borderColor: 'rgba(246,173,85,0.25)',
+                      backgroundColor: 'rgba(246,173,85,0.08)',
+                    }}
+                  >
+                    <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--cp-amber)]">
                       <FilePenLine size={12} aria-hidden />
                       Kladder
                     </span>
@@ -508,24 +649,40 @@ export default function ResidentOverblikTab({
                 {shownDrafts.map((entry) => (
                   <div
                     key={entry.id}
-                    className="px-4 py-3 border-l-2 border-amber-400 bg-amber-50/40"
+                    className="border-l-2 border-[var(--cp-amber)] px-4 py-3"
+                    style={{ backgroundColor: 'rgba(246,173,85,0.06)' }}
                   >
-                    <div className="flex items-center justify-between mb-1 gap-2 flex-wrap">
-                      <span className="text-xs font-semibold text-gray-700">
+                    <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-xs font-semibold" style={{ color: 'var(--cp-text)' }}>
                         {entry.staff_name}
                       </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-medium uppercase text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">
+                        <span
+                          className="rounded px-1.5 py-0.5 text-[10px] font-medium uppercase"
+                          style={{
+                            backgroundColor: 'var(--cp-amber-dim)',
+                            color: 'var(--cp-amber)',
+                          }}
+                        >
                           Kladde
                         </span>
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs" style={{ color: 'var(--cp-muted)' }}>
                           {formatTime(entry.created_at)}
                         </span>
                       </div>
                     </div>
-                    <p className="text-xs text-gray-600 line-clamp-3">{entry.entry_text}</p>
+                    <p className="line-clamp-3 text-xs" style={{ color: 'var(--cp-muted)' }}>
+                      {entry.entry_text}
+                    </p>
                     {entry.category && (
-                      <span className="inline-block mt-1 text-[10px] bg-white text-gray-500 px-1.5 py-0.5 rounded border border-amber-100">
+                      <span
+                        className="mt-1 inline-block rounded border px-1.5 py-0.5 text-[10px]"
+                        style={{
+                          borderColor: 'var(--cp-border)',
+                          backgroundColor: 'var(--cp-bg3)',
+                          color: 'var(--cp-muted)',
+                        }}
+                      >
                         {entry.category}
                       </span>
                     )}
@@ -533,7 +690,11 @@ export default function ResidentOverblikTab({
                       type="button"
                       disabled={approvingId === entry.id}
                       onClick={() => void approveJournalDraft(entry.id)}
-                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-amber-600 px-2.5 py-1.5 text-[11px] font-semibold text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
+                      style={{
+                        borderColor: 'rgba(246,173,85,0.5)',
+                        color: 'var(--cp-amber)',
+                      }}
                     >
                       <CheckCircle2 size={12} aria-hidden />
                       {approvingId === entry.id ? 'Godkender…' : 'Godkend journal'}
@@ -541,23 +702,42 @@ export default function ResidentOverblikTab({
                   </div>
                 ))}
                 {shownGodkendt.length > 0 && shownDrafts.length > 0 && (
-                  <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
-                    <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+                  <div
+                    className="border-b px-4 py-2"
+                    style={{
+                      borderColor: 'var(--cp-border)',
+                      backgroundColor: 'var(--cp-bg3)',
+                    }}
+                  >
+                    <span
+                      className="text-[10px] font-semibold uppercase tracking-wide"
+                      style={{ color: 'var(--cp-muted2)' }}
+                    >
                       Godkendt journal
                     </span>
                   </div>
                 )}
                 {shownGodkendt.map((entry) => (
                   <div key={entry.id} className="px-4 py-3">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-semibold text-gray-700">
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="text-xs font-semibold" style={{ color: 'var(--cp-text)' }}>
                         {entry.staff_name}
                       </span>
-                      <span className="text-xs text-gray-400">{formatTime(entry.created_at)}</span>
+                      <span className="text-xs" style={{ color: 'var(--cp-muted)' }}>
+                        {formatTime(entry.created_at)}
+                      </span>
                     </div>
-                    <p className="text-xs text-gray-600 line-clamp-2">{entry.entry_text}</p>
+                    <p className="line-clamp-2 text-xs" style={{ color: 'var(--cp-muted)' }}>
+                      {entry.entry_text}
+                    </p>
                     {entry.category && (
-                      <span className="inline-block mt-1 text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
+                      <span
+                        className="mt-1 inline-block rounded px-1.5 py-0.5 text-[10px]"
+                        style={{
+                          backgroundColor: 'var(--cp-bg3)',
+                          color: 'var(--cp-muted)',
+                        }}
+                      >
                         {entry.category}
                       </span>
                     )}
@@ -569,9 +749,9 @@ export default function ResidentOverblikTab({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-        <GoalProgress compact variant="live" residentId={residentId} />
-        <ShiftNotesFeed variant="live" residentId={residentId} />
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+        <GoalProgress compact variant="live" residentId={residentId} carePortalDark />
+        <ShiftNotesFeed variant="live" residentId={residentId} carePortalDark />
       </div>
     </div>
   );

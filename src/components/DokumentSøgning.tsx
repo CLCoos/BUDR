@@ -143,8 +143,8 @@ type NavEntry =
 export type DokumentSøgningProps = {
   /** Mørk Care Portal-flade (matcher demo / --cp-* tokens) */
   carePortalDark?: boolean;
-  /** live → resident-360-view; demo → /care-portal-demo/residents med query */
-  linkTarget?: 'live' | 'demo';
+  /** live → resident-360-view; demo → demo-rute; pilot → simuleret 360 bag login */
+  linkTarget?: 'live' | 'demo' | 'pilot';
 };
 
 function DokumentSøgningFallback({ carePortalDark }: { carePortalDark?: boolean }) {
@@ -226,9 +226,11 @@ function DokumentSøgningInner({
   const navigateTo = useCallback(
     (residentId: string, tab: string) => {
       const qKeep = query.trim() ? `&q=${encodeURIComponent(query.trim())}` : '';
+      const qs = `?tab=${encodeURIComponent(tab)}${qKeep}`;
       if (linkTarget === 'demo') {
-        const qs = `?tab=${encodeURIComponent(tab)}${qKeep}`;
         router.push(`/care-portal-demo/residents/${encodeURIComponent(residentId)}${qs}`);
+      } else if (linkTarget === 'pilot') {
+        router.push(`/care-portal-resident-preview/${encodeURIComponent(residentId)}${qs}`);
       } else {
         router.push(
           `/resident-360-view/${encodeURIComponent(residentId)}?tab=${encodeURIComponent(tab)}${qKeep}`

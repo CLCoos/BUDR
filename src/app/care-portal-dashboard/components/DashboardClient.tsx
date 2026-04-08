@@ -14,18 +14,22 @@ import StatCards from './StatCards';
 import HurtigJournalModal from './HurtigJournalModal';
 import JournalOverblikWidget from './JournalOverblikWidget';
 import ActionCards from './ActionCards';
+import ResidentListDemo from './ResidentListDemo';
 import { BookOpen, RefreshCw } from 'lucide-react';
+import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 
 const OverrapportModal = dynamic(() => import('./OverrapportModal'), { ssr: false });
 const OverrapportPanel = dynamic(() => import('./OverrapportPanel'), { ssr: false });
 const IndsatsModal = dynamic(() => import('./IndsatsModal'), { ssr: false });
 const TilsynsrapportModal = dynamic(() => import('./TilsynsrapportModal'), { ssr: false });
+const JournalAiDemoModal = dynamic(() => import('./JournalAiDemoModal'), { ssr: false });
 
 type DashboardClientProps = {
   medicationWidget?: React.ReactNode;
 };
 
 function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
+  const pilotSim = carePortalPilotSimulatedData();
   const [headerSubtitle, setHeaderSubtitle] = useState('Care Portal');
   const [lastUpdated, setLastUpdated] = useState(() =>
     new Date()
@@ -120,10 +124,172 @@ function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
     }
   };
 
+  const facilityLabel = headerSubtitle.split('·')[0]?.trim().replace(/\s+/g, ' ') || 'Organisation';
+
+  if (pilotSim) {
+    return (
+      <div className="relative">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1
+              className="font-bold"
+              style={{
+                fontFamily: "'DM Serif Display', serif",
+                fontSize: 22,
+                color: 'var(--cp-text)',
+                lineHeight: 1.2,
+              }}
+            >
+              Dagsoverblik
+            </h1>
+            <div className="mt-0.5" style={{ fontSize: 13, color: 'var(--cp-muted)' }}>
+              {headerSubtitle}
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <div
+              className="flex items-center gap-1.5"
+              style={{
+                padding: '4px 10px',
+                borderRadius: 20,
+                backgroundColor: 'var(--cp-green-dim)',
+                border: '1px solid rgba(45,212,160,0.2)',
+              }}
+            >
+              <div
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--cp-green)',
+                  boxShadow: '0 0 6px var(--cp-green)',
+                }}
+              />
+              <span style={{ fontSize: 11, color: 'var(--cp-green)', fontWeight: 500 }}>
+                Pilot · simuleret · {lastUpdated}
+              </span>
+            </div>
+            {[
+              { label: 'Overrapport', onClick: () => setOverrapportOpen(true), variant: 'default' },
+              { label: 'Indsatsdok.', onClick: () => setIndsatsOpen(true), variant: 'danger' },
+              {
+                label: 'Tilsynsrapport',
+                onClick: () => setTilsynsrapportOpen(true),
+                variant: 'default',
+              },
+            ].map((btn) => (
+              <button
+                key={btn.label}
+                type="button"
+                onClick={btn.onClick}
+                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs transition-colors"
+                style={
+                  btn.variant === 'danger'
+                    ? {
+                        border: '1px solid var(--cp-red-dim)',
+                        color: 'var(--cp-red)',
+                        backgroundColor: 'transparent',
+                      }
+                    : {
+                        border: '1px solid var(--cp-border)',
+                        color: 'var(--cp-muted)',
+                        backgroundColor: 'transparent',
+                      }
+                }
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--cp-bg3)';
+                  (e.currentTarget as HTMLElement).style.color = 'var(--cp-text)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
+                  (e.currentTarget as HTMLElement).style.color =
+                    btn.variant === 'danger' ? 'var(--cp-red)' : 'var(--cp-muted)';
+                }}
+              >
+                {btn.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs transition-colors"
+              style={{
+                border: '1px solid var(--cp-border)',
+                color: 'var(--cp-muted)',
+                backgroundColor: 'transparent',
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--cp-bg3)';
+                (e.currentTarget as HTMLElement).style.color = 'var(--cp-text)';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
+                (e.currentTarget as HTMLElement).style.color = 'var(--cp-muted)';
+              }}
+            >
+              <RefreshCw size={12} />
+              Opdater
+            </button>
+          </div>
+        </div>
+
+        <ActionCards onOpenOverrapport={() => setOverrapportPanelOpen(true)} showPilotBorgerCard />
+
+        <div className="mb-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
+          {medicationWidget}
+          <BekymringsnotatWidget demoMode />
+          <KalenderWidget variant="demo" />
+          <OpgaveWidget />
+        </div>
+
+        <div className="mb-6">
+          <StatCards variant="demo" />
+        </div>
+
+        <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[1fr_1.4fr]">
+          <AlertPanel variant="demo" />
+          <ResidentListDemo />
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setJournalOpen(true)}
+          className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full px-5 py-3.5 text-sm font-semibold text-white transition-all duration-200 hover:scale-[1.03] hover:brightness-110 active:scale-[0.98]"
+          style={{
+            background: 'linear-gradient(135deg, #8b84e8 0%, #5E56C0 55%, #4c3d91 100%)',
+            boxShadow: '0 8px 32px rgba(94, 86, 192, 0.45), 0 0 0 1px rgba(255,255,255,0.08)',
+          }}
+          aria-label="Åbn journaludkast med AI (pilot)"
+        >
+          <BookOpen className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
+          <span className="hidden sm:inline">Journal · AI-demo</span>
+          <span className="sm:hidden">Journal</span>
+        </button>
+
+        <JournalAiDemoModal open={journalOpen} onClose={closeJournal} />
+        <OverrapportModal
+          open={overrapportOpen}
+          onClose={() => setOverrapportOpen(false)}
+          preferDemoWhenNoResidents
+        />
+        <IndsatsModal open={indsatsOpen} onClose={() => setIndsatsOpen(false)} />
+        <TilsynsrapportModal
+          open={tilsynsrapportOpen}
+          onClose={() => setTilsynsrapportOpen(false)}
+          preferDemoWhenNoResidents
+          facilityName={`${facilityLabel} (pilot)`}
+        />
+        <OverrapportPanel
+          open={overrapportPanelOpen}
+          onClose={() => setOverrapportPanelOpen(false)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="relative">
       {/* Page header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <div>
           <h1
             className="font-bold"

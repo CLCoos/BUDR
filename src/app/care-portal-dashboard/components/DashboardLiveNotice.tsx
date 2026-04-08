@@ -1,9 +1,11 @@
 import React from 'react';
 import Link from 'next/link';
 import { getOrganisationForStaff } from '@/lib/supabase/organisation';
+import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 
 export default async function DashboardLiveNotice() {
   const org = await getOrganisationForStaff();
+  const pilotSim = carePortalPilotSimulatedData();
 
   if (!org) {
     return (
@@ -22,6 +24,37 @@ export default async function DashboardLiveNotice() {
           privatlivspolitikken
         </Link>
         .
+      </div>
+    );
+  }
+
+  if (pilotSim) {
+    return (
+      <div
+        className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border px-4 py-2.5 text-xs"
+        style={{
+          borderColor: 'rgba(45,212,160,0.25)',
+          backgroundColor: 'var(--cp-green-dim)',
+          color: 'var(--cp-muted)',
+        }}
+      >
+        <span>
+          <span className="font-semibold text-[var(--cp-green)]">Pilot</span>
+          {' · '}
+          Du er logget ind som personale for{' '}
+          <span className="font-medium text-[var(--cp-text)]">{org.name}</span>. Dashboard,
+          beboer-grid og 360°-forhåndsvisning bruger{' '}
+          <span className="font-medium text-[var(--cp-text)]">demo-data</span>
+          som i den åbne portal-demo; vagtoverlevering og mange bagvedliggende data er stadig{' '}
+          <span className="font-medium text-[var(--cp-text)]">live</span> for jeres organisation.
+        </span>
+        <Link
+          href="/care-portal-demo"
+          className="shrink-0 font-medium underline"
+          style={{ color: 'var(--cp-text)' }}
+        >
+          Åbn også den åbne demo
+        </Link>
       </div>
     );
   }
