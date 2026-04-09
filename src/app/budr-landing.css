@@ -1580,10 +1580,10 @@ html {
   margin-right: auto;
   margin-top: 0;
   margin-bottom: 1.75rem;
-  padding-left: 1.25rem;
+  padding-left: 0;
   box-sizing: border-box;
   text-align: left;
-  list-style-position: outside;
+  list-style: none;
   color: var(--white-dim);
   line-height: 1.72;
   font-size: 0.95rem;
@@ -1591,11 +1591,25 @@ html {
 }
 
 .budr-landing .intro-section .shell > ul.intro-detail-list > li {
+  position: relative;
+  padding-left: 1.05rem;
   margin-bottom: 14px;
 }
 
 .budr-landing .intro-section .shell > ul.intro-detail-list > li:last-child {
   margin-bottom: 0;
+}
+
+.budr-landing .intro-section .shell > ul.intro-detail-list > li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.72em;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--amber);
+  opacity: 0.78;
 }
 
 .budr-landing .intro-section .shell > ul.intro-detail-list strong {
@@ -4810,7 +4824,9 @@ html {
   border: none;
   border-radius: 12px;
   cursor: pointer;
-  transition: opacity 0.15s ease, transform 0.12s ease;
+  transition:
+    opacity 0.15s ease,
+    transform 0.12s ease;
 }
 
 .budr-landing .marketing-contact-form-submit:hover:not(:disabled) {

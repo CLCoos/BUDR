@@ -1,13 +1,14 @@
--- ── Bostedet BingBong: realistisk testdata (kør manuelt i Supabase SQL Editor) ──
--- Opretter organisation (slug bingbong-demo), 4 beboere og dagens humør-check-in
--- (Europa/København-dato), KUN hvis organisationen endnu ikke har beboere.
+-- ── Bostedet BingBong: første gangs seed (kør manuelt i Supabase SQL Editor) ──
+-- Opretter organisation (slug bingbong-demo) og 18 beboere med initialer pr. hus,
+-- KUN hvis organisationen endnu ikke har beboere.
+-- For at nulstille en eksisterende BingBong-database: kør `seed-bingbong-from-scratch.sql`.
 --
 -- Efter kørsel:
 -- 1) Kopiér org-ID fra NOTICE eller:  SELECT id, name FROM public.organisations WHERE slug = 'bingbong-demo';
 -- 2) I Authentication → Users: sæt "org_id" i User metadata til den UUID (på alle portal-brugere).
--- 3) I app: NEXT_PUBLIC_CARE_PORTAL_SIMULATED_DATA=false (på Netlify / .env.local), så dashboard og
---    beboerliste læser denne database — ikke demo-widgets.
--- 4) Genindlæs /care-portal-dashboard og /resident-360-view.
+-- 3) I app: NEXT_PUBLIC_CARE_PORTAL_SIMULATED_DATA=false (.env.local / Netlify).
+-- 4) Kør `supabase db push` så `journal_entries.show_in_diary` findes (migration 20260418120000).
+-- 5) Genindlæs /resident-360-view og /resident-360-view/dagbog.
 
 DO $$
 DECLARE
@@ -32,7 +33,7 @@ BEGIN
   SELECT count(*) INTO v_count FROM public.care_residents WHERE org_id = v_org;
 
   IF v_count > 0 THEN
-    RAISE NOTICE 'Organisation % (slug %) har allerede % beboere — ingen nye rækker. Org-id: %',
+    RAISE NOTICE 'Organisation % (slug %) har allerede % beboere — ingen nye rækker. Org-id: %. For at erstatte alle beboere, kør scripts/seed-bingbong-from-scratch.sql',
       (SELECT name FROM public.organisations WHERE id = v_org),
       'bingbong-demo',
       v_count,
@@ -40,63 +41,28 @@ BEGIN
   ELSE
     INSERT INTO public.care_residents (user_id, display_name, onboarding_data, org_id)
     VALUES
-      (
-        gen_random_uuid(),
-        'Finn Bingen',
-        jsonb_build_object(
-          'avatar_initials', 'FB',
-          'room', '101',
-          'move_in_date', '2024-08-15',
-          'primary_contact', 'Lone Bingen',
-          'primary_contact_phone', '+45 12 34 56 78',
-          'primary_contact_relation', 'Søster'
-        ),
-        v_org
-      ),
-      (
-        gen_random_uuid(),
-        'Maja Bing',
-        jsonb_build_object(
-          'avatar_initials', 'MB',
-          'room', '103',
-          'move_in_date', '2023-11-02',
-          'primary_contact', 'Kommunal sagsbehandler',
-          'primary_contact_phone', '+45 98 76 54 32',
-          'primary_contact_relation', 'Myndighed'
-        ),
-        v_org
-      ),
-      (
-        gen_random_uuid(),
-        'Thomas Bong',
-        jsonb_build_object(
-          'avatar_initials', 'TB',
-          'room', '108',
-          'move_in_date', '2025-01-20',
-          'primary_contact', 'Kirsten Bong',
-          'primary_contact_phone', '+45 22 11 44 55',
-          'primary_contact_relation', 'Mor'
-        ),
-        v_org
-      ),
-      (
-        gen_random_uuid(),
-        'Sofie Nordbing',
-        jsonb_build_object(
-          'avatar_initials', 'SN',
-          'room', '110',
-          'move_in_date', '2022-05-10',
-          'primary_contact', 'Pårørendekoordinator',
-          'primary_contact_phone', '+45 33 44 55 66',
-          'primary_contact_relation', 'Koordinator'
-        ),
-        v_org
-      );
+      (gen_random_uuid(), 'NOP', jsonb_build_object('avatar_initials', 'NOP', 'house', 'Hus A', 'room', 'A-01'), v_org),
+      (gen_random_uuid(), 'MP', jsonb_build_object('avatar_initials', 'MP', 'house', 'Hus A', 'room', 'A-02'), v_org),
+      (gen_random_uuid(), 'RN', jsonb_build_object('avatar_initials', 'RN', 'house', 'Hus A', 'room', 'A-03'), v_org),
+      (gen_random_uuid(), 'ESS', jsonb_build_object('avatar_initials', 'ESS', 'house', 'Hus B', 'room', 'B-01'), v_org),
+      (gen_random_uuid(), 'TKH', jsonb_build_object('avatar_initials', 'TKH', 'house', 'Hus B', 'room', 'B-02'), v_org),
+      (gen_random_uuid(), 'HT', jsonb_build_object('avatar_initials', 'HT', 'house', 'Hus B', 'room', 'B-03'), v_org),
+      (gen_random_uuid(), 'HAF', jsonb_build_object('avatar_initials', 'HAF', 'house', 'Hus B', 'room', 'B-04'), v_org),
+      (gen_random_uuid(), 'CJT', jsonb_build_object('avatar_initials', 'CJT', 'house', 'Hus B', 'room', 'B-05'), v_org),
+      (gen_random_uuid(), 'LBC', jsonb_build_object('avatar_initials', 'LBC', 'house', 'Hus B', 'room', 'B-06'), v_org),
+      (gen_random_uuid(), 'LPK', jsonb_build_object('avatar_initials', 'LPK', 'house', 'Hus C', 'room', 'C-01'), v_org),
+      (gen_random_uuid(), 'MHL', jsonb_build_object('avatar_initials', 'MHL', 'house', 'Hus C', 'room', 'C-02'), v_org),
+      (gen_random_uuid(), 'BRT', jsonb_build_object('avatar_initials', 'BRT', 'house', 'Hus C', 'room', 'C-03'), v_org),
+      (gen_random_uuid(), 'OPT', jsonb_build_object('avatar_initials', 'OPT', 'house', 'Hus C', 'room', 'C-04'), v_org),
+      (gen_random_uuid(), 'TS', jsonb_build_object('avatar_initials', 'TS', 'house', 'Hus D', 'room', 'D-01'), v_org),
+      (gen_random_uuid(), 'CLN', jsonb_build_object('avatar_initials', 'CLN', 'house', 'Hus D', 'room', 'D-02'), v_org),
+      (gen_random_uuid(), 'AT', jsonb_build_object('avatar_initials', 'AT', 'house', 'Hus D', 'room', 'D-03'), v_org),
+      (gen_random_uuid(), 'SK', jsonb_build_object('avatar_initials', 'SK', 'house', 'Hus D', 'room', 'D-04'), v_org),
+      (gen_random_uuid(), 'LS', jsonb_build_object('avatar_initials', 'LS', 'house', 'TLS', 'room', 'TLS-01'), v_org);
 
-    RAISE NOTICE 'Oprettet 4 beboere under org-id: % (slug bingbong-demo)', v_org;
+    RAISE NOTICE 'Oprettet 18 beboere under org-id: % (slug bingbong-demo)', v_org;
   END IF;
 
-  -- Dagens check-ins (kun hvis der ikke allerede findes en række i dag efter dansk dato)
   INSERT INTO public.park_daily_checkin (resident_id, mood_score, traffic_light, note, created_at)
   SELECT
     cr.user_id::text,

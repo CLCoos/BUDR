@@ -4,6 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import PortalShell from '@/components/PortalShell';
 import ResidentOverviewGrid from './components/ResidentOverviewGrid';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { parseStaffOrgId } from '@/lib/staffOrgScope';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -21,6 +22,8 @@ export type ResidentItem = {
   name: string;
   initials: string;
   room: string;
+  /** Afdeling/hus fra onboarding_data (fx Hus A, TLS) */
+  house: string;
   trafficLight: TrafficUi | null;
   moodScore: number | null;
   lastCheckinIso: string | null;
@@ -31,7 +34,10 @@ export type ResidentItem = {
 
 // ── Data fetching ─────────────────────────────────────────────
 
-async function fetchResidentsOverview(supabase: SupabaseClient): Promise<ResidentItem[]> {
+async function fetchResidentsOverview(
+  supabase: SupabaseClient,
+  orgId: string
+): Promise<ResidentItem[]> {
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
 
@@ -39,6 +45,7 @@ async function fetchResidentsOverview(supabase: SupabaseClient): Promise<Residen
     supabase
       .from('care_residents')
       .select('user_id, display_name, onboarding_data')
+      .eq('org_id', orgId)
       .order('display_name'),
     supabase
       .from('park_daily_checkin')
@@ -94,6 +101,7 @@ async function fetchResidentsOverview(supabase: SupabaseClient): Promise<Residen
       name: r.display_name,
       initials: od.avatar_initials ?? r.display_name.slice(0, 2).toUpperCase(),
       room: od.room ?? '—',
+      house: od.house ?? '—',
       trafficLight: tl,
       moodScore: c ? c.mood_score : null,
       lastCheckinIso: c ? c.created_at : null,
@@ -114,7 +122,10 @@ export default async function Resident360ViewPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect('/care-portal-login');
 
-  const residents = await fetchResidentsOverview(supabase);
+  const orgId = parseStaffOrgId(user.user_metadata?.org_id);
+  if (!orgId) redirect('/care-portal-dashboard/settings');
+
+  const residents = await fetchResidentsOverview(supabase, orgId);
 
   return (
     <PortalShell>

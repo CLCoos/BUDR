@@ -9,6 +9,7 @@ import {
   Bell,
   Calendar,
   BookOpen,
+  BookMarked,
   Settings,
   LogOut,
   ChevronLeft,
@@ -30,7 +31,7 @@ type NavItem = {
   badge: number;
   cpActiveTab?: string | null;
   /** Særlig markering af aktiv side (fx Beboere dækker flere routes) */
-  activeMatch?: 'residents' | 'vagtplan' | 'park';
+  activeMatch?: 'residents' | 'vagtplan' | 'park' | 'dagbog';
 };
 
 function pathFromHref(href: string): string {
@@ -67,6 +68,9 @@ function navItemActive(
   }
   if (item.activeMatch === 'park') {
     return pathname.startsWith('/park-hub') || pathname.startsWith('/park/');
+  }
+  if (item.activeMatch === 'dagbog') {
+    return pathname === '/resident-360-view/dagbog';
   }
   const p = pathFromHref(item.href);
   if (pathname === p) return true;
@@ -110,6 +114,17 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
         badge: 0,
         activeMatch: 'residents',
       },
+      ...(pilot
+        ? []
+        : [
+            {
+              icon: BookMarked,
+              label: 'Dagens dagbog',
+              href: '/resident-360-view/dagbog',
+              badge: 0,
+              activeMatch: 'dagbog' as const,
+            },
+          ]),
       {
         icon: Bell,
         label: 'Advarsler',

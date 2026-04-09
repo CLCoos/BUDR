@@ -220,19 +220,32 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* XP + Level sidebar card */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Niveau</p>
-          <p className="text-2xl font-black text-gray-800">
+        <div className="rounded-2xl border border-[var(--cp-border)] bg-[var(--cp-bg2)] p-4 shadow-sm">
+          <p
+            className="mb-1 text-xs font-semibold uppercase tracking-wide"
+            style={{ color: 'var(--cp-muted2)' }}
+          >
+            Niveau
+          </p>
+          <p className="text-2xl font-black" style={{ color: 'var(--cp-text)' }}>
             {levelInfo.emoji} {levelInfo.level} — {levelInfo.name}
           </p>
-          <p className="text-sm text-gray-500 mt-1">{xp?.total_xp ?? 0} XP i alt</p>
+          <p className="mt-1 text-sm" style={{ color: 'var(--cp-muted)' }}>
+            {xp?.total_xp ?? 0} XP i alt
+          </p>
         </div>
-        <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:col-span-2">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Badges</p>
+        <div className="rounded-2xl border border-[var(--cp-border)] bg-[var(--cp-bg2)] p-4 shadow-sm sm:col-span-2">
+          <p
+            className="mb-2 text-xs font-semibold uppercase tracking-wide"
+            style={{ color: 'var(--cp-muted2)' }}
+          >
+            Badges
+          </p>
           {earnedBadges.length === 0 ? (
-            <p className="text-sm text-gray-400">Ingen badges optjent endnu</p>
+            <p className="text-sm" style={{ color: 'var(--cp-muted)' }}>
+              Ingen badges optjent endnu
+            </p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {earnedBadges.map((b) => {
@@ -253,12 +266,15 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
 
       {/* Plan items */}
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-bold text-gray-800">Planpunkter</h2>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-base font-bold" style={{ color: 'var(--cp-text)' }}>
+            Planpunkter
+          </h2>
           <button
             type="button"
             onClick={() => setShowAdd(true)}
-            className="flex items-center gap-1.5 rounded-full bg-[#0F1B2D] px-3 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-80"
+            className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-90"
+            style={{ backgroundColor: 'var(--cp-green)' }}
           >
             <Plus className="h-3.5 w-3.5" />
             Foreslå til {residentName.split(' ')[0]}
@@ -273,62 +289,90 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
               if (e.target === e.currentTarget) setShowAdd(false);
             }}
           >
-            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl space-y-4">
+            <div
+              className="w-full max-w-md space-y-4 rounded-2xl border border-[var(--cp-border)] p-6 shadow-xl"
+              style={{ backgroundColor: 'var(--cp-bg2)' }}
+            >
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-gray-800">Foreslå planpunkt</h3>
+                <h3 className="font-bold" style={{ color: 'var(--cp-text)' }}>
+                  Foreslå planpunkt
+                </h3>
                 <button
                   type="button"
                   onClick={() => setShowAdd(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  style={{ color: 'var(--cp-muted)' }}
+                  className="hover:opacity-80"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-500 block mb-1">Titel</label>
+                <label
+                  className="mb-1 block text-xs font-semibold"
+                  style={{ color: 'var(--cp-muted)' }}
+                >
+                  Titel
+                </label>
                 <input
                   type="text"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="F.eks. Morgengymnastik…"
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-[#0F1B2D]"
+                  className="w-full rounded-lg border border-[var(--cp-border)] px-3 py-2.5 text-sm outline-none focus:border-[var(--cp-green)]"
+                  style={{ backgroundColor: 'var(--cp-bg3)', color: 'var(--cp-text)' }}
                   autoFocus
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 block mb-1">
+                  <label
+                    className="mb-1 block text-xs font-semibold"
+                    style={{ color: 'var(--cp-muted)' }}
+                  >
                     Tidspunkt
                   </label>
                   <input
                     type="time"
                     value={newTime}
                     onChange={(e) => setNewTime(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none"
+                    className="w-full rounded-lg border border-[var(--cp-border)] px-3 py-2.5 text-sm outline-none"
+                    style={{ backgroundColor: 'var(--cp-bg3)', color: 'var(--cp-text)' }}
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 block mb-1">
+                  <label
+                    className="mb-1 block text-xs font-semibold"
+                    style={{ color: 'var(--cp-muted)' }}
+                  >
                     Gentagelse
                   </label>
                   <select
                     value={newRecurrence}
                     onChange={(e) => setNewRecurrence(e.target.value as 'none' | 'daily')}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none"
+                    className="w-full rounded-lg border border-[var(--cp-border)] px-3 py-2.5 text-sm outline-none"
+                    style={{ backgroundColor: 'var(--cp-bg3)', color: 'var(--cp-text)' }}
                   >
                     <option value="none">Ingen</option>
                     <option value="daily">Daglig</option>
                   </select>
                 </div>
               </div>
-              <p className="text-xs text-gray-400 bg-amber-50 border border-amber-100 rounded-lg p-3">
+              <p
+                className="rounded-lg border p-3 text-xs"
+                style={{
+                  color: 'var(--cp-amber)',
+                  backgroundColor: 'var(--cp-amber-dim)',
+                  borderColor: 'rgba(246,173,85,0.35)',
+                }}
+              >
                 Forslaget vises til borgeren med en lilla kant og skal godkendes af dem.
               </p>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => setShowAdd(false)}
-                  className="flex-1 rounded-xl border border-gray-200 py-3 text-sm font-medium text-gray-600"
+                  className="flex-1 rounded-xl border border-[var(--cp-border)] py-3 text-sm font-medium"
+                  style={{ color: 'var(--cp-muted)' }}
                 >
                   Annuller
                 </button>
@@ -336,7 +380,8 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
                   type="button"
                   onClick={() => void handleAddSuggestion()}
                   disabled={!newTitle.trim() || saving}
-                  className="flex-1 rounded-xl bg-[#0F1B2D] py-3 text-sm font-bold text-white disabled:opacity-40"
+                  className="flex-1 rounded-xl py-3 text-sm font-bold text-white disabled:opacity-40"
+                  style={{ backgroundColor: 'var(--cp-green)' }}
                 >
                   {saving ? 'Sender…' : 'Send forslag'}
                 </button>
@@ -346,10 +391,17 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
         )}
 
         {items === null ? (
-          <div className="text-center py-8 text-gray-400 text-sm">Indlæser…</div>
+          <div className="py-8 text-center text-sm" style={{ color: 'var(--cp-muted)' }}>
+            Indlæser…
+          </div>
         ) : items.length === 0 ? (
-          <div className="rounded-2xl border-2 border-dashed border-gray-200 py-12 text-center">
-            <p className="text-gray-400 text-sm">Ingen planpunkter endnu</p>
+          <div
+            className="rounded-2xl border-2 border-dashed py-12 text-center"
+            style={{ borderColor: 'var(--cp-border)' }}
+          >
+            <p className="text-sm" style={{ color: 'var(--cp-muted)' }}>
+              Ingen planpunkter endnu
+            </p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -358,16 +410,21 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
                 key={item.id}
                 className={`flex items-center gap-3 rounded-2xl border px-4 py-3.5 ${
                   item.staff_suggestion && !item.approved_by_resident
-                    ? 'border-violet-300 bg-violet-50'
-                    : 'border-gray-100 bg-white'
+                    ? 'border-violet-400/50 bg-violet-950/25'
+                    : 'border-[var(--cp-border)] bg-[var(--cp-bg2)]'
                 }`}
               >
-                <div className="h-10 w-10 shrink-0 rounded-xl flex items-center justify-center text-xl bg-gray-50">
+                <div
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl"
+                  style={{ backgroundColor: 'var(--cp-bg3)' }}
+                >
                   {item.emoji ?? CATEGORY_EMOJI[item.category] ?? '📌'}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-semibold text-gray-800">{item.title}</p>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+                      {item.title}
+                    </p>
                     {item.staff_suggestion && !item.approved_by_resident && (
                       <span className="text-[10px] font-bold rounded-full bg-violet-100 text-violet-700 px-2 py-0.5">
                         Afventer godkendelse
@@ -379,7 +436,7 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="mt-0.5 text-xs" style={{ color: 'var(--cp-muted)' }}>
                     kl. {item.time_of_day.slice(0, 5)}
                     {' · '}
                     {RECURRENCE_LABEL[item.recurrence] ?? item.recurrence}
@@ -393,7 +450,7 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
                 <button
                   type="button"
                   onClick={() => void handleDelete(item.id)}
-                  className="h-8 w-8 rounded-full flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--cp-muted2)] transition-colors hover:text-[var(--cp-red)]"
                   aria-label="Slet"
                 >
                   <X className="h-4 w-4" />
@@ -404,30 +461,43 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
         )}
       </div>
 
-      <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-5">
+      <div className="rounded-2xl border border-[var(--cp-border)] bg-[var(--cp-bg2)] p-4 sm:p-5">
         <div className="mb-3">
-          <h2 className="text-base font-bold text-gray-800">Kriseplan</h2>
-          <p className="text-xs text-gray-500 mt-1">
+          <h2 className="text-base font-bold" style={{ color: 'var(--cp-text)' }}>
+            Kriseplan
+          </h2>
+          <p className="mt-1 text-xs" style={{ color: 'var(--cp-muted)' }}>
             Brug én linje pr. punkt. Denne plan vises i Lys-appens kriseflow trin 1.
           </p>
           {crisisPlanId && (
-            <p className="text-[11px] text-gray-400 mt-1">Plan-id: {crisisPlanId}</p>
+            <p className="mt-1 text-[11px]" style={{ color: 'var(--cp-muted2)' }}>
+              Plan-id: {crisisPlanId}
+            </p>
           )}
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-xs font-semibold text-gray-600">Advarselstegn</label>
+            <label
+              className="mb-1 block text-xs font-semibold"
+              style={{ color: 'var(--cp-muted)' }}
+            >
+              Advarselstegn
+            </label>
             <textarea
               value={warningSignsText}
               onChange={(e) => setWarningSignsText(e.target.value)}
               rows={6}
               placeholder={'Fx\nSover næsten ikke\nTrækker mig fra andre'}
-              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-[#0F1B2D]"
+              className="w-full rounded-xl border border-[var(--cp-border)] px-3 py-2.5 text-sm outline-none focus:border-[var(--cp-green)]"
+              style={{ backgroundColor: 'var(--cp-bg3)', color: 'var(--cp-text)' }}
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold text-gray-600">
+            <label
+              className="mb-1 block text-xs font-semibold"
+              style={{ color: 'var(--cp-muted)' }}
+            >
               Hjælpende strategier
             </label>
             <textarea
@@ -435,32 +505,42 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
               onChange={(e) => setHelpfulStrategiesText(e.target.value)}
               rows={6}
               placeholder={'Fx\nGå en kort tur\nRing til kontaktperson'}
-              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-[#0F1B2D]"
+              className="w-full rounded-xl border border-[var(--cp-border)] px-3 py-2.5 text-sm outline-none focus:border-[var(--cp-green)]"
+              style={{ backgroundColor: 'var(--cp-bg3)', color: 'var(--cp-text)' }}
             />
           </div>
         </div>
 
         <div className="mt-4">
           <div className="mb-2 flex items-center justify-between">
-            <label className="text-xs font-semibold text-gray-600">Kriseskridt</label>
+            <label className="text-xs font-semibold" style={{ color: 'var(--cp-muted)' }}>
+              Kriseskridt
+            </label>
             <button
               type="button"
               onClick={addStep}
-              className="rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-700"
+              className="rounded-lg border border-[var(--cp-border)] px-2.5 py-1 text-xs font-semibold"
+              style={{ color: 'var(--cp-text)' }}
             >
               + Tilføj skridt
             </button>
           </div>
           <div className="space-y-2">
             {crisisSteps.map((step, idx) => (
-              <div key={`crisis-step-${idx}`} className="rounded-xl border border-gray-100 p-3">
+              <div
+                key={`crisis-step-${idx}`}
+                className="rounded-xl border border-[var(--cp-border)] p-3"
+                style={{ backgroundColor: 'var(--cp-bg3)' }}
+              >
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="text-xs font-semibold text-gray-500">Skridt {idx + 1}</p>
+                  <p className="text-xs font-semibold" style={{ color: 'var(--cp-muted)' }}>
+                    Skridt {idx + 1}
+                  </p>
                   {crisisSteps.length > 1 && (
                     <button
                       type="button"
                       onClick={() => removeStep(idx)}
-                      className="text-xs font-semibold text-red-600"
+                      className="text-xs font-semibold text-[var(--cp-red)]"
                     >
                       Fjern
                     </button>
@@ -471,13 +551,15 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
                     value={step.icon}
                     onChange={(e) => updateStep(idx, { icon: e.target.value })}
                     placeholder="🌬️"
-                    className="rounded-lg border border-gray-200 px-2.5 py-2 text-sm"
+                    className="rounded-lg border border-[var(--cp-border)] px-2.5 py-2 text-sm"
+                    style={{ backgroundColor: 'var(--cp-bg2)', color: 'var(--cp-text)' }}
                   />
                   <input
                     value={step.title}
                     onChange={(e) => updateStep(idx, { title: e.target.value })}
                     placeholder="Titel"
-                    className="rounded-lg border border-gray-200 px-2.5 py-2 text-sm"
+                    className="rounded-lg border border-[var(--cp-border)] px-2.5 py-2 text-sm"
+                    style={{ backgroundColor: 'var(--cp-bg2)', color: 'var(--cp-text)' }}
                   />
                 </div>
                 <textarea
@@ -485,7 +567,8 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
                   onChange={(e) => updateStep(idx, { description: e.target.value })}
                   rows={2}
                   placeholder="Beskrivelse"
-                  className="mt-2 w-full rounded-lg border border-gray-200 px-2.5 py-2 text-sm"
+                  className="mt-2 w-full rounded-lg border border-[var(--cp-border)] px-2.5 py-2 text-sm"
+                  style={{ backgroundColor: 'var(--cp-bg2)', color: 'var(--cp-text)' }}
                 />
               </div>
             ))}
@@ -497,7 +580,8 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
             type="button"
             onClick={() => void saveCrisisPlan()}
             disabled={savingCrisis}
-            className="rounded-xl bg-[#0F1B2D] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
+            className="rounded-xl px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
+            style={{ backgroundColor: 'var(--cp-green)' }}
           >
             {savingCrisis ? 'Gemmer…' : 'Gem kriseplan'}
           </button>

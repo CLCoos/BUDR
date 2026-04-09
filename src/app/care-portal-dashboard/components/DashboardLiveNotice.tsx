@@ -31,9 +31,9 @@ export default async function DashboardLiveNotice() {
   if (pilotSim) {
     return (
       <div
-        className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border px-4 py-2.5 text-xs"
+        className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 text-[11px] leading-snug"
         style={{
-          borderColor: 'rgba(45,212,160,0.25)',
+          borderColor: 'rgba(45,212,160,0.22)',
           backgroundColor: 'var(--cp-green-dim)',
           color: 'var(--cp-muted)',
         }}
@@ -41,46 +41,20 @@ export default async function DashboardLiveNotice() {
         <span>
           <span className="font-semibold text-[var(--cp-green)]">Pilot</span>
           {' · '}
-          Du er logget ind som personale for{' '}
-          <span className="font-medium text-[var(--cp-text)]">{org.name}</span>. Dashboard,
-          beboer-grid og 360°-forhåndsvisning bruger{' '}
-          <span className="font-medium text-[var(--cp-text)]">demo-data</span>
-          som i den åbne portal-demo; vagtoverlevering og mange bagvedliggende data er stadig{' '}
-          <span className="font-medium text-[var(--cp-text)]">live</span> for jeres organisation.
+          <span className="font-medium text-[var(--cp-text)]">{org.name}</span>
+          {' — '}
+          dele af overblikket bruger demo-data som i den åbne portal-demo.
         </span>
         <Link
           href="/care-portal-demo"
           className="shrink-0 font-medium underline"
           style={{ color: 'var(--cp-text)' }}
         >
-          Åbn også den åbne demo
+          Åbn åben demo
         </Link>
       </div>
     );
   }
 
-  return (
-    <div
-      className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border px-4 py-2.5 text-xs"
-      style={{
-        borderColor: 'var(--cp-border)',
-        backgroundColor: 'var(--cp-bg2)',
-        color: 'var(--cp-muted)',
-      }}
-    >
-      <span>
-        <span className="font-semibold text-[var(--cp-green)]">Live</span>
-        {' · '}
-        Data for <span className="font-medium text-[var(--cp-text)]">{org.name}</span>. Kun beboere
-        med samme <code className="rounded bg-[var(--cp-bg3)] px-1">org_id</code> vises.
-      </span>
-      <Link
-        href="/care-portal-demo"
-        className="shrink-0 font-medium underline"
-        style={{ color: 'var(--cp-text)' }}
-      >
-        Åbn interaktiv demo (simuleret)
-      </Link>
-    </div>
-  );
+  return null;
 }

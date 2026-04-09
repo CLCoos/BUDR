@@ -218,33 +218,49 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
 
   if (medications.length === 0) {
     return (
-      <div className="py-16 text-center text-sm text-gray-400">
+      <div className="py-16 text-center text-sm" style={{ color: 'var(--cp-muted)' }}>
         Ingen mediciner registreret for denne beboer
       </div>
     );
   }
 
   return (
-    <div className="space-y-5 max-w-3xl">
-      <div className="rounded-xl border border-gray-100 bg-white p-4">
+    <div className="max-w-3xl space-y-5">
+      <div className="rounded-xl border border-[var(--cp-border)] bg-[var(--cp-bg2)] p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div className="flex-1">
-            <label className="mb-1 block text-xs font-semibold text-gray-500">Medicin-navn</label>
+            <label
+              className="mb-1 block text-xs font-semibold"
+              style={{ color: 'var(--cp-muted)' }}
+            >
+              Medicin-navn
+            </label>
             <input
               value={newLabel}
               onChange={(e) => setNewLabel(e.target.value)}
               placeholder="Fx Sertralin 50 mg"
-              className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-[#0F1B2D]"
+              className="w-full rounded-lg border border-[var(--cp-border)] px-3 py-2.5 text-sm outline-none focus:border-[var(--cp-green)]"
+              style={{
+                backgroundColor: 'var(--cp-bg3)',
+                color: 'var(--cp-text)',
+              }}
             />
           </div>
           <div className="sm:min-w-[220px] sm:flex-1">
-            <label className="mb-1 block text-xs font-semibold text-gray-500">
+            <label
+              className="mb-1 block text-xs font-semibold"
+              style={{ color: 'var(--cp-muted)' }}
+            >
               Tidspunkt (faste døgnpunkter)
             </label>
             <select
               value={newTime}
               onChange={(e) => setNewTime(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#0F1B2D]"
+              className="w-full rounded-lg border border-[var(--cp-border)] px-3 py-2.5 text-sm outline-none focus:border-[var(--cp-green)]"
+              style={{
+                backgroundColor: 'var(--cp-bg3)',
+                color: 'var(--cp-text)',
+              }}
             >
               {MEDICATION_TIME_SLOTS.map((slot) => (
                 <option key={slot.id} value={slot.time}>
@@ -262,21 +278,29 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
             {savingReminder ? 'Gemmer…' : 'Opret påmindelse'}
           </button>
         </div>
-        <p className="mt-2 text-xs text-gray-500">
+        <p className="mt-2 text-xs" style={{ color: 'var(--cp-muted)' }}>
           Dagens status: {remindersTakenCount} taget · {remindersMissingCount} mangler. Påmindelser
           placeres kun på typiske tidspunkter (morgen til sen aften), ikke vilkårlige minutter.
         </p>
       </div>
 
-      <div className="rounded-xl border border-gray-100 bg-white">
-        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-          <span className="text-sm font-semibold text-gray-800">Påmindelser i dag</span>
-          {loadingReminders && <span className="text-xs text-gray-400">Indlæser…</span>}
+      <div className="rounded-xl border border-[var(--cp-border)] bg-[var(--cp-bg2)]">
+        <div className="flex items-center justify-between border-b border-[var(--cp-border)] px-4 py-3">
+          <span className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+            Påmindelser i dag
+          </span>
+          {loadingReminders && (
+            <span className="text-xs" style={{ color: 'var(--cp-muted2)' }}>
+              Indlæser…
+            </span>
+          )}
         </div>
         {!loadingReminders && reminders.length === 0 ? (
-          <div className="px-4 py-5 text-sm text-gray-400">Ingen påmindelser oprettet i dag.</div>
+          <div className="px-4 py-5 text-sm" style={{ color: 'var(--cp-muted)' }}>
+            Ingen påmindelser oprettet i dag.
+          </div>
         ) : (
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-[var(--cp-border)]">
             {reminders.map((reminder) => {
               const takenAt = reminder.taken_at
                 ? new Date(reminder.taken_at).toLocaleTimeString('da-DK', {
@@ -288,8 +312,12 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
               return (
                 <div key={reminder.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-gray-800">{reminder.label}</p>
-                    <p className="text-xs text-gray-500">Kl. {hhmm}</p>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+                      {reminder.label}
+                    </p>
+                    <p className="text-xs" style={{ color: 'var(--cp-muted)' }}>
+                      Kl. {hhmm}
+                    </p>
                   </div>
                   <button
                     type="button"
@@ -305,7 +333,8 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
                   <button
                     type="button"
                     onClick={() => void deleteReminder(reminder.id)}
-                    className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600"
+                    className="rounded-lg border border-[var(--cp-border)] px-3 py-1.5 text-xs font-semibold"
+                    style={{ color: 'var(--cp-muted)' }}
                   >
                     Slet
                   </button>
@@ -318,25 +347,37 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
 
       {/* Summary bar */}
       <div
-        className={`rounded-xl border px-4 py-3 flex items-center justify-between ${
+        className="flex items-center justify-between rounded-xl border px-4 py-3"
+        style={
           givenCount === totalActive
-            ? 'bg-[#E1F5EE] border-[#A8DFC9]'
-            : 'bg-amber-50 border-amber-200'
-        }`}
+            ? {
+                backgroundColor: 'var(--cp-green-dim)',
+                borderColor: 'rgba(45,212,160,0.35)',
+              }
+            : {
+                backgroundColor: 'var(--cp-amber-dim)',
+                borderColor: 'rgba(246,173,85,0.35)',
+              }
+        }
       >
         <div className="flex items-center gap-2">
           <Pill
             size={16}
-            className={givenCount === totalActive ? 'text-[#1D9E75]' : 'text-amber-500'}
+            className={givenCount === totalActive ? 'text-[var(--cp-green)]' : 'text-[var(--cp-amber)]'}
           />
           <span
-            className={`text-sm font-semibold ${givenCount === totalActive ? 'text-[#1D9E75]' : 'text-amber-700'}`}
+            className="text-sm font-semibold"
+            style={{
+              color: givenCount === totalActive ? 'var(--cp-green)' : 'var(--cp-amber)',
+            }}
           >
             {givenCount}/{totalActive} mediciner givet i dag
           </span>
         </div>
         {givenCount === totalActive && (
-          <span className="text-xs font-medium text-[#1D9E75]">Alt givet ✓</span>
+          <span className="text-xs font-medium" style={{ color: 'var(--cp-green)' }}>
+            Alt givet ✓
+          </span>
         )}
       </div>
 
@@ -346,13 +387,22 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
         if (meds.length === 0) return null;
 
         return (
-          <div key={group} className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-            <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+          <div
+            key={group}
+            className="overflow-hidden rounded-xl border border-[var(--cp-border)] bg-[var(--cp-bg2)]"
+          >
+            <div
+              className="border-b border-[var(--cp-border)] px-4 py-2.5"
+              style={{ backgroundColor: 'var(--cp-bg3)' }}
+            >
+              <span
+                className="text-xs font-semibold uppercase tracking-wide"
+                style={{ color: 'var(--cp-muted)' }}
+              >
                 {GROUP_LABELS[group]}
               </span>
             </div>
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-[var(--cp-border)]">
               {meds.map((med) => {
                 const rec = given[med.id];
                 const isGiven = rec?.given ?? false;
@@ -365,40 +415,59 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
                   : null;
 
                 return (
-                  <div key={med.id} className="px-4 py-4 flex items-center gap-4">
+                  <div key={med.id} className="flex items-center gap-4 px-4 py-4">
                     <div
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                        isGiven ? 'bg-[#E1F5EE]' : isPaused ? 'bg-amber-50' : 'bg-gray-100'
-                      }`}
+                      className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl"
+                      style={{
+                        backgroundColor: isGiven
+                          ? 'var(--cp-green-dim)'
+                          : isPaused
+                            ? 'var(--cp-amber-dim)'
+                            : 'var(--cp-bg3)',
+                      }}
                     >
                       <Pill
                         size={18}
                         className={
-                          isGiven ? 'text-[#1D9E75]' : isPaused ? 'text-amber-400' : 'text-gray-400'
+                          isGiven
+                            ? 'text-[var(--cp-green)]'
+                            : isPaused
+                              ? 'text-[var(--cp-amber)]'
+                              : 'text-[var(--cp-muted2)]'
                         }
                       />
                     </div>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span
-                          className={`text-sm font-semibold ${isGiven ? 'text-gray-400' : 'text-gray-800'}`}
+                          className="text-sm font-semibold"
+                          style={{
+                            color: isGiven ? 'var(--cp-muted2)' : 'var(--cp-text)',
+                          }}
                         >
                           {med.name}
                         </span>
-                        <span className="text-xs text-gray-500">{med.dose}</span>
+                        <span className="text-xs" style={{ color: 'var(--cp-muted)' }}>
+                          {med.dose}
+                        </span>
                         {isPaused && (
                           <span className="text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
                             Pauseret
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-1 mt-0.5 text-xs text-gray-500">
+                      <div
+                        className="mt-0.5 flex items-center gap-1 text-xs"
+                        style={{ color: 'var(--cp-muted)' }}
+                      >
                         <Clock size={10} />
                         {med.time_label} · {med.frequency}
                       </div>
                       {med.notes && (
-                        <p className="text-xs text-gray-400 mt-0.5 italic">{med.notes}</p>
+                        <p className="mt-0.5 text-xs italic" style={{ color: 'var(--cp-muted2)' }}>
+                          {med.notes}
+                        </p>
                       )}
                     </div>
 
@@ -407,13 +476,26 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
                       type="button"
                       disabled={isPaused}
                       onClick={() => !isPaused && toggle(med.id)}
-                      className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all ${
-                        isPaused
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : isGiven
-                            ? 'bg-[#E1F5EE] text-[#1D9E75] border border-[#A8DFC9] hover:bg-[#CCF0E0]'
-                            : 'bg-[#0F1B2D] text-white hover:bg-[#1a2d47] active:scale-95'
+                      className={`flex flex-shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
+                        isPaused ? 'cursor-not-allowed' : isGiven ? 'border' : ''
                       }`}
+                      style={
+                        isPaused
+                          ? {
+                              backgroundColor: 'var(--cp-bg3)',
+                              color: 'var(--cp-muted2)',
+                            }
+                          : isGiven
+                            ? {
+                                backgroundColor: 'var(--cp-green-dim)',
+                                color: 'var(--cp-green)',
+                                borderColor: 'rgba(45,212,160,0.35)',
+                              }
+                            : {
+                                backgroundColor: 'var(--cp-green)',
+                                color: '#fff',
+                              }
+                      }
                     >
                       {isGiven ? (
                         <>
@@ -434,7 +516,7 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
         );
       })}
 
-      <p className="text-xs text-gray-400 text-center pb-2">
+      <p className="pb-2 text-center text-xs" style={{ color: 'var(--cp-muted2)' }}>
         Medicin-status gemmes lokalt for i dag. Nulstilles automatisk ved midnat.
       </p>
     </div>

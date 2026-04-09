@@ -2,9 +2,20 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { BudrLogo } from '@/components/brand/BudrLogo';
 import MarketingContactForm from '@/components/marketing/MarketingContactForm';
 import { useBudrLandingFadeIn } from '@/components/marketing/useBudrLandingFadeIn';
+import {
+  DEFAULT_INSTITUTIONER_HERO_COPY,
+  sanitizeInstitutionerHeroCopy,
+  type InstitutionerHeroCopyPayload,
+} from '@/lib/marketing/institutionerCopyCms';
+import {
+  DEFAULT_INSTITUTIONER_SECTIONS_COPY,
+  sanitizeInstitutionerSectionsCopy,
+  type InstitutionerSectionsCopyPayload,
+} from '@/lib/marketing/institutionerSectionsCms';
 
 const BOOK_MAIL =
   'mailto:hej@budrcare.dk?subject=Henvendelse%20fra%20institution%20—%20BUDR%20Care' as const;
@@ -24,12 +35,32 @@ type InstitutionerPageProps = {
   className?: string;
 };
 
+function renderHeroTitleHtml(titleHtml: string): ReactNode {
+  const m = titleHtml.match(/<em>(.*?)<\/em>\s*—\s*(.*)/i);
+  if (m) {
+    return (
+      <>
+        <em>{m[1]}</em> — {m[2]}
+      </>
+    );
+  }
+  const emOnly = titleHtml.match(/<em>(.*?)<\/em>/i);
+  if (emOnly) return <em>{emOnly[1]}</em>;
+  return titleHtml;
+}
+
 export default function InstitutionerPage({ className = '' }: InstitutionerPageProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const scrollProgressRef = useRef<HTMLDivElement>(null);
   const scrollTicking = useRef(false);
   const [navOpen, setNavOpen] = useState(false);
   const [activeNav, setActiveNav] = useState<SectionId>('inst-overblik');
+  const [heroCopy, setHeroCopy] = useState<InstitutionerHeroCopyPayload>(
+    DEFAULT_INSTITUTIONER_HERO_COPY
+  );
+  const [sectionsCopy, setSectionsCopy] = useState<InstitutionerSectionsCopyPayload>(
+    DEFAULT_INSTITUTIONER_SECTIONS_COPY
+  );
 
   const closeNav = useCallback(() => setNavOpen(false), []);
 
@@ -111,6 +142,48 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
       window.removeEventListener('resize', onScrollOrResize);
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch('/api/public/marketing-copy/institutioner', { cache: 'no-store' });
+        const json = (await res.json()) as { copy?: unknown };
+        if (cancelled) return;
+        if (json.copy) {
+          setHeroCopy(sanitizeInstitutionerHeroCopy(json.copy));
+        }
+      } catch {
+        // Keep local fallback copy when endpoint is unavailable.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch('/api/public/marketing-copy/institutioner-sections', {
+          cache: 'no-store',
+        });
+        const json = (await res.json()) as { copy?: unknown };
+        if (cancelled) return;
+        if (json.copy) {
+          setSectionsCopy(sanitizeInstitutionerSectionsCopy(json.copy));
+        }
+      } catch {
+        // keep fallback copy
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const activeHero = heroCopy[heroCopy.variant];
 
   return (
     <div ref={rootRef} className={`budr-landing ${className}`.trim()}>
@@ -227,13 +300,13 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
                 Kommuner og botilbud
               </div>
               <h1 className="section-h" style={{ maxWidth: 'none', margin: '0 auto' }}>
-                <em>Institutionsstien</em> — fra overblik til pilot
+                {renderHeroTitleHtml(activeHero.title_html)}
               </h1>
               <p className="intro-lead">
                 Denne side er til jer, der skal forankre BUDR Care i organisationen:{' '}
                 <strong>
-                  hvilke tilbud vi understøtter, hvad implementering kræver, og hvordan en pilot
-                  typisk ser ud.
+                  hvilke tilbud vi understøtter, hvordan I kommer hurtigt i gang, og hvordan en
+                  pilot skaber målbar værdi.
                 </strong>{' '}
                 Produktet består af borger-appen Lys og Care Portal til personalet — ét fælles flow,
                 som I også kan udforske på{' '}
@@ -244,7 +317,7 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
               </p>
               <div className="hero-actions" style={{ justifyContent: 'center', marginTop: 28 }}>
                 <a href="#kontakt" className="btn-primary">
-                  Skriv til os (formular)
+                  {activeHero.cta}
                 </a>
                 <Link href="/care-portal-demo" className="btn-ghost">
                   Prøv Care Portal-demo
@@ -303,28 +376,11 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
             <h2 className="section-h">
               <em>Hvad</em> kræver det af jer?
             </h2>
-            <p className="section-p">
-              Implementering tilpasses jeres organisering. Nedenfor et typisk mønster —{' '}
-              <strong>konkrete datoer og ressourcer</strong> aftaler vi, når I kontakter os.
-            </p>
+            <p className="section-p">{sectionsCopy.implementering_intro}</p>
             <ul className="intro-detail-list">
-              <li>
-                <strong>Tidsforløb:</strong> Ofte <strong>2–6 uger</strong> fra beslutning til
-                pilotdrift kan starte (afhænger af IT, godkendelser og oplæringsvinduer).
-              </li>
-              <li>
-                <strong>Roller:</strong> Institutionsleder eller koordinator som ejer; nøglepersoner
-                fra vagtlag; relevant kontakt til IT eller kvalitet efter jeres governance.
-              </li>
-              <li>
-                <strong>Oplæring:</strong> Gennemgang af Care Portal (dashboard, journal, plan,
-                360°), introduktion til Lys for udvalgte borgere — typisk opdelt efter vagtplan.
-              </li>
-              <li>
-                <strong>Teknisk:</strong> Adgang via browser til portal; standard webtilgang til
-                Lys. Krav til identitet og aftaler om dataroller beskrives i forbindelse med pilot
-                og kontraktgrundlag.
-              </li>
+              {sectionsCopy.implementering_items.map((item, i) => (
+                <li key={`impl-item-${i}`}>{item}</li>
+              ))}
             </ul>
           </div>
         </section>
@@ -334,41 +390,17 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
             <h2 className="section-h">
               <em>Piloten</em> — hvad indeholder den?
             </h2>
-            <p className="section-p">
-              En pilot er en <strong>afgrænset periode</strong>, hvor I tester værdien i egen drift
-              med aftalt opfølgning. Indhold og længde tilpasses; her er hvad vi typisk enes om:
-            </p>
+            <p className="section-p">{sectionsCopy.pilot_intro}</p>
             <ul className="intro-detail-list">
-              <li>
-                <strong>Varighed:</strong> Ofte <strong>8–12 uger</strong>, så teamet når både
-                travle og roligere perioder.
-              </li>
-              <li>
-                <strong>Succeskriterier:</strong> Fx tydeligere overblik ved vagtskifte, konkret
-                brug af journal/godkendelsesflow, oplevelse af tryghed hos borgere og personale —
-                måles i fællesskab før start.
-              </li>
-              <li>
-                <strong>Support:</strong> Aftalte kontaktkanaler og forventet responstid i
-                pilotperioden.
-              </li>
-              <li>
-                <strong>Persondata:</strong> Roller som <strong>dataansvarlig</strong>, eventuel{' '}
-                <strong>meddataansvar</strong> og <strong>underdatabehandlere</strong> reguleres
-                skriftligt i jeres aftalegrundlag. Overordnet ramme findes i vores{' '}
-                <Link href="/privacy" style={{ color: 'var(--amber-lt)' }}>
-                  privatlivspolitik
-                </Link>
-                ; detaljer om databehandling og eventuelle AI-komponenter tilpasses den konkrete
-                institution.
-              </li>
+              {sectionsCopy.pilot_items.map((item, i) => (
+                <li key={`pilot-item-${i}`}>{item}</li>
+              ))}
             </ul>
             <p
               className="section-p"
               style={{ maxWidth: '40rem', margin: '0 auto', fontSize: '0.92rem' }}
             >
-              Har I behov for at fremsende ark til DPO eller IT, kan vi understøtte med teknisk
-              beskrivelse og underdatabehandlerliste —{' '}
+              {sectionsCopy.pilot_helper} —{' '}
               <a href={BOOK_MAIL} style={{ color: 'var(--amber-lt)' }}>
                 kontakt os
               </a>
@@ -379,7 +411,7 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
               style={{ maxWidth: '40rem', margin: '16px auto 0', fontSize: '0.92rem' }}
             >
               <Link href="/pilotpakke" style={{ color: 'var(--amber-lt)' }}>
-                Se den fulde pilotpakke som et aftalt produkt (webside / PDF) →
+                {activeHero.pilot_link}
               </Link>
             </p>
           </div>
@@ -388,13 +420,11 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
         <section className="intro-section fi" id="tillid" aria-label="Tillid og erfaring">
           <div className="shell">
             <h2 className="section-h">
-              <em>Tillid</em> — erfaring uden at navngive
+              <em>Tillid</em> — sådan skaber vi værdi i praksis
             </h2>
             <p className="section-p">
-              I behøver ikke store navne på dag ét. Her er et{' '}
-              <strong>sammensat, anonymiseret eksempel</strong> fra tidlig pilotfase med
-              socialpsykiatriske botilbud — som illustrerer den problemkæde, vi ofte løser sammen
-              med jer. Det er <strong>ikke</strong> et citeret udsagn fra en konkret institution.
+              Her er et <strong>anonymiseret eksempel</strong> på et typisk forløb, hvor BUDR har
+              løftet overblik, samarbejde og dokumentationskvalitet i socialpsykiatrisk drift.
             </p>
             <div
               className="intro-grid"
@@ -459,9 +489,8 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
                 color: 'var(--fog)',
               }}
             >
-              Når I har reel drift med BUDR Care, kan I — hvis I ønsker det — erstatte dette med et
-              aftalt citat eller en anonym case fra jeres egen organisation. Indtil da prioriterer
-              vi ærlighed frem for antal botilbud på websitet.
+              Vi deler gerne flere cases og konkrete resultater i et møde, hvor formatet tilpasses
+              jeres organisation og beslutningsproces.
             </p>
           </div>
         </section>
@@ -472,9 +501,8 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
               <em>Sikkerhed og governance</em> — til IT og DPO
             </h2>
             <p className="section-p">
-              Kort oversigt over, hvordan løsningen typisk hænger sammen — så den kan vedlægges en
-              intern vurdering. <strong>Juridisk præcision</strong> og fuld underdatabehandlerliste
-              leveres i jeres aftale og kan suppleres på{' '}
+              Kort oversigt til jeres interne vurdering. Juridisk præcision og fuld
+              underdatabehandlerliste leveres i aftalegrundlaget og kan suppleres på{' '}
               <a href={BOOK_MAIL} style={{ color: 'var(--amber-lt)' }}>
                 forespørgsel
               </a>
@@ -543,9 +571,8 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
                 color: 'var(--fog)',
               }}
             >
-              Yderligere detaljer (fx audit-logning ved login efter aftale, kriseredskaber og
-              beboer-sessioner) beskrives gerne i et teknisk bilag — skriv hvad jeres IT eller DPO
-              efterspørger.
+              Har jeres IT eller DPO særlige krav, leverer vi et målrettet teknisk bilag med de
+              detaljer, I har brug for.
             </p>
           </div>
         </section>
@@ -557,8 +584,7 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
               <em>Kontakt</em> — gennemgang eller pilot
             </h2>
             <p className="cta-lead">
-              Udfyld formularen — så har vi jeres henvendelse samlet og kan spore den internt. Tjek
-              også spamfiltre: svar kommer fra{' '}
+              Udfyld formularen, så planlægger vi næste skridt sammen med jer. Vi svarer hurtigt fra{' '}
               <a href={BOOK_MAIL} style={{ color: 'var(--amber-lt)' }}>
                 hej@budrcare.dk
               </a>

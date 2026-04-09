@@ -1,11 +1,16 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { createPortal } from 'react-dom';
 import { BookOpen, Mic, MicOff, Save, Sparkles, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { createClient } from '@/lib/supabase/client';
+import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
+import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 
-const RESIDENTS = [
+/** Kun til pilot/demo når der ikke findes rigtige beboere i databasen. */
+const DEMO_RESIDENT_OPTIONS = [
   { id: 'res-001', name: 'Anders M.' },
   { id: 'res-002', name: 'Finn L.' },
   { id: 'res-003', name: 'Kirsten R.' },
@@ -13,6 +18,8 @@ const RESIDENTS = [
   { id: 'res-005', name: 'Thomas B.' },
   { id: 'res-006', name: 'Lena P.' },
 ] as const;
+
+type ResidentOption = { id: string; name: string };
 
 type SpeechRec = {
   lang: string;
@@ -47,6 +54,10 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
   const [isRecording, setIsRecording] = useState(false);
   const [polishing, setPolishing] = useState(false);
   const [polishFlash, setPolishFlash] = useState(false);
+  const [residents, setResidents] = useState<ResidentOption[]>([]);
+  const [residentsLoading, setResidentsLoading] = useState(false);
+  const [residentsSource, setResidentsSource] = useState<'live' | 'demo' | null>(null);
+  const [saving, setSaving] = useState(false);
   const recognitionRef = useRef<SpeechRec | null>(null);
   const accumulatedRef = useRef('');
   const modalRef = useRef<HTMLDivElement>(null);
@@ -57,6 +68,9 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
 
   useEffect(() => {
     if (!open) {
+      setResidents([]);
+      setResidentsSource(null);
+      setResidentsLoading(false);
       try {
         recognitionRef.current?.abort?.();
       } catch {
@@ -68,7 +82,76 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
       setResidentId('');
       setPolishing(false);
       setPolishFlash(false);
+      setSaving(false);
     }
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    setResidentsLoading(true);
+    setResidentsSource(null);
+
+    void (async () => {
+      const supabase = createClient();
+      if (!supabase) {
+        if (!cancelled) {
+          setResidents([]);
+          setResidentsLoading(false);
+        }
+        return;
+      }
+
+      const { orgId, error } = await resolveStaffOrgResidents(supabase);
+      if (cancelled) return;
+
+      if (error !== null || !orgId) {
+        const pilot = carePortalPilotSimulatedData();
+        if (pilot) {
+          setResidents([...DEMO_RESIDENT_OPTIONS]);
+          setResidentsSource('demo');
+        } else {
+          setResidents([]);
+          setResidentsSource(null);
+        }
+        setResidentsLoading(false);
+        return;
+      }
+
+      const { data: rows, error: rowsErr } = await supabase
+        .from('care_residents')
+        .select('user_id, display_name')
+        .eq('org_id', orgId)
+        .order('display_name');
+
+      if (cancelled) return;
+
+      if (rowsErr || !rows?.length) {
+        const pilot = carePortalPilotSimulatedData();
+        if (pilot) {
+          setResidents([...DEMO_RESIDENT_OPTIONS]);
+          setResidentsSource('demo');
+        } else {
+          setResidents([]);
+          setResidentsSource('live');
+        }
+        setResidentsLoading(false);
+        return;
+      }
+
+      setResidents(
+        rows.map((r) => ({
+          id: r.user_id as string,
+          name: String(r.display_name ?? '').trim() || '—',
+        }))
+      );
+      setResidentsSource('live');
+      setResidentsLoading(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [open]);
 
   const stopRecognition = useCallback(() => {
@@ -178,17 +261,61 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
     }
   }, [note]);
 
-  const save = useCallback(() => {
-    const res = RESIDENTS.find((r) => r.id === residentId);
+  const save = useCallback(async () => {
+    const res = residents.find((r) => r.id === residentId);
     if (!res || !note.trim()) {
       toast.error('Vælg beboer og skriv et notat');
       return;
     }
-    toast.success(`✓ Journalnotat gemt for ${res.name}`, {
+
+    const isDemoId = residentId.startsWith('res-');
+    if (isDemoId || residentsSource === 'demo') {
+      toast.success(`Demo: notat ville være gemt for ${res.name}`, {
+        className: 'border-budr-teal/40',
+      });
+      onClose();
+      return;
+    }
+
+    setSaving(true);
+    const supabase = createClient();
+    if (!supabase) {
+      toast.error('Forbindelsesfejl');
+      setSaving(false);
+      return;
+    }
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const staffName =
+      (user?.user_metadata?.full_name as string | undefined) ?? user?.email ?? 'Ukendt personale';
+
+    const insertRow: Record<string, unknown> = {
+      resident_id: residentId,
+      staff_id: user?.id ?? null,
+      staff_name: staffName,
+      entry_text: note.trim(),
+      category: 'Observation',
+      journal_status: 'kladde',
+      show_in_diary: true,
+      approved_at: null,
+      approved_by: null,
+    };
+
+    const { error: insErr } = await supabase.from('journal_entries').insert(insertRow);
+    setSaving(false);
+
+    if (insErr) {
+      toast.error('Kunne ikke gemme notat — prøv igen');
+      return;
+    }
+
+    toast.success(`Kladde gemt for ${res.name} — findes på Dagens dagbog`, {
       className: 'border-budr-teal/40',
     });
     onClose();
-  }, [residentId, note, onClose]);
+  }, [residentId, note, residents, residentsSource, onClose]);
 
   const showDictationPanel = isRecording || note.trim() === '';
   const charCount = note.length;
@@ -221,11 +348,21 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
           <X className="h-5 w-5" />
         </button>
 
-        <div className="mb-4 flex items-center gap-2 pr-10">
+        <div className="mb-3 flex items-center gap-2 pr-10">
           <BookOpen className="h-5 w-5 shrink-0 text-budr-purple" aria-hidden />
-          <h2 id="hurtig-journal-title" className="text-sm font-semibold text-gray-900">
-            Ny journalnotat
-          </h2>
+          <div>
+            <h2 id="hurtig-journal-title" className="text-sm font-semibold text-gray-900">
+              Hurtigt stikord
+            </h2>
+            <p className="mt-1 text-[11px] leading-snug text-gray-500">
+              Gemmes som <strong className="font-medium text-gray-700">kladde</strong> med «Vis i
+              dagbog». Om aftenen samler I på{' '}
+              <Link href="/resident-360-view/dagbog" className="font-medium text-budr-purple underline">
+                Dagens dagbog
+              </Link>{' '}
+              til ét professionelt notat med AI.
+            </p>
+          </div>
         </div>
 
         <div className="mb-4">
@@ -239,15 +376,21 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
             id="hurtig-journal-resident"
             value={residentId}
             onChange={(e) => setResidentId(e.target.value)}
-            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm transition-all duration-200 focus:border-budr-purple/50 focus:outline-none focus:ring-2 focus:ring-budr-purple/20"
+            disabled={residentsLoading}
+            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm transition-all duration-200 focus:border-budr-purple/50 focus:outline-none focus:ring-2 focus:ring-budr-purple/20 disabled:opacity-60"
           >
-            <option value="">Vælg beboer</option>
-            {RESIDENTS.map((r) => (
+            <option value="">{residentsLoading ? 'Henter beboere…' : 'Vælg beboer'}</option>
+            {residents.map((r) => (
               <option key={r.id} value={r.id}>
                 {r.name}
               </option>
             ))}
           </select>
+          {!residentsLoading && residents.length === 0 && residentsSource !== 'demo' && (
+            <p className="mt-1.5 text-xs text-gray-500">
+              Ingen beboere i listen — tjek organisationstilknytning eller tilføj beboere.
+            </p>
+          )}
         </div>
 
         <div className="mb-2">
@@ -300,7 +443,7 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
                   AI strukturerer noten...
                 </span>
               ) : (
-                'Lad AI forbedre noten'
+                'Stram dette stikord med AI'
               )}
             </button>
           </div>
@@ -309,11 +452,12 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
         <div className="flex flex-col gap-2 border-t border-gray-100 pt-4">
           <button
             type="button"
-            onClick={save}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-budr-teal py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:opacity-90"
+            onClick={() => void save()}
+            disabled={saving || residentsLoading}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-budr-teal py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Save className="h-4 w-4" />
-            Gem notat
+            {saving ? 'Gemmer…' : 'Gem kladde'}
           </button>
           <button
             type="button"

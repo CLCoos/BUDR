@@ -41,22 +41,22 @@ const flagConfig = {
   },
 };
 
-const aiHandoverSuggestions = [
-  'Anders M. har haft en rolig morgen. Spiste morgenmad og tog sin medicin. Stemning 7/10, grøn trafiklys. Ingen bekymringer. Anbefaler fortsat opmuntring til udeaktivitet som del af målplan.',
-  'Finn L. er i en kritisk periode. Aktiverede kriseplan om natten. Behøver tæt opfølgning i dag. Rød trafiklys. Anbefaler kontakt med behandler. Medicin taget under observation.',
-  'Kirsten R. har haft en svær nat. Græd og ville ikke spise morgenmad. Rød trafiklys, stemning 2/10. Anbefaler en rolig samtale tidligt på dagvagten. Ingen medicin ændringer.',
-  'Maja T. viser tegn på angst men er tilgængelig for kontakt. Gul trafiklys. Vejrtrækningsøvelser hjalp i går. Anbefales fortsat støtte og opfølgning på trivsel.',
-  'Thomas B. var fraværende i går. Ingen observationer. Tjek ind ved ankomst.',
-  'Lena P. har det godt. Deltog aktivt i fællesaktiviteter. Grøn trafiklys, stemning 8/10. Ingen bekymringer.',
+/** Pladsholder {navn} erstattes med den aktuelle beboer (live UUID eller demo-id). */
+const AI_HANDOVER_TEMPLATES = [
+  '{navn} har haft en rolig morgen. Spiste morgenmad og tog sin medicin. Stemning 7/10, grøn trafiklys. Ingen bekymringer. Anbefaler fortsat opmuntring til udeaktivitet som del af målplan.',
+  '{navn} er i en kritisk periode. Aktiverede kriseplan om natten. Behøver tæt opfølgning i dag. Rød trafiklys. Anbefaler kontakt med behandler. Medicin taget under observation.',
+  '{navn} har haft en svær nat. Græd og ville ikke spise morgenmad. Rød trafiklys, stemning 2/10. Anbefaler en rolig samtale tidligt på dagvagten. Ingen medicin ændringer.',
+  '{navn} viser tegn på angst men er tilgængelig for kontakt. Gul trafiklys. Vejrtrækningsøvelser hjalp i går. Anbefales fortsat støtte og opfølgning på trivsel.',
+  '{navn} var fraværende i går. Ingen observationer. Tjek ind ved ankomst.',
+  '{navn} har det godt. Deltog aktivt i fællesaktiviteter. Grøn trafiklys, stemning 8/10. Ingen bekymringer.',
 ];
 
-export default function ResidentHandoverCard({ entry, onUpdate, carePortalDark = false }: Props) {
-  const pd = carePortalDark;
-  const [expanded, setExpanded] = useState(entry.flagColor === 'roed');
-  const [loadingAI, setLoadingAI] = useState(false);
-  const [recording, setRecording] = useState(false);
-  const [recordingSeconds, setRecordingSeconds] = useState(0);
+function fillHandoverTemplate(template: string, residentName: string): string {
+  const n = residentName.trim() || 'Beboeren';
+  return template.split('{navn}').join(n);
+}
 
+function pickHandoverAiTemplateIndex(residentId: string): number {
   const DEMO_RESIDENT_ORDER = [
     'res-001',
     'res-002',
@@ -65,16 +65,23 @@ export default function ResidentHandoverCard({ entry, onUpdate, carePortalDark =
     'res-005',
     'res-006',
   ] as const;
-  const demoIdx = DEMO_RESIDENT_ORDER.indexOf(
-    entry.residentId as (typeof DEMO_RESIDENT_ORDER)[number]
+  const demoIdx = DEMO_RESIDENT_ORDER.indexOf(residentId as (typeof DEMO_RESIDENT_ORDER)[number]);
+  if (demoIdx >= 0) return demoIdx;
+  const hash = [...residentId].reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  return hash % AI_HANDOVER_TEMPLATES.length;
+}
+
+export default function ResidentHandoverCard({ entry, onUpdate, carePortalDark = false }: Props) {
+  const pd = carePortalDark;
+  const [expanded, setExpanded] = useState(entry.flagColor === 'roed');
+  const [loadingAI, setLoadingAI] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+
+  const aiSuggestion = fillHandoverTemplate(
+    AI_HANDOVER_TEMPLATES[pickHandoverAiTemplateIndex(entry.residentId)]!,
+    entry.residentName
   );
-  const aiSuggestion =
-    demoIdx >= 0
-      ? aiHandoverSuggestions[demoIdx]!
-      : aiHandoverSuggestions[
-          [...entry.residentId].reduce((acc, ch) => acc + ch.charCodeAt(0), 0) %
-            aiHandoverSuggestions.length
-        ]!;
 
   const handleGenerateAI = async () => {
     setLoadingAI(true);

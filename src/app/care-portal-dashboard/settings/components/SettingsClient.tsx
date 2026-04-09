@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { Loader2, UserPlus, CheckCircle2, Copy } from 'lucide-react';
+import MarketingCopyCmsCard from './MarketingCopyCmsCard';
+import MarketingSectionsCmsCard from './MarketingSectionsCmsCard';
 
 type Props = {
   staffEmail: string;
@@ -351,6 +353,9 @@ export default function SettingsClient({ staffEmail, orgId }: Props) {
           </form>
         )}
       </section>
+
+      <MarketingCopyCmsCard />
+      <MarketingSectionsCmsCard />
     </div>
   );
 }

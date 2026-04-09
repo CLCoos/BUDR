@@ -48,9 +48,9 @@ interface RawCheckin {
   created_at: string;
 }
 
-type Props = { residentId: string };
+type Props = { residentId: string; /** Mørkt Care Portal (beboer 360°) */ carePortalDark?: boolean };
 
-export default function MoodTrendChart({ residentId }: Props) {
+export default function MoodTrendChart({ residentId, carePortalDark = false }: Props) {
   const [chartData, setChartData] = useState<MoodRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -119,11 +119,21 @@ export default function MoodTrendChart({ residentId }: Props) {
     const item = chartData.find((d) => d.day === label);
     const tc = item ? TRAFFIC_COLORS[item.traffic] : '#6B7280';
     return (
-      <div className="bg-white border border-gray-200 rounded-lg px-3 py-2.5 shadow-sm text-xs">
-        <div className="font-semibold text-gray-700 mb-1">{label}</div>
-        <div className="flex items-center gap-2">
+      <div
+        className={`rounded-lg px-3 py-2.5 text-xs shadow-lg ${
+          carePortalDark
+            ? 'border border-[var(--cp-border)] bg-[var(--cp-bg3)]'
+            : 'border border-gray-200 bg-white shadow-sm'
+        }`}
+      >
+        <div
+          className={`mb-1 font-semibold ${carePortalDark ? 'text-[var(--cp-text)]' : 'text-gray-700'}`}
+        >
+          {label}
+        </div>
+        <div className={`flex items-center gap-2 ${carePortalDark ? 'text-[var(--cp-muted)]' : 'text-gray-600'}`}>
           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: tc }} />
-          <span className="text-gray-600">
+          <span>
             Stemning: <strong className="tabular-nums">{score}/10</strong>
           </span>
         </div>
@@ -131,14 +141,34 @@ export default function MoodTrendChart({ residentId }: Props) {
     );
   };
 
+  const gridStroke = carePortalDark ? 'rgba(148,163,184,0.15)' : '#F3F4F6';
+  const axisTick = carePortalDark ? '#94a3b8' : '#9CA3AF';
+  const dotStroke = carePortalDark ? 'var(--cp-bg2)' : 'white';
+
   return (
-    <div className="bg-white rounded-lg border border-gray-100 p-5">
-      <div className="flex items-center justify-between mb-4">
+    <div
+      className={`rounded-lg border p-5 ${
+        carePortalDark
+          ? 'border-[var(--cp-border)] bg-[var(--cp-bg2)]'
+          : 'border-gray-100 bg-white'
+      }`}
+    >
+      <div className="mb-4 flex items-center justify-between">
         <div>
-          <div className="text-sm font-semibold text-gray-800">Stemningstrend · 7 dage</div>
-          <div className="text-xs text-gray-500 mt-0.5">Daglig check-in score (1–10)</div>
+          <div
+            className={`text-sm font-semibold ${carePortalDark ? 'text-[var(--cp-text)]' : 'text-gray-800'}`}
+          >
+            Stemningstrend · 7 dage
+          </div>
+          <div
+            className={`mt-0.5 text-xs ${carePortalDark ? 'text-[var(--cp-muted)]' : 'text-gray-500'}`}
+          >
+            Daglig check-in score (1–10)
+          </div>
         </div>
-        <div className="flex items-center gap-3 text-xs text-gray-500">
+        <div
+          className={`flex items-center gap-3 text-xs ${carePortalDark ? 'text-[var(--cp-muted)]' : 'text-gray-500'}`}
+        >
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-green-500" />
             Grøn
@@ -155,19 +185,21 @@ export default function MoodTrendChart({ residentId }: Props) {
       </div>
 
       {loading ? (
-        <div className="h-[200px] flex items-center justify-center">
+        <div className="flex h-[200px] items-center justify-center">
           <div className="flex gap-1.5">
             {[0, 150, 300].map((delay) => (
               <div
                 key={delay}
-                className="w-2 h-2 rounded-full bg-gray-300 animate-bounce"
+                className={`h-2 w-2 animate-bounce rounded-full ${carePortalDark ? 'bg-[var(--cp-muted2)]' : 'bg-gray-300'}`}
                 style={{ animationDelay: `${delay}ms` }}
               />
             ))}
           </div>
         </div>
       ) : chartData.length === 0 ? (
-        <div className="h-[200px] flex items-center justify-center text-sm text-gray-400">
+        <div
+          className={`flex h-[200px] items-center justify-center text-sm ${carePortalDark ? 'text-[var(--cp-muted)]' : 'text-gray-400'}`}
+        >
           Ingen check-in data de seneste 7 dage
         </div>
       ) : (
@@ -175,21 +207,21 @@ export default function MoodTrendChart({ residentId }: Props) {
           <AreaChart data={chartData} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
             <defs>
               <linearGradient id="moodGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#1D9E75" stopOpacity={0.15} />
+                <stop offset="5%" stopColor="#1D9E75" stopOpacity={carePortalDark ? 0.35 : 0.15} />
                 <stop offset="95%" stopColor="#1D9E75" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+            <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
             <XAxis
               dataKey="day"
-              tick={{ fontSize: 10, fill: '#9CA3AF', fontFamily: 'DM Sans' }}
+              tick={{ fontSize: 10, fill: axisTick, fontFamily: 'DM Sans' }}
               tickFormatter={(v) => (v as string).split(' ')[0]}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
               domain={[1, 10]}
-              tick={{ fontSize: 10, fill: '#9CA3AF', fontFamily: 'DM Sans' }}
+              tick={{ fontSize: 10, fill: axisTick, fontFamily: 'DM Sans' }}
               axisLine={false}
               tickLine={false}
               ticks={[1, 3, 5, 7, 10]}
@@ -212,7 +244,7 @@ export default function MoodTrendChart({ residentId }: Props) {
                     cy={props.cy}
                     r={5}
                     fill={color}
-                    stroke="white"
+                    stroke={dotStroke}
                     strokeWidth={2}
                   />
                 );
@@ -222,15 +254,21 @@ export default function MoodTrendChart({ residentId }: Props) {
         </ResponsiveContainer>
       )}
 
-      <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-        <div className="text-xs text-gray-500">
+      <div
+        className={`mt-3 flex items-center justify-between border-t pt-3 ${carePortalDark ? 'border-[var(--cp-border)]' : 'border-gray-100'}`}
+      >
+        <div className={`text-xs ${carePortalDark ? 'text-[var(--cp-muted)]' : 'text-gray-500'}`}>
           Gns. stemning:{' '}
-          <span className="font-bold text-gray-800 tabular-nums">
+          <span
+            className={`font-bold tabular-nums ${carePortalDark ? 'text-[var(--cp-text)]' : 'text-gray-800'}`}
+          >
             {avg}
             {typeof avg === 'string' && avg !== '—' ? '/10' : ''}
           </span>
         </div>
-        <div className="text-xs text-gray-500">Rød linje = bekymringsgrænse (4)</div>
+        <div className={`text-xs ${carePortalDark ? 'text-[var(--cp-muted)]' : 'text-gray-500'}`}>
+          Rød linje = bekymringsgrænse (4)
+        </div>
       </div>
     </div>
   );

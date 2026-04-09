@@ -1,19 +1,23 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Plus, X, Loader2 } from 'lucide-react';
+import { Plus, X, Loader2, Sparkles } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { formatJournalEntriesInsertError } from '@/lib/journalEntriesInsertError';
 
-const CATEGORIES = [
-  'Observation',
-  'Hændelse',
-  'Samtale',
-  'Medicin',
-  'Helbred',
-  'Stemning',
-  'Andet',
-];
+/** Fønix-inspireret: én tekstboks med faste overskrifter (jf. guide til journalnotater). */
+export const JOURNAL_NOTE_TEMPLATE = `Aktivitet/Handling
+
+
+
+Refleksion
+
+
+`;
+
+const CATEGORIES = ['Pædagogisk', 'Sundhed', 'Socialt', 'Hændelse', 'Samtale', 'Andet'];
 
 interface Props {
   residentId: string;
@@ -25,18 +29,50 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [text, setText] = useState('');
-  const [category, setCategory] = useState('Observation');
+  const [category, setCategory] = useState('Pædagogisk');
   const [saving, setSaving] = useState(false);
+  const [polishing, setPolishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  /** `kladde` = udkast; `godkendt` = officiel journal med det samme */
-  const [saveMode, setSaveMode] = useState<'kladde' | 'godkendt'>('godkendt');
+  /** Standard: kladde = dagens egne notater; godkendt = færdig journal med det samme */
+  const [saveMode, setSaveMode] = useState<'kladde' | 'godkendt'>('kladde');
+  /** Synlig på Dagens dagbog (aftensamlet overblik) */
+  const [showInDiary, setShowInDiary] = useState(true);
 
   function handleOpen() {
-    setText('');
-    setCategory('Observation');
-    setSaveMode('godkendt');
+    setText(JOURNAL_NOTE_TEMPLATE);
+    setCategory('Pædagogisk');
+    setSaveMode('kladde');
+    setShowInDiary(true);
     setError(null);
     setOpen(true);
+  }
+
+  async function handlePolish() {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    setPolishing(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/portal/journal-polish', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          draft: trimmed,
+          category,
+          residentLabel: residentName,
+        }),
+      });
+      const data = (await res.json()) as { text?: string; error?: string };
+      if (!res.ok) {
+        setError(data.error ?? 'Kunne ikke få svar fra AI');
+        return;
+      }
+      if (data.text?.trim()) setText(data.text.trim());
+    } catch {
+      setError('Netværksfejl — prøv igen');
+    } finally {
+      setPolishing(false);
+    }
   }
 
   async function handleSave() {
@@ -66,16 +102,30 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
       entry_text: text.trim(),
       category,
       journal_status: asDraft ? 'kladde' : 'godkendt',
+      show_in_diary: showInDiary,
     };
-    if (!asDraft && user?.id) {
+    if (asDraft) {
+      insertRow.approved_at = null;
+      insertRow.approved_by = null;
+    } else if (user?.id) {
       insertRow.approved_at = nowIso;
       insertRow.approved_by = user.id;
     }
 
-    const { error: insertError } = await supabase.from('journal_entries').insert(insertRow);
+    let { error: insertError } = await supabase.from('journal_entries').insert(insertRow);
+
+    if (
+      insertError &&
+      String(insertError.message ?? '').toLowerCase().includes('show_in_diary')
+    ) {
+      const retryRow = { ...insertRow };
+      delete retryRow.show_in_diary;
+      ({ error: insertError } = await supabase.from('journal_entries').insert(retryRow));
+    }
 
     if (insertError) {
-      setError('Kunne ikke gemme notat — prøv igen');
+      console.error('[WriteJournalEntry] insert', insertError);
+      setError(formatJournalEntriesInsertError(insertError));
       setSaving(false);
       return;
     }
@@ -103,7 +153,7 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
         }
       >
         <Plus size={13} />
-        Skriv notat
+        Nyt journalnotat
       </button>
 
       {/* Modal */}
@@ -132,13 +182,28 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
                   className={`text-sm font-bold ${carePortalDark ? '' : 'text-gray-900'}`}
                   style={carePortalDark ? { color: 'var(--cp-text)' } : undefined}
                 >
-                  Skriv journalnotat
+                  Ny journalnotat
                 </h2>
                 <p
                   className={`mt-0.5 text-xs ${carePortalDark ? '' : 'text-gray-500'}`}
                   style={carePortalDark ? { color: 'var(--cp-muted)' } : undefined}
                 >
                   {residentName}
+                </p>
+                <p
+                  className={`mt-2 text-[11px] leading-snug ${carePortalDark ? '' : 'text-gray-500'}`}
+                  style={carePortalDark ? { color: 'var(--cp-muted2)' } : undefined}
+                >
+                  Standard er <strong className="font-medium">kladde</strong> — jeres egne stikord i løbet
+                  af dagen. På{' '}
+                  <Link
+                    href="/resident-360-view/dagbog"
+                    className="font-medium underline underline-offset-2"
+                    style={carePortalDark ? { color: 'var(--cp-green)' } : { color: '#0F1B2D' }}
+                  >
+                    Dagens dagbog
+                  </Link>{' '}
+                  kan I om aftenen samle dagens kladder til ét professionelt notat med AI.
                 </p>
               </div>
               <button
@@ -198,22 +263,41 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
                 </div>
               </div>
 
-              {/* Text */}
+              {/* Single text box: Aktivitet/Handling + Refleksion */}
               <div>
-                <span
-                  className={`mb-2 block text-xs font-medium ${carePortalDark ? '' : 'text-gray-500'}`}
-                  style={carePortalDark ? { color: 'var(--cp-muted2)' } : undefined}
-                >
-                  Notat
-                </span>
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                  <span
+                    className={`block text-xs font-medium ${carePortalDark ? '' : 'text-gray-500'}`}
+                    style={carePortalDark ? { color: 'var(--cp-muted2)' } : undefined}
+                  >
+                    Notat (én tekst — brug overskrifterne)
+                  </span>
+                  <button
+                    type="button"
+                    disabled={polishing || !text.trim()}
+                    onClick={() => void handlePolish()}
+                    className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                      carePortalDark
+                        ? 'border-[var(--cp-border)] text-[var(--cp-green)] hover:bg-white/5'
+                        : 'border-gray-200 text-[#0F1B2D] hover:bg-gray-50'
+                    }`}
+                  >
+                    {polishing ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : (
+                      <Sparkles size={12} />
+                    )}
+                    Fagliggør med AI
+                  </button>
+                </div>
                 <textarea
                   value={text}
                   onChange={(e) => setText(e.target.value)}
-                  placeholder="Beskriv observationen, hændelsen eller samtalen…"
-                  rows={5}
+                  placeholder={JOURNAL_NOTE_TEMPLATE}
+                  rows={12}
                   // eslint-disable-next-line jsx-a11y/no-autofocus
                   autoFocus
-                  className={`w-full resize-none rounded-xl border px-3 py-2.5 text-sm focus:outline-none ${
+                  className={`w-full resize-y rounded-xl border px-3 py-2.5 text-sm leading-relaxed focus:outline-none ${
                     carePortalDark ? '' : 'border-gray-200 focus:border-[#1D9E75]'
                   }`}
                   style={
@@ -226,7 +310,49 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
                       : undefined
                   }
                 />
+                <p
+                  className={`mt-1.5 text-[11px] leading-snug ${carePortalDark ? '' : 'text-gray-400'}`}
+                  style={carePortalDark ? { color: 'var(--cp-muted2)' } : undefined}
+                >
+                  Under <strong className="font-medium">Aktivitet/Handling</strong>: hvad skete der?{' '}
+                  Under <strong className="font-medium">Refleksion</strong>: faglig vurdering og
+                  næste skridt. «Fagliggør med AI» strammer ét notat; den samlede aften-sammenfatning
+                  findes på Dagens dagbog.
+                </p>
               </div>
+
+              <label
+                className={`flex cursor-pointer items-start gap-2.5 rounded-xl border px-3 py-2.5 ${
+                  carePortalDark ? '' : 'border-gray-100 bg-gray-50/80'
+                }`}
+                style={
+                  carePortalDark
+                    ? { borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg3)' }
+                    : undefined
+                }
+              >
+                <input
+                  type="checkbox"
+                  checked={showInDiary}
+                  onChange={(e) => setShowInDiary(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 accent-[#1D9E75]"
+                />
+                <span className="text-xs leading-snug">
+                  <span
+                    className={`font-semibold ${carePortalDark ? '' : 'text-gray-800'}`}
+                    style={carePortalDark ? { color: 'var(--cp-text)' } : undefined}
+                  >
+                    Vis i dagbog
+                  </span>
+                  <span
+                    className={`block ${carePortalDark ? '' : 'text-gray-500'}`}
+                    style={carePortalDark ? { color: 'var(--cp-muted)' } : undefined}
+                  >
+                    Medtag dette notat på <em className="not-italic">Dagens dagbog</em> (samlet
+                    skriv til aftenholdet).
+                  </span>
+                </span>
+              </label>
 
               <div>
                 <span

@@ -55,17 +55,24 @@ export default function ResidentHavenTab({ residentId, residentName }: Props) {
   }, [residentId]);
 
   if (plots === null) {
-    return <div className="py-12 text-center text-gray-400 text-sm">Indlæser have…</div>;
+    return (
+      <div className="py-12 text-center text-sm" style={{ color: 'var(--cp-muted)' }}>
+        Indlæser have…
+      </div>
+    );
   }
 
   if (plots.length === 0) {
     return (
-      <div className="rounded-2xl border-2 border-dashed border-gray-200 py-16 text-center">
-        <p className="text-3xl mb-3">🌱</p>
-        <p className="text-gray-500 font-semibold">
+      <div
+        className="rounded-2xl border-2 border-dashed py-16 text-center"
+        style={{ borderColor: 'var(--cp-border)' }}
+      >
+        <p className="mb-3 text-3xl">🌱</p>
+        <p className="font-semibold" style={{ color: 'var(--cp-muted)' }}>
           {residentName.split(' ')[0]} har ikke plantet noget endnu
         </p>
-        <p className="text-gray-400 text-sm mt-1">
+        <p className="mt-1 text-sm" style={{ color: 'var(--cp-muted2)' }}>
           Haven vises her, når borgeren tilføjer planter i Lys
         </p>
       </div>
@@ -93,7 +100,9 @@ export default function ResidentHavenTab({ residentId, residentName }: Props) {
       />
 
       <div>
-        <h2 className="text-base font-bold text-gray-800 mb-3">Planter ({plots.length})</h2>
+        <h2 className="mb-3 text-base font-bold" style={{ color: 'var(--cp-text)' }}>
+          Planter ({plots.length})
+        </h2>
         <div className="space-y-3">
           {plots.map((plot) => {
             const accent = HAVEN_PLANT_ACCENTS[plot.plant_type];
@@ -106,7 +115,7 @@ export default function ResidentHavenTab({ residentId, residentName }: Props) {
             return (
               <div
                 key={plot.id}
-                className="flex items-start gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
+                className="flex items-start gap-4 rounded-2xl border border-[var(--cp-border)] bg-[var(--cp-bg2)] p-4 shadow-sm"
               >
                 <div
                   className="w-14 h-14 shrink-0 rounded-xl flex items-end justify-center overflow-hidden pb-0.5"
@@ -114,9 +123,11 @@ export default function ResidentHavenTab({ residentId, residentName }: Props) {
                 >
                   <HavenPlantSvg type={plot.plant_type} stage={plot.growth_stage} />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                    <p className="text-sm font-bold text-gray-800">{plot.plant_name}</p>
+                <div className="min-w-0 flex-1">
+                  <div className="mb-0.5 flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-bold" style={{ color: 'var(--cp-text)' }}>
+                      {plot.plant_name}
+                    </p>
                     <span
                       className="text-[10px] font-bold rounded-full px-2 py-0.5"
                       style={{ backgroundColor: `${accent}18`, color: accent }}
@@ -124,7 +135,7 @@ export default function ResidentHavenTab({ residentId, residentName }: Props) {
                       {HAVEN_PLANT_LABELS[plot.plant_type]}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500 mb-2">
+                  <p className="mb-2 text-xs" style={{ color: 'var(--cp-muted)' }}>
                     {HAVEN_STAGE_LABELS[plot.growth_stage]} · {plot.total_water} 💧 i alt
                     {plot.last_watered_at && (
                       <>
@@ -138,9 +149,11 @@ export default function ResidentHavenTab({ residentId, residentName }: Props) {
                     )}
                   </p>
                   {plot.goal_text && (
-                    <p className="text-xs text-gray-500 italic mb-2">«{plot.goal_text}»</p>
+                    <p className="mb-2 text-xs italic" style={{ color: 'var(--cp-muted)' }}>
+                      «{plot.goal_text}»
+                    </p>
                   )}
-                  <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+                  <div className="h-2 overflow-hidden rounded-full" style={{ backgroundColor: 'var(--cp-bg3)' }}>
                     <div
                       className="h-full rounded-full transition-all duration-700"
                       style={{

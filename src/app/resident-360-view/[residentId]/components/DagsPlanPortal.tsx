@@ -84,8 +84,10 @@ function PlanTimeline({ items, compact = false }: { items: PlanItem[]; compact?:
 
   return (
     <div className="relative">
-      {/* Vertical rule */}
-      <div className="absolute left-[62px] top-3 bottom-3 w-px bg-gray-100" />
+      <div
+        className="absolute bottom-3 left-[62px] top-3 w-px"
+        style={{ backgroundColor: 'var(--cp-border)' }}
+      />
 
       <div className={compact ? 'space-y-1' : 'space-y-0.5'}>
         {sorted.map((item, idx) => {
@@ -96,61 +98,69 @@ function PlanTimeline({ items, compact = false }: { items: PlanItem[]; compact?:
           const icon = CATEGORY_ICONS[item.category] ?? '📌';
 
           return (
-            <div key={item.id ?? idx} className="flex gap-3 items-start py-2">
-              {/* Time */}
+            <div key={item.id ?? idx} className="flex items-start gap-3 py-2">
               <div
-                className="w-14 flex-shrink-0 text-right text-xs tabular-nums pt-0.5"
+                className="w-14 flex-shrink-0 pt-0.5 text-right text-xs tabular-nums"
                 style={{
                   fontWeight: isCurrent ? 700 : 400,
-                  color: isCurrent ? TEAL : '#9CA3AF',
+                  color: isCurrent ? TEAL : 'var(--cp-muted2)',
                 }}
               >
                 {item.time}
               </div>
 
-              {/* Dot */}
-              <div className="flex-shrink-0 mt-1 relative z-10">
+              <div className="relative z-10 mt-1 flex-shrink-0">
                 {isCurrent ? (
                   <div
-                    className="w-3 h-3 rounded-full ring-4 ring-[#1D9E7522]"
+                    className="h-3 w-3 rounded-full ring-4 ring-[#1D9E7533]"
                     style={{ backgroundColor: TEAL }}
                   />
                 ) : (
                   <div
-                    className="w-2.5 h-2.5 rounded-full border-2"
+                    className="h-2.5 w-2.5 rounded-full border-2"
                     style={{
-                      backgroundColor: isPast ? '#E5E7EB' : 'white',
-                      borderColor: isPast ? '#D1D5DB' : '#E5E7EB',
+                      backgroundColor: isPast ? 'var(--cp-bg3)' : 'var(--cp-bg2)',
+                      borderColor: 'var(--cp-border2)',
                     }}
                   />
                 )}
               </div>
 
-              {/* Content */}
               <div
-                className={`flex-1 min-w-0 rounded-lg px-3 py-2 transition-colors ${
-                  isCurrent
-                    ? 'bg-emerald-50 border border-emerald-100'
-                    : 'bg-gray-50 border border-gray-100'
-                }`}
-                style={{ opacity: isPast ? 0.55 : 1 }}
+                className="min-w-0 flex-1 rounded-lg border px-3 py-2 transition-colors"
+                style={{
+                  opacity: isPast ? 0.55 : 1,
+                  backgroundColor: isCurrent ? 'rgba(45,212,160,0.12)' : 'var(--cp-bg3)',
+                  borderColor: isCurrent ? 'rgba(45,212,160,0.35)' : 'var(--cp-border)',
+                }}
               >
                 <div className="flex items-center gap-1.5">
                   <span className="text-base leading-none">{icon}</span>
                   <span
-                    className="text-sm font-medium truncate"
-                    style={{ color: isCurrent ? TEAL : '#374151' }}
+                    className="truncate text-sm font-medium"
+                    style={{ color: isCurrent ? TEAL : 'var(--cp-text)' }}
                   >
                     {item.title}
                     {isCurrent && (
-                      <span className="ml-2 text-xs font-semibold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                      <span
+                        className="ml-2 rounded-full px-1.5 py-0.5 text-xs font-semibold"
+                        style={{
+                          backgroundColor: 'rgba(45,212,160,0.2)',
+                          color: 'var(--cp-green)',
+                        }}
+                      >
                         Nu
                       </span>
                     )}
                   </span>
                 </div>
                 {item.description && !compact && (
-                  <p className="text-xs text-gray-500 mt-0.5 pl-6 truncate">{item.description}</p>
+                  <p
+                    className="mt-0.5 truncate pl-6 text-xs"
+                    style={{ color: 'var(--cp-muted)' }}
+                  >
+                    {item.description}
+                  </p>
                 )}
               </div>
             </div>
@@ -285,16 +295,29 @@ export default function DagsPlanPortal({
     <div className="space-y-6">
       <Toaster position="top-right" richColors />
       {/* ── Section A: Active daily plan ──────────────────────────────────── */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+      <div className="overflow-hidden rounded-xl border border-[var(--cp-border)] bg-[var(--cp-bg2)]">
+        <div
+          className="flex items-center justify-between border-b border-[var(--cp-border)] px-5 py-4"
+        >
           <div className="flex items-center gap-2">
-            <CalendarDays size={16} className="text-gray-400" />
-            <span className="text-sm font-semibold text-gray-800">Aktiv dagsplan</span>
-            <span className="text-xs text-gray-400 capitalize">{todayLabel}</span>
+            <CalendarDays size={16} style={{ color: 'var(--cp-muted2)' }} />
+            <span className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+              Aktiv dagsplan
+            </span>
+            <span className="text-xs capitalize" style={{ color: 'var(--cp-muted)' }}>
+              {todayLabel}
+            </span>
           </div>
           {activePlan && (
-            <span className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full font-medium">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span
+              className="flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium"
+              style={{
+                color: 'var(--cp-green)',
+                backgroundColor: 'var(--cp-green-dim)',
+                borderColor: 'rgba(45,212,160,0.25)',
+              }}
+            >
+              <div className="h-1.5 w-1.5 rounded-full bg-[var(--cp-green)]" />
               Aktiv i Lys-appen
             </span>
           )}
@@ -303,9 +326,11 @@ export default function DagsPlanPortal({
         <div className="px-5 py-4">
           {!activePlan || activePlan.plan_items.length === 0 ? (
             <div className="py-8 text-center">
-              <Inbox size={32} className="mx-auto text-gray-300 mb-3" />
-              <p className="text-sm font-medium text-gray-500">Ingen godkendt plan for i dag</p>
-              <p className="text-xs text-gray-400 mt-1">
+              <Inbox size={32} className="mx-auto mb-3" style={{ color: 'var(--cp-muted2)' }} />
+              <p className="text-sm font-medium" style={{ color: 'var(--cp-muted)' }}>
+                Ingen godkendt plan for i dag
+              </p>
+              <p className="mt-1 text-xs" style={{ color: 'var(--cp-muted2)' }}>
                 {residentName} ser den samme besked i sin app
               </p>
             </div>
@@ -316,14 +341,23 @@ export default function DagsPlanPortal({
       </div>
 
       {/* ── Section B: Pending proposals ──────────────────────────────────── */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+      <div className="overflow-hidden rounded-xl border border-[var(--cp-border)] bg-[var(--cp-bg2)]">
+        <div className="flex items-center justify-between border-b border-[var(--cp-border)] px-5 py-4">
           <div className="flex items-center gap-2">
-            <Clock size={16} className="text-gray-400" />
-            <span className="text-sm font-semibold text-gray-800">Afventende forslag</span>
+            <Clock size={16} style={{ color: 'var(--cp-muted2)' }} />
+            <span className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+              Afventende forslag
+            </span>
             {proposals.length > 0 && (
-              <span className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse inline-block" />
+              <span
+                className="flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium"
+                style={{
+                  color: 'var(--cp-amber)',
+                  backgroundColor: 'var(--cp-amber-dim)',
+                  borderColor: 'rgba(246,173,85,0.35)',
+                }}
+              >
+                <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--cp-amber)]" />
                 {proposals.length} afventer
               </span>
             )}
@@ -332,10 +366,12 @@ export default function DagsPlanPortal({
 
         {proposals.length === 0 ? (
           <div className="px-5 py-10 text-center">
-            <p className="text-sm text-gray-400">Ingen forslag afventer godkendelse</p>
+            <p className="text-sm" style={{ color: 'var(--cp-muted)' }}>
+              Ingen forslag afventer godkendelse
+            </p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-[var(--cp-border)]">
             {proposals.map((proposal) => {
               const isActioning = actioningId === proposal.id;
               const isRejected = rejectedIds.has(proposal.id);
@@ -344,64 +380,102 @@ export default function DagsPlanPortal({
               return (
                 <div
                   key={proposal.id}
-                  className={`px-5 py-5 transition-all duration-300 ${isRejected ? 'bg-gray-50 opacity-60' : ''}`}
+                  className={`px-5 py-5 transition-all duration-300 ${isRejected ? 'opacity-60' : ''}`}
+                  style={isRejected ? { backgroundColor: 'var(--cp-bg3)' } : undefined}
                 >
-                  {/* Proposal header */}
-                  <div className="flex items-start justify-between gap-4 mb-3">
+                  <div className="mb-3 flex items-start justify-between gap-4">
                     <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                      <div className="mb-1 flex items-center gap-2">
+                        <span
+                          className="rounded-full border px-2 py-0.5 text-xs font-semibold"
+                          style={{
+                            color: 'var(--cp-amber)',
+                            backgroundColor: 'var(--cp-amber-dim)',
+                            borderColor: 'rgba(246,173,85,0.35)',
+                          }}
+                        >
                           ⏳ Afventer godkendelse
                         </span>
                         {isRejected && (
-                          <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                          <span
+                            className="rounded-full px-2 py-0.5 text-xs font-semibold"
+                            style={{
+                              color: 'var(--cp-muted)',
+                              backgroundColor: 'var(--cp-bg3)',
+                            }}
+                          >
                             Afvist
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs" style={{ color: 'var(--cp-muted2)' }}>
                         Sendt {formatTimestamp(proposal.created_at)}
                       </p>
                     </div>
                   </div>
 
-                  {/* Borger's request */}
-                  <div className="mb-3 rounded-lg bg-gray-50 border border-gray-100 px-3 py-2.5">
-                    <p className="text-xs font-medium text-gray-500 mb-0.5">Borgerens ønske</p>
-                    <p className="text-sm text-gray-700">{proposal.user_message}</p>
+                  <div
+                    className="mb-3 rounded-lg border px-3 py-2.5"
+                    style={{
+                      backgroundColor: 'var(--cp-bg3)',
+                      borderColor: 'var(--cp-border)',
+                    }}
+                  >
+                    <p className="mb-0.5 text-xs font-medium" style={{ color: 'var(--cp-muted)' }}>
+                      Borgerens ønske
+                    </p>
+                    <p className="text-sm" style={{ color: 'var(--cp-text)' }}>
+                      {proposal.user_message}
+                    </p>
                   </div>
 
-                  {/* AI reasoning */}
                   {proposal.ai_reasoning && (
-                    <div className="mb-3 rounded-lg bg-blue-50 border border-blue-100 px-3 py-2.5">
-                      <p className="text-xs font-medium text-blue-600 mb-0.5">AI-begrundelse</p>
-                      <p className="text-sm text-blue-800 leading-relaxed">
+                    <div
+                      className="mb-3 rounded-lg border px-3 py-2.5"
+                      style={{
+                        backgroundColor: 'rgba(96,165,250,0.1)',
+                        borderColor: 'rgba(96,165,250,0.25)',
+                      }}
+                    >
+                      <p className="mb-0.5 text-xs font-medium text-sky-400">AI-begrundelse</p>
+                      <p className="text-sm leading-relaxed text-sky-100/90">
                         {proposal.ai_reasoning}
                       </p>
                     </div>
                   )}
 
-                  {/* Proposed timeline */}
-                  <div className="rounded-lg border border-gray-100 overflow-hidden mb-4">
-                    <div className="px-3 py-2 bg-gray-50 border-b border-gray-100">
-                      <p className="text-xs font-medium text-gray-500">Foreslået plan</p>
+                  <div
+                    className="mb-4 overflow-hidden rounded-lg border"
+                    style={{ borderColor: 'var(--cp-border)' }}
+                  >
+                    <div
+                      className="border-b border-[var(--cp-border)] px-3 py-2"
+                      style={{
+                        backgroundColor: 'var(--cp-bg3)',
+                      }}
+                    >
+                      <p className="text-xs font-medium" style={{ color: 'var(--cp-muted)' }}>
+                        Foreslået plan
+                      </p>
                     </div>
                     <div className="px-3 py-3">
                       <PlanTimeline items={proposal.proposed_items} compact />
                     </div>
                   </div>
 
-                  {/* Error */}
-                  {errorMsg && <p className="text-xs text-red-600 mb-3">{errorMsg}</p>}
+                  {errorMsg && (
+                    <p className="mb-3 text-xs" style={{ color: 'var(--cp-red)' }}>
+                      {errorMsg}
+                    </p>
+                  )}
 
-                  {/* Actions */}
                   {!isRejected && (
                     <div className="flex gap-2">
                       <button
                         type="button"
                         onClick={() => handleApprove(proposal)}
                         disabled={!!actioningId}
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all disabled:opacity-50 active:scale-[0.98]"
+                        className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-all disabled:opacity-50 active:scale-[0.98]"
                         style={{ backgroundColor: TEAL }}
                       >
                         {isActioning ? (
@@ -415,7 +489,12 @@ export default function DagsPlanPortal({
                         type="button"
                         onClick={() => handleReject(proposal.id)}
                         disabled={!!actioningId}
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-gray-600 bg-white border border-gray-200 hover:border-red-300 hover:text-red-600 transition-all disabled:opacity-50 active:scale-[0.98]"
+                        className="flex items-center gap-1.5 rounded-lg border px-4 py-2 text-sm font-semibold transition-all disabled:opacity-50 active:scale-[0.98]"
+                        style={{
+                          color: 'var(--cp-muted)',
+                          backgroundColor: 'var(--cp-bg3)',
+                          borderColor: 'var(--cp-border)',
+                        }}
                       >
                         {isActioning ? (
                           <Loader2 size={14} className="animate-spin" />
@@ -433,8 +512,7 @@ export default function DagsPlanPortal({
         )}
       </div>
 
-      {/* ── Section C: Mood trend ──────────────────────────────────────────── */}
-      <MoodTrendChart residentId={residentId} />
+      <MoodTrendChart residentId={residentId} carePortalDark />
     </div>
   );
 }

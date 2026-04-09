@@ -24,7 +24,7 @@ export default async function CarePortalResidentsSimPage() {
       <Suspense fallback={<ResidentsFallback />}>
         <ResidentsDemoGrid
           residentsListPath="/care-portal-residents"
-          residentPath={(id) => `/care-portal-resident-preview/${id}`}
+          residentPathBase="/care-portal-resident-preview"
         />
       </Suspense>
     </PortalShell>

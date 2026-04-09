@@ -14,6 +14,7 @@ import StatCards from './StatCards';
 import HurtigJournalModal from './HurtigJournalModal';
 import JournalOverblikWidget from './JournalOverblikWidget';
 import ActionCards from './ActionCards';
+import DashboardModule from './DashboardModule';
 import ResidentListDemo from './ResidentListDemo';
 import { BookOpen, RefreshCw } from 'lucide-react';
 import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
@@ -234,11 +235,31 @@ function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
 
         <ActionCards onOpenOverrapport={() => setOverrapportPanelOpen(true)} showPilotBorgerCard />
 
-        <div className="mb-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
-          {medicationWidget}
-          <BekymringsnotatWidget demoMode />
-          <KalenderWidget variant="demo" />
-          <OpgaveWidget />
+        <div className="mb-6 space-y-4">
+          <DashboardModule
+            id="dash-pilot-med"
+            title="Medicin"
+            subtitle="Dagens kurser og opfølgning"
+            defaultOpen
+          >
+            {medicationWidget}
+          </DashboardModule>
+          <DashboardModule
+            id="dash-pilot-bek"
+            title="Bekymringsnotater"
+            subtitle="Hurtige observationer"
+          >
+            <BekymringsnotatWidget demoMode />
+          </DashboardModule>
+          <DashboardModule
+            id="dash-pilot-plan"
+            title="Plan og opgaver"
+            subtitle="Kalender og opgaver"
+            contentClassName="p-4 pt-3 space-y-5"
+          >
+            <KalenderWidget variant="demo" />
+            <OpgaveWidget />
+          </DashboardModule>
         </div>
 
         <div className="mb-6">
@@ -396,14 +417,42 @@ function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
       {/* Action cards */}
       <ActionCards onOpenOverrapport={() => setOverrapportPanelOpen(true)} />
 
-      {/* 2-col fluid widget grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-6">
-        {medicationWidget}
-        <JournalOverblikWidget />
-        <BekymringsnotatWidget />
-        <KalenderWidget />
-        <OnCallStaffWidget />
-        <OpgaveWidget />
+      <div className="mb-6 space-y-4">
+        <DashboardModule
+          id="dash-live-med"
+          title="Medicin"
+          subtitle="Dagens kurser og opfølgning"
+          defaultOpen
+        >
+          {medicationWidget}
+        </DashboardModule>
+        <DashboardModule
+          id="dash-live-journal"
+          title="Journal"
+          subtitle="Seneste notater og godkendelse"
+          defaultOpen
+        >
+          <JournalOverblikWidget />
+        </DashboardModule>
+        <DashboardModule
+          id="dash-live-bek"
+          title="Bekymringsnotater"
+          subtitle="Hurtige observationer · synligt på 360°"
+        >
+          <BekymringsnotatWidget />
+        </DashboardModule>
+        <DashboardModule
+          id="dash-live-plan"
+          title="Planlægning og vagt"
+          subtitle="Aftaler, vagttelefon og opgaver"
+          contentClassName="p-4 pt-3 space-y-5"
+        >
+          <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+            <KalenderWidget />
+            <OnCallStaffWidget />
+          </div>
+          <OpgaveWidget />
+        </DashboardModule>
       </div>
 
       {/* Stat cards */}
@@ -419,10 +468,10 @@ function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
         type="button"
         onClick={() => setJournalOpen(true)}
         className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-budr-purple px-4 py-3 text-sm font-medium text-white shadow-lg transition-all duration-200 hover:scale-105"
-        aria-label="Åbn hurtignotat til journal"
+        aria-label="Åbn hurtigt stikord (kladde til Dagens dagbog)"
       >
         <BookOpen className="h-5 w-5 shrink-0" aria-hidden />
-        <span>Hurtignotat</span>
+        <span>Hurtigt stikord</span>
       </button>
 
       <HurtigJournalModal open={journalOpen} onClose={closeJournal} />
