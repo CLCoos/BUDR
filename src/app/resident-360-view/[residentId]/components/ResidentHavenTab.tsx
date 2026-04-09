@@ -153,7 +153,10 @@ export default function ResidentHavenTab({ residentId, residentName }: Props) {
                       «{plot.goal_text}»
                     </p>
                   )}
-                  <div className="h-2 overflow-hidden rounded-full" style={{ backgroundColor: 'var(--cp-bg3)' }}>
+                  <div
+                    className="h-2 overflow-hidden rounded-full"
+                    style={{ backgroundColor: 'var(--cp-bg3)' }}
+                  >
                     <div
                       className="h-full rounded-full transition-all duration-700"
                       style={{

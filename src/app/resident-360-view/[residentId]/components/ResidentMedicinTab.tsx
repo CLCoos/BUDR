@@ -363,7 +363,9 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
         <div className="flex items-center gap-2">
           <Pill
             size={16}
-            className={givenCount === totalActive ? 'text-[var(--cp-green)]' : 'text-[var(--cp-amber)]'}
+            className={
+              givenCount === totalActive ? 'text-[var(--cp-green)]' : 'text-[var(--cp-amber)]'
+            }
           />
           <span
             className="text-sm font-semibold"

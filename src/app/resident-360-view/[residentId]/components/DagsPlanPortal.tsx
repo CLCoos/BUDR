@@ -155,10 +155,7 @@ function PlanTimeline({ items, compact = false }: { items: PlanItem[]; compact?:
                   </span>
                 </div>
                 {item.description && !compact && (
-                  <p
-                    className="mt-0.5 truncate pl-6 text-xs"
-                    style={{ color: 'var(--cp-muted)' }}
-                  >
+                  <p className="mt-0.5 truncate pl-6 text-xs" style={{ color: 'var(--cp-muted)' }}>
                     {item.description}
                   </p>
                 )}
@@ -296,9 +293,7 @@ export default function DagsPlanPortal({
       <Toaster position="top-right" richColors />
       {/* ── Section A: Active daily plan ──────────────────────────────────── */}
       <div className="overflow-hidden rounded-xl border border-[var(--cp-border)] bg-[var(--cp-bg2)]">
-        <div
-          className="flex items-center justify-between border-b border-[var(--cp-border)] px-5 py-4"
-        >
+        <div className="flex items-center justify-between border-b border-[var(--cp-border)] px-5 py-4">
           <div className="flex items-center gap-2">
             <CalendarDays size={16} style={{ color: 'var(--cp-muted2)' }} />
             <span className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>

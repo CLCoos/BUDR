@@ -357,7 +357,10 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
             <p className="mt-1 text-[11px] leading-snug text-gray-500">
               Gemmes som <strong className="font-medium text-gray-700">kladde</strong> med «Vis i
               dagbog». Om aftenen samler I på{' '}
-              <Link href="/resident-360-view/dagbog" className="font-medium text-budr-purple underline">
+              <Link
+                href="/resident-360-view/dagbog"
+                className="font-medium text-budr-purple underline"
+              >
                 Dagens dagbog
               </Link>{' '}
               til ét professionelt notat med AI.

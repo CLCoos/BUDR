@@ -48,7 +48,10 @@ interface RawCheckin {
   created_at: string;
 }
 
-type Props = { residentId: string; /** Mørkt Care Portal (beboer 360°) */ carePortalDark?: boolean };
+type Props = {
+  residentId: string;
+  /** Mørkt Care Portal (beboer 360°) */ carePortalDark?: boolean;
+};
 
 export default function MoodTrendChart({ residentId, carePortalDark = false }: Props) {
   const [chartData, setChartData] = useState<MoodRow[]>([]);
@@ -131,7 +134,9 @@ export default function MoodTrendChart({ residentId, carePortalDark = false }: P
         >
           {label}
         </div>
-        <div className={`flex items-center gap-2 ${carePortalDark ? 'text-[var(--cp-muted)]' : 'text-gray-600'}`}>
+        <div
+          className={`flex items-center gap-2 ${carePortalDark ? 'text-[var(--cp-muted)]' : 'text-gray-600'}`}
+        >
           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: tc }} />
           <span>
             Stemning: <strong className="tabular-nums">{score}/10</strong>
@@ -148,9 +153,7 @@ export default function MoodTrendChart({ residentId, carePortalDark = false }: P
   return (
     <div
       className={`rounded-lg border p-5 ${
-        carePortalDark
-          ? 'border-[var(--cp-border)] bg-[var(--cp-bg2)]'
-          : 'border-gray-100 bg-white'
+        carePortalDark ? 'border-[var(--cp-border)] bg-[var(--cp-bg2)]' : 'border-gray-100 bg-white'
       }`}
     >
       <div className="mb-4 flex items-center justify-between">

@@ -4,9 +4,7 @@ import { redirect } from 'next/navigation';
 import PortalShell from '@/components/PortalShell';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { parseStaffOrgId } from '@/lib/staffOrgScope';
-import DagbogEveningTools, {
-  type SynthesisTarget,
-} from './components/DagbogEveningTools';
+import DagbogEveningTools, { type SynthesisTarget } from './components/DagbogEveningTools';
 
 function copenhagenYmd(d: Date): string {
   return new Intl.DateTimeFormat('sv-SE', {
@@ -126,9 +124,9 @@ export default async function DagensDagbogPage() {
             Dagens dagbog
           </h1>
           <p className="mt-1 text-sm" style={{ color: 'var(--cp-muted, #6b7280)' }}>
-            Notater markeret &ldquo;Vis i dagbog&rdquo; — {dateLabel} (Europa/København). I løbet af dagen
-            gemmes typisk som <strong className="font-medium">kladde</strong> (jeres egne stikord); om
-            aftenen kan I samle til ét professionelt notat nedenfor.
+            Notater markeret &ldquo;Vis i dagbog&rdquo; — {dateLabel} (Europa/København). I løbet af
+            dagen gemmes typisk som <strong className="font-medium">kladde</strong> (jeres egne
+            stikord); om aftenen kan I samle til ét professionelt notat nedenfor.
           </p>
         </div>
 

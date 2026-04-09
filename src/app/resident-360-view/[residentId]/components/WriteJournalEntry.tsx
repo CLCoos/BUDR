@@ -116,7 +116,9 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
 
     if (
       insertError &&
-      String(insertError.message ?? '').toLowerCase().includes('show_in_diary')
+      String(insertError.message ?? '')
+        .toLowerCase()
+        .includes('show_in_diary')
     ) {
       const retryRow = { ...insertRow };
       delete retryRow.show_in_diary;
@@ -194,8 +196,8 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
                   className={`mt-2 text-[11px] leading-snug ${carePortalDark ? '' : 'text-gray-500'}`}
                   style={carePortalDark ? { color: 'var(--cp-muted2)' } : undefined}
                 >
-                  Standard er <strong className="font-medium">kladde</strong> — jeres egne stikord i løbet
-                  af dagen. På{' '}
+                  Standard er <strong className="font-medium">kladde</strong> — jeres egne stikord i
+                  løbet af dagen. På{' '}
                   <Link
                     href="/resident-360-view/dagbog"
                     className="font-medium underline underline-offset-2"
@@ -316,8 +318,8 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
                 >
                   Under <strong className="font-medium">Aktivitet/Handling</strong>: hvad skete der?{' '}
                   Under <strong className="font-medium">Refleksion</strong>: faglig vurdering og
-                  næste skridt. «Fagliggør med AI» strammer ét notat; den samlede aften-sammenfatning
-                  findes på Dagens dagbog.
+                  næste skridt. «Fagliggør med AI» strammer ét notat; den samlede
+                  aften-sammenfatning findes på Dagens dagbog.
                 </p>
               </div>
 

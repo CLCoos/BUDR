@@ -7,7 +7,11 @@ export function formatJournalEntriesInsertError(err: PostgrestError | null): str
   const msg = raw.toLowerCase();
   const code = err.code ?? '';
 
-  if (code === '42501' || msg.includes('row-level security') || msg.includes('violates row-level security')) {
+  if (
+    code === '42501' ||
+    msg.includes('row-level security') ||
+    msg.includes('violates row-level security')
+  ) {
     return 'Ingen adgang til at gemme journal for denne beboer. Tjek org_id på din bruger og at beboeren tilhører samme bosted.';
   }
   if (
