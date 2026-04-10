@@ -2,9 +2,29 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { AlertTriangle, Clock, Activity, Shield, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
 import { logPortalAudit } from '@/lib/auditClient';
+
+/** PostgREST kræver FK for embed; vi henter navne i et separat kald. */
+async function loadResidentNamesByUserId(
+  supabase: SupabaseClient,
+  orgId: string
+): Promise<Record<string, string>> {
+  const { data } = await supabase
+    .from('care_residents')
+    .select('user_id, display_name')
+    .eq('org_id', orgId);
+
+  const map: Record<string, string> = {};
+  for (const r of data ?? []) {
+    const row = r as { user_id: string; display_name: string | null };
+    if (!row.user_id) continue;
+    map[row.user_id] = String(row.display_name ?? '').trim() || 'Ukendt beboer';
+  }
+  return map;
+}
 
 type AlertType =
   | 'inaktivitet'
@@ -26,7 +46,6 @@ interface DbNotification {
   detail: string;
   severity: Severity;
   created_at: string;
-  care_residents: { display_name: string } | null;
 }
 
 interface AlertRow {
@@ -48,7 +67,6 @@ interface CrisisAlertDb {
   triggered_at: string;
   status: 'active' | 'acknowledged' | 'resolved';
   trin: number;
-  care_residents: { display_name: string } | null;
 }
 
 const alertTypeConfig: Record<
@@ -189,9 +207,11 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
       return;
     }
 
+    const nameByUserId = await loadResidentNamesByUserId(supabase, orgId);
+
     const { data, error } = await supabase
       .from('care_portal_notifications')
-      .select('id, resident_id, type, detail, severity, created_at, care_residents(display_name)')
+      .select('id, resident_id, type, detail, severity, created_at')
       .is('acknowledged_at', null)
       .in('resident_id', residentIds)
       .order('created_at', { ascending: false });
@@ -203,7 +223,7 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
     }
 
     const rows: AlertRow[] = ((data ?? []) as unknown as DbNotification[]).map((n) => {
-      const name = n.care_residents?.display_name ?? 'Ukendt beboer';
+      const name = nameByUserId[n.resident_id] ?? 'Ukendt beboer';
       return {
         id: n.id,
         residentName: name,
@@ -230,9 +250,11 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
       return;
     }
 
+    const nameByUserId = await loadResidentNamesByUserId(supabase, orgId);
+
     const { data, error } = await supabase
       .from('crisis_alerts')
-      .select('id, resident_id, triggered_at, status, trin, care_residents(display_name)')
+      .select('id, resident_id, triggered_at, status, trin')
       .in('resident_id', residentIds)
       .neq('status', 'resolved')
       .order('triggered_at', { ascending: false });
@@ -243,7 +265,7 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
     }
 
     const rows: AlertRow[] = ((data ?? []) as unknown as CrisisAlertDb[]).map((n) => {
-      const name = n.care_residents?.display_name ?? 'Ukendt beboer';
+      const name = nameByUserId[n.resident_id] ?? 'Ukendt beboer';
       const isUnacknowledged = n.status === 'active';
       return {
         id: n.id,

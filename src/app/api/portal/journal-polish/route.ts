@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ANTHROPIC_CHAT_MODEL } from '@/lib/ai/anthropicModel';
+import { callAnthropicJournalPolish } from '@/lib/ai/anthropicJournalPolish';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+
+export const maxDuration = 60;
 
 const SYSTEM = `Du er faglig konsulent på et dansk socialpsykiatrisk bosted og hjælper med at omskrive journaludkast.
 
@@ -44,40 +46,28 @@ export async function POST(req: NextRequest) {
 
   const userMsg = extra ? `${extra}\n\n---\n\n${draft}` : draft;
 
-  let res: Response;
-  try {
-    res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: ANTHROPIC_CHAT_MODEL,
-        max_tokens: 1200,
-        system: SYSTEM,
-        messages: [{ role: 'user', content: userMsg }],
-      }),
-    });
-  } catch (e) {
-    console.error('[journal-polish] anthropic fetch failed:', e);
-    return NextResponse.json({ error: 'Netværksfejl mod AI — prøv igen' }, { status: 502 });
-  }
+  const result = await callAnthropicJournalPolish({
+    apiKey: key,
+    system: SYSTEM,
+    userMessage: userMsg,
+    maxTokens: 1200,
+  });
 
-  if (!res.ok) {
-    const err = await res.text();
-    console.error('[journal-polish] anthropic error:', res.status, err);
+  if (!result.ok) {
+    console.error(
+      '[journal-polish] anthropic failed:',
+      result.lastModel,
+      result.status,
+      result.body.slice(0, 500)
+    );
+    if (result.status === 401) {
+      return NextResponse.json(
+        { error: 'Ugyldig Anthropic API-nøgle på serveren' },
+        { status: 503 }
+      );
+    }
     return NextResponse.json({ error: 'AI svarer ikke — prøv igen' }, { status: 502 });
   }
 
-  const data = (await res.json()) as { content?: Array<{ type?: string; text?: string }> };
-  const block = data.content?.find((c) => c.type === 'text');
-  const text = block?.text?.trim();
-
-  if (!text) {
-    return NextResponse.json({ error: 'Tomt svar fra AI' }, { status: 502 });
-  }
-
-  return NextResponse.json({ text, polished: text });
+  return NextResponse.json({ text: result.text, polished: result.text });
 }

@@ -11,6 +11,13 @@ export function parseStaffOrgId(raw: unknown): string | null {
 
 export type StaffOrgResolveError = 'no_client' | 'no_session' | 'no_org' | 'query_failed';
 
+function isUuidString(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
+  );
+}
+
 export async function resolveStaffOrgResidents(supabase: SupabaseClient | null): Promise<{
   orgId: string | null;
   residentIds: string[];
@@ -44,7 +51,9 @@ export async function resolveStaffOrgResidents(supabase: SupabaseClient | null):
 
   return {
     orgId,
-    residentIds: (data ?? []).map((r) => (r as { user_id: string }).user_id),
+    residentIds: (data ?? [])
+      .map((r) => (r as { user_id: string | null }).user_id)
+      .filter(isUuidString),
     error: null,
   };
 }
