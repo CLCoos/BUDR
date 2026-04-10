@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ANTHROPIC_CHAT_MODEL } from '@/lib/ai/anthropicModel';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 const SYSTEM = `Du er en professionel pædagog på et socialpsykiatrisk bosted. Din opgave er at omskrive følgende rånotat til en professionel, klar og empatisk journalnotat. Bevar alle faktuelle oplysninger. Fjern talesprog og gentagelser. Brug fagligt dansk. Max 150 ord.`;
@@ -28,14 +29,17 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let body: { text?: string };
+  let body: { text?: string; draft?: string };
   try {
-    body = (await req.json()) as { text?: string };
+    body = (await req.json()) as { text?: string; draft?: string };
   } catch {
     return NextResponse.json({ error: 'Ugyldig JSON' }, { status: 400 });
   }
 
-  const text = typeof body.text === 'string' ? body.text.trim() : '';
+  const rawInput =
+    (typeof body.text === 'string' ? body.text : '') ||
+    (typeof body.draft === 'string' ? body.draft : '');
+  const text = rawInput.trim();
   if (!text) {
     return NextResponse.json({ error: 'Manglende tekst' }, { status: 400 });
   }
@@ -49,7 +53,7 @@ export async function POST(req: NextRequest) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: ANTHROPIC_CHAT_MODEL,
         max_tokens: 300,
         system: SYSTEM,
         messages: [{ role: 'user', content: text }],
@@ -71,7 +75,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Tomt svar fra AI' }, { status: 502 });
     }
 
-    return NextResponse.json({ polished });
+    return NextResponse.json({ polished, text: polished });
   } catch (e) {
     console.error(e);
     return NextResponse.json({ error: 'Netværksfejl' }, { status: 502 });

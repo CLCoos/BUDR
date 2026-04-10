@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ANTHROPIC_CHAT_MODEL } from '@/lib/ai/anthropicModel';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 const SYSTEM = `Du er faglig konsulent på et dansk socialpsykiatrisk bosted og hjælper med at omskrive journaludkast.
@@ -21,14 +22,14 @@ export async function POST(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  let body: { draft?: string; category?: string; residentLabel?: string };
+  let body: { draft?: string; text?: string; category?: string; residentLabel?: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const draft = (body.draft ?? '').trim();
+  const draft = (body.draft ?? body.text ?? '').trim();
   if (!draft) return NextResponse.json({ error: 'Tomt udkast' }, { status: 400 });
 
   const key = process.env.ANTHROPIC_API_KEY;
@@ -43,20 +44,26 @@ export async function POST(req: NextRequest) {
 
   const userMsg = extra ? `${extra}\n\n---\n\n${draft}` : draft;
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1200,
-      system: SYSTEM,
-      messages: [{ role: 'user', content: userMsg }],
-    }),
-  });
+  let res: Response;
+  try {
+    res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: ANTHROPIC_CHAT_MODEL,
+        max_tokens: 1200,
+        system: SYSTEM,
+        messages: [{ role: 'user', content: userMsg }],
+      }),
+    });
+  } catch (e) {
+    console.error('[journal-polish] anthropic fetch failed:', e);
+    return NextResponse.json({ error: 'Netværksfejl mod AI — prøv igen' }, { status: 502 });
+  }
 
   if (!res.ok) {
     const err = await res.text();
@@ -72,5 +79,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Tomt svar fra AI' }, { status: 502 });
   }
 
-  return NextResponse.json({ text });
+  return NextResponse.json({ text, polished: text });
 }

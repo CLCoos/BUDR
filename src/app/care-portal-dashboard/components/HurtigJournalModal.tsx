@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom';
 import { BookOpen, Mic, MicOff, Save, Sparkles, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
+import { formatJournalEntriesInsertError } from '@/lib/journalEntriesInsertError';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
 import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 
@@ -32,6 +33,13 @@ type SpeechRec = {
   onerror: ((ev: Event) => void) | null;
   onend: (() => void) | null;
 };
+
+function isResidentUuid(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
+  );
+}
 
 function getSpeechRecognitionCtor(): (new () => SpeechRec) | null {
   if (typeof window === 'undefined') return null;
@@ -140,10 +148,12 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
       }
 
       setResidents(
-        rows.map((r) => ({
-          id: r.user_id as string,
-          name: String(r.display_name ?? '').trim() || '—',
-        }))
+        rows
+          .filter((r) => isResidentUuid(r.user_id))
+          .map((r) => ({
+            id: r.user_id as string,
+            name: String(r.display_name ?? '').trim() || '—',
+          }))
       );
       setResidentsSource('live');
       setResidentsLoading(false);
@@ -237,29 +247,41 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
   const polishWithAi = useCallback(async () => {
     const raw = note.trim();
     if (!raw) return;
+    const selected = residents.find((r) => r.id === residentId);
     setPolishing(true);
     try {
-      const res = await fetch('/api/journal-polish', {
+      const response = await fetch('/api/portal/journal-polish', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ text: raw }),
+        body: JSON.stringify({
+          draft: raw,
+          category: 'Andet',
+          residentLabel: selected?.name ?? '',
+        }),
       });
-      const data = (await res.json()) as { polished?: string; error?: string };
-      if (!res.ok) {
+      const data = (await response.json()) as {
+        text?: string;
+        polished?: string;
+        error?: string;
+      };
+      if (!response.ok) {
         toast.error(data.error ?? 'AI kunne ikke forbedre noten');
         return;
       }
-      if (data.polished) {
-        setNote(data.polished);
+      const polishedText = (data.text ?? data.polished ?? '').trim();
+      if (polishedText) {
+        setNote(polishedText);
         setPolishFlash(true);
         window.setTimeout(() => setPolishFlash(false), 1600);
+      } else {
+        toast.error('Tomt svar fra AI');
       }
     } catch {
       toast.error('Netværksfejl');
     } finally {
       setPolishing(false);
     }
-  }, [note]);
+  }, [note, residentId, residents]);
 
   const save = useCallback(async () => {
     const res = residents.find((r) => r.id === residentId);
@@ -296,20 +318,48 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
       staff_id: user?.id ?? null,
       staff_name: staffName,
       entry_text: note.trim(),
-      category: 'Observation',
+      category: 'Andet',
       journal_status: 'kladde',
       show_in_diary: true,
       approved_at: null,
       approved_by: null,
     };
 
-    const { error: insErr } = await supabase.from('journal_entries').insert(insertRow);
+    const missingColumnError = (err: { message?: string } | null, column: string) =>
+      !!err &&
+      String(err.message ?? '')
+        .toLowerCase()
+        .includes(column.toLowerCase());
+
+    const payload = { ...insertRow };
+    let { error: insErr } = await supabase.from('journal_entries').insert(payload);
+
+    if (missingColumnError(insErr, 'show_in_diary')) {
+      delete payload.show_in_diary;
+      ({ error: insErr } = await supabase.from('journal_entries').insert(payload));
+    }
+    if (missingColumnError(insErr, 'approved_at')) {
+      delete payload.approved_at;
+      ({ error: insErr } = await supabase.from('journal_entries').insert(payload));
+    }
+    if (missingColumnError(insErr, 'approved_by')) {
+      delete payload.approved_by;
+      ({ error: insErr } = await supabase.from('journal_entries').insert(payload));
+    }
+    if (missingColumnError(insErr, 'journal_status')) {
+      delete payload.journal_status;
+      ({ error: insErr } = await supabase.from('journal_entries').insert(payload));
+    }
+
     setSaving(false);
 
     if (insErr) {
-      toast.error('Kunne ikke gemme notat — prøv igen');
+      console.error('[HurtigJournalModal] insert', insErr);
+      toast.error(formatJournalEntriesInsertError(insErr));
       return;
     }
+
+    window.dispatchEvent(new CustomEvent('portal-journal-updated', { detail: { residentId } }));
 
     toast.success(`Kladde gemt for ${res.name} — findes på Aftenopsamling`, {
       className: 'border-budr-teal/40',

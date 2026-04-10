@@ -147,6 +147,15 @@ export default function JournalOverblikWidget() {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    const onJournalUpdated = () => {
+      setRefreshing(true);
+      void load();
+    };
+    window.addEventListener('portal-journal-updated', onJournalUpdated);
+    return () => window.removeEventListener('portal-journal-updated', onJournalUpdated);
+  }, [load]);
+
   const refresh = useCallback(() => {
     setRefreshing(true);
     void load();
