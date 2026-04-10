@@ -22,7 +22,7 @@ type JournalRow = {
   entry_text: string;
   category: string;
   created_at: string;
-  journal_status: string | null;
+  journal_status?: string | null;
   show_in_diary: boolean | null;
 };
 
@@ -37,7 +37,7 @@ export default async function DagensDagbogPage() {
   if (!parseStaffOrgId(user.user_metadata?.org_id)) redirect('/care-portal-dashboard/settings');
 
   const since = new Date(Date.now() - 40 * 3600 * 1000).toISOString();
-  const { data: raw, error } = await supabase
+  const first = await supabase
     .from('journal_entries')
     .select(
       'id, resident_id, staff_name, entry_text, category, created_at, journal_status, show_in_diary'
@@ -45,11 +45,28 @@ export default async function DagensDagbogPage() {
     .eq('show_in_diary', true)
     .gte('created_at', since)
     .order('created_at', { ascending: true });
+  let raw = (first.data ?? []) as JournalRow[];
+  let error = first.error;
+
+  // Backward compatibility: some environments still miss `journal_status`.
+  if (
+    error &&
+    String(error.message ?? '')
+      .toLowerCase()
+      .includes('journal_status')
+  ) {
+    const retry = await supabase
+      .from('journal_entries')
+      .select('id, resident_id, staff_name, entry_text, category, created_at, show_in_diary')
+      .eq('show_in_diary', true)
+      .gte('created_at', since)
+      .order('created_at', { ascending: true });
+    raw = (retry.data ?? []) as JournalRow[];
+    error = retry.error;
+  }
 
   const todayYmd = copenhagenYmd(new Date());
-  const rows = ((raw ?? []) as JournalRow[]).filter(
-    (r) => copenhagenYmd(new Date(r.created_at)) === todayYmd
-  );
+  const rows = raw.filter((r) => copenhagenYmd(new Date(r.created_at)) === todayYmd);
 
   const residentIds = [...new Set(rows.map((r) => r.resident_id))];
   const emptyResidentRows: {
@@ -90,7 +107,8 @@ export default async function DagensDagbogPage() {
 
   const draftCountByResident = new Map<string, number>();
   for (const row of rows) {
-    if (row.journal_status !== 'kladde') continue;
+    // If journal_status is missing in DB, treat diary notes as draft-like for evening synthesis.
+    if (row.journal_status && row.journal_status !== 'kladde') continue;
     draftCountByResident.set(row.resident_id, (draftCountByResident.get(row.resident_id) ?? 0) + 1);
   }
   const synthesisTargets: SynthesisTarget[] = [...draftCountByResident.entries()]
@@ -121,7 +139,7 @@ export default async function DagensDagbogPage() {
             ← Tilbage til beboere
           </Link>
           <h1 className="text-xl font-bold" style={{ color: 'var(--cp-text, #111827)' }}>
-            Dagens dagbog
+            Aftenopsamling
           </h1>
           <p className="mt-1 text-sm" style={{ color: 'var(--cp-muted, #6b7280)' }}>
             Notater markeret &ldquo;Vis i dagbog&rdquo; — {dateLabel} (Europa/København). I løbet af
@@ -177,7 +195,7 @@ export default async function DagensDagbogPage() {
                   {list.map((row) => {
                     const m = meta.get(row.resident_id);
                     const label = m?.name ?? row.resident_id.slice(0, 8);
-                    const draft = row.journal_status === 'kladde';
+                    const draft = !row.journal_status || row.journal_status === 'kladde';
                     return (
                       <li
                         key={row.id}

@@ -6,6 +6,7 @@ import { Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { parseStaffOrgId, resolveStaffOrgResidents } from '@/lib/staffOrgScope';
+import { loadShifts } from '@/lib/demoShiftPlan';
 
 function formatHandoverFileDate(d: Date): string {
   const y = d.getFullYear();
@@ -23,7 +24,7 @@ type HandoverExportMeta = {
 };
 
 export type FlagColor = 'groen' | 'gul' | 'roed' | 'sort' | null;
-export type ShiftLabel = 'dag' | 'aften' | 'nat';
+export type ShiftLabel = 'dag' | 'aften' | 'nat' | 'doegnnotat';
 
 export interface HandoverEntry {
   residentId: string;
@@ -104,6 +105,8 @@ const initialEntries: HandoverEntry[] = [
 type HandoverClientProps = {
   /** Mørk Care Portal-flade (fx demo med --cp-* tokens) */
   carePortalDark?: boolean;
+  /** Brug simulerede beboere/notater (demo-rute). */
+  useDemoData?: boolean;
 };
 
 type TrafficDb = 'grøn' | 'gul' | 'rød';
@@ -124,12 +127,30 @@ function mapCheckinTraffic(db: string | null | undefined): FlagColor {
   return DB_TO_FLAG[raw as TrafficDb] ?? null;
 }
 
-export default function HandoverClient({ carePortalDark = false }: HandoverClientProps) {
-  const [entries, setEntries] = useState<HandoverEntry[]>(() =>
-    carePortalDark ? initialEntries : []
+function shiftLabelText(s: ShiftLabel): string {
+  if (s === 'doegnnotat') return 'Døgnnotat';
+  return `${s.charAt(0).toUpperCase()}${s.slice(1)}vagt`;
+}
+
+function detectShiftFromTodayPlan(): ShiftLabel {
+  const today = new Date().toISOString().slice(0, 10);
+  const shiftsToday = loadShifts().filter(
+    (s) => s.date === today && (s.type === 'dag' || s.type === 'aften' || s.type === 'nat')
   );
-  const [liveListLoading, setLiveListLoading] = useState(!carePortalDark);
-  const [currentShift, setCurrentShift] = useState<ShiftLabel>('dag');
+  const uniq = [...new Set(shiftsToday.map((s) => s.type))];
+  if (uniq.length !== 1) return 'doegnnotat';
+  return uniq[0] as ShiftLabel;
+}
+
+export default function HandoverClient({
+  carePortalDark = true,
+  useDemoData = false,
+}: HandoverClientProps) {
+  const [entries, setEntries] = useState<HandoverEntry[]>(() =>
+    useDemoData ? initialEntries : []
+  );
+  const [liveListLoading, setLiveListLoading] = useState(!useDemoData);
+  const [currentShift, setCurrentShift] = useState<ShiftLabel>('doegnnotat');
   const [saving, setSaving] = useState(false);
   const [exportMeta, setExportMeta] = useState<HandoverExportMeta>(() => {
     const d = new Date();
@@ -213,8 +234,17 @@ export default function HandoverClient({ carePortalDark = false }: HandoverClien
   }, [carePortalDark]);
 
   useEffect(() => {
-    if (carePortalDark) {
-      setEntries(initialEntries);
+    const detected = detectShiftFromTodayPlan();
+    setCurrentShift(detected);
+  }, []);
+
+  useEffect(() => {
+    setEntries((prev) => prev.map((e) => ({ ...e, shiftLabel: currentShift })));
+  }, [currentShift]);
+
+  useEffect(() => {
+    if (useDemoData) {
+      setEntries(initialEntries.map((e) => ({ ...e, shiftLabel: currentShift })));
       setLiveListLoading(false);
       return;
     }
@@ -284,7 +314,7 @@ export default function HandoverClient({ carePortalDark = false }: HandoverClien
           initials: (od.avatar_initials ?? name.slice(0, 2)).toUpperCase(),
           flagColor: mapCheckinTraffic(tlByRes.get(r.user_id as string) ?? null),
           note: '',
-          shiftLabel: 'dag',
+          shiftLabel: currentShift,
         };
       });
 
@@ -295,7 +325,7 @@ export default function HandoverClient({ carePortalDark = false }: HandoverClien
     return () => {
       cancelled = true;
     };
-  }, [carePortalDark]);
+  }, [useDemoData, currentShift]);
 
   const updateEntry = (residentId: string, updates: Partial<HandoverEntry>) => {
     setEntries((prev) => prev.map((e) => (e.residentId === residentId ? { ...e, ...updates } : e)));
@@ -306,7 +336,7 @@ export default function HandoverClient({ carePortalDark = false }: HandoverClien
     // Backend: INSERT INTO care_handover_notes (resident_id, staff_id, flag_color, shift_label, body, created_at) for each entry
     await new Promise((r) => setTimeout(r, 1200));
     setSaving(false);
-    toast.success(`Vagtnotat gemt for ${currentShift}vagt`);
+    toast.success(`Vagtnotat gemt for ${shiftLabelText(currentShift).toLowerCase()}`);
   };
 
   const handleDownload = () => {
@@ -314,9 +344,9 @@ export default function HandoverClient({ carePortalDark = false }: HandoverClien
       .filter((e) => e.note.trim())
       .map(
         (e) =>
-          `[${e.flagColor?.toUpperCase() ?? 'INGEN'}] ${e.residentName} · ${e.shiftLabel}vagt\n${e.note}\n`
+          `[${e.flagColor?.toUpperCase() ?? 'INGEN'}] ${e.residentName} · ${shiftLabelText(e.shiftLabel)}\n${e.note}\n`
       );
-    const content = `BUDR Vagtoverleveringsnotat\n${exportMeta.facility} · ${currentShift}vagt · ${exportMeta.dateLong}\nPersonale: ${exportMeta.staff}\n\n${lines.join('\n')}`;
+    const content = `BUDR Vagtoverleveringsnotat\n${exportMeta.facility} · ${shiftLabelText(currentShift)} · ${exportMeta.dateLong}\nPersonale: ${exportMeta.staff}\n\n${lines.join('\n')}`;
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -377,49 +407,35 @@ export default function HandoverClient({ carePortalDark = false }: HandoverClien
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          {/* Shift selector */}
           <div
-            className="flex overflow-hidden rounded-lg border"
+            className="rounded-lg border px-3 py-2 text-sm font-medium"
             style={
               pd
-                ? { backgroundColor: 'var(--cp-bg2)', borderColor: 'var(--cp-border)' }
-                : { backgroundColor: '#fff', borderColor: '#e5e7eb' }
+                ? {
+                    backgroundColor: 'var(--cp-bg2)',
+                    borderColor: 'var(--cp-border)',
+                    color: 'var(--cp-text)',
+                  }
+                : { backgroundColor: '#fff', borderColor: '#e5e7eb', color: '#1f2937' }
             }
+            title="Autodetekteret fra dagens vagtplan; fallback er Døgnnotat"
           >
-            {(['dag', 'aften', 'nat'] as ShiftLabel[]).map((s) => (
-              <button
-                key={`shift-${s}`}
-                onClick={() => setCurrentShift(s)}
-                className={`px-4 py-2 text-sm font-medium capitalize transition-all ${
-                  currentShift === s ? 'bg-[#0F1B2D] text-white' : ''
-                }`}
-                style={
-                  pd && currentShift !== s
-                    ? { color: 'var(--cp-muted)' }
-                    : !pd && currentShift !== s
-                      ? { color: '#4b5563' }
-                      : undefined
-                }
-              >
-                {s === 'dag' ? '☀️' : s === 'aften' ? '🌙' : '🌃'}{' '}
-                {s.charAt(0).toUpperCase() + s.slice(1)}
-              </button>
-            ))}
+            Aktiv notattype: {shiftLabelText(currentShift)}
           </div>
           <button
             onClick={handleDownload}
-            className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-all"
+            className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-all"
             style={
               pd
                 ? {
                     borderColor: 'var(--cp-border)',
-                    color: 'var(--cp-muted)',
-                    backgroundColor: 'var(--cp-bg2)',
+                    color: 'var(--cp-text)',
+                    backgroundColor: 'var(--cp-bg3)',
                   }
                 : undefined
             }
           >
-            <Download size={14} /> Download .txt
+            <Download size={14} /> Download (.txt)
           </button>
           <button
             onClick={handleSaveAll}

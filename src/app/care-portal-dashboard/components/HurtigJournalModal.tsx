@@ -311,7 +311,7 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
       return;
     }
 
-    toast.success(`Kladde gemt for ${res.name} — findes på Dagens dagbog`, {
+    toast.success(`Kladde gemt for ${res.name} — findes på Aftenopsamling`, {
       className: 'border-budr-teal/40',
     });
     onClose();
@@ -361,7 +361,7 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
                 href="/resident-360-view/dagbog"
                 className="font-medium text-budr-purple underline"
               >
-                Dagens dagbog
+                Aftenopsamling
               </Link>{' '}
               til ét professionelt notat med AI.
             </p>

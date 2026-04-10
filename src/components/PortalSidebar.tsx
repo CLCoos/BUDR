@@ -31,7 +31,7 @@ type NavItem = {
   badge: number;
   cpActiveTab?: string | null;
   /** Særlig markering af aktiv side (fx Beboere dækker flere routes) */
-  activeMatch?: 'residents' | 'vagtplan' | 'park' | 'dagbog';
+  activeMatch?: 'residents' | 'vagtplan' | 'park' | 'dagbog' | 'alerts' | 'planner' | 'journal';
 };
 
 function pathFromHref(href: string): string {
@@ -72,6 +72,9 @@ function navItemActive(
   if (item.activeMatch === 'dagbog') {
     return pathname === '/resident-360-view/dagbog';
   }
+  if (item.activeMatch === 'alerts') return pathname === '/care-portal-alerts';
+  if (item.activeMatch === 'planner') return pathname === '/care-portal-planner';
+  if (item.activeMatch === 'journal') return pathname === '/care-portal-journal';
   const p = pathFromHref(item.href);
   if (pathname === p) return true;
   if (p !== '/' && pathname.startsWith(`${p}/`)) return true;
@@ -119,7 +122,7 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
         : [
             {
               icon: BookMarked,
-              label: 'Dagens dagbog',
+              label: 'Aftenopsamling',
               href: '/resident-360-view/dagbog',
               badge: 0,
               activeMatch: 'dagbog' as const,
@@ -128,16 +131,16 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
       {
         icon: Bell,
         label: 'Advarsler',
-        href: '/care-portal-dashboard?tab=alerts',
+        href: '/care-portal-alerts',
         badge: 0,
-        cpActiveTab: 'alerts',
+        activeMatch: 'alerts',
       },
       {
         icon: Calendar,
         label: 'Planlægger',
-        href: '/care-portal-dashboard?tab=planner',
+        href: '/care-portal-planner',
         badge: 0,
-        cpActiveTab: 'planner',
+        activeMatch: 'planner',
       },
       {
         icon: CalendarClock,
@@ -155,9 +158,9 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
       {
         icon: BookOpen,
         label: 'Journal',
-        href: '/care-portal-dashboard?tab=journal',
+        href: '/care-portal-journal',
         badge: 0,
-        cpActiveTab: 'journal',
+        activeMatch: 'journal',
       },
       { icon: Upload, label: 'Dataimport', href: '/care-portal-import', badge: 0 },
       { icon: BrainCircuit, label: 'Faglig støtte', href: '/care-portal-assistant', badge: 0 },
@@ -280,7 +283,7 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
               onClick={() => onMobileClose()}
             >
               <div
-                className="relative mx-2 mb-0.5 flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 transition-all duration-150"
+                className="relative mx-2 mb-0.5 flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 transition-all duration-150 hover:bg-[var(--cp-bg3)]"
                 style={
                   active
                     ? {
@@ -291,18 +294,6 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
                         color: 'var(--cp-muted)',
                       }
                 }
-                onMouseEnter={(e) => {
-                  if (!active) {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--cp-bg3)';
-                    (e.currentTarget as HTMLElement).style.color = 'var(--cp-text)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!active) {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = '';
-                    (e.currentTarget as HTMLElement).style.color = 'var(--cp-muted)';
-                  }
-                }}
               >
                 {active && (
                   <div

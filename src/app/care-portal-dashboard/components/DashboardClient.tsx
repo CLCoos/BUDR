@@ -1,5 +1,5 @@
 'use client';
-import React, { Suspense, useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -16,7 +16,7 @@ import JournalOverblikWidget from './JournalOverblikWidget';
 import ActionCards from './ActionCards';
 import DashboardModule from './DashboardModule';
 import ResidentListDemo from './ResidentListDemo';
-import { BookOpen, RefreshCw } from 'lucide-react';
+import { ArrowDown, ArrowUp, BookOpen, Plus, RefreshCw, Settings2, X } from 'lucide-react';
 import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 
 const OverrapportModal = dynamic(() => import('./OverrapportModal'), { ssr: false });
@@ -27,9 +27,71 @@ const JournalAiDemoModal = dynamic(() => import('./JournalAiDemoModal'), { ssr: 
 
 type DashboardClientProps = {
   medicationWidget?: React.ReactNode;
+  mode?: 'dashboard' | 'single';
+  singleWidget?: DashboardWidgetKey;
 };
 
-function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
+type DashboardWidgetKey =
+  | 'medicin'
+  | 'journal'
+  | 'bekymring'
+  | 'planlaegning'
+  | 'status'
+  | 'advarsler'
+  | 'beboere';
+
+type DashboardWidgetState = { key: DashboardWidgetKey; enabled: boolean };
+type DashboardWidgetMeta = {
+  id: string;
+  title: string;
+  subtitle?: string;
+  defaultOpen?: boolean;
+  content: React.ReactNode;
+  contentClassName?: string;
+};
+
+const DASHBOARD_WIDGETS_KEY = 'budr_dashboard_widgets_v1';
+
+const DEFAULT_WIDGETS: DashboardWidgetState[] = [
+  { key: 'medicin', enabled: true },
+  { key: 'journal', enabled: true },
+  { key: 'bekymring', enabled: true },
+  { key: 'planlaegning', enabled: true },
+  { key: 'status', enabled: true },
+  { key: 'advarsler', enabled: true },
+  { key: 'beboere', enabled: true },
+];
+
+function loadDashboardWidgets(): DashboardWidgetState[] {
+  if (typeof window === 'undefined') return DEFAULT_WIDGETS;
+  try {
+    const raw = window.localStorage.getItem(DASHBOARD_WIDGETS_KEY);
+    if (!raw) return DEFAULT_WIDGETS;
+    const parsed = JSON.parse(raw) as DashboardWidgetState[];
+    if (!Array.isArray(parsed) || parsed.length === 0) return DEFAULT_WIDGETS;
+    const known = new Set(DEFAULT_WIDGETS.map((x) => x.key));
+    const valid = parsed.filter((x) => x && known.has(x.key));
+    const missing = DEFAULT_WIDGETS.filter((d) => !valid.some((v) => v.key === d.key));
+    return [...valid, ...missing];
+  } catch {
+    return DEFAULT_WIDGETS;
+  }
+}
+
+function saveDashboardWidgets(w: DashboardWidgetState[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(DASHBOARD_WIDGETS_KEY, JSON.stringify(w));
+  } catch {
+    // ignore
+  }
+}
+
+function DashboardClientInner({
+  medicationWidget,
+  mode = 'dashboard',
+  singleWidget,
+}: DashboardClientProps) {
   const pilotSim = carePortalPilotSimulatedData();
   const [headerSubtitle, setHeaderSubtitle] = useState('Care Portal');
   const [lastUpdated, setLastUpdated] = useState(() =>
@@ -64,9 +126,20 @@ function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
   const [overrapportPanelOpen, setOverrapportPanelOpen] = useState(false);
   const [indsatsOpen, setIndsatsOpen] = useState(false);
   const [tilsynsrapportOpen, setTilsynsrapportOpen] = useState(false);
+  const [editDashboard, setEditDashboard] = useState(false);
+  const [widgetState, setWidgetState] = useState<DashboardWidgetState[]>(DEFAULT_WIDGETS);
   const searchParams = useSearchParams();
   const router = useRouter();
   const tab = searchParams.get('tab');
+
+  useEffect(() => {
+    const loaded = loadDashboardWidgets();
+    setWidgetState(loaded);
+  }, []);
+
+  useEffect(() => {
+    saveDashboardWidgets(widgetState);
+  }, [widgetState]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -126,6 +199,70 @@ function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
   };
 
   const facilityLabel = headerSubtitle.split('·')[0]?.trim().replace(/\s+/g, ' ') || 'Organisation';
+  const widgetLookup = useMemo(
+    () =>
+      ({
+        medicin: {
+          id: 'dash-live-med',
+          title: 'Medicin',
+          subtitle: 'Dagens kurser og opfølgning',
+          defaultOpen: true,
+          content: medicationWidget,
+        },
+        journal: {
+          id: 'dash-live-journal',
+          title: 'Journal',
+          subtitle: 'Seneste notater og godkendelse',
+          defaultOpen: true,
+          content: <JournalOverblikWidget />,
+        },
+        bekymring: {
+          id: 'dash-live-bek',
+          title: 'Bekymringsnotater',
+          subtitle: 'Hurtige observationer · synligt på 360°',
+          content: <BekymringsnotatWidget />,
+        },
+        planlaegning: {
+          id: 'dash-live-plan',
+          title: 'Planlægning og vagt',
+          subtitle: 'Aftaler, vagttelefon og opgaver',
+          contentClassName: 'p-4 pt-3 space-y-5',
+          content: (
+            <>
+              <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+                <KalenderWidget />
+                <OnCallStaffWidget />
+              </div>
+              <OpgaveWidget />
+            </>
+          ),
+        },
+        status: {
+          id: 'dash-live-status',
+          title: 'Status',
+          subtitle: 'Nøgletal i dag',
+          content: <StatCards />,
+        },
+        advarsler: {
+          id: 'dash-live-alerts',
+          title: 'Advarsler',
+          subtitle: 'Aktive alarmer',
+          content: <AlertPanel />,
+        },
+        beboere: {
+          id: 'dash-live-residents',
+          title: 'Beboere',
+          subtitle: 'Check-ins og overblik',
+          content: <ResidentList />,
+        },
+      }) as Record<DashboardWidgetKey, DashboardWidgetMeta>,
+    [medicationWidget]
+  );
+
+  const visibleWidgets =
+    mode === 'single' && singleWidget
+      ? [{ key: singleWidget, enabled: true }]
+      : widgetState.filter((w) => w.enabled);
 
   if (pilotSim) {
     return (
@@ -414,61 +551,155 @@ function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
         </div>
       </div>
 
-      {/* Action cards */}
-      <ActionCards onOpenOverrapport={() => setOverrapportPanelOpen(true)} />
+      {mode === 'dashboard' && (
+        <ActionCards onOpenOverrapport={() => setOverrapportPanelOpen(true)} />
+      )}
 
       <div className="mb-6 space-y-4">
-        <DashboardModule
-          id="dash-live-med"
-          title="Medicin"
-          subtitle="Dagens kurser og opfølgning"
-          defaultOpen
-        >
-          {medicationWidget}
-        </DashboardModule>
-        <DashboardModule
-          id="dash-live-journal"
-          title="Journal"
-          subtitle="Seneste notater og godkendelse"
-          defaultOpen
-        >
-          <JournalOverblikWidget />
-        </DashboardModule>
-        <DashboardModule
-          id="dash-live-bek"
-          title="Bekymringsnotater"
-          subtitle="Hurtige observationer · synligt på 360°"
-        >
-          <BekymringsnotatWidget />
-        </DashboardModule>
-        <DashboardModule
-          id="dash-live-plan"
-          title="Planlægning og vagt"
-          subtitle="Aftaler, vagttelefon og opgaver"
-          contentClassName="p-4 pt-3 space-y-5"
-        >
-          <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-            <KalenderWidget />
-            <OnCallStaffWidget />
+        {mode === 'dashboard' && (
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setEditDashboard((v) => !v)}
+              className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium"
+              style={{
+                borderColor: 'var(--cp-border)',
+                color: 'var(--cp-text)',
+                backgroundColor: 'var(--cp-bg3)',
+              }}
+            >
+              <Settings2 size={13} />
+              {editDashboard ? 'Afslut redigering' : 'Redigér dashboard'}
+            </button>
           </div>
-          <OpgaveWidget />
-        </DashboardModule>
+        )}
+
+        {visibleWidgets.map((w, idx) => {
+          const meta = widgetLookup[w.key];
+          return (
+            <div key={w.key}>
+              {mode === 'dashboard' && editDashboard && (
+                <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setWidgetState((prev) => {
+                        if (idx === 0) return prev;
+                        const all = [...prev];
+                        const i = all.findIndex((x) => x.key === w.key);
+                        if (i <= 0) return prev;
+                        const tmp = all[i - 1];
+                        all[i - 1] = all[i]!;
+                        all[i] = tmp!;
+                        return all;
+                      })
+                    }
+                    className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px]"
+                    style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-muted)' }}
+                  >
+                    <ArrowUp size={12} />
+                    Op
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setWidgetState((prev) => {
+                        const all = [...prev];
+                        const i = all.findIndex((x) => x.key === w.key);
+                        if (i < 0 || i >= all.length - 1) return prev;
+                        const tmp = all[i + 1];
+                        all[i + 1] = all[i]!;
+                        all[i] = tmp!;
+                        return all;
+                      })
+                    }
+                    className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px]"
+                    style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-muted)' }}
+                  >
+                    <ArrowDown size={12} />
+                    Ned
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setWidgetState((prev) =>
+                        prev.map((x) => (x.key === w.key ? { ...x, enabled: false } : x))
+                      )
+                    }
+                    className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px]"
+                    style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-red)' }}
+                  >
+                    <X size={12} />
+                    Fjern
+                  </button>
+                </div>
+              )}
+              <DashboardModule
+                id={meta.id}
+                title={meta.title}
+                subtitle={meta.subtitle}
+                defaultOpen={meta.defaultOpen}
+                contentClassName={meta.contentClassName}
+              >
+                {meta.content}
+              </DashboardModule>
+            </div>
+          );
+        })}
+
+        {mode === 'dashboard' && editDashboard && (
+          <div className="rounded-xl border p-3" style={{ borderColor: 'var(--cp-border)' }}>
+            <p className="mb-2 text-xs font-semibold" style={{ color: 'var(--cp-muted)' }}>
+              Tilføj til dashboard
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {widgetState
+                .filter((w) => !w.enabled)
+                .map((w) => (
+                  <button
+                    key={`add-${w.key}`}
+                    type="button"
+                    onClick={() =>
+                      setWidgetState((prev) =>
+                        prev.map((x) => (x.key === w.key ? { ...x, enabled: true } : x))
+                      )
+                    }
+                    className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs"
+                    style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-text)' }}
+                  >
+                    <Plus size={12} />
+                    {widgetLookup[w.key].title}
+                  </button>
+                ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Stat cards */}
-      <StatCards />
-
-      {/* Two-column layout — alert panel | resident table */}
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_1.4fr] gap-5 mt-5">
-        <AlertPanel />
-        <ResidentList />
-      </div>
+      {mode === 'single' && singleWidget && (
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={() => {
+              setWidgetState((prev) =>
+                prev.map((x) => (x.key === singleWidget ? { ...x, enabled: true } : x))
+              );
+              router.push('/care-portal-dashboard');
+            }}
+            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-white"
+            style={{ backgroundColor: 'var(--cp-green)' }}
+          >
+            <Plus size={14} />
+            Tilføj til Dashboard
+          </button>
+        </div>
+      )}
 
       <button
         type="button"
         onClick={() => setJournalOpen(true)}
         className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-budr-purple px-4 py-3 text-sm font-medium text-white shadow-lg transition-all duration-200 hover:scale-105"
-        aria-label="Åbn hurtigt stikord (kladde til Dagens dagbog)"
+        aria-label="Åbn hurtigt stikord (kladde til Aftenopsamling)"
       >
         <BookOpen className="h-5 w-5 shrink-0" aria-hidden />
         <span>Hurtigt stikord</span>
@@ -486,7 +717,11 @@ function DashboardClientInner({ medicationWidget }: DashboardClientProps) {
   );
 }
 
-export default function DashboardClient({ medicationWidget }: DashboardClientProps) {
+export default function DashboardClient({
+  medicationWidget,
+  mode = 'dashboard',
+  singleWidget,
+}: DashboardClientProps) {
   return (
     <Suspense
       fallback={
@@ -498,7 +733,11 @@ export default function DashboardClient({ medicationWidget }: DashboardClientPro
         />
       }
     >
-      <DashboardClientInner medicationWidget={medicationWidget} />
+      <DashboardClientInner
+        medicationWidget={medicationWidget}
+        mode={mode}
+        singleWidget={singleWidget}
+      />
     </Suspense>
   );
 }

@@ -12,6 +12,8 @@ type Props = {
   children: React.ReactNode;
   /** Ekstra klasser på indhold (fx `space-y-5` ved flere kort). */
   contentClassName?: string;
+  /** Intern scroll når indholdet er højt. */
+  maxBodyHeightClassName?: string;
 };
 
 export default function DashboardModule({
@@ -21,6 +23,7 @@ export default function DashboardModule({
   defaultOpen = false,
   children,
   contentClassName = 'p-4 pt-3 space-y-4',
+  maxBodyHeightClassName = 'max-h-[70vh]',
 }: Props) {
   const [open, setOpen] = useState(defaultOpen);
 
@@ -61,7 +64,7 @@ export default function DashboardModule({
       >
         <div className="min-h-0 overflow-hidden">
           <div
-            className={`border-t ${contentClassName}`}
+            className={`border-t overflow-y-auto ${maxBodyHeightClassName} ${contentClassName}`}
             style={{ borderColor: 'var(--cp-border)' }}
           >
             {children}

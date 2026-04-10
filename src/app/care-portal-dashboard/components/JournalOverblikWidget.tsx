@@ -17,6 +17,12 @@ type JournalRow = {
   journal_status: string | null;
 };
 
+function missingJournalStatusColumn(errorMessage?: string) {
+  if (!errorMessage) return false;
+  const msg = errorMessage.toLowerCase();
+  return msg.includes('journal_status') && msg.includes('does not exist');
+}
+
 function fmtTime(iso: string) {
   const d = new Date(iso);
   const now = new Date();
@@ -40,6 +46,7 @@ export default function JournalOverblikWidget() {
   const [rows, setRows] = useState<JournalRow[]>([]);
   const [nameByResident, setNameByResident] = useState<Record<string, string>>({});
   const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [hasJournalStatusColumn, setHasJournalStatusColumn] = useState(true);
 
   const load = useCallback(async () => {
     const supabase = createClient();
@@ -72,6 +79,7 @@ export default function JournalOverblikWidget() {
     setScopeError(null);
     const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
 
+    let list: JournalRow[] = [];
     const { data: journalData, error: jErr } = await supabase
       .from('journal_entries')
       .select('id, resident_id, staff_name, entry_text, category, created_at, journal_status')
@@ -80,15 +88,37 @@ export default function JournalOverblikWidget() {
       .order('created_at', { ascending: false })
       .limit(45);
 
-    if (jErr) {
+    if (jErr && missingJournalStatusColumn(jErr.message)) {
+      const { data: fallbackData, error: fallbackErr } = await supabase
+        .from('journal_entries')
+        .select('id, resident_id, staff_name, entry_text, category, created_at')
+        .in('resident_id', residentIds)
+        .gte('created_at', since)
+        .order('created_at', { ascending: false })
+        .limit(45);
+      if (fallbackErr) {
+        setScopeError(fallbackErr.message);
+        setRows([]);
+        setLoading(false);
+        setRefreshing(false);
+        return;
+      }
+      setHasJournalStatusColumn(false);
+      list = ((fallbackData ?? []) as Omit<JournalRow, 'journal_status'>[]).map((row) => ({
+        ...row,
+        journal_status: null,
+      }));
+    } else if (jErr) {
       setScopeError(jErr.message);
       setRows([]);
       setLoading(false);
       setRefreshing(false);
       return;
+    } else {
+      setHasJournalStatusColumn(true);
+      list = (journalData ?? []) as JournalRow[];
     }
 
-    const list = (journalData ?? []) as JournalRow[];
     setRows(list);
 
     const ids = [...new Set(list.map((r) => r.resident_id))];
@@ -219,7 +249,7 @@ export default function JournalOverblikWidget() {
         </p>
       ) : (
         <div className="space-y-5">
-          {drafts.length > 0 && (
+          {hasJournalStatusColumn && drafts.length > 0 && (
             <div>
               <div
                 className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide"
@@ -282,6 +312,12 @@ export default function JournalOverblikWidget() {
             >
               Godkendt journal
             </div>
+            {!hasJournalStatusColumn ? (
+              <p className="mb-2 text-[11px]" style={{ color: 'var(--cp-muted)' }}>
+                Viser notater uden kladde/godkendt-status (mangler kolonnen `journal_status` i
+                databasen).
+              </p>
+            ) : null}
             {godkendt.length === 0 ? (
               <p className="text-xs" style={{ color: 'var(--cp-muted)' }}>
                 Ingen godkendte notater i perioden.

@@ -113,7 +113,7 @@ export default function ResidentOverviewGrid({ residents }: Props) {
           className="text-sm font-semibold shrink-0 hover:underline"
           style={{ color: 'var(--cp-green, #2dd4a0)' }}
         >
-          Dagens dagbog →
+          Aftenopsamling →
         </Link>
       </div>
 

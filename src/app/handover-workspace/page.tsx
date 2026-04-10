@@ -5,7 +5,7 @@ import HandoverClient from './components/HandoverClient';
 export default function HandoverWorkspacePage() {
   return (
     <PortalShell>
-      <HandoverClient />
+      <HandoverClient carePortalDark />
     </PortalShell>
   );
 }

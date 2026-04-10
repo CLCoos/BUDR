@@ -398,11 +398,17 @@ export default function AssistantClient({
               Hvad kan jeg hjælpe med?
             </h2>
             <p
-              className="mb-6 max-w-xs text-sm"
+              className="mb-4 max-w-xs text-sm"
               style={{ color: pd ? 'var(--cp-muted)' : '#9ca3af' }}
             >
               Spørg om beboere, faglige situationer, lovgivning eller hvad du ellers har brug for at
               vide.
+            </p>
+            <p
+              className="mb-2 w-full max-w-lg text-left text-[11px] font-semibold uppercase tracking-wide"
+              style={{ color: pd ? 'var(--cp-muted2)' : '#9ca3af' }}
+            >
+              Ofte stillede spørgsmål
             </p>
             <div className="grid w-full max-w-lg grid-cols-1 gap-2 sm:grid-cols-2">
               {SUGGESTIONS.map((s) => (

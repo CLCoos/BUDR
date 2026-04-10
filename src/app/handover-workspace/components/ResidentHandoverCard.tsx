@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Sparkles, Mic, Square, Loader2 } from 'lucide-react';
-import { HandoverEntry, FlagColor, ShiftLabel } from './HandoverClient';
+import { HandoverEntry, FlagColor } from './HandoverClient';
 import { toast } from 'sonner';
 
 interface Props {
@@ -271,41 +271,6 @@ export default function ResidentHandoverCard({ entry, onUpdate, carePortalDark =
                   </button>
                 );
               })}
-            </div>
-          </div>
-
-          {/* Shift label */}
-          <div>
-            <label
-              className="mb-2 block text-xs font-medium"
-              style={{ color: pd ? 'var(--cp-muted)' : '#4b5563' }}
-            >
-              Vagttype
-            </label>
-            <div className="flex gap-2">
-              {(['dag', 'aften', 'nat'] as ShiftLabel[]).map((s) => (
-                <button
-                  key={`shiftlabel-${entry.residentId}-${s}`}
-                  onClick={() => onUpdate({ shiftLabel: s })}
-                  className={`flex-1 rounded-lg border py-2 text-xs font-medium capitalize transition-all ${
-                    entry.shiftLabel === s ? 'border-[#0F1B2D] bg-[#0F1B2D] text-white' : ''
-                  }`}
-                  style={
-                    pd && entry.shiftLabel !== s
-                      ? {
-                          backgroundColor: 'var(--cp-bg3)',
-                          borderColor: 'var(--cp-border)',
-                          color: 'var(--cp-muted)',
-                        }
-                      : !pd && entry.shiftLabel !== s
-                        ? { backgroundColor: '#fff', borderColor: '#e5e7eb', color: '#4b5563' }
-                        : undefined
-                  }
-                >
-                  {s === 'dag' ? '☀️' : s === 'aften' ? '🌙' : '🌃'}{' '}
-                  {s.charAt(0).toUpperCase() + s.slice(1)}
-                </button>
-              ))}
             </div>
           </div>
 

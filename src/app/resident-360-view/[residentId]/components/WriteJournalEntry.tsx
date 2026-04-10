@@ -1,23 +1,52 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Plus, X, Loader2, Sparkles } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { formatJournalEntriesInsertError } from '@/lib/journalEntriesInsertError';
 
-/** Fønix-inspireret: én tekstboks med faste overskrifter (jf. guide til journalnotater). */
-export const JOURNAL_NOTE_TEMPLATE = `Aktivitet/Handling
+type JournalCategory = 'Døgnnotat' | 'Sundhed' | 'Socialt' | 'Hændelse' | 'Samtale' | 'Andet';
 
+type CategoryConfig = {
+  key: JournalCategory;
+  titleDefault: string;
+  bodyPlaceholder: string;
+};
 
-
-Refleksion
-
-
-`;
-
-const CATEGORIES = ['Pædagogisk', 'Sundhed', 'Socialt', 'Hændelse', 'Samtale', 'Andet'];
+const CATEGORY_CONFIG: CategoryConfig[] = [
+  {
+    key: 'Døgnnotat',
+    titleDefault: '',
+    bodyPlaceholder: '',
+  },
+  {
+    key: 'Sundhed',
+    titleDefault: 'Sundhedsobservation og opfølgning',
+    bodyPlaceholder: 'Beskriv helbred, medicin, somatik og aftalte sundhedsfaglige tiltag…',
+  },
+  {
+    key: 'Socialt',
+    titleDefault: 'Social trivsel og deltagelse',
+    bodyPlaceholder: 'Beskriv samspil, relationer, deltagelse i fællesskab og social støtte…',
+  },
+  {
+    key: 'Hændelse',
+    titleDefault: 'Hændelse og opfølgning',
+    bodyPlaceholder: 'Beskriv hændelsesforløb, handlinger her-og-nu samt aftalt opfølgning…',
+  },
+  {
+    key: 'Samtale',
+    titleDefault: 'Samtalenotat',
+    bodyPlaceholder: 'Beskriv temaer fra samtalen, borgerperspektiv og faglig vurdering…',
+  },
+  {
+    key: 'Andet',
+    titleDefault: '',
+    bodyPlaceholder: 'Skriv frit notat uden prædefinerede overskrifter…',
+  },
+];
 
 interface Props {
   residentId: string;
@@ -28,19 +57,52 @@ interface Props {
 export default function WriteJournalEntry({ residentId, residentName, carePortalDark }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [text, setText] = useState('');
-  const [category, setCategory] = useState('Pædagogisk');
+  const [category, setCategory] = useState<JournalCategory>('Døgnnotat');
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [doegnHandling, setDoegnHandling] = useState('');
+  const [doegnRefleksion, setDoegnRefleksion] = useState('');
   const [saving, setSaving] = useState(false);
   const [polishing, setPolishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   /** Standard: kladde = dagens egne notater; godkendt = færdig journal med det samme */
   const [saveMode, setSaveMode] = useState<'kladde' | 'godkendt'>('kladde');
-  /** Synlig på Dagens dagbog (aftensamlet overblik) */
+  /** Synlig på Aftenopsamling (aftensamlet overblik) */
   const [showInDiary, setShowInDiary] = useState(true);
 
+  const activeCategoryCfg = useMemo(
+    () => CATEGORY_CONFIG.find((c) => c.key === category) ?? CATEGORY_CONFIG[0]!,
+    [category]
+  );
+  const isDoegnnotat = category === 'Døgnnotat';
+
+  const composedText = useMemo(() => {
+    if (isDoegnnotat) {
+      return `Aktivitet/Handling\n${doegnHandling.trim()}\n\nRefleksion\n${doegnRefleksion.trim()}`.trim();
+    }
+    const t = title.trim();
+    const b = body.trim();
+    if (category === 'Andet') return [t, b].filter(Boolean).join('\n\n').trim();
+    return [t || activeCategoryCfg.titleDefault, b].filter(Boolean).join('\n\n').trim();
+  }, [
+    activeCategoryCfg.titleDefault,
+    body,
+    category,
+    doegnHandling,
+    doegnRefleksion,
+    isDoegnnotat,
+    title,
+  ]);
+
+  const canPolish = composedText.length > 0;
+  const canSave = composedText.length > 0;
+
   function handleOpen() {
-    setText(JOURNAL_NOTE_TEMPLATE);
-    setCategory('Pædagogisk');
+    setCategory('Døgnnotat');
+    setTitle('');
+    setBody('');
+    setDoegnHandling('');
+    setDoegnRefleksion('');
     setSaveMode('kladde');
     setShowInDiary(true);
     setError(null);
@@ -48,7 +110,7 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
   }
 
   async function handlePolish() {
-    const trimmed = text.trim();
+    const trimmed = composedText.trim();
     if (!trimmed) return;
     setPolishing(true);
     setError(null);
@@ -67,7 +129,24 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
         setError(data.error ?? 'Kunne ikke få svar fra AI');
         return;
       }
-      if (data.text?.trim()) setText(data.text.trim());
+      if (data.text?.trim()) {
+        const polished = data.text.trim();
+        if (isDoegnnotat) {
+          const parts = polished.split(/Refleksion/i);
+          if (parts.length >= 2) {
+            const handling = parts[0]!.replace(/Aktivitet\/Handling/i, '').trim();
+            const refleksion = parts.slice(1).join('Refleksion').trim();
+            setDoegnHandling(handling);
+            setDoegnRefleksion(refleksion);
+          } else {
+            setDoegnHandling(polished);
+          }
+        } else if (category === 'Andet') {
+          setBody(polished);
+        } else {
+          setBody(polished);
+        }
+      }
     } catch {
       setError('Netværksfejl — prøv igen');
     } finally {
@@ -76,7 +155,8 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
   }
 
   async function handleSave() {
-    if (!text.trim()) return;
+    const finalText = composedText.trim();
+    if (!finalText) return;
     setSaving(true);
     setError(null);
 
@@ -99,7 +179,7 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
       resident_id: residentId,
       staff_id: user?.id ?? null,
       staff_name: staffName,
-      entry_text: text.trim(),
+      entry_text: finalText,
       category,
       journal_status: asDraft ? 'kladde' : 'godkendt',
       show_in_diary: showInDiary,
@@ -112,17 +192,31 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
       insertRow.approved_by = user.id;
     }
 
-    let { error: insertError } = await supabase.from('journal_entries').insert(insertRow);
-
-    if (
-      insertError &&
-      String(insertError.message ?? '')
+    const missingColumnError = (err: { message?: string } | null, column: string) =>
+      !!err &&
+      String(err.message ?? '')
         .toLowerCase()
-        .includes('show_in_diary')
-    ) {
-      const retryRow = { ...insertRow };
-      delete retryRow.show_in_diary;
-      ({ error: insertError } = await supabase.from('journal_entries').insert(retryRow));
+        .includes(column.toLowerCase());
+
+    const payload = { ...insertRow };
+    let { error: insertError } = await supabase.from('journal_entries').insert(payload);
+
+    // Miljøer kan mangle nyere kolonner i schema cache; prøv igen uden dem.
+    if (missingColumnError(insertError, 'show_in_diary')) {
+      delete payload.show_in_diary;
+      ({ error: insertError } = await supabase.from('journal_entries').insert(payload));
+    }
+    if (missingColumnError(insertError, 'approved_at')) {
+      delete payload.approved_at;
+      ({ error: insertError } = await supabase.from('journal_entries').insert(payload));
+    }
+    if (missingColumnError(insertError, 'approved_by')) {
+      delete payload.approved_by;
+      ({ error: insertError } = await supabase.from('journal_entries').insert(payload));
+    }
+    if (missingColumnError(insertError, 'journal_status')) {
+      delete payload.journal_status;
+      ({ error: insertError } = await supabase.from('journal_entries').insert(payload));
     }
 
     if (insertError) {
@@ -184,7 +278,7 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
                   className={`text-sm font-bold ${carePortalDark ? '' : 'text-gray-900'}`}
                   style={carePortalDark ? { color: 'var(--cp-text)' } : undefined}
                 >
-                  Ny journalnotat
+                  Nyt journalnotat
                 </h2>
                 <p
                   className={`mt-0.5 text-xs ${carePortalDark ? '' : 'text-gray-500'}`}
@@ -203,7 +297,7 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
                     className="font-medium underline underline-offset-2"
                     style={carePortalDark ? { color: 'var(--cp-green)' } : { color: '#0F1B2D' }}
                   >
-                    Dagens dagbog
+                    Aftenopsamling
                   </Link>{' '}
                   kan I om aftenen samle dagens kladder til ét professionelt notat med AI.
                 </p>
@@ -232,21 +326,30 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
                   Kategori
                 </span>
                 <div className="flex flex-wrap gap-2">
-                  {CATEGORIES.map((cat) => (
+                  {CATEGORY_CONFIG.map((cat) => (
                     <button
-                      key={cat}
+                      key={cat.key}
                       type="button"
-                      onClick={() => setCategory(cat)}
+                      onClick={() => {
+                        setCategory(cat.key);
+                        setError(null);
+                        setTitle(cat.titleDefault);
+                        setBody('');
+                        if (cat.key === 'Døgnnotat') {
+                          setDoegnHandling('');
+                          setDoegnRefleksion('');
+                        }
+                      }}
                       className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
                         !carePortalDark
-                          ? category === cat
+                          ? category === cat.key
                             ? 'bg-[#0F1B2D] text-white'
                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                           : ''
                       }`}
                       style={
                         carePortalDark
-                          ? category === cat
+                          ? category === cat.key
                             ? {
                                 backgroundColor: 'var(--cp-green-dim)',
                                 color: 'var(--cp-green)',
@@ -259,24 +362,24 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
                           : undefined
                       }
                     >
-                      {cat}
+                      {cat.key}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Single text box: Aktivitet/Handling + Refleksion */}
+              {/* Structured note input */}
               <div>
                 <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                   <span
                     className={`block text-xs font-medium ${carePortalDark ? '' : 'text-gray-500'}`}
                     style={carePortalDark ? { color: 'var(--cp-muted2)' } : undefined}
                   >
-                    Notat (én tekst — brug overskrifterne)
+                    Notat
                   </span>
                   <button
                     type="button"
-                    disabled={polishing || !text.trim()}
+                    disabled={polishing || !canPolish}
                     onClick={() => void handlePolish()}
                     className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                       carePortalDark
@@ -292,34 +395,113 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
                     Fagliggør med AI
                   </button>
                 </div>
-                <textarea
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  placeholder={JOURNAL_NOTE_TEMPLATE}
-                  rows={12}
-                  // eslint-disable-next-line jsx-a11y/no-autofocus
-                  autoFocus
-                  className={`w-full resize-y rounded-xl border px-3 py-2.5 text-sm leading-relaxed focus:outline-none ${
-                    carePortalDark ? '' : 'border-gray-200 focus:border-[#1D9E75]'
-                  }`}
-                  style={
-                    carePortalDark
-                      ? {
-                          borderColor: 'var(--cp-border)',
-                          backgroundColor: 'var(--cp-bg)',
-                          color: 'var(--cp-text)',
+                {isDoegnnotat ? (
+                  <div className="space-y-3">
+                    <div>
+                      <p
+                        className={`mb-1.5 text-sm font-bold ${carePortalDark ? '' : 'text-gray-800'}`}
+                        style={carePortalDark ? { color: 'var(--cp-text)' } : undefined}
+                      >
+                        Aktivitet/Handling
+                      </p>
+                      <textarea
+                        value={doegnHandling}
+                        onChange={(e) => setDoegnHandling(e.target.value)}
+                        placeholder="Beskriv hvad der konkret skete i vagten…"
+                        rows={5}
+                        className={`w-full resize-y rounded-xl border px-3 py-2.5 text-sm leading-relaxed focus:outline-none ${
+                          carePortalDark ? '' : 'border-gray-200 focus:border-[#1D9E75]'
+                        }`}
+                        style={
+                          carePortalDark
+                            ? {
+                                borderColor: 'var(--cp-border)',
+                                backgroundColor: 'var(--cp-bg)',
+                                color: 'var(--cp-text)',
+                              }
+                            : undefined
                         }
-                      : undefined
-                  }
-                />
+                      />
+                    </div>
+                    <div>
+                      <p
+                        className={`mb-1.5 text-sm font-bold ${carePortalDark ? '' : 'text-gray-800'}`}
+                        style={carePortalDark ? { color: 'var(--cp-text)' } : undefined}
+                      >
+                        Refleksion
+                      </p>
+                      <textarea
+                        value={doegnRefleksion}
+                        onChange={(e) => setDoegnRefleksion(e.target.value)}
+                        placeholder="Beskriv faglig vurdering og næste skridt…"
+                        rows={5}
+                        className={`w-full resize-y rounded-xl border px-3 py-2.5 text-sm leading-relaxed focus:outline-none ${
+                          carePortalDark ? '' : 'border-gray-200 focus:border-[#1D9E75]'
+                        }`}
+                        style={
+                          carePortalDark
+                            ? {
+                                borderColor: 'var(--cp-border)',
+                                backgroundColor: 'var(--cp-bg)',
+                                color: 'var(--cp-text)',
+                              }
+                            : undefined
+                        }
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <input
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder={
+                        category === 'Andet' ? 'Valgfri overskrift (kan udelades)' : 'Overskrift'
+                      }
+                      className={`w-full rounded-xl border px-3 py-2 text-sm focus:outline-none ${
+                        carePortalDark ? '' : 'border-gray-200 focus:border-[#1D9E75]'
+                      }`}
+                      style={
+                        carePortalDark
+                          ? {
+                              borderColor: 'var(--cp-border)',
+                              backgroundColor: 'var(--cp-bg)',
+                              color: 'var(--cp-text)',
+                            }
+                          : undefined
+                      }
+                    />
+                    <textarea
+                      value={body}
+                      onChange={(e) => setBody(e.target.value)}
+                      placeholder={activeCategoryCfg.bodyPlaceholder}
+                      rows={9}
+                      // eslint-disable-next-line jsx-a11y/no-autofocus
+                      autoFocus
+                      className={`w-full resize-y rounded-xl border px-3 py-2.5 text-sm leading-relaxed focus:outline-none ${
+                        carePortalDark ? '' : 'border-gray-200 focus:border-[#1D9E75]'
+                      }`}
+                      style={
+                        carePortalDark
+                          ? {
+                              borderColor: 'var(--cp-border)',
+                              backgroundColor: 'var(--cp-bg)',
+                              color: 'var(--cp-text)',
+                            }
+                          : undefined
+                      }
+                    />
+                  </div>
+                )}
                 <p
                   className={`mt-1.5 text-[11px] leading-snug ${carePortalDark ? '' : 'text-gray-400'}`}
                   style={carePortalDark ? { color: 'var(--cp-muted2)' } : undefined}
                 >
-                  Under <strong className="font-medium">Aktivitet/Handling</strong>: hvad skete der?{' '}
-                  Under <strong className="font-medium">Refleksion</strong>: faglig vurdering og
-                  næste skridt. «Fagliggør med AI» strammer ét notat; den samlede
-                  aften-sammenfatning findes på Dagens dagbog.
+                  {isDoegnnotat
+                    ? 'Døgnnotat har faste sektioner med låste overskrifter. Brug Aktivitet/Handling til fakta og Refleksion til faglig vurdering.'
+                    : category === 'Andet'
+                      ? 'Andet har ingen prædefinerede overskrifter. Skriv frit med valgfri overskrift.'
+                      : 'Overskriften er foreslået ud fra kategori og kan redigeres. Brug brødteksten til faglige observationer og opfølgning.'}
                 </p>
               </div>
 
@@ -350,7 +532,7 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
                     className={`block ${carePortalDark ? '' : 'text-gray-500'}`}
                     style={carePortalDark ? { color: 'var(--cp-muted)' } : undefined}
                   >
-                    Medtag dette notat på <em className="not-italic">Dagens dagbog</em> (samlet
+                    Medtag dette notat på <em className="not-italic">Aftenopsamling</em> (samlet
                     skriv til aftenholdet).
                   </span>
                 </span>
@@ -457,7 +639,7 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
               </button>
               <button
                 type="button"
-                disabled={!text.trim() || saving}
+                disabled={!canSave || saving}
                 onClick={() => void handleSave()}
                 className={`flex items-center justify-center gap-2 rounded-xl px-5 py-2 text-sm font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                   carePortalDark ? '' : 'bg-[#1D9E75] hover:bg-[#18886a]'

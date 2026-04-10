@@ -1,50 +1,83 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { CalendarClock, Plus, Trash2, Wallet } from 'lucide-react';
+import { CalendarClock, CheckCircle2, Clock3, MapPin, Users, Wallet } from 'lucide-react';
 import type { DemoShift, DemoShiftType } from '@/lib/demoShiftPlan';
 import {
-  loadShifts,
-  saveShifts,
   currentPayPeriod,
-  shiftsInPeriod,
-  formatKr,
   estimateGrossPay,
-  DEMO_OPEN_SHIFTS,
+  formatKr,
+  loadShifts,
+  shiftsInPeriod,
 } from '@/lib/demoShiftPlan';
 
-function uid() {
-  return `s-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+type VagtplanDemoClientProps = { basePath?: string };
+type CoreShift = 'dag' | 'aften' | 'nat';
+
+type ShiftSlot = {
+  id: string;
+  date: string;
+  type: CoreShift;
+  start: string;
+  end: string;
+  hours: number;
+  location: string;
+  assigned: string[];
+  required: number;
+  mine: boolean;
+};
+
+const TEAM = ['Christian C.', 'Mette R.', 'Anders K.', 'Louise N.', 'Helle T.', 'Nicolai S.'];
+
+const SHIFT_META: Record<
+  CoreShift,
+  { start: string; end: string; hours: number; location: string; weekday: number; weekend: number }
+> = {
+  dag: { start: '07:30', end: '15:30', hours: 8, location: 'Hus A + B', weekday: 4, weekend: 3 },
+  aften: { start: '15:00', end: '23:00', hours: 8, location: 'Hus B + C', weekday: 3, weekend: 3 },
+  nat: {
+    start: '23:00',
+    end: '07:00',
+    hours: 8,
+    location: 'Nattevagt (hele huset)',
+    weekday: 2,
+    weekend: 2,
+  },
+};
+
+function ymd(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+function plusDays(dateIso: string, delta: number): string {
+  const d = new Date(`${dateIso}T12:00:00`);
+  d.setDate(d.getDate() + delta);
+  return ymd(d);
+}
+
+function hash(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i += 1) h = (h * 33 + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
 }
 
 function labelType(t: DemoShiftType): string {
-  switch (t) {
-    case 'dag':
-      return 'Dag';
-    case 'aften':
-      return 'Aften';
-    case 'nat':
-      return 'Nat';
-    case 'uddannelse':
-      return 'Uddannelse';
-    default:
-      return 'Vagt';
-  }
+  if (t === 'dag') return 'Dag';
+  if (t === 'aften') return 'Aften';
+  if (t === 'nat') return 'Nat';
+  if (t === 'uddannelse') return 'Uddannelse';
+  return 'Vagt';
 }
-
-type VagtplanDemoClientProps = {
-  /** Rodsti uden trailing slash, fx `/care-portal-demo/vagtplan` eller `/care-portal-vagtplan` */
-  basePath?: string;
-};
 
 export default function VagtplanDemoClient({
   basePath = '/care-portal-demo/vagtplan',
 }: VagtplanDemoClientProps) {
   const [shifts, setShifts] = useState<DemoShift[]>([]);
   const [mounted, setMounted] = useState(false);
-  const [addDate, setAddDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [addType, setAddType] = useState<DemoShiftType>('dag');
+  const [selectedDate, setSelectedDate] = useState(() => ymd(new Date()));
+  const [selectedSlot, setSelectedSlot] = useState<ShiftSlot | null>(null);
+  const [requesting, setRequesting] = useState<string | null>(null);
 
   useEffect(() => {
     setShifts(loadShifts());
@@ -54,47 +87,94 @@ export default function VagtplanDemoClient({
   const period = useMemo(() => currentPayPeriod(), []);
   const inPeriod = useMemo(
     () => shiftsInPeriod(shifts, period.start, period.end),
-    [shifts, period]
+    [period, shifts]
   );
   const pay = useMemo(() => estimateGrossPay(inPeriod), [inPeriod]);
 
-  const update = useCallback((next: DemoShift[]) => {
-    setShifts(next);
-    saveShifts(next);
-  }, []);
-
-  const addShift = () => {
-    const hours = addType === 'nat' ? 8 : addType === 'aften' ? 8 : 7.5;
-    const row: DemoShift = {
-      id: uid(),
-      date: addDate,
-      type: addType,
-      start: addType === 'nat' ? '23:00' : addType === 'aften' ? '15:00' : '07:30',
-      end: addType === 'nat' ? '07:00' : addType === 'aften' ? '23:00' : '15:00',
-      hours,
-      supplement: addType === 'aften' ? 'Aftentillæg' : addType === 'nat' ? 'Nattillæg' : undefined,
-    };
-    update([...shifts, row].sort((a, b) => a.date.localeCompare(b.date)));
-  };
-
-  const remove = (id: string) => update(shifts.filter((s) => s.id !== id));
-
-  const nextOpenNight = useMemo(() => {
-    const d = new Date();
-    const add = (5 - d.getDay() + 7) % 7;
-    d.setDate(d.getDate() + (add === 0 ? 7 : add));
-    return d.toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long' });
-  }, []);
-
-  const grouped = useMemo(() => {
-    const m = new Map<string, DemoShift[]>();
+  const myShiftMap = useMemo(() => {
+    const m = new Map<string, DemoShift>();
     for (const s of shifts) {
-      const arr = m.get(s.date) ?? [];
-      arr.push(s);
-      m.set(s.date, arr);
+      if (s.type === 'dag' || s.type === 'aften' || s.type === 'nat')
+        m.set(`${s.date}:${s.type}`, s);
     }
-    return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    return m;
   }, [shifts]);
+
+  const days = useMemo(
+    () => Array.from({ length: 14 }, (_, i) => plusDays(selectedDate, i - 6)),
+    [selectedDate]
+  );
+
+  const slotsByDate = useMemo(() => {
+    const m = new Map<string, ShiftSlot[]>();
+    for (const d of days) {
+      const weekend = [0, 6].includes(new Date(`${d}T12:00:00`).getDay());
+      const slots: ShiftSlot[] = (['dag', 'aften', 'nat'] as CoreShift[]).map((type) => {
+        const meta = SHIFT_META[type];
+        const mine = myShiftMap.has(`${d}:${type}`);
+        const mineShift = myShiftMap.get(`${d}:${type}`);
+        const required = weekend ? meta.weekend : meta.weekday;
+        const seed = hash(`${d}:${type}`);
+        const assignedCount = mine ? required : Math.max(0, required - (seed % 2));
+        const assigned: string[] = mine ? ['Dig'] : [];
+        let i = 0;
+        while (assigned.length < assignedCount) {
+          const name = TEAM[(seed + i) % TEAM.length]!;
+          if (!assigned.includes(name)) assigned.push(name);
+          i += 1;
+        }
+        return {
+          id: `${d}-${type}`,
+          date: d,
+          type,
+          start: mineShift?.start ?? meta.start,
+          end: mineShift?.end ?? meta.end,
+          hours: mineShift?.hours ?? meta.hours,
+          location: meta.location,
+          assigned,
+          required,
+          mine,
+        };
+      });
+      m.set(d, slots);
+    }
+    return m;
+  }, [days, myShiftMap]);
+
+  const myUpcoming = useMemo(() => {
+    const now = ymd(new Date());
+    return shifts
+      .filter((s) => s.type === 'dag' || s.type === 'aften' || s.type === 'nat')
+      .filter((s) => s.date >= now)
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(0, 6);
+  }, [shifts]);
+
+  const selectedSlots = slotsByDate.get(selectedDate) ?? [];
+  const appointments = useMemo(
+    () => [
+      {
+        date: plusDays(selectedDate, 1),
+        title: 'Teammøde',
+        time: '10:30',
+        owner: 'Afdelingsleder',
+      },
+      {
+        date: plusDays(selectedDate, 2),
+        title: 'Borgerplan: NOP',
+        time: '13:00',
+        owner: 'Kollega: Mette',
+      },
+      { date: plusDays(selectedDate, 5), title: 'Supervision', time: '09:00', owner: 'Psykolog' },
+    ],
+    [selectedDate]
+  );
+
+  const requestShift = async (slotId: string) => {
+    setRequesting(slotId);
+    await new Promise((r) => setTimeout(r, 700));
+    setRequesting(null);
+  };
 
   if (!mounted) {
     return (
@@ -105,7 +185,7 @@ export default function VagtplanDemoClient({
   }
 
   return (
-    <div className="mx-auto max-w-4xl p-6">
+    <div className="mx-auto max-w-6xl p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p
@@ -122,8 +202,7 @@ export default function VagtplanDemoClient({
             Vagtplan
           </h1>
           <p className="mt-1 text-sm" style={{ color: 'var(--cp-muted)' }}>
-            Demo-data gemmes i denne browser. Tilføj eller fjern vagter — lønberegningen opdateres
-            på siden{' '}
+            Realistisk oversigt over egne vagter, bemanding og ledige vagter. Lønoverblik findes på{' '}
             <Link
               href={`${basePath}/loen`}
               className="font-medium underline-offset-2 hover:underline"
@@ -136,7 +215,7 @@ export default function VagtplanDemoClient({
         </div>
         <Link
           href={`${basePath}/loen`}
-          className="inline-flex items-center gap-2 self-start rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors"
+          className="inline-flex items-center gap-2 self-start rounded-xl border px-4 py-2.5 text-sm font-medium"
           style={{
             borderColor: 'var(--cp-border)',
             backgroundColor: 'var(--cp-bg2)',
@@ -148,55 +227,124 @@ export default function VagtplanDemoClient({
         </Link>
       </div>
 
-      <div
-        className="mt-8 rounded-xl border p-4"
-        style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
-      >
+      <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-[1.2fr_1fr]">
+        <section
+          className="rounded-xl border p-4"
+          style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
+        >
+          <h2 className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+            Mine vagter (kommende)
+          </h2>
+          <ul className="mt-3 space-y-2">
+            {myUpcoming.map((s) => (
+              <li
+                key={s.id}
+                className="rounded-lg border px-3 py-2.5"
+                style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg3)' }}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+                    {new Date(`${s.date}T12:00:00`).toLocaleDateString('da-DK', {
+                      weekday: 'short',
+                      day: 'numeric',
+                      month: 'short',
+                    })}{' '}
+                    · {labelType(s.type)}
+                  </p>
+                  <span className="text-xs" style={{ color: 'var(--cp-muted)' }}>
+                    {s.hours} t
+                  </span>
+                </div>
+                <p className="mt-0.5 text-xs" style={{ color: 'var(--cp-muted)' }}>
+                  {s.start}–{s.end} · {SHIFT_META[s.type as CoreShift]?.location ?? 'Bosted'}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section
+          className="rounded-xl border p-4"
+          style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
+        >
+          <h2 className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+            Dagens bemanding
+          </h2>
+          <div className="mt-3 space-y-2">
+            {(slotsByDate.get(ymd(new Date())) ?? []).map((slot) => {
+              const open = Math.max(0, slot.required - slot.assigned.length);
+              return (
+                <div
+                  key={slot.id}
+                  className="rounded-lg border px-3 py-2 text-sm"
+                  style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg3)' }}
+                >
+                  <p className="font-medium" style={{ color: 'var(--cp-text)' }}>
+                    {labelType(slot.type)} · {slot.start}–{slot.end}
+                  </p>
+                  <p
+                    className="mt-0.5 text-xs"
+                    style={{ color: open ? 'var(--cp-amber)' : 'var(--cp-green)' }}
+                  >
+                    {open ? `${open} ledig(e) vagt(er)` : 'Fuld bemanding'}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      </div>
+
+      <div className="mt-8">
         <h2 className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
-          Tilføj vagt (demo)
+          Kalender (forrige/fremtidige vagter og aftaler)
         </h2>
-        <div className="mt-3 flex flex-wrap items-end gap-3">
-          <label className="flex flex-col gap-1 text-xs" style={{ color: 'var(--cp-muted)' }}>
-            Dato
-            <input
-              type="date"
-              value={addDate}
-              onChange={(e) => setAddDate(e.target.value)}
-              className="rounded-lg border px-3 py-2 text-sm"
-              style={{
-                borderColor: 'var(--cp-border)',
-                backgroundColor: 'var(--cp-bg3)',
-                color: 'var(--cp-text)',
-              }}
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-xs" style={{ color: 'var(--cp-muted)' }}>
-            Type
-            <select
-              value={addType}
-              onChange={(e) => setAddType(e.target.value as DemoShiftType)}
-              className="rounded-lg border px-3 py-2 text-sm"
-              style={{
-                borderColor: 'var(--cp-border)',
-                backgroundColor: 'var(--cp-bg3)',
-                color: 'var(--cp-text)',
-              }}
-            >
-              <option value="dag">Dag</option>
-              <option value="aften">Aften</option>
-              <option value="nat">Nat</option>
-              <option value="uddannelse">Uddannelse</option>
-            </select>
-          </label>
-          <button
-            type="button"
-            onClick={addShift}
-            className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white"
-            style={{ background: 'linear-gradient(135deg, #2dd4a0, #0d9488)' }}
-          >
-            <Plus size={16} />
-            Tilføj
-          </button>
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-7">
+          {days.map((d) => {
+            const slots = slotsByDate.get(d) ?? [];
+            const open = slots.reduce(
+              (acc, s) => acc + Math.max(0, s.required - s.assigned.length),
+              0
+            );
+            const mine = slots.some((s) => s.mine);
+            const active = d === selectedDate;
+            return (
+              <button
+                key={d}
+                type="button"
+                onClick={() => setSelectedDate(d)}
+                className="rounded-lg border px-2.5 py-2 text-left"
+                style={{
+                  borderColor: active ? 'var(--cp-green)' : 'var(--cp-border)',
+                  backgroundColor: active ? 'var(--cp-green-dim)' : 'var(--cp-bg2)',
+                }}
+              >
+                <p
+                  className="text-[11px] font-semibold uppercase"
+                  style={{ color: 'var(--cp-muted)' }}
+                >
+                  {new Date(`${d}T12:00:00`).toLocaleDateString('da-DK', { weekday: 'short' })}
+                </p>
+                <p className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+                  {new Date(`${d}T12:00:00`).toLocaleDateString('da-DK', {
+                    day: '2-digit',
+                    month: '2-digit',
+                  })}
+                </p>
+                <p
+                  className="mt-1 text-[11px]"
+                  style={{ color: open ? 'var(--cp-amber)' : 'var(--cp-green)' }}
+                >
+                  {open ? `${open} ledig` : 'Fuld'}
+                </p>
+                {mine && (
+                  <p className="text-[11px]" style={{ color: 'var(--cp-blue)' }}>
+                    Min vagt
+                  </p>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -216,8 +364,7 @@ export default function VagtplanDemoClient({
           Registrerede timer i perioden:{' '}
           <strong style={{ color: 'var(--cp-text)' }}>{pay.totalHours.toFixed(1)} t</strong> ·
           Brutto ca.{' '}
-          <strong style={{ color: 'var(--cp-green)' }}>{formatKr(pay.estimatedGross)}</strong> (før
-          skat, demo-beregning)
+          <strong style={{ color: 'var(--cp-green)' }}>{formatKr(pay.estimatedGross)}</strong>
         </p>
       </div>
 
@@ -226,87 +373,150 @@ export default function VagtplanDemoClient({
         style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
       >
         <h2 className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
-          Ledige vagter (pool)
+          {new Date(`${selectedDate}T12:00:00`).toLocaleDateString('da-DK', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+          })}{' '}
+          · vagter i tidsrum
         </h2>
         <p className="mt-1 text-xs" style={{ color: 'var(--cp-muted)' }}>
-          Eksempel på vagter der søges dækket — i live kan de matches med tilgængelighed.
+          Klik på en vagt for detaljer og evt. anmod om ledig vagt.
         </p>
         <ul className="mt-3 space-y-2">
-          {DEMO_OPEN_SHIFTS.map((o) => (
+          {selectedSlots.map((slot) => {
+            const open = Math.max(0, slot.required - slot.assigned.length);
+            return (
+              <li
+                key={slot.id}
+                className="rounded-lg border px-3 py-2.5 text-sm"
+                style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg3)' }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setSelectedSlot(slot)}
+                  className="w-full text-left"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <div className="font-medium" style={{ color: 'var(--cp-text)' }}>
+                        {labelType(slot.type)} · {slot.start}–{slot.end}
+                      </div>
+                      <div className="text-xs" style={{ color: 'var(--cp-muted)' }}>
+                        {slot.location} · {slot.hours} timer
+                      </div>
+                    </div>
+                    <div
+                      className="text-xs"
+                      style={{ color: open ? 'var(--cp-amber)' : 'var(--cp-green)' }}
+                    >
+                      {open ? `${open} ledig` : 'Fuld bemanding'}
+                    </div>
+                  </div>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      <div
+        className="mt-6 rounded-xl border p-4"
+        style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
+      >
+        <h2 className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+          Mine allokerede aftaler
+        </h2>
+        <ul className="mt-3 space-y-2">
+          {appointments.map((a) => (
             <li
-              key={o.id}
+              key={`${a.date}-${a.title}`}
               className="rounded-lg border px-3 py-2.5 text-sm"
               style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg3)' }}
             >
-              <div className="font-medium" style={{ color: 'var(--cp-text)' }}>
-                {o.label} · {o.hours} t
-              </div>
-              <div className="text-xs" style={{ color: 'var(--cp-muted)' }}>
-                {o.note}
-              </div>
-              {o.id === 'open-1' && (
-                <div className="mt-1 text-xs" style={{ color: 'var(--cp-amber)' }}>
-                  Foreslået dato: {nextOpenNight}
-                </div>
-              )}
+              <p className="font-medium" style={{ color: 'var(--cp-text)' }}>
+                {a.title}
+              </p>
+              <p className="mt-0.5 text-xs" style={{ color: 'var(--cp-muted)' }}>
+                {new Date(`${a.date}T12:00:00`).toLocaleDateString('da-DK', {
+                  weekday: 'short',
+                  day: 'numeric',
+                  month: 'short',
+                })}{' '}
+                · {a.time} · {a.owner}
+              </p>
             </li>
           ))}
         </ul>
       </div>
 
-      <div className="mt-8">
-        <h2 className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
-          Kalenderoversigt
-        </h2>
-        <div className="mt-3 space-y-2">
-          {grouped.length === 0 && (
-            <p className="text-sm" style={{ color: 'var(--cp-muted)' }}>
-              Ingen vagter — tilføj ovenfor.
-            </p>
-          )}
-          {grouped.map(([date, list]) => (
-            <div
-              key={date}
-              className="rounded-lg border"
-              style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
-            >
-              <div
-                className="border-b px-3 py-2 text-xs font-semibold uppercase tracking-wide"
-                style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-muted)' }}
+      {selectedSlot && (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 p-4"
+          onClick={(e) => e.target === e.currentTarget && setSelectedSlot(null)}
+        >
+          <div
+            className="w-full max-w-lg rounded-xl border p-5"
+            style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
+          >
+            <h3 className="text-base font-semibold" style={{ color: 'var(--cp-text)' }}>
+              {labelType(selectedSlot.type)} · {selectedSlot.start}–{selectedSlot.end}
+            </h3>
+            <div className="mt-3 space-y-2 text-sm">
+              <p className="flex items-center gap-2" style={{ color: 'var(--cp-muted)' }}>
+                <MapPin size={14} /> {selectedSlot.location}
+              </p>
+              <p className="flex items-center gap-2" style={{ color: 'var(--cp-muted)' }}>
+                <Clock3 size={14} /> {selectedSlot.hours} timer
+              </p>
+              <p className="flex items-center gap-2" style={{ color: 'var(--cp-muted)' }}>
+                <Users size={14} /> {selectedSlot.assigned.length}/{selectedSlot.required} bemandet
+              </p>
+            </div>
+            <div className="mt-4 rounded-lg border p-3" style={{ borderColor: 'var(--cp-border)' }}>
+              <p
+                className="text-xs font-semibold uppercase tracking-wide"
+                style={{ color: 'var(--cp-muted)' }}
               >
-                {new Date(date + 'T12:00:00').toLocaleDateString('da-DK', {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'long',
-                })}
-              </div>
-              <ul className="divide-y" style={{ borderColor: 'var(--cp-border)' }}>
-                {list.map((s) => (
-                  <li key={s.id} className="flex items-center gap-3 px-3 py-2.5">
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium" style={{ color: 'var(--cp-text)' }}>
-                        {labelType(s.type)} · {s.start}–{s.end}
-                      </div>
-                      <div className="text-xs" style={{ color: 'var(--cp-muted)' }}>
-                        {s.hours} t{s.supplement ? ` · ${s.supplement}` : ''}
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => remove(s.id)}
-                      className="rounded-lg p-2 transition-colors"
-                      style={{ color: 'var(--cp-red)' }}
-                      aria-label="Fjern vagt"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                Personale på vagt i tidsrummet
+              </p>
+              <ul className="mt-2 space-y-1">
+                {selectedSlot.assigned.map((name) => (
+                  <li
+                    key={name}
+                    className="flex items-center gap-2 text-sm"
+                    style={{ color: 'var(--cp-text)' }}
+                  >
+                    <CheckCircle2 size={14} style={{ color: 'var(--cp-green)' }} />
+                    {name}
                   </li>
                 ))}
               </ul>
             </div>
-          ))}
+            <div className="mt-4 flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedSlot(null)}
+                className="rounded-lg border px-3 py-2 text-sm"
+                style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-muted)' }}
+              >
+                Luk
+              </button>
+              {!selectedSlot.mine && selectedSlot.assigned.length < selectedSlot.required && (
+                <button
+                  type="button"
+                  onClick={() => void requestShift(selectedSlot.id)}
+                  disabled={requesting === selectedSlot.id}
+                  className="rounded-lg px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                  style={{ backgroundColor: 'var(--cp-green)' }}
+                >
+                  {requesting === selectedSlot.id ? 'Sender anmodning…' : 'Anmod om vagt'}
+                </button>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
