@@ -15,21 +15,20 @@ function hashSeed(input: string): number {
   let hash = 2166136261;
   for (let i = 0; i < input.length; i += 1) {
     hash ^= input.charCodeAt(i);
-    hash +=
-      (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+    hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
   }
   return Math.abs(hash >>> 0);
 }
 
 function toDanishPhoneFromSeed(seed: number): string {
   const d1 = (seed % 9) + 1;
-  const d2 = ((seed >> 3) % 10 + 10) % 10;
-  const d3 = ((seed >> 6) % 10 + 10) % 10;
-  const d4 = ((seed >> 9) % 10 + 10) % 10;
-  const d5 = ((seed >> 12) % 10 + 10) % 10;
-  const d6 = ((seed >> 15) % 10 + 10) % 10;
-  const d7 = ((seed >> 18) % 10 + 10) % 10;
-  const d8 = ((seed >> 21) % 10 + 10) % 10;
+  const d2 = (((seed >> 3) % 10) + 10) % 10;
+  const d3 = (((seed >> 6) % 10) + 10) % 10;
+  const d4 = (((seed >> 9) % 10) + 10) % 10;
+  const d5 = (((seed >> 12) % 10) + 10) % 10;
+  const d6 = (((seed >> 15) % 10) + 10) % 10;
+  const d7 = (((seed >> 18) % 10) + 10) % 10;
+  const d8 = (((seed >> 21) % 10) + 10) % 10;
   return `${d1}${d2} ${d3}${d4} ${d5}${d6} ${d7}${d8}`;
 }
 
@@ -57,8 +56,8 @@ export default function OnCallStaffWidget() {
         </h3>
       </div>
       <p className="text-xs mb-3" style={{ color: 'var(--cp-muted)' }}>
-        Bruges af borgerens kriseflow trin 3. Telefoner er simulerede på dashboardet og
-        ændres i Indstillinger.
+        Bruges af borgerens kriseflow trin 3. Telefoner er simulerede på dashboardet og ændres i
+        Indstillinger.
       </p>
       <div className="space-y-3">
         {(Object.keys(SHIFT_LABELS) as ShiftKey[]).map((shift) => {
