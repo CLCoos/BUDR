@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { callAnthropicJournalPolish } from '@/lib/ai/anthropicJournalPolish';
+import { fetchDiaryDraftRowsForSynthesis } from '@/lib/journalEntriesQueryCompat';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { parseStaffOrgId } from '@/lib/staffOrgScope';
+
+export const maxDuration = 60;
 
 function copenhagenYmd(d: Date): string {
   return new Intl.DateTimeFormat('sv-SE', {
@@ -68,28 +72,24 @@ export async function POST(req: NextRequest) {
   const todayYmd = copenhagenYmd(new Date());
   const since = new Date(Date.now() - 40 * 3600 * 1000).toISOString();
 
-  const { data: raw, error: jErr } = await supabase
-    .from('journal_entries')
-    .select('id, staff_name, entry_text, category, created_at, journal_status, show_in_diary')
-    .eq('resident_id', residentId)
-    .eq('journal_status', 'kladde')
-    .eq('show_in_diary', true)
-    .gte('created_at', since)
-    .order('created_at', { ascending: true });
+  const { rows: rawRows, error: fetchErr } = await fetchDiaryDraftRowsForSynthesis(
+    supabase,
+    residentId,
+    since
+  );
 
-  if (jErr) {
-    return NextResponse.json({ error: jErr.message }, { status: 500 });
+  if (fetchErr) {
+    console.error('[journal-day-synthesis] fetch journal_entries:', fetchErr.message);
+    return NextResponse.json(
+      {
+        error:
+          'Kunne ikke hente journal — tjek database-migrationer (journal_status / show_in_diary)',
+      },
+      { status: 500 }
+    );
   }
 
-  const rows = (raw ?? []).filter(
-    (r) => copenhagenYmd(new Date(r.created_at as string)) === todayYmd
-  ) as {
-    id: string;
-    staff_name: string;
-    entry_text: string;
-    category: string;
-    created_at: string;
-  }[];
+  const rows = rawRows.filter((r) => copenhagenYmd(new Date(r.created_at)) === todayYmd);
 
   if (rows.length === 0) {
     return NextResponse.json(
@@ -112,34 +112,28 @@ export async function POST(req: NextRequest) {
 
   const userMsg = lines.join('\n\n---\n\n');
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 2200,
-      system: SYSTEM,
-      messages: [{ role: 'user', content: userMsg }],
-    }),
+  const ai = await callAnthropicJournalPolish({
+    apiKey: key,
+    system: SYSTEM,
+    userMessage: userMsg,
+    maxTokens: 2200,
   });
 
-  if (!res.ok) {
-    const err = await res.text();
-    console.error('[journal-day-synthesis] anthropic error:', res.status, err);
+  if (!ai.ok) {
+    console.error(
+      '[journal-day-synthesis] anthropic:',
+      ai.lastModel,
+      ai.status,
+      ai.body.slice(0, 400)
+    );
+    if (ai.status === 401) {
+      return NextResponse.json(
+        { error: 'Ugyldig Anthropic API-nøgle på serveren' },
+        { status: 503 }
+      );
+    }
     return NextResponse.json({ error: 'AI svarer ikke — prøv igen' }, { status: 502 });
   }
 
-  const data = (await res.json()) as { content?: Array<{ type?: string; text?: string }> };
-  const block = data.content?.find((c) => c.type === 'text');
-  const text = block?.text?.trim();
-
-  if (!text) {
-    return NextResponse.json({ error: 'Tomt svar fra AI' }, { status: 502 });
-  }
-
-  return NextResponse.json({ text, sourceCount: rows.length });
+  return NextResponse.json({ text: ai.text, sourceCount: rows.length });
 }

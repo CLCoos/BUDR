@@ -5,6 +5,7 @@ import PortalShell from '@/components/PortalShell';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { parseStaffOrgId } from '@/lib/staffOrgScope';
 import DagbogEveningTools, { type SynthesisTarget } from './components/DagbogEveningTools';
+import { journalQueryMissingColumn } from '@/lib/journalEntriesQueryCompat';
 
 function copenhagenYmd(d: Date): string {
   return new Intl.DateTimeFormat('sv-SE', {
@@ -48,13 +49,7 @@ export default async function DagensDagbogPage() {
   let raw = (first.data ?? []) as JournalRow[];
   let error = first.error;
 
-  // Backward compatibility: some environments still miss `journal_status`.
-  if (
-    error &&
-    String(error.message ?? '')
-      .toLowerCase()
-      .includes('journal_status')
-  ) {
+  if (error && journalQueryMissingColumn(error.message, 'journal_status')) {
     const retry = await supabase
       .from('journal_entries')
       .select('id, resident_id, staff_name, entry_text, category, created_at, show_in_diary')
@@ -63,6 +58,16 @@ export default async function DagensDagbogPage() {
       .order('created_at', { ascending: true });
     raw = (retry.data ?? []) as JournalRow[];
     error = retry.error;
+  }
+
+  if (error && journalQueryMissingColumn(error.message, 'show_in_diary')) {
+    const retry2 = await supabase
+      .from('journal_entries')
+      .select('id, resident_id, staff_name, entry_text, category, created_at')
+      .gte('created_at', since)
+      .order('created_at', { ascending: true });
+    raw = (retry2.data ?? []) as JournalRow[];
+    error = retry2.error;
   }
 
   const todayYmd = copenhagenYmd(new Date());

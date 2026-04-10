@@ -101,16 +101,29 @@ export default function DagbogEveningTools({ targets }: Props) {
       insertRow.approved_by = user.id;
     }
 
-    let { error: insErr } = await supabase.from('journal_entries').insert(insertRow);
-    if (
-      insErr &&
-      String(insErr.message ?? '')
+    const missingColumnError = (err: { message?: string } | null, column: string) =>
+      !!err &&
+      String(err.message ?? '')
         .toLowerCase()
-        .includes('show_in_diary')
-    ) {
-      const retry = { ...insertRow };
-      delete retry.show_in_diary;
-      ({ error: insErr } = await supabase.from('journal_entries').insert(retry));
+        .includes(column.toLowerCase());
+
+    const payload = { ...insertRow };
+    let { error: insErr } = await supabase.from('journal_entries').insert(payload);
+    if (missingColumnError(insErr, 'show_in_diary')) {
+      delete payload.show_in_diary;
+      ({ error: insErr } = await supabase.from('journal_entries').insert(payload));
+    }
+    if (missingColumnError(insErr, 'approved_at')) {
+      delete payload.approved_at;
+      ({ error: insErr } = await supabase.from('journal_entries').insert(payload));
+    }
+    if (missingColumnError(insErr, 'approved_by')) {
+      delete payload.approved_by;
+      ({ error: insErr } = await supabase.from('journal_entries').insert(payload));
+    }
+    if (missingColumnError(insErr, 'journal_status')) {
+      delete payload.journal_status;
+      ({ error: insErr } = await supabase.from('journal_entries').insert(payload));
     }
 
     setSaving(false);
