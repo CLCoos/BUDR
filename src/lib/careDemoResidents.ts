@@ -1,6 +1,11 @@
 /** Delte demo-profiler til Care Portal (kalender, medicin, beboerliste). */
-export const CARE_HOUSES = ['A', 'B', 'C', 'D'] as const;
+export const CARE_HOUSES = ['A', 'B', 'C', 'D', 'TLS'] as const;
 export type CareHouse = (typeof CARE_HOUSES)[number];
+
+/** Kort label til hus-chips (fx onboarding `TLS` uden "Hus"-præfiks). */
+export function carePortalHouseChipLabel(house: CareHouse): string {
+  return house === 'TLS' ? 'TLS' : `Hus ${house}`;
+}
 
 export type CareDemoResidentProfile = {
   id: string;

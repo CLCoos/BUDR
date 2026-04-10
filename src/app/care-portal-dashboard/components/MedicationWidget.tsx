@@ -17,8 +17,16 @@ import {
   Undo2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { CARE_HOUSES, careDemoProfileById, type CareHouse } from '@/lib/careDemoResidents';
+import {
+  CARE_HOUSES,
+  careDemoProfileById,
+  carePortalHouseChipLabel,
+  type CareHouse,
+} from '@/lib/careDemoResidents';
+import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 import { enumerateCivilMedicationSlotDates } from '@/lib/medicationScheduleSlots';
+import { createClient } from '@/lib/supabase/client';
+import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
 
 export interface MedicationTask {
   id: string;
@@ -61,6 +69,136 @@ function qtyLabel(q: number, unit: MedicationTask['unit']): string {
   if (unit === 'ml') return `${q} ml`;
   if (unit === 'dråber') return q === 1 ? '1 dråbe' : `${q} dråber`;
   return q === 1 ? '1 inhalation' : `${q} inhalationer`;
+}
+
+const TIME_GROUP_DEFAULT_HHMM: Record<string, string> = {
+  morgen: '08:00',
+  middag: '12:30',
+  aften: '20:00',
+  behoev: '12:30',
+};
+
+function parseHhMmFromTimeLabel(label: string): string | null {
+  const compact = label.replace(/\s/g, '');
+  const m = /(\d{1,2})[.:](\d{2})/.exec(compact);
+  if (!m) return null;
+  const h = Math.min(23, Math.max(0, parseInt(m[1]!, 10)));
+  const min = Math.min(59, Math.max(0, parseInt(m[2]!, 10)));
+  return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+}
+
+function careHouseFromOnboarding(od: Record<string, unknown>): CareHouse {
+  const h = String(od.house ?? '').trim();
+  const husLetter = /^Hus\s+([ABCD])\b/i.exec(h);
+  if (husLetter) return husLetter[1]!.toUpperCase() as CareHouse;
+  if (/^tls$/i.test(h)) return 'TLS';
+  const single = /^([ABCD])$/i.exec(h);
+  if (single) return single[1]!.toUpperCase() as CareHouse;
+  return 'D';
+}
+
+function scheduledTodayFromMed(timeGroup: string, timeLabel: string, anchor: Date): Date {
+  const fromLabel = parseHhMmFromTimeLabel(timeLabel);
+  const key = String(timeGroup ?? '').toLowerCase();
+  const hhmm = fromLabel ?? TIME_GROUP_DEFAULT_HHMM[key] ?? '12:30';
+  const parts = hhmm.split(':');
+  const hs = parseInt(parts[0] ?? '12', 10);
+  const ms = parseInt(parts[1] ?? '0', 10);
+  const d = new Date(anchor);
+  d.setHours(hs, ms, 0, 0);
+  return d;
+}
+
+type DbResidentMedRow = {
+  id: string;
+  resident_id: string;
+  name: string;
+  dose: string;
+  frequency: string;
+  time_label: string;
+  time_group: string;
+  status: string;
+  notes: string | null;
+};
+
+async function fetchLiveMedicationTasksForOrg(): Promise<MedicationTask[]> {
+  const supabase = createClient();
+  if (!supabase) return [];
+
+  const { orgId, residentIds, error } = await resolveStaffOrgResidents(supabase);
+  if (error || !orgId || residentIds.length === 0) return [];
+
+  const { data: resRows } = await supabase
+    .from('care_residents')
+    .select('user_id, display_name, onboarding_data')
+    .eq('org_id', orgId)
+    .in('user_id', residentIds);
+
+  const resMeta = new Map<
+    string,
+    { name: string; initials: string; house: CareHouse; room: string }
+  >();
+
+  for (const row of resRows ?? []) {
+    const r = row as {
+      user_id: string;
+      display_name: string;
+      onboarding_data: unknown;
+    };
+    const od = (r.onboarding_data ?? {}) as Record<string, unknown>;
+    const initialsRaw = od.avatar_initials;
+    const initials =
+      typeof initialsRaw === 'string' && initialsRaw.trim().length > 0
+        ? initialsRaw.trim().slice(0, 3).toUpperCase()
+        : r.display_name
+            .split(/\s+/)
+            .filter(Boolean)
+            .map((w) => w[0]!)
+            .join('')
+            .slice(0, 3)
+            .toUpperCase();
+    resMeta.set(r.user_id, {
+      name: r.display_name,
+      initials,
+      house: careHouseFromOnboarding(od),
+      room: String(od.room ?? '—'),
+    });
+  }
+
+  const { data: medRows, error: medErr } = await supabase
+    .from('resident_medications')
+    .select('id, resident_id, name, dose, frequency, time_label, time_group, status, notes')
+    .in('resident_id', residentIds)
+    .eq('status', 'aktiv');
+
+  if (medErr || !medRows?.length) return [];
+
+  const now = new Date();
+  const ymd = now.toISOString().slice(0, 10);
+  const tasks: MedicationTask[] = [];
+
+  for (const raw of medRows as DbResidentMedRow[]) {
+    const meta = resMeta.get(raw.resident_id);
+    if (!meta) continue;
+    const scheduledAt = scheduledTodayFromMed(raw.time_group, raw.time_label, now);
+    tasks.push({
+      id: `live-${raw.id}-${ymd}`,
+      residentId: raw.resident_id,
+      residentName: meta.name,
+      initials: meta.initials,
+      house: meta.house,
+      room: meta.room,
+      medicationName: raw.name,
+      strengthLabel: raw.dose?.trim() ? raw.dose : '—',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+      scheduledAt,
+      givenAt: null,
+    });
+  }
+
+  return tasks.sort((a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime());
 }
 
 /** Primær knap + synlig fortryd når registreret */
@@ -563,6 +701,7 @@ function ResidentAbbr({
 type TaskFilter = 'alle' | 'ventende' | 'forsinkede';
 
 export default function MedicationWidget() {
+  const simulatedMedicin = carePortalPilotSimulatedData();
   const [entries, setEntries] = useState<MedicationTask[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [laterExpanded, setLaterExpanded] = useState(false);
@@ -573,9 +712,26 @@ export default function MedicationWidget() {
   const [viewMode, setViewMode] = useState<'koe' | 'liste'>('koe');
 
   useEffect(() => {
-    setEntries(createMockEntries(Date.now()));
-    setHydrated(true);
-  }, []);
+    let cancelled = false;
+    const run = async () => {
+      if (simulatedMedicin) {
+        if (!cancelled) {
+          setEntries(createMockEntries(Date.now()));
+          setHydrated(true);
+        }
+        return;
+      }
+      const live = await fetchLiveMedicationTasksForOrg();
+      if (!cancelled) {
+        setEntries(live);
+        setHydrated(true);
+      }
+    };
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [simulatedMedicin]);
 
   useEffect(() => {
     const t = window.setInterval(() => setNowTick(Date.now()), 60_000);
@@ -752,12 +908,21 @@ export default function MedicationWidget() {
               color: 'var(--cp-blue)',
             }}
           >
-            <Shield className="h-3.5 w-3.5" aria-hidden />
-            FMK-integration
+            {simulatedMedicin ? (
+              <>
+                <Shield className="h-3.5 w-3.5" aria-hidden />
+                FMK-integration
+              </>
+            ) : (
+              <>
+                <Pill className="h-3.5 w-3.5" aria-hidden />
+                Jeres medicindata
+              </>
+            )}
           </span>
           <div className="flex flex-wrap justify-start gap-1.5 sm:justify-end">
             {(['alle', ...CARE_HOUSES] as const).map((key) => {
-              const label = key === 'alle' ? 'Alle' : `Hus ${key}`;
+              const label = key === 'alle' ? 'Alle' : carePortalHouseChipLabel(key);
               const selected = houseFilter === key;
               return (
                 <button
@@ -830,7 +995,9 @@ export default function MedicationWidget() {
               />
               <p className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
                 Mængde &amp; præparater{' '}
-                {houseFilter === 'alle' ? '(alle huse)' : `(Hus ${houseFilter})`}
+                {houseFilter === 'alle'
+                  ? '(alle huse)'
+                  : `(${carePortalHouseChipLabel(houseFilter)})`}
               </p>
             </div>
             <button
@@ -1031,6 +1198,23 @@ export default function MedicationWidget() {
       )}
 
       <div className="flex flex-col gap-6">
+        {hydrated && !simulatedMedicin && entries.length === 0 && (
+          <div
+            className="rounded-2xl p-5 sm:p-6"
+            style={{
+              backgroundColor: 'var(--cp-bg3)',
+              border: '1px solid var(--cp-border)',
+            }}
+          >
+            <p className="text-sm font-medium" style={{ color: 'var(--cp-text)' }}>
+              Ingen aktive mediciner at vise i dag
+            </p>
+            <p className="mt-2 text-sm leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
+              Overblikket bygger på aktive præparater fra beboernes Medicin-fane. Når medicin er
+              tilføjet dér, vises planlagte udleveringer her.
+            </p>
+          </div>
+        )}
         {viewMode === 'koe' && pastDue.length > 0 && (
           <div>
             <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
@@ -1126,7 +1310,8 @@ export default function MedicationWidget() {
                             </div>
                             <p className="mt-1 text-sm" style={{ color: 'var(--cp-muted)' }}>
                               <ResidentAbbr fullName={item.residentName} initials={item.initials} />{' '}
-                              · Hus {item.house} · værelse {item.room} · {item.routeLabel}
+                              · {carePortalHouseChipLabel(item.house)} · værelse {item.room} ·{' '}
+                              {item.routeLabel}
                             </p>
                             <div
                               className="mt-2 flex flex-wrap items-center gap-2 text-xs font-medium"
@@ -1234,8 +1419,8 @@ export default function MedicationWidget() {
                         </span>
                       </p>
                       <p className="text-xs" style={{ color: 'var(--cp-muted2)' }}>
-                        <ResidentAbbr fullName={row.residentName} initials={row.initials} /> · Hus{' '}
-                        {row.house} · {row.room}
+                        <ResidentAbbr fullName={row.residentName} initials={row.initials} /> ·{' '}
+                        {carePortalHouseChipLabel(row.house)} · {row.room}
                       </p>
                     </div>
                     <span
@@ -1339,8 +1524,8 @@ export default function MedicationWidget() {
                           className="mt-0.5 truncate text-xs"
                           style={{ color: 'var(--cp-muted2)' }}
                         >
-                          <ResidentAbbr fullName={row.residentName} initials={row.initials} /> · Hus{' '}
-                          {row.house}
+                          <ResidentAbbr fullName={row.residentName} initials={row.initials} /> ·{' '}
+                          {carePortalHouseChipLabel(row.house)}
                         </p>
                       </div>
                       <DeliveryControls
@@ -1484,7 +1669,7 @@ export default function MedicationWidget() {
                               </p>
                               <p className="text-xs" style={{ color: 'var(--cp-muted2)' }}>
                                 <ResidentAbbr fullName={row.residentName} initials={row.initials} />{' '}
-                                · Hus {row.house} · {row.room}
+                                · {carePortalHouseChipLabel(row.house)} · {row.room}
                               </p>
                             </div>
                             <span
@@ -1543,7 +1728,7 @@ export default function MedicationWidget() {
                   style={{ color: 'var(--cp-text)' }}
                 >
                   Alle udleveringer registreret
-                  {houseFilter !== 'alle' ? ` for Hus ${houseFilter}` : ''}
+                  {houseFilter !== 'alle' ? ` for ${carePortalHouseChipLabel(houseFilter)}` : ''}
                 </p>
                 <p className="mt-2 text-sm leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
                   Godt gået — der er ingen åbne medicinopgaver på listen lige nu.
@@ -1555,7 +1740,7 @@ export default function MedicationWidget() {
 
         {scopedEntries.length === 0 && houseFilter !== 'alle' && (
           <p className="text-center text-sm" style={{ color: 'var(--cp-muted)' }}>
-            Ingen planlagte udleveringer for Hus {houseFilter} i dette vindue.
+            Ingen planlagte udleveringer for {carePortalHouseChipLabel(houseFilter)} i dette vindue.
           </p>
         )}
       </div>

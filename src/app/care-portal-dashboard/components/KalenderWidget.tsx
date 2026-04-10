@@ -7,6 +7,7 @@ import {
   CARE_DEMO_RESIDENT_PROFILES,
   CARE_HOUSES,
   careDemoProfileById,
+  carePortalHouseChipLabel,
 } from '@/lib/careDemoResidents';
 
 export type { CareHouse } from '@/lib/careDemoResidents';
@@ -328,7 +329,7 @@ export default function KalenderWidget({ variant: _variant = 'live' }: KalenderW
           </button>
           <div className="flex flex-wrap justify-start gap-1.5 sm:justify-end">
             {(['alle', ...CARE_HOUSES] as const).map((key) => {
-              const label = key === 'alle' ? 'Alle' : `Hus ${key}`;
+              const label = key === 'alle' ? 'Alle' : carePortalHouseChipLabel(key);
               const selected = houseFilter === key;
               return (
                 <button

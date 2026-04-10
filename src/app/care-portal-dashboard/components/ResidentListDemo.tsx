@@ -2,7 +2,12 @@
 import React, { useMemo, useState } from 'react';
 import { Search, ChevronRight, Clock } from 'lucide-react';
 import { toast } from 'sonner';
-import { CARE_DEMO_RESIDENT_PROFILES, CARE_HOUSES, type CareHouse } from '@/lib/careDemoResidents';
+import {
+  CARE_DEMO_RESIDENT_PROFILES,
+  CARE_HOUSES,
+  carePortalHouseChipLabel,
+  type CareHouse,
+} from '@/lib/careDemoResidents';
 
 type TrafficUi = 'groen' | 'gul' | 'roed';
 
@@ -229,7 +234,7 @@ export default function ResidentListDemo() {
         </div>
         <div className="mb-2 flex flex-wrap gap-1.5">
           {(['alle', ...CARE_HOUSES] as const).map((key) => {
-            const label = key === 'alle' ? 'Alle huse' : `Hus ${key}`;
+            const label = key === 'alle' ? 'Alle huse' : carePortalHouseChipLabel(key);
             const active = houseFilter === key;
             return (
               <button
