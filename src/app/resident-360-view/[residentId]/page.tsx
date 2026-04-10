@@ -15,6 +15,10 @@ import ResidentExportModule from './components/ResidentExportModule';
 import type { DailyPlan, PendingProposal } from './components/DagsPlanPortal';
 import type { MedDefinition } from './components/types';
 import type { ResidentExportInput } from '@/lib/residentExport/types';
+import { copenhagenStartOfTodayUtcIso } from '@/lib/copenhagenDay';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -40,9 +44,16 @@ function formatCheckin(iso: string): string {
 
 // ── Data fetching ─────────────────────────────────────────────
 
+function journalSelectMissingStatus(message: string | undefined): boolean {
+  const m = (message ?? '').toLowerCase();
+  return (
+    m.includes('journal_status') && (m.includes('does not exist') || m.includes('schema cache'))
+  );
+}
+
 async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
   const today = new Date().toISOString().slice(0, 10);
-  const todayStart = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
+  const todayStart = copenhagenStartOfTodayUtcIso();
 
   const exportJournalSince = new Date(Date.now() - 90 * 86400000).toISOString();
 
@@ -108,6 +119,64 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
       .limit(25),
   ]);
 
+  type JournalRow = {
+    id: string;
+    staff_name: string;
+    entry_text: string;
+    category: string;
+    created_at: string;
+    journal_status: string;
+    approved_at: string | null;
+  };
+
+  let journalEntriesResolved: JournalRow[] = (journalRes.data ?? []) as JournalRow[];
+  if (journalRes.error) {
+    if (journalSelectMissingStatus(journalRes.error.message)) {
+      const retry = await supabase
+        .from('journal_entries')
+        .select('id, staff_name, entry_text, category, created_at, approved_at')
+        .eq('resident_id', residentId)
+        .gte('created_at', todayStart)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (!retry.error && retry.data) {
+        journalEntriesResolved = (retry.data as Omit<JournalRow, 'journal_status'>[]).map(
+          (row) => ({
+            ...row,
+            journal_status: 'godkendt',
+          })
+        );
+      } else {
+        journalEntriesResolved = [];
+      }
+    } else {
+      journalEntriesResolved = [];
+    }
+  }
+
+  let journalExportResolved: JournalRow[] = (journalExportRes.data ?? []) as JournalRow[];
+  if (journalExportRes.error) {
+    if (journalSelectMissingStatus(journalExportRes.error.message)) {
+      const retry = await supabase
+        .from('journal_entries')
+        .select('id, staff_name, entry_text, category, created_at, approved_at')
+        .eq('resident_id', residentId)
+        .gte('created_at', exportJournalSince)
+        .order('created_at', { ascending: false })
+        .limit(80);
+      if (!retry.error && retry.data) {
+        journalExportResolved = (retry.data as Omit<JournalRow, 'journal_status'>[]).map((row) => ({
+          ...row,
+          journal_status: 'godkendt',
+        }));
+      } else {
+        journalExportResolved = [];
+      }
+    } else {
+      journalExportResolved = [];
+    }
+  }
+
   if (residentRes.error || !residentRes.data) return null;
 
   const r = residentRes.data;
@@ -148,24 +217,8 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
     checkinVoiceTranscript: c ? ((c.voice_transcript as string | null) ?? null) : null,
     plan: (planRes.data as DailyPlan | null) ?? null,
     proposals: (proposalsRes.data ?? []) as PendingProposal[],
-    journalEntries: (journalRes.data ?? []) as {
-      id: string;
-      staff_name: string;
-      entry_text: string;
-      category: string;
-      created_at: string;
-      journal_status: string;
-      approved_at: string | null;
-    }[],
-    journalEntriesForExport: (journalExportRes.data ?? []) as {
-      id: string;
-      staff_name: string;
-      entry_text: string;
-      category: string;
-      created_at: string;
-      journal_status: string;
-      approved_at: string | null;
-    }[],
+    journalEntries: journalEntriesResolved,
+    journalEntriesForExport: journalExportResolved,
     concernNotesForExport: (concernRes.data ?? []) as {
       id: string;
       note: string;

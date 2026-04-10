@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -14,6 +14,7 @@ import {
   Mic,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { copenhagenStartOfTodayUtcIso } from '@/lib/copenhagenDay';
 import { logPortalAudit } from '@/lib/auditClient';
 import type { MedDefinition } from './types';
 import WriteJournalEntry from './WriteJournalEntry';
@@ -117,6 +118,60 @@ export default function ResidentOverblikTab({
   const [showVoiceTranscript, setShowVoiceTranscript] = useState(false);
   const [simpleMode, setSimpleMode] = useState(false);
   const [savingSimpleMode, setSavingSimpleMode] = useState(false);
+  const [journalList, setJournalList] = useState<JournalEntry[]>(journalEntries);
+
+  useEffect(() => {
+    setJournalList(journalEntries);
+  }, [journalEntries]);
+
+  const refetchJournalToday = useCallback(async () => {
+    const supabase = createClient();
+    if (!supabase) return;
+    const todayStart = copenhagenStartOfTodayUtcIso();
+    const fullSelect =
+      'id, staff_name, entry_text, category, created_at, journal_status, approved_at';
+    const first = await supabase
+      .from('journal_entries')
+      .select(fullSelect)
+      .eq('resident_id', residentId)
+      .gte('created_at', todayStart)
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    const errMsg = first.error?.message?.toLowerCase() ?? '';
+    if (first.error && errMsg.includes('journal_status')) {
+      const r2 = await supabase
+        .from('journal_entries')
+        .select('id, staff_name, entry_text, category, created_at, approved_at')
+        .eq('resident_id', residentId)
+        .gte('created_at', todayStart)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (!r2.error && r2.data) {
+        setJournalList(
+          (r2.data as Omit<JournalEntry, 'journal_status'>[]).map((row) => ({
+            ...row,
+            journal_status: 'godkendt',
+          }))
+        );
+      }
+      return;
+    }
+
+    if (!first.error && first.data) {
+      setJournalList(first.data as JournalEntry[]);
+    }
+  }, [residentId]);
+
+  useEffect(() => {
+    const onJournalUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<{ residentId?: string }>).detail;
+      if (detail?.residentId !== undefined && detail.residentId !== residentId) return;
+      void refetchJournalToday();
+    };
+    window.addEventListener('portal-journal-updated', onJournalUpdated);
+    return () => window.removeEventListener('portal-journal-updated', onJournalUpdated);
+  }, [residentId, refetchJournalToday]);
 
   useEffect(() => {
     let cancelled = false;
@@ -183,8 +238,8 @@ export default function ResidentOverblikTab({
     toast.success(nextValue ? 'Forenklet visning aktiveret' : 'Forenklet visning deaktiveret');
   }
 
-  const journalDrafts = journalEntries.filter((e) => e.journal_status === 'kladde');
-  const journalGodkendt = journalEntries.filter((e) => e.journal_status !== 'kladde');
+  const journalDrafts = journalList.filter((e) => e.journal_status === 'kladde');
+  const journalGodkendt = journalList.filter((e) => e.journal_status !== 'kladde');
   const maxJournalLines = 4;
   const shownDrafts = journalDrafts.slice(0, maxJournalLines);
   const shownGodkendt = journalGodkendt.slice(0, maxJournalLines - shownDrafts.length);
@@ -220,6 +275,7 @@ export default function ResidentOverblikTab({
       return;
     }
     toast.success('Notat godkendt og synlig som journal');
+    void refetchJournalToday();
     router.refresh();
   }
 
@@ -617,16 +673,16 @@ export default function ResidentOverblikTab({
               <span className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
                 Journal i dag
               </span>
-              {journalEntries.length > 0 && (
+              {journalList.length > 0 && (
                 <span className="text-xs" style={{ color: 'var(--cp-muted)' }}>
-                  {journalEntries.length} noter
+                  {journalList.length} noter
                 </span>
               )}
             </div>
             <WriteJournalEntry residentId={residentId} residentName={residentName} carePortalDark />
           </div>
           <div className="divide-y divide-[var(--cp-border)]">
-            {journalEntries.length === 0 ? (
+            {journalList.length === 0 ? (
               <div className="px-4 py-5 text-center text-xs" style={{ color: 'var(--cp-muted)' }}>
                 Ingen journalnoter i dag
               </div>
