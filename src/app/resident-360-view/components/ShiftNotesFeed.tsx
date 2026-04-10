@@ -1,11 +1,12 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Search, Download } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 interface ShiftNote {
   id: string;
   date: string;
+  time: string;
   shift: 'dag' | 'aften' | 'nat';
   staffName: string;
   staffInitials: string;
@@ -17,6 +18,7 @@ const mockShiftNotes: ShiftNote[] = [
   {
     id: 'sn-001',
     date: '26/03/2026',
+    time: '08:14',
     shift: 'dag',
     staffName: 'Sara K.',
     staffInitials: 'SK',
@@ -26,6 +28,7 @@ const mockShiftNotes: ShiftNote[] = [
   {
     id: 'sn-002',
     date: '25/03/2026',
+    time: '21:10',
     shift: 'aften',
     staffName: 'Morten L.',
     staffInitials: 'ML',
@@ -35,6 +38,7 @@ const mockShiftNotes: ShiftNote[] = [
   {
     id: 'sn-003',
     date: '25/03/2026',
+    time: '13:45',
     shift: 'dag',
     staffName: 'Sara K.',
     staffInitials: 'SK',
@@ -44,6 +48,7 @@ const mockShiftNotes: ShiftNote[] = [
   {
     id: 'sn-004',
     date: '24/03/2026',
+    time: '20:05',
     shift: 'aften',
     staffName: 'Hanne B.',
     staffInitials: 'HB',
@@ -53,6 +58,7 @@ const mockShiftNotes: ShiftNote[] = [
   {
     id: 'sn-005',
     date: '24/03/2026',
+    time: '11:20',
     shift: 'dag',
     staffName: 'Sara K.',
     staffInitials: 'SK',
@@ -62,6 +68,7 @@ const mockShiftNotes: ShiftNote[] = [
   {
     id: 'sn-006',
     date: '23/03/2026',
+    time: '02:10',
     shift: 'nat',
     staffName: 'Hanne B.',
     staffInitials: 'HB',
@@ -71,6 +78,7 @@ const mockShiftNotes: ShiftNote[] = [
   {
     id: 'sn-007',
     date: '23/03/2026',
+    time: '19:35',
     shift: 'aften',
     staffName: 'Morten L.',
     staffInitials: 'ML',
@@ -112,6 +120,21 @@ function categoryToFlag(category: string): ShiftNote['flagColor'] {
   return 'groen';
 }
 
+function formatDateShort(iso: string): string {
+  return new Date(iso).toLocaleDateString('da-DK', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+  });
+}
+
+function formatTimeShort(iso: string): string {
+  return new Date(iso).toLocaleTimeString('da-DK', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 interface Props {
   variant?: 'mock' | 'live';
   residentId?: string;
@@ -125,77 +148,113 @@ export default function ShiftNotesFeed({ variant = 'mock', residentId, carePorta
   const [notes, setNotes] = useState<ShiftNote[]>(() => (variant === 'mock' ? mockShiftNotes : []));
   const [loading, setLoading] = useState(variant === 'live');
 
-  useEffect(() => {
-    if (variant === 'mock') {
+  const fetchLiveNotes = useCallback(async () => {
+    if (variant !== 'live') {
       setNotes(mockShiftNotes);
       setLoading(false);
       return;
     }
-
     if (!residentId?.trim()) {
       setNotes([]);
       setLoading(false);
       return;
     }
 
+    const supabase = createClient();
+    if (!supabase) {
+      setNotes([]);
+      setLoading(false);
+      return;
+    }
+
+    const since = new Date(Date.now() - 28 * 86400000).toISOString();
+    const { data, error } = await supabase
+      .from('journal_entries')
+      .select('id, staff_name, entry_text, category, created_at, journal_status')
+      .eq('resident_id', residentId.trim())
+      .eq('journal_status', 'godkendt')
+      .gte('created_at', since)
+      .order('created_at', { ascending: false })
+      .limit(80);
+
+    if (error || !data) {
+      setNotes([]);
+      setLoading(false);
+      return;
+    }
+
+    const mapped: ShiftNote[] = data.map((row) => {
+      const createdAt = String(row.created_at ?? '');
+      const created = new Date(createdAt);
+      const name = (row.staff_name as string) || 'Personale';
+      return {
+        id: row.id as string,
+        date: formatDateShort(createdAt),
+        time: formatTimeShort(createdAt),
+        shift: hourToShift(created.getHours()),
+        staffName: name,
+        staffInitials: staffInitials(name),
+        flagColor: categoryToFlag((row.category as string) ?? ''),
+        body: row.entry_text as string,
+      };
+    });
+
+    setNotes(mapped);
+    setLoading(false);
+  }, [residentId, variant]);
+
+  useEffect(() => {
     let cancelled = false;
     setLoading(true);
-
-    void (async () => {
-      const supabase = createClient();
-      if (!supabase) {
-        if (!cancelled) {
-          setNotes([]);
-          setLoading(false);
-        }
-        return;
-      }
-
-      const since = new Date(Date.now() - 28 * 86400000).toISOString();
-      const { data, error } = await supabase
-        .from('journal_entries')
-        .select('id, staff_name, entry_text, category, created_at, journal_status')
-        .eq('resident_id', residentId.trim())
-        .eq('journal_status', 'godkendt')
-        .gte('created_at', since)
-        .order('created_at', { ascending: false })
-        .limit(80);
-
-      if (cancelled) return;
-
-      if (error || !data) {
+    void fetchLiveNotes().catch(() => {
+      if (!cancelled) {
         setNotes([]);
         setLoading(false);
-        return;
       }
-
-      const mapped: ShiftNote[] = data.map((row) => {
-        const created = new Date(row.created_at as string);
-        const dateStr = created.toLocaleDateString('da-DK', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-        });
-        const name = (row.staff_name as string) || 'Personale';
-        return {
-          id: row.id as string,
-          date: dateStr,
-          shift: hourToShift(created.getHours()),
-          staffName: name,
-          staffInitials: staffInitials(name),
-          flagColor: categoryToFlag((row.category as string) ?? ''),
-          body: row.entry_text as string,
-        };
-      });
-
-      setNotes(mapped);
-      setLoading(false);
-    })();
+    });
 
     return () => {
       cancelled = true;
     };
-  }, [variant, residentId]);
+  }, [fetchLiveNotes]);
+
+  useEffect(() => {
+    if (variant !== 'live' || !residentId?.trim()) return;
+    const supabase = createClient();
+    if (!supabase) return;
+
+    const residentKey = residentId.trim();
+    const channel = supabase
+      .channel(`journal-feed-${residentKey}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'journal_entries',
+          filter: `resident_id=eq.${residentKey}`,
+        },
+        () => {
+          void fetchLiveNotes();
+        }
+      )
+      .subscribe();
+
+    const onJournalUpdated = (event: Event) => {
+      const custom = event as CustomEvent<{ residentId?: string }>;
+      const targetResidentId = custom.detail?.residentId;
+      if (!targetResidentId || targetResidentId === residentKey) {
+        void fetchLiveNotes();
+      }
+    };
+
+    window.addEventListener('portal-journal-updated', onJournalUpdated);
+
+    return () => {
+      window.removeEventListener('portal-journal-updated', onJournalUpdated);
+      void supabase.removeChannel(channel);
+    };
+  }, [fetchLiveNotes, residentId, variant]);
 
   const filtered = notes.filter((n) => {
     const matchSearch =
@@ -395,7 +454,7 @@ export default function ShiftNotesFeed({ variant = 'mock', residentId, carePorta
                           className={`text-xs ${d ? '' : 'text-gray-500'}`}
                           style={d ? { color: 'var(--cp-muted)' } : undefined}
                         >
-                          {sl.emoji} {sl.label}
+                          {sl.emoji} {sl.label} · {note.date} kl. {note.time}
                         </span>
                         <span
                           className="rounded px-2 py-0.5 text-xs font-medium"

@@ -228,6 +228,7 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
 
     setOpen(false);
     setSaving(false);
+    window.dispatchEvent(new CustomEvent('portal-journal-updated', { detail: { residentId } }));
     router.refresh();
   }
 
