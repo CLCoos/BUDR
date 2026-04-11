@@ -605,10 +605,7 @@ export default function ResidentList({ compact = false }: { compact?: boolean })
       )}
 
       {compact && !loading && residents.length > 0 && (
-        <div
-          className="px-4 py-2.5"
-          style={{ borderTop: '1px solid var(--cp-border)' }}
-        >
+        <div className="px-4 py-2.5" style={{ borderTop: '1px solid var(--cp-border)' }}>
           <Link
             href="/care-portal-residents"
             className="text-xs font-medium transition-colors hover:underline"

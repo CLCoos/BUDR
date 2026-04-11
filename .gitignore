@@ -51,3 +51,4 @@ supabase/.temp/
 
 # iCloud Drive placeholder files (never commit)
 *.icloud
+.env.local.save
