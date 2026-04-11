@@ -545,18 +545,20 @@ function DashboardClientInner({
       </div>
 
       {/* ── Zone 2: Hero grid (3 cols → 2 → 1) ─────────────── */}
-      <div className="mb-5 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+      <div
+        className="mb-5 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3"
+        style={{ alignItems: 'start' }}
+      >
         <Zone2Card accent="var(--cp-red)">
           <AlertPanel />
         </Zone2Card>
 
         <Zone2Card accent="var(--cp-green)">
-          <ResidentList />
+          <ResidentList compact />
         </Zone2Card>
 
-        {/* Medicin spans 2 cols on md before going to 1 col on lg */}
         <div
-          className="overflow-hidden rounded-xl md:col-span-2 lg:col-span-1"
+          className="overflow-hidden rounded-xl"
           style={{ borderTop: '2px solid var(--cp-amber)' }}
         >
           {medicationWidget}

@@ -1,5 +1,6 @@
 'use client';
 import React, { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Search, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
@@ -122,7 +123,7 @@ function applyCheckin(resident: Resident, row: CheckinRow): Resident {
 
 // ── Component ────────────────────────────────────────────────
 
-export default function ResidentList() {
+export default function ResidentList({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
   const [residents, setResidents] = useState<Resident[]>([]);
   const [loading, setLoading] = useState(true);
@@ -417,7 +418,10 @@ export default function ResidentList() {
           </span>
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <div
+          className="overflow-x-auto"
+          style={compact ? { maxHeight: 400, overflowY: 'hidden' } : undefined}
+        >
           <table className="w-full">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--cp-border)' }}>
@@ -441,7 +445,7 @@ export default function ResidentList() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((r) => {
+              {(compact ? filtered.slice(0, 8) : filtered).map((r) => {
                 const dotColor = r.trafficLight ? TRAFFIC_DOT[r.trafficLight] : 'var(--cp-muted2)';
                 const dotShadow = r.trafficLight ? TRAFFIC_DOT_SHADOW[r.trafficLight] : 'none';
                 const avStyle = avatarStyle(r.trafficLight);
@@ -597,6 +601,21 @@ export default function ResidentList() {
                 : 'Ingen beboere matcher søgningen'}
             </div>
           )}
+        </div>
+      )}
+
+      {compact && !loading && residents.length > 0 && (
+        <div
+          className="px-4 py-2.5"
+          style={{ borderTop: '1px solid var(--cp-border)' }}
+        >
+          <Link
+            href="/care-portal-residents"
+            className="text-xs font-medium transition-colors hover:underline"
+            style={{ color: 'var(--cp-green)' }}
+          >
+            Se alle {residents.length} beboere →
+          </Link>
         </div>
       )}
     </div>

@@ -12,7 +12,7 @@ const demoStats = [
     label: 'Aktive beboere',
     sub: '3 fraværende i dag',
     value: '12',
-    stripe: 'var(--cp-green)',
+    stripe: 'var(--cp-blue)',
     alertLink: false,
   },
   {
@@ -20,7 +20,7 @@ const demoStats = [
     label: 'Check-ins i dag',
     sub: '2 mangler endnu',
     value: '10',
-    stripe: 'var(--cp-blue)',
+    stripe: 'var(--cp-green)',
     alertLink: false,
   },
   {
@@ -171,7 +171,7 @@ export default function StatCards({ variant = 'live' }: Props) {
             : 'var(--cp-text)';
 
         return (
-          <div key={stat.id} className="cp-card-elevated relative overflow-hidden px-5 py-4">
+          <div key={stat.id} className="cp-card-elevated relative overflow-hidden px-5 pb-4 pt-5">
             {/* Colored top accent stripe */}
             <div
               className="absolute inset-x-0 top-0 rounded-t-[13px]"
