@@ -215,12 +215,19 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
         ${mobileClosed ? '-translate-x-full md:translate-x-0' : 'translate-x-0'}
         ${mobileClosed ? 'pointer-events-none md:pointer-events-auto' : 'pointer-events-auto'}
       `}
-      style={{ backgroundColor: 'var(--cp-bg2)', borderRight: '1px solid var(--cp-border)' }}
+      style={{
+        background: 'var(--cp-sidebar-bg)',
+        borderRight: '1px solid var(--cp-sidebar-border)',
+        color: 'var(--cp-sidebar-text)',
+      }}
     >
       {/* Org branding header */}
       <div
         className={`flex shrink-0 items-center ${collapsed ? 'justify-center px-0 py-3' : 'gap-2.5 px-4 py-3'}`}
-        style={{ borderBottom: '1px solid var(--cp-border)' }}
+        style={{
+          background: 'var(--cp-sidebar-header-bg)',
+          borderBottom: '1px solid var(--cp-sidebar-border)',
+        }}
       >
         {orgLogoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -250,7 +257,7 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
                   style={{
                     fontFamily: "'DM Serif Display', serif",
                     fontSize: 15,
-                    color: 'var(--cp-text)',
+                    color: 'var(--cp-sidebar-text)',
                     lineHeight: 1.2,
                   }}
                 >
@@ -261,7 +268,7 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
                     fontSize: 10,
                     letterSpacing: '0.08em',
                     textTransform: 'uppercase',
-                    color: 'var(--cp-muted)',
+                    color: 'var(--cp-sidebar-muted)',
                     lineHeight: 1.4,
                   }}
                 >
@@ -284,15 +291,15 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
               onClick={() => onMobileClose()}
             >
               <div
-                className="relative mx-2 mb-0.5 flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 transition-all duration-150 hover:bg-[var(--cp-bg3)]"
+                className="relative mx-2 mb-0.5 flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 transition-all duration-150 hover:bg-[var(--cp-sidebar-hover-bg)]"
                 style={
                   active
                     ? {
-                        backgroundColor: 'var(--cp-green-dim)',
-                        color: 'var(--cp-green)',
+                        backgroundColor: 'var(--cp-sidebar-active-bg)',
+                        color: 'var(--cp-sidebar-text)',
                       }
                     : {
-                        color: 'var(--cp-muted)',
+                        color: 'var(--cp-sidebar-muted)',
                       }
                 }
               >
@@ -330,7 +337,7 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
         })}
       </div>
 
-      <div className="p-3" style={{ borderTop: '1px solid var(--cp-border)' }}>
+      <div className="p-3" style={{ borderTop: '1px solid var(--cp-sidebar-border)' }}>
         {!collapsed && displayName && (
           <div className="mb-3 flex items-center gap-2 px-1">
             <div
@@ -340,10 +347,13 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
               {initials}
             </div>
             <div className="min-w-0">
-              <div className="truncate text-xs font-medium" style={{ color: 'var(--cp-text)' }}>
+              <div
+                className="truncate text-xs font-medium"
+                style={{ color: 'var(--cp-sidebar-text)' }}
+              >
                 {displayName}
               </div>
-              <div className="truncate text-xs" style={{ color: 'var(--cp-muted)' }}>
+              <div className="truncate text-xs" style={{ color: 'var(--cp-sidebar-muted)' }}>
                 Personale
               </div>
             </div>
@@ -359,12 +369,12 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
             type="button"
             onClick={() => void handleLogout()}
             className="rounded p-1 transition-colors"
-            style={{ color: 'var(--cp-muted)' }}
+            style={{ color: 'var(--cp-sidebar-muted)' }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.color = 'var(--cp-text)';
+              (e.currentTarget as HTMLElement).style.color = 'var(--cp-sidebar-text)';
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.color = 'var(--cp-muted)';
+              (e.currentTarget as HTMLElement).style.color = 'var(--cp-sidebar-muted)';
             }}
             aria-label="Log ud"
           >
@@ -375,12 +385,12 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
               <button
                 type="button"
                 className="rounded p-1 transition-colors"
-                style={{ color: 'var(--cp-muted)' }}
+                style={{ color: 'var(--cp-sidebar-muted)' }}
                 onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.color = 'var(--cp-text)';
+                  (e.currentTarget as HTMLElement).style.color = 'var(--cp-sidebar-text)';
                 }}
                 onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.color = 'var(--cp-muted)';
+                  (e.currentTarget as HTMLElement).style.color = 'var(--cp-sidebar-muted)';
                 }}
                 aria-label="Indstillinger"
               >
@@ -396,9 +406,9 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
         onClick={() => setCollapsed(!collapsed)}
         className="absolute -right-3 top-6 hidden h-6 w-6 items-center justify-center rounded-full transition-colors md:flex"
         style={{
-          border: '1px solid var(--cp-border)',
-          backgroundColor: 'var(--cp-bg2)',
-          color: 'var(--cp-muted)',
+          border: '1px solid var(--cp-sidebar-border)',
+          backgroundColor: 'var(--cp-sidebar-bg)',
+          color: 'var(--cp-sidebar-muted)',
         }}
         aria-label={collapsed ? 'Udvid sidemenu' : 'Sammenklap sidemenu'}
       >
@@ -428,8 +438,8 @@ export default function PortalSidebar({
           className="fixed bottom-0 left-0 z-40 hidden w-56 shrink-0 md:block"
           style={{
             top: '52px',
-            backgroundColor: 'var(--cp-bg2)',
-            borderRight: '1px solid var(--cp-border)',
+            background: 'var(--cp-sidebar-bg)',
+            borderRight: '1px solid var(--cp-sidebar-border)',
           }}
           aria-hidden
         />

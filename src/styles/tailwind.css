@@ -49,6 +49,18 @@
     --budr-gul: #eab308;
     --budr-roed: #ef4444;
     --budr-sort: #1f2937;
+
+    --cp-sidebar-bg: var(--cp-bg2);
+    --cp-sidebar-text: var(--cp-text);
+    --cp-sidebar-muted: var(--cp-muted);
+    --cp-sidebar-border: var(--cp-border);
+    --cp-sidebar-active-bg: var(--cp-green-dim);
+    --cp-sidebar-hover-bg: rgba(255, 255, 255, 0.04);
+    --cp-sidebar-header-bg: var(--cp-bg);
+    --cp-input-bg: var(--cp-bg3);
+    --cp-input-border: var(--cp-border2);
+    --cp-card-bg: var(--cp-bg2);
+    --cp-card-shadow: none;
   }
 
   :root[data-theme='light'] {
@@ -69,6 +81,18 @@
     --cp-amber-dim: rgba(217, 119, 6, 0.1);
     --cp-blue: #2563eb;
     --cp-blue-dim: rgba(37, 99, 235, 0.1);
+
+    --cp-sidebar-bg: #1e2a3a;
+    --cp-sidebar-text: #f0f2f7;
+    --cp-sidebar-muted: #8a9ab5;
+    --cp-sidebar-border: rgba(255, 255, 255, 0.08);
+    --cp-sidebar-active-bg: rgba(45, 212, 160, 0.12);
+    --cp-sidebar-hover-bg: rgba(255, 255, 255, 0.05);
+    --cp-sidebar-header-bg: #162030;
+    --cp-input-bg: #edf0f7;
+    --cp-input-border: rgba(0, 0, 0, 0.12);
+    --cp-card-bg: #ffffff;
+    --cp-card-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.06);
   }
 
   * {

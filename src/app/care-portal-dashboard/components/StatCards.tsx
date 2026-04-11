@@ -174,7 +174,7 @@ export default function StatCards({ variant = 'live' }: Props) {
           <div
             key={stat.id}
             className="cp-card-elevated relative overflow-hidden px-5 pb-4 pt-5"
-            style={{ borderTop: `3px solid ${stat.stripe}` }}
+            style={{ borderTop: `3px solid ${stat.stripe}`, boxShadow: 'var(--cp-card-shadow)' }}
           >
             {/* Large stat number */}
             <div
