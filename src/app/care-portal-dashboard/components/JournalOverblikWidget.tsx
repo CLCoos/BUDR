@@ -321,12 +321,6 @@ export default function JournalOverblikWidget() {
             >
               Godkendt journal
             </div>
-            {!hasJournalStatusColumn ? (
-              <p className="mb-2 text-[11px]" style={{ color: 'var(--cp-muted)' }}>
-                Viser notater uden kladde/godkendt-status (mangler kolonnen `journal_status` i
-                databasen).
-              </p>
-            ) : null}
             {godkendt.length === 0 ? (
               <p className="text-xs" style={{ color: 'var(--cp-muted)' }}>
                 Ingen godkendte notater i perioden.

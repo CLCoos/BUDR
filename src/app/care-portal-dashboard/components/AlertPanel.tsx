@@ -1,13 +1,12 @@
 'use client';
 import React, { useEffect, useState, useCallback } from 'react';
-import { AlertTriangle, Clock, Activity, Shield, MessageSquare } from 'lucide-react';
-import { toast } from 'sonner';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { AlertTriangle, Clock, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
-import { logPortalAudit } from '@/lib/auditClient';
 
-/** PostgREST kræver FK for embed; vi henter navne i et separat kald. */
 async function loadResidentNamesByUserId(
   supabase: SupabaseClient,
   orgId: string
@@ -50,6 +49,7 @@ interface DbNotification {
 
 interface AlertRow {
   id: string;
+  residentId: string;
   residentName: string;
   initials: string;
   type: AlertType;
@@ -57,7 +57,7 @@ interface AlertRow {
   timestamp: string;
   severity: Severity;
   source: AlertSource;
-  isComputed?: boolean; // inactivity alerts are not stored in DB
+  isComputed?: boolean;
   crisisStatus?: 'active' | 'acknowledged' | 'resolved';
 }
 
@@ -69,66 +69,6 @@ interface CrisisAlertDb {
   trin: number;
 }
 
-const alertTypeConfig: Record<
-  AlertType,
-  { label: string; icon: React.ElementType; color: string; bg: string }
-> = {
-  krise: {
-    label: 'Krise aktiveret',
-    icon: Shield,
-    color: 'var(--cp-red)',
-    bg: 'var(--cp-red-dim)',
-  },
-  lav_stemning: {
-    label: 'Lav stemning',
-    icon: Activity,
-    color: 'var(--cp-red)',
-    bg: 'var(--cp-red-dim)',
-  },
-  inaktivitet: {
-    label: 'Inaktivitet',
-    icon: Clock,
-    color: 'var(--cp-amber)',
-    bg: 'var(--cp-amber-dim)',
-  },
-  besked: {
-    label: 'Besked fra beboer',
-    icon: MessageSquare,
-    color: 'var(--cp-blue)',
-    bg: 'var(--cp-blue-dim)',
-  },
-  mood_alert: {
-    label: 'Lav stemning',
-    icon: Activity,
-    color: 'var(--cp-red)',
-    bg: 'var(--cp-red-dim)',
-  },
-  crisis_alert: {
-    label: 'Krise',
-    icon: AlertTriangle,
-    color: 'var(--cp-red)',
-    bg: 'var(--cp-red-dim)',
-  },
-  medication_missed: {
-    label: 'Medicin mangler',
-    icon: AlertTriangle,
-    color: 'var(--cp-red)',
-    bg: 'var(--cp-red-dim)',
-  },
-  checkin_missing: {
-    label: 'Check-in mangler',
-    icon: Clock,
-    color: 'var(--cp-amber)',
-    bg: 'var(--cp-amber-dim)',
-  },
-  goal_completed: {
-    label: 'Mål afsluttet',
-    icon: Shield,
-    color: 'var(--cp-blue)',
-    bg: 'var(--cp-blue-dim)',
-  },
-};
-
 function toInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
   if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
@@ -139,9 +79,7 @@ function formatTimestamp(iso: string): string {
   const d = new Date(iso);
   const now = new Date();
   const diffH = (now.getTime() - d.getTime()) / 3600000;
-  if (diffH < 24) {
-    return d.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
-  }
+  if (diffH < 24) return d.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
   if (diffH < 48) return 'I går';
   return `${Math.floor(diffH / 24)} dage siden`;
 }
@@ -149,16 +87,19 @@ function formatTimestamp(iso: string): string {
 const DEMO_ALERT_SEED: AlertRow[] = [
   {
     id: 'demo-alert-1',
+    residentId: 'demo-resident-1',
     residentName: 'Finn L.',
     initials: 'FL',
-    type: 'krise',
-    detail: 'Kriseplan åbnet fra Park Hub — personale tilkaldt.',
+    type: 'crisis_alert',
+    detail: 'Krisehjælp aktiveret (trin 2)',
     severity: 'roed',
     timestamp: '08:14',
-    source: 'notification',
+    source: 'crisis',
+    crisisStatus: 'active',
   },
   {
     id: 'demo-alert-2',
+    residentId: 'demo-resident-2',
     residentName: 'Kirsten R.',
     initials: 'KR',
     type: 'lav_stemning',
@@ -169,6 +110,7 @@ const DEMO_ALERT_SEED: AlertRow[] = [
   },
   {
     id: 'demo-alert-3',
+    residentId: 'demo-resident-3',
     residentName: 'Thomas B.',
     initials: 'TB',
     type: 'inaktivitet',
@@ -182,6 +124,99 @@ const DEMO_ALERT_SEED: AlertRow[] = [
 
 export const DEMO_ALERT_PANEL_COUNT = DEMO_ALERT_SEED.length;
 
+function isCritical(alert: AlertRow): boolean {
+  return alert.source === 'crisis' || alert.severity === 'roed';
+}
+
+function isWatchout(alert: AlertRow): boolean {
+  return alert.source !== 'inactivity' && !isCritical(alert);
+}
+
+function badgeLabelFor(alert: AlertRow): string {
+  if (alert.source === 'crisis') return 'Krise';
+  if (alert.type === 'lav_stemning' || alert.type === 'mood_alert') return 'Lav stemning';
+  if (alert.type === 'medication_missed') return 'Medicin mangler';
+  if (alert.type === 'checkin_missing') return 'Check-in mangler';
+  if (alert.type === 'besked') return 'Besked fra beboer';
+  return 'Advarsel';
+}
+
+// ── AlertCard ─────────────────────────────────────────────────
+
+function AlertCard({ alert, group }: { alert: AlertRow; group: 'roed' | 'gul' }) {
+  const router = useRouter();
+  const accentColor = group === 'roed' ? 'var(--cp-red)' : 'var(--cp-amber)';
+  const dimColor = group === 'roed' ? 'var(--cp-red-dim)' : 'var(--cp-amber-dim)';
+  const cardHref = `/resident-360-view/${alert.residentId}?tab=overblik`;
+  const actionHref =
+    alert.source === 'crisis'
+      ? `/resident-360-view/${alert.residentId}?tab=overblik`
+      : `/resident-360-view/${alert.residentId}?tab=overblik`;
+  const actionLabel = alert.source === 'crisis' ? 'Åbn kriseplan' : 'Se journal';
+
+  return (
+    <div
+      className="relative transition-colors"
+      style={{ borderBottom: '1px solid var(--cp-border)', borderLeft: `3px solid ${accentColor}` }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--cp-bg3)';
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLElement).style.backgroundColor = '';
+      }}
+    >
+      {/* Full-card click target — sits behind content in stacking order */}
+      <button
+        type="button"
+        className="absolute inset-0 w-full h-full"
+        onClick={() => router.push(cardHref)}
+        aria-label={`Åbn ${alert.residentName}`}
+        tabIndex={-1}
+      />
+
+      {/* Card content */}
+      <div className="relative flex items-start gap-3 p-4">
+        <div
+          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+          style={{ backgroundColor: dimColor, color: accentColor }}
+        >
+          {alert.initials}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className="text-sm font-semibold" style={{ color: 'var(--cp-text)', fontSize: 13 }}>
+              {alert.residentName}
+            </span>
+            <span
+              className="text-xs px-1.5 py-0.5 rounded font-medium"
+              style={{ backgroundColor: dimColor, color: accentColor }}
+            >
+              {badgeLabelFor(alert)}
+            </span>
+          </div>
+          <div className="text-xs mb-2" style={{ color: 'var(--cp-muted)' }}>
+            {alert.detail}
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-[11px]" style={{ color: 'var(--cp-muted2)' }}>
+              {alert.timestamp}
+            </span>
+            <Link
+              href={actionHref}
+              className="relative text-[11px] font-semibold px-2 py-1 rounded transition-opacity hover:opacity-80"
+              style={{ backgroundColor: dimColor, color: accentColor }}
+            >
+              {actionLabel} →
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── AlertPanel ────────────────────────────────────────────────
+
 type AlertPanelProps = { variant?: 'live' | 'demo' };
 
 export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
@@ -189,7 +224,8 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
   const [crisisAlerts, setCrisisAlerts] = useState<AlertRow[]>([]);
   const [inactiveAlerts, setInactiveAlerts] = useState<AlertRow[]>([]);
   const [loading, setLoading] = useState(variant !== 'demo');
-  const [demoAlerts, setDemoAlerts] = useState<AlertRow[]>(() =>
+  const [inaktivitetExpanded, setInaktivitetExpanded] = useState(false);
+  const [demoAlerts] = useState<AlertRow[]>(() =>
     variant === 'demo' ? [...DEMO_ALERT_SEED] : []
   );
 
@@ -226,6 +262,7 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
       const name = nameByUserId[n.resident_id] ?? 'Ukendt beboer';
       return {
         id: n.id,
+        residentId: n.resident_id,
         residentName: name,
         initials: toInitials(name),
         type: n.type,
@@ -266,14 +303,14 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
 
     const rows: AlertRow[] = ((data ?? []) as unknown as CrisisAlertDb[]).map((n) => {
       const name = nameByUserId[n.resident_id] ?? 'Ukendt beboer';
-      const isUnacknowledged = n.status === 'active';
       return {
         id: n.id,
+        residentId: n.resident_id,
         residentName: name,
         initials: toInitials(name),
         type: 'crisis_alert',
         detail: `Krisehjælp aktiveret (trin ${n.trin})`,
-        severity: isUnacknowledged ? 'roed' : 'gul',
+        severity: n.status === 'active' ? 'roed' : 'gul',
         timestamp: formatTimestamp(n.triggered_at),
         source: 'crisis',
         crisisStatus: n.status,
@@ -293,7 +330,6 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
       return;
     }
 
-    // Find residents whose last check-in was > 48h ago (or never)
     const cutoff = new Date(Date.now() - 48 * 3600 * 1000).toISOString();
 
     const { data: residents } = await supabase
@@ -309,14 +345,15 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
       .gte('created_at', cutoff)
       .in('resident_id', residentIds);
 
-    const activeIds = new Set((recentCheckins ?? []).map((c) => c.resident_id));
+    const activeIds = new Set((recentCheckins ?? []).map((c) => c.resident_id as string));
 
     const inactive: AlertRow[] = residents
       .filter((r) => !activeIds.has(r.user_id))
       .map((r) => {
-        const name = r.display_name ?? 'Ukendt beboer';
+        const name = (r.display_name as string | null) ?? 'Ukendt beboer';
         return {
-          id: `inaktiv-${r.user_id}`,
+          id: `inaktiv-${r.user_id as string}`,
+          residentId: r.user_id as string,
           residentName: name,
           initials: toInitials(name),
           type: 'inaktivitet' as AlertType,
@@ -362,157 +399,74 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
       })
       .subscribe();
 
+    // Auto-resolve inaktivitet + lav_stemning alerts when a new check-in arrives
+    const checkinChannel = supabase
+      .channel('alert_panel_checkins')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'park_daily_checkin' },
+        (payload) => {
+          const row = payload.new as { resident_id: string; mood_score: number | null };
+          const rid = row.resident_id;
+          // Always remove inaktivitet for this resident immediately
+          setInactiveAlerts((prev) => prev.filter((a) => a.residentId !== rid));
+          // If mood score recovers (>= 5), also drop mood alerts from notifications
+          if ((row.mood_score ?? 0) >= 5) {
+            setDbAlerts((prev) =>
+              prev.filter(
+                (a) =>
+                  !(
+                    a.residentId === rid &&
+                    (a.type === 'lav_stemning' || a.type === 'mood_alert')
+                  )
+              )
+            );
+          }
+        }
+      )
+      .subscribe();
+
     const timer = setInterval(() => void fetchInactivity(), 5 * 60 * 1000);
 
     return () => {
       void supabase.removeChannel(notificationsChannel);
       void supabase.removeChannel(crisisChannel);
+      void supabase.removeChannel(checkinChannel);
       clearInterval(timer);
     };
   }, [variant, fetchDbAlerts, fetchCrisisAlerts, fetchInactivity]);
 
-  const acknowledge = async (alert: AlertRow) => {
-    if (variant === 'demo') {
-      setDemoAlerts((prev) => prev.filter((a) => a.id !== alert.id));
-      toast.success('Advarsel kvitteret');
-      return;
-    }
-
-    if (alert.isComputed) {
-      setInactiveAlerts((prev) => prev.filter((a) => a.id !== alert.id));
-      toast.success('Advarsel kvitteret');
-      return;
-    }
-
-    const supabase = createClient();
-    if (!supabase) return;
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (alert.source === 'crisis') {
-      const patch =
-        alert.crisisStatus === 'active'
-          ? {
-              status: 'acknowledged',
-              acknowledged_by: user?.id ?? null,
-              acknowledged_at: new Date().toISOString(),
-            }
-          : {
-              acknowledged_by: user?.id ?? null,
-              acknowledged_at: new Date().toISOString(),
-            };
-      const { error } = await supabase.from('crisis_alerts').update(patch).eq('id', alert.id);
-
-      if (error) {
-        toast.error('Kunne ikke kvittere — prøv igen');
-        return;
-      }
-
-      setCrisisAlerts((prev) =>
-        prev.map((item) =>
-          item.id === alert.id ? { ...item, crisisStatus: 'acknowledged', severity: 'gul' } : item
-        )
-      );
-      void logPortalAudit({
-        action: 'daily_plan.updated',
-        tableName: 'crisis_alerts',
-        recordId: alert.id,
-        metadata: { operation: 'acknowledge' },
-      });
-      toast.success('Krise-alarm kvitteret');
-      return;
-    }
-
-    const { error } = await supabase
-      .from('care_portal_notifications')
-      .update({ acknowledged_by: user?.id ?? null, acknowledged_at: new Date().toISOString() })
-      .eq('id', alert.id);
-
-    if (error) {
-      toast.error('Kunne ikke kvittere — prøv igen');
-      return;
-    }
-
-    setDbAlerts((prev) => prev.filter((a) => a.id !== alert.id));
-    void logPortalAudit({
-      action: 'daily_plan.updated',
-      tableName: 'care_portal_notifications',
-      recordId: alert.id,
-      metadata: { operation: 'acknowledge' },
-    });
-    toast.success('Advarsel kvitteret');
-  };
-
-  const resolve = async (alert: AlertRow) => {
-    if (variant === 'demo') {
-      setDemoAlerts((prev) => prev.filter((a) => a.id !== alert.id));
-      toast.success('Krise-alarm markeret som løst');
-      return;
-    }
-    if (alert.source !== 'crisis') return;
-
-    const supabase = createClient();
-    if (!supabase) return;
-
-    const patch = {
-      status: 'resolved',
-      resolved_at: new Date().toISOString(),
-      acknowledged_at: new Date().toISOString(),
-    };
-    const { error } = await supabase.from('crisis_alerts').update(patch).eq('id', alert.id);
-    if (error) {
-      toast.error('Kunne ikke markere som løst');
-      return;
-    }
-
-    setCrisisAlerts((prev) => prev.filter((item) => item.id !== alert.id));
-    void logPortalAudit({
-      action: 'daily_plan.updated',
-      tableName: 'crisis_alerts',
-      recordId: alert.id,
-      metadata: { operation: 'resolve' },
-    });
-    toast.success('Krise-alarm markeret som løst');
-  };
-
-  const priority = (alert: AlertRow): number => {
-    if (alert.source === 'crisis' && alert.crisisStatus === 'active') return 0;
-    if (alert.severity === 'roed') return 1;
-    return 2;
-  };
-
-  const alerts =
+  const allAlerts =
     variant === 'demo'
-      ? [...demoAlerts].sort((a, b) => {
-          return priority(a) - priority(b);
-        })
-      : [...crisisAlerts, ...dbAlerts, ...inactiveAlerts].sort((a, b) => {
-          return priority(a) - priority(b);
-        });
+      ? demoAlerts
+      : [...crisisAlerts, ...dbAlerts, ...inactiveAlerts];
+
+  const group1 = allAlerts.filter(isCritical);
+  const group2 = allAlerts.filter(isWatchout);
+  const group3 = allAlerts.filter((a) => a.source === 'inactivity');
+  const urgentCount = group1.length + group2.length;
 
   return (
-    <div id="budr-advarsler" className="cp-card-elevated scroll-mt-24 h-full overflow-hidden">
+    <div id="budr-advarsler" className="cp-card-elevated scroll-mt-24 overflow-hidden">
+      {/* Header */}
       <div
-        className="flex items-center justify-between px-4 py-3"
+        className="flex items-center justify-between px-5 py-3.5"
         style={{ borderBottom: '1px solid var(--cp-border)' }}
       >
         <div className="flex items-center gap-2">
           <AlertTriangle size={15} style={{ color: 'var(--cp-red)' }} />
           <span className="text-sm font-medium" style={{ color: 'var(--cp-text)', fontSize: 13 }}>
             Aktive advarsler
+            {urgentCount > 0 && (
+              <span
+                className="ml-2 text-xs rounded-full w-5 h-5 inline-flex items-center justify-center font-bold"
+                style={{ backgroundColor: 'var(--cp-red-dim)', color: 'var(--cp-red)' }}
+              >
+                {urgentCount}
+              </span>
+            )}
           </span>
-          {alerts.length > 0 && (
-            <span
-              className="text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold"
-              style={{ backgroundColor: 'var(--cp-red-dim)', color: 'var(--cp-red)' }}
-            >
-              {alerts.length}
-            </span>
-          )}
         </div>
-        {/* Live pill */}
         <div
           className="flex items-center gap-1.5"
           style={{
@@ -545,33 +499,63 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
             style={{ border: '2px solid var(--cp-border2)', borderTopColor: 'var(--cp-green)' }}
           />
         </div>
-      ) : alerts.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-          <div
-            className="w-10 h-10 rounded-full flex items-center justify-center mb-3"
-            style={{ backgroundColor: 'var(--cp-green-dim)' }}
-          >
-            <Shield size={20} style={{ color: 'var(--cp-green)' }} />
-          </div>
-          <div className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
-            Ingen aktive advarsler
-          </div>
-          <div className="text-xs mt-1" style={{ color: 'var(--cp-muted)' }}>
-            Alle beboere har det godt
-          </div>
-        </div>
       ) : (
         <div>
-          {alerts.map((alert) => {
-            const config = alertTypeConfig[alert.type];
-            const avatarBg =
-              alert.severity === 'roed' ? 'var(--cp-red-dim)' : 'var(--cp-amber-dim)';
-            const avatarColor = alert.severity === 'roed' ? 'var(--cp-red)' : 'var(--cp-amber)';
-            return (
+          {/* Empty state — groups 1 & 2 */}
+          {urgentCount === 0 && (
+            <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
               <div
-                key={alert.id}
-                className="p-4 transition-all"
-                style={{ borderBottom: '1px solid var(--cp-border)' }}
+                className="w-10 h-10 rounded-full flex items-center justify-center mb-3"
+                style={{ backgroundColor: 'var(--cp-green-dim)' }}
+              >
+                <CheckCircle2 size={20} style={{ color: 'var(--cp-green)' }} />
+              </div>
+              <div className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+                Alt roligt i dag
+              </div>
+              <div className="text-xs mt-1" style={{ color: 'var(--cp-muted)' }}>
+                Ingen akutte advarsler
+              </div>
+            </div>
+          )}
+
+          {/* Group 1: Kræver handling nu */}
+          {group1.length > 0 && (
+            <div>
+              <div
+                className="px-5 py-2 text-[10px] font-semibold uppercase tracking-widest"
+                style={{ color: 'var(--cp-red)', borderBottom: '1px solid var(--cp-border)' }}
+              >
+                🔴 Kræver handling nu
+              </div>
+              {group1.map((alert) => (
+                <AlertCard key={alert.id} alert={alert} group="roed" />
+              ))}
+            </div>
+          )}
+
+          {/* Group 2: Hold øje med */}
+          {group2.length > 0 && (
+            <div style={{ borderTop: '1px solid var(--cp-border)' }}>
+              <div
+                className="px-5 py-2 text-[10px] font-semibold uppercase tracking-widest"
+                style={{ color: 'var(--cp-amber)', borderBottom: '1px solid var(--cp-border)' }}
+              >
+                🟡 Hold øje med
+              </div>
+              {group2.map((alert) => (
+                <AlertCard key={alert.id} alert={alert} group="gul" />
+              ))}
+            </div>
+          )}
+
+          {/* Group 3: Inaktivitet — collapsed by default */}
+          {group3.length > 0 && (
+            <div style={{ borderTop: '1px solid var(--cp-border)' }}>
+              <button
+                type="button"
+                onClick={() => setInaktivitetExpanded((v) => !v)}
+                className="w-full flex items-center justify-between px-5 py-3 text-left transition-colors"
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--cp-bg3)';
                 }}
@@ -579,75 +563,58 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
                   (e.currentTarget as HTMLElement).style.backgroundColor = '';
                 }}
               >
-                <div className="flex items-start gap-3">
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                    style={{ backgroundColor: avatarBg, color: avatarColor }}
+                <div className="flex items-center gap-2">
+                  <Clock size={12} style={{ color: 'var(--cp-muted)' }} />
+                  <span
+                    className="text-[10px] font-semibold uppercase tracking-widest"
+                    style={{ color: 'var(--cp-muted)' }}
                   >
-                    {alert.initials}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span
-                        className="text-sm font-semibold"
-                        style={{ color: 'var(--cp-text)', fontSize: 13 }}
-                      >
-                        {alert.residentName}
-                      </span>
-                      <span
-                        className="text-xs px-1.5 py-0.5 rounded font-medium"
-                        style={{ backgroundColor: config.bg, color: config.color }}
-                      >
-                        {config.label}
-                      </span>
-                    </div>
-                    <div className="text-xs mb-1" style={{ color: 'var(--cp-muted)' }}>
-                      {alert.detail}
-                    </div>
-                    <div className="text-xs" style={{ color: 'var(--cp-muted2)' }}>
-                      {alert.timestamp}
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1.5 flex-shrink-0">
-                    <button
-                      onClick={() => void acknowledge(alert)}
-                      className="px-2.5 py-1.5 rounded text-xs font-medium transition-all active:scale-95"
-                      style={{
-                        border: '1px solid var(--cp-border2)',
-                        backgroundColor: 'transparent',
-                        color: 'var(--cp-muted)',
-                        borderRadius: 6,
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--cp-bg3)';
-                        (e.currentTarget as HTMLElement).style.color = 'var(--cp-text)';
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
-                        (e.currentTarget as HTMLElement).style.color = 'var(--cp-muted)';
-                      }}
-                    >
-                      Kvitter
-                    </button>
-                    {alert.source === 'crisis' && (
-                      <button
-                        onClick={() => void resolve(alert)}
-                        className="px-2.5 py-1.5 rounded text-xs font-medium transition-all active:scale-95"
-                        style={{
-                          border: '1px solid var(--cp-red)',
-                          backgroundColor: 'var(--cp-red-dim)',
-                          color: 'var(--cp-red)',
-                          borderRadius: 6,
-                        }}
-                      >
-                        Løst
-                      </button>
-                    )}
-                  </div>
+                    ⚪ Inaktivitet
+                  </span>
+                  <span
+                    className="text-[11px] rounded-full px-2 py-0.5 font-medium"
+                    style={{ backgroundColor: 'var(--cp-bg3)', color: 'var(--cp-muted)' }}
+                  >
+                    {group3.length} beboere uden check-in
+                  </span>
                 </div>
-              </div>
-            );
-          })}
+                {inaktivitetExpanded ? (
+                  <ChevronUp size={14} style={{ color: 'var(--cp-muted)' }} />
+                ) : (
+                  <ChevronDown size={14} style={{ color: 'var(--cp-muted)' }} />
+                )}
+              </button>
+
+              {inaktivitetExpanded &&
+                group3.map((alert) => (
+                  <Link
+                    key={alert.id}
+                    href={`/resident-360-view/${alert.residentId}?tab=overblik`}
+                    className="flex items-center gap-3 px-5 py-2.5 transition-colors"
+                    style={{ borderTop: '1px solid var(--cp-border)' }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--cp-bg3)';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.backgroundColor = '';
+                    }}
+                  >
+                    <div
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
+                      style={{ backgroundColor: 'var(--cp-bg3)', color: 'var(--cp-muted)' }}
+                    >
+                      {alert.initials}
+                    </div>
+                    <span className="flex-1 text-sm" style={{ color: 'var(--cp-text)', fontSize: 13 }}>
+                      {alert.residentName}
+                    </span>
+                    <span className="text-[11px]" style={{ color: 'var(--cp-muted)' }}>
+                      48h+
+                    </span>
+                  </Link>
+                ))}
+            </div>
+          )}
         </div>
       )}
     </div>
