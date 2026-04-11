@@ -10,11 +10,13 @@ import type { ResidentItem } from '../page';
 
 type TrafficUi = 'groen' | 'gul' | 'roed';
 
-const TRAFFIC_DOT: Record<TrafficUi, string> = {
-  groen: '#2dd4a0',
-  gul: '#EF9F27',
-  roed: '#E24B4A',
-};
+function trafficDotColor(tl: TrafficUi): string {
+  const style = getComputedStyle(document.documentElement);
+  if (tl === 'groen') return style.getPropertyValue('--cp-green').trim();
+  if (tl === 'gul') return style.getPropertyValue('--cp-amber').trim();
+  if (tl === 'roed') return style.getPropertyValue('--cp-red').trim();
+  return style.getPropertyValue('--cp-muted').trim();
+}
 
 const TRAFFIC_LABEL: Record<TrafficUi, string> = {
   groen: 'Grøn',
@@ -23,8 +25,8 @@ const TRAFFIC_LABEL: Record<TrafficUi, string> = {
 };
 
 function avatarStyle(tl: TrafficUi | null): React.CSSProperties {
-  if (tl === 'roed') return { backgroundColor: 'rgba(226,75,74,0.18)', color: '#fca5a5' };
-  if (tl === 'gul') return { backgroundColor: 'rgba(239,159,39,0.18)', color: '#fcd34d' };
+  if (tl === 'roed') return { backgroundColor: 'var(--cp-red-dim)', color: 'var(--cp-red)' };
+  if (tl === 'gul') return { backgroundColor: 'var(--cp-amber-dim)', color: 'var(--cp-amber)' };
   return { backgroundColor: 'var(--cp-bg3)', color: 'var(--cp-muted)' };
 }
 
@@ -85,11 +87,30 @@ export default function ResidentOverviewGrid({ residents }: Props) {
   });
 
   const checkinCount = residents.filter((r) => r.checkinToday).length;
+  const missingCheckin = residents.length - checkinCount;
   const alertCount = residents.filter((r) => r.trafficLight === 'roed').length;
 
   const cardStyle: React.CSSProperties = {
     backgroundColor: 'var(--cp-bg2)',
     borderColor: 'var(--cp-border)',
+  };
+
+  const miniStatCard: React.CSSProperties = {
+    background: 'var(--cp-bg2)',
+    border: '1px solid var(--cp-border)',
+    borderRadius: '12px',
+    padding: '14px 20px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '14px',
+    boxShadow: 'var(--cp-card-shadow)',
+  };
+
+  const statLabel: React.CSSProperties = {
+    fontSize: '0.75rem',
+    color: 'var(--cp-muted)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
   };
 
   return (
@@ -102,7 +123,7 @@ export default function ResidentOverviewGrid({ residents }: Props) {
           <p className="text-sm mt-0.5" style={{ color: 'var(--cp-muted)' }}>
             {residents.length} beboere · {checkinCount} check-in i dag
             {alertCount > 0 && (
-              <span className="ml-2 font-medium" style={{ color: 'var(--cp-red, #f56565)' }}>
+              <span className="ml-2 font-medium" style={{ color: 'var(--cp-red)' }}>
                 · {alertCount} rød trafiklys
               </span>
             )}
@@ -111,13 +132,71 @@ export default function ResidentOverviewGrid({ residents }: Props) {
         <Link
           href="/resident-360-view/dagbog"
           className="text-sm font-semibold shrink-0 hover:underline"
-          style={{ color: 'var(--cp-green, #2dd4a0)' }}
+          style={{ color: 'var(--cp-green)' }}
         >
           Aftenopsamling →
         </Link>
       </div>
 
+      {/* ── Stat-bar ─────────────────────────────────────────── */}
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
+        {/* Total beboere */}
+        <div style={miniStatCard}>
+          <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>👥</span>
+          <div>
+            <div
+              style={{
+                fontSize: '1.6rem',
+                fontWeight: 300,
+                color: 'var(--cp-text)',
+                lineHeight: 1,
+              }}
+            >
+              {residents.length}
+            </div>
+            <div style={statLabel}>Beboere i alt</div>
+          </div>
+        </div>
+
+        {/* Check-in i dag */}
+        <div style={miniStatCard}>
+          <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>✅</span>
+          <div>
+            <div
+              style={{
+                fontSize: '1.6rem',
+                fontWeight: 300,
+                color: 'var(--cp-green)',
+                lineHeight: 1,
+              }}
+            >
+              {checkinCount}
+            </div>
+            <div style={statLabel}>Check-in i dag</div>
+          </div>
+        </div>
+
+        {/* Mangler check-in */}
+        <div style={miniStatCard}>
+          <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>⚠️</span>
+          <div>
+            <div
+              style={{
+                fontSize: '1.6rem',
+                fontWeight: 300,
+                color: 'var(--cp-amber)',
+                lineHeight: 1,
+              }}
+            >
+              {missingCheckin}
+            </div>
+            <div style={statLabel}>Mangler check-in</div>
+          </div>
+        </div>
+      </div>
+
       <div className="rounded-lg border overflow-hidden" style={cardStyle}>
+        {/* ── Søg + trafiklys-filter ────────────────────────── */}
         <div
           className="px-4 py-3 flex flex-wrap items-center gap-3 border-b"
           style={{ borderColor: 'var(--cp-border)' }}
@@ -174,6 +253,7 @@ export default function ResidentOverviewGrid({ residents }: Props) {
           </div>
         </div>
 
+        {/* ── Hus-filter ───────────────────────────────────── */}
         {houseOptions.length > 0 && (
           <div
             className="px-4 py-2.5 flex flex-wrap items-center gap-2 border-b"
@@ -202,70 +282,65 @@ export default function ResidentOverviewGrid({ residents }: Props) {
           </div>
         )}
 
+        {/* ── Tabel ────────────────────────────────────────── */}
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b" style={{ borderColor: 'var(--cp-border)' }}>
-                <th
-                  className="text-left text-xs font-medium px-4 py-2.5 w-[200px]"
-                  style={{ color: 'var(--cp-muted2)' }}
-                >
-                  Beboer
-                </th>
-                <th
-                  className="text-left text-xs font-medium px-3 py-2.5 w-[88px]"
-                  style={{ color: 'var(--cp-muted2)' }}
-                >
-                  Hus
-                </th>
-                <th
-                  className="text-left text-xs font-medium px-3 py-2.5 w-[90px]"
-                  style={{ color: 'var(--cp-muted2)' }}
-                >
-                  Værelse
-                </th>
-                <th
-                  className="text-left text-xs font-medium px-3 py-2.5 w-[110px]"
-                  style={{ color: 'var(--cp-muted2)' }}
-                >
-                  Trafiklys
-                </th>
-                <th
-                  className="text-left text-xs font-medium px-3 py-2.5 w-[120px]"
-                  style={{ color: 'var(--cp-muted2)' }}
-                >
-                  Stemning
-                </th>
-                <th
-                  className="text-left text-xs font-medium px-3 py-2.5 w-[120px]"
-                  style={{ color: 'var(--cp-muted2)' }}
-                >
-                  Check-in
-                </th>
-                <th
-                  className="text-left text-xs font-medium px-3 py-2.5"
-                  style={{ color: 'var(--cp-muted2)' }}
-                >
-                  Note
-                </th>
-                <th className="w-10 px-3 py-2.5" />
+              <tr
+                style={{
+                  background: 'var(--cp-bg3)',
+                  borderBottom: '2px solid var(--cp-border2)',
+                  position: 'sticky',
+                  top: 0,
+                  zIndex: 1,
+                }}
+              >
+                {[
+                  { label: 'Beboer', w: '200px', px: '16px' },
+                  { label: 'Hus', w: '88px', px: '12px' },
+                  { label: 'Værelse', w: '90px', px: '12px' },
+                  { label: 'Trafiklys', w: '110px', px: '12px' },
+                  { label: 'Stemning', w: '120px', px: '12px' },
+                  { label: 'Check-in', w: '120px', px: '12px' },
+                  { label: 'Note', w: undefined, px: '12px' },
+                  { label: '', w: '40px', px: '12px' },
+                ].map(({ label, w, px }) => (
+                  <th
+                    key={label || 'arrow'}
+                    className="text-left"
+                    style={{
+                      width: w,
+                      padding: `10px ${px}`,
+                      fontSize: '0.7rem',
+                      fontWeight: 600,
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      color: 'var(--cp-muted)',
+                    }}
+                  >
+                    {label}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {filtered.map((r) => {
-                const dotColor = r.trafficLight ? TRAFFIC_DOT[r.trafficLight] : 'var(--cp-muted2)';
+              {filtered.map((r, index) => {
+                const dotColor = r.trafficLight
+                  ? trafficDotColor(r.trafficLight)
+                  : 'var(--cp-muted2)';
                 const avStyle = avatarStyle(r.trafficLight);
+                const zebraColor = index % 2 === 0 ? 'var(--cp-bg)' : 'var(--cp-bg2)';
                 return (
                   <tr
                     key={r.id}
                     onClick={() => router.push(`/resident-360-view/${r.id}`)}
                     className="border-b transition-colors group cursor-pointer"
-                    style={{ borderColor: 'var(--cp-border)' }}
+                    style={{ borderColor: 'var(--cp-border)', backgroundColor: zebraColor }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.04)';
+                      e.currentTarget.style.backgroundColor = 'var(--cp-sidebar-hover-bg)';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.backgroundColor = zebraColor;
                     }}
                   >
                     <td className="px-4 py-3">
@@ -290,7 +365,7 @@ export default function ResidentOverviewGrid({ residents }: Props) {
                                 style={{
                                   color: 'var(--cp-amber)',
                                   borderColor: 'rgba(245,158,11,0.35)',
-                                  backgroundColor: 'rgba(245,158,11,0.1)',
+                                  backgroundColor: 'var(--cp-amber-dim)',
                                 }}
                               >
                                 ⏳ {r.pendingProposals}
@@ -358,7 +433,7 @@ export default function ResidentOverviewGrid({ residents }: Props) {
                               className="h-full rounded-full"
                               style={{
                                 width: `${(r.moodScore / 10) * 100}%`,
-                                backgroundColor: dotColor as string,
+                                backgroundColor: dotColor,
                               }}
                             />
                           </div>
@@ -375,7 +450,7 @@ export default function ResidentOverviewGrid({ residents }: Props) {
                         <span className="flex items-center gap-1">
                           <span
                             className="w-1.5 h-1.5 rounded-full inline-block"
-                            style={{ backgroundColor: 'var(--cp-green, #2dd4a0)' }}
+                            style={{ backgroundColor: 'var(--cp-green)' }}
                           />
                           {formatCheckin(r.lastCheckinIso)}
                         </span>
