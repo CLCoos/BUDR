@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Sun, Moon } from 'lucide-react';
 
 export function ThemeToggle() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
@@ -25,22 +26,21 @@ export function ThemeToggle() {
       aria-label="Skift tema"
       title={theme === 'dark' ? 'Skift til lyst tema' : 'Skift til mørkt tema'}
       style={{
-        background: 'var(--cp-bg3)',
-        border: '1px solid var(--cp-border2)',
+        background: theme === 'dark' ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.12)',
+        border:
+          theme === 'dark' ? '1px solid rgba(255,255,255,0.18)' : '1px solid rgba(0,0,0,0.18)',
         borderRadius: '8px',
-        padding: '6px 10px',
+        padding: '6px 12px',
         cursor: 'pointer',
-        fontSize: '16px',
-        lineHeight: 1,
         display: 'flex',
         alignItems: 'center',
-        gap: '6px',
-        color: 'var(--cp-muted)',
+        gap: '7px',
+        color: theme === 'dark' ? '#f0f2f7' : '#1a1f2e',
         transition: 'background 0.15s, border-color 0.15s',
       }}
     >
-      {theme === 'dark' ? '☀️' : '🌙'}
-      <span style={{ fontSize: '12px', fontWeight: 500 }}>
+      {theme === 'dark' ? <Sun size={14} strokeWidth={2} /> : <Moon size={14} strokeWidth={2} />}
+      <span style={{ fontSize: '12px', fontWeight: 500, lineHeight: 1 }}>
         {theme === 'dark' ? 'Lyst' : 'Mørkt'}
       </span>
     </button>

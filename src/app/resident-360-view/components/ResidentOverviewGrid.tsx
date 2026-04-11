@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Search } from 'lucide-react';
+import { Search, Users, CheckCircle, AlertTriangle } from 'lucide-react';
 import type { ResidentItem } from '../page';
 
 // ── Colour tokens ─────────────────────────────────────────────
@@ -142,7 +142,7 @@ export default function ResidentOverviewGrid({ residents }: Props) {
       <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
         {/* Total beboere */}
         <div style={miniStatCard}>
-          <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>👥</span>
+          <Users size={20} strokeWidth={1.5} style={{ color: 'var(--cp-muted)' }} />
           <div>
             <div
               style={{
@@ -160,7 +160,7 @@ export default function ResidentOverviewGrid({ residents }: Props) {
 
         {/* Check-in i dag */}
         <div style={miniStatCard}>
-          <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>✅</span>
+          <CheckCircle size={20} strokeWidth={1.5} style={{ color: 'var(--cp-green)' }} />
           <div>
             <div
               style={{
@@ -178,7 +178,7 @@ export default function ResidentOverviewGrid({ residents }: Props) {
 
         {/* Mangler check-in */}
         <div style={miniStatCard}>
-          <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>⚠️</span>
+          <AlertTriangle size={20} strokeWidth={1.5} style={{ color: 'var(--cp-amber)' }} />
           <div>
             <div
               style={{
