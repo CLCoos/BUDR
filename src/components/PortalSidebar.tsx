@@ -20,6 +20,7 @@ import {
   MessageSquare,
   Sparkles,
 } from 'lucide-react';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { createClient } from '@/lib/supabase/client';
 import { useAlertCount } from '@/hooks/useAlertCount';
 import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
@@ -346,6 +347,11 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
                 Personale
               </div>
             </div>
+          </div>
+        )}
+        {!collapsed && (
+          <div className="mx-1 mb-2">
+            <ThemeToggle />
           </div>
         )}
         <div className="mx-1 flex items-center gap-2">

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Menu, Sparkles } from 'lucide-react';
 import PortalSidebar from '@/components/PortalSidebar';
 import DokumentSøgning from '@/components/DokumentSøgning';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 
 type Props = {
@@ -55,6 +56,7 @@ export default function PortalMobileNav({ children, orgName, orgLogoUrl }: Props
               mobileTitle
             )}
           </span>
+          <ThemeToggle />
         </div>
         <div className="w-full min-w-0 sm:hidden" aria-label="Dokumentsøgning">
           <DokumentSøgning carePortalDark linkTarget={pilot ? 'pilot' : 'live'} />
