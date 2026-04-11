@@ -2,7 +2,15 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { BookOpen, CheckCircle2, FilePenLine, Loader2, RefreshCw } from 'lucide-react';
+import {
+  BookOpen,
+  CheckCircle2,
+  FilePenLine,
+  FileEdit,
+  Clock,
+  Loader2,
+  RefreshCw,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
@@ -38,6 +46,41 @@ function fmtTime(iso: string) {
 function isDraft(row: JournalRow) {
   return row.journal_status === 'kladde';
 }
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+}
+
+const miniStatCard: React.CSSProperties = {
+  background: 'var(--cp-bg2)',
+  border: '1px solid var(--cp-border)',
+  borderRadius: '12px',
+  padding: '14px 20px',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '14px',
+  boxShadow: 'var(--cp-card-shadow)',
+};
+
+const statLabel: React.CSSProperties = {
+  fontSize: '0.7rem',
+  color: 'var(--cp-muted)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.06em',
+};
+
+const sectionHeader: React.CSSProperties = {
+  fontSize: '0.7rem',
+  fontWeight: 700,
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
+  color: 'var(--cp-muted)',
+  padding: '0 0 10px 0',
+  borderBottom: '1px solid var(--cp-border)',
+  marginBottom: '12px',
+};
 
 export default function JournalOverblikWidget() {
   const [loading, setLoading] = useState(true);
@@ -200,8 +243,9 @@ export default function JournalOverblikWidget() {
 
   return (
     <section className="cp-card-elevated w-full p-5" aria-label="Journal overblik">
+      {/* ── Widget-header ───────────────────────────────────── */}
       <div
-        className="mb-4 flex items-start justify-between gap-3 pb-4"
+        className="mb-5 flex items-start justify-between gap-3 pb-4"
         style={{ borderBottom: '1px solid var(--cp-border)' }}
       >
         <div className="flex min-w-0 items-start gap-2.5">
@@ -252,117 +296,265 @@ export default function JournalOverblikWidget() {
         <p className="text-sm" style={{ color: 'var(--cp-amber)' }}>
           {scopeError}
         </p>
-      ) : rows.length === 0 ? (
-        <p className="text-sm" style={{ color: 'var(--cp-muted)' }}>
-          Ingen journalnotater i de seneste 7 dage.
-        </p>
       ) : (
-        <div className="space-y-5">
-          {hasJournalStatusColumn && drafts.length > 0 && (
-            <div>
-              <div
-                className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide"
-                style={{ color: 'var(--cp-amber)' }}
-              >
-                <FilePenLine className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                Kladder ({drafts.length})
+        <>
+          {/* ── Stat-bar ─────────────────────────────────────── */}
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
+            <div style={miniStatCard}>
+              <BookOpen size={20} strokeWidth={1.5} style={{ color: 'var(--cp-muted)' }} />
+              <div>
+                <div
+                  style={{
+                    fontSize: '1.6rem',
+                    fontWeight: 300,
+                    color: 'var(--cp-text)',
+                    lineHeight: 1,
+                  }}
+                >
+                  {godkendt.length}
+                </div>
+                <div style={statLabel}>Godkendte notater</div>
               </div>
-              <ul className="space-y-2">
-                {drafts.slice(0, 6).map((j) => (
-                  <li
-                    key={j.id}
-                    className="rounded-lg border border-dashed p-3"
+            </div>
+            <div style={miniStatCard}>
+              <FileEdit size={20} strokeWidth={1.5} style={{ color: 'var(--cp-amber)' }} />
+              <div>
+                <div
+                  style={{
+                    fontSize: '1.6rem',
+                    fontWeight: 300,
+                    color: 'var(--cp-amber)',
+                    lineHeight: 1,
+                  }}
+                >
+                  {drafts.length}
+                </div>
+                <div style={statLabel}>Kladder</div>
+              </div>
+            </div>
+            <div style={miniStatCard}>
+              <Clock size={20} strokeWidth={1.5} style={{ color: 'var(--cp-muted)' }} />
+              <div>
+                <div
+                  style={{
+                    fontSize: '1.6rem',
+                    fontWeight: 300,
+                    color: 'var(--cp-muted)',
+                    lineHeight: 1,
+                  }}
+                >
+                  7
+                </div>
+                <div style={statLabel}>Dages periode</div>
+              </div>
+            </div>
+          </div>
+
+          {rows.length === 0 ? (
+            /* ── Tom-state ─────────────────────────────────── */
+            <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--cp-muted)' }}>
+              <BookOpen size={32} strokeWidth={1} style={{ marginBottom: '12px', opacity: 0.4 }} />
+              <p style={{ fontSize: '0.875rem' }}>Ingen journalnotater i de seneste 7 dage</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* ── Sektion A: Kladder ────────────────────── */}
+              {hasJournalStatusColumn && (
+                <div>
+                  <div
+                    style={{ ...sectionHeader, display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <FilePenLine size={12} aria-hidden />
+                    Kladder {drafts.length > 0 && `(${drafts.length})`}
+                  </div>
+                  {drafts.length === 0 ? (
+                    <p
+                      style={{
+                        fontSize: '0.8rem',
+                        fontStyle: 'italic',
+                        color: 'var(--cp-muted)',
+                        padding: '8px 0',
+                      }}
+                    >
+                      Ingen kladder
+                    </p>
+                  ) : (
+                    <div>
+                      {drafts.slice(0, 6).map((j) => {
+                        const resName = nameByResident[j.resident_id] ?? 'Beboer';
+                        const initials = getInitials(resName);
+                        return (
+                          <NoteCard
+                            key={j.id}
+                            j={j}
+                            resName={resName}
+                            initials={initials}
+                            isDraftCard
+                            approvingId={approvingId}
+                            onApprove={() => void approveDraft(j.id, j.resident_id)}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── Sektion B: Godkendt journal ───────────── */}
+              <div>
+                <div style={sectionHeader}>Godkendt journal</div>
+                {godkendt.length === 0 ? (
+                  <p
                     style={{
-                      borderColor: 'rgba(245, 158, 11, 0.45)',
-                      backgroundColor: 'var(--cp-amber-dim)',
+                      fontSize: '0.8rem',
+                      fontStyle: 'italic',
+                      color: 'var(--cp-muted)',
+                      padding: '8px 0',
                     }}
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-1 text-[11px]">
-                      <span style={{ color: 'var(--cp-text)' }} className="font-medium">
-                        {nameByResident[j.resident_id] ?? 'Beboer'}
-                      </span>
-                      <span style={{ color: 'var(--cp-muted)' }}>{fmtTime(j.created_at)}</span>
-                    </div>
-                    <p className="mt-1 line-clamp-2 text-xs" style={{ color: 'var(--cp-muted)' }}>
-                      {j.entry_text}
-                    </p>
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <button
-                        type="button"
-                        disabled={approvingId === j.id}
-                        onClick={() => void approveDraft(j.id, j.resident_id)}
-                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold transition-opacity disabled:opacity-50"
-                        style={{
-                          backgroundColor: 'var(--cp-amber)',
-                          color: '#0c1118',
-                        }}
-                      >
-                        <CheckCircle2 className="h-3 w-3" aria-hidden />
-                        {approvingId === j.id ? 'Godkender…' : 'Godkend'}
-                      </button>
-                      <Link
-                        href={`/resident-360-view/${j.resident_id}?tab=overblik`}
-                        className="text-[11px] font-medium underline-offset-2 hover:underline"
-                        style={{ color: 'var(--cp-green)' }}
-                      >
-                        Åbn 360°
-                      </Link>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                    Ingen godkendte notater i perioden.
+                  </p>
+                ) : (
+                  <div>
+                    {godkendt.slice(0, 12).map((j) => {
+                      const resName = nameByResident[j.resident_id] ?? 'Beboer';
+                      const initials = getInitials(resName);
+                      return (
+                        <NoteCard
+                          key={j.id}
+                          j={j}
+                          resName={resName}
+                          initials={initials}
+                          isDraftCard={false}
+                          approvingId={approvingId}
+                          onApprove={() => {}}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           )}
-
-          <div>
-            <div
-              className="mb-2 text-[10px] font-semibold uppercase tracking-wide"
-              style={{ color: 'var(--cp-muted)' }}
-            >
-              Godkendt journal
-            </div>
-            {godkendt.length === 0 ? (
-              <p className="text-xs" style={{ color: 'var(--cp-muted)' }}>
-                Ingen godkendte notater i perioden.
-              </p>
-            ) : (
-              <ul className="max-h-[280px] space-y-2 overflow-y-auto pr-1">
-                {godkendt.slice(0, 12).map((j) => (
-                  <li
-                    key={j.id}
-                    className="rounded-lg border px-3 py-2"
-                    style={{
-                      borderColor: 'var(--cp-border)',
-                      backgroundColor: 'var(--cp-bg3)',
-                    }}
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-1 text-[11px]">
-                      <Link
-                        href={`/resident-360-view/${j.resident_id}?tab=overblik`}
-                        className="font-medium hover:underline"
-                        style={{ color: 'var(--cp-text)' }}
-                      >
-                        {nameByResident[j.resident_id] ?? 'Beboer'}
-                      </Link>
-                      <span style={{ color: 'var(--cp-muted)' }}>{fmtTime(j.created_at)}</span>
-                    </div>
-                    <p className="mt-0.5 line-clamp-2 text-xs" style={{ color: 'var(--cp-muted)' }}>
-                      {j.entry_text}
-                    </p>
-                    <div
-                      className="mt-1 flex flex-wrap gap-2 text-[10px]"
-                      style={{ color: 'var(--cp-muted)' }}
-                    >
-                      <span>{j.staff_name}</span>
-                      {j.category ? <span>· {j.category}</span> : null}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
+        </>
       )}
     </section>
+  );
+}
+
+type NoteCardProps = {
+  j: JournalRow;
+  resName: string;
+  initials: string;
+  isDraftCard: boolean;
+  approvingId: string | null;
+  onApprove: () => void;
+};
+
+function NoteCard({ j, resName, initials, isDraftCard, approvingId, onApprove }: NoteCardProps) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      style={{
+        background: isDraftCard ? 'var(--cp-amber-dim)' : 'var(--cp-bg2)',
+        border: isDraftCard
+          ? `1px dashed ${hovered ? 'rgba(245,158,11,0.7)' : 'rgba(245,158,11,0.45)'}`
+          : `1px solid ${hovered ? 'var(--cp-border2)' : 'var(--cp-border)'}`,
+        borderRadius: '10px',
+        padding: '14px 16px',
+        marginBottom: '8px',
+        boxShadow: 'var(--cp-card-shadow)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '6px',
+        cursor: 'pointer',
+        transition: 'border-color 0.15s',
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* Række 1: Avatar + navn / dato */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: '50%',
+              background: 'var(--cp-bg3)',
+              color: 'var(--cp-muted)',
+              fontSize: 11,
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            {initials}
+          </div>
+          <Link
+            href={`/resident-360-view/${j.resident_id}?tab=overblik`}
+            style={{ fontWeight: 600, fontSize: '0.8rem', color: 'var(--cp-text)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {resName}
+          </Link>
+        </div>
+        <span style={{ fontSize: '0.75rem', color: 'var(--cp-muted)' }}>
+          {fmtTime(j.created_at)}
+        </span>
+      </div>
+
+      {/* Række 2: Notat-tekst */}
+      <p
+        style={{
+          fontSize: '0.875rem',
+          color: 'var(--cp-text)',
+          lineHeight: 1.5,
+          overflow: 'hidden',
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+          margin: 0,
+        }}
+      >
+        {j.entry_text}
+      </p>
+
+      {/* Række 3: Badge + forfatter + godkend-knap */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+        {j.category && (
+          <span
+            style={{
+              fontSize: '0.7rem',
+              padding: '2px 8px',
+              borderRadius: '20px',
+              background: 'var(--cp-bg3)',
+              color: 'var(--cp-muted)',
+            }}
+          >
+            {j.category}
+          </span>
+        )}
+        <span style={{ fontSize: '0.75rem', color: 'var(--cp-muted2)' }}>{j.staff_name}</span>
+        {isDraftCard && (
+          <button
+            type="button"
+            disabled={approvingId === j.id}
+            onClick={(e) => {
+              e.stopPropagation();
+              onApprove();
+            }}
+            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold transition-opacity disabled:opacity-50"
+            style={{ backgroundColor: 'var(--cp-amber)', color: '#0c1118', marginLeft: 'auto' }}
+          >
+            <CheckCircle2 className="h-3 w-3" aria-hidden />
+            {approvingId === j.id ? 'Godkender…' : 'Godkend'}
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
