@@ -2,7 +2,16 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { CalendarClock, CheckCircle2, Clock3, MapPin, Users, Wallet } from 'lucide-react';
+import {
+  AlertTriangle,
+  CalendarClock,
+  CheckCircle2,
+  Clock,
+  Clock3,
+  MapPin,
+  Users,
+  Wallet,
+} from 'lucide-react';
 import type { DemoShift, DemoShiftType } from '@/lib/demoShiftPlan';
 import {
   currentPayPeriod,
@@ -69,6 +78,36 @@ function labelType(t: DemoShiftType): string {
   if (t === 'uddannelse') return 'Uddannelse';
   return 'Vagt';
 }
+
+function vagtAccent(type: CoreShift): string {
+  if (type === 'nat') return 'var(--cp-blue)';
+  if (type === 'aften') return 'var(--cp-amber)';
+  return 'var(--cp-green)';
+}
+
+function bemandingStatus(open: number): { color: string; bg: string } {
+  if (open === 0) return { color: 'var(--cp-green)', bg: 'var(--cp-green-dim)' };
+  if (open <= 2) return { color: 'var(--cp-amber)', bg: 'var(--cp-amber-dim)' };
+  return { color: 'var(--cp-red)', bg: 'var(--cp-red-dim)' };
+}
+
+const miniStatCard: React.CSSProperties = {
+  background: 'var(--cp-bg2)',
+  border: '1px solid var(--cp-border)',
+  borderRadius: '12px',
+  padding: '14px 20px',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '14px',
+  boxShadow: 'var(--cp-card-shadow)',
+};
+
+const statLabel: React.CSSProperties = {
+  fontSize: '0.7rem',
+  color: 'var(--cp-muted)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.06em',
+};
 
 export default function VagtplanDemoClient({
   basePath = '/care-portal-demo/vagtplan',
@@ -150,6 +189,26 @@ export default function VagtplanDemoClient({
       .slice(0, 6);
   }, [shifts]);
 
+  // Stat-bar beregninger
+  const weekHours = useMemo(() => {
+    const now = new Date();
+    const dow = now.getDay();
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    const ws = ymd(weekStart);
+    const we = ymd(weekEnd);
+    return shifts
+      .filter((s) => s.date >= ws && s.date <= we)
+      .reduce((acc, s) => acc + (s.hours ?? 0), 0);
+  }, [shifts]);
+
+  const todayOpenSlots = useMemo(() => {
+    const todaySlots = slotsByDate.get(ymd(new Date())) ?? [];
+    return todaySlots.reduce((acc, s) => acc + Math.max(0, s.required - s.assigned.length), 0);
+  }, [slotsByDate]);
+
   const selectedSlots = slotsByDate.get(selectedDate) ?? [];
   const appointments = useMemo(
     () => [
@@ -186,6 +245,7 @@ export default function VagtplanDemoClient({
 
   return (
     <div className="mx-auto max-w-6xl p-6">
+      {/* ── Side-header ─────────────────────────────────────── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p
@@ -227,7 +287,60 @@ export default function VagtplanDemoClient({
         </Link>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-[1.2fr_1fr]">
+      {/* ── Stat-bar ─────────────────────────────────────────── */}
+      <div style={{ display: 'flex', gap: '12px', margin: '24px 0', flexWrap: 'wrap' }}>
+        <div style={miniStatCard}>
+          <Clock size={20} strokeWidth={1.5} style={{ color: 'var(--cp-muted)' }} />
+          <div>
+            <div
+              style={{
+                fontSize: '1.6rem',
+                fontWeight: 300,
+                color: 'var(--cp-text)',
+                lineHeight: 1,
+              }}
+            >
+              {weekHours}
+            </div>
+            <div style={statLabel}>Timer denne uge</div>
+          </div>
+        </div>
+        <div style={miniStatCard}>
+          <Users size={20} strokeWidth={1.5} style={{ color: 'var(--cp-blue)' }} />
+          <div>
+            <div
+              style={{
+                fontSize: '1.6rem',
+                fontWeight: 300,
+                color: 'var(--cp-blue)',
+                lineHeight: 1,
+              }}
+            >
+              {myUpcoming.length}
+            </div>
+            <div style={statLabel}>Kommende vagter</div>
+          </div>
+        </div>
+        <div style={miniStatCard}>
+          <AlertTriangle size={20} strokeWidth={1.5} style={{ color: 'var(--cp-amber)' }} />
+          <div>
+            <div
+              style={{
+                fontSize: '1.6rem',
+                fontWeight: 300,
+                color: 'var(--cp-amber)',
+                lineHeight: 1,
+              }}
+            >
+              {todayOpenSlots}
+            </div>
+            <div style={statLabel}>Ledige vagter i dag</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Mine vagter + Dagens bemanding ────────────────────── */}
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.2fr_1fr]">
         <section
           className="rounded-xl border p-4"
           style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
@@ -236,30 +349,40 @@ export default function VagtplanDemoClient({
             Mine vagter (kommende)
           </h2>
           <ul className="mt-3 space-y-2">
-            {myUpcoming.map((s) => (
-              <li
-                key={s.id}
-                className="rounded-lg border px-3 py-2.5"
-                style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg3)' }}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
-                    {new Date(`${s.date}T12:00:00`).toLocaleDateString('da-DK', {
-                      weekday: 'short',
-                      day: 'numeric',
-                      month: 'short',
-                    })}{' '}
-                    · {labelType(s.type)}
+            {myUpcoming.map((s) => {
+              const accent = vagtAccent(s.type as CoreShift);
+              return (
+                <li
+                  key={s.id}
+                  className="rounded-lg"
+                  style={{
+                    backgroundColor: 'var(--cp-bg3)',
+                    border: '1px solid var(--cp-border)',
+                    borderLeftWidth: '3px',
+                    borderLeftColor: accent,
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                  }}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+                      {new Date(`${s.date}T12:00:00`).toLocaleDateString('da-DK', {
+                        weekday: 'short',
+                        day: 'numeric',
+                        month: 'short',
+                      })}{' '}
+                      · {labelType(s.type)}
+                    </p>
+                    <span className="text-xs" style={{ color: 'var(--cp-muted)' }}>
+                      {s.hours} t
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-xs" style={{ color: 'var(--cp-muted)' }}>
+                    {s.start}–{s.end} · {SHIFT_META[s.type as CoreShift]?.location ?? 'Bosted'}
                   </p>
-                  <span className="text-xs" style={{ color: 'var(--cp-muted)' }}>
-                    {s.hours} t
-                  </span>
-                </div>
-                <p className="mt-0.5 text-xs" style={{ color: 'var(--cp-muted)' }}>
-                  {s.start}–{s.end} · {SHIFT_META[s.type as CoreShift]?.location ?? 'Bosted'}
-                </p>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         </section>
 
@@ -273,20 +396,39 @@ export default function VagtplanDemoClient({
           <div className="mt-3 space-y-2">
             {(slotsByDate.get(ymd(new Date())) ?? []).map((slot) => {
               const open = Math.max(0, slot.required - slot.assigned.length);
+              const status = bemandingStatus(open);
+              const statusTekst = open ? `${open} ledig(e) vagt(er)` : 'Fuld bemanding';
+              const accent = vagtAccent(slot.type);
               return (
                 <div
                   key={slot.id}
-                  className="rounded-lg border px-3 py-2 text-sm"
-                  style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg3)' }}
+                  className="rounded-lg text-sm"
+                  style={{
+                    backgroundColor: 'var(--cp-bg3)',
+                    border: '1px solid var(--cp-border)',
+                    borderLeftWidth: '3px',
+                    borderLeftColor: accent,
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                  }}
                 >
                   <p className="font-medium" style={{ color: 'var(--cp-text)' }}>
                     {labelType(slot.type)} · {slot.start}–{slot.end}
                   </p>
-                  <p
-                    className="mt-0.5 text-xs"
-                    style={{ color: open ? 'var(--cp-amber)' : 'var(--cp-green)' }}
-                  >
-                    {open ? `${open} ledig(e) vagt(er)` : 'Fuld bemanding'}
+                  <p className="mt-0.5 flex items-center gap-1.5 text-xs">
+                    <span
+                      style={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: '50%',
+                        background: status.color,
+                        display: 'inline-block',
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span style={{ color: status.color, fontWeight: 500, fontSize: '0.8rem' }}>
+                      {statusTekst}
+                    </span>
                   </p>
                 </div>
               );
@@ -295,6 +437,7 @@ export default function VagtplanDemoClient({
         </section>
       </div>
 
+      {/* ── Kalender-grid ────────────────────────────────────── */}
       <div className="mt-8">
         <h2 className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
           Kalender (forrige/fremtidige vagter og aftaler)
@@ -308,46 +451,65 @@ export default function VagtplanDemoClient({
             );
             const mine = slots.some((s) => s.mine);
             const active = d === selectedDate;
+            const isToday = d === ymd(new Date());
             return (
               <button
                 key={d}
                 type="button"
                 onClick={() => setSelectedDate(d)}
-                className="rounded-lg border px-2.5 py-2 text-left"
+                className="text-left"
                 style={{
-                  borderColor: active ? 'var(--cp-green)' : 'var(--cp-border)',
-                  backgroundColor: active ? 'var(--cp-green-dim)' : 'var(--cp-bg2)',
+                  background: active || isToday ? 'var(--cp-green-dim)' : 'var(--cp-bg2)',
+                  border:
+                    active || isToday ? '1px solid var(--cp-green)' : '1px solid var(--cp-border)',
+                  borderRadius: '8px',
+                  padding: '10px 12px',
+                  cursor: 'pointer',
+                  transition: 'border-color 0.15s',
                 }}
               >
                 <p
-                  className="text-[11px] font-semibold uppercase"
-                  style={{ color: 'var(--cp-muted)' }}
+                  style={{
+                    fontSize: '0.65rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.08em',
+                    color: 'var(--cp-muted)',
+                    textTransform: 'uppercase',
+                    marginBottom: '4px',
+                  }}
                 >
                   {new Date(`${d}T12:00:00`).toLocaleDateString('da-DK', { weekday: 'short' })}
                 </p>
-                <p className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+                <p
+                  style={{
+                    fontSize: '1.1rem',
+                    fontWeight: 300,
+                    color: 'var(--cp-text)',
+                    lineHeight: 1,
+                  }}
+                >
                   {new Date(`${d}T12:00:00`).toLocaleDateString('da-DK', {
                     day: '2-digit',
                     month: '2-digit',
                   })}
                 </p>
                 <p
-                  className="mt-1 text-[11px]"
-                  style={{ color: open ? 'var(--cp-amber)' : 'var(--cp-green)' }}
+                  className="mt-1"
+                  style={{
+                    color: open ? 'var(--cp-amber)' : 'var(--cp-green)',
+                    fontSize: '0.75rem',
+                  }}
                 >
                   {open ? `${open} ledig` : 'Fuld'}
                 </p>
-                {mine && (
-                  <p className="text-[11px]" style={{ color: 'var(--cp-blue)' }}>
-                    Min vagt
-                  </p>
-                )}
+                {mine && <p style={{ color: 'var(--cp-blue)', fontSize: '0.75rem' }}>Min vagt</p>}
               </button>
             );
           })}
         </div>
       </div>
 
+      {/* ── Aktuel lønperiode ────────────────────────────────── */}
       <div
         className="mt-6 rounded-xl border p-4"
         style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
@@ -368,6 +530,7 @@ export default function VagtplanDemoClient({
         </p>
       </div>
 
+      {/* ── Valgt dato · vagter i tidsrum ────────────────────── */}
       <div
         className="mt-8 rounded-xl border p-4"
         style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
@@ -386,11 +549,19 @@ export default function VagtplanDemoClient({
         <ul className="mt-3 space-y-2">
           {selectedSlots.map((slot) => {
             const open = Math.max(0, slot.required - slot.assigned.length);
+            const accent = vagtAccent(slot.type);
             return (
               <li
                 key={slot.id}
-                className="rounded-lg border px-3 py-2.5 text-sm"
-                style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg3)' }}
+                className="text-sm"
+                style={{
+                  backgroundColor: 'var(--cp-bg3)',
+                  border: '1px solid var(--cp-border)',
+                  borderLeftWidth: '3px',
+                  borderLeftColor: accent,
+                  borderRadius: '8px',
+                  padding: '12px 16px',
+                }}
               >
                 <button
                   type="button"
@@ -420,6 +591,7 @@ export default function VagtplanDemoClient({
         </ul>
       </div>
 
+      {/* ── Mine allokerede aftaler ──────────────────────────── */}
       <div
         className="mt-6 rounded-xl border p-4"
         style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
@@ -450,19 +622,29 @@ export default function VagtplanDemoClient({
         </ul>
       </div>
 
+      {/* ── Vagt-detalje modal ───────────────────────────────── */}
       {selectedSlot && (
         <div
-          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 p-4"
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
           onClick={(e) => e.target === e.currentTarget && setSelectedSlot(null)}
         >
           <div
             className="w-full max-w-lg rounded-xl border p-5"
             style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
           >
-            <h3 className="text-base font-semibold" style={{ color: 'var(--cp-text)' }}>
-              {labelType(selectedSlot.type)} · {selectedSlot.start}–{selectedSlot.end}
-            </h3>
-            <div className="mt-3 space-y-2 text-sm">
+            <div
+              style={{
+                borderLeft: `4px solid ${vagtAccent(selectedSlot.type)}`,
+                paddingLeft: '12px',
+                marginBottom: '16px',
+              }}
+            >
+              <h3 className="text-base font-semibold" style={{ color: 'var(--cp-text)' }}>
+                {labelType(selectedSlot.type)} · {selectedSlot.start}–{selectedSlot.end}
+              </h3>
+            </div>
+            <div className="space-y-2 text-sm">
               <p className="flex items-center gap-2" style={{ color: 'var(--cp-muted)' }}>
                 <MapPin size={14} /> {selectedSlot.location}
               </p>
