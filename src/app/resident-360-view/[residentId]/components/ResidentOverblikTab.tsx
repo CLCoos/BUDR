@@ -302,52 +302,17 @@ export default function ResidentOverblikTab({
 
   return (
     <div className="space-y-5">
-      <div
-        className="flex items-center justify-between gap-3 rounded-xl border px-4 py-3"
-        style={{
-          backgroundColor: 'var(--cp-bg2)',
-          borderColor: 'var(--cp-border)',
-        }}
-      >
-        <div>
-          <p className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
-            Forenklet visning
-          </p>
-          <p className="text-xs" style={{ color: 'var(--cp-muted)' }}>
-            Reducerer appen til tre skærme og forstørrer tekst.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => void toggleSimpleMode()}
-          disabled={savingSimpleMode}
-          className="rounded-full px-3 py-1.5 text-xs font-semibold disabled:opacity-40"
-          style={
-            simpleMode
-              ? {
-                  backgroundColor: 'var(--cp-green-dim)',
-                  color: 'var(--cp-green)',
-                }
-              : { backgroundColor: 'var(--cp-bg3)', color: 'var(--cp-muted)' }
-          }
-        >
-          {savingSimpleMode ? 'Gemmer…' : simpleMode ? 'Aktiv' : 'Inaktiv'}
-        </button>
-      </div>
-
       {/* ── Critical status row ─────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Traffic light */}
         <div
-          className="flex flex-col gap-1 rounded-xl border p-4"
-          style={
-            tlCfg
-              ? { backgroundColor: tlCfg.bg, borderColor: tlCfg.border }
-              : {
-                  backgroundColor: 'var(--cp-bg3)',
-                  borderColor: 'var(--cp-border)',
-                }
-          }
+          className="flex flex-col gap-1 rounded-xl border"
+          style={{
+            padding: '1rem',
+            minHeight: 'unset',
+            backgroundColor: tlCfg ? tlCfg.bg : 'var(--cp-bg3)',
+            borderColor: tlCfg ? tlCfg.border : 'var(--cp-border)',
+          }}
         >
           <span
             className="text-xs font-medium uppercase tracking-wide"
@@ -366,8 +331,11 @@ export default function ResidentOverblikTab({
               </span>
             </div>
           ) : (
-            <span className="mt-1 text-xl font-bold" style={{ color: 'var(--cp-muted)' }}>
-              Ingen data
+            <span
+              className="mt-1"
+              style={{ color: 'var(--cp-muted)', fontSize: '0.8rem', fontStyle: 'italic' }}
+            >
+              Ingen check-in endnu
             </span>
           )}
           {checkinNote && (
@@ -412,8 +380,10 @@ export default function ResidentOverblikTab({
 
         {/* Mood score */}
         <div
-          className="flex flex-col gap-1 rounded-xl border p-4"
+          className="flex flex-col gap-1 rounded-xl border"
           style={{
+            padding: '1rem',
+            minHeight: 'unset',
             backgroundColor: 'var(--cp-bg2)',
             borderColor: 'var(--cp-border)',
           }}
@@ -448,8 +418,11 @@ export default function ResidentOverblikTab({
               </div>
             </div>
           ) : (
-            <span className="mt-1 text-xl font-bold" style={{ color: 'var(--cp-muted)' }}>
-              Ingen check-in
+            <span
+              className="mt-1"
+              style={{ color: 'var(--cp-muted)', fontSize: '0.8rem', fontStyle: 'italic' }}
+            >
+              Ingen check-in endnu
             </span>
           )}
         </div>

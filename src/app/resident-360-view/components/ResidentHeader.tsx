@@ -165,38 +165,53 @@ export default function ResidentHeader({
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {[
-                { k: 'Indflyttet', v: moveInDate ?? '—' },
-                {
-                  k: primaryContactRelation
-                    ? `Primær kontakt · ${primaryContactRelation}`
-                    : 'Primær kontakt',
-                  v: primaryContact ?? '—',
-                },
-                { k: 'Sidst check-in', v: lastCheckin ?? '—' },
-                { k: 'Stemning', v: moodScore !== null ? `${moodScore}/10` : '—' },
-              ].map((cell) => (
-                <div
-                  key={cell.k}
-                  className="rounded-xl border px-3 py-2.5"
-                  style={{
-                    backgroundColor: 'var(--cp-bg3)',
-                    borderColor: 'var(--cp-border)',
-                  }}
-                >
+            {(moveInDate !== null ||
+              primaryContact !== null ||
+              lastCheckin !== null ||
+              moodScore !== null) && (
+              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {[
+                  { k: 'Indflyttet', v: moveInDate },
+                  {
+                    k: primaryContactRelation
+                      ? `Primær kontakt · ${primaryContactRelation}`
+                      : 'Primær kontakt',
+                    v: primaryContact,
+                  },
+                  { k: 'Sidst check-in', v: lastCheckin },
+                  { k: 'Stemning', v: moodScore !== null ? `${moodScore}/10` : null },
+                ].map((cell) => (
                   <div
-                    className="text-[11px] font-medium uppercase tracking-wide"
-                    style={{ color: 'var(--cp-muted2)' }}
+                    key={cell.k}
+                    className="rounded-xl border px-3 py-2.5"
+                    style={{
+                      backgroundColor: 'var(--cp-bg3)',
+                      borderColor: 'var(--cp-border)',
+                    }}
                   >
-                    {cell.k}
+                    <div
+                      className="text-[11px] font-medium uppercase tracking-wide"
+                      style={{ color: 'var(--cp-muted2)' }}
+                    >
+                      {cell.k}
+                    </div>
+                    <div className="mt-0.5 text-sm font-medium" style={{ color: 'var(--cp-text)' }}>
+                      {cell.v ?? (
+                        <span
+                          style={{
+                            color: 'var(--cp-muted)',
+                            fontSize: '0.75rem',
+                            fontStyle: 'italic',
+                          }}
+                        >
+                          Ikke registreret
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="mt-0.5 text-sm font-medium" style={{ color: 'var(--cp-text)' }}>
-                    {cell.v}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
               {primaryContactPhone && (
