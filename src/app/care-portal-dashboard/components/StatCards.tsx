@@ -152,8 +152,7 @@ export default function StatCards({ variant = 'live' }: Props) {
           },
           {
             ...demoStats[3],
-            value:
-              live === null ? '…' : live.avgMood === null ? '—' : live.avgMood.toFixed(1),
+            value: live === null ? '…' : live.avgMood === null ? '—' : live.avgMood.toFixed(1),
             sub: 'Af 10 mulige (dagens check-in)',
           },
         ];
@@ -163,8 +162,7 @@ export default function StatCards({ variant = 'live' }: Props) {
       {stats.map((stat) => {
         const liveAlertCount = stat.alertLink ? alertCount : 0;
         const isAlertActive =
-          stat.alertLink &&
-          (variant === 'demo' ? DEMO_ALERT_PANEL_COUNT > 0 : liveAlertCount > 0);
+          stat.alertLink && (variant === 'demo' ? DEMO_ALERT_PANEL_COUNT > 0 : liveAlertCount > 0);
 
         const numberColor = isAlertActive
           ? 'var(--cp-red)'
@@ -173,10 +171,7 @@ export default function StatCards({ variant = 'live' }: Props) {
             : 'var(--cp-text)';
 
         return (
-          <div
-            key={stat.id}
-            className="cp-card-elevated relative overflow-hidden px-5 py-4"
-          >
+          <div key={stat.id} className="cp-card-elevated relative overflow-hidden px-5 py-4">
             {/* Colored top accent stripe */}
             <div
               className="absolute inset-x-0 top-0 rounded-t-[13px]"
@@ -206,10 +201,7 @@ export default function StatCards({ variant = 'live' }: Props) {
 
             {/* Sub-label */}
             {stat.sub && (
-              <div
-                className="mt-0.5"
-                style={{ fontSize: '0.7rem', color: 'var(--cp-muted2)' }}
-              >
+              <div className="mt-0.5" style={{ fontSize: '0.7rem', color: 'var(--cp-muted2)' }}>
                 {stat.sub}
               </div>
             )}

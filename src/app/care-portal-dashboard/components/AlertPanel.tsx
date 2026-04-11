@@ -184,7 +184,10 @@ function AlertCard({ alert, group }: { alert: AlertRow; group: 'roed' | 'gul' })
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-sm font-semibold" style={{ color: 'var(--cp-text)', fontSize: 13 }}>
+            <span
+              className="text-sm font-semibold"
+              style={{ color: 'var(--cp-text)', fontSize: 13 }}
+            >
               {alert.residentName}
             </span>
             <span
@@ -225,9 +228,7 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
   const [inactiveAlerts, setInactiveAlerts] = useState<AlertRow[]>([]);
   const [loading, setLoading] = useState(variant !== 'demo');
   const [inaktivitetExpanded, setInaktivitetExpanded] = useState(false);
-  const [demoAlerts] = useState<AlertRow[]>(() =>
-    variant === 'demo' ? [...DEMO_ALERT_SEED] : []
-  );
+  const [demoAlerts] = useState<AlertRow[]>(() => (variant === 'demo' ? [...DEMO_ALERT_SEED] : []));
 
   const fetchDbAlerts = useCallback(async () => {
     const supabase = createClient();
@@ -415,10 +416,7 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
             setDbAlerts((prev) =>
               prev.filter(
                 (a) =>
-                  !(
-                    a.residentId === rid &&
-                    (a.type === 'lav_stemning' || a.type === 'mood_alert')
-                  )
+                  !(a.residentId === rid && (a.type === 'lav_stemning' || a.type === 'mood_alert'))
               )
             );
           }
@@ -437,9 +435,7 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
   }, [variant, fetchDbAlerts, fetchCrisisAlerts, fetchInactivity]);
 
   const allAlerts =
-    variant === 'demo'
-      ? demoAlerts
-      : [...crisisAlerts, ...dbAlerts, ...inactiveAlerts];
+    variant === 'demo' ? demoAlerts : [...crisisAlerts, ...dbAlerts, ...inactiveAlerts];
 
   const group1 = allAlerts.filter(isCritical);
   const group2 = allAlerts.filter(isWatchout);
@@ -605,7 +601,10 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
                     >
                       {alert.initials}
                     </div>
-                    <span className="flex-1 text-sm" style={{ color: 'var(--cp-text)', fontSize: 13 }}>
+                    <span
+                      className="flex-1 text-sm"
+                      style={{ color: 'var(--cp-text)', fontSize: 13 }}
+                    >
                       {alert.residentName}
                     </span>
                     <span className="text-[11px]" style={{ color: 'var(--cp-muted)' }}>

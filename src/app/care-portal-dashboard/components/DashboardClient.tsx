@@ -54,10 +54,7 @@ type DashboardWidgetMeta = {
 // overflow:hidden + border-radius so the inner card's corners are clipped flush.
 function Zone2Card({ accent, children }: { accent: string; children: React.ReactNode }) {
   return (
-    <div
-      className="overflow-hidden rounded-xl"
-      style={{ borderTop: `2px solid ${accent}` }}
-    >
+    <div className="overflow-hidden rounded-xl" style={{ borderTop: `2px solid ${accent}` }}>
       {children}
     </div>
   );
@@ -108,8 +105,16 @@ function PillButton({
       className="flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors"
       style={
         danger
-          ? { border: '1px solid var(--cp-red-dim)', color: 'var(--cp-red)', backgroundColor: 'transparent' }
-          : { border: '1px solid var(--cp-border)', color: 'var(--cp-muted)', backgroundColor: 'transparent' }
+          ? {
+              border: '1px solid var(--cp-red-dim)',
+              color: 'var(--cp-red)',
+              backgroundColor: 'transparent',
+            }
+          : {
+              border: '1px solid var(--cp-border)',
+              color: 'var(--cp-muted)',
+              backgroundColor: 'transparent',
+            }
       }
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--cp-bg3)';
@@ -228,8 +233,7 @@ function DashboardClientInner({
     }
   };
 
-  const facilityLabel =
-    headerSubtitle.split('·')[0]?.trim().replace(/\s+/g, ' ') || 'Organisation';
+  const facilityLabel = headerSubtitle.split('·')[0]?.trim().replace(/\s+/g, ' ') || 'Organisation';
 
   // widgetLookup — used by pilotSim path and single-widget mode
   const widgetLookup = useMemo(
@@ -505,7 +509,6 @@ function DashboardClientInner({
   // ── Main cockpit dashboard layout ─────────────────────────
   return (
     <div className="relative">
-
       {/* ── Page header ─────────────────────────────────────── */}
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -525,7 +528,9 @@ function DashboardClientInner({
         <div className="flex flex-wrap items-center gap-2">
           <LivePill>{lastUpdated}</LivePill>
           <PillButton onClick={() => setOverrapportOpen(true)}>Overrapport</PillButton>
-          <PillButton onClick={() => setIndsatsOpen(true)} danger>Indsatsdok.</PillButton>
+          <PillButton onClick={() => setIndsatsOpen(true)} danger>
+            Indsatsdok.
+          </PillButton>
           <PillButton onClick={() => setTilsynsrapportOpen(true)}>Tilsynsrapport</PillButton>
           <PillButton onClick={() => window.location.reload()}>
             <RefreshCw size={11} />
@@ -606,10 +611,7 @@ function DashboardClientInner({
       <HurtigJournalModal open={journalOpen} onClose={closeJournal} />
       <OverrapportModal open={overrapportOpen} onClose={() => setOverrapportOpen(false)} />
       <IndsatsModal open={indsatsOpen} onClose={() => setIndsatsOpen(false)} />
-      <TilsynsrapportModal
-        open={tilsynsrapportOpen}
-        onClose={() => setTilsynsrapportOpen(false)}
-      />
+      <TilsynsrapportModal open={tilsynsrapportOpen} onClose={() => setTilsynsrapportOpen(false)} />
       <OverrapportPanel
         open={overrapportPanelOpen}
         onClose={() => setOverrapportPanelOpen(false)}

@@ -25,7 +25,7 @@ function polishModelCandidates(): string[] {
   const fallbacks = [
     fromEnv,
     ANTHROPIC_CHAT_MODEL,
-    'claude-sonnet-4-20250514',
+    'claude-haiku-4-5-20251001',
     'claude-3-5-sonnet-20241022',
     'claude-3-haiku-20240307',
   ].filter((m): m is string => typeof m === 'string' && m.length > 0);
