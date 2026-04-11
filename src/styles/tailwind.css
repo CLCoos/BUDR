@@ -71,8 +71,8 @@
     --cp-border: rgba(0, 0, 0, 0.08);
     --cp-border2: rgba(0, 0, 0, 0.14);
     --cp-text: #1a1f2e;
-    --cp-muted: #6b7280;
-    --cp-muted2: #9ca3af;
+    --cp-muted: #4b5563;
+    --cp-muted2: #6b7280;
     --cp-green: #0f9b72;
     --cp-green-dim: rgba(15, 155, 114, 0.1);
     --cp-red: #dc2626;
@@ -83,8 +83,8 @@
     --cp-blue-dim: rgba(37, 99, 235, 0.1);
 
     --cp-sidebar-bg: #1e2a3a;
-    --cp-sidebar-text: #f0f2f7;
-    --cp-sidebar-muted: #8a9ab5;
+    --cp-sidebar-text: #ffffff;
+    --cp-sidebar-muted: #b8c8de;
     --cp-sidebar-border: rgba(255, 255, 255, 0.08);
     --cp-sidebar-active-bg: rgba(45, 212, 160, 0.12);
     --cp-sidebar-hover-bg: rgba(255, 255, 255, 0.05);
