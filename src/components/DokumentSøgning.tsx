@@ -147,15 +147,19 @@ export type DokumentSøgningProps = {
   linkTarget?: 'live' | 'demo' | 'pilot';
 };
 
-function DokumentSøgningFallback({ carePortalDark }: { carePortalDark?: boolean }) {
-  const dark = carePortalDark ?? false;
-  const shellCls = dark
-    ? 'border border-[var(--cp-border)] bg-[var(--cp-bg3)]'
-    : 'border border-transparent bg-gray-100';
+function DokumentSøgningFallback({
+  carePortalDark: _carePortalDark,
+}: {
+  carePortalDark?: boolean;
+}) {
   return (
     <div className="relative w-full max-w-md min-w-0 flex-1">
       <div
-        className={`flex h-[42px] items-center gap-2 rounded-full px-3 ${shellCls} animate-pulse`}
+        className="flex h-[42px] items-center gap-2 rounded-full px-3 animate-pulse"
+        style={{
+          backgroundColor: 'var(--cp-input-bg)',
+          border: '1px solid var(--cp-input-border)',
+        }}
         aria-hidden
       />
     </div>
@@ -306,22 +310,31 @@ function DokumentSøgningInner({
     return Array.from(keys);
   };
 
-  const shellCls = dark
-    ? 'border border-[var(--cp-border)] bg-[var(--cp-bg3)] shadow-none transition-all duration-200 focus-within:border-[rgba(45,212,160,0.35)] focus-within:shadow-[0_0_0_1px_rgba(45,212,160,0.12)]'
-    : 'border border-transparent bg-gray-100 shadow-none transition-all duration-200 focus-within:border-budr-purple/30 focus-within:bg-white focus-within:shadow-md';
+  const shellCls =
+    'border shadow-none transition-all duration-200 focus-within:shadow-[0_0_0_1px_rgba(45,212,160,0.12)]';
+  const shellStyle: React.CSSProperties = {
+    backgroundColor: 'var(--cp-input-bg)',
+    borderColor: 'var(--cp-input-border)',
+  };
 
-  const iconMuted = dark ? 'var(--cp-muted2)' : undefined;
-  const inputCls = dark
-    ? 'w-full border-none bg-transparent py-2 pl-10 pr-3 text-sm text-[var(--cp-text)] placeholder:text-[var(--cp-muted)] focus:outline-none focus:ring-0'
-    : 'w-full border-none bg-transparent py-2 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-0';
+  const iconMuted = 'var(--cp-muted2)';
+  const inputCls =
+    'w-full border-none bg-transparent py-2 pl-10 pr-3 text-sm placeholder:text-[var(--cp-muted)] focus:outline-none focus:ring-0';
+  const inputStyle: React.CSSProperties = {
+    color: 'var(--cp-text)',
+  };
 
-  const kbdCls = dark
-    ? 'mr-2 hidden shrink-0 rounded bg-[var(--cp-bg2)] px-1.5 py-0.5 font-mono text-[10px] font-medium text-[var(--cp-muted2)] sm:inline'
-    : 'mr-2 hidden shrink-0 rounded bg-gray-200 px-1.5 py-0.5 font-mono text-[10px] font-medium text-gray-500 sm:inline';
+  const kbdCls =
+    'mr-2 hidden shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px] font-medium sm:inline';
+  const kbdStyle: React.CSSProperties = {
+    backgroundColor: 'var(--cp-bg2)',
+    color: 'var(--cp-muted2)',
+  };
 
-  const clearBtnCls = dark
-    ? 'mr-2 rounded-full p-1 text-[var(--cp-muted)] transition-all duration-200 hover:bg-[var(--cp-bg2)] hover:text-[var(--cp-text)]'
-    : 'mr-2 rounded-full p-1 text-gray-400 transition-all duration-200 hover:bg-gray-200 hover:text-gray-600';
+  const clearBtnCls = 'mr-2 rounded-full p-1 transition-all duration-200';
+  const clearBtnStyle: React.CSSProperties = {
+    color: 'var(--cp-muted)',
+  };
 
   const dropdownCls = dark
     ? 'absolute left-0 right-0 top-full z-50 mt-2 w-96 max-w-[calc(100vw-2rem)] rounded-xl border border-[var(--cp-border)] bg-[var(--cp-bg2)] shadow-[0_12px_40px_rgba(0,0,0,0.35)]'
@@ -367,11 +380,11 @@ function DokumentSøgningInner({
 
   return (
     <div ref={rootRef} className="relative w-full max-w-md min-w-0 flex-1">
-      <div className={`flex items-center gap-2 rounded-full ${shellCls}`}>
+      <div className={`flex items-center gap-2 rounded-full ${shellCls}`} style={shellStyle}>
         <div className="relative flex min-w-0 flex-1 items-center">
           <Search
-            className={`pointer-events-none absolute left-3 h-4 w-4 ${dark ? '' : 'text-gray-400'}`}
-            style={dark ? { color: iconMuted } : undefined}
+            className="pointer-events-none absolute left-3 h-4 w-4"
+            style={{ color: iconMuted }}
             aria-hidden
           />
           <input
@@ -393,9 +406,12 @@ function DokumentSøgningInner({
             aria-expanded={showDropdown}
             aria-controls="dokument-sogning-results"
             className={inputCls}
+            style={inputStyle}
           />
         </div>
-        <span className={kbdCls}>⌘K</span>
+        <span className={kbdCls} style={kbdStyle}>
+          ⌘K
+        </span>
         {query ? (
           <button
             type="button"
@@ -405,6 +421,7 @@ function DokumentSøgningInner({
               inputRef.current?.focus();
             }}
             className={clearBtnCls}
+            style={clearBtnStyle}
             aria-label="Ryd søgning"
           >
             <X className="h-3.5 w-3.5" />

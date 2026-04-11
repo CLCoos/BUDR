@@ -61,6 +61,8 @@
     --cp-input-border: var(--cp-border2);
     --cp-card-bg: var(--cp-bg2);
     --cp-card-shadow: none;
+    --cp-nav-bg: rgba(22, 27, 38, 0.88);
+    --cp-nav-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
   }
 
   :root[data-theme='light'] {
@@ -93,6 +95,8 @@
     --cp-input-border: rgba(0, 0, 0, 0.12);
     --cp-card-bg: #ffffff;
     --cp-card-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.06);
+    --cp-nav-bg: rgba(255, 255, 255, 0.92);
+    --cp-nav-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
   }
 
   * {
@@ -141,11 +145,11 @@
   }
 
   .cp-glass-nav {
-    background: rgba(22, 27, 38, 0.88);
+    background: var(--cp-nav-bg);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--cp-border);
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+    box-shadow: var(--cp-nav-shadow);
   }
 
   .cp-card-elevated {
