@@ -213,8 +213,8 @@ export default function ResidentHeader({
               </div>
             )}
 
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              {primaryContactPhone && (
+            {primaryContactPhone && (
+              <div className="mt-3">
                 <a
                   href={`tel:${primaryContactPhone.replace(/\s/g, '')}`}
                   className="inline-flex items-center gap-1.5 text-sm transition-colors hover:opacity-90"
@@ -223,16 +223,8 @@ export default function ResidentHeader({
                   <Phone size={14} aria-hidden />
                   {primaryContactPhone}
                 </a>
-              )}
-              <Link
-                href="/handover-workspace"
-                className="inline-flex items-center gap-1.5 text-sm font-medium transition-opacity hover:opacity-90"
-                style={{ color: 'var(--cp-muted)' }}
-              >
-                <FilePenLine size={14} aria-hidden />
-                Skriv vagtnotat
-              </Link>
-            </div>
+              </div>
+            )}
 
             {/* Genveje — samme familien som demo-portalen */}
             <div
@@ -249,11 +241,8 @@ export default function ResidentHeader({
               </Link>
               <Link
                 href="/care-portal-assistant"
-                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90"
-                style={{
-                  background: 'linear-gradient(135deg, #2dd4a0 0%, #0d9488 100%)',
-                  boxShadow: '0 2px 12px rgba(45,212,160,0.25)',
-                }}
+                className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors hover:bg-[rgba(255,255,255,0.04)]"
+                style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-muted)' }}
               >
                 <BrainCircuit className="h-3.5 w-3.5" aria-hidden />
                 Faglig støtte
@@ -265,6 +254,14 @@ export default function ResidentHeader({
               >
                 <Calendar className="h-3.5 w-3.5" aria-hidden />
                 Dagsplan
+              </Link>
+              <Link
+                href="/handover-workspace"
+                className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors hover:bg-[rgba(255,255,255,0.04)]"
+                style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-muted)' }}
+              >
+                <FilePenLine className="h-3.5 w-3.5" aria-hidden />
+                Skriv vagtnotat
               </Link>
             </div>
           </div>

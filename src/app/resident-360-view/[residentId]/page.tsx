@@ -11,7 +11,7 @@ import ResidentHavenTab from './components/ResidentHavenTab';
 import ResidentOverblikTab from './components/ResidentOverblikTab';
 import ResidentMedicinTab from './components/ResidentMedicinTab';
 import WriteJournalEntry from './components/WriteJournalEntry';
-import ResidentExportModule from './components/ResidentExportModule';
+import ResidentOverflowMenu from './components/ResidentOverflowMenu';
 import type { DailyPlan, PendingProposal } from './components/DagsPlanPortal';
 import type { MedDefinition } from './components/types';
 import type { ResidentExportInput } from '@/lib/residentExport/types';
@@ -344,8 +344,8 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
 
         {/* Action bar */}
         <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
-          <ResidentExportModule exportInput={exportInput} carePortalDark />
           <WriteJournalEntry residentId={residentId} residentName={resident.name} carePortalDark />
+          <ResidentOverflowMenu exportInput={exportInput} />
         </div>
 
         {/* Tabs — matcher mørk portal / demo */}

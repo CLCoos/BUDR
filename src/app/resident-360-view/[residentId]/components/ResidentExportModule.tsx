@@ -9,6 +9,9 @@ type Props = {
   exportInput: ResidentExportInput;
   /** Matcher Care Portal / demo — mørk trigger og dialog */
   carePortalDark?: boolean;
+  /** Controlled open state — when provided, no trigger button is rendered */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 const AUDIENCES: {
@@ -37,8 +40,16 @@ const AUDIENCES: {
   },
 ];
 
-export default function ResidentExportModule({ exportInput, carePortalDark }: Props) {
-  const [open, setOpen] = useState(false);
+export default function ResidentExportModule({
+  exportInput,
+  carePortalDark,
+  open: controlledOpen,
+  onOpenChange,
+}: Props) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : uncontrolledOpen;
+  const setOpen = isControlled ? (v: boolean) => onOpenChange?.(v) : setUncontrolledOpen;
   const [selected, setSelected] = useState<ExportAudience>('laege');
   const [copied, setCopied] = useState(false);
 
@@ -81,31 +92,33 @@ pre{white-space:pre-wrap;font-family:inherit;font-size:12.5px;margin:0}
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors ${
-          carePortalDark
-            ? 'shadow-sm hover:opacity-95'
-            : 'border-gray-200 bg-white text-gray-700 shadow-sm hover:border-[#0F1B2D]/30 hover:bg-gray-50'
-        }`}
-        style={
-          carePortalDark
-            ? {
-                borderColor: 'var(--cp-border)',
-                backgroundColor: 'var(--cp-bg2)',
-                color: 'var(--cp-text)',
-              }
-            : undefined
-        }
-      >
-        <FileOutput
-          size={17}
-          className={carePortalDark ? 'text-[var(--cp-green)]' : 'text-[#0F1B2D]'}
-          aria-hidden
-        />
-        Udtræk til samarbejdspartner
-      </button>
+      {!isControlled && (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors ${
+            carePortalDark
+              ? 'shadow-sm hover:opacity-95'
+              : 'border-gray-200 bg-white text-gray-700 shadow-sm hover:border-[#0F1B2D]/30 hover:bg-gray-50'
+          }`}
+          style={
+            carePortalDark
+              ? {
+                  borderColor: 'var(--cp-border)',
+                  backgroundColor: 'var(--cp-bg2)',
+                  color: 'var(--cp-text)',
+                }
+              : undefined
+          }
+        >
+          <FileOutput
+            size={17}
+            className={carePortalDark ? 'text-[var(--cp-green)]' : 'text-[#0F1B2D]'}
+            aria-hidden
+          />
+          Udtræk til samarbejdspartner
+        </button>
+      )}
 
       {open && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
