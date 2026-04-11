@@ -1,6 +1,6 @@
 import React from 'react';
 import PortalShell from '@/components/PortalShell';
-import BeskederDemoClient from '@/app/care-portal-demo/components/BeskederDemoClient';
+import BeskederClient from '@/components/BeskederClient';
 import { requirePortalAuth } from '@/lib/portalAuth';
 
 export default async function CarePortalBeskederPage() {
@@ -8,7 +8,7 @@ export default async function CarePortalBeskederPage() {
 
   return (
     <PortalShell>
-      <BeskederDemoClient />
+      <BeskederClient />
     </PortalShell>
   );
 }
