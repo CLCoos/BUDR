@@ -171,13 +171,11 @@ export default function StatCards({ variant = 'live' }: Props) {
             : 'var(--cp-text)';
 
         return (
-          <div key={stat.id} className="cp-card-elevated relative overflow-hidden px-5 pb-4 pt-5">
-            {/* Colored top accent stripe */}
-            <div
-              className="absolute inset-x-0 top-0 rounded-t-[13px]"
-              style={{ height: 2, backgroundColor: stat.stripe }}
-            />
-
+          <div
+            key={stat.id}
+            className="cp-card-elevated relative overflow-hidden px-5 pb-4 pt-5"
+            style={{ borderTop: `3px solid ${stat.stripe}` }}
+          >
             {/* Large stat number */}
             <div
               className="mt-2 tabular-nums leading-none"

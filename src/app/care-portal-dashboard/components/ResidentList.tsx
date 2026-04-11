@@ -420,32 +420,33 @@ export default function ResidentList({ compact = false }: { compact?: boolean })
       ) : (
         <div
           className="overflow-x-auto"
-          style={compact ? { maxHeight: 400, overflowY: 'hidden' } : undefined}
+          style={compact ? { maxHeight: 320, overflowY: 'hidden' } : undefined}
         >
           <table className="w-full">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--cp-border)' }}>
-                {['Beboer', 'Værelse', 'Trafiklys', 'Stemning', 'Check-in', 'Note', ''].map(
-                  (h, i) => (
-                    <th
-                      key={h || `h-${i}`}
-                      className={`${i === 0 ? 'px-4' : 'px-3'} py-2.5 text-left`}
-                      style={{
-                        fontSize: 9,
-                        fontWeight: 500,
-                        letterSpacing: '0.06em',
-                        textTransform: 'uppercase',
-                        color: 'var(--cp-muted2)',
-                      }}
-                    >
-                      {h}
-                    </th>
-                  )
-                )}
+                {(compact
+                  ? ['Beboer', 'Værelse', 'Trafiklys', 'Stemning']
+                  : ['Beboer', 'Værelse', 'Trafiklys', 'Stemning', 'Check-in', 'Note', '']
+                ).map((h, i) => (
+                  <th
+                    key={h || `h-${i}`}
+                    className={`${i === 0 ? 'px-4' : 'px-3'} py-2.5 text-left`}
+                    style={{
+                      fontSize: 9,
+                      fontWeight: 500,
+                      letterSpacing: '0.06em',
+                      textTransform: 'uppercase',
+                      color: 'var(--cp-muted2)',
+                    }}
+                  >
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {(compact ? filtered.slice(0, 8) : filtered).map((r) => {
+              {(compact ? filtered.slice(0, 6) : filtered).map((r) => {
                 const dotColor = r.trafficLight ? TRAFFIC_DOT[r.trafficLight] : 'var(--cp-muted2)';
                 const dotShadow = r.trafficLight ? TRAFFIC_DOT_SHADOW[r.trafficLight] : 'none';
                 const avStyle = avatarStyle(r.trafficLight);
@@ -554,40 +555,49 @@ export default function ResidentList({ compact = false }: { compact?: boolean })
                     </td>
 
                     {/* Check-in tid */}
-                    <td className="px-3 py-3" style={{ fontSize: 12, color: 'var(--cp-muted)' }}>
-                      {r.lastCheckin}
-                    </td>
+                    {!compact && (
+                      <td className="px-3 py-3" style={{ fontSize: 12, color: 'var(--cp-muted)' }}>
+                        {r.lastCheckin}
+                      </td>
+                    )}
 
                     {/* Note */}
-                    <td className="px-3 py-3 max-w-[200px]">
-                      <span
-                        className="truncate block"
-                        style={{ fontSize: 12, color: 'var(--cp-muted)' }}
-                      >
-                        {r.notePreview}
-                      </span>
-                    </td>
+                    {!compact && (
+                      <td className="px-3 py-3 max-w-[200px]">
+                        <span
+                          className="truncate block"
+                          style={{ fontSize: 12, color: 'var(--cp-muted)' }}
+                        >
+                          {r.notePreview}
+                        </span>
+                      </td>
+                    )}
 
                     {/* Arrow */}
-                    <td className="px-3 py-3">
-                      <span
-                        className="opacity-0 group-hover:opacity-100 w-6 h-6 rounded-lg flex items-center justify-center transition-all"
-                        style={{ border: '1px solid var(--cp-border2)', color: 'var(--cp-green)' }}
-                      >
-                        <svg
-                          width="12"
-                          height="12"
-                          viewBox="0 0 14 14"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
+                    {!compact && (
+                      <td className="px-3 py-3">
+                        <span
+                          className="opacity-0 group-hover:opacity-100 w-6 h-6 rounded-lg flex items-center justify-center transition-all"
+                          style={{
+                            border: '1px solid var(--cp-border2)',
+                            color: 'var(--cp-green)',
+                          }}
                         >
-                          <path d="M5 3l4 4-4 4" />
-                        </svg>
-                      </span>
-                    </td>
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 14 14"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M5 3l4 4-4 4" />
+                          </svg>
+                        </span>
+                      </td>
+                    )}
                   </tr>
                 );
               })}
