@@ -1,7 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Users, CheckSquare, AlertTriangle, TrendingUp } from 'lucide-react';
 import { useAlertCount } from '@/hooks/useAlertCount';
 import { createClient } from '@/lib/supabase/client';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
@@ -11,52 +10,32 @@ const demoStats = [
   {
     id: 'stat-residents',
     label: 'Aktive beboere',
+    sub: '3 fraværende i dag',
     value: '12',
-    sub: '3 fraværende i dag (ferie / sygdom)',
-    icon: Users,
-    iconColor: 'var(--cp-green)',
-    iconBg: 'var(--cp-green-dim)',
-    trend: null as string | null,
-    trendPos: undefined as boolean | undefined,
     stripe: 'var(--cp-green)',
     alertLink: false,
   },
   {
     id: 'stat-checkins',
     label: 'Check-ins i dag',
+    sub: '2 mangler endnu',
     value: '10',
-    sub: '2 mangler endnu · 1 uden Lys i 24 t.',
-    icon: CheckSquare,
-    iconColor: 'var(--cp-blue)',
-    iconBg: 'var(--cp-blue-dim)',
-    trend: '+3 vs. i går',
-    trendPos: true,
     stripe: 'var(--cp-blue)',
     alertLink: false,
   },
   {
     id: 'stat-alerts',
     label: 'Åbne advarsler',
-    value: null as string | null,
     sub: null as string | null,
-    icon: AlertTriangle,
-    iconColor: 'var(--cp-red)',
-    iconBg: 'var(--cp-red-dim)',
-    trend: null as string | null,
-    trendPos: undefined as boolean | undefined,
+    value: null as string | null,
     stripe: 'var(--cp-red)',
     alertLink: true,
   },
   {
     id: 'stat-avg-mood',
     label: 'Gns. stemning',
-    value: '6.2',
     sub: 'Af 10 mulige',
-    icon: TrendingUp,
-    iconColor: 'var(--cp-amber)',
-    iconBg: 'var(--cp-amber-dim)',
-    trend: '-0.4 vs. i går',
-    trendPos: false,
+    value: '6.2',
     stripe: 'var(--cp-amber)',
     alertLink: false,
   },
@@ -155,8 +134,6 @@ export default function StatCards({ variant = 'live' }: Props) {
                 : live.total === 0
                   ? 'Ingen beboere i organisationen'
                   : `${Math.max(0, live.total - live.checkinToday)} uden check-in i dag`,
-            trend: null,
-            trendPos: undefined,
           },
           {
             ...demoStats[1],
@@ -167,78 +144,77 @@ export default function StatCards({ variant = 'live' }: Props) {
                 : live.total === 0
                   ? '—'
                   : `${Math.max(0, live.total - live.checkinToday)} mangler endnu`,
-            trend: null,
-            trendPos: undefined,
           },
           {
             ...demoStats[2],
             value: String(alertCount),
             sub: alertCount === 1 ? '1 aktiv advarsel' : `${alertCount} aktive advarsler`,
-            trend: null,
-            trendPos: undefined,
           },
           {
             ...demoStats[3],
-            value: live === null ? '…' : live.avgMood === null ? '—' : live.avgMood.toFixed(1),
+            value:
+              live === null ? '…' : live.avgMood === null ? '—' : live.avgMood.toFixed(1),
             sub: 'Af 10 mulige (dagens check-in)',
-            trend: null,
-            trendPos: undefined,
           },
         ];
 
   return (
-    <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
       {stats.map((stat) => {
         const liveAlertCount = stat.alertLink ? alertCount : 0;
-        const valueColor =
-          stat.id === 'stat-avg-mood'
+        const isAlertActive =
+          stat.alertLink &&
+          (variant === 'demo' ? DEMO_ALERT_PANEL_COUNT > 0 : liveAlertCount > 0);
+
+        const numberColor = isAlertActive
+          ? 'var(--cp-red)'
+          : stat.id === 'stat-avg-mood'
             ? 'var(--cp-amber)'
-            : stat.alertLink &&
-                (variant === 'demo' ? DEMO_ALERT_PANEL_COUNT > 0 : liveAlertCount > 0)
-              ? 'var(--cp-red)'
-              : 'var(--cp-text)';
+            : 'var(--cp-text)';
 
         return (
           <div
             key={stat.id}
-            className="cp-card-elevated relative overflow-hidden p-4 transition-all duration-150 hover:border-[var(--cp-border2)]"
+            className="cp-card-elevated relative overflow-hidden px-5 py-4"
           >
+            {/* Colored top accent stripe */}
             <div
               className="absolute inset-x-0 top-0 rounded-t-[13px]"
               style={{ height: 2, backgroundColor: stat.stripe }}
             />
 
-            <div className="flex items-start justify-between mb-3 mt-1">
-              <div
-                className="w-9 h-9 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: stat.iconBg }}
-              >
-                <stat.icon size={17} style={{ color: stat.iconColor }} />
-              </div>
-              {stat.trend && (
-                <span
-                  className="text-xs font-medium px-1.5 py-0.5 rounded"
-                  style={
-                    stat.trendPos
-                      ? { backgroundColor: 'var(--cp-green-dim)', color: 'var(--cp-green)' }
-                      : { backgroundColor: 'var(--cp-red-dim)', color: 'var(--cp-red)' }
-                  }
-                >
-                  {stat.trend}
-                </span>
-              )}
-            </div>
-
-            <div className="text-2xl font-bold tabular-nums mb-0.5" style={{ color: valueColor }}>
+            {/* Large stat number */}
+            <div
+              className="mt-2 tabular-nums leading-none"
+              style={{
+                fontSize: '2.5rem',
+                fontWeight: 300,
+                color: numberColor,
+                letterSpacing: '-0.02em',
+              }}
+            >
               {stat.value ?? '—'}
             </div>
-            <div className="text-xs font-medium" style={{ color: 'var(--cp-muted)', fontSize: 11 }}>
+
+            {/* Label */}
+            <div
+              className="mt-2 font-medium"
+              style={{ fontSize: '0.75rem', color: 'var(--cp-muted)' }}
+            >
               {stat.label}
             </div>
-            <div className="text-xs mt-0.5" style={{ color: 'var(--cp-muted2)', fontSize: 10 }}>
-              {stat.sub}
-            </div>
 
+            {/* Sub-label */}
+            {stat.sub && (
+              <div
+                className="mt-0.5"
+                style={{ fontSize: '0.7rem', color: 'var(--cp-muted2)' }}
+              >
+                {stat.sub}
+              </div>
+            )}
+
+            {/* Alert link */}
             {stat.alertLink && (
               <div className="mt-3 pt-2" style={{ borderTop: '1px solid var(--cp-border)' }}>
                 <button
