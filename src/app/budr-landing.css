@@ -170,9 +170,9 @@
     position: absolute;
     inset: 0;
     background-image:
-      linear-gradient(rgba(45, 212, 160, 0.06) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(45, 212, 160, 0.06) 1px, transparent 1px);
-    background-size: 44px 44px;
+      linear-gradient(rgba(45, 212, 160, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(45, 212, 160, 0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
     pointer-events: none;
     z-index: 0;
   }
@@ -183,9 +183,9 @@
     position: absolute;
     inset: 0;
     background-image:
-      linear-gradient(rgba(15, 145, 114, 0.07) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(15, 145, 114, 0.07) 1px, transparent 1px);
-    background-size: 44px 44px;
+      linear-gradient(rgba(15, 145, 114, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15, 145, 114, 0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
     pointer-events: none;
     z-index: 0;
   }
@@ -281,24 +281,6 @@
   }
 }
 
-@keyframes budr-pulse {
-  0% {
-    transform: scale(1);
-    opacity: 0.9;
-    filter: drop-shadow(0 0 0px rgba(45, 212, 160, 0));
-  }
-  40% {
-    transform: scale(1.06);
-    opacity: 1;
-    filter: drop-shadow(0 0 18px rgba(45, 212, 160, 0.55));
-  }
-  100% {
-    transform: scale(1);
-    opacity: 0.9;
-    filter: drop-shadow(0 0 0px rgba(45, 212, 160, 0));
-  }
-}
-
 @keyframes budr-entry {
   0% {
     opacity: 0;
@@ -311,9 +293,7 @@
 }
 
 .budr-logo-animate {
-  animation:
-    budr-entry 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards,
-    budr-pulse 3s ease-in-out 0.8s infinite;
+  animation: budr-entry 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes careEntryLeftIn {
@@ -414,9 +394,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  animation:
-    careEntryLogoIn 400ms ease 400ms both,
-    orb-breathe 3.5s ease-in-out 1.2s infinite;
+  animation: careEntryLogoIn 400ms ease 400ms both;
   transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -511,18 +489,9 @@
   background: var(--cp-green, #2dd4a0);
 }
 
-/* ─── Staggered entry animations (desktop panels) ─── */
-.budr-entry-1 {
-  animation: budr-entry 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
-}
-.budr-entry-2 {
-  animation: budr-entry 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
-}
-.budr-entry-3 {
-  animation: budr-entry 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.32s both;
-}
-.budr-entry-4 {
-  animation: budr-entry 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.44s both;
+/* ─── Panel fade-in ─── */
+.budr-fade-in {
+  animation: budr-entry 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* ─── Scoped marketing landing — only applies inside .budr-landing ─── */
