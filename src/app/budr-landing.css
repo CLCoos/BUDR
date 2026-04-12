@@ -150,43 +150,64 @@
   }
 
   .care-entry-left {
-    background: linear-gradient(135deg, #0f1117 0%, #1a2540 100%);
+    background: linear-gradient(135deg, #0b0e15 0%, #111827 100%);
     animation: careEntryLeftIn 600ms ease both;
   }
 
-  .care-entry-left::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(45, 212, 160, 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(45, 212, 160, 0.04) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
   .care-entry-right {
-    background: linear-gradient(135deg, #f8f9fc 0%, #eef1f8 100%);
+    background: linear-gradient(135deg, #f4f6fb 0%, #eaeff8 100%);
     animation: careEntryRightIn 600ms ease 150ms both;
-  }
-
-  .care-entry-right::before {
-    content: '';
-    position: absolute;
-    top: -20%;
-    right: -10%;
-    width: 60%;
-    padding-bottom: 60%;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(45, 212, 160, 0.08) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
   }
 
   .care-entry-circle-left,
   .care-entry-circle-right {
     display: none;
+  }
+
+  /* Grid pattern — left */
+  .budr-panel-left::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(45, 212, 160, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(45, 212, 160, 0.06) 1px, transparent 1px);
+    background-size: 44px 44px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Grid pattern — right */
+  .budr-panel-right::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(15, 145, 114, 0.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15, 145, 114, 0.07) 1px, transparent 1px);
+    background-size: 44px 44px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Vignette — left */
+  .budr-panel-left::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 30%, rgba(10, 13, 20, 0.7) 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Vignette — right */
+  .budr-panel-right::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 30%, rgba(240, 244, 251, 0.8) 100%);
+    pointer-events: none;
+    z-index: 0;
   }
 
   .care-entry-left .care-entry-content p {
@@ -327,6 +348,184 @@
     transform: translate(-50%, -50%) scale(1);
   }
 }
+/* ─── Panel content wrapper (above grid + vignette pseudo-elements) ─── */
+.budr-panel-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.5rem;
+  max-width: 30rem;
+}
+
+/* ─── New divider ─── */
+@keyframes orb-breathe {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(45, 212, 160, 0),
+      0 4px 24px rgba(0, 0, 0, 0.14);
+  }
+  50% {
+    box-shadow:
+      0 0 0 8px rgba(45, 212, 160, 0.12),
+      0 4px 32px rgba(0, 0, 0, 0.18);
+  }
+}
+
+.budr-divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  z-index: 10;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.budr-divider-line {
+  position: absolute;
+  left: 0;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(255, 255, 255, 0.18) 20%,
+    rgba(255, 255, 255, 0.18) 80%,
+    transparent 100%
+  );
+  top: 0;
+  bottom: 0;
+}
+
+.budr-divider-orb {
+  position: relative;
+  z-index: 1;
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation:
+    careEntryLogoIn 400ms ease 400ms both,
+    orb-breathe 3.5s ease-in-out 1.2s infinite;
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.budr-divider-orb-rotated {
+  transform: rotate(180deg);
+}
+
+/* ─── CTA buttons ─── */
+.budr-cta-dark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  border-radius: 999px;
+  padding: 14px 28px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-landing-body, 'DM Sans', sans-serif);
+  text-decoration: none;
+  border: 1.5px solid rgba(255, 255, 255, 0.75);
+  color: #ffffff;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.01em;
+}
+
+.budr-cta-dark:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #ffffff;
+}
+
+.budr-cta-green {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  border-radius: 999px;
+  padding: 14px 28px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-landing-body, 'DM Sans', sans-serif);
+  text-decoration: none;
+  border: 0;
+  color: #ffffff;
+  background: var(--cp-green, #2dd4a0);
+  box-shadow: 0 4px 20px rgba(45, 212, 160, 0.38);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.01em;
+}
+
+.budr-cta-green:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 28px rgba(45, 212, 160, 0.48);
+}
+
+/* ─── Feature hints ─── */
+.budr-feature-hints {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 28px;
+  align-items: center;
+}
+
+.budr-feature-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-family: var(--font-landing-body, 'DM Sans', sans-serif);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  opacity: 0.65;
+}
+
+.budr-feature-hint-dark {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.budr-feature-hint-light {
+  color: #4b5563;
+}
+
+.budr-feature-hint-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--cp-green, #2dd4a0);
+}
+
+/* ─── Staggered entry animations (desktop panels) ─── */
+.budr-entry-1 {
+  animation: budr-entry 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+.budr-entry-2 {
+  animation: budr-entry 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+.budr-entry-3 {
+  animation: budr-entry 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.32s both;
+}
+.budr-entry-4 {
+  animation: budr-entry 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.44s both;
+}
+
+/* ─── Scoped marketing landing — only applies inside .budr-landing ─── */
 /* Scoped marketing landing — only applies inside .budr-landing */
 html {
   scroll-behavior: smooth;

@@ -11,14 +11,12 @@
  */
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { BudrLogo } from '@/components/brand/BudrLogo';
 
 type HoverSide = 'left' | 'right' | null;
 
 export default function CareEntrySplit() {
-  const router = useRouter();
-  const [hoverSide, setHoverSide] = useState<HoverSide>(null);
+  const [hovered, setHovered] = useState<HoverSide>(null);
   const [showSplash, setShowSplash] = useState(true);
   const [splashFading, setSplashFading] = useState(false);
 
@@ -31,8 +29,8 @@ export default function CareEntrySplit() {
     };
   }, []);
 
-  const leftFlex = hoverSide === 'left' ? 6 : hoverSide === 'right' ? 4 : 5;
-  const rightFlex = hoverSide === 'right' ? 6 : hoverSide === 'left' ? 4 : 5;
+  const leftFlex = hovered === 'left' ? '1.18' : hovered === 'right' ? '0.82' : '1';
+  const rightFlex = hovered === 'right' ? '1.18' : hovered === 'left' ? '0.82' : '1';
 
   return (
     <main className="care-entry-root">
@@ -44,15 +42,16 @@ export default function CareEntrySplit() {
         </div>
       )}
 
+      {/* ── Mobile layout ── */}
       <div className="care-entry-mobile">
         <section className="care-entry-mobile-top">
           <div className="care-entry-content">
             <BudrLogo size={52} dark showWordmark />
             <h1>Til borgere og pårørende</h1>
             <p>Læs om BUDR Lys og hvad vi tilbyder</p>
-            <button type="button" onClick={() => router.push('/institutioner')}>
+            <a href="/lys" className="budr-cta-dark">
               Læs mere →
-            </button>
+            </a>
           </div>
         </section>
         <section className="care-entry-mobile-bottom">
@@ -71,39 +70,54 @@ export default function CareEntrySplit() {
               }}
             />
             <p>Til dig der arbejder i socialpsykiatrien</p>
-            <button type="button" onClick={() => router.push('/care-portal-login')}>
+            <a href="/care-portal-login" className="budr-cta-green">
               Log ind →
-            </button>
+            </a>
           </div>
         </section>
       </div>
 
+      {/* ── Desktop layout ── */}
       <div className="care-entry-desktop">
+        {/* Left panel */}
         <section
-          className="care-entry-left"
+          className="care-entry-left budr-panel-left"
           style={{ flex: leftFlex }}
-          onMouseEnter={() => setHoverSide('left')}
-          onMouseLeave={() => setHoverSide(null)}
+          onMouseEnter={() => setHovered('left')}
+          onMouseLeave={() => setHovered(null)}
         >
-          <div className="care-entry-circle-left" aria-hidden />
-          <div className="care-entry-content">
+          <div className="budr-panel-content budr-entry-1">
             <BudrLogo size={56} dark showWordmark />
             <h1>Til borgere og pårørende</h1>
             <p>Læs om BUDR Lys og hvad vi tilbyder</p>
-            <button type="button" onClick={() => router.push('/institutioner')}>
+            <a href="/lys" className="budr-cta-dark">
               Læs mere →
-            </button>
+            </a>
+            <div className="budr-feature-hints">
+              <span className="budr-feature-hint budr-feature-hint-dark">
+                <span className="budr-feature-hint-dot" />
+                Daglig aktivitetsstøtte
+              </span>
+              <span className="budr-feature-hint budr-feature-hint-dark">
+                <span className="budr-feature-hint-dot" />
+                Pårørendeinformation
+              </span>
+              <span className="budr-feature-hint budr-feature-hint-dark">
+                <span className="budr-feature-hint-dot" />
+                Indsigt i forløbet
+              </span>
+            </div>
           </div>
         </section>
 
+        {/* Right panel */}
         <section
-          className="care-entry-right"
+          className="care-entry-right budr-panel-right"
           style={{ flex: rightFlex }}
-          onMouseEnter={() => setHoverSide('right')}
-          onMouseLeave={() => setHoverSide(null)}
+          onMouseEnter={() => setHovered('right')}
+          onMouseLeave={() => setHovered(null)}
         >
-          <div className="care-entry-circle-right" aria-hidden />
-          <div className="care-entry-content">
+          <div className="budr-panel-content budr-entry-2">
             <BudrLogo size={56} showWordmark />
             <h2>Care Portal</h2>
             <span
@@ -118,20 +132,34 @@ export default function CareEntrySplit() {
               }}
             />
             <p>Til dig der arbejder i socialpsykiatrien</p>
-            <button type="button" onClick={() => router.push('/care-portal-login')}>
+            <a href="/care-portal-login" className="budr-cta-green">
               Log ind →
-            </button>
+            </a>
+            <div className="budr-feature-hints">
+              <span className="budr-feature-hint budr-feature-hint-light">
+                <span className="budr-feature-hint-dot" />
+                Borgeroversigt og journaler
+              </span>
+              <span className="budr-feature-hint budr-feature-hint-light">
+                <span className="budr-feature-hint-dot" />
+                Vagtplanlægning
+              </span>
+              <span className="budr-feature-hint budr-feature-hint-light">
+                <span className="budr-feature-hint-dot" />
+                Intern beskedgivning
+              </span>
+            </div>
           </div>
         </section>
 
-        <div className="care-entry-divider" aria-hidden>
-          <span
-            className={`care-entry-divider-logo ${
-              hoverSide === 'left' ? 'care-entry-divider-logo-rotated' : ''
-            }`}
+        {/* Divider orb */}
+        <div className="budr-divider" aria-hidden>
+          <div className="budr-divider-line" />
+          <div
+            className={`budr-divider-orb${hovered === 'left' ? ' budr-divider-orb-rotated' : ''}`}
           >
             <BudrLogo size={28} showWordmark={false} />
-          </span>
+          </div>
         </div>
       </div>
     </main>

@@ -19,7 +19,7 @@ export default async function PortalShell({ children }: { children: React.ReactN
         style={{ backgroundColor: 'var(--cp-bg)' }}
       >
         <PortalMobileNav orgName={org?.name ?? null} orgLogoUrl={org?.logo_url ?? null}>
-          {children}
+          <div className="cp-page-enter">{children}</div>
         </PortalMobileNav>
       </div>
     </div>
