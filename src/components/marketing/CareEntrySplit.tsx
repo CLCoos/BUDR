@@ -42,9 +42,9 @@ export default function CareEntrySplit() {
     setHovered(side);
   };
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = (side: 'left' | 'right') => {
     hoverTimer.current = setTimeout(() => {
-      setHovered(null);
+      setHovered((current) => (current === side ? null : current));
     }, 2000);
   };
 
@@ -103,7 +103,7 @@ export default function CareEntrySplit() {
           className="care-entry-left budr-panel-left"
           style={{ flex: 1, position: 'relative', overflow: 'hidden' }}
           onMouseEnter={() => handleMouseEnter('left')}
-          onMouseLeave={handleMouseLeave}
+          onMouseLeave={() => handleMouseLeave('left')}
         >
           <svg
             aria-hidden="true"
@@ -209,7 +209,7 @@ export default function CareEntrySplit() {
           className="care-entry-right budr-panel-right"
           style={{ flex: 1, position: 'relative', overflow: 'hidden' }}
           onMouseEnter={() => handleMouseEnter('right')}
-          onMouseLeave={handleMouseLeave}
+          onMouseLeave={() => handleMouseLeave('right')}
         >
           <svg
             aria-hidden="true"
