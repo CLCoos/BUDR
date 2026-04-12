@@ -311,49 +311,33 @@
 
 .budr-divider {
   position: absolute;
-  top: 0;
-  bottom: 0;
   left: 50%;
-  transform: translateX(-50%);
-  width: 1px;
+  top: 50%;
+  transform: translate(-50%, -50%);
   z-index: 10;
-  pointer-events: none;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  gap: 0;
+  pointer-events: none;
 }
 
 .budr-divider-line {
-  position: absolute;
-  left: 0;
   width: 1px;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(255, 255, 255, 0.18) 20%,
-    rgba(255, 255, 255, 0.18) 80%,
-    transparent 100%
-  );
-  top: 0;
-  bottom: 0;
+  height: 80px;
+  background: linear-gradient(to bottom, transparent, rgba(45, 212, 160, 0.3), transparent);
 }
 
 .budr-divider-orb {
-  position: relative;
-  z-index: 1;
-  width: 52px;
-  height: 52px;
-  border-radius: 999px;
-  background: #ffffff;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #0f1117;
+  border: 1px solid rgba(45, 212, 160, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: careEntryLogoIn 400ms ease 400ms both;
-  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.budr-divider-orb-rotated {
-  transform: rotate(180deg);
+  box-shadow: 0 0 20px rgba(45, 212, 160, 0.12);
 }
 
 /* ─── CTA buttons ─── */

@@ -14,6 +14,7 @@ import React, { useState } from 'react';
 import { BudrLogo } from '@/components/brand/BudrLogo';
 
 export default function CareEntrySplit() {
+  const [hovered, setHovered] = useState<'left' | 'right' | null>(null);
   const [showSplash, setShowSplash] = useState(true);
   const [splashFading, setSplashFading] = useState(false);
 
@@ -72,9 +73,17 @@ export default function CareEntrySplit() {
       </div>
 
       {/* ── Desktop layout ── */}
-      <div className="care-entry-desktop">
+      <div
+        className="care-entry-desktop"
+        style={{ position: 'relative', display: 'flex', width: '100%', minHeight: '100vh' }}
+      >
         {/* Left panel */}
-        <section className="care-entry-left budr-panel-left" style={{ flex: '1' }}>
+        <section
+          className="care-entry-left budr-panel-left"
+          style={{ flex: 1, position: 'relative', overflow: 'hidden' }}
+          onMouseEnter={() => setHovered('left')}
+          onMouseLeave={() => setHovered(null)}
+        >
           <svg
             aria-hidden="true"
             style={{
@@ -94,6 +103,17 @@ export default function CareEntrySplit() {
             </defs>
             <rect width="100%" height="100%" fill="url(#grid-left)" />
           </svg>
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(45,212,160,0.04)',
+              opacity: hovered === 'left' ? 1 : 0,
+              transition: 'opacity 0.3s ease',
+              pointerEvents: 'none',
+              zIndex: 1,
+            }}
+          />
           <div className="budr-panel-content budr-fade-in">
             <BudrLogo size={56} dark showWordmark />
             <h1
@@ -154,8 +174,22 @@ export default function CareEntrySplit() {
           </div>
         </section>
 
+        {/* Midter-orb — absolut på container niveau */}
+        <div className="budr-divider" aria-hidden>
+          <div className="budr-divider-line" />
+          <div className="budr-divider-orb">
+            <BudrLogo size={22} showWordmark={false} />
+          </div>
+          <div className="budr-divider-line" />
+        </div>
+
         {/* Right panel */}
-        <section className="care-entry-right budr-panel-right" style={{ flex: '1' }}>
+        <section
+          className="care-entry-right budr-panel-right"
+          style={{ flex: 1, position: 'relative', overflow: 'hidden' }}
+          onMouseEnter={() => setHovered('right')}
+          onMouseLeave={() => setHovered(null)}
+        >
           <svg
             aria-hidden="true"
             style={{
@@ -175,6 +209,17 @@ export default function CareEntrySplit() {
             </defs>
             <rect width="100%" height="100%" fill="url(#grid-right)" />
           </svg>
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(45,212,160,0.05)',
+              opacity: hovered === 'right' ? 1 : 0,
+              transition: 'opacity 0.3s ease',
+              pointerEvents: 'none',
+              zIndex: 1,
+            }}
+          />
           <div className="budr-panel-content budr-fade-in">
             <BudrLogo size={56} showWordmark />
             <h2
@@ -243,14 +288,6 @@ export default function CareEntrySplit() {
             </div>
           </div>
         </section>
-
-        {/* Divider orb */}
-        <div className="budr-divider" aria-hidden>
-          <div className="budr-divider-line" />
-          <div className="budr-divider-orb">
-            <BudrLogo size={28} showWordmark={false} />
-          </div>
-        </div>
       </div>
     </main>
   );
