@@ -76,6 +76,10 @@ export default function BeskederClient() {
   useEffect(() => {
     const init = async () => {
       const supabase = createClient();
+      if (!supabase) {
+        await loadThreadsList('default-org', 'intern');
+        return;
+      }
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -113,6 +117,7 @@ export default function BeskederClient() {
   useEffect(() => {
     if (!activeId) return;
     const supabase = createClient();
+    if (!supabase) return;
     const channel = supabase
       .channel(`messages-${activeId}`)
       .on(
