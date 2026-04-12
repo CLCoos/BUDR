@@ -164,52 +164,6 @@
     display: none;
   }
 
-  /* Grid pattern — left */
-  .budr-panel-left::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(45, 212, 160, 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(45, 212, 160, 0.04) 1px, transparent 1px);
-    background-size: 60px 60px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* Grid pattern — right */
-  .budr-panel-right::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(15, 145, 114, 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(15, 145, 114, 0.04) 1px, transparent 1px);
-    background-size: 60px 60px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* Vignette — left */
-  .budr-panel-left::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse at center, transparent 30%, rgba(10, 13, 20, 0.7) 100%);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* Vignette — right */
-  .budr-panel-right::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse at center, transparent 30%, rgba(240, 244, 251, 0.8) 100%);
-    pointer-events: none;
-    z-index: 0;
-  }
-
   .care-entry-left .care-entry-content p {
     color: rgb(255 255 255 / 0.65);
   }
