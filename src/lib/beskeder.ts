@@ -31,6 +31,7 @@ export async function fetchThreads(
   threadType: 'intern' | 'lys'
 ): Promise<MessageThread[]> {
   const supabase = createClient();
+  if (!supabase) throw new Error('Supabase client ikke tilgængeligt');
   const { data, error } = await supabase
     .from('portal_message_threads')
     .select('*')
@@ -44,6 +45,7 @@ export async function fetchThreads(
 
 export async function fetchMessages(threadId: string): Promise<PortalMessage[]> {
   const supabase = createClient();
+  if (!supabase) throw new Error('Supabase client ikke tilgængeligt');
   const { data, error } = await supabase
     .from('portal_messages')
     .select('*')
@@ -64,6 +66,7 @@ export async function createThread(
   senderInitials: string
 ): Promise<MessageThread> {
   const supabase = createClient();
+  if (!supabase) throw new Error('Supabase client ikke tilgængeligt');
   const { data: thread, error: threadError } = await supabase
     .from('portal_message_threads')
     .insert({
@@ -101,6 +104,7 @@ export async function sendMessage(
   body: string
 ): Promise<void> {
   const supabase = createClient();
+  if (!supabase) throw new Error('Supabase client ikke tilgængeligt');
   const { error: msgError } = await supabase.from('portal_messages').insert({
     thread_id: threadId,
     org_id: orgId,
