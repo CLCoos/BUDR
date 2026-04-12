@@ -49,7 +49,7 @@ export default function CareEntrySplit() {
             <BudrLogo size={52} dark showWordmark />
             <h1>Til borgere og pårørende</h1>
             <p>Læs om BUDR Lys og hvad vi tilbyder</p>
-            <a href="/lys" className="budr-cta-dark">
+            <a href="/institutioner" className="budr-cta-dark">
               Læs mere →
             </a>
           </div>
@@ -108,7 +108,7 @@ export default function CareEntrySplit() {
             >
               Læs om BUDR Lys og hvad vi tilbyder
             </p>
-            <a href="/lys" className="budr-cta-dark">
+            <a href="/institutioner" className="budr-cta-dark">
               Læs mere →
             </a>
             <div
