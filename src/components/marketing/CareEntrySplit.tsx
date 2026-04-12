@@ -10,15 +10,16 @@
  * --font-budr-wordmark, --font-landing-body
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { BudrLogo } from '@/components/brand/BudrLogo';
 
 export default function CareEntrySplit() {
   const [hovered, setHovered] = useState<'left' | 'right' | null>(null);
   const [showSplash, setShowSplash] = useState(true);
   const [splashFading, setSplashFading] = useState(false);
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const startFade = window.setTimeout(() => setSplashFading(true), 1500);
     const removeSplash = window.setTimeout(() => setShowSplash(false), 1950);
     return () => {
@@ -26,6 +27,26 @@ export default function CareEntrySplit() {
       window.clearTimeout(removeSplash);
     };
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimer.current) clearTimeout(hoverTimer.current);
+    };
+  }, []);
+
+  const handleMouseEnter = (side: 'left' | 'right') => {
+    if (hoverTimer.current) {
+      clearTimeout(hoverTimer.current);
+      hoverTimer.current = null;
+    }
+    setHovered(side);
+  };
+
+  const handleMouseLeave = () => {
+    hoverTimer.current = setTimeout(() => {
+      setHovered(null);
+    }, 2000);
+  };
 
   return (
     <main className="care-entry-root">
@@ -81,8 +102,8 @@ export default function CareEntrySplit() {
         <section
           className="care-entry-left budr-panel-left"
           style={{ flex: 1, position: 'relative', overflow: 'hidden' }}
-          onMouseEnter={() => setHovered('left')}
-          onMouseLeave={() => setHovered(null)}
+          onMouseEnter={() => handleMouseEnter('left')}
+          onMouseLeave={handleMouseLeave}
         >
           <svg
             aria-hidden="true"
@@ -187,8 +208,8 @@ export default function CareEntrySplit() {
         <section
           className="care-entry-right budr-panel-right"
           style={{ flex: 1, position: 'relative', overflow: 'hidden' }}
-          onMouseEnter={() => setHovered('right')}
-          onMouseLeave={() => setHovered(null)}
+          onMouseEnter={() => handleMouseEnter('right')}
+          onMouseLeave={handleMouseLeave}
         >
           <svg
             aria-hidden="true"
