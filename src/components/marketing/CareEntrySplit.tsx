@@ -38,7 +38,9 @@ export default function CareEntrySplit() {
     <main className="care-entry-root">
       {showSplash && (
         <div className={`care-entry-splash ${splashFading ? 'care-entry-splash-out' : ''}`}>
-          <BudrLogo size={140} showWordmark />
+          <div className="budr-logo-animate">
+            <BudrLogo size={140} showWordmark />
+          </div>
         </div>
       )}
 
@@ -57,6 +59,17 @@ export default function CareEntrySplit() {
           <div className="care-entry-content">
             <BudrLogo size={52} showWordmark />
             <h2>Care Portal</h2>
+            <span
+              style={{
+                display: 'block',
+                width: '40px',
+                height: '2px',
+                background: '#2dd4a0',
+                marginTop: '-4px',
+                marginBottom: '12px',
+                borderRadius: '2px',
+              }}
+            />
             <p>Til dig der arbejder i socialpsykiatrien</p>
             <button type="button" onClick={() => router.push('/care-portal-login')}>
               Log ind →
@@ -93,6 +106,17 @@ export default function CareEntrySplit() {
           <div className="care-entry-content">
             <BudrLogo size={56} showWordmark />
             <h2>Care Portal</h2>
+            <span
+              style={{
+                display: 'block',
+                width: '40px',
+                height: '2px',
+                background: '#2dd4a0',
+                marginTop: '-4px',
+                marginBottom: '12px',
+                borderRadius: '2px',
+              }}
+            />
             <p>Til dig der arbejder i socialpsykiatrien</p>
             <button type="button" onClick={() => router.push('/care-portal-login')}>
               Log ind →

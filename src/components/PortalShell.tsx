@@ -8,6 +8,8 @@ export default async function PortalShell({ children }: { children: React.ReactN
 
   return (
     <div
+      id="care-portal-shell"
+      data-theme="dark"
       className="cp-demo-ambient flex h-screen flex-col overflow-hidden text-[15px] antialiased"
       style={{ backgroundColor: 'var(--cp-bg)' }}
     >

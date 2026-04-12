@@ -10,14 +10,14 @@ export function ThemeToggle() {
     const stored = localStorage.getItem('budr-theme') as 'dark' | 'light' | null;
     const initial = stored || 'dark';
     setTheme(initial);
-    document.documentElement.setAttribute('data-theme', initial);
+    document.getElementById('care-portal-shell')?.setAttribute('data-theme', initial);
   }, []);
 
   const toggle = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
     setTheme(next);
     localStorage.setItem('budr-theme', next);
-    document.documentElement.setAttribute('data-theme', next);
+    document.getElementById('care-portal-shell')?.setAttribute('data-theme', next);
   };
 
   return (
