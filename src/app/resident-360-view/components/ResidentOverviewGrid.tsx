@@ -4,7 +4,10 @@ import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Search, Users, CheckCircle, AlertTriangle } from 'lucide-react';
-import { residentNameRoomInitialsMatch } from '@/lib/residentSearchMatch';
+import {
+  residentNameRoomInitialsMatch,
+  sortResidentsBySearchRelevance,
+} from '@/lib/residentSearchMatch';
 import type { ResidentItem } from '../page';
 
 // ── Colour tokens ─────────────────────────────────────────────
@@ -75,16 +78,20 @@ export default function ResidentOverviewGrid({ residents }: Props) {
     [residents]
   );
 
-  const filtered = sorted.filter((r) => {
+  const filtered = useMemo(() => {
     const ql = search.trim().toLowerCase();
-    const matchSearch =
-      residentNameRoomInitialsMatch(r.name, r.room, r.initials, search) ||
-      (ql.length > 0 && r.house.toLowerCase().includes(ql));
-    const matchFilter =
-      filter === 'alle' ? true : filter === 'ingen' ? !r.trafficLight : r.trafficLight === filter;
-    const matchHouse = houseFilter === 'alle' || r.house === houseFilter;
-    return matchSearch && matchFilter && matchHouse;
-  });
+    const base = sorted.filter((r) => {
+      const matchSearch =
+        residentNameRoomInitialsMatch(r.name, r.room, r.initials, search) ||
+        (ql.length > 0 && r.house.toLowerCase().includes(ql));
+      const matchFilter =
+        filter === 'alle' ? true : filter === 'ingen' ? !r.trafficLight : r.trafficLight === filter;
+      const matchHouse = houseFilter === 'alle' || r.house === houseFilter;
+      return matchSearch && matchFilter && matchHouse;
+    });
+    const q = search.trim();
+    return q ? sortResidentsBySearchRelevance(base, q) : base;
+  }, [sorted, search, filter, houseFilter]);
 
   const checkinCount = residents.filter((r) => r.checkinToday).length;
   const missingCheckin = residents.length - checkinCount;

@@ -1,10 +1,13 @@
 'use client';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Search, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { residentNameRoomInitialsMatch } from '@/lib/residentSearchMatch';
+import {
+  residentNameRoomInitialsMatch,
+  sortResidentsBySearchRelevance,
+} from '@/lib/residentSearchMatch';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
 
 // ── Types ────────────────────────────────────────────────────
@@ -280,12 +283,16 @@ export default function ResidentList({ compact = false }: { compact?: boolean })
 
   // ── Filter + search ────────────────────────────────────────
 
-  const filtered = residents.filter((r) => {
-    const matchSearch = residentNameRoomInitialsMatch(r.name, r.room, r.initials, search);
-    const matchFilter =
-      filter === 'alle' ? true : filter === 'ingen' ? !r.trafficLight : r.trafficLight === filter;
-    return matchSearch && matchFilter;
-  });
+  const filtered = useMemo(() => {
+    const q = search.trim();
+    const base = residents.filter((r) => {
+      const matchSearch = residentNameRoomInitialsMatch(r.name, r.room, r.initials, search);
+      const matchFilter =
+        filter === 'alle' ? true : filter === 'ingen' ? !r.trafficLight : r.trafficLight === filter;
+      return matchSearch && matchFilter;
+    });
+    return q ? sortResidentsBySearchRelevance(base, q) : base;
+  }, [residents, search, filter]);
 
   const checkinTodayCount = residents.filter((r) => r.checkinToday).length;
 

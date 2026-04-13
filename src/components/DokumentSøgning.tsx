@@ -4,7 +4,11 @@ import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } fr
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FileText, Search, User, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { residentNameRoomInitialsMatch } from '@/lib/residentSearchMatch';
+import {
+  residentNameRoomInitialsMatch,
+  residentSearchRank,
+  sortResidentsBySearchRelevance,
+} from '@/lib/residentSearchMatch';
 import { isResidentUuidForCloud } from '@/lib/residentUuid';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
 
@@ -257,9 +261,10 @@ function DokumentSøgningInner({
 
   const matchedResidents = useMemo(() => {
     if (q.length < 1) return [];
-    return residentsForSearch.filter((r) =>
+    const filtered = residentsForSearch.filter((r) =>
       residentNameRoomInitialsMatch(r.name, r.room, r.initials, q)
     );
+    return sortResidentsBySearchRelevance(filtered, q);
   }, [q, residentsForSearch]);
 
   const matchedDocs = useMemo(() => {
@@ -270,6 +275,14 @@ function DokumentSøgningInner({
         if (docMatchesQuery(doc, q)) out.push({ resident: r, doc });
       }
     }
+    out.sort((a, b) => {
+      const ra = residentSearchRank(a.resident.name, a.resident.room, a.resident.initials, q);
+      const rb = residentSearchRank(b.resident.name, b.resident.room, b.resident.initials, q);
+      if (rb !== ra) return rb - ra;
+      const t = a.doc.title.localeCompare(b.doc.title, 'da', { sensitivity: 'base' });
+      if (t !== 0) return t;
+      return a.resident.name.localeCompare(b.resident.name, 'da', { sensitivity: 'base' });
+    });
     return out;
   }, [q, residentsForSearch]);
 
