@@ -26,9 +26,24 @@ export default function AnalyticsGate() {
       return;
     }
     const stored = readAnalyticsConsent();
-    if (stored === 'granted') setUi('granted');
-    else if (stored === 'denied') setUi('denied');
-    else setUi('pending');
+    if (stored === 'granted') {
+      setUi('granted');
+      return;
+    }
+    if (stored === 'denied') {
+      setUi('denied');
+      return;
+    }
+    /* Vent til efter næste paint, så FCP/LCP ikke konkurrerer med consent-bar (fixed, men mindre arbejde i samme frame). */
+    let cancelled = false;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!cancelled) setUi('pending');
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const grant = () => {

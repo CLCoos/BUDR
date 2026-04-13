@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useResident } from '../context/ResidentContext';
 import { useResidentSession } from '@/hooks/useResidentSession';
@@ -221,6 +221,11 @@ export default function LysMigScreen({
     await dataService.saveProfile(mode, activeId, { theme: key });
   };
 
+  const profileAccent = useMemo(() => {
+    const hit = THEMES.find((t) => t.key === colorTheme);
+    return hit?.color ?? accent;
+  }, [colorTheme, accent]);
+
   const levelInfo = getLevelInfo(xpData.total_xp);
   const nextLevel = LEVEL_INFO.find((l) => l.level === levelInfo.level + 1);
   const xpProgress = xpData.total_xp - levelInfo.min;
@@ -245,10 +250,10 @@ export default function LysMigScreen({
   }
 
   function energyToColor(val: number | null): string {
-    if (val === null) return `${accent}20`;
+    if (val === null) return `${profileAccent}20`;
     const pct = val > 5 ? val / 10 : val / 5;
     if (pct >= 0.75) return '#22C55E';
-    if (pct >= 0.5) return accent;
+    if (pct >= 0.5) return profileAccent;
     if (pct >= 0.3) return '#F59E0B';
     return '#EF4444';
   }
@@ -277,8 +282,8 @@ export default function LysMigScreen({
       <section
         className="rounded-3xl p-6"
         style={{
-          background: `linear-gradient(150deg, ${accent}18 0%, ${accent}06 100%)`,
-          border: `1px solid ${accent}20`,
+          background: `linear-gradient(150deg, ${profileAccent}18 0%, ${profileAccent}06 100%)`,
+          border: `1px solid ${profileAccent}20`,
         }}
       >
         {/* Avatar + name */}
@@ -287,8 +292,8 @@ export default function LysMigScreen({
             <div
               className="h-20 w-20 shrink-0 rounded-full flex items-center justify-center text-2xl font-black text-white overflow-hidden"
               style={{
-                background: `linear-gradient(135deg, ${accent}, ${accent}99)`,
-                boxShadow: `0 6px 24px ${accent}40`,
+                background: `linear-gradient(135deg, ${profileAccent}, ${profileAccent}99)`,
+                boxShadow: `0 6px 24px ${profileAccent}40`,
               }}
             >
               {avatarUrl ? (
@@ -305,7 +310,7 @@ export default function LysMigScreen({
                   onClick={() => fileRef.current?.click()}
                   disabled={uploadingAvatar}
                   className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full flex items-center justify-center text-white text-xs transition-all active:scale-90"
-                  style={{ backgroundColor: accent }}
+                  style={{ backgroundColor: profileAccent }}
                   aria-label="Skift profilbillede"
                 >
                   {uploadingAvatar ? '…' : '📷'}
@@ -321,7 +326,7 @@ export default function LysMigScreen({
             ) : (
               <div
                 className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full flex items-center justify-center text-white text-[9px]"
-                style={{ backgroundColor: `${accent}88` }}
+                style={{ backgroundColor: `${profileAccent}88` }}
               >
                 🔒
               </div>
@@ -336,8 +341,8 @@ export default function LysMigScreen({
                   onChange={(e) => setNickname(e.target.value)}
                   className="flex-1 rounded-lg px-2 py-1 text-lg font-black outline-none min-w-0"
                   style={{
-                    backgroundColor: `${accent}18`,
-                    border: `1px solid ${accent}33`,
+                    backgroundColor: `${profileAccent}18`,
+                    border: `1px solid ${profileAccent}33`,
                     color: tokens.text,
                   }}
                   autoFocus
@@ -347,7 +352,7 @@ export default function LysMigScreen({
                   onClick={() => void saveNickname()}
                   disabled={savingNick}
                   className="text-xs font-bold px-2 py-1 rounded-lg text-white"
-                  style={{ backgroundColor: accent }}
+                  style={{ backgroundColor: profileAccent }}
                 >
                   Gem
                 </button>
@@ -360,7 +365,7 @@ export default function LysMigScreen({
                 </p>
               </button>
             )}
-            <p className="text-sm font-bold mt-1" style={{ color: accent }}>
+            <p className="text-sm font-bold mt-1" style={{ color: profileAccent }}>
               {levelInfo.emoji} Niveau {levelInfo.level} — {levelInfo.name}
             </p>
           </div>
@@ -374,16 +379,22 @@ export default function LysMigScreen({
               dages streak
             </p>
           </div>
-          <div className="w-px h-10 self-center" style={{ backgroundColor: `${accent}25` }} />
+          <div
+            className="w-px h-10 self-center"
+            style={{ backgroundColor: `${profileAccent}25` }}
+          />
           <div className="flex-1 text-center">
-            <p className="text-2xl font-black" style={{ color: accent }}>
+            <p className="text-2xl font-black" style={{ color: profileAccent }}>
               {xpData.total_xp}
             </p>
             <p className="text-xs mt-0.5" style={{ color: subtext }}>
               XP i alt
             </p>
           </div>
-          <div className="w-px h-10 self-center" style={{ backgroundColor: `${accent}25` }} />
+          <div
+            className="w-px h-10 self-center"
+            style={{ backgroundColor: `${profileAccent}25` }}
+          />
           <div className="flex-1 text-center">
             <p className="text-2xl font-black">📅 {activeDays}</p>
             <p className="text-xs mt-0.5" style={{ color: subtext }}>
@@ -400,17 +411,17 @@ export default function LysMigScreen({
                 ? `${xpProgress} / ${xpNeeded} XP til ${nextLevel.emoji} Niveau ${nextLevel.level}`
                 : 'Maks niveau nået!'}
             </p>
-            <p className="text-xs font-bold" style={{ color: accent }}>
+            <p className="text-xs font-bold" style={{ color: profileAccent }}>
               {Math.round(progressPct)}%
             </p>
           </div>
           <div
             className="h-2 w-full rounded-full overflow-hidden"
-            style={{ backgroundColor: `${accent}20` }}
+            style={{ backgroundColor: `${profileAccent}20` }}
           >
             <div
               className="h-full rounded-full transition-all duration-700"
-              style={{ width: `${progressPct}%`, backgroundColor: accent }}
+              style={{ width: `${progressPct}%`, backgroundColor: profileAccent }}
             />
           </div>
         </div>
@@ -450,7 +461,7 @@ export default function LysMigScreen({
           {activeDays > 0 && (
             <span
               className="text-xs font-semibold px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: `${accent}18`, color: accent }}
+              style={{ backgroundColor: `${profileAccent}18`, color: profileAccent }}
             >
               {activeDays} af 14 dage
             </span>
@@ -478,7 +489,7 @@ export default function LysMigScreen({
                       className="w-full rounded-t-sm transition-all duration-300"
                       style={{
                         height: day.value !== null ? `${pct}%` : '6%',
-                        backgroundColor: day.value !== null ? color : `${accent}18`,
+                        backgroundColor: day.value !== null ? color : `${profileAccent}18`,
                         opacity: selectedMoodDay && !isSelected ? 0.4 : 1,
                         boxShadow: isSelected
                           ? `0 0 0 2px ${tokens.bg}, 0 0 0 3px ${color}`
@@ -487,7 +498,10 @@ export default function LysMigScreen({
                       }}
                     />
                     {isToday && (
-                      <div className="w-1 h-1 rounded-full" style={{ backgroundColor: accent }} />
+                      <div
+                        className="w-1 h-1 rounded-full"
+                        style={{ backgroundColor: profileAccent }}
+                      />
                     )}
                   </button>
                 );
@@ -554,7 +568,7 @@ export default function LysMigScreen({
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-bold">Badges</h2>
-          <span className="text-xs font-semibold" style={{ color: accent }}>
+          <span className="text-xs font-semibold" style={{ color: profileAccent }}>
             {earnedBadges.length}/{RESIDENT_BADGE_DEFS.length}
           </span>
         </div>
@@ -583,16 +597,17 @@ export default function LysMigScreen({
                   style={{
                     background:
                       selectedBadge?.key === b.key
-                        ? `linear-gradient(150deg, ${accent}28, ${accent}10)`
-                        : `linear-gradient(150deg, ${accent}18, ${accent}06)`,
-                    border: `1.5px solid ${selectedBadge?.key === b.key ? accent : `${accent}30`}`,
-                    boxShadow: selectedBadge?.key === b.key ? `0 4px 16px ${accent}30` : 'none',
+                        ? `linear-gradient(150deg, ${profileAccent}28, ${profileAccent}10)`
+                        : `linear-gradient(150deg, ${profileAccent}18, ${profileAccent}06)`,
+                    border: `1.5px solid ${selectedBadge?.key === b.key ? profileAccent : `${profileAccent}30`}`,
+                    boxShadow:
+                      selectedBadge?.key === b.key ? `0 4px 16px ${profileAccent}30` : 'none',
                   }}
                 >
                   <span className="text-2xl leading-none">{b.emoji}</span>
                   <p
                     className="text-[10px] font-bold text-center leading-tight"
-                    style={{ color: accent }}
+                    style={{ color: profileAccent }}
                   >
                     {b.name}
                   </p>
@@ -609,7 +624,10 @@ export default function LysMigScreen({
         {selectedBadge && earnedBadges.includes(selectedBadge) && (
           <div
             className="rounded-2xl px-4 py-3 mb-4 flex items-center gap-3"
-            style={{ backgroundColor: `${accent}10`, border: `1px solid ${accent}25` }}
+            style={{
+              backgroundColor: `${profileAccent}10`,
+              border: `1px solid ${profileAccent}25`,
+            }}
           >
             <span className="text-3xl">{selectedBadge.emoji}</span>
             <div className="flex-1">
@@ -705,13 +723,13 @@ export default function LysMigScreen({
                   <p className="text-sm font-medium w-20 shrink-0 text-left">{r.label}</p>
                   <div
                     className="flex-1 h-2 rounded-full overflow-hidden"
-                    style={{ backgroundColor: `${accent}14` }}
+                    style={{ backgroundColor: `${profileAccent}14` }}
                   >
                     <div
                       className="h-full rounded-full transition-all duration-500"
                       style={{
                         width: `${(r.val / 5) * 100}%`,
-                        backgroundColor: isOpen ? accent : `${accent}88`,
+                        backgroundColor: isOpen ? profileAccent : `${profileAccent}88`,
                       }}
                     />
                   </div>
@@ -726,8 +744,8 @@ export default function LysMigScreen({
                   <div
                     className="rounded-2xl px-3.5 py-2.5 mt-1.5 text-xs leading-relaxed"
                     style={{
-                      backgroundColor: `${accent}10`,
-                      border: `1px solid ${accent}20`,
+                      backgroundColor: `${profileAccent}10`,
+                      border: `1px solid ${profileAccent}20`,
                       color: tokens.text,
                     }}
                   >
@@ -749,7 +767,9 @@ export default function LysMigScreen({
           {/* Visual */}
           <div
             className="w-24 shrink-0 flex items-center justify-center text-4xl"
-            style={{ background: `linear-gradient(160deg, ${accent}15, ${accent}05)` }}
+            style={{
+              background: `linear-gradient(160deg, ${profileAccent}15, ${profileAccent}05)`,
+            }}
           >
             🌸
           </div>
@@ -768,8 +788,8 @@ export default function LysMigScreen({
               onClick={onOpenBlomst}
               className="mt-3 rounded-xl py-2 px-4 text-xs font-bold text-white self-start transition-all duration-200 active:scale-[0.97]"
               style={{
-                background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
-                boxShadow: !flowerFilledThisWeek ? `0 4px 12px ${accent}40` : undefined,
+                background: `linear-gradient(135deg, ${profileAccent}, ${profileAccent}cc)`,
+                boxShadow: !flowerFilledThisWeek ? `0 4px 12px ${profileAccent}40` : undefined,
               }}
             >
               {flowerFilledThisWeek ? 'Opdater blomst' : 'Åbn blomst →'}
@@ -798,9 +818,12 @@ export default function LysMigScreen({
         {sendState === 'sent' ? (
           <div
             className="rounded-2xl px-4 py-4 text-center"
-            style={{ backgroundColor: `${accent}14`, border: `1px solid ${accent}30` }}
+            style={{
+              backgroundColor: `${profileAccent}14`,
+              border: `1px solid ${profileAccent}30`,
+            }}
           >
-            <p className="text-sm font-bold" style={{ color: accent }}>
+            <p className="text-sm font-bold" style={{ color: profileAccent }}>
               Sendt ✓
             </p>
             <p className="text-xs mt-1" style={{ color: subtext }}>
@@ -816,8 +839,8 @@ export default function LysMigScreen({
               rows={3}
               className="w-full rounded-2xl px-4 py-3 text-sm resize-none focus:outline-none transition-colors mb-3"
               style={{
-                backgroundColor: `${accent}10`,
-                border: `1px solid ${accent}25`,
+                backgroundColor: `${profileAccent}10`,
+                border: `1px solid ${profileAccent}25`,
                 color: tokens.text,
               }}
             />
@@ -830,8 +853,8 @@ export default function LysMigScreen({
               onClick={() => void sendToStaff()}
               className="w-full rounded-2xl py-3.5 text-sm font-bold text-white transition-all duration-200 active:scale-[0.98] disabled:opacity-40"
               style={{
-                background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
-                boxShadow: staffMsg.trim() ? `0 4px 16px ${accent}35` : undefined,
+                background: `linear-gradient(135deg, ${profileAccent}, ${profileAccent}cc)`,
+                boxShadow: staffMsg.trim() ? `0 4px 16px ${profileAccent}35` : undefined,
               }}
             >
               {sendState === 'sending' ? 'Sender…' : 'Send besked'}

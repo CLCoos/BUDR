@@ -10,8 +10,22 @@
  * --font-budr-wordmark, --font-landing-body
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { BudrLogo } from '@/components/brand/BudrLogo';
+
+const SPLASH_SEEN_KEY = 'budr-care-entry-splash-seen';
+
+const HINTS_LEFT = [
+  'Daglig aktivitetsstøtte',
+  'Pårørendeinformation',
+  'Indsigt i forløbet',
+] as const;
+
+const HINTS_RIGHT = [
+  'Borgeroversigt og journaler',
+  'Vagtplanlægning',
+  'Intern beskedgivning',
+] as const;
 
 export default function CareEntrySplit() {
   const [hovered, setHovered] = useState<'left' | 'right' | null>(null);
@@ -19,14 +33,37 @@ export default function CareEntrySplit() {
   const [splashFading, setSplashFading] = useState(false);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useLayoutEffect(() => {
+    try {
+      if (sessionStorage.getItem(SPLASH_SEEN_KEY)) {
+        setShowSplash(false);
+      }
+    } catch {
+      /* private mode / storage blocked */
+    }
+  }, []);
+
   useEffect(() => {
-    const startFade = window.setTimeout(() => setSplashFading(true), 1500);
-    const removeSplash = window.setTimeout(() => setShowSplash(false), 1950);
+    if (!showSplash) return undefined;
+    if (typeof window === 'undefined') return undefined;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setShowSplash(false);
+      return undefined;
+    }
+    const startFade = window.setTimeout(() => setSplashFading(true), 480);
+    const removeSplash = window.setTimeout(() => {
+      try {
+        sessionStorage.setItem(SPLASH_SEEN_KEY, '1');
+      } catch {
+        /* ignore */
+      }
+      setShowSplash(false);
+    }, 880);
     return () => {
       window.clearTimeout(startFade);
       window.clearTimeout(removeSplash);
     };
-  }, []);
+  }, [showSplash]);
 
   useEffect(() => {
     return () => {
@@ -45,7 +82,7 @@ export default function CareEntrySplit() {
   const handleMouseLeave = (side: 'left' | 'right') => {
     hoverTimer.current = setTimeout(() => {
       setHovered((current) => (current === side ? null : current));
-    }, 2000);
+    }, 380);
   };
 
   return (
@@ -58,63 +95,15 @@ export default function CareEntrySplit() {
         </div>
       )}
 
-      {/* ── Mobile layout ── */}
-      <div className="care-entry-mobile">
-        <section className="care-entry-mobile-top">
-          <div className="care-entry-content">
-            <BudrLogo size={52} dark showWordmark />
-            <h1>Til borgere og pårørende</h1>
-            <p>Læs om BUDR Lys og hvad vi tilbyder</p>
-            <a href="/institutioner" className="budr-cta-dark">
-              Læs mere →
-            </a>
-          </div>
-        </section>
-        <section className="care-entry-mobile-bottom">
-          <div className="care-entry-content">
-            <BudrLogo size={52} showWordmark />
-            <h2>Care Portal</h2>
-            <span
-              style={{
-                display: 'block',
-                width: '40px',
-                height: '2px',
-                background: '#2dd4a0',
-                marginTop: '-4px',
-                marginBottom: '12px',
-                borderRadius: '2px',
-              }}
-            />
-            <p>Til dig der arbejder i socialpsykiatrien</p>
-            <a href="/care-portal-login" className="budr-cta-green">
-              Log ind →
-            </a>
-          </div>
-        </section>
-      </div>
-
-      {/* ── Desktop layout ── */}
-      <div
-        className="care-entry-desktop"
-        style={{ position: 'relative', display: 'flex', width: '100%', minHeight: '100vh' }}
-      >
-        {/* Left panel */}
+      <div className="care-entry-panels">
         <section
-          className="care-entry-left budr-panel-left"
-          style={{ flex: 1, position: 'relative', overflow: 'hidden' }}
+          className="care-entry-panel care-entry-panel--left"
           onMouseEnter={() => handleMouseEnter('left')}
           onMouseLeave={() => handleMouseLeave('left')}
         >
           <svg
-            aria-hidden="true"
-            style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              opacity: 0.07,
-              pointerEvents: 'none',
-            }}
+            className="care-entry-panel-grid-svg care-entry-panel-grid-svg--left"
+            aria-hidden
             xmlns="http://www.w3.org/2000/svg"
           >
             <defs>
@@ -125,77 +114,33 @@ export default function CareEntrySplit() {
             <rect width="100%" height="100%" fill="url(#grid-left)" />
           </svg>
           <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'rgba(45,212,160,0.04)',
-              opacity: hovered === 'left' ? 1 : 0,
-              transition: 'opacity 0.3s ease',
-              pointerEvents: 'none',
-              zIndex: 1,
-            }}
+            className={`care-entry-panel-shade care-entry-panel-shade--left ${hovered === 'left' ? 'is-visible' : ''}`}
           />
           <div className="budr-panel-content budr-fade-in">
             <BudrLogo size={56} dark showWordmark />
-            <h1
-              style={{
-                fontSize: 'clamp(1.6rem, 3vw, 2.4rem)',
-                fontWeight: 700,
-                color: '#ffffff',
-                marginBottom: '8px',
-                lineHeight: 1.2,
-              }}
-            >
+            <h1 className="care-entry-deck-title care-entry-deck-title--on-dark">
               Til borgere og pårørende
             </h1>
-            <p
-              style={{
-                fontSize: '0.9rem',
-                color: 'rgba(255,255,255,0.5)',
-                marginBottom: '28px',
-              }}
-            >
+            <p className="care-entry-deck-lede care-entry-deck-lede--on-dark">
               Læs om BUDR Lys og hvad vi tilbyder
             </p>
             <a href="/institutioner" className="budr-cta-dark">
               Læs mere →
             </a>
-            <div
-              className="budr-feature-hints"
-              style={{
-                display: 'flex',
-                flexDirection: 'row',
-                gap: '16px',
-                marginTop: '20px',
-                flexWrap: 'wrap',
-              }}
-            >
-              <span
-                className="budr-feature-hint budr-feature-hint-dark"
-                style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
-              >
-                <span className="budr-feature-hint-dot" />
-                Daglig aktivitetsstøtte
-              </span>
-              <span
-                className="budr-feature-hint budr-feature-hint-dark"
-                style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
-              >
-                <span className="budr-feature-hint-dot" />
-                Pårørendeinformation
-              </span>
-              <span
-                className="budr-feature-hint budr-feature-hint-dark"
-                style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
-              >
-                <span className="budr-feature-hint-dot" />
-                Indsigt i forløbet
-              </span>
+            <div className="budr-feature-hints budr-feature-hints--entry-row">
+              {HINTS_LEFT.map((label) => (
+                <span
+                  key={label}
+                  className="budr-feature-hint budr-feature-hint-dark budr-feature-hint--row"
+                >
+                  <span className="budr-feature-hint-dot" />
+                  {label}
+                </span>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* Midter-orb — absolut på container niveau */}
         <div className="budr-divider" aria-hidden>
           <div className="budr-divider-line" />
           <div className="budr-divider-orb">
@@ -204,23 +149,14 @@ export default function CareEntrySplit() {
           <div className="budr-divider-line" />
         </div>
 
-        {/* Right panel */}
         <section
-          className="care-entry-right budr-panel-right"
-          style={{ flex: 1, position: 'relative', overflow: 'hidden' }}
+          className="care-entry-panel care-entry-panel--right"
           onMouseEnter={() => handleMouseEnter('right')}
           onMouseLeave={() => handleMouseLeave('right')}
         >
           <svg
-            aria-hidden="true"
-            style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              opacity: 0.06,
-              pointerEvents: 'none',
-            }}
+            className="care-entry-panel-grid-svg care-entry-panel-grid-svg--right"
+            aria-hidden
             xmlns="http://www.w3.org/2000/svg"
           >
             <defs>
@@ -231,81 +167,28 @@ export default function CareEntrySplit() {
             <rect width="100%" height="100%" fill="url(#grid-right)" />
           </svg>
           <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'rgba(45,212,160,0.05)',
-              opacity: hovered === 'right' ? 1 : 0,
-              transition: 'opacity 0.3s ease',
-              pointerEvents: 'none',
-              zIndex: 1,
-            }}
+            className={`care-entry-panel-shade care-entry-panel-shade--right ${hovered === 'right' ? 'is-visible' : ''}`}
           />
           <div className="budr-panel-content budr-fade-in">
             <BudrLogo size={56} showWordmark />
-            <h2
-              style={{
-                fontSize: 'clamp(1.6rem, 3vw, 2.4rem)',
-                fontWeight: 700,
-                color: '#0f1117',
-                marginBottom: '8px',
-              }}
-            >
-              Care Portal
-            </h2>
-            <span
-              style={{
-                display: 'block',
-                width: '40px',
-                height: '2px',
-                background: '#2dd4a0',
-                marginBottom: '12px',
-                borderRadius: '2px',
-              }}
-            />
-            <p
-              style={{
-                fontSize: '0.9rem',
-                color: 'rgba(15,17,23,0.45)',
-                marginBottom: '28px',
-              }}
-            >
+            <h2 className="care-entry-deck-title care-entry-deck-title--on-light">Care Portal</h2>
+            <span className="care-entry-accent-rule care-entry-accent-rule--deck" aria-hidden />
+            <p className="care-entry-deck-lede care-entry-deck-lede--on-light">
               Til dig der arbejder i socialpsykiatrien
             </p>
             <a href="/care-portal-login" className="budr-cta-green">
               Log ind →
             </a>
-            <div
-              className="budr-feature-hints"
-              style={{
-                display: 'flex',
-                flexDirection: 'row',
-                gap: '16px',
-                marginTop: '20px',
-                flexWrap: 'wrap',
-              }}
-            >
-              <span
-                className="budr-feature-hint budr-feature-hint-light"
-                style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
-              >
-                <span className="budr-feature-hint-dot" />
-                Borgeroversigt og journaler
-              </span>
-              <span
-                className="budr-feature-hint budr-feature-hint-light"
-                style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
-              >
-                <span className="budr-feature-hint-dot" />
-                Vagtplanlægning
-              </span>
-              <span
-                className="budr-feature-hint budr-feature-hint-light"
-                style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
-              >
-                <span className="budr-feature-hint-dot" />
-                Intern beskedgivning
-              </span>
+            <div className="budr-feature-hints budr-feature-hints--entry-row">
+              {HINTS_RIGHT.map((label) => (
+                <span
+                  key={label}
+                  className="budr-feature-hint budr-feature-hint-light budr-feature-hint--row"
+                >
+                  <span className="budr-feature-hint-dot" />
+                  {label}
+                </span>
+              ))}
             </div>
           </div>
         </section>

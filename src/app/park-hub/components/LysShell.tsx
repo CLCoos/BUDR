@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { useResidentSession } from '@/hooks/useResidentSession';
 import { trackEvent } from '@/lib/analytics';
 import { tryEarnFirstChatBadge } from '@/lib/residentBadgeSync';
-import { getLysPhase, lysTheme } from '../lib/lysTheme';
+import { getLysPhase, lysParkHubShell, lysTheme } from '../lib/lysTheme';
 import type { LysFlowOverlay } from '../lib/lysOverlay';
 import { useLysConversation } from '../hooks/useLysConversation';
 import { useSpeech } from '../hooks/useSpeech';
@@ -55,8 +55,12 @@ export default function LysShell({
   const [simpleMode, setSimpleMode] = useState(false);
 
   const phase = useMemo(() => getLysPhase(now), [now]);
-  const tokens = useMemo(() => lysTheme(phase), [phase]);
-  const accent = tokens.accent;
+  /** Fuldskærms-flows (stemning, sanser, …) følger døgnet */
+  const ambientTokens = useMemo(() => lysTheme(phase), [phase]);
+  const ambientAccent = ambientTokens.accent;
+  /** Faner under lys shell-baggrund — altid mørk tekst / læsbare kort */
+  const shellTokens = useMemo(() => lysParkHubShell(), []);
+  const shellAccent = shellTokens.accent;
 
   const session = useResidentSession();
 
@@ -192,7 +196,7 @@ export default function LysShell({
         className="min-h-dvh font-sans transition-colors duration-300"
         style={{ backgroundColor: '#F7F5F1', color: '#1A1814' }}
       >
-        <LysStatusChrome tokens={tokens} isDemoMode={isDemoMode} />
+        <LysStatusChrome tokens={shellTokens} isDemoMode={isDemoMode} />
         <div
           className="mx-auto max-w-lg transition-all duration-200"
           style={{ paddingBottom: 'calc(5rem + max(1rem, env(safe-area-inset-bottom, 0px)))' }}
@@ -238,8 +242,8 @@ export default function LysShell({
                 firstName={firstName}
                 initials={initials}
                 residentId={residentId}
-                tokens={tokens}
-                accent={accent}
+                tokens={shellTokens}
+                accent={shellAccent}
                 phase={phase}
                 now={now}
                 reducedMotion={reducedMotion}
@@ -255,14 +259,14 @@ export default function LysShell({
               />
             )}
 
-            {tab === 'dag' && <LysDagTab tokens={tokens} accent={accent} />}
+            {tab === 'dag' && <LysDagTab tokens={shellTokens} accent={shellAccent} />}
 
-            {tab === 'journal' && <LysJournalTab tokens={tokens} accent={accent} />}
+            {tab === 'journal' && <LysJournalTab tokens={shellTokens} accent={shellAccent} />}
 
             {tab === 'mig' && (
               <LysMigScreen
-                tokens={tokens}
-                accent={accent}
+                tokens={shellTokens}
+                accent={shellAccent}
                 firstName={firstName}
                 initials={initials}
                 reducedMotion={reducedMotion}
@@ -294,11 +298,11 @@ export default function LysShell({
         {overlay === 'mood' && (
           <div
             className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: tokens.bg }}
+            style={{ backgroundColor: ambientTokens.bg }}
           >
             <LysStemningskort
-              tokens={tokens}
-              accent={accent}
+              tokens={ambientTokens}
+              accent={ambientAccent}
               firstName={firstName}
               reducedMotion={reducedMotion}
               onBack={() => setOverlay(null)}
@@ -310,11 +314,11 @@ export default function LysShell({
         {overlay === 'flower' && (
           <div
             className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: tokens.bg }}
+            style={{ backgroundColor: ambientTokens.bg }}
           >
             <LysBlomst
-              tokens={tokens}
-              accent={accent}
+              tokens={ambientTokens}
+              accent={ambientAccent}
               firstName={firstName}
               reducedMotion={reducedMotion}
               onBack={() => setOverlay(null)}
@@ -326,11 +330,11 @@ export default function LysShell({
         {overlay === 'thought' && (
           <div
             className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: tokens.bg }}
+            style={{ backgroundColor: ambientTokens.bg }}
           >
             <LysTankefanger
-              tokens={tokens}
-              accent={accent}
+              tokens={ambientTokens}
+              accent={ambientAccent}
               firstName={firstName}
               reducedMotion={reducedMotion}
               speak={speakSafe}
@@ -345,11 +349,11 @@ export default function LysShell({
         {overlay === 'goals' && (
           <div
             className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: tokens.bg }}
+            style={{ backgroundColor: ambientTokens.bg }}
           >
             <LysMaaltrappe
-              tokens={tokens}
-              accent={accent}
+              tokens={ambientTokens}
+              accent={ambientAccent}
               firstName={firstName}
               reducedMotion={reducedMotion}
               onBack={() => setOverlay(null)}
@@ -360,11 +364,11 @@ export default function LysShell({
         {overlay === 'dailyWin' && (
           <div
             className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: tokens.bg }}
+            style={{ backgroundColor: ambientTokens.bg }}
           >
             <LysDagligSejr
-              tokens={tokens}
-              accent={accent}
+              tokens={ambientTokens}
+              accent={ambientAccent}
               firstName={firstName}
               onBack={() => setOverlay(null)}
             />
@@ -374,20 +378,24 @@ export default function LysShell({
         {overlay === 'sanser' && (
           <div
             className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: tokens.bg }}
+            style={{ backgroundColor: ambientTokens.bg }}
           >
-            <LysSansekasse tokens={tokens} accent={accent} onClose={() => setOverlay(null)} />
+            <LysSansekasse
+              tokens={ambientTokens}
+              accent={ambientAccent}
+              onClose={() => setOverlay(null)}
+            />
           </div>
         )}
 
         {overlay === 'aac' && (
           <div
             className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: tokens.bg }}
+            style={{ backgroundColor: ambientTokens.bg }}
           >
             <LysAACBoard
-              tokens={tokens}
-              accent={accent}
+              tokens={ambientTokens}
+              accent={ambientAccent}
               residentId={residentId}
               onClose={() => setOverlay(null)}
             />
@@ -499,8 +507,8 @@ export default function LysShell({
 
         <LysOnboarding
           residentId={residentId}
-          tokens={tokens}
-          accent={accent}
+          tokens={shellTokens}
+          accent={shellAccent}
           reducedMotion={reducedMotion}
           hidden={!!overlay}
           skip={isDemoMode}

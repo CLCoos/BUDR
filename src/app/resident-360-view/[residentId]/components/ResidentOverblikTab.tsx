@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { copenhagenStartOfTodayUtcIso } from '@/lib/copenhagenDay';
-import { logPortalAudit } from '@/lib/auditClient';
 import type { MedDefinition } from './types';
 import WriteJournalEntry from './WriteJournalEntry';
 import GoalProgress from '../../components/GoalProgress';
@@ -116,8 +115,6 @@ export default function ResidentOverblikTab({
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [concernNotes, setConcernNotes] = useState<ConcernNoteRow[]>([]);
   const [showVoiceTranscript, setShowVoiceTranscript] = useState(false);
-  const [simpleMode, setSimpleMode] = useState(false);
-  const [savingSimpleMode, setSavingSimpleMode] = useState(false);
   const [journalList, setJournalList] = useState<JournalEntry[]>(journalEntries);
 
   useEffect(() => {
@@ -192,51 +189,6 @@ export default function ResidentOverblikTab({
       cancelled = true;
     };
   }, [residentId]);
-
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      const supabase = createClient();
-      if (!supabase) return;
-      const { data, error } = await supabase
-        .from('care_residents')
-        .select('simple_mode')
-        .eq('user_id', residentId)
-        .maybeSingle();
-      if (cancelled) return;
-      if (!error && data) setSimpleMode(Boolean((data as { simple_mode?: boolean }).simple_mode));
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [residentId]);
-
-  async function toggleSimpleMode() {
-    const nextValue = !simpleMode;
-    const supabase = createClient();
-    if (!supabase) {
-      toast.error('Forbindelsesfejl');
-      return;
-    }
-    setSavingSimpleMode(true);
-    const { error } = await supabase
-      .from('care_residents')
-      .update({ simple_mode: nextValue })
-      .eq('user_id', residentId);
-    setSavingSimpleMode(false);
-    if (error) {
-      toast.error('Kunne ikke opdatere forenklet visning');
-      return;
-    }
-    setSimpleMode(nextValue);
-    void logPortalAudit({
-      action: 'resident.updated',
-      tableName: 'care_residents',
-      recordId: residentId,
-      metadata: { simple_mode: nextValue },
-    });
-    toast.success(nextValue ? 'Forenklet visning aktiveret' : 'Forenklet visning deaktiveret');
-  }
 
   const journalDrafts = journalList.filter((e) => e.journal_status === 'kladde');
   const journalGodkendt = journalList.filter((e) => e.journal_status !== 'kladde');

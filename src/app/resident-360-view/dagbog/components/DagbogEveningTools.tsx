@@ -155,7 +155,7 @@ export default function DagbogEveningTools({ targets }: Props) {
           </h2>
           <p className="mt-1 text-xs leading-relaxed" style={{ color: 'var(--cp-muted, #6b7280)' }}>
             Dagens hurtige notater og kladder (med «Vis i dagbog») er jeres egne stikord. Her kan I
-            lade AI samle dem til ét sammenhængende notat med «Aktivitet/Handling» og «Refleksion».
+            lade AI samle dem til ét sammenhængende notat med «Handling/aktivitet» og «Refleksion».
             Tjek altid teksten før I gemmer som godkendt journal.
           </p>
         </div>

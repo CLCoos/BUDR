@@ -3,7 +3,7 @@ module.exports = {
   content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
   safelist: [
     { pattern: /^(bg|text|border)-(midnight|sunrise|aurora)-[a-z0-9-]+(\/[0-9]+)?$/ },
-    { pattern: /^gradient-midnight$/ },
+    /* `gradient-midnight` er @layer utility i `src/styles/tailwind.css` — ikke en JIT-klasse; safelist-pattern matchede aldrig. */
   ],
   theme: {
     extend: {

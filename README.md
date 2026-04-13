@@ -27,6 +27,8 @@ Underneath: Next.js 15 app (TypeScript, Tailwind). Marketing + Care Portal + Lys
   ```
 3. Open [http://localhost:4028](http://localhost:4028) with your browser to see the result.
 
+**Lighthouse (performance, marketing-side uden forsidesplash):** `npm run build`, start prod på 4028 (`npx next start -p 4028`), derefter i et andet terminal: `npm run lighthouse:institutioner` — skriver `lighthouse-institutioner.html` i projektroden.
+
 ## 📁 Project Structure
 
 ```

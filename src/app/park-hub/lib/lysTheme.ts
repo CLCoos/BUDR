@@ -23,6 +23,28 @@ export function getLysPhase(date: Date): LysPhase {
   return 'night';
 }
 
+/**
+ * Lys-parkens scrollbare indhold ligger altid på lys baggrund (#F7F5F1 i LysShell).
+ * Brug disse tokens til faner (Hjem/Mig/Kalender/Journal), så tekst/kort ikke følger
+ * aften/nat-tema (lyse farver på lys baggrund).
+ */
+export function lysParkHubShell(): LysThemeTokens {
+  return {
+    bg: '#F7F5F1',
+    accent: '#2D5BE3',
+    text: '#1A1814',
+    textMuted: 'rgba(26, 24, 20, 0.62)',
+    cardBg: '#FFFFFF',
+    cardBorder: '#E8E3DA',
+    gradientFrom: '#F7F5F1',
+    gradientTo: 'rgba(235, 240, 253, 0.72)',
+    accentSoft: '#EBF0FD',
+    accentSoftText: '#1A3FAF',
+    shadow: '0 4px 24px rgba(45,91,227,0.08), 0 1px 8px rgba(0,0,0,0.05)',
+    glowShadow: '0 8px 40px rgba(45,91,227,0.18)',
+  };
+}
+
 export function lysTheme(phase: LysPhase): LysThemeTokens {
   switch (phase) {
     case 'morning':

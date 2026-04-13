@@ -48,6 +48,30 @@ const CATEGORY_CONFIG: CategoryConfig[] = [
   },
 ];
 
+/** Parser AI-output: Handling/aktivitet eller ældre Aktivitet/Handling + Refleksion */
+function parseDoegnPolishedSections(
+  polished: string
+): { handling: string; refleksion: string } | null {
+  const t = polished.trim();
+  const fullMatch = t.match(
+    /^(?:Handling\/aktivitet|Aktivitet\/Handling)\s*\n([\s\S]*?)\n\s*Refleksion\s*\n([\s\S]*)$/i
+  );
+  if (fullMatch) {
+    return { handling: fullMatch[1]!.trim(), refleksion: fullMatch[2]!.trim() };
+  }
+  const splitAt = t.search(/\n\s*Refleksion\s*\n/i);
+  if (splitAt >= 0) {
+    let handling = t.slice(0, splitAt).trim();
+    const refleksion = t
+      .slice(splitAt)
+      .replace(/^\s*Refleksion\s*\n/i, '')
+      .trim();
+    handling = handling.replace(/^(?:Handling\/aktivitet|Aktivitet\/Handling)\s*\n/i, '').trim();
+    return { handling, refleksion };
+  }
+  return null;
+}
+
 interface Props {
   residentId: string;
   residentName: string;
@@ -78,7 +102,7 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
 
   const composedText = useMemo(() => {
     if (isDoegnnotat) {
-      return `Aktivitet/Handling\n${doegnHandling.trim()}\n\nRefleksion\n${doegnRefleksion.trim()}`.trim();
+      return `Handling/aktivitet\n${doegnHandling.trim()}\n\nRefleksion\n${doegnRefleksion.trim()}`.trim();
     }
     const t = title.trim();
     const b = body.trim();
@@ -132,12 +156,10 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
       if (data.text?.trim()) {
         const polished = data.text.trim();
         if (isDoegnnotat) {
-          const parts = polished.split(/Refleksion/i);
-          if (parts.length >= 2) {
-            const handling = parts[0]!.replace(/Aktivitet\/Handling/i, '').trim();
-            const refleksion = parts.slice(1).join('Refleksion').trim();
-            setDoegnHandling(handling);
-            setDoegnRefleksion(refleksion);
+          const parsed = parseDoegnPolishedSections(polished);
+          if (parsed) {
+            setDoegnHandling(parsed.handling);
+            setDoegnRefleksion(parsed.refleksion);
           } else {
             setDoegnHandling(polished);
           }
@@ -403,7 +425,7 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
                         className={`mb-1.5 text-sm font-bold ${carePortalDark ? '' : 'text-gray-800'}`}
                         style={carePortalDark ? { color: 'var(--cp-text)' } : undefined}
                       >
-                        Aktivitet/Handling
+                        Handling/aktivitet
                       </p>
                       <textarea
                         value={doegnHandling}
@@ -499,7 +521,7 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
                   style={carePortalDark ? { color: 'var(--cp-muted2)' } : undefined}
                 >
                   {isDoegnnotat
-                    ? 'Døgnnotat har faste sektioner med låste overskrifter. Brug Aktivitet/Handling til fakta og Refleksion til faglig vurdering.'
+                    ? 'Døgnnotat har faste sektioner med låste overskrifter. Brug Handling/aktivitet til fakta og Refleksion til refleksion (åben, undrende — ikke nye konklusioner).'
                     : category === 'Andet'
                       ? 'Andet har ingen prædefinerede overskrifter. Skriv frit med valgfri overskrift.'
                       : 'Overskriften er foreslået ud fra kategori og kan redigeres. Brug brødteksten til faglige observationer og opfølgning.'}

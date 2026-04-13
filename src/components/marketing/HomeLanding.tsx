@@ -1,5 +1,7 @@
 'use client';
 
+import '@/app/budr-landing.css';
+import '@/app/budr-landing-longform.css';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';

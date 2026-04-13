@@ -1,0 +1,395 @@
+/* Care Portal entry split — kun forsiden; hold `/` let uden hele budr-landing.css */
+
+.care-entry-root {
+  min-height: 100dvh;
+  background: var(--cp-bg);
+  color: var(--cp-text);
+  position: relative;
+}
+
+.care-entry-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(255 255 255);
+  opacity: 1;
+  transition: opacity 320ms ease;
+}
+
+.care-entry-splash-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .care-entry-splash {
+    transition: none;
+  }
+}
+
+/* Ét DOM-træ: kolonne på mobil, række på desktop — undgår duplikat-indhold */
+.care-entry-panels {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.care-entry-panel {
+  flex: 1 1 50%;
+  min-height: 50dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.care-entry-panel--left {
+  background: var(--cp-bg);
+}
+
+.care-entry-panel--right {
+  background: rgb(255 255 255);
+}
+
+.care-entry-panels .budr-divider {
+  display: none;
+}
+
+.budr-feature-hints--entry-row {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .care-entry-panel .care-entry-deck-title {
+    font-size: clamp(1.85rem, 6vw, 2.75rem);
+  }
+
+  .care-entry-panel--right .care-entry-accent-rule--deck {
+    margin-top: -4px;
+    margin-bottom: 12px;
+  }
+}
+
+.care-entry-accent-rule {
+  display: block;
+  width: 40px;
+  height: 2px;
+  background: var(--cp-green, #2dd4a0);
+  border-radius: 2px;
+}
+
+/* Desktop deck: accent under titel */
+.care-entry-accent-rule--deck {
+  margin-bottom: 12px;
+}
+
+.care-entry-deck-title {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 700;
+  margin-top: 1.25rem;
+  margin-bottom: 8px;
+  line-height: 1.2;
+  font-family: var(--font-landing-body, 'DM Sans', sans-serif);
+}
+
+.care-entry-deck-title--on-dark {
+  color: #ffffff;
+}
+
+.care-entry-deck-title--on-light {
+  color: #0f1117;
+}
+
+.care-entry-deck-lede {
+  font-size: 0.9rem;
+  margin-bottom: 28px;
+  font-family: var(--font-landing-body, 'DM Sans', sans-serif);
+}
+
+.care-entry-deck-lede--on-dark {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.care-entry-deck-lede--on-light {
+  color: rgba(15, 17, 23, 0.45);
+}
+
+.care-entry-panel-grid-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.care-entry-panel-grid-svg--left {
+  opacity: 0.07;
+}
+
+.care-entry-panel-grid-svg--right {
+  opacity: 0.06;
+}
+
+.care-entry-panel-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  opacity: 0;
+}
+
+.care-entry-panel-shade.is-visible {
+  opacity: 1;
+}
+
+.care-entry-panel-shade--left {
+  background: rgba(45, 212, 160, 0.04);
+}
+
+.care-entry-panel-shade--right {
+  background: rgba(45, 212, 160, 0.05);
+}
+
+/* Desktop: feature hints som vandrette chips (aktiveres i @media min-width 768px) */
+
+.budr-feature-hint--row {
+  gap: 5px;
+}
+
+@media (min-width: 768px) {
+  .care-entry-panels {
+    flex-direction: row;
+    position: relative;
+    min-height: 100dvh;
+  }
+
+  .care-entry-panel {
+    flex: 1;
+    min-width: 0;
+    min-height: 100dvh;
+  }
+
+  .care-entry-panel--left {
+    background: linear-gradient(135deg, #0b0e15 0%, #111827 100%);
+    animation: careEntryLeftIn 600ms ease both;
+  }
+
+  .care-entry-panel--right {
+    background: linear-gradient(135deg, #f4f6fb 0%, #eaeff8 100%);
+    animation: careEntryRightIn 600ms ease 150ms both;
+  }
+
+  .care-entry-panels .budr-divider {
+    display: flex;
+  }
+
+  .budr-feature-hints--entry-row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 20px;
+    justify-content: center;
+  }
+
+  .care-entry-circle-left,
+  .care-entry-circle-right {
+    display: none;
+  }
+}
+
+@keyframes budr-entry {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.budr-logo-animate {
+  animation: budr-entry 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .budr-logo-animate,
+  .budr-fade-in {
+    animation: none;
+  }
+
+  .care-entry-panel--left,
+  .care-entry-panel--right {
+    animation: none;
+  }
+}
+
+@keyframes careEntryLeftIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes careEntryRightIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes careEntryLogoIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.budr-panel-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.5rem;
+  max-width: 30rem;
+}
+
+.budr-divider {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  pointer-events: none;
+}
+
+.budr-divider-line {
+  width: 1px;
+  height: 80px;
+  background: linear-gradient(to bottom, transparent, rgba(45, 212, 160, 0.3), transparent);
+}
+
+.budr-divider-orb {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #0f1117;
+  border: 1px solid rgba(45, 212, 160, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(45, 212, 160, 0.12);
+}
+
+.budr-cta-dark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  border-radius: 999px;
+  padding: 14px 28px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-landing-body, 'DM Sans', sans-serif);
+  text-decoration: none;
+  border: 1.5px solid rgba(255, 255, 255, 0.75);
+  color: #ffffff;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.01em;
+}
+
+.budr-cta-dark:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #ffffff;
+}
+
+.budr-cta-green {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  border-radius: 999px;
+  padding: 14px 28px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-landing-body, 'DM Sans', sans-serif);
+  text-decoration: none;
+  border: 0;
+  color: #ffffff;
+  background: var(--cp-green, #2dd4a0);
+  box-shadow: 0 4px 20px rgba(45, 212, 160, 0.38);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.01em;
+}
+
+.budr-cta-green:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 28px rgba(45, 212, 160, 0.48);
+}
+
+.budr-feature-hints {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 28px;
+  align-items: center;
+}
+
+.budr-feature-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-family: var(--font-landing-body, 'DM Sans', sans-serif);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  opacity: 0.65;
+}
+
+.budr-feature-hint-dark {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.budr-feature-hint-light {
+  color: #4b5563;
+}
+
+.budr-feature-hint-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--cp-green, #2dd4a0);
+}
+
+.budr-fade-in {
+  animation: budr-entry 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}

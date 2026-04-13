@@ -551,13 +551,13 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
                 <p className="intro-card-p">
                   Udvalgte funktioner kan kalde eksterne sprogmodeller for udkast og forslag (fx
                   faglig assistent, journalfortolkning eller planforslag). I produktion bruger
-                  relevante API-ruter typisk <strong>Anthropic</strong>
-                  (modelleverandør uden for EU). Formål, datasæt, prompt-behandling og overførsel
-                  reguleres i <strong>databehandleraftalen</strong>; se også{' '}
+                  relevante API-ruter typisk <strong>Anthropic</strong> (modelleverandør uden for
+                  EU). Formål, datasæt, prompt-behandling og overførsel reguleres i{' '}
+                  <strong>databehandleraftalen</strong>. Se også{' '}
                   <Link href="/privacy" style={{ color: 'var(--amber-lt)' }}>
                     privatlivspolitikken
                   </Link>{' '}
-                  om underdatabehandlere og AI.
+                  for oplysninger om underdatabehandlere og brug af AI.
                 </p>
               </div>
             </div>

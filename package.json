@@ -48,6 +48,7 @@
     "lint:fix": "next lint --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,md,json}\"",
     "serve": "next start",
+    "lighthouse:institutioner": "npx --yes lighthouse@11 http://localhost:4028/institutioner --only-categories=performance --preset=desktop --chrome-flags=\"--headless --no-sandbox --disable-gpu\" --output=html --output-path=./lighthouse-institutioner.html",
     "type-check": "tsc --noEmit",
     "test": "vitest run"
   },

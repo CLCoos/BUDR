@@ -3,7 +3,7 @@
 import { type RefObject, useEffect } from 'react';
 
 /**
- * Matcher `budr-landing.css`: `.fi` starter usynlig; `.vis` aktiverer fade-in.
+ * Matcher marketing-CSS (`.budr-landing` i `budr-landing.css`): `.fi` starter usynlig; `.vis` aktiverer fade-in.
  * Forsiden (`HomeLanding`) bruger samme logik — hold synkad om du ændrer threshold her.
  */
 export function useBudrLandingFadeIn(rootRef: RefObject<HTMLElement | null>) {

@@ -1,8 +1,24 @@
 import React from 'react';
 import type { Metadata, Viewport } from 'next';
+import { DM_Sans, DM_Serif_Display } from 'next/font/google';
 import AnalyticsGate from '@/components/AnalyticsGate';
 import SonnerToaster from '@/components/SonnerToaster';
 import './globals.css';
+
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  display: 'swap',
+  weight: ['300', '400', '500', '600'],
+  variable: '--font-landing-body',
+});
+
+const dmSerifDisplay = DM_Serif_Display({
+  subsets: ['latin'],
+  display: 'swap',
+  weight: '400',
+  style: ['normal', 'italic'],
+  variable: '--font-budr-wordmark',
+});
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -27,7 +43,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="da">
+    <html lang="da" className={`${dmSans.variable} ${dmSerifDisplay.variable}`}>
       <body>
         <AnalyticsGate />
         {children}

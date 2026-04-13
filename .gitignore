@@ -32,6 +32,11 @@ Thumbs.db
 coverage/
 jest-test-results.json
 
+# Lighthouse (npm run lighthouse:institutioner m.m.)
+lighthouse-institutioner.html
+lighthouse-*.html
+lighthouse-*.json
+
 # Optional: if using IDEs
 .vscode/
 .idea/
