@@ -4,6 +4,7 @@ import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Plus, X, Loader2, Sparkles } from 'lucide-react';
+import { compareEditorChrome } from '@/components/journal/compareEditorChrome';
 import { JournalVersionToggle } from '@/components/journal/JournalVersionToggle';
 import { createClient } from '@/lib/supabase/client';
 import { formatJournalEntriesInsertError } from '@/lib/journalEntriesInsertError';
@@ -169,6 +170,7 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
 
   const canPolish = composedText.length > 0;
   const canSave = composedText.length > 0;
+  const versionChrome = compareEditorChrome(carePortalDark, compareMode, compareSource);
 
   function resetCompareState() {
     setCompareMode(false);
@@ -379,7 +381,7 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
           }}
         >
           <div
-            className={`w-full max-w-lg rounded-2xl shadow-2xl ${carePortalDark ? '' : 'bg-white'}`}
+            className={`flex max-h-[min(92vh,880px)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl shadow-2xl ${carePortalDark ? '' : 'bg-white'}`}
             style={
               carePortalDark
                 ? { backgroundColor: 'var(--cp-bg2)', border: '1px solid var(--cp-border)' }
@@ -388,10 +390,10 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
           >
             {/* Header */}
             <div
-              className={`flex items-center justify-between border-b px-5 py-4 ${carePortalDark ? '' : 'border-gray-100'}`}
+              className={`flex shrink-0 items-center justify-between border-b px-5 py-4 ${carePortalDark ? '' : 'border-gray-100'}`}
               style={carePortalDark ? { borderColor: 'var(--cp-border)' } : undefined}
             >
-              <div>
+              <div className="min-w-0 pr-2">
                 <h2
                   className={`text-sm font-bold ${carePortalDark ? '' : 'text-gray-900'}`}
                   style={carePortalDark ? { color: 'var(--cp-text)' } : undefined}
@@ -404,21 +406,29 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
                 >
                   {residentName}
                 </p>
-                <p
+                <details
                   className={`mt-2 text-[11px] leading-snug ${carePortalDark ? '' : 'text-gray-500'}`}
                   style={carePortalDark ? { color: 'var(--cp-muted2)' } : undefined}
                 >
-                  Standard er <strong className="font-medium">kladde</strong> — jeres egne stikord i
-                  løbet af dagen. På{' '}
-                  <Link
-                    href="/resident-360-view/dagbog"
-                    className="font-medium underline underline-offset-2"
-                    style={carePortalDark ? { color: 'var(--cp-green)' } : { color: '#0F1B2D' }}
+                  <summary
+                    className={`cursor-pointer font-medium underline-offset-2 hover:underline ${carePortalDark ? '' : 'text-gray-600'}`}
+                    style={carePortalDark ? { color: 'var(--cp-muted)' } : undefined}
                   >
-                    Aftenopsamling
-                  </Link>{' '}
-                  kan I om aftenen samle dagens kladder til ét professionelt notat med AI.
-                </p>
+                    Kladde, dagbog og Aftenopsamling
+                  </summary>
+                  <p className="mt-2">
+                    Standard er <strong className="font-medium">kladde</strong> — jeres egne stikord
+                    i løbet af dagen. På{' '}
+                    <Link
+                      href="/resident-360-view/dagbog"
+                      className="font-medium underline underline-offset-2"
+                      style={carePortalDark ? { color: 'var(--cp-green)' } : { color: '#0F1B2D' }}
+                    >
+                      Aftenopsamling
+                    </Link>{' '}
+                    kan I om aftenen samle dagens kladder til ét professionelt notat med AI.
+                  </p>
+                </details>
               </div>
               <button
                 type="button"
@@ -434,41 +444,391 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
             </div>
 
             {/* Body */}
-            <div className="space-y-4 p-5">
-              {/* Category pills */}
-              <div>
-                <span
-                  className={`mb-2 block text-xs font-medium ${carePortalDark ? '' : 'text-gray-500'}`}
-                  style={carePortalDark ? { color: 'var(--cp-muted2)' } : undefined}
-                >
-                  Kategori
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {CATEGORY_CONFIG.map((cat) => (
-                    <button
-                      key={cat.key}
-                      type="button"
-                      onClick={() => {
-                        resetCompareState();
-                        setCategory(cat.key);
-                        setError(null);
-                        setTitle(cat.titleDefault);
-                        setBody('');
-                        if (cat.key === 'Døgnnotat') {
-                          setDoegnHandling('');
-                          setDoegnRefleksion('');
+            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+              <div className="space-y-4">
+                {/* Category pills */}
+                <div>
+                  <span
+                    className={`mb-2 block text-xs font-medium ${carePortalDark ? '' : 'text-gray-500'}`}
+                    style={carePortalDark ? { color: 'var(--cp-muted2)' } : undefined}
+                  >
+                    Kategori
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {CATEGORY_CONFIG.map((cat) => (
+                      <button
+                        key={cat.key}
+                        type="button"
+                        onClick={() => {
+                          resetCompareState();
+                          setCategory(cat.key);
+                          setError(null);
+                          setTitle(cat.titleDefault);
+                          setBody('');
+                          if (cat.key === 'Døgnnotat') {
+                            setDoegnHandling('');
+                            setDoegnRefleksion('');
+                          }
+                        }}
+                        className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                          !carePortalDark
+                            ? category === cat.key
+                              ? 'bg-[#0F1B2D] text-white'
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            : ''
+                        }`}
+                        style={
+                          carePortalDark
+                            ? category === cat.key
+                              ? {
+                                  backgroundColor: 'var(--cp-green-dim)',
+                                  color: 'var(--cp-green)',
+                                  boxShadow: '0 0 0 1px rgba(45,212,160,0.2)',
+                                }
+                              : {
+                                  backgroundColor: 'var(--cp-bg3)',
+                                  color: 'var(--cp-muted)',
+                                }
+                            : undefined
                         }
-                      }}
-                      className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                      >
+                        {cat.key}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Structured note input */}
+                <div>
+                  <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                    <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
+                      <span
+                        className={`text-xs font-medium ${carePortalDark ? '' : 'text-gray-500'}`}
+                        style={carePortalDark ? { color: 'var(--cp-muted2)' } : undefined}
+                      >
+                        Notat
+                      </span>
+                      <span
+                        className={`text-[10px] tabular-nums ${carePortalDark ? '' : 'text-gray-400'}`}
+                        style={carePortalDark ? { color: 'var(--cp-muted2)' } : undefined}
+                      >
+                        {composedText.length} tegn
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                      {compareMode && (
+                        <>
+                          <JournalVersionToggle
+                            value={compareSource}
+                            onChange={setCompareSource}
+                            variant={carePortalDark ? 'portal-dark' : 'light'}
+                          />
+                          <button
+                            type="button"
+                            onClick={dismissCompare}
+                            className={`text-[11px] font-medium underline-offset-2 hover:underline ${
+                              carePortalDark ? 'text-[var(--cp-muted)]' : 'text-gray-500'
+                            }`}
+                          >
+                            Afslut sammenligning
+                          </button>
+                        </>
+                      )}
+                      <button
+                        type="button"
+                        disabled={polishing || !canPolish}
+                        onClick={() => void handlePolish()}
+                        className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                          carePortalDark
+                            ? 'border-[var(--cp-border)] text-[var(--cp-green)] hover:bg-white/5'
+                            : 'border-gray-200 text-[#0F1B2D] hover:bg-gray-50'
+                        }`}
+                      >
+                        {polishing ? (
+                          <Loader2 size={12} className="animate-spin" />
+                        ) : (
+                          <Sparkles size={12} />
+                        )}
+                        Fagliggør med AI
+                      </button>
+                    </div>
+                  </div>
+                  {compareMode && (
+                    <p
+                      className={`mb-2 flex flex-wrap items-center gap-2 text-[11px] leading-snug ${carePortalDark ? '' : 'text-gray-500'}`}
+                      style={carePortalDark ? { color: 'var(--cp-muted)' } : undefined}
+                    >
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[10px] font-medium ${
+                          carePortalDark ? '' : 'bg-gray-100 text-gray-600'
+                        }`}
+                        style={
+                          carePortalDark
+                            ? { backgroundColor: 'var(--cp-bg3)', color: 'var(--cp-text)' }
+                            : undefined
+                        }
+                      >
+                        <span
+                          className="inline-block h-2 w-2 shrink-0 rounded-full"
+                          style={{
+                            backgroundColor:
+                              compareSource === 'ai'
+                                ? carePortalDark
+                                  ? 'var(--cp-green)'
+                                  : '#0d9488'
+                                : carePortalDark
+                                  ? 'var(--cp-amber)'
+                                  : '#d97706',
+                          }}
+                          aria-hidden
+                        />
+                        {compareSource === 'ai' ? 'Redigerer AI-forslag' : 'Redigerer original'}
+                      </span>
+                      <span>
+                        Skift med knapperne ovenfor.{' '}
+                        <strong className="font-semibold">Frit redigér</strong> — det du ser,
+                        gemmes.
+                      </span>
+                    </p>
+                  )}
+                  {isDoegnnotat ? (
+                    <div className="space-y-3">
+                      <div>
+                        <p
+                          className={`mb-1.5 text-sm font-bold ${carePortalDark ? '' : 'text-gray-800'}`}
+                          style={carePortalDark ? { color: 'var(--cp-text)' } : undefined}
+                        >
+                          Handling/aktivitet
+                        </p>
+                        <textarea
+                          value={
+                            compareMode && pairOriginalDoegn && pairAiDoegn
+                              ? compareSource === 'original'
+                                ? pairOriginalDoegn.handling
+                                : pairAiDoegn.handling
+                              : doegnHandling
+                          }
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            if (compareMode && pairOriginalDoegn && pairAiDoegn) {
+                              if (compareSource === 'original') {
+                                setPairOriginalDoegn({ ...pairOriginalDoegn, handling: v });
+                              } else {
+                                setPairAiDoegn({ ...pairAiDoegn, handling: v });
+                              }
+                            } else {
+                              setDoegnHandling(v);
+                            }
+                          }}
+                          placeholder="Beskriv hvad der konkret skete i vagten…"
+                          rows={5}
+                          className={`w-full resize-y rounded-xl border px-3 py-2.5 text-sm leading-relaxed focus:outline-none ${
+                            carePortalDark ? '' : 'border-gray-200 focus:border-[#1D9E75]'
+                          } ${versionChrome.className}`}
+                          style={
+                            carePortalDark
+                              ? {
+                                  borderColor: 'var(--cp-border)',
+                                  backgroundColor: 'var(--cp-bg)',
+                                  color: 'var(--cp-text)',
+                                  ...versionChrome.style,
+                                }
+                              : versionChrome.style
+                          }
+                        />
+                      </div>
+                      <div>
+                        <p
+                          className={`mb-1.5 text-sm font-bold ${carePortalDark ? '' : 'text-gray-800'}`}
+                          style={carePortalDark ? { color: 'var(--cp-text)' } : undefined}
+                        >
+                          Refleksion
+                        </p>
+                        <textarea
+                          value={
+                            compareMode && pairOriginalDoegn && pairAiDoegn
+                              ? compareSource === 'original'
+                                ? pairOriginalDoegn.refleksion
+                                : pairAiDoegn.refleksion
+                              : doegnRefleksion
+                          }
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            if (compareMode && pairOriginalDoegn && pairAiDoegn) {
+                              if (compareSource === 'original') {
+                                setPairOriginalDoegn({ ...pairOriginalDoegn, refleksion: v });
+                              } else {
+                                setPairAiDoegn({ ...pairAiDoegn, refleksion: v });
+                              }
+                            } else {
+                              setDoegnRefleksion(v);
+                            }
+                          }}
+                          placeholder="Beskriv faglig vurdering og næste skridt…"
+                          rows={5}
+                          className={`w-full resize-y rounded-xl border px-3 py-2.5 text-sm leading-relaxed focus:outline-none ${
+                            carePortalDark ? '' : 'border-gray-200 focus:border-[#1D9E75]'
+                          } ${versionChrome.className}`}
+                          style={
+                            carePortalDark
+                              ? {
+                                  borderColor: 'var(--cp-border)',
+                                  backgroundColor: 'var(--cp-bg)',
+                                  color: 'var(--cp-text)',
+                                  ...versionChrome.style,
+                                }
+                              : versionChrome.style
+                          }
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <input
+                        value={
+                          compareMode && pairOriginalOther && pairAiOther
+                            ? compareSource === 'original'
+                              ? pairOriginalOther.title
+                              : pairAiOther.title
+                            : title
+                        }
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          if (compareMode && pairOriginalOther && pairAiOther) {
+                            if (compareSource === 'original') {
+                              setPairOriginalOther({ ...pairOriginalOther, title: v });
+                            } else {
+                              setPairAiOther({ ...pairAiOther, title: v });
+                            }
+                          } else {
+                            setTitle(v);
+                          }
+                        }}
+                        placeholder={
+                          category === 'Andet' ? 'Valgfri overskrift (kan udelades)' : 'Overskrift'
+                        }
+                        className={`w-full rounded-xl border px-3 py-2 text-sm focus:outline-none ${
+                          carePortalDark ? '' : 'border-gray-200 focus:border-[#1D9E75]'
+                        } ${versionChrome.className}`}
+                        style={
+                          carePortalDark
+                            ? {
+                                borderColor: 'var(--cp-border)',
+                                backgroundColor: 'var(--cp-bg)',
+                                color: 'var(--cp-text)',
+                                ...versionChrome.style,
+                              }
+                            : versionChrome.style
+                        }
+                      />
+                      <textarea
+                        value={
+                          compareMode && pairOriginalOther && pairAiOther
+                            ? compareSource === 'original'
+                              ? pairOriginalOther.body
+                              : pairAiOther.body
+                            : body
+                        }
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          if (compareMode && pairOriginalOther && pairAiOther) {
+                            if (compareSource === 'original') {
+                              setPairOriginalOther({ ...pairOriginalOther, body: v });
+                            } else {
+                              setPairAiOther({ ...pairAiOther, body: v });
+                            }
+                          } else {
+                            setBody(v);
+                          }
+                        }}
+                        placeholder={activeCategoryCfg.bodyPlaceholder}
+                        rows={9}
+                        // eslint-disable-next-line jsx-a11y/no-autofocus
+                        autoFocus
+                        className={`w-full resize-y rounded-xl border px-3 py-2.5 text-sm leading-relaxed focus:outline-none ${
+                          carePortalDark ? '' : 'border-gray-200 focus:border-[#1D9E75]'
+                        } ${versionChrome.className}`}
+                        style={
+                          carePortalDark
+                            ? {
+                                borderColor: 'var(--cp-border)',
+                                backgroundColor: 'var(--cp-bg)',
+                                color: 'var(--cp-text)',
+                                ...versionChrome.style,
+                              }
+                            : versionChrome.style
+                        }
+                      />
+                    </div>
+                  )}
+                  <p
+                    className={`mt-1.5 text-[11px] leading-snug ${carePortalDark ? '' : 'text-gray-400'}`}
+                    style={carePortalDark ? { color: 'var(--cp-muted2)' } : undefined}
+                  >
+                    {isDoegnnotat
+                      ? 'Døgnnotat har faste sektioner med låste overskrifter. Brug Handling/aktivitet til fakta og Refleksion til refleksion (åben, undrende — ikke nye konklusioner).'
+                      : category === 'Andet'
+                        ? 'Andet har ingen prædefinerede overskrifter. Skriv frit med valgfri overskrift.'
+                        : 'Overskriften er foreslået ud fra kategori og kan redigeres. Brug brødteksten til faglige observationer og opfølgning.'}
+                  </p>
+                </div>
+
+                <label
+                  className={`flex cursor-pointer items-start gap-2.5 rounded-xl border px-3 py-2.5 ${
+                    carePortalDark ? '' : 'border-gray-100 bg-gray-50/80'
+                  }`}
+                  style={
+                    carePortalDark
+                      ? { borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg3)' }
+                      : undefined
+                  }
+                >
+                  <input
+                    type="checkbox"
+                    checked={showInDiary}
+                    onChange={(e) => setShowInDiary(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 accent-[#1D9E75]"
+                  />
+                  <span className="text-xs leading-snug">
+                    <span
+                      className={`font-semibold ${carePortalDark ? '' : 'text-gray-800'}`}
+                      style={carePortalDark ? { color: 'var(--cp-text)' } : undefined}
+                    >
+                      Vis i dagbog
+                    </span>
+                    <span
+                      className={`block ${carePortalDark ? '' : 'text-gray-500'}`}
+                      style={carePortalDark ? { color: 'var(--cp-muted)' } : undefined}
+                    >
+                      Medtag dette notat på <em className="not-italic">Aftenopsamling</em> (samlet
+                      skriv til aftenholdet).
+                    </span>
+                  </span>
+                </label>
+
+                <div>
+                  <span
+                    className={`mb-2 block text-xs font-medium ${carePortalDark ? '' : 'text-gray-500'}`}
+                    style={carePortalDark ? { color: 'var(--cp-muted2)' } : undefined}
+                  >
+                    Gem som
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSaveMode('godkendt')}
+                      className={
                         !carePortalDark
-                          ? category === cat.key
-                            ? 'bg-[#0F1B2D] text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          : ''
-                      }`}
+                          ? `rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                              saveMode === 'godkendt'
+                                ? 'bg-[#0F1B2D] text-white'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`
+                          : 'rounded-lg px-3 py-1.5 text-xs font-medium transition-all'
+                      }
                       style={
                         carePortalDark
-                          ? category === cat.key
+                          ? saveMode === 'godkendt'
                             ? {
                                 backgroundColor: 'var(--cp-green-dim)',
                                 color: 'var(--cp-green)',
@@ -481,377 +841,67 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
                           : undefined
                       }
                     >
-                      {cat.key}
+                      Godkendt journal
                     </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Structured note input */}
-              <div>
-                <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-                  <span
-                    className={`block text-xs font-medium ${carePortalDark ? '' : 'text-gray-500'}`}
-                    style={carePortalDark ? { color: 'var(--cp-muted2)' } : undefined}
-                  >
-                    Notat
-                  </span>
-                  <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                    {compareMode && (
-                      <>
-                        <JournalVersionToggle
-                          value={compareSource}
-                          onChange={setCompareSource}
-                          variant={carePortalDark ? 'portal-dark' : 'light'}
-                        />
-                        <button
-                          type="button"
-                          onClick={dismissCompare}
-                          className={`text-[11px] font-medium underline-offset-2 hover:underline ${
-                            carePortalDark ? 'text-[var(--cp-muted)]' : 'text-gray-500'
-                          }`}
-                        >
-                          Afslut sammenligning
-                        </button>
-                      </>
-                    )}
                     <button
                       type="button"
-                      disabled={polishing || !canPolish}
-                      onClick={() => void handlePolish()}
-                      className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                      onClick={() => setSaveMode('kladde')}
+                      className={
+                        !carePortalDark
+                          ? `rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                              saveMode === 'kladde'
+                                ? 'bg-amber-600 text-white'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`
+                          : 'rounded-lg px-3 py-1.5 text-xs font-medium transition-all'
+                      }
+                      style={
                         carePortalDark
-                          ? 'border-[var(--cp-border)] text-[var(--cp-green)] hover:bg-white/5'
-                          : 'border-gray-200 text-[#0F1B2D] hover:bg-gray-50'
-                      }`}
+                          ? saveMode === 'kladde'
+                            ? { backgroundColor: 'var(--cp-amber-dim)', color: 'var(--cp-amber)' }
+                            : {
+                                backgroundColor: 'var(--cp-bg3)',
+                                color: 'var(--cp-muted)',
+                              }
+                          : undefined
+                      }
                     >
-                      {polishing ? (
-                        <Loader2 size={12} className="animate-spin" />
-                      ) : (
-                        <Sparkles size={12} />
-                      )}
-                      Fagliggør med AI
+                      Kladde
                     </button>
                   </div>
-                </div>
-                {compareMode && (
                   <p
-                    className={`mb-2 text-[11px] leading-snug ${carePortalDark ? '' : 'text-gray-500'}`}
-                    style={carePortalDark ? { color: 'var(--cp-muted)' } : undefined}
+                    className={`mt-1.5 text-[11px] leading-snug ${carePortalDark ? '' : 'text-gray-400'}`}
+                    style={carePortalDark ? { color: 'var(--cp-muted2)' } : undefined}
                   >
-                    {compareSource === 'ai' ? (
-                      <>
-                        Du ser <strong className="font-semibold">AI-forslaget</strong>. Skift til{' '}
-                        <strong className="font-semibold">Original</strong> for at sammenligne. Det
-                        du ser her, er det der gemmes.
-                      </>
-                    ) : (
-                      <>
-                        Du ser <strong className="font-semibold">dit oprindelige udkast</strong>.
-                        Det du ser her, er det der gemmes.
-                      </>
-                    )}
+                    Kladder vises på overblikket og kan godkendes senere. Godkendt journal tæller
+                    som officielt notat (fx overdragelse).
+                  </p>
+                </div>
+
+                {error && (
+                  <p
+                    className={`rounded-lg px-3 py-2 text-xs ${carePortalDark ? '' : 'bg-red-50 text-red-600'}`}
+                    style={
+                      carePortalDark
+                        ? { backgroundColor: 'rgba(245,101,101,0.12)', color: 'var(--cp-red)' }
+                        : undefined
+                    }
+                  >
+                    {error}
                   </p>
                 )}
-                {isDoegnnotat ? (
-                  <div className="space-y-3">
-                    <div>
-                      <p
-                        className={`mb-1.5 text-sm font-bold ${carePortalDark ? '' : 'text-gray-800'}`}
-                        style={carePortalDark ? { color: 'var(--cp-text)' } : undefined}
-                      >
-                        Handling/aktivitet
-                      </p>
-                      <textarea
-                        value={
-                          compareMode && pairOriginalDoegn && pairAiDoegn
-                            ? compareSource === 'original'
-                              ? pairOriginalDoegn.handling
-                              : pairAiDoegn.handling
-                            : doegnHandling
-                        }
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          if (compareMode && pairOriginalDoegn && pairAiDoegn) {
-                            if (compareSource === 'original') {
-                              setPairOriginalDoegn({ ...pairOriginalDoegn, handling: v });
-                            } else {
-                              setPairAiDoegn({ ...pairAiDoegn, handling: v });
-                            }
-                          } else {
-                            setDoegnHandling(v);
-                          }
-                        }}
-                        placeholder="Beskriv hvad der konkret skete i vagten…"
-                        rows={5}
-                        className={`w-full resize-y rounded-xl border px-3 py-2.5 text-sm leading-relaxed focus:outline-none ${
-                          carePortalDark ? '' : 'border-gray-200 focus:border-[#1D9E75]'
-                        }`}
-                        style={
-                          carePortalDark
-                            ? {
-                                borderColor: 'var(--cp-border)',
-                                backgroundColor: 'var(--cp-bg)',
-                                color: 'var(--cp-text)',
-                              }
-                            : undefined
-                        }
-                      />
-                    </div>
-                    <div>
-                      <p
-                        className={`mb-1.5 text-sm font-bold ${carePortalDark ? '' : 'text-gray-800'}`}
-                        style={carePortalDark ? { color: 'var(--cp-text)' } : undefined}
-                      >
-                        Refleksion
-                      </p>
-                      <textarea
-                        value={
-                          compareMode && pairOriginalDoegn && pairAiDoegn
-                            ? compareSource === 'original'
-                              ? pairOriginalDoegn.refleksion
-                              : pairAiDoegn.refleksion
-                            : doegnRefleksion
-                        }
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          if (compareMode && pairOriginalDoegn && pairAiDoegn) {
-                            if (compareSource === 'original') {
-                              setPairOriginalDoegn({ ...pairOriginalDoegn, refleksion: v });
-                            } else {
-                              setPairAiDoegn({ ...pairAiDoegn, refleksion: v });
-                            }
-                          } else {
-                            setDoegnRefleksion(v);
-                          }
-                        }}
-                        placeholder="Beskriv faglig vurdering og næste skridt…"
-                        rows={5}
-                        className={`w-full resize-y rounded-xl border px-3 py-2.5 text-sm leading-relaxed focus:outline-none ${
-                          carePortalDark ? '' : 'border-gray-200 focus:border-[#1D9E75]'
-                        }`}
-                        style={
-                          carePortalDark
-                            ? {
-                                borderColor: 'var(--cp-border)',
-                                backgroundColor: 'var(--cp-bg)',
-                                color: 'var(--cp-text)',
-                              }
-                            : undefined
-                        }
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <input
-                      value={
-                        compareMode && pairOriginalOther && pairAiOther
-                          ? compareSource === 'original'
-                            ? pairOriginalOther.title
-                            : pairAiOther.title
-                          : title
-                      }
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        if (compareMode && pairOriginalOther && pairAiOther) {
-                          if (compareSource === 'original') {
-                            setPairOriginalOther({ ...pairOriginalOther, title: v });
-                          } else {
-                            setPairAiOther({ ...pairAiOther, title: v });
-                          }
-                        } else {
-                          setTitle(v);
-                        }
-                      }}
-                      placeholder={
-                        category === 'Andet' ? 'Valgfri overskrift (kan udelades)' : 'Overskrift'
-                      }
-                      className={`w-full rounded-xl border px-3 py-2 text-sm focus:outline-none ${
-                        carePortalDark ? '' : 'border-gray-200 focus:border-[#1D9E75]'
-                      }`}
-                      style={
-                        carePortalDark
-                          ? {
-                              borderColor: 'var(--cp-border)',
-                              backgroundColor: 'var(--cp-bg)',
-                              color: 'var(--cp-text)',
-                            }
-                          : undefined
-                      }
-                    />
-                    <textarea
-                      value={
-                        compareMode && pairOriginalOther && pairAiOther
-                          ? compareSource === 'original'
-                            ? pairOriginalOther.body
-                            : pairAiOther.body
-                          : body
-                      }
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        if (compareMode && pairOriginalOther && pairAiOther) {
-                          if (compareSource === 'original') {
-                            setPairOriginalOther({ ...pairOriginalOther, body: v });
-                          } else {
-                            setPairAiOther({ ...pairAiOther, body: v });
-                          }
-                        } else {
-                          setBody(v);
-                        }
-                      }}
-                      placeholder={activeCategoryCfg.bodyPlaceholder}
-                      rows={9}
-                      // eslint-disable-next-line jsx-a11y/no-autofocus
-                      autoFocus
-                      className={`w-full resize-y rounded-xl border px-3 py-2.5 text-sm leading-relaxed focus:outline-none ${
-                        carePortalDark ? '' : 'border-gray-200 focus:border-[#1D9E75]'
-                      }`}
-                      style={
-                        carePortalDark
-                          ? {
-                              borderColor: 'var(--cp-border)',
-                              backgroundColor: 'var(--cp-bg)',
-                              color: 'var(--cp-text)',
-                            }
-                          : undefined
-                      }
-                    />
-                  </div>
-                )}
-                <p
-                  className={`mt-1.5 text-[11px] leading-snug ${carePortalDark ? '' : 'text-gray-400'}`}
-                  style={carePortalDark ? { color: 'var(--cp-muted2)' } : undefined}
-                >
-                  {isDoegnnotat
-                    ? 'Døgnnotat har faste sektioner med låste overskrifter. Brug Handling/aktivitet til fakta og Refleksion til refleksion (åben, undrende — ikke nye konklusioner).'
-                    : category === 'Andet'
-                      ? 'Andet har ingen prædefinerede overskrifter. Skriv frit med valgfri overskrift.'
-                      : 'Overskriften er foreslået ud fra kategori og kan redigeres. Brug brødteksten til faglige observationer og opfølgning.'}
-                </p>
               </div>
-
-              <label
-                className={`flex cursor-pointer items-start gap-2.5 rounded-xl border px-3 py-2.5 ${
-                  carePortalDark ? '' : 'border-gray-100 bg-gray-50/80'
-                }`}
-                style={
-                  carePortalDark
-                    ? { borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg3)' }
-                    : undefined
-                }
-              >
-                <input
-                  type="checkbox"
-                  checked={showInDiary}
-                  onChange={(e) => setShowInDiary(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 accent-[#1D9E75]"
-                />
-                <span className="text-xs leading-snug">
-                  <span
-                    className={`font-semibold ${carePortalDark ? '' : 'text-gray-800'}`}
-                    style={carePortalDark ? { color: 'var(--cp-text)' } : undefined}
-                  >
-                    Vis i dagbog
-                  </span>
-                  <span
-                    className={`block ${carePortalDark ? '' : 'text-gray-500'}`}
-                    style={carePortalDark ? { color: 'var(--cp-muted)' } : undefined}
-                  >
-                    Medtag dette notat på <em className="not-italic">Aftenopsamling</em> (samlet
-                    skriv til aftenholdet).
-                  </span>
-                </span>
-              </label>
-
-              <div>
-                <span
-                  className={`mb-2 block text-xs font-medium ${carePortalDark ? '' : 'text-gray-500'}`}
-                  style={carePortalDark ? { color: 'var(--cp-muted2)' } : undefined}
-                >
-                  Gem som
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setSaveMode('godkendt')}
-                    className={
-                      !carePortalDark
-                        ? `rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                            saveMode === 'godkendt'
-                              ? 'bg-[#0F1B2D] text-white'
-                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          }`
-                        : 'rounded-lg px-3 py-1.5 text-xs font-medium transition-all'
-                    }
-                    style={
-                      carePortalDark
-                        ? saveMode === 'godkendt'
-                          ? {
-                              backgroundColor: 'var(--cp-green-dim)',
-                              color: 'var(--cp-green)',
-                              boxShadow: '0 0 0 1px rgba(45,212,160,0.2)',
-                            }
-                          : {
-                              backgroundColor: 'var(--cp-bg3)',
-                              color: 'var(--cp-muted)',
-                            }
-                        : undefined
-                    }
-                  >
-                    Godkendt journal
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSaveMode('kladde')}
-                    className={
-                      !carePortalDark
-                        ? `rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                            saveMode === 'kladde'
-                              ? 'bg-amber-600 text-white'
-                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          }`
-                        : 'rounded-lg px-3 py-1.5 text-xs font-medium transition-all'
-                    }
-                    style={
-                      carePortalDark
-                        ? saveMode === 'kladde'
-                          ? { backgroundColor: 'var(--cp-amber-dim)', color: 'var(--cp-amber)' }
-                          : {
-                              backgroundColor: 'var(--cp-bg3)',
-                              color: 'var(--cp-muted)',
-                            }
-                        : undefined
-                    }
-                  >
-                    Kladde
-                  </button>
-                </div>
-                <p
-                  className={`mt-1.5 text-[11px] leading-snug ${carePortalDark ? '' : 'text-gray-400'}`}
-                  style={carePortalDark ? { color: 'var(--cp-muted2)' } : undefined}
-                >
-                  Kladder vises på overblikket og kan godkendes senere. Godkendt journal tæller som
-                  officielt notat (fx overdragelse).
-                </p>
-              </div>
-
-              {error && (
-                <p
-                  className={`rounded-lg px-3 py-2 text-xs ${carePortalDark ? '' : 'bg-red-50 text-red-600'}`}
-                  style={
-                    carePortalDark
-                      ? { backgroundColor: 'rgba(245,101,101,0.12)', color: 'var(--cp-red)' }
-                      : undefined
-                  }
-                >
-                  {error}
-                </p>
-              )}
             </div>
 
             {/* Footer */}
-            <div className="flex flex-col-reverse gap-2 px-5 pb-5 sm:flex-row sm:items-center sm:justify-end">
+            <div
+              className={`flex shrink-0 flex-col-reverse gap-2 border-t px-5 py-4 sm:flex-row sm:items-center sm:justify-end ${carePortalDark ? '' : 'border-gray-100 bg-gray-50/90'}`}
+              style={
+                carePortalDark
+                  ? { borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg3)' }
+                  : undefined
+              }
+            >
               <button
                 type="button"
                 onClick={() => setOpen(false)}

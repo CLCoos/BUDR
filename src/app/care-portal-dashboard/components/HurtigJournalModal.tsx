@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { createPortal } from 'react-dom';
 import { BookOpen, Mic, MicOff, Save, Sparkles, X } from 'lucide-react';
+import { compareEditorChrome } from '@/components/journal/compareEditorChrome';
 import { JournalVersionToggle } from '@/components/journal/JournalVersionToggle';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
@@ -78,6 +79,7 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
   const displayNote = compareMode ? (compareSource === 'original' ? noteOriginal : noteAi) : note;
   const charCount = displayNote.length;
   const showDictationPanel = !compareMode && (isRecording || displayNote.trim() === '');
+  const versionChrome = compareEditorChrome(false, compareMode, compareSource);
 
   useEffect(() => {
     setMounted(true);
@@ -434,165 +436,176 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
         role="dialog"
         aria-modal="true"
         aria-labelledby="hurtig-journal-title"
-        className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-gray-100 bg-white p-5 shadow-xl transition-all duration-200"
+        className="relative flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-xl border border-gray-100 bg-white shadow-xl transition-all duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 rounded-lg p-1.5 text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-gray-600"
+          className="absolute right-3 top-3 z-10 rounded-lg p-1.5 text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-gray-600"
           aria-label="Luk"
         >
           <X className="h-5 w-5" />
         </button>
 
-        <div className="mb-3 flex items-center gap-2 pr-10">
-          <BookOpen className="h-5 w-5 shrink-0 text-budr-purple" aria-hidden />
-          <div>
-            <h2 id="hurtig-journal-title" className="text-sm font-semibold text-gray-900">
-              Hurtigt stikord
-            </h2>
-            <p className="mt-1 text-[11px] leading-snug text-gray-500">
-              Gemmes som <strong className="font-medium text-gray-700">kladde</strong> med «Vis i
-              dagbog». Om aftenen samler I på{' '}
-              <Link
-                href="/resident-360-view/dagbog"
-                className="font-medium text-budr-purple underline"
-              >
-                Aftenopsamling
-              </Link>{' '}
-              til ét professionelt notat med AI.
-            </p>
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-3 pt-5">
+          <div className="mb-3 flex items-center gap-2 pr-10">
+            <BookOpen className="h-5 w-5 shrink-0 text-budr-purple" aria-hidden />
+            <div>
+              <h2 id="hurtig-journal-title" className="text-sm font-semibold text-gray-900">
+                Hurtigt stikord
+              </h2>
+              <details className="mt-1 text-[11px] leading-snug text-gray-500">
+                <summary className="cursor-pointer font-medium text-gray-600 underline-offset-2 hover:underline">
+                  Kladde, dagbog og Aftenopsamling
+                </summary>
+                <p className="mt-2">
+                  Gemmes som <strong className="font-medium text-gray-700">kladde</strong> med «Vis
+                  i dagbog». Om aftenen samler I på{' '}
+                  <Link
+                    href="/resident-360-view/dagbog"
+                    className="font-medium text-budr-purple underline"
+                  >
+                    Aftenopsamling
+                  </Link>{' '}
+                  til ét professionelt notat med AI.
+                </p>
+              </details>
+            </div>
           </div>
-        </div>
 
-        <div className="mb-4">
-          <label
-            htmlFor="hurtig-journal-resident"
-            className="mb-1 block text-xs font-medium text-gray-500"
-          >
-            Beboer
-          </label>
-          <select
-            id="hurtig-journal-resident"
-            value={residentId}
-            onChange={(e) => setResidentId(e.target.value)}
-            disabled={residentsLoading}
-            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm transition-all duration-200 focus:border-budr-purple/50 focus:outline-none focus:ring-2 focus:ring-budr-purple/20 disabled:opacity-60"
-          >
-            <option value="">{residentsLoading ? 'Henter beboere…' : 'Vælg beboer'}</option>
-            {residents.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name}
-              </option>
-            ))}
-          </select>
-          {!residentsLoading && residents.length === 0 && residentsSource !== 'demo' && (
-            <p className="mt-1.5 text-xs text-gray-500">
-              Ingen beboere i listen — tjek organisationstilknytning eller tilføj beboere.
-            </p>
-          )}
-        </div>
-
-        <div className="mb-2">
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <label htmlFor="hurtig-journal-note" className="text-xs font-medium text-gray-600">
-              Notat
+          <div className="mb-4">
+            <label
+              htmlFor="hurtig-journal-resident"
+              className="mb-1 block text-xs font-medium text-gray-500"
+            >
+              Beboer
             </label>
-            {compareMode && (
-              <div className="flex flex-wrap items-center gap-2">
-                <JournalVersionToggle
-                  value={compareSource}
-                  onChange={setCompareSource}
-                  variant="light"
-                />
-                <button
-                  type="button"
-                  onClick={dismissJournalCompare}
-                  className="text-[11px] font-medium text-gray-500 underline-offset-2 hover:text-gray-700 hover:underline"
-                >
-                  Afslut sammenligning
-                </button>
-              </div>
+            <select
+              id="hurtig-journal-resident"
+              value={residentId}
+              onChange={(e) => setResidentId(e.target.value)}
+              disabled={residentsLoading}
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm transition-all duration-200 focus:border-budr-purple/50 focus:outline-none focus:ring-2 focus:ring-budr-purple/20 disabled:opacity-60"
+            >
+              <option value="">{residentsLoading ? 'Henter beboere…' : 'Vælg beboer'}</option>
+              {residents.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name}
+                </option>
+              ))}
+            </select>
+            {!residentsLoading && residents.length === 0 && residentsSource !== 'demo' && (
+              <p className="mt-1.5 text-xs text-gray-500">
+                Ingen beboere i listen — tjek organisationstilknytning eller tilføj beboere.
+              </p>
             )}
           </div>
-          {compareMode && (
-            <p className="mb-2 text-[11px] leading-snug text-gray-500">
-              {compareSource === 'ai' ? (
-                <>
-                  Du ser <span className="font-semibold text-gray-700">AI-forslaget</span>. Skift
-                  til <span className="font-semibold text-gray-700">Original</span> for at
-                  sammenligne. Det du ser her, gemmes ved «Gem kladde».
-                </>
-              ) : (
-                <>
-                  Du ser <span className="font-semibold text-gray-700">dit oprindelige udkast</span>
-                  . Det du ser her, gemmes ved «Gem kladde».
-                </>
+
+          <div className="mb-2">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <label htmlFor="hurtig-journal-note" className="text-xs font-medium text-gray-600">
+                  Notat
+                </label>
+                <span className="text-[10px] tabular-nums text-gray-400">{charCount} tegn</span>
+              </div>
+              {(compareMode || !showDictationPanel) && (
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  {compareMode && (
+                    <>
+                      <JournalVersionToggle
+                        value={compareSource}
+                        onChange={setCompareSource}
+                        variant="light"
+                      />
+                      <button
+                        type="button"
+                        onClick={dismissJournalCompare}
+                        className="text-[11px] font-medium text-gray-500 underline-offset-2 hover:text-gray-700 hover:underline"
+                      >
+                        Afslut sammenligning
+                      </button>
+                    </>
+                  )}
+                  {!showDictationPanel && (
+                    <button
+                      type="button"
+                      onClick={polishWithAi}
+                      disabled={polishing || !displayNote.trim()}
+                      className="inline-flex items-center gap-1.5 rounded-lg border-2 border-budr-purple bg-white px-3 py-1.5 text-[11px] font-semibold text-budr-purple transition-all duration-200 hover:bg-budr-lavender disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <Sparkles
+                        className={`h-3.5 w-3.5 shrink-0 ${polishing ? 'animate-pulse' : ''}`}
+                      />
+                      {polishing ? 'Arbejder…' : 'Stram med AI'}
+                    </button>
+                  )}
+                </div>
               )}
-            </p>
+            </div>
+            {compareMode && (
+              <p className="mb-2 flex flex-wrap items-center gap-2 text-[11px] leading-snug text-gray-500">
+                <span className="inline-flex items-center gap-1.5 rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">
+                  <span
+                    className={`inline-block h-2 w-2 shrink-0 rounded-full ${
+                      compareSource === 'ai' ? 'bg-teal-600' : 'bg-amber-500'
+                    }`}
+                    aria-hidden
+                  />
+                  {compareSource === 'ai' ? 'Redigerer AI-forslag' : 'Redigerer original'}
+                </span>
+                <span>
+                  Skift med knapperne ovenfor.{' '}
+                  <span className="font-semibold text-gray-700">Frit redigér</span> — det du ser
+                  gemmes ved «Gem kladde».
+                </span>
+              </p>
+            )}
+            <label htmlFor="hurtig-journal-note" className="sr-only">
+              Notattekst
+            </label>
+            <textarea
+              id="hurtig-journal-note"
+              value={displayNote}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (!compareMode) setNote(v);
+                else if (compareSource === 'original') setNoteOriginal(v);
+                else setNoteAi(v);
+              }}
+              rows={5}
+              placeholder="Skriv eller diktér en observation..."
+              className={`min-h-32 w-full resize-y rounded-xl border border-gray-200 px-3 py-3 text-sm text-gray-900 placeholder:text-gray-400 transition-all duration-200 focus:border-budr-purple/40 focus:outline-none focus:ring-2 focus:ring-budr-purple/15 ${
+                polishFlash ? 'border-green-400 ring-2 ring-green-300/60' : ''
+              } ${versionChrome.className}`}
+              style={versionChrome.style}
+            />
+          </div>
+
+          {showDictationPanel && (
+            <div className="mb-5 flex flex-col items-center py-2">
+              <button
+                type="button"
+                onClick={toggleRecording}
+                className={`flex h-12 w-12 items-center justify-center rounded-full text-white shadow-md transition-all duration-200 ${
+                  isRecording
+                    ? 'bg-red-500 ring-4 ring-red-400/50 ring-offset-2 animate-pulse'
+                    : 'bg-budr-purple hover:scale-105'
+                }`}
+                aria-pressed={isRecording}
+                aria-label={isRecording ? 'Stop diktat' : 'Start diktat'}
+              >
+                {isRecording ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+              </button>
+              <p className="mt-2 text-center text-sm text-gray-500">
+                {isRecording ? 'Optager... tryk for at stoppe' : 'Tryk for at diktere'}
+              </p>
+            </div>
           )}
-          <label htmlFor="hurtig-journal-note" className="sr-only">
-            Notattekst
-          </label>
-          <textarea
-            id="hurtig-journal-note"
-            value={displayNote}
-            onChange={(e) => {
-              const v = e.target.value;
-              if (!compareMode) setNote(v);
-              else if (compareSource === 'original') setNoteOriginal(v);
-              else setNoteAi(v);
-            }}
-            rows={5}
-            placeholder="Skriv eller diktér en observation..."
-            className={`min-h-32 w-full resize-y rounded-xl border border-gray-200 px-3 py-3 text-sm text-gray-900 placeholder:text-gray-400 transition-all duration-200 focus:border-budr-purple/40 focus:outline-none focus:ring-2 focus:ring-budr-purple/15 ${
-              polishFlash ? 'border-green-400 ring-2 ring-green-300/60' : ''
-            }`}
-          />
-          <div className="mt-1 text-right text-xs text-gray-400">{charCount} tegn</div>
         </div>
 
-        {showDictationPanel ? (
-          <div className="mb-5 flex flex-col items-center py-2">
-            <button
-              type="button"
-              onClick={toggleRecording}
-              className={`flex h-12 w-12 items-center justify-center rounded-full text-white shadow-md transition-all duration-200 ${
-                isRecording
-                  ? 'bg-red-500 ring-4 ring-red-400/50 ring-offset-2 animate-pulse'
-                  : 'bg-budr-purple hover:scale-105'
-              }`}
-              aria-pressed={isRecording}
-              aria-label={isRecording ? 'Stop diktat' : 'Start diktat'}
-            >
-              {isRecording ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
-            </button>
-            <p className="mt-2 text-center text-sm text-gray-500">
-              {isRecording ? 'Optager... tryk for at stoppe' : 'Tryk for at diktere'}
-            </p>
-          </div>
-        ) : (
-          <div className="mb-5">
-            <button
-              type="button"
-              onClick={polishWithAi}
-              disabled={polishing}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-budr-purple bg-white px-4 py-2.5 text-sm font-medium text-budr-purple transition-all duration-200 hover:bg-budr-lavender disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <Sparkles className={`h-4 w-4 shrink-0 ${polishing ? 'animate-pulse' : ''}`} />
-              {polishing ? (
-                <span className="bg-gradient-to-r from-budr-purple via-budr-teal to-budr-purple bg-clip-text font-medium text-transparent animate-pulse">
-                  AI strukturerer noten...
-                </span>
-              ) : (
-                'Stram dette stikord med AI'
-              )}
-            </button>
-          </div>
-        )}
-
-        <div className="flex flex-col gap-2 border-t border-gray-100 pt-4">
+        <div className="flex shrink-0 flex-col gap-2 border-t border-gray-100 bg-gray-50/90 px-5 py-4">
           <button
             type="button"
             onClick={() => void save()}
@@ -605,7 +618,7 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
           <button
             type="button"
             onClick={onClose}
-            className="w-full py-2 text-sm text-gray-400 transition-all duration-200 hover:text-gray-600"
+            className="w-full py-2 text-sm text-gray-500 transition-all duration-200 hover:text-gray-700"
           >
             Annuller
           </button>

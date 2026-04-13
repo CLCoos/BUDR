@@ -69,6 +69,16 @@ This project uses Tailwind CSS for styling with the following features:
 - `npm run lint:fix` - Fix ESLint issues automatically
 - `npm run format` - Format code with Prettier
 
+## Care Portal — journal AI (kvalitet)
+
+**Fagliggør med AI** (`/api/portal/journal-polish`) bruger Anthropic. For at tune sprog og pålidelighed:
+
+1. Sæt **`ANTHROPIC_JOURNAL_POLISH_MODEL`** i **Netlify → Site → Environment variables** (Production) eller i **`.env.local`** lokalt til et model-id, din Anthropic-konto understøtter (se [Anthropics modeloversigt](https://docs.anthropic.com/en/docs/about-claude/models)).
+2. Uden variabel bruges `ANTHROPIC_CHAT_MODEL` fra `src/lib/ai/anthropicModel.ts` og derefter intern fallback — se `src/lib/ai/anthropicJournalPolish.ts`.
+3. Efter ændring på Netlify: **deploy igen**. Lokalt: genstart `npm run dev`.
+
+Detaljer og sikkerhed: [`CONTEXT.md`](./CONTEXT.md) → *Environment variables*.
+
 ## 📱 Deployment
 
 Build the application for production:
