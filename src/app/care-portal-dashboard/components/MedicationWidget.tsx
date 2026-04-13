@@ -23,6 +23,7 @@ import {
   carePortalHouseChipLabel,
   type CareHouse,
 } from '@/lib/careDemoResidents';
+import { useStaffOrgIsBingbong } from '@/hooks/useStaffOrgIsBingbong';
 import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 import { enumerateCivilMedicationSlotDates } from '@/lib/medicationScheduleSlots';
 import { createClient } from '@/lib/supabase/client';
@@ -702,6 +703,8 @@ type TaskFilter = 'alle' | 'ventende' | 'forsinkede';
 
 export default function MedicationWidget() {
   const simulatedMedicin = carePortalPilotSimulatedData();
+  const { isBingbong, ready: bingbongReady } = useStaffOrgIsBingbong();
+  const pilotMedicinMock = simulatedMedicin && (!bingbongReady || !isBingbong);
   const [entries, setEntries] = useState<MedicationTask[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [laterExpanded, setLaterExpanded] = useState(false);
@@ -714,7 +717,10 @@ export default function MedicationWidget() {
   useEffect(() => {
     let cancelled = false;
     const run = async () => {
-      if (simulatedMedicin) {
+      if (simulatedMedicin && !bingbongReady) {
+        return;
+      }
+      if (pilotMedicinMock) {
         if (!cancelled) {
           setEntries(createMockEntries(Date.now()));
           setHydrated(true);
@@ -731,7 +737,7 @@ export default function MedicationWidget() {
     return () => {
       cancelled = true;
     };
-  }, [simulatedMedicin]);
+  }, [simulatedMedicin, bingbongReady, pilotMedicinMock]);
 
   useEffect(() => {
     const t = window.setInterval(() => setNowTick(Date.now()), 60_000);
@@ -908,7 +914,7 @@ export default function MedicationWidget() {
               color: 'var(--cp-blue)',
             }}
           >
-            {simulatedMedicin ? (
+            {pilotMedicinMock ? (
               <>
                 <Shield className="h-3.5 w-3.5" aria-hidden />
                 FMK-integration
@@ -1198,7 +1204,7 @@ export default function MedicationWidget() {
       )}
 
       <div className="flex flex-col gap-6">
-        {hydrated && !simulatedMedicin && entries.length === 0 && (
+        {hydrated && !pilotMedicinMock && entries.length === 0 && (
           <div
             className="rounded-2xl p-5 sm:p-6"
             style={{

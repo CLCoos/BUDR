@@ -210,7 +210,7 @@ export default function DagbogEveningTools({ targets }: Props) {
       {result && (
         <div className="mt-4 space-y-3">
           <pre
-            className="max-h-[min(50vh,420px)] overflow-y-auto whitespace-pre-wrap rounded-lg border p-3 text-sm leading-relaxed"
+            className="max-h-[min(50vh,420px)] overflow-y-auto whitespace-pre-wrap rounded-lg border p-3 font-sans text-sm leading-relaxed"
             style={{
               borderColor: 'var(--cp-border, #e5e7eb)',
               backgroundColor: 'var(--cp-bg2, #fff)',

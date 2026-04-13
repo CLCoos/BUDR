@@ -4,6 +4,7 @@ export interface OrgBranding {
   name: string;
   logo_url: string | null;
   primary_color: string;
+  slug: string | null;
 }
 
 /**
@@ -25,7 +26,7 @@ export async function getOrganisationForStaff(): Promise<OrgBranding | null> {
 
   const { data, error } = await supabase
     .from('organisations')
-    .select('name, logo_url, primary_color')
+    .select('name, logo_url, primary_color, slug')
     .eq('id', orgId)
     .single();
 
@@ -35,5 +36,6 @@ export async function getOrganisationForStaff(): Promise<OrgBranding | null> {
     name: data.name as string,
     logo_url: (data.logo_url as string | null) ?? null,
     primary_color: (data.primary_color as string) ?? '#1D9E75',
+    slug: typeof data.slug === 'string' && data.slug.trim() ? data.slug.trim() : null,
   };
 }

@@ -17,6 +17,7 @@ import ActionCards from './ActionCards';
 import DashboardModule from './DashboardModule';
 import ResidentListDemo from './ResidentListDemo';
 import { BookOpen, RefreshCw } from 'lucide-react';
+import { useStaffOrgIsBingbong } from '@/hooks/useStaffOrgIsBingbong';
 import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 
 const OverrapportModal = dynamic(() => import('./OverrapportModal'), { ssr: false });
@@ -138,6 +139,7 @@ function DashboardClientInner({
   singleWidget,
 }: DashboardClientProps) {
   const pilotSim = carePortalPilotSimulatedData();
+  const { isBingbong, ready: bingbongReady } = useStaffOrgIsBingbong();
   const [headerSubtitle, setHeaderSubtitle] = useState('Care Portal');
   const [lastUpdated, setLastUpdated] = useState(() =>
     new Date()
@@ -296,8 +298,19 @@ function DashboardClientInner({
     [medicationWidget]
   );
 
-  // ── Pilot-sim path (unchanged) ────────────────────────────
-  if (pilotSim) {
+  // ── Pilot-sim path (skip for BingBong org: real residents + live widgets) ──
+  if (pilotSim && !bingbongReady) {
+    return (
+      <div
+        className="relative min-h-[50vh] rounded-xl animate-pulse"
+        style={{ backgroundColor: 'var(--cp-bg3)' }}
+        aria-busy
+        aria-label="Indlæser organisation"
+      />
+    );
+  }
+
+  if (pilotSim && !isBingbong) {
     return (
       <div className="relative">
         <div className="mb-6 flex items-center justify-between">

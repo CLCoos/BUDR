@@ -9,6 +9,10 @@ import {
   careDemoProfileById,
   carePortalHouseChipLabel,
 } from '@/lib/careDemoResidents';
+import { BINGBONG_DEMO_ORG_SLUG } from '@/lib/bingbongOrg';
+import { createClient } from '@/lib/supabase/client';
+import { parseStaffOrgId } from '@/lib/staffOrgScope';
+import { isResidentUuidForCloud } from '@/lib/residentUuid';
 
 export type { CareHouse } from '@/lib/careDemoResidents';
 
@@ -35,12 +39,24 @@ export interface CareAppointment {
   responsible: string;
 }
 
-const RESIDENT_OPTIONS = CARE_DEMO_RESIDENT_PROFILES.map((r) => ({
+type ResidentOption = { id: string; name: string; initials: string; house: CareHouse };
+
+const DEMO_RESIDENT_OPTIONS: ResidentOption[] = CARE_DEMO_RESIDENT_PROFILES.map((r) => ({
   id: r.id,
   name: r.displayName,
   initials: r.initials,
   house: r.house,
 }));
+
+function onboardingHouseToCareHouse(raw: unknown): CareHouse {
+  const s = String(raw ?? '').trim();
+  const u = s.toUpperCase();
+  if (u === 'TLS') return 'TLS';
+  const m = s.match(/hus\s*([ABCD])/i);
+  if (m?.[1]) return m[1].toUpperCase() as CareHouse;
+  if (u === 'A' || u === 'B' || u === 'C' || u === 'D') return u;
+  return 'A';
+}
 
 function formatDanishLongDate(d: Date): string {
   const wd = d.toLocaleDateString('da-DK', { weekday: 'long' });
@@ -201,14 +217,15 @@ const INPUT_STYLE: React.CSSProperties = {
 };
 
 type KalenderWidgetProps = {
-  /** Bevares til API-kompatibilitet; kalenderen er foreløbig lokalt/demo-data i begge tilstande. */
+  /** `demo` = mock aftaler + demo-beboere. `live` = mock kun hvis org ikke er BingBong-seed. */
   variant?: 'live' | 'demo';
 };
 
-export default function KalenderWidget({ variant: _variant = 'live' }: KalenderWidgetProps) {
+export default function KalenderWidget({ variant = 'live' }: KalenderWidgetProps) {
   const [hydrated, setHydrated] = useState(false);
   const [today, setToday] = useState<Date>(() => new Date());
   const [appointments, setAppointments] = useState<CareAppointment[]>([]);
+  const [residentOptions, setResidentOptions] = useState<ResidentOption[]>(DEMO_RESIDENT_OPTIONS);
   const [houseFilter, setHouseFilter] = useState<'alle' | CareHouse>('alle');
   const [residentFilter, setResidentFilter] = useState<string>('alle');
   const [showForm, setShowForm] = useState(false);
@@ -222,9 +239,84 @@ export default function KalenderWidget({ variant: _variant = 'live' }: KalenderW
   useEffect(() => {
     const d = new Date();
     setToday(d);
-    setAppointments(createMockAppointments(d));
-    setHydrated(true);
-  }, []);
+
+    if (variant === 'demo') {
+      setAppointments(createMockAppointments(d));
+      setResidentOptions(DEMO_RESIDENT_OPTIONS);
+      setHydrated(true);
+      return;
+    }
+
+    let cancelled = false;
+    void (async () => {
+      const supabase = createClient();
+      if (!supabase) {
+        if (!cancelled) {
+          setAppointments(createMockAppointments(d));
+          setResidentOptions(DEMO_RESIDENT_OPTIONS);
+          setHydrated(true);
+        }
+        return;
+      }
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const orgId = parseStaffOrgId(session?.user?.user_metadata?.org_id);
+      if (!orgId) {
+        if (!cancelled) {
+          setAppointments(createMockAppointments(d));
+          setResidentOptions(DEMO_RESIDENT_OPTIONS);
+          setHydrated(true);
+        }
+        return;
+      }
+      const { data: orgRow } = await supabase
+        .from('organisations')
+        .select('slug')
+        .eq('id', orgId)
+        .maybeSingle();
+      const slug = typeof orgRow?.slug === 'string' ? orgRow.slug.trim() : '';
+      if (slug === BINGBONG_DEMO_ORG_SLUG) {
+        if (cancelled) return;
+        setAppointments([]);
+        const { data: rows } = await supabase
+          .from('care_residents')
+          .select('user_id, display_name, onboarding_data')
+          .eq('org_id', orgId)
+          .order('display_name');
+        if (cancelled) return;
+        const opts: ResidentOption[] = [];
+        for (const row of rows ?? []) {
+          const id = String(row.user_id ?? '');
+          if (!isResidentUuidForCloud(id)) continue;
+          const od = (row.onboarding_data ?? {}) as Record<string, unknown>;
+          const name = String(row.display_name ?? '').trim() || '—';
+          const rawIni = od.avatar_initials;
+          const initials =
+            typeof rawIni === 'string' && rawIni.trim().length > 0
+              ? rawIni.trim().toUpperCase().slice(0, 4)
+              : name.slice(0, 2).toUpperCase();
+          opts.push({
+            id,
+            name,
+            initials,
+            house: onboardingHouseToCareHouse(od.house),
+          });
+        }
+        setResidentOptions(opts);
+      } else {
+        if (!cancelled) {
+          setAppointments(createMockAppointments(d));
+          setResidentOptions(DEMO_RESIDENT_OPTIONS);
+        }
+      }
+      if (!cancelled) setHydrated(true);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [variant]);
 
   const dateLabel = useMemo(() => formatDanishLongDate(today), [today]);
 
@@ -242,7 +334,7 @@ export default function KalenderWidget({ variant: _variant = 'live' }: KalenderW
       const [hh, mm] = formTime.split(':').map(Number);
       const scheduledAt = new Date(today);
       scheduledAt.setHours(hh ?? 12, mm ?? 0, 0, 0);
-      const res = formResidentId ? RESIDENT_OPTIONS.find((r) => r.id === formResidentId) : null;
+      const res = formResidentId ? residentOptions.find((r) => r.id === formResidentId) : null;
       setAppointments((prev) => [
         ...prev,
         {
@@ -275,6 +367,7 @@ export default function KalenderWidget({ variant: _variant = 'live' }: KalenderW
       formLocation,
       today,
       houseFilter,
+      residentOptions,
     ]
   );
 
@@ -367,7 +460,7 @@ export default function KalenderWidget({ variant: _variant = 'live' }: KalenderW
           style={{ ...INPUT_STYLE, paddingRight: '2rem', appearance: 'none' }}
         >
           <option value="alle">Alle beboere</option>
-          {RESIDENT_OPTIONS.map((r) => (
+          {residentOptions.map((r) => (
             <option key={r.id} value={r.id}>
               {r.name}
             </option>
@@ -460,7 +553,7 @@ export default function KalenderWidget({ variant: _variant = 'live' }: KalenderW
                   style={{ ...INPUT_STYLE, appearance: 'none' }}
                 >
                   <option value="">Ingen</option>
-                  {RESIDENT_OPTIONS.map((r) => (
+                  {residentOptions.map((r) => (
                     <option key={r.id} value={r.id}>
                       {r.name}
                     </option>

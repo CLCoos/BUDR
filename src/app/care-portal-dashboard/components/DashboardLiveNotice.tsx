@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { BINGBONG_DEMO_ORG_SLUG } from '@/lib/bingbongOrg';
 import { getOrganisationForStaff } from '@/lib/supabase/organisation';
 import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 
@@ -28,7 +29,7 @@ export default async function DashboardLiveNotice() {
     );
   }
 
-  if (pilotSim) {
+  if (pilotSim && org.slug !== BINGBONG_DEMO_ORG_SLUG) {
     return (
       <div
         className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 text-[11px] leading-snug"
