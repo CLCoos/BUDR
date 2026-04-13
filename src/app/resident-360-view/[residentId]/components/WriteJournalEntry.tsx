@@ -4,6 +4,7 @@ import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Plus, X, Loader2, Sparkles } from 'lucide-react';
+import { JournalVersionToggle } from '@/components/journal/JournalVersionToggle';
 import { createClient } from '@/lib/supabase/client';
 import { formatJournalEntriesInsertError } from '@/lib/journalEntriesInsertError';
 
@@ -72,6 +73,35 @@ function parseDoegnPolishedSections(
   return null;
 }
 
+function buildComposedDoegn(handling: string, refleksion: string) {
+  return `Handling/aktivitet\n${handling.trim()}\n\nRefleksion\n${refleksion.trim()}`.trim();
+}
+
+type CompareDoegnPair = { handling: string; refleksion: string };
+type CompareOtherPair = { title: string; body: string };
+
+function splitPolishedToTitleBody(polished: string, fallbackTitle: string): CompareOtherPair {
+  const t = polished.trim();
+  if (!t) return { title: fallbackTitle, body: '' };
+  const parts = t.split(/\n\n+/);
+  if (parts.length >= 2 && parts[0]!.length <= 240 && !parts[0]!.includes('\n')) {
+    return { title: parts[0]!.trim(), body: parts.slice(1).join('\n\n').trim() };
+  }
+  return { title: fallbackTitle, body: t };
+}
+
+function composeOtherCategory(
+  cat: JournalCategory,
+  noteTitle: string,
+  noteBody: string,
+  titleDefault: string
+): string {
+  const ti = noteTitle.trim();
+  const b = noteBody.trim();
+  if (cat === 'Andet') return [ti, b].filter(Boolean).join('\n\n').trim();
+  return [ti || titleDefault, b].filter(Boolean).join('\n\n').trim();
+}
+
 interface Props {
   residentId: string;
   residentName: string;
@@ -94,6 +124,14 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
   /** Synlig på Aftenopsamling (aftensamlet overblik) */
   const [showInDiary, setShowInDiary] = useState(true);
 
+  /** Efter AI: sammenlign original (frosset ved første polish) vs. AI-forslag */
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareSource, setCompareSource] = useState<'original' | 'ai'>('ai');
+  const [pairOriginalDoegn, setPairOriginalDoegn] = useState<CompareDoegnPair | null>(null);
+  const [pairAiDoegn, setPairAiDoegn] = useState<CompareDoegnPair | null>(null);
+  const [pairOriginalOther, setPairOriginalOther] = useState<CompareOtherPair | null>(null);
+  const [pairAiOther, setPairAiOther] = useState<CompareOtherPair | null>(null);
+
   const activeCategoryCfg = useMemo(
     () => CATEGORY_CONFIG.find((c) => c.key === category) ?? CATEGORY_CONFIG[0]!,
     [category]
@@ -101,25 +139,45 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
   const isDoegnnotat = category === 'Døgnnotat';
 
   const composedText = useMemo(() => {
-    if (isDoegnnotat) {
-      return `Handling/aktivitet\n${doegnHandling.trim()}\n\nRefleksion\n${doegnRefleksion.trim()}`.trim();
+    if (compareMode && isDoegnnotat && pairOriginalDoegn && pairAiDoegn) {
+      const p = compareSource === 'original' ? pairOriginalDoegn : pairAiDoegn;
+      return buildComposedDoegn(p.handling, p.refleksion);
     }
-    const t = title.trim();
-    const b = body.trim();
-    if (category === 'Andet') return [t, b].filter(Boolean).join('\n\n').trim();
-    return [t || activeCategoryCfg.titleDefault, b].filter(Boolean).join('\n\n').trim();
+    if (compareMode && !isDoegnnotat && pairOriginalOther && pairAiOther) {
+      const p = compareSource === 'original' ? pairOriginalOther : pairAiOther;
+      return composeOtherCategory(category, p.title, p.body, activeCategoryCfg.titleDefault);
+    }
+    if (isDoegnnotat) {
+      return buildComposedDoegn(doegnHandling, doegnRefleksion);
+    }
+    return composeOtherCategory(category, title, body, activeCategoryCfg.titleDefault);
   }, [
     activeCategoryCfg.titleDefault,
     body,
     category,
+    compareMode,
+    compareSource,
     doegnHandling,
     doegnRefleksion,
     isDoegnnotat,
+    pairAiDoegn,
+    pairAiOther,
+    pairOriginalDoegn,
+    pairOriginalOther,
     title,
   ]);
 
   const canPolish = composedText.length > 0;
   const canSave = composedText.length > 0;
+
+  function resetCompareState() {
+    setCompareMode(false);
+    setCompareSource('ai');
+    setPairOriginalDoegn(null);
+    setPairAiDoegn(null);
+    setPairOriginalOther(null);
+    setPairAiOther(null);
+  }
 
   function handleOpen() {
     setCategory('Døgnnotat');
@@ -130,7 +188,23 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
     setSaveMode('kladde');
     setShowInDiary(true);
     setError(null);
+    resetCompareState();
     setOpen(true);
+  }
+
+  /** Afslut sammenligning og fortsæt med den version der vises nu */
+  function dismissCompare() {
+    if (!compareMode) return;
+    if (isDoegnnotat && pairOriginalDoegn && pairAiDoegn) {
+      const p = compareSource === 'original' ? pairOriginalDoegn : pairAiDoegn;
+      setDoegnHandling(p.handling);
+      setDoegnRefleksion(p.refleksion);
+    } else if (pairOriginalOther && pairAiOther) {
+      const p = compareSource === 'original' ? pairOriginalOther : pairAiOther;
+      setTitle(p.title);
+      setBody(p.body);
+    }
+    resetCompareState();
   }
 
   async function handlePolish() {
@@ -139,6 +213,17 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
     setPolishing(true);
     setError(null);
     try {
+      if (!compareMode) {
+        if (isDoegnnotat) {
+          setPairOriginalDoegn({ handling: doegnHandling, refleksion: doegnRefleksion });
+        } else {
+          setPairOriginalOther({
+            title: category === 'Andet' ? title : title.trim() || activeCategoryCfg.titleDefault,
+            body,
+          });
+        }
+      }
+
       const res = await fetch('/api/portal/journal-polish', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -150,6 +235,10 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
       });
       const data = (await res.json()) as { text?: string; error?: string };
       if (!res.ok) {
+        if (!compareMode) {
+          if (isDoegnnotat) setPairOriginalDoegn(null);
+          else setPairOriginalOther(null);
+        }
         setError(data.error ?? 'Kunne ikke få svar fra AI');
         return;
       }
@@ -158,18 +247,24 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
         if (isDoegnnotat) {
           const parsed = parseDoegnPolishedSections(polished);
           if (parsed) {
-            setDoegnHandling(parsed.handling);
-            setDoegnRefleksion(parsed.refleksion);
+            setPairAiDoegn(parsed);
           } else {
-            setDoegnHandling(polished);
+            setPairAiDoegn({ handling: polished, refleksion: '' });
           }
-        } else if (category === 'Andet') {
-          setBody(polished);
+          setCompareMode(true);
+          setCompareSource('ai');
         } else {
-          setBody(polished);
+          const fb = category === 'Andet' ? '' : title.trim() || activeCategoryCfg.titleDefault;
+          setPairAiOther(splitPolishedToTitleBody(polished, fb));
+          setCompareMode(true);
+          setCompareSource('ai');
         }
       }
     } catch {
+      if (!compareMode) {
+        if (isDoegnnotat) setPairOriginalDoegn(null);
+        else setPairOriginalOther(null);
+      }
       setError('Netværksfejl — prøv igen');
     } finally {
       setPolishing(false);
@@ -354,6 +449,7 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
                       key={cat.key}
                       type="button"
                       onClick={() => {
+                        resetCompareState();
                         setCategory(cat.key);
                         setError(null);
                         setTitle(cat.titleDefault);
@@ -393,31 +489,70 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
 
               {/* Structured note input */}
               <div>
-                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                   <span
                     className={`block text-xs font-medium ${carePortalDark ? '' : 'text-gray-500'}`}
                     style={carePortalDark ? { color: 'var(--cp-muted2)' } : undefined}
                   >
                     Notat
                   </span>
-                  <button
-                    type="button"
-                    disabled={polishing || !canPolish}
-                    onClick={() => void handlePolish()}
-                    className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-                      carePortalDark
-                        ? 'border-[var(--cp-border)] text-[var(--cp-green)] hover:bg-white/5'
-                        : 'border-gray-200 text-[#0F1B2D] hover:bg-gray-50'
-                    }`}
-                  >
-                    {polishing ? (
-                      <Loader2 size={12} className="animate-spin" />
-                    ) : (
-                      <Sparkles size={12} />
+                  <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                    {compareMode && (
+                      <>
+                        <JournalVersionToggle
+                          value={compareSource}
+                          onChange={setCompareSource}
+                          variant={carePortalDark ? 'portal-dark' : 'light'}
+                        />
+                        <button
+                          type="button"
+                          onClick={dismissCompare}
+                          className={`text-[11px] font-medium underline-offset-2 hover:underline ${
+                            carePortalDark ? 'text-[var(--cp-muted)]' : 'text-gray-500'
+                          }`}
+                        >
+                          Afslut sammenligning
+                        </button>
+                      </>
                     )}
-                    Fagliggør med AI
-                  </button>
+                    <button
+                      type="button"
+                      disabled={polishing || !canPolish}
+                      onClick={() => void handlePolish()}
+                      className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                        carePortalDark
+                          ? 'border-[var(--cp-border)] text-[var(--cp-green)] hover:bg-white/5'
+                          : 'border-gray-200 text-[#0F1B2D] hover:bg-gray-50'
+                      }`}
+                    >
+                      {polishing ? (
+                        <Loader2 size={12} className="animate-spin" />
+                      ) : (
+                        <Sparkles size={12} />
+                      )}
+                      Fagliggør med AI
+                    </button>
+                  </div>
                 </div>
+                {compareMode && (
+                  <p
+                    className={`mb-2 text-[11px] leading-snug ${carePortalDark ? '' : 'text-gray-500'}`}
+                    style={carePortalDark ? { color: 'var(--cp-muted)' } : undefined}
+                  >
+                    {compareSource === 'ai' ? (
+                      <>
+                        Du ser <strong className="font-semibold">AI-forslaget</strong>. Skift til{' '}
+                        <strong className="font-semibold">Original</strong> for at sammenligne. Det
+                        du ser her, er det der gemmes.
+                      </>
+                    ) : (
+                      <>
+                        Du ser <strong className="font-semibold">dit oprindelige udkast</strong>.
+                        Det du ser her, er det der gemmes.
+                      </>
+                    )}
+                  </p>
+                )}
                 {isDoegnnotat ? (
                   <div className="space-y-3">
                     <div>
@@ -428,8 +563,25 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
                         Handling/aktivitet
                       </p>
                       <textarea
-                        value={doegnHandling}
-                        onChange={(e) => setDoegnHandling(e.target.value)}
+                        value={
+                          compareMode && pairOriginalDoegn && pairAiDoegn
+                            ? compareSource === 'original'
+                              ? pairOriginalDoegn.handling
+                              : pairAiDoegn.handling
+                            : doegnHandling
+                        }
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          if (compareMode && pairOriginalDoegn && pairAiDoegn) {
+                            if (compareSource === 'original') {
+                              setPairOriginalDoegn({ ...pairOriginalDoegn, handling: v });
+                            } else {
+                              setPairAiDoegn({ ...pairAiDoegn, handling: v });
+                            }
+                          } else {
+                            setDoegnHandling(v);
+                          }
+                        }}
                         placeholder="Beskriv hvad der konkret skete i vagten…"
                         rows={5}
                         className={`w-full resize-y rounded-xl border px-3 py-2.5 text-sm leading-relaxed focus:outline-none ${
@@ -454,8 +606,25 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
                         Refleksion
                       </p>
                       <textarea
-                        value={doegnRefleksion}
-                        onChange={(e) => setDoegnRefleksion(e.target.value)}
+                        value={
+                          compareMode && pairOriginalDoegn && pairAiDoegn
+                            ? compareSource === 'original'
+                              ? pairOriginalDoegn.refleksion
+                              : pairAiDoegn.refleksion
+                            : doegnRefleksion
+                        }
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          if (compareMode && pairOriginalDoegn && pairAiDoegn) {
+                            if (compareSource === 'original') {
+                              setPairOriginalDoegn({ ...pairOriginalDoegn, refleksion: v });
+                            } else {
+                              setPairAiDoegn({ ...pairAiDoegn, refleksion: v });
+                            }
+                          } else {
+                            setDoegnRefleksion(v);
+                          }
+                        }}
                         placeholder="Beskriv faglig vurdering og næste skridt…"
                         rows={5}
                         className={`w-full resize-y rounded-xl border px-3 py-2.5 text-sm leading-relaxed focus:outline-none ${
@@ -476,8 +645,25 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
                 ) : (
                   <div className="space-y-2">
                     <input
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
+                      value={
+                        compareMode && pairOriginalOther && pairAiOther
+                          ? compareSource === 'original'
+                            ? pairOriginalOther.title
+                            : pairAiOther.title
+                          : title
+                      }
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (compareMode && pairOriginalOther && pairAiOther) {
+                          if (compareSource === 'original') {
+                            setPairOriginalOther({ ...pairOriginalOther, title: v });
+                          } else {
+                            setPairAiOther({ ...pairAiOther, title: v });
+                          }
+                        } else {
+                          setTitle(v);
+                        }
+                      }}
                       placeholder={
                         category === 'Andet' ? 'Valgfri overskrift (kan udelades)' : 'Overskrift'
                       }
@@ -495,8 +681,25 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
                       }
                     />
                     <textarea
-                      value={body}
-                      onChange={(e) => setBody(e.target.value)}
+                      value={
+                        compareMode && pairOriginalOther && pairAiOther
+                          ? compareSource === 'original'
+                            ? pairOriginalOther.body
+                            : pairAiOther.body
+                          : body
+                      }
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (compareMode && pairOriginalOther && pairAiOther) {
+                          if (compareSource === 'original') {
+                            setPairOriginalOther({ ...pairOriginalOther, body: v });
+                          } else {
+                            setPairAiOther({ ...pairAiOther, body: v });
+                          }
+                        } else {
+                          setBody(v);
+                        }
+                      }}
                       placeholder={activeCategoryCfg.bodyPlaceholder}
                       rows={9}
                       // eslint-disable-next-line jsx-a11y/no-autofocus

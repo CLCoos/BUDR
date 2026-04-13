@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { createPortal } from 'react-dom';
 import { BookOpen, Mic, MicOff, Save, Sparkles, X } from 'lucide-react';
+import { JournalVersionToggle } from '@/components/journal/JournalVersionToggle';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { formatJournalEntriesInsertError } from '@/lib/journalEntriesInsertError';
@@ -62,6 +63,10 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
   const [isRecording, setIsRecording] = useState(false);
   const [polishing, setPolishing] = useState(false);
   const [polishFlash, setPolishFlash] = useState(false);
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareSource, setCompareSource] = useState<'original' | 'ai'>('ai');
+  const [noteOriginal, setNoteOriginal] = useState('');
+  const [noteAi, setNoteAi] = useState('');
   const [residents, setResidents] = useState<ResidentOption[]>([]);
   const [residentsLoading, setResidentsLoading] = useState(false);
   const [residentsSource, setResidentsSource] = useState<'live' | 'demo' | null>(null);
@@ -69,6 +74,10 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
   const recognitionRef = useRef<SpeechRec | null>(null);
   const accumulatedRef = useRef('');
   const modalRef = useRef<HTMLDivElement>(null);
+
+  const displayNote = compareMode ? (compareSource === 'original' ? noteOriginal : noteAi) : note;
+  const charCount = displayNote.length;
+  const showDictationPanel = !compareMode && (isRecording || displayNote.trim() === '');
 
   useEffect(() => {
     setMounted(true);
@@ -91,6 +100,10 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
       setPolishing(false);
       setPolishFlash(false);
       setSaving(false);
+      setCompareMode(false);
+      setCompareSource('ai');
+      setNoteOriginal('');
+      setNoteAi('');
     }
   }, [open]);
 
@@ -182,13 +195,18 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
-  const noteRef = useRef(note);
-  noteRef.current = note;
+  const noteRef = useRef(displayNote);
+  noteRef.current = displayNote;
 
   const toggleRecording = useCallback(() => {
     const Ctor = getSpeechRecognitionCtor();
     if (!Ctor) {
       toast.error('Diktat understøttes ikke i denne browser');
+      return;
+    }
+
+    if (compareMode) {
+      toast.message('Afslut sammenligning for at diktere ind i ét felt.');
       return;
     }
 
@@ -242,14 +260,19 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
       toast.error('Kunne ikke starte diktat');
       recognitionRef.current = null;
     }
-  }, [isRecording, stopRecognition]);
+  }, [compareMode, isRecording, stopRecognition]);
 
   const polishWithAi = useCallback(async () => {
-    const raw = note.trim();
+    const raw = (
+      compareMode ? (compareSource === 'original' ? noteOriginal : noteAi) : note
+    ).trim();
     if (!raw) return;
     const selected = residents.find((r) => r.id === residentId);
     setPolishing(true);
     try {
+      if (!compareMode) {
+        setNoteOriginal(note.trim());
+      }
       const response = await fetch('/api/portal/journal-polish', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -265,27 +288,45 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
         error?: string;
       };
       if (!response.ok) {
+        if (!compareMode) setNoteOriginal('');
         toast.error(data.error ?? 'AI kunne ikke forbedre noten');
         return;
       }
       const polishedText = (data.text ?? data.polished ?? '').trim();
       if (polishedText) {
-        setNote(polishedText);
+        setNoteAi(polishedText);
+        setCompareMode(true);
+        setCompareSource('ai');
         setPolishFlash(true);
         window.setTimeout(() => setPolishFlash(false), 1600);
       } else {
+        if (!compareMode) setNoteOriginal('');
         toast.error('Tomt svar fra AI');
       }
     } catch {
+      if (!compareMode) setNoteOriginal('');
       toast.error('Netværksfejl');
     } finally {
       setPolishing(false);
     }
-  }, [note, residentId, residents]);
+  }, [compareMode, compareSource, note, noteAi, noteOriginal, residentId, residents]);
+
+  const dismissJournalCompare = useCallback(() => {
+    if (!compareMode) return;
+    const picked = compareSource === 'original' ? noteOriginal : noteAi;
+    setNote(picked);
+    setCompareMode(false);
+    setCompareSource('ai');
+    setNoteOriginal('');
+    setNoteAi('');
+  }, [compareMode, compareSource, noteAi, noteOriginal]);
 
   const save = useCallback(async () => {
     const res = residents.find((r) => r.id === residentId);
-    if (!res || !note.trim()) {
+    const textToSave = (
+      compareMode ? (compareSource === 'original' ? noteOriginal : noteAi) : note
+    ).trim();
+    if (!res || !textToSave) {
       toast.error('Vælg beboer og skriv et notat');
       return;
     }
@@ -317,7 +358,7 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
       resident_id: residentId,
       staff_id: user?.id ?? null,
       staff_name: staffName,
-      entry_text: note.trim(),
+      entry_text: textToSave,
       category: 'Andet',
       journal_status: 'kladde',
       show_in_diary: true,
@@ -365,10 +406,17 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
       className: 'border-budr-teal/40',
     });
     onClose();
-  }, [residentId, note, residents, residentsSource, onClose]);
-
-  const showDictationPanel = isRecording || note.trim() === '';
-  const charCount = note.length;
+  }, [
+    compareMode,
+    compareSource,
+    note,
+    noteAi,
+    noteOriginal,
+    residentId,
+    residents,
+    residentsSource,
+    onClose,
+  ]);
 
   if (!mounted || !open) return null;
 
@@ -447,13 +495,55 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
         </div>
 
         <div className="mb-2">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <label htmlFor="hurtig-journal-note" className="text-xs font-medium text-gray-600">
+              Notat
+            </label>
+            {compareMode && (
+              <div className="flex flex-wrap items-center gap-2">
+                <JournalVersionToggle
+                  value={compareSource}
+                  onChange={setCompareSource}
+                  variant="light"
+                />
+                <button
+                  type="button"
+                  onClick={dismissJournalCompare}
+                  className="text-[11px] font-medium text-gray-500 underline-offset-2 hover:text-gray-700 hover:underline"
+                >
+                  Afslut sammenligning
+                </button>
+              </div>
+            )}
+          </div>
+          {compareMode && (
+            <p className="mb-2 text-[11px] leading-snug text-gray-500">
+              {compareSource === 'ai' ? (
+                <>
+                  Du ser <span className="font-semibold text-gray-700">AI-forslaget</span>. Skift
+                  til <span className="font-semibold text-gray-700">Original</span> for at
+                  sammenligne. Det du ser her, gemmes ved «Gem kladde».
+                </>
+              ) : (
+                <>
+                  Du ser <span className="font-semibold text-gray-700">dit oprindelige udkast</span>
+                  . Det du ser her, gemmes ved «Gem kladde».
+                </>
+              )}
+            </p>
+          )}
           <label htmlFor="hurtig-journal-note" className="sr-only">
-            Notat
+            Notattekst
           </label>
           <textarea
             id="hurtig-journal-note"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
+            value={displayNote}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (!compareMode) setNote(v);
+              else if (compareSource === 'original') setNoteOriginal(v);
+              else setNoteAi(v);
+            }}
             rows={5}
             placeholder="Skriv eller diktér en observation..."
             className={`min-h-32 w-full resize-y rounded-xl border border-gray-200 px-3 py-3 text-sm text-gray-900 placeholder:text-gray-400 transition-all duration-200 focus:border-budr-purple/40 focus:outline-none focus:ring-2 focus:ring-budr-purple/15 ${
