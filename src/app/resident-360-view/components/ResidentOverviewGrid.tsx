@@ -4,6 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Search, Users, CheckCircle, AlertTriangle } from 'lucide-react';
+import { residentNameRoomInitialsMatch } from '@/lib/residentSearchMatch';
 import type { ResidentItem } from '../page';
 
 // ── Colour tokens ─────────────────────────────────────────────
@@ -75,11 +76,10 @@ export default function ResidentOverviewGrid({ residents }: Props) {
   );
 
   const filtered = sorted.filter((r) => {
+    const ql = search.trim().toLowerCase();
     const matchSearch =
-      r.name.toLowerCase().includes(search.toLowerCase()) ||
-      r.room.toLowerCase().includes(search.toLowerCase()) ||
-      r.initials.toLowerCase().includes(search.toLowerCase()) ||
-      r.house.toLowerCase().includes(search.toLowerCase());
+      residentNameRoomInitialsMatch(r.name, r.room, r.initials, search) ||
+      (ql.length > 0 && r.house.toLowerCase().includes(ql));
     const matchFilter =
       filter === 'alle' ? true : filter === 'ingen' ? !r.trafficLight : r.trafficLight === filter;
     const matchHouse = houseFilter === 'alle' || r.house === houseFilter;
@@ -210,7 +210,7 @@ export default function ResidentOverviewGrid({ residents }: Props) {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Søg navn eller værelse…"
+              placeholder="Søg initialer, navn, værelse eller hus…"
               className="w-full pl-8 pr-3 py-2 text-sm rounded-lg focus:outline-none transition-colors"
               style={{
                 border: '1px solid var(--cp-border)',

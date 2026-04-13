@@ -3,6 +3,10 @@
 import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FileText, Search, User, X } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import { residentNameRoomInitialsMatch } from '@/lib/residentSearchMatch';
+import { isResidentUuidForCloud } from '@/lib/residentUuid';
+import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
 
 type CategoryKey = 'journal' | 'handleplan' | 'medicin' | 'bekymringsnotater' | 'aftaler';
 
@@ -120,16 +124,6 @@ const MOCK_RESIDENTS: MockResident[] = [
   },
 ];
 
-function residentMatchesQuery(r: MockResident, q: string): boolean {
-  const s = q.trim().toLowerCase();
-  if (!s) return false;
-  if (r.initials.toLowerCase().includes(s)) return true;
-  if (r.name.toLowerCase().includes(s)) return true;
-  const parts = r.name.toLowerCase().split(/\s+/);
-  if (parts.some((p) => p.startsWith(s))) return true;
-  return false;
-}
-
 function docMatchesQuery(d: MockDoc, q: string): boolean {
   const s = q.trim().toLowerCase();
   if (!s) return false;
@@ -179,6 +173,71 @@ function DokumentSøgningInner({
   const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const [liveResidents, setLiveResidents] = useState<MockResident[]>([]);
+  const [liveResidentsLoading, setLiveResidentsLoading] = useState(() => linkTarget !== 'demo');
+
+  useEffect(() => {
+    if (linkTarget === 'demo') {
+      setLiveResidentsLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setLiveResidentsLoading(true);
+    void (async () => {
+      const supabase = createClient();
+      if (!supabase) {
+        if (!cancelled) {
+          setLiveResidents([]);
+          setLiveResidentsLoading(false);
+        }
+        return;
+      }
+      const { orgId, error } = await resolveStaffOrgResidents(supabase);
+      if (cancelled) return;
+      if (error || !orgId) {
+        setLiveResidents([]);
+        setLiveResidentsLoading(false);
+        return;
+      }
+      const { data: rows, error: rowsErr } = await supabase
+        .from('care_residents')
+        .select('user_id, display_name, onboarding_data')
+        .eq('org_id', orgId)
+        .order('display_name');
+      if (cancelled) return;
+      if (rowsErr || !rows) {
+        setLiveResidents([]);
+        setLiveResidentsLoading(false);
+        return;
+      }
+      const mapped: MockResident[] = [];
+      for (const row of rows) {
+        const id = String(row.user_id ?? '');
+        if (!isResidentUuidForCloud(id)) continue;
+        const od = (row.onboarding_data ?? {}) as Record<string, unknown>;
+        const name = String(row.display_name ?? '').trim() || '—';
+        const rawIni = od.avatar_initials;
+        const initials =
+          typeof rawIni === 'string' && rawIni.trim().length > 0
+            ? rawIni.trim().toUpperCase().slice(0, 4)
+            : name.slice(0, 2).toUpperCase();
+        const rawRoom = od.room;
+        const room = typeof rawRoom === 'string' && rawRoom.trim() ? rawRoom.trim() : '—';
+        mapped.push({ id, name, initials, room, documents: [] });
+      }
+      setLiveResidents(mapped);
+      setLiveResidentsLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [linkTarget]);
+
+  const residentsForSearch = useMemo(
+    () => (linkTarget === 'demo' ? MOCK_RESIDENTS : liveResidents),
+    [linkTarget, liveResidents]
+  );
+
   const categoryTab = useCallback(
     (cat: CategoryKey) =>
       linkTarget === 'live' ? CATEGORY_TO_TAB_LIVE[cat] : CATEGORY_TO_TAB_DEMO[cat],
@@ -198,19 +257,21 @@ function DokumentSøgningInner({
 
   const matchedResidents = useMemo(() => {
     if (q.length < 1) return [];
-    return MOCK_RESIDENTS.filter((r) => residentMatchesQuery(r, q));
-  }, [q]);
+    return residentsForSearch.filter((r) =>
+      residentNameRoomInitialsMatch(r.name, r.room, r.initials, q)
+    );
+  }, [q, residentsForSearch]);
 
   const matchedDocs = useMemo(() => {
     if (q.length < 1) return [] as { resident: MockResident; doc: MockDoc }[];
     const out: { resident: MockResident; doc: MockDoc }[] = [];
-    for (const r of MOCK_RESIDENTS) {
+    for (const r of residentsForSearch) {
       for (const doc of r.documents) {
         if (docMatchesQuery(doc, q)) out.push({ resident: r, doc });
       }
     }
     return out;
-  }, [q]);
+  }, [q, residentsForSearch]);
 
   const navEntries = useMemo((): NavEntry[] => {
     const e: NavEntry[] = [];
@@ -401,7 +462,7 @@ function DokumentSøgningInner({
               if (q.length >= 1) setOpen(true);
             }}
             onKeyDown={onInputKeyDown}
-            placeholder="Søg beboer eller dokumenter…"
+            placeholder="Søg initialer, beboer eller dokumenter…"
             autoComplete="off"
             aria-expanded={showDropdown}
             aria-controls="dokument-sogning-results"
@@ -436,7 +497,9 @@ function DokumentSøgningInner({
           role="listbox"
           onMouseDown={(e) => e.preventDefault()}
         >
-          {matchedResidents.length === 0 && matchedDocs.length === 0 ? (
+          {liveResidentsLoading && linkTarget !== 'demo' ? (
+            <div className={emptyCls}>Henter beboere…</div>
+          ) : matchedResidents.length === 0 && matchedDocs.length === 0 ? (
             <div className={emptyCls}>Ingen resultater for &apos;{q}&apos;</div>
           ) : (
             <div className="max-h-[min(70vh,28rem)] overflow-y-auto py-2">

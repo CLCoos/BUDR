@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Search, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { residentNameRoomInitialsMatch } from '@/lib/residentSearchMatch';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
 
 // ── Types ────────────────────────────────────────────────────
@@ -280,8 +281,7 @@ export default function ResidentList({ compact = false }: { compact?: boolean })
   // ── Filter + search ────────────────────────────────────────
 
   const filtered = residents.filter((r) => {
-    const matchSearch =
-      r.name.toLowerCase().includes(search.toLowerCase()) || r.room.includes(search);
+    const matchSearch = residentNameRoomInitialsMatch(r.name, r.room, r.initials, search);
     const matchFilter =
       filter === 'alle' ? true : filter === 'ingen' ? !r.trafficLight : r.trafficLight === filter;
     return matchSearch && matchFilter;
@@ -363,7 +363,7 @@ export default function ResidentList({ compact = false }: { compact?: boolean })
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Søg navn eller værelse..."
+              placeholder="Søg initialer, navn eller værelse…"
               className="w-full pl-8 pr-3 py-2 text-sm focus:outline-none transition-colors"
               style={{
                 backgroundColor: 'var(--cp-bg3)',
