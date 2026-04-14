@@ -69,6 +69,14 @@ This project uses Tailwind CSS for styling with the following features:
 - `npm run lint:fix` - Fix ESLint issues automatically
 - `npm run format` - Format code with Prettier
 
+## 🔄 Session handoff (obligatorisk)
+
+Efter **hver** session med kodeændringer:
+
+1. Opdater `CONTEXT.md` (dato + kort status snapshot af leverede ændringer).
+2. Opdater relevante docs (typisk `README.md`), hvis workflows, ruter eller driftskrav ændres.
+3. Kør minimum `npm run lint` og helst `npm run type-check && npm run build` før aflevering.
+
 ## Care Portal — journal AI (kvalitet)
 
 **Fagliggør med AI** (`/api/portal/journal-polish`) bruger Anthropic. For at tune sprog og pålidelighed:

@@ -1421,3 +1421,157 @@ html {
   border: 1px solid rgba(217, 85, 85, 0.35);
   color: #f0b4b4;
 }
+
+/* ── Homepage 2026 rewrite ──────────────────────────────────────────────── */
+.budr-landing .home-v2 section {
+  padding-top: clamp(82px, 10vw, 140px);
+  padding-bottom: clamp(82px, 10vw, 140px);
+}
+
+.budr-landing .home-hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding-top: clamp(120px, 12vw, 172px);
+}
+
+.budr-landing .home-brand-row {
+  margin-bottom: 28px;
+}
+
+.budr-landing .home-hero h1 {
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
+  font-size: clamp(2.2rem, 5.4vw, 4.7rem);
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  max-width: 15ch;
+  margin: 0 0 24px;
+}
+
+.budr-landing .home-hero p {
+  max-width: 52ch;
+  font-size: clamp(1rem, 1.2vw, 1.18rem);
+  color: var(--white-dim);
+  line-height: 1.7;
+  margin: 0 0 34px;
+}
+
+.budr-landing .home-proof {
+  padding-top: 34px;
+  padding-bottom: 34px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.budr-landing .home-proof p {
+  margin: 0;
+  color: var(--fog);
+  font-size: 0.85rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.budr-landing .home-copy-shell .section-h {
+  max-width: 20ch;
+}
+
+.budr-landing .home-copy-shell .section-p {
+  max-width: 56ch;
+}
+
+.budr-landing .home-cta-band {
+  text-align: left;
+}
+
+/* ── /institutioner rewrite ─────────────────────────────────────────────── */
+.budr-landing .institutioner-v2 section {
+  padding-top: clamp(74px, 8vw, 112px);
+  padding-bottom: clamp(74px, 8vw, 112px);
+}
+
+.budr-landing .institutioner-hero {
+  min-height: 88vh;
+  display: flex;
+  align-items: center;
+  padding-top: clamp(118px, 11vw, 164px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.budr-landing .institutioner-brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 26px;
+}
+
+.budr-landing .institutioner-back-link {
+  color: var(--fog);
+  text-decoration: none;
+  font-size: 0.84rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.budr-landing .institutioner-back-link:hover {
+  color: var(--white);
+}
+
+.budr-landing .institutioner-hero .section-h {
+  max-width: 15ch;
+}
+
+.budr-landing .institutioner-hero .section-p {
+  max-width: 56ch;
+}
+
+.budr-landing .institutioner-copy-shell .section-h {
+  max-width: 20ch;
+}
+
+.budr-landing .institutioner-copy-shell .section-p {
+  max-width: 54ch;
+  margin-bottom: 16px;
+}
+
+.budr-landing .institutioner-copy-shell .section-p:last-child {
+  margin-bottom: 0;
+}
+
+.budr-landing .institutioner-problem {
+  background: linear-gradient(180deg, rgba(217, 85, 85, 0.08) 0%, rgba(12, 17, 24, 0.03) 100%);
+}
+
+.budr-landing .institutioner-contrast {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.budr-landing .institutioner-social-proof {
+  background: rgba(133, 183, 235, 0.07);
+}
+
+.budr-landing .institutioner-tech a {
+  color: var(--amber-lt);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.budr-landing .institutioner-contact .cta-lead {
+  margin-bottom: 28px;
+}
+
+.budr-landing .institutioner-contact-inner {
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 560px) {
+  .budr-landing .home-proof p {
+    letter-spacing: 0.04em;
+    line-height: 1.7;
+  }
+
+  .budr-landing .institutioner-brand-row {
+    margin-bottom: 18px;
+  }
+}

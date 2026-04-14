@@ -6,11 +6,11 @@ import '../budr-landing.css';
 export const metadata: Metadata = {
   title: 'Institutioner — kommuner og botilbud | BUDR Care',
   description:
-    'Målgruppe, implementering, pilot, anonym case og IT/DPO-oversigt (hosting, RLS, journal godkendt/kladde, AI/Anthropic) for BUDR Care.',
+    'BUDR Care til institutioner: hvorfor status quo koster, hvad Care Portal + Lys ændrer, og hvordan I starter med en målbar pilot.',
   openGraph: {
     title: 'BUDR Care — Institutionssti for kommuner og botilbud',
     description:
-      'Beslutningsstøtte: målgruppe, implementering, pilot, tillid og sikkerhed til IT og DPO.',
+      'Se hvordan BUDR Care erstatter tung dokumentation med et samlet system til personale og borgere.',
   },
 };
 
