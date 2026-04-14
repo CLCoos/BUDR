@@ -28,14 +28,17 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
               </Link>
             </div>
             <p className="eyebrow">Til kommuner og botilbud</p>
-            <h1 className="section-h">
-              Det dokumentationssystem socialpsykiatrien fortjente. Ikke det den fik i 2008.
-            </h1>
+            <h1 className="section-h">Et driftssystem bygget til socialpsykiatrisk virkelighed.</h1>
             <p className="section-p">
               BUDR Care samler Care Portal og Lys i ét driftssystem. Personale arbejder i realtid.
               Borgeren er med i samme flow. Det løfter faglighed, overdragelse og dokumentation fra
               første uge.
             </p>
+            <ul className="intro-detail-list institutioner-hero-list">
+              <li>Én platform til borger, team og ledelse.</li>
+              <li>Tydelig dokumentation med kladde og godkendt status.</li>
+              <li>Pilot med klare mål før fuld udrulning.</li>
+            </ul>
             <div className="hero-actions">
               <a href="#kontakt" className="btn-primary">
                 Book en gennemgang
@@ -100,6 +103,14 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
             <p className="section-p">
               Vi er i pilotdialog med udvalgte botilbud. Kontakt os for at høre mere.
             </p>
+            <div className="hero-actions">
+              <a href="#kontakt" className="btn-primary">
+                Book en gennemgang
+              </a>
+              <Link href="/care-portal-demo" className="btn-ghost">
+                Prøv demo
+              </Link>
+            </div>
           </div>
         </section>
 

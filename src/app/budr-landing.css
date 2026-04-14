@@ -1428,15 +1428,62 @@ html {
   padding-bottom: clamp(82px, 10vw, 140px);
 }
 
-.budr-landing .home-hero {
-  min-height: 100vh;
+.budr-landing .home-nav {
+  position: sticky;
+  top: 0;
+  z-index: 1200;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 22, 20, 0.92);
+  backdrop-filter: blur(10px);
+}
+
+.budr-landing .home-nav-inner {
   display: flex;
   align-items: center;
-  padding-top: clamp(120px, 12vw, 172px);
+  justify-content: space-between;
+  gap: 18px;
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+.budr-landing .home-nav-logo {
+  display: inline-flex;
+  align-items: center;
+}
+
+.budr-landing .home-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.budr-landing .home-nav-links a {
+  color: var(--fog);
+  text-decoration: none;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+}
+
+.budr-landing .home-nav-links a:hover {
+  color: var(--white);
+}
+
+.budr-landing .home-hero {
+  min-height: 92vh;
+  display: flex;
+  align-items: flex-start;
+  padding-top: clamp(72px, 9vw, 116px);
+}
+
+.budr-landing .home-hero-grid {
+  display: grid;
+  gap: 18px;
 }
 
 .budr-landing .home-brand-row {
-  margin-bottom: 28px;
+  margin-bottom: 10px;
 }
 
 .budr-landing .home-hero h1 {
@@ -1453,7 +1500,64 @@ html {
   font-size: clamp(1rem, 1.2vw, 1.18rem);
   color: var(--white-dim);
   line-height: 1.7;
-  margin: 0 0 34px;
+  margin: 0;
+}
+
+.budr-landing .home-hero-points {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.budr-landing .home-hero-points span {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(133, 183, 235, 0.24);
+  background: rgba(133, 183, 235, 0.08);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  color: var(--white-dim);
+}
+
+.budr-landing .home-overview-cards {
+  margin-top: 40px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.budr-landing .home-overview-card {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+  border-radius: 16px;
+  padding: 22px 20px;
+}
+
+.budr-landing .home-card-label {
+  margin: 0 0 8px;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+
+.budr-landing .home-overview-card h3 {
+  margin: 0 0 12px;
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
+  font-size: 1.22rem;
+  font-weight: 400;
+}
+
+.budr-landing .home-overview-card ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--white-dim);
+  display: grid;
+  gap: 8px;
+  line-height: 1.55;
+  font-size: 0.9rem;
 }
 
 .budr-landing .home-proof {
@@ -1471,6 +1575,21 @@ html {
   text-transform: uppercase;
 }
 
+.budr-landing .home-usp {
+  padding-top: clamp(64px, 8vw, 104px);
+  padding-bottom: clamp(64px, 8vw, 104px);
+}
+
+.budr-landing .home-usp-list {
+  margin: 20px 0 0;
+  padding-left: 18px;
+  max-width: 58ch;
+  display: grid;
+  gap: 10px;
+  color: var(--white-dim);
+  line-height: 1.6;
+}
+
 .budr-landing .home-copy-shell .section-h {
   max-width: 20ch;
 }
@@ -1479,8 +1598,90 @@ html {
   max-width: 56ch;
 }
 
+.budr-landing .home-problem-grid {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.budr-landing .home-problem-item {
+  border: 1px solid rgba(217, 85, 85, 0.3);
+  background: rgba(217, 85, 85, 0.08);
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 0.9rem;
+  color: var(--white-dim);
+}
+
+.budr-landing .home-view-switch {
+  margin-top: 24px;
+  display: inline-flex;
+  border: 1px solid rgba(133, 183, 235, 0.24);
+  border-radius: 999px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.budr-landing .home-view-switch button {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--fog);
+  font-size: 0.84rem;
+  font-family: inherit;
+  border-radius: 999px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.budr-landing .home-view-switch button.is-active {
+  background: rgba(133, 183, 235, 0.2);
+  color: var(--white);
+}
+
+.budr-landing .home-feature-box {
+  margin-top: 16px;
+  border: 1px solid rgba(133, 183, 235, 0.28);
+  border-radius: 14px;
+  background: rgba(133, 183, 235, 0.08);
+  padding: 20px;
+}
+
+.budr-landing .home-feature-box h3 {
+  margin: 0 0 10px;
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
+  font-size: 1.26rem;
+  font-weight: 400;
+}
+
+.budr-landing .home-feature-box ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+  color: var(--white-dim);
+  font-size: 0.92rem;
+}
+
 .budr-landing .home-cta-band {
   text-align: left;
+}
+
+.budr-landing .home-cta-band-inner {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  padding: clamp(24px, 4vw, 42px);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+}
+
+.budr-landing .home-cta-band-inner h2 {
+  margin: 0 0 18px;
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  line-height: 1.16;
+  font-weight: 400;
+  max-width: 22ch;
 }
 
 /* ── /institutioner rewrite ─────────────────────────────────────────────── */
@@ -1522,6 +1723,12 @@ html {
 
 .budr-landing .institutioner-hero .section-p {
   max-width: 56ch;
+}
+
+.budr-landing .institutioner-hero-list {
+  max-width: 56ch;
+  margin-top: 16px;
+  margin-bottom: 0;
 }
 
 .budr-landing .institutioner-copy-shell .section-h {
@@ -1566,9 +1773,43 @@ html {
 }
 
 @media (max-width: 560px) {
+  .budr-landing .home-nav-inner {
+    flex-wrap: wrap;
+  }
+
+  .budr-landing .home-nav-links {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .budr-landing .home-nav-links a {
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 8px 10px;
+  }
+
+  .budr-landing .home-nav .btn-sm {
+    width: 100%;
+    justify-content: center;
+  }
+
   .budr-landing .home-proof p {
     letter-spacing: 0.04em;
     line-height: 1.7;
+  }
+
+  .budr-landing .home-overview-cards,
+  .budr-landing .home-problem-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .budr-landing .home-feature-box,
+  .budr-landing .home-overview-card,
+  .budr-landing .home-cta-band-inner {
+    border-radius: 14px;
   }
 
   .budr-landing .institutioner-brand-row {
