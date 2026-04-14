@@ -1457,6 +1457,12 @@ html {
   gap: 20px;
 }
 
+.budr-landing .home-nav-cta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .budr-landing .home-nav-links a {
   color: var(--fog);
   text-decoration: none;
@@ -1845,6 +1851,12 @@ html {
   margin-bottom: 26px;
 }
 
+.budr-landing .institutioner-brand-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .budr-landing .institutioner-back-link {
   color: var(--fog);
   text-decoration: none;
@@ -1974,6 +1986,18 @@ html {
     justify-content: center;
   }
 
+  .budr-landing .home-nav-cta {
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .budr-landing .home-nav .btn-sm,
+  .budr-landing .home-nav .btn-sm-ghost {
+    width: 100%;
+    justify-content: center;
+  }
+
   .budr-landing .home-proof p {
     letter-spacing: 0.04em;
     line-height: 1.7;
@@ -2005,6 +2029,13 @@ html {
   }
 
   .budr-landing .institutioner-brand-row {
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .budr-landing .institutioner-brand-actions {
+    flex-direction: column;
+    align-items: flex-end;
     margin-bottom: 18px;
   }
 }

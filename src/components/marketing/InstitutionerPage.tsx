@@ -23,9 +23,14 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
               <Link href="/" className="nav-logo" aria-label="BUDR Care — forsiden">
                 <BudrLogo dark size={40} />
               </Link>
-              <Link href="/" className="institutioner-back-link">
-                Forside
-              </Link>
+              <div className="institutioner-brand-actions">
+                <Link href="/care-portal-login" className="btn-sm-ghost">
+                  Login (BingBong)
+                </Link>
+                <Link href="/" className="institutioner-back-link">
+                  Forside
+                </Link>
+              </div>
             </div>
             <p className="eyebrow">Til kommuner og botilbud</p>
             <h1 className="section-h">Et driftssystem bygget til socialpsykiatrisk virkelighed.</h1>

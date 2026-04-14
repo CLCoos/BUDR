@@ -68,9 +68,14 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
               <a href="#funktioner">Funktioner</a>
               <a href="#kontakt">Kontakt</a>
             </div>
-            <Link href="/institutioner" className="btn-sm">
-              Se hvad vi erstatter
-            </Link>
+            <div className="home-nav-cta">
+              <Link href="/care-portal-login" className="btn-sm-ghost">
+                Login (BingBong)
+              </Link>
+              <Link href="/institutioner" className="btn-sm">
+                Se hvad vi erstatter
+              </Link>
+            </div>
           </div>
         </nav>
 
