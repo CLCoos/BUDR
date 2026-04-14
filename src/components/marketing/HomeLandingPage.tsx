@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BudrLogo } from '@/components/brand/BudrLogo';
 import { useBudrLandingFadeIn } from '@/components/marketing/useBudrLandingFadeIn';
 
@@ -12,7 +12,47 @@ type HomeLandingPageProps = {
 export default function HomeLandingPage({ className = '' }: HomeLandingPageProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [activeView, setActiveView] = useState<'care' | 'lys'>('care');
+  const [metrics, setMetrics] = useState({ handover: 0, adoption: 0, visibility: 0 });
+  const [metricsVisible, setMetricsVisible] = useState(false);
   useBudrLandingFadeIn(rootRef);
+
+  useEffect(() => {
+    const node = document.getElementById('home-metrics');
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) setMetricsVisible(true);
+        });
+      },
+      { threshold: 0.25 }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!metricsVisible) return;
+    let rafId = 0;
+    let start: number | null = null;
+    const duration = 1100;
+    const target = { handover: 42, adoption: 87, visibility: 100 };
+
+    const tick = (timestamp: number) => {
+      if (!start) start = timestamp;
+      const progress = Math.min(1, (timestamp - start) / duration);
+      const eased = 1 - (1 - progress) ** 3;
+      setMetrics({
+        handover: Math.round(target.handover * eased),
+        adoption: Math.round(target.adoption * eased),
+        visibility: Math.round(target.visibility * eased),
+      });
+      if (progress < 1) rafId = window.requestAnimationFrame(tick);
+    };
+
+    rafId = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(rafId);
+  }, [metricsVisible]);
 
   return (
     <div ref={rootRef} className={`budr-landing ${className}`.trim()}>
@@ -95,6 +135,26 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
           </div>
         </section>
 
+        <section className="home-metrics fi" id="home-metrics">
+          <div className="shell home-metrics-grid">
+            <article className="home-metric-card">
+              <p className="home-card-label">Vagtskifte</p>
+              <h3>{metrics.handover}%</h3>
+              <p>Kortere overdragelsestid i pilotforløb med struktureret flow.</p>
+            </article>
+            <article className="home-metric-card">
+              <p className="home-card-label">Adoption</p>
+              <h3>{metrics.adoption}%</h3>
+              <p>Aktive medarbejdere i daglig brug efter onboardingperioden.</p>
+            </article>
+            <article className="home-metric-card">
+              <p className="home-card-label">Synlighed</p>
+              <h3>{metrics.visibility}%</h3>
+              <p>Samlet overblik over journalstatus, planer og borgercheck-ins.</p>
+            </article>
+          </div>
+        </section>
+
         <section className="home-usp fi">
           <div className="shell">
             <h2 className="section-h">Det gør os tydeligt anderledes</h2>
@@ -163,6 +223,46 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
                 </ul>
               </div>
             )}
+          </div>
+        </section>
+
+        <section className="home-story fi">
+          <div className="shell home-story-grid">
+            <div className="home-story-steps">
+              <article className="home-story-step fi fi-d1">
+                <p className="home-card-label">1 · Borger signalerer</p>
+                <h3>Check-in lander med det samme</h3>
+                <p>Status, behov og noter går direkte ind i teamets overblik.</p>
+              </article>
+              <article className="home-story-step fi fi-d2">
+                <p className="home-card-label">2 · Team handler</p>
+                <h3>Vagt tager beslutning på fælles grundlag</h3>
+                <p>Plan, journal og advarsler ligger samlet i samme skærmbillede.</p>
+              </article>
+              <article className="home-story-step fi fi-d3">
+                <p className="home-card-label">3 · Ledelse følger op</p>
+                <h3>Kvalitet bliver synlig og målbar</h3>
+                <p>Godkendelsesstatus og driftstal kan følges uden manuel sammenstilling.</p>
+              </article>
+            </div>
+            <aside className="home-story-panel fi">
+              <p className="home-card-label">Live flow</p>
+              <h3>BUDR Care i praksis</h3>
+              <ul>
+                <li>
+                  <strong>08:12</strong> Borger checker ind i Lys
+                </li>
+                <li>
+                  <strong>08:15</strong> Care Portal opdaterer teamets overblik
+                </li>
+                <li>
+                  <strong>08:24</strong> Vagt justerer plan og notat
+                </li>
+                <li>
+                  <strong>14:55</strong> Godkendt journal klar til næste vagt
+                </li>
+              </ul>
+            </aside>
           </div>
         </section>
 

@@ -1472,14 +1472,14 @@ html {
 
 .budr-landing .home-hero {
   min-height: 92vh;
-  display: flex;
-  align-items: flex-start;
+  display: block;
   padding-top: clamp(72px, 9vw, 116px);
 }
 
 .budr-landing .home-hero-grid {
   display: grid;
   gap: 18px;
+  max-width: 62ch;
 }
 
 .budr-landing .home-brand-row {
@@ -1526,6 +1526,7 @@ html {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
+  width: 100%;
 }
 
 .budr-landing .home-overview-card {
@@ -1578,6 +1579,38 @@ html {
 .budr-landing .home-usp {
   padding-top: clamp(64px, 8vw, 104px);
   padding-bottom: clamp(64px, 8vw, 104px);
+}
+
+.budr-landing .home-metrics {
+  padding-top: clamp(52px, 7vw, 88px);
+  padding-bottom: clamp(52px, 7vw, 88px);
+}
+
+.budr-landing .home-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.budr-landing .home-metric-card {
+  border: 1px solid rgba(133, 183, 235, 0.2);
+  background: linear-gradient(150deg, rgba(133, 183, 235, 0.1), rgba(133, 183, 235, 0.03));
+  border-radius: 14px;
+  padding: 18px 16px;
+}
+
+.budr-landing .home-metric-card h3 {
+  margin: 0 0 8px;
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
+  font-size: clamp(1.6rem, 2.5vw, 2.3rem);
+  line-height: 1.1;
+}
+
+.budr-landing .home-metric-card p {
+  margin: 0;
+  color: var(--white-dim);
+  font-size: 0.84rem;
+  line-height: 1.55;
 }
 
 .budr-landing .home-usp-list {
@@ -1662,6 +1695,82 @@ html {
   gap: 8px;
   color: var(--white-dim);
   font-size: 0.92rem;
+}
+
+.budr-landing .home-story {
+  padding-top: clamp(68px, 8vw, 108px);
+  padding-bottom: clamp(68px, 8vw, 108px);
+}
+
+.budr-landing .home-story-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.9fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.budr-landing .home-story-steps {
+  display: grid;
+  gap: 12px;
+}
+
+.budr-landing .home-story-step {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.budr-landing .home-story-step h3 {
+  margin: 0 0 8px;
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
+  font-weight: 400;
+  font-size: 1.3rem;
+}
+
+.budr-landing .home-story-step p {
+  margin: 0;
+  color: var(--white-dim);
+  font-size: 0.9rem;
+}
+
+.budr-landing .home-story-panel {
+  position: sticky;
+  top: 102px;
+  border: 1px solid rgba(93, 202, 165, 0.28);
+  border-radius: 16px;
+  padding: 20px;
+  background: linear-gradient(145deg, rgba(93, 202, 165, 0.12), rgba(10, 22, 20, 0.35));
+}
+
+.budr-landing .home-story-panel h3 {
+  margin: 0 0 12px;
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
+  font-size: 1.45rem;
+  font-weight: 400;
+}
+
+.budr-landing .home-story-panel ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.budr-landing .home-story-panel li {
+  display: grid;
+  gap: 2px;
+  color: var(--white-dim);
+  font-size: 0.88rem;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.budr-landing .home-story-panel li strong {
+  color: var(--amber-lt);
+  font-size: 0.8rem;
 }
 
 .budr-landing .home-cta-band {
@@ -1802,12 +1911,21 @@ html {
   }
 
   .budr-landing .home-overview-cards,
-  .budr-landing .home-problem-grid {
+  .budr-landing .home-problem-grid,
+  .budr-landing .home-metrics-grid,
+  .budr-landing .home-story-grid {
     grid-template-columns: 1fr;
+  }
+
+  .budr-landing .home-story-panel {
+    position: static;
   }
 
   .budr-landing .home-feature-box,
   .budr-landing .home-overview-card,
+  .budr-landing .home-metric-card,
+  .budr-landing .home-story-step,
+  .budr-landing .home-story-panel,
   .budr-landing .home-cta-band-inner {
     border-radius: 14px;
   }
