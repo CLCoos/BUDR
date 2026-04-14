@@ -117,33 +117,59 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
         <section className="institutioner-target fi" id="maalgruppe">
           <div className="shell institutioner-copy-shell">
             <h2 className="section-h">Målgruppe</h2>
-            <ul className="intro-detail-list">
-              <li>Forstandere og ledere, der vil løfte faglig kvalitet og dokumentation.</li>
-              <li>Kommunale tilbudskonsulenter og socialchefer med ansvar for drift.</li>
-              <li>Faglige teams, der vil have samme overblik på tværs af vagter.</li>
-            </ul>
+            <div className="institutioner-list-grid">
+              <article className="institutioner-list-card">
+                <h3>Forstandere og ledere</h3>
+                <p>Til jer der vil løfte kvalitet, dokumentation og beslutningshastighed.</p>
+              </article>
+              <article className="institutioner-list-card">
+                <h3>Kommunale beslutningstagere</h3>
+                <p>Til tilbudskonsulenter og socialchefer med ansvar for drift og retning.</p>
+              </article>
+              <article className="institutioner-list-card">
+                <h3>Faglige teams i drift</h3>
+                <p>Til medarbejdere der skal arbejde på samme overblik i alle vagter.</p>
+              </article>
+            </div>
           </div>
         </section>
 
         <section className="institutioner-implementation fi" id="implementering">
           <div className="shell institutioner-copy-shell">
             <h2 className="section-h">Implementering</h2>
-            <ul className="intro-detail-list">
-              <li>Vi planlægger forløbet med jeres ledelse og nøglepersoner.</li>
-              <li>Vi håndterer opsætning, onboarding og træning af medarbejdere.</li>
-              <li>Vi følger driftstæt op i opstartsperioden med faste checkpoints.</li>
-              <li>Vi dokumenterer effekt, så I kan beslutte næste skridt hurtigt.</li>
-            </ul>
+            <div className="institutioner-list-grid institutioner-list-grid--four">
+              <article className="institutioner-list-card">
+                <h3>Plan</h3>
+                <p>Vi planlægger forløbet med ledelse og nøglepersoner.</p>
+              </article>
+              <article className="institutioner-list-card">
+                <h3>Onboarding</h3>
+                <p>Vi står for opsætning, træning og opstart af teamet.</p>
+              </article>
+              <article className="institutioner-list-card">
+                <h3>Driftsstøtte</h3>
+                <p>Vi følger tæt op i opstartsperioden med faste checkpoints.</p>
+              </article>
+              <article className="institutioner-list-card">
+                <h3>Effektmåling</h3>
+                <p>Vi dokumenterer effekten, så I kan beslutte næste skridt.</p>
+              </article>
+            </div>
           </div>
         </section>
 
         <section className="institutioner-pilot fi" id="pilot">
           <div className="shell institutioner-copy-shell">
             <h2 className="section-h">Pilot</h2>
-            <p className="section-p">
-              Piloten afklarer drift, adfærd og effekt i praksis. Format og succeskriterier får I i
-              pilotpakken efter første møde.
-            </p>
+            <div className="institutioner-list-grid institutioner-list-grid--single">
+              <article className="institutioner-list-card">
+                <h3>Kort forløb med klare succeskriterier</h3>
+                <p>
+                  Piloten afklarer drift, adfærd og effekt i praksis. Pilotpakken leveres efter
+                  første møde.
+                </p>
+              </article>
+            </div>
           </div>
         </section>
 

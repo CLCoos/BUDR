@@ -158,11 +158,23 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
         <section className="home-usp fi">
           <div className="shell">
             <h2 className="section-h">Det gør os tydeligt anderledes</h2>
-            <ul className="home-usp-list">
-              <li>Borger-ejet app direkte koblet til personalets arbejdsflow.</li>
-              <li>PARK-metodikken er indbygget i funktionerne, ikke i en manual.</li>
-              <li>I starter i pilot og skalerer på dokumenteret effekt.</li>
-            </ul>
+            <div className="home-usp-grid">
+              <article className="home-usp-card">
+                <p className="home-card-label">USP 01</p>
+                <h3>Borger og personale i samme flow</h3>
+                <p>Borger-ejet app koblet direkte til teamets daglige arbejde.</p>
+              </article>
+              <article className="home-usp-card">
+                <p className="home-card-label">USP 02</p>
+                <h3>PARK indbygget i produktet</h3>
+                <p>Metodikken lever i funktionerne. Ikke i et separat dokument.</p>
+              </article>
+              <article className="home-usp-card">
+                <p className="home-card-label">USP 03</p>
+                <h3>Pilot før skalering</h3>
+                <p>I starter med målbar effekt og udvider på dokumenteret kvalitet.</p>
+              </article>
+            </div>
           </div>
         </section>
 
@@ -174,9 +186,18 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
               sjældent helt ind i beslutningen.
             </p>
             <div className="home-problem-grid">
-              <div className="home-problem-item">Overlevering bygger på hukommelse.</div>
-              <div className="home-problem-item">Kladder bliver forvekslet med dokumentation.</div>
-              <div className="home-problem-item">Borgerdata lever uden for medarbejderflowet.</div>
+              <article className="home-problem-item">
+                <h3>Overlevering på hukommelse</h3>
+                <p>Næste vagt mangler afgørende kontekst fra starten.</p>
+              </article>
+              <article className="home-problem-item">
+                <h3>Kladder forveksles med fakta</h3>
+                <p>Teamet tvivler på, hvad der er godkendt dokumentation.</p>
+              </article>
+              <article className="home-problem-item">
+                <h3>Borgerdata ligger ved siden af drift</h3>
+                <p>Signaler når for sent frem til dem, der skal handle.</p>
+              </article>
             </div>
           </div>
         </section>
