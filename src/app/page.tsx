@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import HomeLandingPage from '@/components/marketing/HomeLandingPage';
 import { marketingFontVariableClassName } from './marketing-fonts';
 import './budr-landing.css';
+import './budr-landing-longform.css';
 
 export const metadata: Metadata = {
   title: 'BUDR Care — Driftssystem til socialpsykiatriske botilbud',

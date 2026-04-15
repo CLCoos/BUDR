@@ -1,58 +1,49 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { BudrLogo } from '@/components/brand/BudrLogo';
+import MarketingFooter from '@/components/marketing/MarketingFooter';
 import { useBudrLandingFadeIn } from '@/components/marketing/useBudrLandingFadeIn';
+
+const LandingInteractiveDemo = dynamic(
+  () =>
+    import('@/components/marketing/LandingInteractiveDemo').then((m) => ({
+      default: m.LandingInteractiveDemo,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="live-demo-skeleton" role="status" aria-label="Indlæser interaktiv demo" />
+    ),
+  }
+);
 
 type HomeLandingPageProps = {
   className?: string;
 };
 
+const CARE_USPS = [
+  'Realtime risikobillede på tværs af alle borgere.',
+  'Fra observation til godkendt journal i samme flow.',
+  'AI-støttet dagssyntese til skarp overdragelse.',
+  'Beboer-360 med plan- og medicinhandlinger samlet.',
+  'Ledelsesklare rapporter direkte fra driftsdata.',
+] as const;
+
+const LYS_USPS = [
+  'Akut-beredskab i app med direkte personalealarm.',
+  'Tidlig opsporing via humørtjek med handling i portalen.',
+  'Samskabt dagsstruktur mellem borger og personale.',
+  'AI-støttet journal med PARK-kladde på sekunder.',
+  'Empatisk Lys-ledsager med kontinuitet mellem vagter.',
+] as const;
+
 export default function HomeLandingPage({ className = '' }: HomeLandingPageProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [activeView, setActiveView] = useState<'care' | 'lys'>('care');
-  const [metrics, setMetrics] = useState({ handover: 0, adoption: 0, visibility: 0 });
-  const [metricsVisible, setMetricsVisible] = useState(false);
   useBudrLandingFadeIn(rootRef);
-
-  useEffect(() => {
-    const node = document.getElementById('home-metrics');
-    if (!node) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) setMetricsVisible(true);
-        });
-      },
-      { threshold: 0.25 }
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!metricsVisible) return;
-    let rafId = 0;
-    let start: number | null = null;
-    const duration = 1100;
-    const target = { handover: 42, adoption: 87, visibility: 100 };
-
-    const tick = (timestamp: number) => {
-      if (!start) start = timestamp;
-      const progress = Math.min(1, (timestamp - start) / duration);
-      const eased = 1 - (1 - progress) ** 3;
-      setMetrics({
-        handover: Math.round(target.handover * eased),
-        adoption: Math.round(target.adoption * eased),
-        visibility: Math.round(target.visibility * eased),
-      });
-      if (progress < 1) rafId = window.requestAnimationFrame(tick);
-    };
-
-    rafId = window.requestAnimationFrame(tick);
-    return () => window.cancelAnimationFrame(rafId);
-  }, [metricsVisible]);
 
   return (
     <div ref={rootRef} className={`budr-landing ${className}`.trim()}>
@@ -64,16 +55,13 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
             </a>
             <div className="home-nav-links">
               <a href="#problem">Problemet</a>
-              <a href="#overblik">Overblik</a>
+              <a href="#live-demo">Se det i aktion</a>
               <a href="#funktioner">Funktioner</a>
               <a href="#kontakt">Kontakt</a>
             </div>
             <div className="home-nav-cta">
-              <Link href="/care-portal-login" className="btn-sm-ghost">
-                Login (BingBong)
-              </Link>
-              <Link href="/institutioner" className="btn-sm">
-                Se hvad vi erstatter
+              <Link href="/institutioner#kontakt" className="btn-sm">
+                Book gratis demo
               </Link>
             </div>
           </div>
@@ -84,14 +72,14 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
             <div className="home-brand-row">
               <BudrLogo dark size={42} />
             </div>
-            <h1>Socialpsykiatriens nye standard for drift og dokumentation.</h1>
+            <h1>Vagtoverdragelsen sker stadig på hukommelse. Det kan løses.</h1>
             <p>
-              BUDR Care er platformen til botilbud, der vil arbejde hurtigere og mere præcist. Care
-              Portal og Lys binder borger og personale sammen i samme beslutningsflow.
+              BUDR Care samler journal, vagtoverdragelse og borger-check-ins i ét system. Personalet
+              arbejder på fælles grundlag. Ledelsen har realtidsoverblik. Borgeren er med i flowet.
             </p>
             <div className="hero-actions">
-              <a href="/institutioner" className="btn-primary">
-                Book en gennemgang
+              <a href="/institutioner#kontakt" className="btn-primary">
+                Book gratis demo
               </a>
               <Link href="/care-portal-demo" className="btn-ghost">
                 Prøv demo
@@ -136,27 +124,39 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
 
         <section className="home-proof fi">
           <div className="shell">
-            <p>I pilotdialog med udvalgte botilbud · Dansk hosting-aftale · EU-data efter aftale</p>
+            <p>Dansk platform · Bygget til socialpsykiatri · GDPR-klar hosting</p>
           </div>
         </section>
 
-        <section className="home-metrics fi" id="home-metrics">
-          <div className="shell home-metrics-grid">
-            <article className="home-metric-card">
-              <p className="home-card-label">Vagtskifte</p>
-              <h3>{metrics.handover}%</h3>
-              <p>Kortere overdragelsestid i pilotforløb med struktureret flow.</p>
-            </article>
-            <article className="home-metric-card">
-              <p className="home-card-label">Adoption</p>
-              <h3>{metrics.adoption}%</h3>
-              <p>Aktive medarbejdere i daglig brug efter onboardingperioden.</p>
-            </article>
-            <article className="home-metric-card">
-              <p className="home-card-label">Synlighed</p>
-              <h3>{metrics.visibility}%</h3>
-              <p>Samlet overblik over journalstatus, planer og borgercheck-ins.</p>
-            </article>
+        <section className="home-usp fi" id="scenarier">
+          <div className="shell home-copy-shell">
+            <h2 className="section-h">Tre situationer I kender alt for godt</h2>
+            <div className="home-problem-grid">
+              <article className="home-problem-item">
+                <p className="home-card-label">Kl. 06:00 · Vagtskifte</p>
+                <h3>Overlevering på hukommelse</h3>
+                <p>
+                  Nattevagten fortæller. Dagvagten noterer hvad den kan huske. Halvdelen er væk
+                  inden den første borger er oppe. Næste kollega starter bagud.
+                </p>
+              </article>
+              <article className="home-problem-item">
+                <p className="home-card-label">Kl. 14:30 · Dokumentation</p>
+                <h3>Journalen venter til sidst på dagen</h3>
+                <p>
+                  Notaten er ikke godkendt. Lederen kan ikke se hvad der er sket. Teamet tvivler på
+                  hvad der er fakta, og hvad der er en kladde fra i torsdags.
+                </p>
+              </article>
+              <article className="home-problem-item">
+                <p className="home-card-label">Kl. 16:00 · Borgersignal</p>
+                <h3>Borgeren signalerede — ingen så det</h3>
+                <p>
+                  Check-in&apos;et stod i et system. Teamet arbejdede i et andet. Signalet nåede
+                  aldrig frem til den vagt, der kunne handle på det.
+                </p>
+              </article>
+            </div>
           </div>
         </section>
 
@@ -165,17 +165,17 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
             <h2 className="section-h">Det gør os tydeligt anderledes</h2>
             <div className="home-usp-grid">
               <article className="home-usp-card">
-                <p className="home-card-label">USP 01</p>
+                <p className="home-card-label">Borger i centrum</p>
                 <h3>Borger og personale i samme flow</h3>
                 <p>Borger-ejet app koblet direkte til teamets daglige arbejde.</p>
               </article>
               <article className="home-usp-card">
-                <p className="home-card-label">USP 02</p>
+                <p className="home-card-label">Metode</p>
                 <h3>PARK indbygget i produktet</h3>
                 <p>Metodikken lever i funktionerne. Ikke i et separat dokument.</p>
               </article>
               <article className="home-usp-card">
-                <p className="home-card-label">USP 03</p>
+                <p className="home-card-label">Implementering</p>
                 <h3>Pilot før skalering</h3>
                 <p>I starter med målbar effekt og udvider på dokumenteret kvalitet.</p>
               </article>
@@ -204,6 +204,18 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
                 <p>Signaler når for sent frem til dem, der skal handle.</p>
               </article>
             </div>
+          </div>
+        </section>
+
+        <section className="home-demo fi" id="live-demo">
+          <div className="shell">
+            <p className="eyebrow">Se det i aktion</p>
+            <h2 className="section-h">Borgeren check-er ind. Teamet ser det med det samme.</h2>
+            <p className="section-p">
+              Vælg humør, energi og hvad der fylder — og se præcis hvad der lander i Care Portal.
+              Det her er ikke en animation. Det er den rigtige logik.
+            </p>
+            <LandingInteractiveDemo />
           </div>
         </section>
 
@@ -252,6 +264,33 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
           </div>
         </section>
 
+        <section className="home-top-usp fi" id="usp-top5">
+          <div className="shell">
+            <h2 className="section-h">Det mest værdiskabende i platformen</h2>
+            <p className="section-p">
+              Prioriteret efter driftseffekt for ledelse, medarbejdere og borgere.
+            </p>
+            <div className="home-top-usp-grid">
+              <article className="home-top-usp-panel">
+                <p className="home-card-label">Care Portal · Top 5</p>
+                <ol>
+                  {CARE_USPS.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ol>
+              </article>
+              <article className="home-top-usp-panel">
+                <p className="home-card-label">Lys app · Top 5</p>
+                <ol>
+                  {LYS_USPS.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ol>
+              </article>
+            </div>
+          </div>
+        </section>
+
         <section className="home-story fi">
           <div className="shell home-story-grid">
             <div className="home-story-steps">
@@ -295,18 +334,19 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
         <section className="home-cta-band fi" id="kontakt">
           <div className="shell">
             <div className="home-cta-band-inner">
-              <h2>Se præcis hvad vi erstatter i jeres drift</h2>
+              <h2>Klar til at se systemet i jeres virkelighed?</h2>
               <div className="hero-actions">
-                <Link href="/institutioner" className="btn-primary">
-                  Se hvad vi erstatter →
+                <Link href="/institutioner#kontakt" className="btn-primary">
+                  Book gratis demo →
                 </Link>
                 <Link href="/care-portal-demo" className="btn-ghost">
-                  Prøv demo
+                  Prøv demo selv
                 </Link>
               </div>
             </div>
           </div>
         </section>
+        <MarketingFooter />
       </div>
     </div>
   );

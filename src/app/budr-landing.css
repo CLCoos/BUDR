@@ -641,6 +641,19 @@ html {
   font-weight: 300;
 }
 
+.budr-landing .footer-mail {
+  display: inline-block;
+  font-size: 0.8rem;
+  color: var(--fog);
+  text-decoration: none;
+  margin-top: 10px;
+  transition: color 0.18s;
+}
+
+.budr-landing .footer-mail:hover {
+  color: var(--white);
+}
+
 .budr-landing .footer-col h5 {
   font-size: 0.7rem;
   font-weight: 600;
@@ -1739,6 +1752,63 @@ html {
   padding-bottom: clamp(68px, 8vw, 108px);
 }
 
+.budr-landing .home-top-usp {
+  padding-top: clamp(68px, 8vw, 104px);
+  padding-bottom: clamp(68px, 8vw, 104px);
+}
+
+.budr-landing .home-top-usp-grid {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.budr-landing .home-top-usp-panel {
+  border: 1px solid rgba(93, 202, 165, 0.24);
+  border-radius: 16px;
+  padding: 18px;
+  background: linear-gradient(150deg, rgba(93, 202, 165, 0.11), rgba(133, 183, 235, 0.06));
+}
+
+.budr-landing .home-top-usp-panel ol {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: usp-rank;
+  display: grid;
+  gap: 8px;
+}
+
+.budr-landing .home-top-usp-panel li {
+  counter-increment: usp-rank;
+  position: relative;
+  padding: 10px 10px 10px 38px;
+  border-radius: 11px;
+  background: rgba(10, 22, 20, 0.52);
+  color: var(--white-dim);
+  line-height: 1.5;
+  font-size: 0.88rem;
+}
+
+.budr-landing .home-top-usp-panel li::before {
+  content: counter(usp-rank);
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: rgba(93, 202, 165, 0.22);
+  color: var(--amber-lt);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
 .budr-landing .home-story-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.9fr);
@@ -1869,6 +1939,26 @@ html {
   color: var(--white);
 }
 
+.budr-landing .institutioner-nav-links {
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 2vw, 28px);
+  margin-left: auto;
+  margin-right: 16px;
+}
+
+.budr-landing .institutioner-nav-links a {
+  font-size: 0.84rem;
+  color: var(--fog);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.18s;
+}
+
+.budr-landing .institutioner-nav-links a:hover {
+  color: var(--white);
+}
+
 .budr-landing .institutioner-hero .section-h {
   max-width: 15ch;
 }
@@ -1947,6 +2037,68 @@ html {
   background: rgba(133, 183, 235, 0.07);
 }
 
+.budr-landing .inst-faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 36px;
+  max-width: 680px;
+}
+
+.budr-landing .inst-faq-item {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 0;
+}
+
+.budr-landing .inst-faq-item:last-child {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.budr-landing .inst-faq-item summary {
+  padding: 20px 0;
+  font-size: 0.96rem;
+  font-weight: 500;
+  color: var(--white);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  user-select: none;
+  transition: color 0.18s;
+}
+
+.budr-landing .inst-faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.budr-landing .inst-faq-item summary::after {
+  content: '+';
+  font-size: 1.3rem;
+  font-weight: 300;
+  color: var(--budr-teal);
+  flex-shrink: 0;
+  transition: transform 0.22s ease;
+}
+
+.budr-landing .inst-faq-item[open] summary::after {
+  transform: rotate(45deg);
+}
+
+.budr-landing .inst-faq-item summary:hover {
+  color: var(--budr-teal);
+}
+
+.budr-landing .inst-faq-item p {
+  font-size: 0.9rem;
+  color: var(--white-dim);
+  line-height: 1.8;
+  padding-bottom: 20px;
+  margin: 0;
+  max-width: 60ch;
+}
+
 .budr-landing .institutioner-tech a {
   color: var(--amber-lt);
   text-decoration: underline;
@@ -1960,6 +2112,115 @@ html {
 .budr-landing .institutioner-contact-inner {
   position: relative;
   z-index: 1;
+}
+
+.budr-landing .booking-block {
+  background: rgba(93, 202, 165, 0.07);
+  border: 1px solid rgba(93, 202, 165, 0.22);
+  border-radius: 20px;
+  padding: 36px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  max-width: 520px;
+  margin-top: 8px;
+}
+
+.budr-landing .booking-block h3 {
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
+  font-size: clamp(1.3rem, 2vw, 1.75rem);
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--white);
+  margin: 0;
+}
+
+.budr-landing .booking-what {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.budr-landing .booking-what li {
+  font-size: 0.9rem;
+  color: var(--white-dim);
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.budr-landing .booking-what li::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--budr-teal);
+  flex-shrink: 0;
+  margin-top: 0.45em;
+}
+
+.budr-landing .btn-booking {
+  background: linear-gradient(135deg, var(--budr-teal) 0%, var(--budr-blue) 100%);
+  color: var(--budr-brand-dark);
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 16px 36px;
+  border-radius: 100px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-landing-body, 'DM Sans', system-ui, sans-serif);
+  display: inline-flex;
+  align-items: center;
+  transition:
+    filter 0.2s,
+    transform 0.2s,
+    box-shadow 0.2s;
+  box-shadow: 0 4px 20px rgba(93, 202, 165, 0.25);
+}
+
+.budr-landing .btn-booking:hover {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(93, 202, 165, 0.38);
+}
+
+.budr-landing .booking-note {
+  font-size: 0.78rem;
+  color: var(--fog);
+  margin: 0;
+}
+
+.budr-landing .booking-or {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 36px 0 20px;
+  color: var(--fog);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  max-width: 520px;
+}
+
+.budr-landing .booking-or::before,
+.budr-landing .booking-or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.budr-landing .booking-form-label {
+  font-size: 0.88rem;
+  color: var(--fog);
+  margin: 0 0 20px;
+  font-weight: 400;
 }
 
 @media (max-width: 560px) {
@@ -2006,6 +2267,7 @@ html {
   .budr-landing .home-overview-cards,
   .budr-landing .home-usp-grid,
   .budr-landing .home-problem-grid,
+  .budr-landing .home-top-usp-grid,
   .budr-landing .home-metrics-grid,
   .budr-landing .home-story-grid,
   .budr-landing .institutioner-list-grid,
