@@ -30,10 +30,10 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   const supabase = getServiceClient();
 
-  // Look up resident name for the journal entry
+  // Look up resident name and org_id for the journal entry
   const { data: resident } = await supabase
     .from('care_residents')
-    .select('display_name')
+    .select('display_name, org_id')
     .eq('user_id', residentId)
     .maybeSingle();
 
@@ -42,6 +42,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     : 'Beboer';
 
   const nowIso = new Date().toISOString();
+  const residentOrgId = (resident as { org_id?: string } | null)?.org_id ?? null;
   const { error } = await supabase.from('journal_entries').insert({
     resident_id: residentId,
     staff_id: null,
@@ -51,6 +52,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     journal_status: 'godkendt',
     approved_at: nowIso,
     approved_by: null,
+    org_id: residentOrgId,
   });
 
   if (error) {
@@ -66,6 +68,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     detail: `${residentLabel}: «${excerpt}»`,
     severity: 'gul',
     source_table: 'journal_entries',
+    org_id: residentOrgId,
   });
 
   return NextResponse.json({ ok: true });

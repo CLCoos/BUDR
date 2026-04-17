@@ -69,12 +69,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, deduplicated: true });
   }
 
+  const { data: residentRow } = await admin
+    .from('care_residents')
+    .select('org_id')
+    .eq('user_id', residentId)
+    .maybeSingle();
+
   const { error: insertErr } = await admin.from('care_portal_notifications').insert({
     resident_id: residentId,
     type: 'mood_alert',
     detail: 'Lav stemning registreret — følg op',
     severity: 'roed',
     source_table: 'park_daily_checkin',
+    org_id: (residentRow as { org_id?: string } | null)?.org_id ?? null,
   });
 
   if (insertErr) {

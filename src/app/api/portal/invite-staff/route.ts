@@ -4,7 +4,7 @@ import { headers } from 'next/headers';
 import { requirePortalAuth } from '@/lib/portalAuth';
 import { parseStaffOrgId } from '@/lib/staffOrgScope';
 
-type InviteBody = { email?: unknown; name?: unknown };
+type InviteBody = { email?: unknown; name?: unknown; role?: unknown };
 
 /**
  * POST /api/portal/invite-staff
@@ -19,7 +19,11 @@ export async function POST(req: Request): Promise<NextResponse> {
   // requirePortalAuth throws a redirect if not authenticated.
   const user = await requirePortalAuth();
 
-  const orgId = parseStaffOrgId(user.user_metadata?.org_id);
+  const supabaseForOrg = await (await import('@/lib/supabase/server')).createServerSupabaseClient();
+  const { data: staffRow } = supabaseForOrg
+    ? await supabaseForOrg.from('care_staff').select('org_id').eq('id', user.id).single()
+    : { data: null };
+  const orgId = parseStaffOrgId(staffRow?.org_id ?? null);
   if (!orgId) {
     return NextResponse.json(
       { error: 'Din bruger mangler org_id — kontakt administrator' },
@@ -36,6 +40,7 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
   const name = typeof body.name === 'string' ? body.name.trim() : '';
+  const role = body.role === 'leder' || body.role === 'medarbejder' ? body.role : 'medarbejder';
 
   if (!email) {
     return NextResponse.json({ error: 'Email er påkrævet' }, { status: 400 });
@@ -52,8 +57,8 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   const admin = createClient(url, serviceKey);
 
-  // Invite via Supabase Admin API — sets org_id + display_name in raw_user_meta_data.
-  const { error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
+  // Invite via Supabase Admin API — creates the user row and sends the magic link.
+  const { data: inviteData, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
     data: {
       org_id: orgId,
       ...(name ? { display_name: name } : {}),
@@ -69,6 +74,16 @@ export async function POST(req: Request): Promise<NextResponse> {
       );
     }
     return NextResponse.json({ error: inviteErr.message }, { status: 400 });
+  }
+
+  // Insert into care_staff — best-effort (user exists, magic link pending confirmation).
+  if (inviteData?.user?.id) {
+    await admin.from('care_staff').insert({
+      id: inviteData.user.id,
+      org_id: orgId,
+      full_name: name || email.split('@')[0],
+      role,
+    });
   }
 
   // Audit log — best-effort, same pattern as staffAuditLog.ts.

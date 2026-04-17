@@ -17,8 +17,8 @@ export async function getPortalSession(): Promise<Session | null> {
 }
 
 /**
- * Extracts the staff member's org_id (UUID) from their JWT user metadata.
- * Returns null if not authenticated or metadata is absent/invalid.
+ * Extracts the staff member's org_id from the care_staff table.
+ * Returns null if not authenticated or no care_staff row exists.
  */
 export async function getPortalStaffOrgId(): Promise<string | null> {
   const supabase = await createServerSupabaseClient();
@@ -27,7 +27,8 @@ export async function getPortalStaffOrgId(): Promise<string | null> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
-  return parseStaffOrgId(user.user_metadata?.org_id);
+  const { data } = await supabase.from('care_staff').select('org_id').eq('id', user.id).single();
+  return parseStaffOrgId(data?.org_id ?? null);
 }
 
 /**

@@ -13,11 +13,17 @@ import {
   FileSpreadsheet,
   X,
 } from 'lucide-react';
-import { importResidentsAction, type ImportRow, type ImportResult } from './actions';
+import { type ImportRow, type ImportResult } from './actions';
 
 // ── Types ─────────────────────────────────────────────────────
 
 type Step = 1 | 2 | 3 | 4;
+type RowStatus = 'pending' | 'importing' | 'ok' | 'error';
+interface RowProgress {
+  row: ImportRow;
+  status: RowStatus;
+  error?: string;
+}
 
 interface BudrField {
   key: keyof ImportRow;
@@ -194,6 +200,7 @@ export default function ImportWizardClient() {
   const [previewPage, setPreviewPage] = useState(0);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
+  const [progress, setProgress] = useState<RowProgress[]>([]);
 
   // ── Step 1: File upload ──────────────────────────────────────
 
@@ -233,14 +240,56 @@ export default function ImportWizardClient() {
     setStep(3);
   }
 
-  // ── Step 3 → 4: Import ───────────────────────────────────────
+  // ── Step 3: Delete a row from preview ───────────────────────
+
+  function deleteRow(i: number) {
+    setMappedRows((prev) => prev.filter((_, idx) => idx !== i));
+  }
+
+  // ── Step 3 → 4: Import (row-by-row live progress) ────────────
 
   async function runImport() {
+    const initial: RowProgress[] = mappedRows.map((r) => ({ row: r, status: 'pending' }));
+    setProgress(initial);
     setImporting(true);
-    const res = await importResidentsAction(mappedRows);
-    setResult(res);
-    setImporting(false);
     setStep(4);
+
+    let imported = 0;
+    const errors: ImportResult['errors'] = [];
+
+    for (let i = 0; i < mappedRows.length; i++) {
+      setProgress((prev) => prev.map((p, idx) => (idx === i ? { ...p, status: 'importing' } : p)));
+
+      try {
+        const res = await fetch('/api/portal/import-residents', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ residents: [mappedRows[i]] }),
+        });
+        const data = (await res.json()) as { imported?: number; errors?: Array<{ error: string }> };
+        const rowErrors = data.errors ?? [];
+        if (rowErrors.length > 0) {
+          errors.push(rowErrors[0]?.error ?? 'Ukendt fejl');
+          setProgress((prev) =>
+            prev.map((p, idx) =>
+              idx === i ? { ...p, status: 'error', error: rowErrors[0]?.error } : p
+            )
+          );
+        } else {
+          imported++;
+          setProgress((prev) => prev.map((p, idx) => (idx === i ? { ...p, status: 'ok' } : p)));
+        }
+      } catch {
+        errors.push('Netværksfejl');
+        setProgress((prev) =>
+          prev.map((p, idx) => (idx === i ? { ...p, status: 'error', error: 'Netværksfejl' } : p))
+        );
+      }
+    }
+
+    setResult({ inserted: imported, skipped: 0, errors });
+    setImporting(false);
   }
 
   // ── Render helpers ───────────────────────────────────────────
@@ -546,6 +595,13 @@ export default function ImportWizardClient() {
                     >
                       Kontakt
                     </th>
+                    <th
+                      className="text-left text-xs font-medium px-3 py-2.5"
+                      style={{ color: 'var(--cp-muted)' }}
+                    >
+                      Status
+                    </th>
+                    <th className="px-2 py-2.5 w-8" />
                   </tr>
                 </thead>
                 <tbody>
@@ -584,6 +640,28 @@ export default function ImportWizardClient() {
                           {row.primary_contact
                             ? `${row.primary_contact}${row.primary_contact_relation ? ` · ${row.primary_contact_relation}` : ''}`
                             : '—'}
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <span
+                            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                            style={{
+                              backgroundColor: 'rgba(29, 158, 117, 0.15)',
+                              color: '#1D9E75',
+                            }}
+                          >
+                            Klar
+                          </span>
+                        </td>
+                        <td className="px-2 py-2.5 text-right">
+                          <button
+                            type="button"
+                            onClick={() => deleteRow(previewPage * PAGE_SIZE + i)}
+                            className="rounded p-1 transition-colors hover:opacity-80"
+                            style={{ color: 'var(--cp-muted)' }}
+                            aria-label="Slet række"
+                          >
+                            <X size={13} />
+                          </button>
                         </td>
                       </tr>
                     );
@@ -652,6 +730,65 @@ export default function ImportWizardClient() {
                 </>
               )}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── STEP 4: Live progress ───────────────────────────────── */}
+      {step === 4 && importing && (
+        <div className="space-y-4">
+          <div
+            className="rounded-xl border overflow-hidden"
+            style={{ backgroundColor: 'var(--cp-bg2)', borderColor: 'var(--cp-border)' }}
+          >
+            <div
+              className="px-4 py-3 border-b flex items-center gap-2"
+              style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg3)' }}
+            >
+              <Loader2 size={14} className="animate-spin text-[#1D9E75]" />
+              <span className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+                Importerer beboere…
+              </span>
+              <span className="ml-auto text-xs" style={{ color: 'var(--cp-muted)' }}>
+                {progress.filter((p) => p.status === 'ok' || p.status === 'error').length} /{' '}
+                {progress.length}
+              </span>
+            </div>
+            <div className="divide-y divide-[var(--cp-border)] max-h-96 overflow-y-auto">
+              {progress.map((p, i) => (
+                <div key={i} className="px-4 py-2.5 flex items-center gap-3">
+                  <div className="w-6 flex-shrink-0 flex items-center justify-center">
+                    {p.status === 'pending' && (
+                      <div
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: 'var(--cp-border)' }}
+                      />
+                    )}
+                    {p.status === 'importing' && (
+                      <Loader2 size={14} className="animate-spin text-[#1D9E75]" />
+                    )}
+                    {p.status === 'ok' && <CheckCircle2 size={14} className="text-[#1D9E75]" />}
+                    {p.status === 'error' && <AlertCircle size={14} className="text-red-400" />}
+                  </div>
+                  <span
+                    className="flex-1 text-sm truncate"
+                    style={{
+                      color:
+                        p.status === 'error'
+                          ? '#f87171'
+                          : p.status === 'pending'
+                            ? 'var(--cp-muted)'
+                            : 'var(--cp-text)',
+                    }}
+                  >
+                    {p.row.display_name}
+                  </span>
+                  {p.status === 'error' && p.error && (
+                    <span className="text-xs text-red-400 truncate max-w-[180px]">{p.error}</span>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

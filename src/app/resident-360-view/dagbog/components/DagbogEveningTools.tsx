@@ -87,6 +87,12 @@ export default function DagbogEveningTools({ targets }: Props) {
       (user?.user_metadata?.full_name as string | undefined) ?? user?.email ?? 'Ukendt personale';
     const nowIso = new Date().toISOString();
 
+    const { data: staffOrgRow } = await supabase
+      .from('care_staff')
+      .select('org_id')
+      .eq('id', user?.id ?? '')
+      .maybeSingle();
+
     const insertRow: Record<string, unknown> = {
       resident_id: selectedId,
       staff_id: user?.id ?? null,
@@ -95,6 +101,7 @@ export default function DagbogEveningTools({ targets }: Props) {
       category: 'Sammenfatning',
       journal_status: 'godkendt',
       show_in_diary: true,
+      org_id: (staffOrgRow as { org_id?: string } | null)?.org_id ?? null,
     };
     if (user?.id) {
       insertRow.approved_at = nowIso;

@@ -66,12 +66,18 @@ export default function MedicinReminder({ residentId }: Props) {
     if (!supabase) return;
     setSaving(true);
     if (isLate) {
+      const { data: residentRow } = await supabase
+        .from('care_residents')
+        .select('org_id')
+        .eq('user_id', residentId)
+        .maybeSingle();
       await supabase.from('care_portal_notifications').insert({
         resident_id: residentId,
         type: 'medication_missed',
         detail: `${reminder.label} ikke taget - ${Math.abs(diff)} minutter forsinket`,
         severity: 'roed',
         source_table: 'medication_reminders',
+        org_id: (residentRow as { org_id?: string } | null)?.org_id ?? null,
       });
     }
     const { error } = await supabase

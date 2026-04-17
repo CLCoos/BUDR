@@ -86,12 +86,19 @@ export async function POST(req: Request): Promise<NextResponse> {
       const detail = `Stemningsscore ${mood_score}/10 · ${trafficLabel}`;
       const severity = mood_score <= 3 || traffic_light === 'roed' ? 'roed' : 'gul';
 
+      const { data: residentRow } = await serviceClient
+        .from('care_residents')
+        .select('org_id')
+        .eq('user_id', residentId)
+        .maybeSingle();
+
       await serviceClient.from('care_portal_notifications').insert({
         resident_id: residentId,
         type: 'lav_stemning',
         detail,
         severity,
         source_table: 'park_daily_checkin',
+        org_id: (residentRow as { org_id?: string } | null)?.org_id ?? null,
       });
     }
   }

@@ -364,6 +364,11 @@ export default function LysDagTab({ tokens, accent }: Props) {
     } else {
       const supabase = createClient();
       if (supabase) {
+        const { data: crRow } = await supabase
+          .from('care_residents')
+          .select('org_id')
+          .eq('user_id', residentId)
+          .maybeSingle();
         await supabase.from('resident_plan_items').insert({
           resident_id: residentId,
           title: form.title.trim(),
@@ -376,6 +381,7 @@ export default function LysDagTab({ tokens, accent }: Props) {
           notify_minutes_before: form.notify_minutes_before,
           created_by: 'resident',
           active_from: dateStr,
+          org_id: (crRow as { org_id?: string } | null)?.org_id ?? null,
         });
       }
     }

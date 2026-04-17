@@ -294,6 +294,13 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
 
     const nowIso = new Date().toISOString();
     const asDraft = saveMode === 'kladde';
+
+    const { data: staffOrgRow } = await supabase
+      .from('care_staff')
+      .select('org_id')
+      .eq('id', user?.id ?? '')
+      .maybeSingle();
+
     const insertRow: Record<string, unknown> = {
       resident_id: residentId,
       staff_id: user?.id ?? null,
@@ -302,6 +309,7 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
       category,
       journal_status: asDraft ? 'kladde' : 'godkendt',
       show_in_diary: showInDiary,
+      org_id: (staffOrgRow as { org_id?: string } | null)?.org_id ?? null,
     };
     if (asDraft) {
       insertRow.approved_at = null;

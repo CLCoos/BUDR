@@ -339,6 +339,11 @@ export default function BekymringsnotatWidget({ demoMode = false }: Props) {
 
       setSaving(true);
       const author = await staffAuthorLabel();
+      const { data: staffOrgRow } = await supabase
+        .from('care_staff')
+        .select('org_id')
+        .eq('id', user.id)
+        .maybeSingle();
       const { error } = await supabase.from('care_concern_notes').insert({
         resident_id: residentId,
         note: noteText.trim().slice(0, maxNoteLen),
@@ -346,6 +351,7 @@ export default function BekymringsnotatWidget({ demoMode = false }: Props) {
         severity,
         staff_name: author,
         created_by: user.id,
+        org_id: (staffOrgRow as { org_id?: string } | null)?.org_id ?? null,
       });
       setSaving(false);
       if (error) {

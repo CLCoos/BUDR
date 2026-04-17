@@ -356,6 +356,12 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
     const staffName =
       (user?.user_metadata?.full_name as string | undefined) ?? user?.email ?? 'Ukendt personale';
 
+    const { data: staffOrgRow } = await supabase
+      .from('care_staff')
+      .select('org_id')
+      .eq('id', user?.id ?? '')
+      .maybeSingle();
+
     const insertRow: Record<string, unknown> = {
       resident_id: residentId,
       staff_id: user?.id ?? null,
@@ -366,6 +372,7 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
       show_in_diary: true,
       approved_at: null,
       approved_by: null,
+      org_id: (staffOrgRow as { org_id?: string } | null)?.org_id ?? null,
     };
 
     const missingColumnError = (err: { message?: string } | null, column: string) =>

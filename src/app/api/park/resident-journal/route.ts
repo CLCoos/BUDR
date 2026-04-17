@@ -136,7 +136,7 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   const { data: resident } = await supabase
     .from('care_residents')
-    .select('display_name')
+    .select('display_name, org_id')
     .eq('user_id', residentId)
     .maybeSingle();
 
@@ -158,6 +158,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     journal_status,
     approved_at: privacy === 'shared' ? nowIso : null,
     approved_by: null,
+    org_id: (resident as { org_id?: string } | null)?.org_id ?? null,
   });
 
   if (insertError) {

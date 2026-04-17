@@ -65,7 +65,14 @@ async function checkStaffAuth(
     data: { user },
   } = await supabase.auth.getUser();
 
-  return { response: supabaseResponse, authenticated: !!user };
+  if (!user) {
+    return { response: supabaseResponse, authenticated: false };
+  }
+
+  // Verify the user exists in care_staff (source of truth for staff authorisation).
+  const { data: isStaff } = await supabase.rpc('care_is_portal_staff');
+
+  return { response: supabaseResponse, authenticated: !!isStaff };
 }
 
 // ── Middleware ────────────────────────────────────────────────

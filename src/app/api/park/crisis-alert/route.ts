@@ -38,10 +38,10 @@ export async function POST(): Promise<NextResponse> {
     return NextResponse.json({ error: 'Server ikke konfigureret' }, { status: 503 });
   }
 
-  // Confirm the resident exists in care_residents.
+  // Confirm the resident exists in care_residents and fetch org_id.
   const { data: resident, error: resErr } = await supabase
     .from('care_residents')
-    .select('user_id')
+    .select('user_id, org_id')
     .eq('user_id', residentId)
     .maybeSingle();
 
@@ -77,6 +77,7 @@ export async function POST(): Promise<NextResponse> {
     triggered_at: new Date().toISOString(),
     status: 'active',
     trin: 2,
+    org_id: (resident as { org_id?: string }).org_id ?? null,
   });
   if (crisisErr) {
     return NextResponse.json({ error: crisisErr.message }, { status: 500 });
@@ -88,6 +89,7 @@ export async function POST(): Promise<NextResponse> {
     detail: 'Beboer har aktiveret krisekort — reagér nu',
     severity: 'roed',
     source_table: 'crisis_alerts',
+    org_id: (resident as { org_id?: string }).org_id ?? null,
   });
 
   if (insertErr) {

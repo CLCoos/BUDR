@@ -197,9 +197,17 @@ export async function earnBadge(
   if (mode === 'supabase') {
     const supabase = createClient();
     if (!supabase) return;
-    void supabase
-      .from('resident_badges')
-      .upsert({ resident_id: activeId, badge_key, earned_at: new Date().toISOString() });
+    const { data: crRow } = await supabase
+      .from('care_residents')
+      .select('org_id')
+      .eq('user_id', activeId)
+      .maybeSingle();
+    void supabase.from('resident_badges').upsert({
+      resident_id: activeId,
+      badge_key,
+      earned_at: new Date().toISOString(),
+      org_id: (crRow as { org_id?: string } | null)?.org_id ?? null,
+    });
     return;
   }
   const badges = ls.getItem<Badge[]>(LOCAL_KEYS.badges) ?? [];
@@ -521,7 +529,16 @@ export async function savePlanItem(
   if (mode === 'supabase') {
     const supabase = createClient();
     if (!supabase) return;
-    await supabase.from('resident_plan_items').insert({ ...data, resident_id: activeId });
+    const { data: crRow } = await supabase
+      .from('care_residents')
+      .select('org_id')
+      .eq('user_id', activeId)
+      .maybeSingle();
+    await supabase.from('resident_plan_items').insert({
+      ...data,
+      resident_id: activeId,
+      org_id: (crRow as { org_id?: string } | null)?.org_id ?? null,
+    });
     return;
   }
   const items = ls.getItem<PlanItem[]>(LOCAL_KEYS.planItems) ?? [];

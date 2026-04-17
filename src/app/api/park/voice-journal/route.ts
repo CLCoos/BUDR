@@ -52,10 +52,10 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Server ikke konfigureret' }, { status: 503 });
   }
 
-  // Confirm resident exists.
+  // Confirm resident exists and fetch org_id.
   const { data: resident, error: resErr } = await supabase
     .from('care_residents')
-    .select('user_id, display_name')
+    .select('user_id, display_name, org_id')
     .eq('user_id', residentId)
     .maybeSingle();
 
@@ -115,6 +115,7 @@ export async function POST(req: Request): Promise<NextResponse> {
       journal_status: 'kladde',
       approved_at: null,
       approved_by: null,
+      org_id: (resident as { org_id?: string }).org_id ?? null,
     })
     .select('id')
     .single();

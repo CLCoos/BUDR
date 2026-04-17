@@ -123,6 +123,11 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
     if (!newTitle.trim()) return;
     setSaving(true);
     const supabase = createClient();
+    const { data: crRow } = (await supabase
+      ?.from('care_residents')
+      .select('org_id')
+      .eq('user_id', residentId)
+      .maybeSingle()) ?? { data: null };
     await supabase?.from('resident_plan_items').insert({
       resident_id: residentId,
       title: newTitle.trim(),
@@ -135,6 +140,7 @@ export default function ResidentPlanTab({ residentId, residentName }: Props) {
       staff_suggestion: true,
       approved_by_resident: false,
       active_from: new Date().toISOString().slice(0, 10),
+      org_id: (crRow as { org_id?: string } | null)?.org_id ?? null,
     });
     setSaving(false);
     setShowAdd(false);

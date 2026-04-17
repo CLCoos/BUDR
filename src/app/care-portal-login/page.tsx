@@ -19,6 +19,7 @@ function CarePortalLoginContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [registered, setRegistered] = useState(false);
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [quoteIdx, setQuoteIdx] = useState(0);
@@ -29,6 +30,9 @@ function CarePortalLoginContent() {
       setError(
         'Supabase er ikke konfigureret på serveren (mangler NEXT_PUBLIC_SUPABASE_URL eller NEXT_PUBLIC_SUPABASE_ANON_KEY).'
       );
+    }
+    if (searchParams.get('registered') === '1') {
+      setRegistered(true);
     }
   }, [searchParams]);
 
@@ -146,6 +150,20 @@ function CarePortalLoginContent() {
             <p className="mb-8 text-[13px] font-light text-[var(--cp-muted)]">
               Log ind med din arbejdsmailadresse
             </p>
+
+            {registered && (
+              <p
+                aria-live="polite"
+                className="mb-5 rounded-[10px] border px-3.5 py-3 text-[13px]"
+                style={{
+                  backgroundColor: 'rgb(16 185 129 / 0.08)',
+                  borderColor: 'rgb(16 185 129 / 0.4)',
+                  color: 'rgb(6 95 70)',
+                }}
+              >
+                Konto oprettet. Log ind nedenfor.
+              </p>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>

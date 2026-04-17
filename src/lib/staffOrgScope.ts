@@ -29,13 +29,19 @@ export async function resolveStaffOrgResidents(supabase: SupabaseClient | null):
   }
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session?.user) {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
     return { orgId: null, residentIds: [], error: 'no_session' };
   }
 
-  const orgId = parseStaffOrgId(session.user.user_metadata?.org_id);
+  const { data: staffRow } = await supabase
+    .from('care_staff')
+    .select('org_id')
+    .eq('id', user.id)
+    .single();
+
+  const orgId = parseStaffOrgId(staffRow?.org_id ?? null);
   if (!orgId) {
     return { orgId: null, residentIds: [], error: 'no_org' };
   }

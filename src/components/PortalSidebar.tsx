@@ -33,6 +33,8 @@ type NavItem = {
   cpActiveTab?: string | null;
   /** Særlig markering af aktiv side (fx Beboere dækker flere routes) */
   activeMatch?: 'residents' | 'vagtplan' | 'park' | 'dagbog' | 'alerts' | 'planner' | 'journal';
+  /** Vis kun for staff med denne rolle */
+  roleOnly?: 'leder' | 'medarbejder';
 };
 
 function pathFromHref(href: string): string {
@@ -96,6 +98,7 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
   const [collapsed, setCollapsed] = useState(false);
   const [displayName, setDisplayName] = useState<string>('');
   const [initials, setInitials] = useState<string>('');
+  const [staffRole, setStaffRole] = useState<string | null>(null);
   const alertCount = useAlertCount();
   const pilot = carePortalPilotSimulatedData();
 
@@ -163,7 +166,13 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
         badge: 0,
         activeMatch: 'journal',
       },
-      { icon: Upload, label: 'Dataimport', href: '/care-portal-import', badge: 0 },
+      {
+        icon: Upload,
+        label: 'Dataimport',
+        href: '/care-portal-import',
+        badge: 0,
+        roleOnly: 'leder',
+      },
       { icon: BrainCircuit, label: 'Faglig støtte', href: '/care-portal-assistant', badge: 0 },
       {
         icon: Sparkles,
@@ -174,10 +183,10 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
       },
       { icon: Settings, label: 'Indstillinger', href: '/care-portal-dashboard/settings', badge: 0 },
     ];
-    return base.map((item) =>
-      item.cpActiveTab === 'alerts' ? { ...item, badge: alertCount } : item
-    );
-  }, [pilot, alertCount]);
+    return base
+      .filter((item) => !item.roleOnly || item.roleOnly === staffRole)
+      .map((item) => (item.cpActiveTab === 'alerts' ? { ...item, badge: alertCount } : item));
+  }, [pilot, alertCount, staffRole]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -193,6 +202,14 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
           ? (parts[0][0] + parts[1][0]).toUpperCase()
           : name.slice(0, 2).toUpperCase()
       );
+      supabase
+        .from('care_staff')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => {
+          setStaffRole((data as { role?: string } | null)?.role ?? null);
+        });
     });
   }, []);
 

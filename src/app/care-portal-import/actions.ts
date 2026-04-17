@@ -46,13 +46,18 @@ export async function importResidentsAction(rows: ImportRow[]): Promise<ImportRe
       errors: ['Du skal være logget ind i Care Portal for at importere.'],
     };
   }
-  const orgId = parseStaffOrgId(user.user_metadata?.org_id);
+  const { data: staffRow } = await server
+    .from('care_staff')
+    .select('org_id')
+    .eq('id', user.id)
+    .single();
+  const orgId = parseStaffOrgId(staffRow?.org_id ?? null);
   if (!orgId) {
     return {
       inserted: 0,
       skipped: 0,
       errors: [
-        'Din bruger mangler gyldig org_id i Supabase Auth (User metadata). Uden organisation kan vi ikke knytte beboere til jeres bosted.',
+        'Din bruger er ikke registreret som personale med tilknyttet organisation. Kontakt administrator.',
       ],
     };
   }
