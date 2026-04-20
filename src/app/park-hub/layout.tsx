@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import '@/styles/park-flows.css';
+import './lys-phone.css';
 
 export const metadata: Metadata = {
   applicationName: 'BUDR Lys',
@@ -19,8 +20,8 @@ export const viewport: Viewport = {
 
 export default function ParkHubLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div id="budr-lys-root" className="budr-lys-root min-h-dvh antialiased">
-      {children}
+    <div id="budr-lys-root" className="budr-lys-root budr-lys-phone-frame antialiased">
+      <div className="budr-lys-phone-column">{children}</div>
     </div>
   );
 }

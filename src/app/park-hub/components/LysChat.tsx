@@ -278,7 +278,7 @@ export default function LysChat({
           backdropFilter: 'blur(12px)',
         }}
       >
-        <div className="mx-auto flex max-w-lg items-end gap-2">
+        <div className="mx-auto flex w-full max-w-full items-end gap-2">
           <input
             type="text"
             value={input}

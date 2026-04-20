@@ -420,7 +420,7 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
       )}
 
       <div
-        className="mx-auto flex w-full max-w-lg flex-col"
+        className="mx-auto flex w-full max-w-full flex-col"
         style={{
           minHeight: '100dvh',
           color: TEXT,

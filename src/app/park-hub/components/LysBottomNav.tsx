@@ -54,7 +54,7 @@ export default function LysBottomNav({
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 backdrop-blur-2xl"
+      className="fixed bottom-0 left-1/2 z-40 w-full max-w-[430px] -translate-x-1/2 backdrop-blur-2xl"
       style={{
         backgroundColor: tokens.bottomNavBg,
         borderTop: `1px solid ${tokens.cardBorder}`,
@@ -63,7 +63,7 @@ export default function LysBottomNav({
       aria-label="Hovedmenu"
     >
       <div
-        className={`mx-auto grid min-h-[64px] max-w-lg items-stretch px-2 ${simpleMode ? 'grid-cols-3' : 'grid-cols-4'}`}
+        className={`grid min-h-[64px] w-full items-stretch px-2 ${simpleMode ? 'grid-cols-3' : 'grid-cols-4'}`}
       >
         {tabs.map((tab) => {
           const isOn = tab.id === 'mere' ? isMoreOpen : active === (tab.id as LysNavTab);

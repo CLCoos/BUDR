@@ -59,7 +59,7 @@ export default function LysStemningskort({
 
   return (
     <div
-      className="mx-auto min-h-dvh w-full max-w-lg px-4 py-6 sm:px-5"
+      className="min-h-dvh w-full px-4 py-6 sm:px-5"
       style={{ color: tokens.text, paddingBottom: 'max(6rem, env(safe-area-inset-bottom, 0px))' }}
     >
       <button
@@ -77,7 +77,7 @@ export default function LysStemningskort({
         Hej {firstName} — der er ikke nogen forkerte svar.
       </p>
 
-      <div className="mx-auto grid w-full max-w-lg grid-cols-2 gap-2.5">
+      <div className="grid w-full grid-cols-2 gap-2.5">
         {MOODS.map((m, i) => {
           const active = selected === i;
           return (
@@ -114,7 +114,7 @@ export default function LysStemningskort({
         })}
       </div>
 
-      <div className="mx-auto mt-8 w-full max-w-lg space-y-3">
+      <div className="mt-8 w-full space-y-3">
         <div>
           <label
             htmlFor="lys-mood-note"
@@ -156,7 +156,7 @@ export default function LysStemningskort({
         />
       </div>
 
-      <div className="mx-auto mt-4 w-full max-w-lg space-y-2">
+      <div className="mt-4 w-full space-y-2">
         {voiceSummary && (
           <p className="text-xs" style={{ color: tokens.textMuted }}>
             Stemmejournal tilføjet: {voiceSummary}

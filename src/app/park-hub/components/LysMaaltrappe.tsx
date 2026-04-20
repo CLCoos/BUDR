@@ -122,7 +122,7 @@ export default function LysMaaltrappe({ tokens, accent, firstName, reducedMotion
 
       {celebrate ? (
         <div
-          className="pointer-events-none fixed inset-0 z-20 flex flex-col items-center justify-center p-6"
+          className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center p-6"
           style={{ backgroundColor: `${tokens.bg}ee` }}
           role="status"
         >

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import '../park-hub/lys-phone.css';
 
 export const metadata: Metadata = {
   applicationName: 'BUDR Lys chat',
@@ -17,5 +18,9 @@ export const viewport: Viewport = {
 };
 
 export default function LysChatLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <div className="budr-lys-phone-frame min-h-dvh">
+      <div className="budr-lys-phone-column">{children}</div>
+    </div>
+  );
 }

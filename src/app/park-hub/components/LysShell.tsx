@@ -38,6 +38,26 @@ type Props = {
   isDemoMode?: boolean;
 };
 
+/** Fuldskærm over layout, men indhold max telefonbredde (matcher `.budr-lys-phone-column`). */
+function LysPhoneOverlayShell({
+  backgroundColor,
+  children,
+}: {
+  backgroundColor: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex justify-center bg-black/35">
+      <div
+        className="h-full w-full max-w-[430px] overflow-y-auto shadow-2xl"
+        style={{ backgroundColor }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export default function LysShell({
   firstName,
   initials,
@@ -214,13 +234,17 @@ export default function LysShell({
   return (
     <ResidentProvider firstName={firstName} initials={initials} residentId={residentId}>
       <div
-        className="min-h-dvh font-sans transition-colors duration-300"
+        className="relative min-h-dvh w-full font-sans transition-colors duration-300"
         style={{ backgroundColor: shellTokens.bg, color: shellTokens.text }}
       >
         <LysStatusChrome tokens={shellTokens} isDemoMode={isDemoMode} />
         <div
-          className="mx-auto max-w-lg transition-all duration-200"
-          style={{ paddingBottom: 'calc(5rem + max(1rem, env(safe-area-inset-bottom, 0px)))' }}
+          className="w-full transition-all duration-200"
+          style={{
+            /* Bundmenu + flydende krise-knap (h-14) så genveje ikke blokeres */
+            paddingBottom:
+              'calc(5rem + 4.25rem + max(1rem, env(safe-area-inset-bottom, 0px)))',
+          }}
         >
           <div
             className="sticky top-0 z-20 flex items-center justify-between border-b px-5 py-4 backdrop-blur-xl"
@@ -338,10 +362,7 @@ export default function LysShell({
       `}</style>
 
         {overlay === 'mood' && (
-          <div
-            className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: shellTokens.bg }}
-          >
+          <LysPhoneOverlayShell backgroundColor={shellTokens.bg}>
             <LysStemningskort
               tokens={shellTokens}
               accent={shellAccent}
@@ -350,14 +371,11 @@ export default function LysShell({
               onBack={() => setOverlay(null)}
               onComplete={handleMoodComplete}
             />
-          </div>
+          </LysPhoneOverlayShell>
         )}
 
         {overlay === 'flower' && (
-          <div
-            className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: shellTokens.bg }}
-          >
+          <LysPhoneOverlayShell backgroundColor={shellTokens.bg}>
             <LysBlomst
               tokens={shellTokens}
               accent={shellAccent}
@@ -366,14 +384,11 @@ export default function LysShell({
               onBack={() => setOverlay(null)}
               onDone={() => setOverlay(null)}
             />
-          </div>
+          </LysPhoneOverlayShell>
         )}
 
         {overlay === 'thought' && (
-          <div
-            className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: shellTokens.bg }}
-          >
+          <LysPhoneOverlayShell backgroundColor={shellTokens.bg}>
             <LysTankefanger
               tokens={shellTokens}
               accent={shellAccent}
@@ -385,14 +400,11 @@ export default function LysShell({
               activeId={session.activeId}
               onBack={() => setOverlay(null)}
             />
-          </div>
+          </LysPhoneOverlayShell>
         )}
 
         {overlay === 'goals' && (
-          <div
-            className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: shellTokens.bg }}
-          >
+          <LysPhoneOverlayShell backgroundColor={shellTokens.bg}>
             <LysMaaltrappe
               tokens={shellTokens}
               accent={shellAccent}
@@ -400,55 +412,43 @@ export default function LysShell({
               reducedMotion={reducedMotion}
               onBack={() => setOverlay(null)}
             />
-          </div>
+          </LysPhoneOverlayShell>
         )}
 
         {overlay === 'dailyWin' && (
-          <div
-            className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: shellTokens.bg }}
-          >
+          <LysPhoneOverlayShell backgroundColor={shellTokens.bg}>
             <LysDagligSejr
               tokens={shellTokens}
               accent={shellAccent}
               firstName={firstName}
               onBack={() => setOverlay(null)}
             />
-          </div>
+          </LysPhoneOverlayShell>
         )}
 
         {overlay === 'sanser' && (
-          <div
-            className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: shellTokens.bg }}
-          >
+          <LysPhoneOverlayShell backgroundColor={shellTokens.bg}>
             <LysSansekasse
               tokens={shellTokens}
               accent={shellAccent}
               onClose={() => setOverlay(null)}
             />
-          </div>
+          </LysPhoneOverlayShell>
         )}
 
         {overlay === 'aac' && (
-          <div
-            className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: shellTokens.bg }}
-          >
+          <LysPhoneOverlayShell backgroundColor={shellTokens.bg}>
             <LysAACBoard
               tokens={shellTokens}
               accent={shellAccent}
               residentId={residentId}
               onClose={() => setOverlay(null)}
             />
-          </div>
+          </LysPhoneOverlayShell>
         )}
 
         {overlay === 'vagtplan' && (
-          <div
-            className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: shellTokens.bg }}
-          >
+          <LysPhoneOverlayShell backgroundColor={shellTokens.bg}>
             <LysVagtplan
               tokens={shellTokens}
               accent={shellAccent}
@@ -461,30 +461,27 @@ export default function LysShell({
                 setTab('dag');
               }}
             />
-          </div>
+          </LysPhoneOverlayShell>
         )}
 
         {overlay === 'crisis' && (
-          <div
-            className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: '#0F1B2D' }}
-          >
+          <LysPhoneOverlayShell backgroundColor="#0F1B2D">
             <LysKrisekort
               firstName={firstName}
               facilityId={facilityId}
               onClose={() => setOverlay(null)}
             />
-          </div>
+          </LysPhoneOverlayShell>
         )}
 
         {!overlay && (
           <button
             type="button"
             onClick={() => setOverlay('crisis')}
-            className="fixed z-[60] h-14 w-14 rounded-full text-white text-2xl font-black shadow-lg active:scale-95"
+            className="fixed z-[60] h-14 w-14 rounded-full text-2xl font-black text-white shadow-lg active:scale-95"
             style={{
               right:
-                'max(0.75rem, env(safe-area-inset-right, 0px), calc((100vw - min(32rem, 100vw)) / 2 + 0.75rem))',
+                'max(0.75rem, env(safe-area-inset-right, 0px), calc((100vw - min(430px, 100vw)) / 2 + 0.75rem))',
               bottom: 'calc(5.5rem + max(0.5rem, env(safe-area-inset-bottom, 0px)))',
               background: 'linear-gradient(135deg, #C0392B, #B91C1C)',
               boxShadow: '0 4px 20px rgba(192,57,43,0.45)',
@@ -521,7 +518,7 @@ export default function LysShell({
               aria-label="Luk menu"
             />
             <div
-              className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-lg rounded-t-3xl border px-5 pb-10 pt-3"
+              className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-[430px] rounded-t-3xl border px-5 pb-10 pt-3"
               style={{ backgroundColor: shellTokens.cardBg, borderColor: shellTokens.cardBorder }}
             >
               <div

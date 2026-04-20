@@ -449,7 +449,7 @@ export default function LysChatView() {
           </div>
         )}
 
-        <div className="space-y-3 mt-4 max-w-lg mx-auto">
+        <div className="mx-auto mt-4 w-full max-w-full space-y-3">
           {messages.map((m, i) => (
             <div
               key={`${m.role}-${i}`}
@@ -515,10 +515,10 @@ export default function LysChatView() {
 
       {/* Input bar */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-30 px-4 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] backdrop-blur-xl"
+        className="fixed bottom-0 left-1/2 z-30 w-full max-w-[430px] -translate-x-1/2 px-4 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] backdrop-blur-xl"
         style={{ backgroundColor: `${tokens.bg}F0`, borderTop: `1px solid ${accent}14` }}
       >
-        <div className="max-w-lg mx-auto flex gap-2 items-end">
+        <div className="mx-auto flex w-full max-w-full items-end gap-2">
           {voiceMode ? (
             /* Voice mode: big mic button + live transcript */
             <div className="flex-1 flex flex-col gap-2">
@@ -595,77 +595,82 @@ export default function LysChatView() {
 
       {/* History panel */}
       {showHistory && (
-        <div className="fixed inset-0 z-50 flex flex-col" style={{ backgroundColor: tokens.bg }}>
+        <div className="fixed inset-0 z-50 flex justify-center bg-black/35">
           <div
-            className="flex items-center gap-3 px-4 py-3 border-b"
-            style={{ borderColor: `${accent}14` }}
+            className="flex h-full w-full max-w-[430px] flex-col shadow-2xl"
+            style={{ backgroundColor: tokens.bg }}
           >
-            <button
-              type="button"
-              onClick={() => setShowHistory(false)}
-              className="flex h-10 w-10 items-center justify-center rounded-full"
-              style={{ backgroundColor: tokens.cardBg, color: tokens.textMuted }}
+            <div
+              className="flex items-center gap-3 border-b px-4 py-3"
+              style={{ borderColor: `${accent}14` }}
             >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <p className="text-base font-bold">Tidligere samtaler</p>
-          </div>
-
-          <div className="flex-1 overflow-y-auto px-4 pt-4 space-y-2">
-            <button
-              type="button"
-              onClick={startNew}
-              className="w-full rounded-2xl px-4 py-4 text-left text-sm font-bold transition-all duration-150 active:scale-[0.98]"
-              style={{
-                background: `linear-gradient(135deg, ${accent}18, ${accent}08)`,
-                border: `1.5px solid ${accent}30`,
-                color: accent,
-              }}
-            >
-              + Ny samtale
-            </button>
-
-            {historyLoading && (
-              <div className="flex justify-center py-8">
-                <div className="flex gap-1.5">
-                  {[0, 150, 300].map((d) => (
-                    <div
-                      key={d}
-                      className="w-2 h-2 rounded-full animate-bounce"
-                      style={{ backgroundColor: accent, animationDelay: `${d}ms` }}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {!historyLoading && history.length === 0 && (
-              <p className="text-center text-sm py-8" style={{ color: tokens.textMuted }}>
-                Ingen tidligere samtaler
-              </p>
-            )}
-
-            {history.map((conv) => (
               <button
-                key={conv.id}
                 type="button"
-                onClick={() => loadConversation(conv)}
-                className="w-full rounded-2xl px-4 py-4 text-left transition-all duration-150 active:scale-[0.98]"
-                style={{ backgroundColor: tokens.cardBg, boxShadow: tokens.shadow }}
+                onClick={() => setShowHistory(false)}
+                className="flex h-10 w-10 items-center justify-center rounded-full"
+                style={{ backgroundColor: tokens.cardBg, color: tokens.textMuted }}
               >
-                <p className="text-sm font-semibold mb-1 truncate" style={{ color: tokens.text }}>
-                  {conv.title ?? 'Samtale'}
-                </p>
-                <p className="text-xs" style={{ color: tokens.textMuted }}>
-                  {new Date(conv.updated_at).toLocaleDateString('da-DK', {
-                    day: 'numeric',
-                    month: 'short',
-                  })}
-                  {' · '}
-                  {(conv.messages as LysChatMessage[]).length} beskeder
-                </p>
+                <ArrowLeft className="h-5 w-5" />
               </button>
-            ))}
+              <p className="text-base font-bold">Tidligere samtaler</p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-4 pt-4 space-y-2">
+              <button
+                type="button"
+                onClick={startNew}
+                className="w-full rounded-2xl px-4 py-4 text-left text-sm font-bold transition-all duration-150 active:scale-[0.98]"
+                style={{
+                  background: `linear-gradient(135deg, ${accent}18, ${accent}08)`,
+                  border: `1.5px solid ${accent}30`,
+                  color: accent,
+                }}
+              >
+                + Ny samtale
+              </button>
+
+              {historyLoading && (
+                <div className="flex justify-center py-8">
+                  <div className="flex gap-1.5">
+                    {[0, 150, 300].map((d) => (
+                      <div
+                        key={d}
+                        className="w-2 h-2 rounded-full animate-bounce"
+                        style={{ backgroundColor: accent, animationDelay: `${d}ms` }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {!historyLoading && history.length === 0 && (
+                <p className="text-center text-sm py-8" style={{ color: tokens.textMuted }}>
+                  Ingen tidligere samtaler
+                </p>
+              )}
+
+              {history.map((conv) => (
+                <button
+                  key={conv.id}
+                  type="button"
+                  onClick={() => loadConversation(conv)}
+                  className="w-full rounded-2xl px-4 py-4 text-left transition-all duration-150 active:scale-[0.98]"
+                  style={{ backgroundColor: tokens.cardBg, boxShadow: tokens.shadow }}
+                >
+                  <p className="text-sm font-semibold mb-1 truncate" style={{ color: tokens.text }}>
+                    {conv.title ?? 'Samtale'}
+                  </p>
+                  <p className="text-xs" style={{ color: tokens.textMuted }}>
+                    {new Date(conv.updated_at).toLocaleDateString('da-DK', {
+                      day: 'numeric',
+                      month: 'short',
+                    })}
+                    {' · '}
+                    {(conv.messages as LysChatMessage[]).length} beskeder
+                  </p>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}

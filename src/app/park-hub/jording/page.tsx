@@ -35,7 +35,7 @@ export default function JordingPage() {
   }, [router]);
 
   return (
-    <main className="mx-auto max-w-lg min-h-dvh bg-[#F7F5F1] text-[#1A1814] px-5 py-5">
+    <main className="mx-auto w-full min-h-dvh max-w-full bg-[#F7F5F1] px-5 py-5 text-[#1A1814]">
       <button
         type="button"
         onClick={() => (active === 'menu' ? router.back() : setActive('menu'))}

@@ -159,14 +159,14 @@ export default function LysKrisePlan({ open, onClose, firstName }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col justify-end"
+      className="fixed inset-0 z-50 flex items-end justify-center"
       style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div
-        className="mx-auto w-full max-w-lg flex flex-col"
+        className="flex w-full max-w-[430px] flex-col"
         style={{
           backgroundColor: 'var(--lys-bg2)',
           borderRadius: '20px 20px 0 0',

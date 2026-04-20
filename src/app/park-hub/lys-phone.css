@@ -1,0 +1,27 @@
+/**
+ * Lys: centreret telefonkolonne (max 430px) — park-hub + lys-chat.
+ */
+.budr-lys-phone-frame {
+  min-height: 100dvh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  background-color: #07080c;
+}
+
+.budr-lys-phone-column {
+  width: 100%;
+  max-width: 430px;
+  min-height: 100dvh;
+  position: relative;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+@media (min-width: 431px) {
+  .budr-lys-phone-column {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.06),
+      0 12px 48px rgba(0, 0, 0, 0.35);
+  }
+}

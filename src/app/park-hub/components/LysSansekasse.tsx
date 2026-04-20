@@ -51,7 +51,7 @@ export default function LysSansekasse({ tokens, accent, onClose }: Props) {
 
   return (
     <div
-      className="mx-auto flex w-full max-w-lg flex-col min-h-dvh"
+      className="mx-auto flex min-h-dvh w-full max-w-full flex-col"
       style={{ backgroundColor: tokens.bg, color: tokens.text }}
     >
       {/* Top bar */}

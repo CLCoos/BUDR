@@ -719,7 +719,7 @@ export default function LysDagTab({ tokens, accent }: Props) {
           }}
         >
           <div
-            className="w-full max-w-lg rounded-3xl p-6 space-y-4"
+            className="w-full max-w-[430px] rounded-3xl p-6 space-y-4"
             style={{ backgroundColor: tokens.bg, border: `1px solid ${tokens.cardBorder}` }}
           >
             <div className="flex items-center justify-between">
