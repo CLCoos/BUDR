@@ -7,10 +7,10 @@ const COOKIE_NAME = 'budr_resident_id';
 const MAX_AGE = 60 * 60 * 24 * 365;
 
 const COOKIE_OPTS = {
-  httpOnly: false, // readable client-side so logout can clear without an API call
+  httpOnly: false, // læsbar client-side så Lys kan logge ud uden API-kald
   secure: process.env.NODE_ENV === 'production',
   sameSite: 'lax' as const,
-  maxAge: MAX_AGE,
+  maxAge: MAX_AGE, // 31536000 — synk med /app/[resident_id]
   path: '/',
 };
 

@@ -89,16 +89,22 @@ type InnerProps = {
   onMobileClose: () => void;
   orgName: string | null;
   orgLogoUrl: string | null;
+  staffRole: string | null;
 };
 
-function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: InnerProps) {
+function PortalSidebarInner({
+  mobileOpen,
+  onMobileClose,
+  orgName,
+  orgLogoUrl,
+  staffRole,
+}: InnerProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [displayName, setDisplayName] = useState<string>('');
   const [initials, setInitials] = useState<string>('');
-  const [staffRole, setStaffRole] = useState<string | null>(null);
   const alertCount = useAlertCount();
   const pilot = carePortalPilotSimulatedData();
 
@@ -168,7 +174,7 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
       },
       {
         icon: Upload,
-        label: 'Dataimport',
+        label: 'Importer beboere',
         href: '/care-portal-import',
         badge: 0,
         roleOnly: 'leder',
@@ -202,14 +208,6 @@ function PortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl }: 
           ? (parts[0][0] + parts[1][0]).toUpperCase()
           : name.slice(0, 2).toUpperCase()
       );
-      supabase
-        .from('care_staff')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-        .then(({ data }) => {
-          setStaffRole((data as { role?: string } | null)?.role ?? null);
-        });
     });
   }, []);
 
@@ -440,6 +438,7 @@ type PortalSidebarProps = {
   onMobileClose?: () => void;
   orgName?: string | null;
   orgLogoUrl?: string | null;
+  staffRole: string | null;
 };
 
 export default function PortalSidebar({
@@ -447,6 +446,7 @@ export default function PortalSidebar({
   onMobileClose = () => {},
   orgName = null,
   orgLogoUrl = null,
+  staffRole,
 }: PortalSidebarProps) {
   return (
     <Suspense
@@ -467,6 +467,7 @@ export default function PortalSidebar({
         onMobileClose={onMobileClose}
         orgName={orgName}
         orgLogoUrl={orgLogoUrl}
+        staffRole={staffRole}
       />
     </Suspense>
   );

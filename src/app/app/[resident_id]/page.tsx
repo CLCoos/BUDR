@@ -21,7 +21,7 @@ export default async function ResidentEntryPage({ params }: Props) {
     httpOnly: false,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 365, // 1 year
+    maxAge: 31536000,
     path: '/',
   });
 

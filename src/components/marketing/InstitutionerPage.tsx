@@ -9,7 +9,7 @@ import { useBudrLandingFadeIn } from '@/components/marketing/useBudrLandingFadeI
 
 // Skift denne URL ud når Cal.com-kontoen er oprettet.
 // Opret konto på cal.com → "New event type" → "20 min demo" → kopiér dit link hertil.
-const BOOKING_URL = 'https://cal.com/budrcare/demo';
+const BOOKING_URL = 'https://cal.eu/budr-care/20-min-demo-budr-care';
 
 type InstitutionerPageProps = {
   className?: string;

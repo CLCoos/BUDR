@@ -12,9 +12,11 @@ type Props = {
   children: React.ReactNode;
   orgName: string | null;
   orgLogoUrl: string | null;
+  /** Fra server (`care_staff.role`); bruges til rolle-baseret nav. */
+  staffRole: string | null;
 };
 
-export default function PortalMobileNav({ children, orgName, orgLogoUrl }: Props) {
+export default function PortalMobileNav({ children, orgName, orgLogoUrl, staffRole }: Props) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const pilot = carePortalPilotSimulatedData();
 
@@ -89,6 +91,7 @@ export default function PortalMobileNav({ children, orgName, orgLogoUrl }: Props
           onMobileClose={() => setMobileNavOpen(false)}
           orgName={orgName}
           orgLogoUrl={orgLogoUrl}
+          staffRole={staffRole}
         />
         <main className="cp-scroll min-w-0 flex-1 overflow-y-auto">{children}</main>
       </div>

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const COOKIE_NAME = 'budr_resident_session';
-const MAX_AGE = 60 * 60 * 12; // 12 hours
+/** 1 år — matcher øvrige beboer-cookie varighed; PIN/WebAuthn styrer reelt adgang. */
+const MAX_AGE = 31536000;
 
 /**
  * POST /api/resident-session
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
     res.cookies.set(COOKIE_NAME, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: MAX_AGE,
       path: '/',
     });
@@ -36,6 +37,6 @@ export async function POST(req: NextRequest) {
  */
 export async function DELETE() {
   const res = NextResponse.json({ ok: true });
-  res.cookies.delete(COOKIE_NAME);
+  res.cookies.set(COOKIE_NAME, '', { maxAge: 0, path: '/' });
   return res;
 }

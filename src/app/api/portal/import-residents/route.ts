@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
@@ -8,11 +9,6 @@ const MAX_BATCH = 100;
 interface ResidentInput {
   display_name?: unknown;
   nickname?: unknown;
-  room?: unknown;
-  move_in_date?: unknown;
-  primary_contact?: unknown;
-  primary_contact_phone?: unknown;
-  primary_contact_relation?: unknown;
 }
 
 interface ImportError {
@@ -21,15 +17,14 @@ interface ImportError {
   error: string;
 }
 
-function getServiceClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false } }
-  );
+function getServiceRoleClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false } });
 }
 
-export async function POST(req: Request): Promise<NextResponse> {
+export async function POST(req: Request): Promise<Response | NextResponse> {
   const server = await createServerSupabaseClient();
   if (!server) {
     return NextResponse.json({ error: 'not_configured' }, { status: 503 });
@@ -50,6 +45,11 @@ export async function POST(req: Request): Promise<NextResponse> {
   const orgId = parseStaffOrgId(staffRow?.org_id ?? null);
   if (!orgId) {
     return NextResponse.json({ error: 'no_org' }, { status: 403 });
+  }
+
+  const admin = getServiceRoleClient();
+  if (!admin) {
+    return NextResponse.json({ error: 'service_role_required' }, { status: 503 });
   }
 
   let body: unknown;
@@ -74,54 +74,86 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: `Max ${MAX_BATCH} beboere per request` }, { status: 400 });
   }
 
-  const supabase = getServiceClient();
-  let imported = 0;
-  const errors: ImportError[] = [];
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const send = (obj: Record<string, unknown>) => {
+        controller.enqueue(encoder.encode(`${JSON.stringify(obj)}\n`));
+      };
 
-  for (let i = 0; i < residents.length; i++) {
-    const r = residents[i];
-    const name = typeof r.display_name === 'string' ? r.display_name.trim() : '';
-    if (!name) {
-      errors.push({ row: i + 1, name: '(tom)', error: 'display_name er påkrævet' });
-      continue;
-    }
+      let imported = 0;
+      const errors: ImportError[] = [];
 
-    const parts = name.split(/\s+/).filter(Boolean);
-    const initials = parts
-      .slice(0, 2)
-      .map((p) => p[0].toUpperCase())
-      .join('');
+      for (let i = 0; i < residents.length; i++) {
+        const r = residents[i];
+        const name = typeof r.display_name === 'string' ? r.display_name.trim() : '';
+        if (!name) {
+          const err: ImportError = {
+            row: i + 1,
+            name: '(tom)',
+            error: 'display_name er påkrævet',
+          };
+          errors.push(err);
+          send({
+            type: 'row',
+            index: i,
+            ok: false,
+            display_name: '(tom)',
+            error: err.error,
+          });
+          continue;
+        }
 
-    const onboarding_data = {
-      avatar_initials: initials,
-      room: typeof r.room === 'string' ? r.room.trim() || '—' : '—',
-      move_in_date: typeof r.move_in_date === 'string' ? r.move_in_date.trim() || null : null,
-      primary_contact:
-        typeof r.primary_contact === 'string' ? r.primary_contact.trim() || null : null,
-      primary_contact_phone:
-        typeof r.primary_contact_phone === 'string' ? r.primary_contact_phone.trim() || null : null,
-      primary_contact_relation:
-        typeof r.primary_contact_relation === 'string'
-          ? r.primary_contact_relation.trim() || null
-          : null,
-    };
+        const nickRaw = typeof r.nickname === 'string' ? r.nickname.trim() : '';
+        const nickname = nickRaw ? nickRaw : null;
 
-    const { error } = await supabase.from('care_residents').insert({
-      display_name: name,
-      nickname: typeof r.nickname === 'string' && r.nickname.trim() ? r.nickname.trim() : null,
-      onboarding_data,
-      org_id: orgId,
-      preferred_language: 'da',
-      color_theme: 'purple',
-      simple_mode: false,
-    });
+        const parts = name.split(/\s+/).filter(Boolean);
+        const initials = parts
+          .slice(0, 2)
+          .map((p) => p[0]?.toUpperCase() ?? '')
+          .join('');
 
-    if (error) {
-      errors.push({ row: i + 1, name, error: error.message });
-    } else {
-      imported++;
-    }
-  }
+        const onboarding_data = {
+          avatar_initials: initials || '?',
+          room: '—',
+          move_in_date: null as string | null,
+          primary_contact: null as string | null,
+          primary_contact_phone: null as string | null,
+          primary_contact_relation: null as string | null,
+        };
 
-  return NextResponse.json({ imported, errors });
+        const user_id = randomUUID();
+
+        const { error } = await admin.from('care_residents').insert({
+          user_id,
+          display_name: name,
+          nickname,
+          org_id: orgId,
+          onboarding_data,
+          preferred_language: 'da',
+          color_theme: 'purple',
+          simple_mode: false,
+        });
+
+        if (error) {
+          const err: ImportError = { row: i + 1, name, error: error.message };
+          errors.push(err);
+          send({ type: 'row', index: i, ok: false, display_name: name, error: error.message });
+        } else {
+          imported++;
+          send({ type: 'row', index: i, ok: true, display_name: name });
+        }
+      }
+
+      send({ type: 'done', imported, errors });
+      controller.close();
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'application/x-ndjson; charset=utf-8',
+      'Cache-Control': 'no-store',
+    },
+  });
 }

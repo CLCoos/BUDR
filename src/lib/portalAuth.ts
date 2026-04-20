@@ -31,6 +31,19 @@ export async function getPortalStaffOrgId(): Promise<string | null> {
   return parseStaffOrgId(data?.org_id ?? null);
 }
 
+/** `care_staff.role` for the logged-in user (fx `leder`), or null. */
+export async function getPortalStaffRole(): Promise<string | null> {
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) return null;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data } = await supabase.from('care_staff').select('role').eq('id', user.id).single();
+  const role = (data as { role?: string } | null)?.role;
+  return typeof role === 'string' && role.trim() ? role.trim() : null;
+}
+
 /**
  * Asserts that a valid staff session exists. Redirects to /care-portal-login
  * if Supabase is unconfigured or the user is not authenticated.

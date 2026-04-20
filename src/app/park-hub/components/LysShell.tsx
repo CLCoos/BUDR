@@ -194,7 +194,7 @@ export default function LysShell({
     <ResidentProvider firstName={firstName} initials={initials} residentId={residentId}>
       <div
         className="min-h-dvh font-sans transition-colors duration-300"
-        style={{ backgroundColor: '#F7F5F1', color: '#1A1814' }}
+        style={{ backgroundColor: shellTokens.bg, color: shellTokens.text }}
       >
         <LysStatusChrome tokens={shellTokens} isDemoMode={isDemoMode} />
         <div
@@ -204,17 +204,18 @@ export default function LysShell({
           <div
             className="sticky top-0 z-20 flex items-center justify-between border-b px-5 py-4 backdrop-blur-xl"
             style={{
-              backgroundColor: 'rgba(247,245,241,0.92)',
-              borderColor: '#E8E3DA',
+              backgroundColor: shellTokens.navBarBg,
+              borderColor: shellTokens.cardBorder,
             }}
           >
             <div
               style={{
                 fontFamily: "'DM Serif Display', serif",
                 fontSize: 22,
-                color: '#2D5BE3',
+                color: shellTokens.accent,
                 fontStyle: 'italic',
                 lineHeight: 1,
+                letterSpacing: '-0.02em',
               }}
             >
               lys
@@ -222,9 +223,9 @@ export default function LysShell({
             <div
               className="flex h-9 w-9 items-center justify-center rounded-full border text-xs font-semibold"
               style={{
-                backgroundColor: '#EBF0FD',
-                color: '#1A3FAF',
-                borderColor: 'rgba(45,91,227,0.3)',
+                backgroundColor: shellTokens.accentSoft,
+                color: shellTokens.accentSoftText,
+                borderColor: 'rgba(29, 158, 117, 0.35)',
               }}
             >
               {initials || 'B'}
@@ -433,6 +434,7 @@ export default function LysShell({
         )}
 
         <LysBottomNav
+          tokens={shellTokens}
           active={tab}
           onChange={setTab}
           onCheckIn={openCheckIn}
@@ -458,15 +460,15 @@ export default function LysShell({
             />
             <div
               className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-lg rounded-t-3xl border px-5 pb-10 pt-3"
-              style={{ backgroundColor: '#FFFFFF', borderColor: '#E8E3DA' }}
+              style={{ backgroundColor: shellTokens.cardBg, borderColor: shellTokens.cardBorder }}
             >
               <div
                 className="mx-auto mb-4 h-1 w-10 rounded-full"
-                style={{ backgroundColor: '#E8E3DA' }}
+                style={{ backgroundColor: shellTokens.cardBorder }}
               />
               <p
                 className="mb-3 text-[10px] font-semibold uppercase tracking-[0.2em]"
-                style={{ color: '#A09890' }}
+                style={{ color: shellTokens.textMuted }}
               >
                 Alle sektioner
               </p>
@@ -483,19 +485,22 @@ export default function LysShell({
                     key={item.label}
                     type="button"
                     onClick={item.action}
-                    className="w-full rounded-2xl border px-3 py-3 text-left flex items-center gap-3"
-                    style={{ borderColor: '#E8E3DA', backgroundColor: '#FFFFFF' }}
+                    className="flex w-full items-center gap-3 rounded-2xl border px-3 py-3 text-left"
+                    style={{
+                      borderColor: shellTokens.cardBorder,
+                      backgroundColor: shellTokens.cardBg,
+                    }}
                   >
                     <span
                       className="inline-flex h-9 w-9 items-center justify-center rounded-xl"
-                      style={{ backgroundColor: '#EBF0FD', color: '#2D5BE3' }}
+                      style={{ backgroundColor: shellTokens.accentSoft, color: shellTokens.accent }}
                     >
                       {item.icon}
                     </span>
-                    <span className="text-[15px]" style={{ color: '#1A1814' }}>
+                    <span className="text-[15px]" style={{ color: shellTokens.text }}>
                       {item.label}
                     </span>
-                    <span className="ml-auto" style={{ color: '#A09890' }}>
+                    <span className="ml-auto" style={{ color: shellTokens.textMuted }}>
                       ›
                     </span>
                   </button>

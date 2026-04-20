@@ -54,7 +54,7 @@ export default function CarePortalTopNav() {
         <Link
           href="/park-hub"
           className="truncate rounded-lg px-2 py-1.5 text-[11px] font-semibold transition-colors hover:opacity-90 sm:text-xs"
-          style={{ color: 'var(--cp-blue)' }}
+          style={{ color: 'var(--cp-green)' }}
           title="Åbn borger-app (Lys)"
         >
           <span className="sm:hidden">Borger-app</span>

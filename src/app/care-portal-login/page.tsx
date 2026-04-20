@@ -31,6 +31,9 @@ function CarePortalLoginContent() {
         'Supabase er ikke konfigureret på serveren (mangler NEXT_PUBLIC_SUPABASE_URL eller NEXT_PUBLIC_SUPABASE_ANON_KEY).'
       );
     }
+    if (searchParams.get('error') === 'unauthorized') {
+      setError('Din konto har ikke adgang til Care Portal. Kontakt en leder eller administrator.');
+    }
     if (searchParams.get('registered') === '1') {
       setRegistered(true);
     }

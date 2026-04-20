@@ -13,6 +13,9 @@ export type LysThemeTokens = {
   accentSoftText: string;
   shadow: string;
   glowShadow: string;
+  /** Sticky topbar / bundnavigation — let glas over shell-bg */
+  navBarBg: string;
+  bottomNavBg: string;
 };
 
 export function getLysPhase(date: Date): LysPhase {
@@ -28,20 +31,26 @@ export function getLysPhase(date: Date): LysPhase {
  * Brug disse tokens til faner (Hjem/Mig/Kalender/Journal), så tekst/kort ikke følger
  * aften/nat-tema (lyse farver på lys baggrund).
  */
+/**
+ * Lys hovedskal (faner) — samme “produktfamilie” som Care Portal light:
+ * baggrund som `--cp-bg` light, accent som BUDR-teal (`#1D9E75`).
+ */
 export function lysParkHubShell(): LysThemeTokens {
   return {
-    bg: '#F7F5F1',
-    accent: '#2D5BE3',
-    text: '#1A1814',
-    textMuted: 'rgba(26, 24, 20, 0.62)',
-    cardBg: '#FFFFFF',
-    cardBorder: '#E8E3DA',
-    gradientFrom: '#F7F5F1',
-    gradientTo: 'rgba(235, 240, 253, 0.72)',
-    accentSoft: '#EBF0FD',
-    accentSoftText: '#1A3FAF',
-    shadow: '0 4px 24px rgba(45,91,227,0.08), 0 1px 8px rgba(0,0,0,0.05)',
-    glowShadow: '0 8px 40px rgba(45,91,227,0.18)',
+    bg: '#f4f6fb',
+    accent: '#1d9e75',
+    text: '#1a1f2e',
+    textMuted: 'rgba(26, 31, 46, 0.62)',
+    cardBg: '#ffffff',
+    cardBorder: 'rgba(0, 0, 0, 0.08)',
+    gradientFrom: '#f4f6fb',
+    gradientTo: 'rgba(230, 247, 242, 0.78)',
+    accentSoft: 'rgba(29, 158, 117, 0.12)',
+    accentSoftText: '#0d6e52',
+    shadow: '0 1px 4px rgba(0,0,0,0.06), 0 4px 24px rgba(29,158,117,0.07)',
+    glowShadow: '0 8px 40px rgba(29,158,117,0.16)',
+    navBarBg: 'rgba(244, 246, 251, 0.94)',
+    bottomNavBg: 'rgba(244, 246, 251, 0.94)',
   };
 }
 
@@ -61,6 +70,8 @@ export function lysTheme(phase: LysPhase): LysThemeTokens {
         accentSoftText: '#92400E',
         shadow: '0 4px 24px rgba(245,158,11,0.10), 0 1px 8px rgba(0,0,0,0.04)',
         glowShadow: '0 8px 40px rgba(245,158,11,0.22)',
+        navBarBg: 'rgba(253, 250, 245, 0.92)',
+        bottomNavBg: 'rgba(253, 250, 245, 0.92)',
       };
     case 'afternoon':
       return {
@@ -76,6 +87,8 @@ export function lysTheme(phase: LysPhase): LysThemeTokens {
         accentSoftText: '#4338CA',
         shadow: '0 4px 24px rgba(127,119,221,0.12), 0 1px 8px rgba(0,0,0,0.04)',
         glowShadow: '0 8px 40px rgba(127,119,221,0.28)',
+        navBarBg: 'rgba(245, 244, 255, 0.92)',
+        bottomNavBg: 'rgba(245, 244, 255, 0.92)',
       };
     case 'evening':
       return {
@@ -91,6 +104,8 @@ export function lysTheme(phase: LysPhase): LysThemeTokens {
         accentSoftText: '#6EE7B7',
         shadow: '0 4px 24px rgba(0,0,0,0.30), 0 1px 8px rgba(0,0,0,0.10)',
         glowShadow: '0 8px 40px rgba(29,158,117,0.32)',
+        navBarBg: 'rgba(12, 24, 41, 0.88)',
+        bottomNavBg: 'rgba(12, 24, 41, 0.92)',
       };
     default: // night
       return {
@@ -106,6 +121,8 @@ export function lysTheme(phase: LysPhase): LysThemeTokens {
         accentSoftText: '#C4B5FD',
         shadow: '0 4px 24px rgba(0,0,0,0.40), 0 1px 8px rgba(0,0,0,0.15)',
         glowShadow: '0 8px 40px rgba(127,119,221,0.30)',
+        navBarBg: 'rgba(8, 14, 28, 0.9)',
+        bottomNavBg: 'rgba(8, 14, 28, 0.92)',
       };
   }
 }

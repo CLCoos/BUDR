@@ -109,6 +109,12 @@
     font-family: 'DM Sans', sans-serif;
     -webkit-font-smoothing: antialiased;
   }
+
+  /** Borger-app (Lys) — samme DM Sans som Care Portal (`font-sans` i Tailwind). */
+  #budr-lys-root,
+  .budr-lys-root {
+    font-family: var(--font-landing-body, 'DM Sans'), 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  }
 }
 
 @layer utilities {

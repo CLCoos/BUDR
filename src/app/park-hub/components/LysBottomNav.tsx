@@ -2,10 +2,13 @@
 
 import React from 'react';
 import { CalendarDays, Home, Menu, PlusCircle } from 'lucide-react';
+import type { LysThemeTokens } from '../lib/lysTheme';
+import { lysParkHubShell } from '../lib/lysTheme';
 
 export type LysNavTab = 'hjem' | 'dag' | 'journal' | 'mig';
 
 type Props = {
+  tokens?: LysThemeTokens;
   active: LysNavTab;
   onChange: (tab: LysNavTab) => void;
   onCheckIn: () => void;
@@ -18,6 +21,7 @@ type Props = {
 };
 
 export default function LysBottomNav({
+  tokens = lysParkHubShell(),
   active,
   onChange,
   onCheckIn,
@@ -52,8 +56,8 @@ export default function LysBottomNav({
     <nav
       className="fixed bottom-0 left-0 right-0 z-40 backdrop-blur-2xl"
       style={{
-        backgroundColor: 'rgba(247,245,241,0.94)',
-        borderTop: '1px solid #E8E3DA',
+        backgroundColor: tokens.bottomNavBg,
+        borderTop: `1px solid ${tokens.cardBorder}`,
         paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))',
       }}
       aria-label="Hovedmenu"
@@ -73,8 +77,8 @@ export default function LysBottomNav({
               onClick={tab.onPress}
               className="relative flex min-h-[56px] flex-col items-center justify-center gap-1 rounded-xl transition-all duration-200"
               style={{
-                backgroundColor: isOn ? '#EBF0FD' : 'transparent',
-                color: isOn ? '#2D5BE3' : '#6B6459',
+                backgroundColor: isOn ? tokens.accentSoft : 'transparent',
+                color: isOn ? tokens.accent : tokens.textMuted,
               }}
               aria-current={isOn ? 'page' : undefined}
             >
@@ -89,7 +93,7 @@ export default function LysBottomNav({
                     className="absolute -right-1 -top-0.5 h-2 w-2 rounded-full"
                     style={{
                       backgroundColor: '#B85C00',
-                      boxShadow: '0 0 0 2px rgba(247,245,241,0.94), 0 0 6px rgba(184,92,0,0.4)',
+                      boxShadow: `0 0 0 2px ${tokens.bottomNavBg}, 0 0 6px rgba(184,92,0,0.4)`,
                     }}
                     aria-hidden
                   />
@@ -98,7 +102,7 @@ export default function LysBottomNav({
 
               <span
                 className="relative z-10 text-[11px] font-semibold leading-none tracking-wide"
-                style={{ color: isOn ? '#2D5BE3' : '#6B6459' }}
+                style={{ color: isOn ? tokens.accent : tokens.textMuted }}
               >
                 {tab.label}
               </span>
@@ -107,7 +111,7 @@ export default function LysBottomNav({
               {isOn && (
                 <span
                   className="absolute bottom-1 h-1 w-1 rounded-full"
-                  style={{ backgroundColor: '#2D5BE3' }}
+                  style={{ backgroundColor: tokens.accent }}
                   aria-hidden
                 />
               )}

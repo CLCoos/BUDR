@@ -18,5 +18,9 @@ export const viewport: Viewport = {
 };
 
 export default function ParkHubLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <div id="budr-lys-root" className="budr-lys-root min-h-dvh antialiased">
+      {children}
+    </div>
+  );
 }
