@@ -10,6 +10,7 @@ import { useBudrLandingFadeIn } from '@/components/marketing/useBudrLandingFadeI
 // Skift denne URL ud når Cal.com-kontoen er oprettet.
 // Opret konto på cal.com → "New event type" → "20 min demo" → kopiér dit link hertil.
 const BOOKING_URL = 'https://cal.eu/budr-care/20-min-demo-budr-care';
+const BOOK_DEMO_CTA = 'Book 20 min. demo →';
 
 type InstitutionerPageProps = {
   className?: string;
@@ -28,20 +29,22 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
               <Link href="/" className="nav-logo" aria-label="BUDR Care — forsiden">
                 <BudrLogo dark size={40} />
               </Link>
+              <div className="institutioner-brand-actions">
+                <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="btn-sm">
+                  {BOOK_DEMO_CTA}
+                </a>
+              </div>
               <nav className="institutioner-nav-links" aria-label="Sidenavigation">
                 <a href="#problem">Problemet</a>
                 <a href="#loesning">Løsningen</a>
                 <a href="#maalgruppe">For hvem</a>
                 <a href="#implementering">Implementering</a>
               </nav>
-              <div className="institutioner-brand-actions">
-                <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="btn-sm">
-                  Book demo
-                </a>
-              </div>
             </div>
             <p className="eyebrow">Til ledere og koordinatorer i socialpsykiatrien</p>
-            <h1 className="section-h">Dokumentation og overdragelse. Et sted. Fra dag ét.</h1>
+            <h1 className="section-h institutioner-hero-title">
+              Dokumentation og overdragelse. Et sted. Fra dag ét.
+            </h1>
             <p className="section-p">
               BUDR Care samler Care Portal og borger-appen Lys i ét driftssystem. Personalet
               arbejder på fælles grundlag. Borgeren er med i flowet. Ledelsen ser status uden at
@@ -59,7 +62,7 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
                 rel="noopener noreferrer"
                 className="btn-primary"
               >
-                Book 20 min. demo →
+                {BOOK_DEMO_CTA}
               </a>
               <Link href="/care-portal-demo" className="btn-ghost">
                 Prøv demo
@@ -136,7 +139,7 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
                 rel="noopener noreferrer"
                 className="btn-primary"
               >
-                Book 20 min. demo →
+                {BOOK_DEMO_CTA}
               </a>
               <Link href="/care-portal-demo" className="btn-ghost">
                 Prøv demo

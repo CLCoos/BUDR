@@ -2,10 +2,15 @@
 
 import React, { useMemo, useRef, useState } from 'react';
 import { Mic, MicOff } from 'lucide-react';
+import type { LysThemeTokens } from '../lib/lysTheme';
 
 type Props = {
   onComplete: (transcript: string, summary: string) => void;
   onSkip: () => void;
+  /** Når sat, matcher feltet Lys-tema (lys/mørk) i stedet for hårdkodet hvid kasse */
+  tokens?: LysThemeTokens;
+  /** Sæt false når forælderen allerede har overskrift for sektionen */
+  showTitle?: boolean;
 };
 
 type Status = 'idle' | 'recording' | 'processing' | 'done' | 'error' | 'unsupported';
@@ -34,13 +39,16 @@ function getSpeechCtor(): SpeechRecognitionType | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-export default function VoiceJournal({ onComplete, onSkip }: Props) {
+export default function VoiceJournal({ onComplete, onSkip, tokens, showTitle = true }: Props) {
   const speechCtor = useMemo(() => getSpeechCtor(), []);
   const [status, setStatus] = useState<Status>(speechCtor ? 'idle' : 'unsupported');
   const [transcript, setTranscript] = useState('');
   const [summary, setSummary] = useState('');
   const recRef = useRef<InstanceType<SpeechRecognitionType> | null>(null);
   const statusRef = useRef<Status>(speechCtor ? 'idle' : 'unsupported');
+
+  const themed = Boolean(tokens);
+  const isDark = tokens?.colorScheme === 'dark';
 
   const setStatusSafe = (next: Status) => {
     statusRef.current = next;
@@ -108,22 +116,85 @@ export default function VoiceJournal({ onComplete, onSkip }: Props) {
     setStatusSafe('done');
   };
 
+  const surfaceClass = themed
+    ? 'rounded-2xl border p-4 sm:p-5 space-y-3'
+    : 'rounded-xl border border-gray-100 bg-white p-4 sm:p-5 space-y-3';
+
+  const surfaceStyle = themed
+    ? {
+        backgroundColor: tokens!.cardBg,
+        borderColor: tokens!.cardBorder,
+        color: tokens!.text,
+      }
+    : undefined;
+
+  const labelStyle = themed ? { color: tokens!.text } : undefined;
+  const mutedStyle = themed ? { color: tokens!.textMuted } : undefined;
+  const skipBtnClass = themed
+    ? 'rounded-md px-2 py-1 text-xs font-medium active:scale-95'
+    : 'rounded-md px-2 py-1 text-xs font-medium text-gray-500 active:scale-95';
+
+  const skipBtnStyle = themed
+    ? { color: tokens!.textMuted, backgroundColor: 'transparent' }
+    : undefined;
+
+  const textareaClass = themed
+    ? 'w-full min-h-[120px] text-base rounded-2xl px-4 py-3 outline-none resize-y transition-all'
+    : 'w-full min-h-[120px] text-sm text-gray-700 placeholder-gray-400 border border-gray-200 rounded-lg p-3 resize-y focus:outline-none focus:border-[#7F77DD]';
+
+  const textareaStyle = themed
+    ? {
+        backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : tokens!.bg,
+        border: `1px solid ${tokens!.cardBorder}`,
+        color: tokens!.text,
+      }
+    : undefined;
+
+  const primaryBtn = {
+    backgroundColor: themed ? tokens!.accent : '#2D5BE3',
+    color: '#fff',
+  };
+  const stopBtn = { backgroundColor: '#C0392B', color: '#fff' };
+  const manualBtn = {
+    backgroundColor: themed ? tokens!.accent : '#0F1B2D',
+    color: '#fff',
+  };
+
+  const doneBoxStyle = themed
+    ? {
+        border: `1px solid ${tokens!.cardBorder}`,
+        backgroundColor: tokens!.accentSoft,
+        color: tokens!.accentSoftText,
+      }
+    : undefined;
+
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-4 sm:p-5 space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-gray-700">Vil du fortælle mere?</p>
-        <button
-          type="button"
-          onClick={onSkip}
-          className="rounded-md px-2 py-1 text-xs font-medium text-gray-500 active:scale-95"
-        >
-          Spring over
-        </button>
-      </div>
+    <div className={surfaceClass} style={surfaceStyle}>
+      {showTitle && (
+        <div className="flex items-center justify-between gap-2">
+          <p
+            className={`text-sm font-semibold ${!themed ? 'text-gray-700' : ''}`}
+            style={labelStyle}
+          >
+            Vil du fortælle mere?
+          </p>
+          <button type="button" onClick={onSkip} className={skipBtnClass} style={skipBtnStyle}>
+            Spring over
+          </button>
+        </div>
+      )}
+
+      {!showTitle && (
+        <div className="flex justify-end">
+          <button type="button" onClick={onSkip} className={skipBtnClass} style={skipBtnStyle}>
+            Spring stemme over
+          </button>
+        </div>
+      )}
 
       {(status === 'unsupported' || status === 'error') && (
-        <p className="text-xs text-gray-500">
-          Stemmegenkendelse er ikke tilgængelig her. Du kan skrive din note i stedet.
+        <p className={`text-xs ${!themed ? 'text-gray-500' : ''}`} style={mutedStyle}>
+          Stemmegenkendelse er ikke tilgængelig her. Du kan skrive i feltet i stedet.
         </p>
       )}
 
@@ -131,8 +202,9 @@ export default function VoiceJournal({ onComplete, onSkip }: Props) {
         <textarea
           value={transcript}
           onChange={(e) => setTranscript(e.target.value)}
-          placeholder="Skriv hvad der fylder for dig i dag..."
-          className="w-full min-h-[120px] text-sm text-gray-700 placeholder-gray-400 border border-gray-200 rounded-lg p-3 resize-y focus:outline-none focus:border-[#7F77DD]"
+          placeholder="Valgfrit: optag eller skriv mere her…"
+          className={textareaClass}
+          style={textareaStyle}
         />
       )}
 
@@ -140,7 +212,8 @@ export default function VoiceJournal({ onComplete, onSkip }: Props) {
         <button
           type="button"
           onClick={start}
-          className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-[#2D5BE3] px-4 py-2 text-sm font-semibold text-white"
+          className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white"
+          style={primaryBtn}
         >
           <Mic size={16} /> Start optagelse
         </button>
@@ -150,7 +223,8 @@ export default function VoiceJournal({ onComplete, onSkip }: Props) {
         <button
           type="button"
           onClick={() => void stopAndSummarize()}
-          className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-[#C0392B] px-4 py-2 text-sm font-semibold text-white"
+          className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white"
+          style={stopBtn}
         >
           <MicOff size={16} /> Stop optagelse
         </button>
@@ -161,30 +235,54 @@ export default function VoiceJournal({ onComplete, onSkip }: Props) {
           <button
             type="button"
             onClick={() => void saveManual()}
-            className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-[#0F1B2D] px-4 py-2 text-sm font-semibold text-white"
+            className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white"
+            style={manualBtn}
           >
-            Gem note
+            Gem som note
           </button>
         )}
 
-      {status === 'processing' && <p className="text-sm text-gray-500">Et øjeblik...</p>}
+      {status === 'processing' && (
+        <p className={`text-sm ${!themed ? 'text-gray-500' : ''}`} style={mutedStyle}>
+          Et øjeblik…
+        </p>
+      )}
 
       {status === 'done' && (
-        <div className="rounded-lg border border-[#A8DFC9] bg-[#E1F5EE] p-3">
-          <p className="text-xs font-semibold text-[#1D9E75]">Her er hvad du fortalte</p>
-          <p className="text-sm italic text-[#1D9E75] mt-1">{summary}</p>
+        <div
+          className={
+            themed ? 'rounded-xl p-3' : 'rounded-lg border border-[#A8DFC9] bg-[#E1F5EE] p-3'
+          }
+          style={doneBoxStyle}
+        >
+          <p className={`text-xs font-semibold ${!themed ? 'text-[#1D9E75]' : ''}`}>
+            Her er hvad du fortalte
+          </p>
+          <p className={`text-sm italic mt-1 ${!themed ? 'text-[#1D9E75]' : ''}`}>{summary}</p>
           <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
             <button
               type="button"
               onClick={() => onComplete(transcript.trim(), summary)}
-              className="min-h-[44px] rounded-lg bg-[#1D9E75] px-3 py-2 text-xs font-semibold text-white"
+              className="min-h-[44px] rounded-xl px-3 py-2 text-xs font-semibold text-white"
+              style={{ backgroundColor: themed ? tokens!.accent : '#1D9E75' }}
             >
-              Ja, gem det
+              Ja, tag med
             </button>
             <button
               type="button"
               onClick={() => setStatusSafe('idle')}
-              className="min-h-[44px] rounded-lg border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-600"
+              className={`min-h-[44px] rounded-xl border px-3 py-2 text-xs font-semibold ${
+                !themed ? 'border-gray-200 text-gray-600' : ''
+              }`}
+              style={
+                themed
+                  ? {
+                      borderColor: tokens!.cardBorder,
+                      color: tokens!.textMuted,
+                      backgroundColor: 'transparent',
+                    }
+                  : undefined
+              }
             >
               Rediger
             </button>

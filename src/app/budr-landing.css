@@ -1916,15 +1916,20 @@ html {
 
 .budr-landing .institutioner-brand-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 26px;
+  gap: 12px 20px;
+  margin-bottom: clamp(22px, 4vw, 34px);
+  padding-bottom: 4px;
 }
 
 .budr-landing .institutioner-brand-actions {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 .budr-landing .institutioner-back-link {
@@ -1941,10 +1946,13 @@ html {
 
 .budr-landing .institutioner-nav-links {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: clamp(16px, 2vw, 28px);
-  margin-left: auto;
-  margin-right: 16px;
+  gap: clamp(12px, 2vw, 24px);
+  margin: 0;
+  padding-top: 14px;
+  flex: 1 0 100%;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .budr-landing .institutioner-nav-links a {
@@ -1959,8 +1967,32 @@ html {
   color: var(--white);
 }
 
+.budr-landing .institutioner-brand-actions .btn-sm {
+  text-align: center;
+  white-space: normal;
+  line-height: 1.25;
+  justify-content: center;
+  max-width: min(220px, 100%);
+}
+
+@media (max-width: 520px) {
+  .budr-landing .institutioner-brand-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .budr-landing .institutioner-brand-actions .btn-sm {
+    width: 100%;
+    max-width: none;
+  }
+}
+
 .budr-landing .institutioner-hero .section-h {
-  max-width: 15ch;
+  max-width: min(22ch, 92vw);
+}
+
+.budr-landing .institutioner-hero-title {
+  text-wrap: balance;
 }
 
 .budr-landing .institutioner-hero .section-p {
@@ -2112,6 +2144,9 @@ html {
 .budr-landing .institutioner-contact-inner {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .budr-landing .booking-block {
@@ -2123,8 +2158,10 @@ html {
   flex-direction: column;
   align-items: flex-start;
   gap: 20px;
+  width: 100%;
   max-width: 520px;
-  margin-top: 8px;
+  margin: 8px auto 0;
+  box-sizing: border-box;
 }
 
 .budr-landing .booking-block h3 {
@@ -2200,12 +2237,14 @@ html {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin: 36px 0 20px;
+  margin: 36px auto 20px;
   color: var(--fog);
   font-size: 0.8rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  width: 100%;
   max-width: 520px;
+  box-sizing: border-box;
 }
 
 .budr-landing .booking-or::before,
@@ -2221,6 +2260,16 @@ html {
   color: var(--fog);
   margin: 0 0 20px;
   font-weight: 400;
+  width: 100%;
+  max-width: 520px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+/* Én kolonne under booking — samme bredde som booking-kortet */
+.budr-landing .institutioner-contact .marketing-contact-form {
+  max-width: 520px;
+  width: 100%;
 }
 
 @media (max-width: 560px) {

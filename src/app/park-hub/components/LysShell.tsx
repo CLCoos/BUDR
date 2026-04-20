@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { useResidentSession } from '@/hooks/useResidentSession';
 import { trackEvent } from '@/lib/analytics';
 import { tryEarnFirstChatBadge } from '@/lib/residentBadgeSync';
-import { getLysPhase, lysParkHubShell, lysTheme } from '../lib/lysTheme';
+import { getLysPhase, lysParkHubShell, lysParkHubShellDark } from '../lib/lysTheme';
 import type { LysFlowOverlay } from '../lib/lysOverlay';
 import { useLysConversation } from '../hooks/useLysConversation';
 import { useSpeech } from '../hooks/useSpeech';
@@ -26,6 +26,7 @@ import LysOnboarding from './LysOnboarding';
 import LysStatusChrome from './LysStatusChrome';
 import LysKrisekort from './LysKrisekort';
 import { createClient } from '@/lib/supabase/client';
+import { Moon, Sun } from 'lucide-react';
 
 type Props = {
   firstName: string;
@@ -53,13 +54,14 @@ export default function LysShell({
   const [moodTick, setMoodTick] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [simpleMode, setSimpleMode] = useState(false);
+  const [appearance, setAppearance] = useState<'light' | 'dark'>('light');
 
   const phase = useMemo(() => getLysPhase(now), [now]);
-  /** Fuldskærms-flows (stemning, sanser, …) følger døgnet */
-  const ambientTokens = useMemo(() => lysTheme(phase), [phase]);
-  const ambientAccent = ambientTokens.accent;
-  /** Faner under lys shell-baggrund — altid mørk tekst / læsbare kort */
-  const shellTokens = useMemo(() => lysParkHubShell(), []);
+  /** Én palet for faner + fuldskærms-flows — følger brugerens lys/mørk-valg */
+  const shellTokens = useMemo(
+    () => (appearance === 'dark' ? lysParkHubShellDark() : lysParkHubShell()),
+    [appearance]
+  );
   const shellAccent = shellTokens.accent;
 
   const session = useResidentSession();
@@ -89,6 +91,23 @@ export default function LysShell({
     mq.addEventListener('change', fn);
     return () => mq.removeEventListener('change', fn);
   }, []);
+
+  useEffect(() => {
+    const v = localStorage.getItem('budr-lys-theme');
+    if (v === 'dark' || v === 'light') setAppearance(v);
+  }, []);
+
+  const toggleAppearance = () => {
+    setAppearance((prev) => {
+      const next = prev === 'light' ? 'dark' : 'light';
+      try {
+        localStorage.setItem('budr-lys-theme', next);
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (!residentId) return;
@@ -220,15 +239,35 @@ export default function LysShell({
             >
               lys
             </div>
-            <div
-              className="flex h-9 w-9 items-center justify-center rounded-full border text-xs font-semibold"
-              style={{
-                backgroundColor: shellTokens.accentSoft,
-                color: shellTokens.accentSoftText,
-                borderColor: 'rgba(29, 158, 117, 0.35)',
-              }}
-            >
-              {initials || 'B'}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={toggleAppearance}
+                className="flex h-9 min-w-[2.25rem] items-center justify-center gap-1 rounded-full border px-2 text-xs font-semibold transition-all active:scale-95"
+                style={{
+                  backgroundColor: shellTokens.cardBg,
+                  color: shellTokens.textMuted,
+                  borderColor: shellTokens.cardBorder,
+                }}
+                title={appearance === 'light' ? 'Skift til mørkt tema' : 'Skift til lyst tema'}
+                aria-label={appearance === 'light' ? 'Skift til mørkt tema' : 'Skift til lyst tema'}
+              >
+                {appearance === 'light' ? (
+                  <Moon size={15} strokeWidth={2} aria-hidden />
+                ) : (
+                  <Sun size={15} strokeWidth={2} aria-hidden />
+                )}
+              </button>
+              <div
+                className="flex h-9 w-9 items-center justify-center rounded-full border text-xs font-semibold"
+                style={{
+                  backgroundColor: shellTokens.accentSoft,
+                  color: shellTokens.accentSoftText,
+                  borderColor: 'rgba(29, 158, 117, 0.35)',
+                }}
+              >
+                {initials || 'B'}
+              </div>
             </div>
           </div>
           <div
@@ -299,11 +338,11 @@ export default function LysShell({
         {overlay === 'mood' && (
           <div
             className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: ambientTokens.bg }}
+            style={{ backgroundColor: shellTokens.bg }}
           >
             <LysStemningskort
-              tokens={ambientTokens}
-              accent={ambientAccent}
+              tokens={shellTokens}
+              accent={shellAccent}
               firstName={firstName}
               reducedMotion={reducedMotion}
               onBack={() => setOverlay(null)}
@@ -315,11 +354,11 @@ export default function LysShell({
         {overlay === 'flower' && (
           <div
             className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: ambientTokens.bg }}
+            style={{ backgroundColor: shellTokens.bg }}
           >
             <LysBlomst
-              tokens={ambientTokens}
-              accent={ambientAccent}
+              tokens={shellTokens}
+              accent={shellAccent}
               firstName={firstName}
               reducedMotion={reducedMotion}
               onBack={() => setOverlay(null)}
@@ -331,11 +370,11 @@ export default function LysShell({
         {overlay === 'thought' && (
           <div
             className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: ambientTokens.bg }}
+            style={{ backgroundColor: shellTokens.bg }}
           >
             <LysTankefanger
-              tokens={ambientTokens}
-              accent={ambientAccent}
+              tokens={shellTokens}
+              accent={shellAccent}
               firstName={firstName}
               reducedMotion={reducedMotion}
               speak={speakSafe}
@@ -350,11 +389,11 @@ export default function LysShell({
         {overlay === 'goals' && (
           <div
             className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: ambientTokens.bg }}
+            style={{ backgroundColor: shellTokens.bg }}
           >
             <LysMaaltrappe
-              tokens={ambientTokens}
-              accent={ambientAccent}
+              tokens={shellTokens}
+              accent={shellAccent}
               firstName={firstName}
               reducedMotion={reducedMotion}
               onBack={() => setOverlay(null)}
@@ -365,11 +404,11 @@ export default function LysShell({
         {overlay === 'dailyWin' && (
           <div
             className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: ambientTokens.bg }}
+            style={{ backgroundColor: shellTokens.bg }}
           >
             <LysDagligSejr
-              tokens={ambientTokens}
-              accent={ambientAccent}
+              tokens={shellTokens}
+              accent={shellAccent}
               firstName={firstName}
               onBack={() => setOverlay(null)}
             />
@@ -379,11 +418,11 @@ export default function LysShell({
         {overlay === 'sanser' && (
           <div
             className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: ambientTokens.bg }}
+            style={{ backgroundColor: shellTokens.bg }}
           >
             <LysSansekasse
-              tokens={ambientTokens}
-              accent={ambientAccent}
+              tokens={shellTokens}
+              accent={shellAccent}
               onClose={() => setOverlay(null)}
             />
           </div>
@@ -392,11 +431,11 @@ export default function LysShell({
         {overlay === 'aac' && (
           <div
             className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ backgroundColor: ambientTokens.bg }}
+            style={{ backgroundColor: shellTokens.bg }}
           >
             <LysAACBoard
-              tokens={ambientTokens}
-              accent={ambientAccent}
+              tokens={shellTokens}
+              accent={shellAccent}
               residentId={residentId}
               onClose={() => setOverlay(null)}
             />

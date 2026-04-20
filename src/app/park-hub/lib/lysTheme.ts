@@ -16,6 +16,8 @@ export type LysThemeTokens = {
   /** Sticky topbar / bundnavigation — let glas over shell-bg */
   navBarBg: string;
   bottomNavBg: string;
+  /** Til chatbobler m.m. uden heuristisk gæt på baggrundsfarve */
+  colorScheme: 'light' | 'dark';
 };
 
 export function getLysPhase(date: Date): LysPhase {
@@ -51,6 +53,28 @@ export function lysParkHubShell(): LysThemeTokens {
     glowShadow: '0 8px 40px rgba(29,158,117,0.16)',
     navBarBg: 'rgba(244, 246, 251, 0.94)',
     bottomNavBg: 'rgba(244, 246, 251, 0.94)',
+    colorScheme: 'light',
+  };
+}
+
+/** Mørk park-hub — samme struktur som lys shell, til valgfrit tema */
+export function lysParkHubShellDark(): LysThemeTokens {
+  return {
+    bg: '#0f1218',
+    accent: '#1d9e75',
+    text: '#f0f2f7',
+    textMuted: 'rgba(240, 242, 247, 0.62)',
+    cardBg: '#171c28',
+    cardBorder: 'rgba(255, 255, 255, 0.09)',
+    gradientFrom: '#0f1218',
+    gradientTo: 'rgba(29, 158, 117, 0.14)',
+    accentSoft: 'rgba(29, 158, 117, 0.16)',
+    accentSoftText: '#6ee7b7',
+    shadow: '0 4px 24px rgba(0,0,0,0.35), 0 1px 8px rgba(0,0,0,0.2)',
+    glowShadow: '0 8px 40px rgba(29,158,117,0.28)',
+    navBarBg: 'rgba(15, 18, 24, 0.92)',
+    bottomNavBg: 'rgba(15, 18, 24, 0.94)',
+    colorScheme: 'dark',
   };
 }
 
@@ -72,6 +96,7 @@ export function lysTheme(phase: LysPhase): LysThemeTokens {
         glowShadow: '0 8px 40px rgba(245,158,11,0.22)',
         navBarBg: 'rgba(253, 250, 245, 0.92)',
         bottomNavBg: 'rgba(253, 250, 245, 0.92)',
+        colorScheme: 'light',
       };
     case 'afternoon':
       return {
@@ -89,6 +114,7 @@ export function lysTheme(phase: LysPhase): LysThemeTokens {
         glowShadow: '0 8px 40px rgba(127,119,221,0.28)',
         navBarBg: 'rgba(245, 244, 255, 0.92)',
         bottomNavBg: 'rgba(245, 244, 255, 0.92)',
+        colorScheme: 'light',
       };
     case 'evening':
       return {
@@ -106,6 +132,7 @@ export function lysTheme(phase: LysPhase): LysThemeTokens {
         glowShadow: '0 8px 40px rgba(29,158,117,0.32)',
         navBarBg: 'rgba(12, 24, 41, 0.88)',
         bottomNavBg: 'rgba(12, 24, 41, 0.92)',
+        colorScheme: 'dark',
       };
     default: // night
       return {
@@ -123,6 +150,7 @@ export function lysTheme(phase: LysPhase): LysThemeTokens {
         glowShadow: '0 8px 40px rgba(127,119,221,0.30)',
         navBarBg: 'rgba(8, 14, 28, 0.9)',
         bottomNavBg: 'rgba(8, 14, 28, 0.92)',
+        colorScheme: 'dark',
       };
   }
 }

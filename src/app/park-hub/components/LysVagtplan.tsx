@@ -83,10 +83,10 @@ export default function LysVagtplan({ tokens, accent, reducedMotion }: Props) {
 
   return (
     <section
-      className="rounded-2xl border border-gray-100/20 bg-white/95 p-6 shadow-sm transition-all dark:bg-white/5"
+      className="rounded-2xl border p-6 shadow-sm transition-all"
       style={{
         transitionDuration: `${dur}ms`,
-        backgroundColor: tokens.cardBg.includes('255') ? 'rgba(255,255,255,0.92)' : tokens.cardBg,
+        backgroundColor: tokens.cardBg,
         borderColor: tokens.cardBorder,
         color: tokens.text,
       }}

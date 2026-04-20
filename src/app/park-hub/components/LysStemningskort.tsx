@@ -59,7 +59,7 @@ export default function LysStemningskort({
 
   return (
     <div
-      className="min-h-dvh px-4 py-6 sm:px-5"
+      className="mx-auto min-h-dvh w-full max-w-lg px-4 py-6 sm:px-5"
       style={{ color: tokens.text, paddingBottom: 'max(6rem, env(safe-area-inset-bottom, 0px))' }}
     >
       <button
@@ -77,7 +77,7 @@ export default function LysStemningskort({
         Hej {firstName} — der er ikke nogen forkerte svar.
       </p>
 
-      <div className="grid grid-cols-2 gap-2.5 max-w-md mx-auto">
+      <div className="mx-auto grid w-full max-w-lg grid-cols-2 gap-2.5">
         {MOODS.map((m, i) => {
           const active = selected === i;
           return (
@@ -114,31 +114,37 @@ export default function LysStemningskort({
         })}
       </div>
 
-      <div className="mt-8 max-w-md mx-auto">
-        <label
-          htmlFor="lys-mood-note"
-          className="block text-sm font-semibold mb-2"
-          style={{ color: tokens.textMuted }}
-        >
-          Vil du fortælle Lys mere? (valgfrit)
-        </label>
-        <textarea
-          id="lys-mood-note"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          rows={3}
-          placeholder="Skriv gerne lidt…"
-          className="w-full rounded-2xl px-4 py-3 text-base outline-none resize-none transition-all"
-          style={{
-            backgroundColor: tokens.cardBg,
-            border: `1px solid ${tokens.cardBorder}`,
-            color: tokens.text,
-          }}
-        />
-      </div>
+      <div className="mx-auto mt-8 w-full max-w-lg space-y-3">
+        <div>
+          <label
+            htmlFor="lys-mood-note"
+            className="mb-1 block text-sm font-semibold"
+            style={{ color: tokens.text }}
+          >
+            Vil du fortælle mere? <span className="font-normal opacity-80">(valgfrit)</span>
+          </label>
+          <p className="mb-2 text-xs leading-snug" style={{ color: tokens.textMuted }}>
+            Skriv et par linjer herunder — eller brug stemme-feltet længere nede. Du behøver ikke
+            begge dele.
+          </p>
+          <textarea
+            id="lys-mood-note"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            rows={3}
+            placeholder="Skriv gerne lidt…"
+            className="w-full resize-none rounded-2xl px-4 py-3 text-base outline-none transition-all"
+            style={{
+              backgroundColor: tokens.cardBg,
+              border: `1px solid ${tokens.cardBorder}`,
+              color: tokens.text,
+            }}
+          />
+        </div>
 
-      <div className="max-w-md mx-auto mt-4">
         <VoiceJournal
+          tokens={tokens}
+          showTitle={false}
           onSkip={() => {
             setVoiceTranscript(null);
             setVoiceSummary(null);
@@ -150,7 +156,7 @@ export default function LysStemningskort({
         />
       </div>
 
-      <div className="max-w-md mx-auto mt-4 space-y-2">
+      <div className="mx-auto mt-4 w-full max-w-lg space-y-2">
         {voiceSummary && (
           <p className="text-xs" style={{ color: tokens.textMuted }}>
             Stemmejournal tilføjet: {voiceSummary}

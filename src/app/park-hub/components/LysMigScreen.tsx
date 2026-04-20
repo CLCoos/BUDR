@@ -233,7 +233,7 @@ export default function LysMigScreen({
   const progressPct = nextLevel ? Math.min(100, (xpProgress / xpNeeded) * 100) : 100;
   const activeDays = moodHistory.filter((d) => d.value !== null).length;
 
-  const isDarkish = tokens.bg.startsWith('#0');
+  const isDarkish = tokens.colorScheme === 'dark';
   const cardBg = tokens.cardBg;
   const subtext = tokens.textMuted;
 

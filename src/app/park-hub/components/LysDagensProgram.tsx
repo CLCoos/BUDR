@@ -154,10 +154,7 @@ export default function LysDagensProgram({
   const nextIdx = displayItems.findIndex((i) => parseTime(i.time) >= nowMin);
   const placeholders = nextIdx >= 0 ? Math.min(2, displayItems.length - nextIdx - 1) : 0;
 
-  const isDarkish =
-    tokens.bg === '#0F1B2D' ||
-    tokens.bg === '#0A1220' ||
-    tokens.text.toLowerCase().includes('e2e8f0');
+  const isDarkish = tokens.colorScheme === 'dark';
 
   const toggleExpand = useCallback((id: string) => {
     setExpandedId((cur) => (cur === id ? null : id));
@@ -306,16 +303,14 @@ export default function LysDagensProgram({
                     maxLength={100}
                     rows={2}
                     placeholder="Fortæl personalet noget om denne aftale..."
-                    className="mt-1 w-full rounded-xl border border-white/20 bg-white/10 p-3 text-sm text-white placeholder:text-white/40 outline-none transition-all duration-200"
-                    style={
-                      !isDarkish
-                        ? {
-                            borderColor: tokens.cardBorder,
-                            backgroundColor: 'rgba(255,255,255,0.85)',
-                            color: tokens.text,
-                          }
-                        : undefined
-                    }
+                    className="mt-1 w-full rounded-xl border p-3 text-sm outline-none transition-all duration-200"
+                    style={{
+                      borderColor: tokens.cardBorder,
+                      backgroundColor: isDarkish
+                        ? 'rgba(255,255,255,0.06)'
+                        : 'rgba(255,255,255,0.92)',
+                      color: tokens.text,
+                    }}
                   />
                 </label>
                 <button
@@ -402,9 +397,10 @@ export default function LysDagensProgram({
                     <button
                       type="button"
                       onClick={() => toggleExpand(item.id)}
-                      className="relative w-full overflow-hidden rounded-2xl border-2 bg-white p-4 text-left shadow-sm transition-all duration-200"
+                      className="relative w-full overflow-hidden rounded-2xl border-2 p-4 text-left shadow-sm transition-all duration-200"
                       style={{
                         borderColor: accent,
+                        backgroundColor: tokens.cardBg,
                         opacity: past ? 0.55 : 1,
                         transform: isNext && !past ? 'scale(1.01)' : undefined,
                       }}

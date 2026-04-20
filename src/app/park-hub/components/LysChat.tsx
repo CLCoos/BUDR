@@ -54,10 +54,7 @@ export default function LysChat({
   } | null>(null);
   const accRef = useRef('');
 
-  const isDarkish =
-    tokens.bg === '#0F1B2D' ||
-    tokens.bg === '#0A1220' ||
-    tokens.text.toLowerCase().includes('e2e8f0');
+  const isDarkish = tokens.colorScheme === 'dark';
 
   const bubbleUser = isDarkish ? 'rgba(255,255,255,0.12)' : `${accent}33`;
   const bubbleLys = isDarkish ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.85)';
