@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
+import type { LysThemeTokens } from '../lib/lysTheme';
 
 type ReminderRow = {
   id: string;
@@ -12,7 +13,11 @@ type ReminderRow = {
   date: string;
 };
 
-type Props = { residentId: string };
+type Props = {
+  residentId: string;
+  tokens?: LysThemeTokens;
+  accent?: string;
+};
 
 function minutesDiff(now: Date, hhmmss: string): number {
   const [h, m] = hhmmss.split(':').map((n) => Number(n));
@@ -21,7 +26,7 @@ function minutesDiff(now: Date, hhmmss: string): number {
   return Math.round((target.getTime() - now.getTime()) / 60000);
 }
 
-export default function MedicinReminder({ residentId }: Props) {
+export default function MedicinReminder({ residentId, tokens, accent = '#1D9E75' }: Props) {
   const [reminder, setReminder] = useState<ReminderRow | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -93,23 +98,46 @@ export default function MedicinReminder({ residentId }: Props) {
     toast.success('Tak - medicin registreret som taget');
   };
 
+  const dark = tokens?.colorScheme === 'dark';
+  const cardBg = isLate
+    ? dark
+      ? 'rgba(239,68,68,0.14)'
+      : '#fdecea'
+    : dark
+      ? 'rgba(245,158,11,0.12)'
+      : '#fef3e6';
+  const cardBorder = isLate
+    ? dark
+      ? 'rgba(248,113,113,0.35)'
+      : '#f5aaaa'
+    : dark
+      ? 'rgba(251,191,36,0.35)'
+      : '#f5cc85';
+  const titleColor = isLate ? (dark ? '#fca5a5' : '#c0392b') : dark ? '#fcd34d' : '#b85c00';
+  const bodyColor = tokens?.text ?? '#1a1814';
+  const mutedColor = tokens?.textMuted ?? '#6b6459';
+
   return (
     <section
       className="rounded-2xl border px-4 py-4"
       style={{
-        backgroundColor: isLate ? '#FDECEA' : '#FEF3E6',
-        borderColor: isLate ? '#F5AAAA' : '#F5CC85',
+        backgroundColor: cardBg,
+        borderColor: cardBorder,
       }}
       aria-live="polite"
     >
       <div className="flex items-center gap-3">
         <span className="text-2xl">💊</span>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold" style={{ color: isLate ? '#C0392B' : '#B85C00' }}>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold" style={{ color: titleColor }}>
             {isLate ? 'Medicin ikke taget' : `Medicin om ${Math.max(diff, 0)} minutter`}
           </p>
-          <p className="text-sm font-semibold text-[#1A1814]">{reminder.label}</p>
-          <p className="text-xs text-[#6B6459]">{dueText}</p>
+          <p className="text-sm font-semibold" style={{ color: bodyColor }}>
+            {reminder.label}
+          </p>
+          <p className="text-xs" style={{ color: mutedColor }}>
+            {dueText}
+          </p>
         </div>
       </div>
       <button
@@ -117,7 +145,7 @@ export default function MedicinReminder({ residentId }: Props) {
         onClick={() => void markTaken()}
         disabled={saving}
         className="mt-3 w-full rounded-xl py-3 text-sm font-bold text-white disabled:opacity-40"
-        style={{ backgroundColor: isLate ? '#C0392B' : '#1D9E75' }}
+        style={{ backgroundColor: isLate ? '#C0392B' : accent }}
       >
         {saving ? 'Gemmer…' : 'Taget ✓'}
       </button>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Volume2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -378,32 +378,40 @@ export default function LysHome({
   });
   const greeting = greetingLine(phase, firstName);
 
-  void tokens;
-  void accent;
+  const homeSurface = useMemo(() => {
+    const dark = tokens.colorScheme === 'dark';
+    return {
+      color: tokens.text,
+      '--lys-text': tokens.text,
+      '--lys-muted': tokens.textMuted,
+      '--lys-green': accent,
+      '--lys-green-dim': tokens.accentSoft,
+      '--lys-bg3': tokens.cardBg,
+      '--lys-bg4': dark ? 'rgba(255,255,255,0.055)' : '#f7f5f2',
+      '--lys-border': tokens.cardBorder,
+      '--lys-row-divider': dark ? 'rgba(255,255,255,0.08)' : '#f0ede7',
+      '--lys-icon-tile-bg': tokens.accentSoft,
+      '--lys-icon-tile-fg': dark ? tokens.accentSoftText : accent,
+      '--lys-dot-active': accent,
+      '--lys-dot-done': dark ? 'rgba(255,255,255,0.35)' : '#c8c0b6',
+    } as React.CSSProperties;
+  }, [tokens, accent]);
+
   void moodLabel;
 
   return (
-    <div
-      className="relative"
-      style={
-        {
-          color: 'var(--lys-text)',
-          '--lys-text': '#1A1814',
-          '--lys-muted': '#6B6459',
-          '--lys-green': '#2D5BE3',
-          '--lys-green-dim': '#EBF0FD',
-          '--lys-bg3': '#FFFFFF',
-          '--lys-bg4': '#FDFAF6',
-          '--lys-border': '#E8E3DA',
-        } as React.CSSProperties
-      }
-    >
+    <div className="relative" style={homeSurface}>
       {/* Header */}
       <header className="flex items-center justify-between px-5 pt-6 pb-3">
         <div>
           <h1
             className="leading-tight"
-            style={{ fontFamily: "'DM Serif Display', serif", fontSize: 30, fontWeight: 400 }}
+            style={{
+              fontFamily: "'DM Serif Display', serif",
+              fontSize: 30,
+              fontWeight: 400,
+              color: 'var(--lys-text)',
+            }}
           >
             {greeting.static}
             <em>{greeting.italic}</em>
@@ -436,7 +444,7 @@ export default function LysHome({
       </header>
 
       <main className="space-y-4 px-5 pb-4">
-        <MedicinReminder residentId={residentId} />
+        <MedicinReminder residentId={residentId} tokens={tokens} accent={accent} />
 
         {/* Dagens plan (v3 style) */}
         <section
@@ -444,8 +452,8 @@ export default function LysHome({
           style={{ backgroundColor: 'var(--lys-bg3)', border: '1px solid var(--lys-border)' }}
         >
           <div
-            className="flex items-center justify-between px-4 py-3 border-b"
-            style={{ borderColor: '#F0EDE7' }}
+            className="flex items-center justify-between border-b px-4 py-3"
+            style={{ borderColor: 'var(--lys-row-divider)' }}
           >
             <div>
               <p className="text-sm font-semibold" style={{ color: 'var(--lys-text)' }}>
@@ -456,8 +464,11 @@ export default function LysHome({
               </p>
             </div>
             <div
-              className="h-10 w-10 rounded-full flex items-center justify-center text-[11px] font-bold"
-              style={{ backgroundColor: '#EBF0FD', color: '#2D5BE3' }}
+              className="flex h-10 w-10 items-center justify-center rounded-full text-[11px] font-bold"
+              style={{
+                backgroundColor: 'var(--lys-icon-tile-bg)',
+                color: 'var(--lys-icon-tile-fg)',
+              }}
             >
               {Math.round((completedToday.size / Math.max(todayPreview.length, 1)) * 100)}%
             </div>
@@ -482,15 +493,17 @@ export default function LysHome({
                   style={{
                     borderBottom:
                       idx < (todayPreview.length > 0 ? todayPreview.length : 4) - 1
-                        ? '1px solid #F0EDE7'
+                        ? '1px solid var(--lys-row-divider)'
                         : 'none',
-                    backgroundColor: done ? '#FDFAF6' : 'transparent',
+                    backgroundColor: done ? 'var(--lys-bg4)' : 'transparent',
                     opacity: done ? 0.55 : 1,
                   }}
                 >
                   <span
                     className="h-2 w-2 rounded-full shrink-0"
-                    style={{ backgroundColor: done ? '#C8C0B6' : '#2D5BE3' }}
+                    style={{
+                      backgroundColor: done ? 'var(--lys-dot-done)' : 'var(--lys-dot-active)',
+                    }}
                   />
                   <span
                     className="flex-1 text-sm"
@@ -514,7 +527,7 @@ export default function LysHome({
         <section>
           <p
             className="text-[10px] font-semibold uppercase tracking-[0.2em] mb-2"
-            style={{ color: '#A09890' }}
+            style={{ color: 'var(--lys-muted)' }}
           >
             Genveje
           </p>
@@ -522,9 +535,9 @@ export default function LysHome({
             {[
               {
                 label: 'Vagtplan',
-                sub: 'Dagens aftaler',
+                sub: 'Hvem er på arbejde',
                 icon: '⊙',
-                onClick: () => onSwitchTab('dag'),
+                onClick: () => onOpenFlow('vagtplan'),
               },
               {
                 label: 'Kriseplan',
@@ -560,7 +573,10 @@ export default function LysHome({
               >
                 <div
                   className="mb-2 h-8 w-8 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: '#EBF0FD', color: '#2D5BE3' }}
+                  style={{
+                    backgroundColor: 'var(--lys-icon-tile-bg)',
+                    color: 'var(--lys-icon-tile-fg)',
+                  }}
                 >
                   {q.icon}
                 </div>
@@ -656,7 +672,7 @@ export default function LysHome({
                 style={{
                   backgroundColor:
                     lastCheckIn?.level === opt.level ? 'var(--lys-green-dim)' : 'var(--lys-bg4)',
-                  border: `1px solid ${lastCheckIn?.level === opt.level ? 'rgba(45,91,227,0.3)' : 'var(--lys-border)'}`,
+                  border: `1px solid ${lastCheckIn?.level === opt.level ? `${accent}55` : 'var(--lys-border)'}`,
                 }}
                 title={opt.label}
               >

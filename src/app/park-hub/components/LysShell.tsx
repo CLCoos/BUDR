@@ -25,6 +25,7 @@ import LysAACBoard from './LysAACBoard';
 import LysOnboarding from './LysOnboarding';
 import LysStatusChrome from './LysStatusChrome';
 import LysKrisekort from './LysKrisekort';
+import LysVagtplan from './LysVagtplan';
 import { createClient } from '@/lib/supabase/client';
 import { Moon, Sun } from 'lucide-react';
 
@@ -200,13 +201,14 @@ export default function LysShell({
     setOverlay('mood');
   };
 
-  const openFromDrawer = (target: 'journal' | 'mig' | 'day' | 'crisis' | 'goals') => {
+  const openFromDrawer = (target: 'journal' | 'mig' | 'day' | 'crisis' | 'goals' | 'vagtplan') => {
     setDrawerOpen(false);
     if (target === 'journal') setTab('journal');
     else if (target === 'mig') setTab('mig');
     else if (target === 'day') setTab('dag');
     else if (target === 'crisis') setOverlay('crisis');
     else if (target === 'goals') setOverlay('goals');
+    else if (target === 'vagtplan') setOverlay('vagtplan');
   };
 
   return (
@@ -442,6 +444,26 @@ export default function LysShell({
           </div>
         )}
 
+        {overlay === 'vagtplan' && (
+          <div
+            className="fixed inset-0 z-50 overflow-y-auto"
+            style={{ backgroundColor: shellTokens.bg }}
+          >
+            <LysVagtplan
+              tokens={shellTokens}
+              accent={shellAccent}
+              reducedMotion={reducedMotion}
+              facilityId={facilityId}
+              isDemoMode={isDemoMode}
+              onBack={() => setOverlay(null)}
+              onOpenCalendar={() => {
+                setOverlay(null);
+                setTab('dag');
+              }}
+            />
+          </div>
+        )}
+
         {overlay === 'crisis' && (
           <div
             className="fixed inset-0 z-50 overflow-y-auto"
@@ -461,8 +483,9 @@ export default function LysShell({
             onClick={() => setOverlay('crisis')}
             className="fixed z-[60] h-14 w-14 rounded-full text-white text-2xl font-black shadow-lg active:scale-95"
             style={{
-              right: 20,
-              bottom: 'calc(88px + env(safe-area-inset-bottom, 0px))',
+              right:
+                'max(0.75rem, env(safe-area-inset-right, 0px), calc((100vw - min(32rem, 100vw)) / 2 + 0.75rem))',
+              bottom: 'calc(5.5rem + max(0.5rem, env(safe-area-inset-bottom, 0px)))',
               background: 'linear-gradient(135deg, #C0392B, #B91C1C)',
               boxShadow: '0 4px 20px rgba(192,57,43,0.45)',
             }}
@@ -513,7 +536,7 @@ export default function LysShell({
               </p>
               <div className="space-y-2">
                 {[
-                  { label: 'Vagtplan', icon: '⊙', action: () => openFromDrawer('day') },
+                  { label: 'Vagtplan', icon: '⊙', action: () => openFromDrawer('vagtplan') },
                   { label: 'Kriseplan', icon: '⚡', action: () => openFromDrawer('crisis') },
                   { label: 'Mine mål', icon: '◇', action: () => openFromDrawer('goals') },
                   { label: 'Aktiviteter', icon: '✦', action: () => openFromDrawer('day') },

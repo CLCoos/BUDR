@@ -2,7 +2,9 @@
 
 **Til AI/assistenter:** Læs denne fil først. Kort indgang: [`AGENTS.md`](./AGENTS.md).
 
-**Sidst opdateret (manuelt):** 2026-04-20 — **Lys (`/park-hub`):** Bruger kan vælge lyst eller mørkt tema (knap ved initialer; `localStorage` `budr-lys-theme`). Fuldskærms-flows (stemning, blomst, tankefanger, mål, …) bruger samme palet som hovedskallen — ikke længere døgnbaseret `lysTheme`-baggrund, så lys/mørk ikke blandes. Nyt `lysParkHubShellDark()` + `colorScheme` på `LysThemeTokens`. Stemning: én “fortæl mere”-sektion; `VoiceJournal` kan styles med tokens (`showTitle={false}` i stemningsflow). Kalender/vagtplan: færre hårdkodede hvide flader.
+**Sidst opdateret (manuelt):** 2026-04-20 — **Lys hjem + vagtplan:** `LysHome` bruger nu shell-`tokens` til kort/tekst (mørkt tema læsbar). Krise-FAB `fixed` med `right` udregnet ud fra centreret `max-w-lg`-kolonne. Genvej **Vagtplan** åbner overlay med `LysVagtplan` (live: `GET /api/park/resident-on-call` → `on_call_staff` + `care_staff.full_name` for beboerens `org_id`); tom tilstand med CTA til kalender-fanen; demo beholder eksempeldata.
+
+**Forrige:** 2026-04-20 — **Lys (`/park-hub`):** Bruger kan vælge lyst eller mørkt tema (knap ved initialer; `localStorage` `budr-lys-theme`). Fuldskærms-flows (stemning, blomst, tankefanger, mål, …) bruger samme palet som hovedskallen — ikke længere døgnbaseret `lysTheme`-baggrund, så lys/mørk ikke blandes. Nyt `lysParkHubShellDark()` + `colorScheme` på `LysThemeTokens`. Stemning: én “fortæl mere”-sektion; `VoiceJournal` kan styles med tokens (`showTitle={false}` i stemningsflow). Kalender/vagtplan: færre hårdkodede hvide flader.
 
 **Forrige:** 2026-04-20 — **Marketing `/institutioner` hero:** Top-række (logo + booking-CTA) og anker-navigation på egen fuld bredde-række med diskret separator; `BOOK_DEMO_CTA` bruges konsekvent; `institutioner-hero-title` med bredere `max-width` + `text-wrap: balance` for bedre linjeskift. Styles i `budr-landing.css`.
 
