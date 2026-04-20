@@ -242,8 +242,7 @@ export default function LysShell({
           className="w-full transition-all duration-200"
           style={{
             /* Bundmenu + flydende krise-knap (h-14) så genveje ikke blokeres */
-            paddingBottom:
-              'calc(5rem + 4.25rem + max(1rem, env(safe-area-inset-bottom, 0px)))',
+            paddingBottom: 'calc(5rem + 4.25rem + max(1rem, env(safe-area-inset-bottom, 0px)))',
           }}
         >
           <div
