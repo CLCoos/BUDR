@@ -166,6 +166,23 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
 
+  try {
+    await supabase.rpc('create_audit_log', {
+      p_actor_type: 'resident',
+      p_action: 'journal.entry_created',
+      p_actor_id: residentId,
+      p_actor_org_id: (resident as { org_id?: string } | null)?.org_id ?? null,
+      p_target_table: 'journal_entries',
+      p_metadata: {
+        source: 'resident-journal',
+        mode,
+        privacy,
+      },
+    });
+  } catch {
+    // best-effort
+  }
+
   const { count, error: countError } = await supabase
     .from('journal_entries')
     .select('*', { count: 'exact', head: true })

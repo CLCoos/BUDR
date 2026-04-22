@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getStaffPermissions } from '@/lib/auth/getStaffPermissions';
+import { hasPermission } from '@/lib/auth/hasPermission';
 import { callAnthropicJournalPolish } from '@/lib/ai/anthropicJournalPolish';
+import { PERMISSIONS } from '@/lib/permissions';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export const maxDuration = 60;
@@ -60,6 +63,10 @@ export async function POST(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const permissions = await getStaffPermissions(supabase);
+  if (!hasPermission(permissions, PERMISSIONS.WRITE_JOURNAL)) {
+    return NextResponse.json({ error: 'Ingen adgang' }, { status: 403 });
+  }
 
   let body: { draft?: string; text?: string; category?: string; residentLabel?: string };
   try {

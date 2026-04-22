@@ -67,6 +67,40 @@ function isResidentRoute(pathname: string): boolean {
   return pathname.startsWith('/park-hub') || pathname.startsWith('/park/');
 }
 
+function isBudrAdminRoute(pathname: string): boolean {
+  return pathname === '/budr-admin' || pathname.startsWith('/budr-admin/');
+}
+
+function unauthorizedBasicAuthResponse(): NextResponse {
+  return new NextResponse('Authentication required', {
+    status: 401,
+    headers: {
+      'WWW-Authenticate': 'Basic realm="BUDR Admin", charset="UTF-8"',
+    },
+  });
+}
+
+function isValidBudrAdminBasicAuth(req: NextRequest): boolean {
+  const adminSecret = process.env.BUDR_ADMIN_SECRET ?? '';
+  if (!adminSecret) return false;
+
+  const expectedUser = process.env.BUDR_ADMIN_BASIC_USER ?? 'budr';
+  const expectedPass = process.env.BUDR_ADMIN_BASIC_PASS ?? adminSecret;
+  const authHeader = req.headers.get('authorization') ?? '';
+  if (!authHeader.startsWith('Basic ')) return false;
+
+  try {
+    const decoded = atob(authHeader.slice(6));
+    const idx = decoded.indexOf(':');
+    if (idx < 0) return false;
+    const username = decoded.slice(0, idx);
+    const password = decoded.slice(idx + 1);
+    return username === expectedUser && password === expectedPass;
+  } catch {
+    return false;
+  }
+}
+
 function clearResidentCookies(res: NextResponse): void {
   const clear = (name: string) => {
     res.cookies.set(name, '', { maxAge: 0, path: '/' });
@@ -91,17 +125,27 @@ async function residentExistsInDb(userId: string): Promise<boolean | null> {
   if (!admin) return null;
   const { data, error } = await admin
     .from('care_residents')
-    .select('user_id')
+    .select('user_id, org_id')
     .eq('user_id', userId)
     .maybeSingle();
   if (error) return null;
-  return !!data;
+  if (!data) return false;
+  const orgId = (data as { org_id?: string | null }).org_id ?? null;
+  if (!orgId) return true;
+  const { data: orgRow, error: orgErr } = await admin
+    .from('organisations')
+    .select('deactivated_at')
+    .eq('id', orgId)
+    .maybeSingle();
+  if (orgErr) return null;
+  return !orgRow?.deactivated_at;
 }
 
 // ── Staff auth (Supabase Auth JWT + care_staff) ───────────────
 
 type StaffAuthResult =
-  | { kind: 'ok'; response: NextResponse }
+  | { kind: 'ok'; response: NextResponse; permissions: string[] }
+  | { kind: 'deactivated'; response: NextResponse }
   | { kind: 'no_session'; response: NextResponse }
   | { kind: 'no_staff_row'; response: NextResponse }
   | { kind: 'misconfigured'; response: NextResponse };
@@ -141,7 +185,7 @@ async function checkStaffAuth(req: NextRequest): Promise<StaffAuthResult> {
 
   const { data: staffRow, error } = await supabase
     .from('care_staff')
-    .select('id')
+    .select('id, role, role_id, org_id')
     .eq('id', user.id)
     .maybeSingle();
 
@@ -149,13 +193,57 @@ async function checkStaffAuth(req: NextRequest): Promise<StaffAuthResult> {
     return { kind: 'no_staff_row', response: supabaseResponse };
   }
 
-  return { kind: 'ok', response: supabaseResponse };
+  if (staffRow.org_id) {
+    const { data: orgRow } = await supabase
+      .from('organisations')
+      .select('deactivated_at')
+      .eq('id', staffRow.org_id)
+      .maybeSingle();
+    if (orgRow?.deactivated_at) {
+      return { kind: 'deactivated', response: supabaseResponse };
+    }
+  }
+
+  let permissions: string[] = [];
+  if (staffRow?.role_id) {
+    const { data: roleRow } = await supabase
+      .from('org_roles')
+      .select('permissions')
+      .eq('id', staffRow.role_id)
+      .maybeSingle();
+    permissions = Array.isArray(roleRow?.permissions)
+      ? roleRow.permissions.filter((p): p is string => typeof p === 'string')
+      : [];
+  }
+
+  if (permissions.length === 0 && staffRow?.role === 'leder') {
+    permissions = ['*'];
+  }
+
+  const reqHeaders = new Headers(req.headers);
+  reqHeaders.set('x-staff-permissions', JSON.stringify(permissions));
+  const responseWithHeader = NextResponse.next({
+    request: { headers: reqHeaders },
+  });
+  supabaseResponse.cookies.getAll().forEach((c) => {
+    responseWithHeader.cookies.set(c.name, c.value, c);
+  });
+
+  return { kind: 'ok', response: responseWithHeader, permissions };
 }
 
 // ── Middleware ────────────────────────────────────────────────
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // 0) Intern BUDR admin-side: HTTP Basic Auth ovenpå side-secret.
+  if (isBudrAdminRoute(pathname)) {
+    if (!isValidBudrAdminBasicAuth(req)) {
+      return unauthorizedBasicAuthResponse();
+    }
+    return NextResponse.next();
+  }
 
   // 1) Demo-portal: kun synlig når simulerings-flag er sat
   if (isCarePortalDemoRoute(pathname) && !carePortalSimulated()) {
@@ -169,6 +257,12 @@ export async function middleware(req: NextRequest) {
       if (auth.kind === 'ok') {
         return NextResponse.redirect(new URL('/care-portal-dashboard', req.url));
       }
+      if (auth.kind === 'deactivated') {
+        const current = req.nextUrl.searchParams.get('error');
+        if (current !== 'deactivated') {
+          return NextResponse.redirect(new URL('/care-portal-login?error=deactivated', req.url));
+        }
+      }
     }
     return NextResponse.next();
   }
@@ -181,6 +275,9 @@ export async function middleware(req: NextRequest) {
     const auth = await checkStaffAuth(req);
     if (auth.kind === 'no_session' || auth.kind === 'misconfigured') {
       return NextResponse.redirect(new URL('/care-portal-login', req.url));
+    }
+    if (auth.kind === 'deactivated') {
+      return NextResponse.redirect(new URL('/care-portal-login?error=deactivated', req.url));
     }
     if (auth.kind === 'no_staff_row') {
       return NextResponse.redirect(new URL('/care-portal-login?error=unauthorized', req.url));
@@ -252,6 +349,8 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
+    '/budr-admin',
+    '/budr-admin/:path*',
     '/care-portal-login',
     '/care-portal-demo',
     '/care-portal-demo/:path*',
@@ -263,6 +362,8 @@ export const config = {
     '/care-portal-tilsynsrapport/:path*',
     '/care-portal-settings',
     '/care-portal-settings/:path*',
+    '/care-portal-roles',
+    '/care-portal-roles/:path*',
     '/care-portal-import',
     '/care-portal-import/:path*',
     '/care-portal-assistant',

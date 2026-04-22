@@ -1,32 +1,33 @@
-import React, { Suspense } from 'react';
+import React from 'react';
 import { redirect } from 'next/navigation';
 import PortalShell from '@/components/PortalShell';
-import ResidentsDemoGrid from '@/app/care-portal-demo/components/ResidentsDemoGrid';
+import ResidentsOpsClient from './ResidentsOpsClient';
 import { requirePortalAuth } from '@/lib/portalAuth';
-import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
-
-function ResidentsFallback() {
-  return (
-    <div className="p-6 text-sm" style={{ color: 'var(--cp-muted)' }}>
-      Indlæser beboere…
-    </div>
-  );
-}
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export default async function CarePortalResidentsSimPage() {
-  await requirePortalAuth();
-  if (!carePortalPilotSimulatedData()) {
-    redirect('/resident-360-view');
+  const user = await requirePortalAuth();
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) redirect('/care-portal-login?err=config');
+
+  const { data: me } = await supabase
+    .from('care_staff')
+    .select('org_id, role')
+    .eq('id', user.id)
+    .single<{ org_id: string; role: string | null }>();
+  if (!me?.org_id || me.role !== 'leder') {
+    redirect('/care-portal-dashboard?error=unauthorized');
   }
+
+  const { data: residents } = await supabase
+    .from('care_residents')
+    .select('user_id, display_name, created_at')
+    .eq('org_id', me.org_id)
+    .order('created_at', { ascending: false });
 
   return (
     <PortalShell>
-      <Suspense fallback={<ResidentsFallback />}>
-        <ResidentsDemoGrid
-          residentsListPath="/care-portal-residents"
-          residentPathBase="/care-portal-resident-preview"
-        />
-      </Suspense>
+      <ResidentsOpsClient residents={residents ?? []} />
     </PortalShell>
   );
 }

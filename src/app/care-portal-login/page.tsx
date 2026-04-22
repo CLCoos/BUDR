@@ -34,6 +34,9 @@ function CarePortalLoginContent() {
     if (searchParams.get('error') === 'unauthorized') {
       setError('Din konto har ikke adgang til Care Portal. Kontakt en leder eller administrator.');
     }
+    if (searchParams.get('error') === 'deactivated') {
+      setError('Denne konto er deaktiveret — kontakt BUDR.');
+    }
     if (searchParams.get('registered') === '1') {
       setRegistered(true);
     }
@@ -233,7 +236,7 @@ function CarePortalLoginContent() {
 
               <div className="text-right">
                 <Link
-                  href="/care-portal-login"
+                  href="/care-portal-reset-password"
                   className="text-xs text-[var(--cp-green)] hover:underline"
                 >
                   Glemt adgangskode?

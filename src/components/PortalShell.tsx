@@ -1,11 +1,18 @@
 import React from 'react';
 import CarePortalTopNav from '@/components/CarePortalTopNav';
 import PortalMobileNav from '@/components/PortalMobileNav';
+import { getStaffPermissions } from '@/lib/auth/getStaffPermissions';
 import { getPortalStaffRole } from '@/lib/portalAuth';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getOrganisationForStaff } from '@/lib/supabase/organisation';
 
 export default async function PortalShell({ children }: { children: React.ReactNode }) {
-  const [org, staffRole] = await Promise.all([getOrganisationForStaff(), getPortalStaffRole()]);
+  const supabase = await createServerSupabaseClient();
+  const [org, staffRole, permissions] = await Promise.all([
+    getOrganisationForStaff(),
+    getPortalStaffRole(),
+    supabase ? getStaffPermissions(supabase) : Promise.resolve([]),
+  ]);
 
   return (
     <div
@@ -23,6 +30,7 @@ export default async function PortalShell({ children }: { children: React.ReactN
           orgName={org?.name ?? null}
           orgLogoUrl={org?.logo_url ?? null}
           staffRole={staffRole}
+          permissions={permissions}
         >
           <div className="cp-page-enter">{children}</div>
         </PortalMobileNav>

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getStaffPermissions } from '@/lib/auth/getStaffPermissions';
+import { hasPermission } from '@/lib/auth/hasPermission';
 import { callAnthropicJournalPolish } from '@/lib/ai/anthropicJournalPolish';
 import { fetchDiaryDraftRowsForSynthesis } from '@/lib/journalEntriesQueryCompat';
+import { PERMISSIONS } from '@/lib/permissions';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { parseStaffOrgId } from '@/lib/staffOrgScope';
 
@@ -40,6 +43,10 @@ export async function POST(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const permissions = await getStaffPermissions(supabase);
+  if (!hasPermission(permissions, PERMISSIONS.VIEW_JOURNAL)) {
+    return NextResponse.json({ error: 'Ingen adgang' }, { status: 403 });
+  }
 
   const orgId = parseStaffOrgId(user.user_metadata?.org_id);
   if (!orgId) {

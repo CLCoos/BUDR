@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Menu, Sparkles } from 'lucide-react';
 import PortalSidebar from '@/components/PortalSidebar';
+import type { Permission } from '@/lib/permissions';
 import DokumentSøgning from '@/components/DokumentSøgning';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
@@ -14,9 +15,16 @@ type Props = {
   orgLogoUrl: string | null;
   /** Fra server (`care_staff.role`); bruges til rolle-baseret nav. */
   staffRole: string | null;
+  permissions: Permission[];
 };
 
-export default function PortalMobileNav({ children, orgName, orgLogoUrl, staffRole }: Props) {
+export default function PortalMobileNav({
+  children,
+  orgName,
+  orgLogoUrl,
+  staffRole,
+  permissions,
+}: Props) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const pilot = carePortalPilotSimulatedData();
 
@@ -92,6 +100,7 @@ export default function PortalMobileNav({ children, orgName, orgLogoUrl, staffRo
           orgName={orgName}
           orgLogoUrl={orgLogoUrl}
           staffRole={staffRole}
+          permissions={permissions}
         />
         <main className="cp-scroll min-w-0 flex-1 overflow-y-auto">{children}</main>
       </div>

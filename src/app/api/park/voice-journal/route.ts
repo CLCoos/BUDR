@@ -125,6 +125,23 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: insertErr.message }, { status: 500 });
   }
 
+  try {
+    await supabase.rpc('create_audit_log', {
+      p_actor_type: 'resident',
+      p_action: 'journal.entry_created',
+      p_actor_id: residentId,
+      p_actor_org_id: (resident as { org_id?: string }).org_id ?? null,
+      p_target_table: 'journal_entries',
+      p_target_id: (inserted as { id: string }).id,
+      p_metadata: {
+        source: 'voice-journal',
+        mode: 'voice',
+      },
+    });
+  } catch {
+    // best-effort
+  }
+
   return NextResponse.json({
     entry_id: (inserted as { id: string }).id,
     content: aiContent,

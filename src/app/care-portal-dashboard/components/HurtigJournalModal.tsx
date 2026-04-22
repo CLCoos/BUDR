@@ -8,6 +8,7 @@ import { compareEditorChrome } from '@/components/journal/compareEditorChrome';
 import { JournalVersionToggle } from '@/components/journal/JournalVersionToggle';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
+import { logPortalAudit } from '@/lib/auditClient';
 import { formatJournalEntriesInsertError } from '@/lib/journalEntriesInsertError';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
 import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
@@ -408,6 +409,17 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
       toast.error(formatJournalEntriesInsertError(insErr));
       return;
     }
+
+    void logPortalAudit({
+      action: 'journal.entry_created',
+      tableName: 'journal_entries',
+      metadata: {
+        resident_id: residentId,
+        category: 'Andet',
+        journal_status: 'kladde',
+        source: 'care-portal.hurtig-journal-modal',
+      },
+    });
 
     window.dispatchEvent(new CustomEvent('portal-journal-updated', { detail: { residentId } }));
 

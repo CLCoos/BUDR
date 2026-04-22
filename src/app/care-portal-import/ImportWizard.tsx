@@ -2,6 +2,7 @@
 
 import React, { useCallback, useId, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
 import {
   Upload,
   ChevronRight,
@@ -138,8 +139,17 @@ type StreamDoneEvent = {
 };
 
 type ImportRowStatus = 'pending' | 'importing' | 'ok' | 'error';
+type PinStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 type WizardRow = CsvResidentRow & { clientKey: string };
+type ImportedResidentPinRow = {
+  key: string;
+  residentId: string;
+  displayName: string;
+  pin: string;
+  status: PinStatus;
+  error?: string;
+};
 
 let keySeq = 0;
 function nextKey() {
@@ -171,6 +181,9 @@ export default function ImportWizard() {
   const [doneErrors, setDoneErrors] = useState<Array<{ row: number; name: string; error: string }>>(
     []
   );
+  const [showPinSetup, setShowPinSetup] = useState(false);
+  const [pinRows, setPinRows] = useState<ImportedResidentPinRow[]>([]);
+  const [pinLoadError, setPinLoadError] = useState<string | null>(null);
 
   const validStep1 = rowErrors.length === 0 && rows.length > 0 && !parseErr;
 
@@ -187,6 +200,9 @@ export default function ImportWizard() {
     setLastDoneIndex(-1);
     setSummary(null);
     setDoneErrors([]);
+    setShowPinSetup(false);
+    setPinRows([]);
+    setPinLoadError(null);
   }, []);
 
   const applyFile = useCallback(async (file: File) => {
@@ -374,6 +390,151 @@ export default function ImportWizard() {
     if (!importRunning) return 'pending';
     return i === lastDoneIndex + 1 ? 'importing' : 'pending';
   }
+
+  const hydrateImportedResidentsForPin = useCallback(async () => {
+    const successfulNames = rows
+      .map((r, i) => ({ name: r.display_name.trim(), ok: rowStatus[i] === 'ok' }))
+      .filter((r) => r.ok && r.name.length > 0)
+      .map((r) => r.name);
+    if (successfulNames.length === 0) return;
+
+    setPinLoadError(null);
+
+    const supabase = createClient();
+    if (!supabase) {
+      setPinLoadError('Supabase client mangler i miljøet.');
+      return;
+    }
+
+    const uniqueNames = Array.from(new Set(successfulNames));
+    const { data, error } = await supabase
+      .from('care_residents')
+      .select('user_id, display_name, created_at')
+      .in('display_name', uniqueNames)
+      .order('created_at', { ascending: false });
+
+    if (error || !data) {
+      setPinLoadError('Kunne ikke hente importerede beboere til PIN-trinnet.');
+      return;
+    }
+
+    const byName = new Map<string, Array<{ user_id: string; display_name: string }>>();
+    for (const row of data) {
+      const name = typeof row.display_name === 'string' ? row.display_name.trim() : '';
+      const id = typeof row.user_id === 'string' ? row.user_id : '';
+      if (!name || !id) continue;
+      const list = byName.get(name) ?? [];
+      list.push({ user_id: id, display_name: name });
+      byName.set(name, list);
+    }
+
+    const next: ImportedResidentPinRow[] = [];
+    for (let i = 0; i < successfulNames.length; i += 1) {
+      const name = successfulNames[i]!;
+      const picks = byName.get(name) ?? [];
+      const picked = picks.shift();
+      if (!picked) continue;
+      next.push({
+        key: `${picked.user_id}-${i}`,
+        residentId: picked.user_id,
+        displayName: picked.display_name,
+        pin: '',
+        status: 'idle',
+      });
+    }
+
+    if (next.length === 0) {
+      setPinLoadError('Ingen importerede beboere fundet til PIN-trinnet.');
+      return;
+    }
+
+    if (next.length < successfulNames.length) {
+      setPinLoadError('Nogle beboere kunne ikke matches automatisk. Tjek navnene og prøv igen.');
+    }
+
+    setPinRows(next);
+    setShowPinSetup(true);
+  }, [rows, rowStatus]);
+
+  const saveResidentPin = useCallback(
+    async (rowKey: string) => {
+      const target = pinRows.find((r) => r.key === rowKey);
+      if (!target) return;
+      if (!/^\d{4}$/.test(target.pin)) {
+        setPinRows((prev) =>
+          prev.map((r) =>
+            r.key === rowKey ? { ...r, status: 'error', error: 'PIN skal være præcis 4 cifre.' } : r
+          )
+        );
+        return;
+      }
+
+      setPinRows((prev) =>
+        prev.map((r) => (r.key === rowKey ? { ...r, status: 'saving', error: undefined } : r))
+      );
+
+      const supabase = createClient();
+      if (!supabase) {
+        setPinRows((prev) =>
+          prev.map((r) =>
+            r.key === rowKey ? { ...r, status: 'error', error: 'Supabase client mangler.' } : r
+          )
+        );
+        return;
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        setPinRows((prev) =>
+          prev.map((r) =>
+            r.key === rowKey ? { ...r, status: 'error', error: 'Du er ikke logget ind.' } : r
+          )
+        );
+        return;
+      }
+
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/resident-pin-set`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              resident_id: target.residentId,
+              pin: target.pin,
+              staff_token: session.access_token,
+            }),
+          }
+        );
+        const json = (await res.json()) as { data?: { success: boolean }; error?: string };
+        if (!res.ok || !json.data?.success) {
+          setPinRows((prev) =>
+            prev.map((r) =>
+              r.key === rowKey
+                ? { ...r, status: 'error', error: json.error ?? 'Kunne ikke gemme PIN.' }
+                : r
+            )
+          );
+          return;
+        }
+
+        setPinRows((prev) =>
+          prev.map((r) => (r.key === rowKey ? { ...r, status: 'saved', error: undefined } : r))
+        );
+      } catch {
+        setPinRows((prev) =>
+          prev.map((r) =>
+            r.key === rowKey ? { ...r, status: 'error', error: 'Netværksfejl — prøv igen.' } : r
+          )
+        );
+      }
+    },
+    [pinRows]
+  );
+
+  const allPinsSaved = pinRows.length > 0 && pinRows.every((r) => r.status === 'saved');
 
   return (
     <div className="max-w-3xl p-6" style={{ color: 'var(--cp-text)' }}>
@@ -786,7 +947,121 @@ Camilla Frost,`}
                 >
                   Ny import
                 </button>
+                {!fatalImportErr && (summary?.imported ?? 0) > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => void hydrateImportedResidentsForPin()}
+                    className="rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors"
+                    style={{
+                      borderColor: 'rgba(29, 158, 117, 0.4)',
+                      color: '#1D9E75',
+                      backgroundColor: 'rgba(29, 158, 117, 0.12)',
+                    }}
+                  >
+                    Sæt PIN for beboere
+                  </button>
+                )}
               </div>
+
+              {showPinSetup && (
+                <div
+                  className="rounded-2xl border p-4 sm:p-5"
+                  style={{
+                    borderColor: 'var(--cp-border)',
+                    backgroundColor: 'var(--cp-bg2)',
+                  }}
+                >
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <h3 className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+                      PIN-opsætning ({pinRows.length} beboere)
+                    </h3>
+                    {allPinsSaved && (
+                      <span
+                        className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold"
+                        style={{ backgroundColor: 'rgba(29,158,117,0.16)', color: '#1D9E75' }}
+                      >
+                        Alle PIN sat ✓
+                      </span>
+                    )}
+                  </div>
+
+                  {pinLoadError && (
+                    <p className="mb-3 text-xs" style={{ color: '#fca5a5' }}>
+                      {pinLoadError}
+                    </p>
+                  )}
+
+                  <div className="space-y-2">
+                    {pinRows.map((r) => (
+                      <div
+                        key={r.key}
+                        className="rounded-xl border p-3"
+                        style={{
+                          borderColor: 'var(--cp-border)',
+                          backgroundColor: 'var(--cp-bg3)',
+                        }}
+                      >
+                        <div className="mb-2 flex items-center justify-between gap-3">
+                          <p className="text-sm font-medium" style={{ color: 'var(--cp-text)' }}>
+                            {r.displayName}
+                          </p>
+                          {r.status === 'saved' && (
+                            <span className="text-xs font-semibold" style={{ color: '#1D9E75' }}>
+                              ✓ Gemt
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="\d{4}"
+                            maxLength={4}
+                            value={r.pin}
+                            disabled={r.status === 'saving' || r.status === 'saved'}
+                            onChange={(e) => {
+                              const digits = e.target.value.replace(/\D/g, '').slice(0, 4);
+                              setPinRows((prev) =>
+                                prev.map((x) =>
+                                  x.key === r.key
+                                    ? {
+                                        ...x,
+                                        pin: digits,
+                                        status: x.status === 'saved' ? 'saved' : 'idle',
+                                        error: undefined,
+                                      }
+                                    : x
+                                )
+                              );
+                            }}
+                            className="h-9 w-24 rounded-lg border px-2 text-center text-sm tracking-[0.2em]"
+                            style={{
+                              borderColor: 'var(--cp-border)',
+                              backgroundColor: 'var(--cp-bg2)',
+                              color: 'var(--cp-text)',
+                            }}
+                            placeholder="0000"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => void saveResidentPin(r.key)}
+                            disabled={r.status === 'saving' || r.status === 'saved'}
+                            className="rounded-lg px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+                            style={{ backgroundColor: 'var(--cp-green)' }}
+                          >
+                            {r.status === 'saving' ? 'Gemmer…' : 'Gem PIN'}
+                          </button>
+                        </div>
+                        {r.status === 'error' && r.error && (
+                          <p className="mt-2 text-xs" style={{ color: '#fca5a5' }}>
+                            {r.error}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>

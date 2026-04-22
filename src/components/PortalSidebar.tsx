@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { createClient } from '@/lib/supabase/client';
+import { hasPermission } from '@/lib/auth/hasPermission';
+import { PERMISSIONS, type Permission } from '@/lib/permissions';
 import { useAlertCount } from '@/hooks/useAlertCount';
 import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 
@@ -90,6 +92,7 @@ type InnerProps = {
   orgName: string | null;
   orgLogoUrl: string | null;
   staffRole: string | null;
+  permissions: Permission[];
 };
 
 function PortalSidebarInner({
@@ -98,6 +101,7 @@ function PortalSidebarInner({
   orgName,
   orgLogoUrl,
   staffRole,
+  permissions,
 }: InnerProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -152,13 +156,17 @@ function PortalSidebarInner({
         badge: 0,
         activeMatch: 'planner',
       },
-      {
-        icon: CalendarClock,
-        label: 'Vagtplan',
-        href: '/care-portal-vagtplan',
-        badge: 0,
-        activeMatch: 'vagtplan',
-      },
+      ...(hasPermission(permissions, PERMISSIONS.MANAGE_SHIFTS)
+        ? [
+            {
+              icon: CalendarClock,
+              label: 'Vagtplan',
+              href: '/care-portal-vagtplan',
+              badge: 0,
+              activeMatch: 'vagtplan' as const,
+            },
+          ]
+        : []),
       {
         icon: MessageSquare,
         label: 'Beskeder',
@@ -172,13 +180,26 @@ function PortalSidebarInner({
         badge: 0,
         activeMatch: 'journal',
       },
-      {
-        icon: Upload,
-        label: 'Importer beboere',
-        href: '/care-portal-import',
-        badge: 0,
-        roleOnly: 'leder',
-      },
+      ...(hasPermission(permissions, PERMISSIONS.IMPORT_RESIDENTS)
+        ? [
+            {
+              icon: Upload,
+              label: 'Importer beboere',
+              href: '/care-portal-import',
+              badge: 0,
+            },
+          ]
+        : []),
+      ...(hasPermission(permissions, PERMISSIONS.MANAGE_ROLES)
+        ? [
+            {
+              icon: Settings,
+              label: 'Roller',
+              href: '/care-portal-roles',
+              badge: 0,
+            },
+          ]
+        : []),
       { icon: BrainCircuit, label: 'Faglig støtte', href: '/care-portal-assistant', badge: 0 },
       {
         icon: Sparkles,
@@ -192,7 +213,7 @@ function PortalSidebarInner({
     return base
       .filter((item) => !item.roleOnly || item.roleOnly === staffRole)
       .map((item) => (item.cpActiveTab === 'alerts' ? { ...item, badge: alertCount } : item));
-  }, [pilot, alertCount, staffRole]);
+  }, [pilot, alertCount, staffRole, permissions]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -439,6 +460,7 @@ type PortalSidebarProps = {
   orgName?: string | null;
   orgLogoUrl?: string | null;
   staffRole: string | null;
+  permissions: Permission[];
 };
 
 export default function PortalSidebar({
@@ -447,6 +469,7 @@ export default function PortalSidebar({
   orgName = null,
   orgLogoUrl = null,
   staffRole,
+  permissions,
 }: PortalSidebarProps) {
   return (
     <Suspense
@@ -468,6 +491,7 @@ export default function PortalSidebar({
         orgName={orgName}
         orgLogoUrl={orgLogoUrl}
         staffRole={staffRole}
+        permissions={permissions}
       />
     </Suspense>
   );

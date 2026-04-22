@@ -7,6 +7,7 @@ import { Plus, X, Loader2, Sparkles } from 'lucide-react';
 import { compareEditorChrome } from '@/components/journal/compareEditorChrome';
 import { JournalVersionToggle } from '@/components/journal/JournalVersionToggle';
 import { createClient } from '@/lib/supabase/client';
+import { logPortalAudit } from '@/lib/auditClient';
 import { formatJournalEntriesInsertError } from '@/lib/journalEntriesInsertError';
 
 type JournalCategory = 'Døgnnotat' | 'Sundhed' | 'Socialt' | 'Hændelse' | 'Samtale' | 'Andet';
@@ -352,6 +353,17 @@ export default function WriteJournalEntry({ residentId, residentName, carePortal
       setSaving(false);
       return;
     }
+
+    void logPortalAudit({
+      action: 'journal.entry_created',
+      tableName: 'journal_entries',
+      metadata: {
+        resident_id: residentId,
+        category,
+        journal_status: asDraft ? 'kladde' : 'godkendt',
+        source: 'resident-360.write-journal-entry',
+      },
+    });
 
     setOpen(false);
     setSaving(false);

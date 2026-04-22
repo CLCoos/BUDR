@@ -1,0 +1,28 @@
+import BudrAdminClient from './BudrAdminClient';
+import { getBudrAdminOverview } from './adminOverview';
+
+type SearchParams =
+  | Record<string, string | string[] | undefined>
+  | Promise<Record<string, string | string[] | undefined>>
+  | undefined;
+
+function parseHealthFilter(
+  value: string | string[] | undefined
+): 'all' | 'critical' | 'warning' | 'healthy' {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (raw === 'critical' || raw === 'warning' || raw === 'healthy' || raw === 'all') return raw;
+  return 'all';
+}
+
+export default async function BudrAdminPage({ searchParams }: { searchParams?: SearchParams }) {
+  const resolvedSearchParams = (await Promise.resolve(searchParams)) ?? {};
+  const initialHealthFilter = parseHealthFilter(resolvedSearchParams.health);
+  const { rows, error } = await getBudrAdminOverview();
+  return (
+    <BudrAdminClient
+      overviewRows={rows}
+      overviewError={error}
+      initialHealthFilter={initialHealthFilter}
+    />
+  );
+}

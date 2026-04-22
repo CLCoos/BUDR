@@ -1,6 +1,9 @@
 import { randomUUID } from 'crypto';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getStaffPermissions } from '@/lib/auth/getStaffPermissions';
+import { hasPermission } from '@/lib/auth/hasPermission';
+import { PERMISSIONS } from '@/lib/permissions';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { parseStaffOrgId } from '@/lib/staffOrgScope';
 
@@ -35,6 +38,10 @@ export async function POST(req: Request): Promise<Response | NextResponse> {
   } = await server.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  }
+  const permissions = await getStaffPermissions(server);
+  if (!hasPermission(permissions, PERMISSIONS.IMPORT_RESIDENTS)) {
+    return NextResponse.json({ error: 'Ingen adgang' }, { status: 403 });
   }
 
   const { data: staffRow } = await server

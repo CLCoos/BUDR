@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { headers } from 'next/headers';
+import { getStaffPermissions } from '@/lib/auth/getStaffPermissions';
+import { hasPermission } from '@/lib/auth/hasPermission';
 import { requirePortalAuth } from '@/lib/portalAuth';
+import { PERMISSIONS } from '@/lib/permissions';
 import { parseStaffOrgId } from '@/lib/staffOrgScope';
 
-type InviteBody = { email?: unknown; name?: unknown; role?: unknown };
+type InviteBody = { email?: unknown; name?: unknown; role?: unknown; roleId?: unknown };
 
 /**
  * POST /api/portal/invite-staff
@@ -18,11 +21,18 @@ type InviteBody = { email?: unknown; name?: unknown; role?: unknown };
 export async function POST(req: Request): Promise<NextResponse> {
   // requirePortalAuth throws a redirect if not authenticated.
   const user = await requirePortalAuth();
+  const supabase = await (await import('@/lib/supabase/server')).createServerSupabaseClient();
+  if (!supabase) return NextResponse.json({ error: 'Server ikke konfigureret' }, { status: 503 });
+  const permissions = await getStaffPermissions(supabase);
+  if (!hasPermission(permissions, PERMISSIONS.INVITE_STAFF)) {
+    return NextResponse.json({ error: 'Ingen adgang' }, { status: 403 });
+  }
 
-  const supabaseForOrg = await (await import('@/lib/supabase/server')).createServerSupabaseClient();
-  const { data: staffRow } = supabaseForOrg
-    ? await supabaseForOrg.from('care_staff').select('org_id').eq('id', user.id).single()
-    : { data: null };
+  const { data: staffRow } = await supabase
+    .from('care_staff')
+    .select('org_id')
+    .eq('id', user.id)
+    .single();
   const orgId = parseStaffOrgId(staffRow?.org_id ?? null);
   if (!orgId) {
     return NextResponse.json(
@@ -40,7 +50,8 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
   const name = typeof body.name === 'string' ? body.name.trim() : '';
-  const role = body.role === 'leder' || body.role === 'medarbejder' ? body.role : 'medarbejder';
+  const roleId = typeof body.roleId === 'string' ? body.roleId : null;
+  let role = body.role === 'leder' || body.role === 'medarbejder' ? body.role : 'medarbejder';
 
   if (!email) {
     return NextResponse.json({ error: 'Email er påkrævet' }, { status: 400 });
@@ -56,6 +67,19 @@ export async function POST(req: Request): Promise<NextResponse> {
   }
 
   const admin = createClient(url, serviceKey);
+
+  if (roleId) {
+    const { data: roleRow } = await admin
+      .from('org_roles')
+      .select('id, name')
+      .eq('id', roleId)
+      .eq('org_id', orgId)
+      .single();
+    if (!roleRow) {
+      return NextResponse.json({ error: 'Ugyldig rolle valgt' }, { status: 400 });
+    }
+    role = roleRow.name;
+  }
 
   // Invite via Supabase Admin API — creates the user row and sends the magic link.
   const { data: inviteData, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
@@ -83,6 +107,7 @@ export async function POST(req: Request): Promise<NextResponse> {
       org_id: orgId,
       full_name: name || email.split('@')[0],
       role,
+      ...(roleId ? { role_id: roleId } : {}),
     });
   }
 

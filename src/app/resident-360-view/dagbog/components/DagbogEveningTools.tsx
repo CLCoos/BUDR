@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2, Sparkles, Copy, Check, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
+import { logPortalAudit } from '@/lib/auditClient';
 import { formatJournalEntriesInsertError } from '@/lib/journalEntriesInsertError';
 
 export type SynthesisTarget = {
@@ -138,6 +139,18 @@ export default function DagbogEveningTools({ targets }: Props) {
       toast.error(formatJournalEntriesInsertError(insErr));
       return;
     }
+
+    void logPortalAudit({
+      action: 'journal.entry_created',
+      tableName: 'journal_entries',
+      metadata: {
+        resident_id: selectedId,
+        category: 'Sammenfatning',
+        journal_status: 'godkendt',
+        source: 'resident-360.dagbog-evening-tools',
+      },
+    });
+
     toast.success('Gemt som godkendt journalnotat');
     setResult(null);
     router.refresh();

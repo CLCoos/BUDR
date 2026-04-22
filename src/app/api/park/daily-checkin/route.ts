@@ -68,6 +68,29 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  const { data: residentRow } = await supabase
+    .from('care_residents')
+    .select('org_id')
+    .eq('user_id', residentId)
+    .maybeSingle();
+  const orgId = (residentRow as { org_id?: string } | null)?.org_id ?? null;
+
+  try {
+    await supabase.rpc('create_audit_log', {
+      p_actor_type: 'resident',
+      p_action: 'checkin.submitted',
+      p_actor_id: residentId,
+      p_actor_org_id: orgId,
+      p_target_table: 'park_daily_checkin',
+      p_metadata: {
+        mood_score,
+        traffic_light: dbTraffic,
+      },
+    });
+  } catch {
+    // best-effort
+  }
+
   // Fire alert notification for low mood or red traffic light
   if (mood_score <= 3 || traffic_light === 'roed') {
     const serviceClient = getServiceClient();
@@ -86,19 +109,13 @@ export async function POST(req: Request): Promise<NextResponse> {
       const detail = `Stemningsscore ${mood_score}/10 · ${trafficLabel}`;
       const severity = mood_score <= 3 || traffic_light === 'roed' ? 'roed' : 'gul';
 
-      const { data: residentRow } = await serviceClient
-        .from('care_residents')
-        .select('org_id')
-        .eq('user_id', residentId)
-        .maybeSingle();
-
       await serviceClient.from('care_portal_notifications').insert({
         resident_id: residentId,
         type: 'lav_stemning',
         detail,
         severity,
         source_table: 'park_daily_checkin',
-        org_id: (residentRow as { org_id?: string } | null)?.org_id ?? null,
+        org_id: orgId,
       });
     }
   }

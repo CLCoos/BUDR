@@ -15,6 +15,7 @@ import HurtigJournalModal from './HurtigJournalModal';
 import JournalOverblikWidget from './JournalOverblikWidget';
 import ActionCards from './ActionCards';
 import DashboardModule from './DashboardModule';
+import OnboardingChecklist from './OnboardingChecklist';
 import ResidentListDemo from './ResidentListDemo';
 import { BookOpen, RefreshCw } from 'lucide-react';
 import { useStaffOrgIsBingbong } from '@/hooks/useStaffOrgIsBingbong';
@@ -551,6 +552,9 @@ function DashboardClientInner({
           </PillButton>
         </div>
       </div>
+
+      {/* ── Zone 1: Status bar (full width) ─────────────────── */}
+      <OnboardingChecklist />
 
       {/* ── Zone 1: Status bar (full width) ─────────────────── */}
       <div className="mb-5">
