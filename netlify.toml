@@ -3,6 +3,8 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # Set actual value in Netlify UI/site env vars.
+  SENTRY_DSN = ""
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
