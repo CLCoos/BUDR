@@ -451,16 +451,14 @@
 }
 
 /* ─── Care Portal page-enter animation ─── */
-/* Slut med transform: none — translateY(0) etablerer stadig et fixed-containing block,
-   så position:fixed overlays (fx OverrapportPanel) forankres forkert og giver vandret scroll. */
+/* Kun opacity: enhver transform på denne wrapper gør fixed-overlays relativ til main
+   (se OverrapportPanel — porteret til document.body som ekstra sikkerhed). */
 @keyframes cp-page-enter {
   from {
     opacity: 0;
-    transform: translateY(8px);
   }
   to {
     opacity: 1;
-    transform: none;
   }
 }
 

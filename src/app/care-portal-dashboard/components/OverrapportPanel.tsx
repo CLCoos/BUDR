@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Edit3, CheckCircle, Users, BookOpen, Activity, ClipboardList } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
@@ -312,19 +313,32 @@ export default function OverrapportPanel({ open, onClose }: Props) {
     journalsByResident[j.resident_name].push(j);
   }
 
-  return (
+  /* Portal til document.body: undgår at forældre med transform/animation (fx .cp-page-enter)
+     gør position:fixed relativ til main — det gav vandret scroll og mast dashboard. */
+  if (typeof document === 'undefined') {
+    return null;
+  }
+
+  return createPortal(
     <>
       {/* Backdrop */}
       {open && (
-        <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" onClick={onClose} />
+        <div
+          className="fixed inset-0 z-[10061] bg-black/30 backdrop-blur-[2px]"
+          onClick={onClose}
+          aria-hidden
+        />
       )}
 
       {/* Panel */}
       <div
-        className={`fixed top-0 right-0 h-full z-50 flex flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 z-[10062] flex h-full flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
-        style={{ width: 520 }}
+        style={{ width: 520, maxWidth: '100vw' }}
+        role="dialog"
+        aria-modal={open}
+        aria-hidden={!open}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0 bg-gradient-to-r from-gray-50/90 to-white">
@@ -610,6 +624,7 @@ export default function OverrapportPanel({ open, onClose }: Props) {
           </button>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
