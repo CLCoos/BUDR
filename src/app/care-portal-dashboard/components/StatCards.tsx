@@ -5,6 +5,7 @@ import { useAlertCount } from '@/hooks/useAlertCount';
 import { createClient } from '@/lib/supabase/client';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
 import { DEMO_ALERT_PANEL_COUNT } from './AlertPanel';
+import { getWidgetStatus, widgetStatusVar, type WidgetStatusKey } from '@/lib/widgetStatus';
 
 const demoStats = [
   {
@@ -12,7 +13,6 @@ const demoStats = [
     label: 'Aktive beboere',
     sub: '3 fraværende i dag',
     value: '12',
-    stripe: 'var(--cp-blue)',
     alertLink: false,
   },
   {
@@ -20,7 +20,6 @@ const demoStats = [
     label: 'Check-ins i dag',
     sub: '2 mangler endnu',
     value: '10',
-    stripe: 'var(--cp-green)',
     alertLink: false,
   },
   {
@@ -28,7 +27,6 @@ const demoStats = [
     label: 'Åbne advarsler',
     sub: null as string | null,
     value: null as string | null,
-    stripe: 'var(--cp-red)',
     alertLink: true,
   },
   {
@@ -36,10 +34,54 @@ const demoStats = [
     label: 'Gns. stemning',
     sub: 'Af 10 mulige',
     value: '6.2',
-    stripe: 'var(--cp-amber)',
     alertLink: false,
   },
 ];
+
+function statTopBorderStatus(
+  statId: string,
+  variant: 'demo' | 'live',
+  live: { total: number; checkinToday: number; avgMood: number | null } | null,
+  alertCount: number
+): WidgetStatusKey {
+  const hour = new Date().getHours();
+  if (statId === 'stat-residents') {
+    return getWidgetStatus('stat_active_residents', {});
+  }
+  if (statId === 'stat-checkins') {
+    if (variant === 'demo') {
+      return getWidgetStatus('stat_checkins_today', {
+        totalResidents: 12,
+        checkinTodayCount: 10,
+        nowHour: hour,
+      });
+    }
+    if (live === null) return 'neutral';
+    return getWidgetStatus('stat_checkins_today', {
+      totalResidents: live.total,
+      checkinTodayCount: live.checkinToday,
+      nowHour: hour,
+    });
+  }
+  if (statId === 'stat-alerts') {
+    const n = variant === 'demo' ? DEMO_ALERT_PANEL_COUNT : alertCount;
+    return getWidgetStatus('stat_open_alerts', { openAlertCount: n });
+  }
+  if (statId === 'stat-avg-mood') {
+    if (variant === 'demo') {
+      return getWidgetStatus('stat_avg_mood', {
+        checkinTodayCount: 10,
+        avgMood: 6.2,
+      });
+    }
+    if (live === null) return 'neutral';
+    return getWidgetStatus('stat_avg_mood', {
+      checkinTodayCount: live.checkinToday,
+      avgMood: live.avgMood,
+    });
+  }
+  return 'neutral';
+}
 
 type Props = { variant?: 'demo' | 'live' };
 
@@ -170,11 +212,17 @@ export default function StatCards({ variant = 'live' }: Props) {
             ? 'var(--cp-amber)'
             : 'var(--cp-text)';
 
+        const topStatus = statTopBorderStatus(stat.id, variant, live, alertCount);
+
         return (
           <div
             key={stat.id}
             className="cp-card-elevated relative overflow-hidden px-5 pb-4 pt-5"
-            style={{ borderTop: `3px solid ${stat.stripe}`, boxShadow: 'var(--cp-card-shadow)' }}
+            style={{
+              border: '1px solid var(--cp-border)',
+              borderTop: `2px solid ${widgetStatusVar(topStatus)}`,
+              boxShadow: 'var(--cp-card-shadow)',
+            }}
           >
             {/* Large stat number */}
             <div

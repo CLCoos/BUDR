@@ -65,6 +65,12 @@
     --cp-card-shadow: none;
     --cp-nav-bg: rgba(22, 27, 38, 0.88);
     --cp-nav-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+
+    /* Dashboard widget status (top border) */
+    --status-ok: #10b981;
+    --status-attention: #f59e0b;
+    --status-action: #ef4444;
+    --status-neutral: #3b82f6;
   }
 
   #care-portal-shell[data-theme='light'] {
@@ -98,6 +104,11 @@
     --cp-card-bg: #ffffff;
     --cp-card-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.06);
     --cp-nav-bg: rgba(255, 255, 255, 0.92);
+
+    --status-ok: #10b981;
+    --status-attention: #f59e0b;
+    --status-action: #ef4444;
+    --status-neutral: #3b82f6;
     --cp-nav-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
   }
 

@@ -2,7 +2,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, Loader2 } from 'lucide-react';
+import { Search, Loader2, Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import {
   residentNameRoomInitialsMatch,
@@ -127,7 +127,13 @@ function applyCheckin(resident: Resident, row: CheckinRow): Resident {
 
 // ── Component ────────────────────────────────────────────────
 
-export default function ResidentList({ compact = false }: { compact?: boolean }) {
+export default function ResidentList({
+  compact = false,
+  onNewJournal,
+}: {
+  compact?: boolean;
+  onNewJournal?: (residentId: string) => void;
+}) {
   const router = useRouter();
   const [residents, setResidents] = useState<Resident[]>([]);
   const [loading, setLoading] = useState(true);
@@ -433,7 +439,9 @@ export default function ResidentList({ compact = false }: { compact?: boolean })
             <thead>
               <tr style={{ borderBottom: '1px solid var(--cp-border)' }}>
                 {(compact
-                  ? ['Beboer', 'Værelse', 'Trafiklys', 'Stemning']
+                  ? onNewJournal
+                    ? ['Beboer', 'Værelse', 'Trafiklys', 'Stemning', '']
+                    : ['Beboer', 'Værelse', 'Trafiklys', 'Stemning']
                   : ['Beboer', 'Værelse', 'Trafiklys', 'Stemning', 'Check-in', 'Note', '']
                 ).map((h, i) => (
                   <th
@@ -561,6 +569,27 @@ export default function ResidentList({ compact = false }: { compact?: boolean })
                       )}
                     </td>
 
+                    {compact && onNewJournal && (
+                      <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onNewJournal(r.id);
+                          }}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg border opacity-0 transition-opacity duration-150 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
+                          style={{
+                            borderColor: 'var(--cp-border2)',
+                            color: 'var(--cp-green)',
+                            backgroundColor: 'var(--cp-bg3)',
+                          }}
+                          aria-label={`Ny journal for ${r.name}`}
+                        >
+                          <Plus className="h-4 w-4" strokeWidth={2.5} aria-hidden />
+                        </button>
+                      </td>
+                    )}
+
                     {/* Check-in tid */}
                     {!compact && (
                       <td className="px-3 py-3" style={{ fontSize: 12, color: 'var(--cp-muted)' }}>
@@ -580,29 +609,48 @@ export default function ResidentList({ compact = false }: { compact?: boolean })
                       </td>
                     )}
 
-                    {/* Arrow */}
+                    {/* Journal / pil */}
                     {!compact && (
-                      <td className="px-3 py-3">
-                        <span
-                          className="opacity-0 group-hover:opacity-100 w-6 h-6 rounded-lg flex items-center justify-center transition-all"
-                          style={{
-                            border: '1px solid var(--cp-border2)',
-                            color: 'var(--cp-green)',
-                          }}
-                        >
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 14 14"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                      <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
+                        {onNewJournal ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onNewJournal(r.id);
+                            }}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg border opacity-0 transition-opacity duration-150 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
+                            style={{
+                              borderColor: 'var(--cp-border2)',
+                              color: 'var(--cp-green)',
+                              backgroundColor: 'var(--cp-bg3)',
+                            }}
+                            aria-label={`Ny journal for ${r.name}`}
                           >
-                            <path d="M5 3l4 4-4 4" />
-                          </svg>
-                        </span>
+                            <Plus className="h-4 w-4" strokeWidth={2.5} aria-hidden />
+                          </button>
+                        ) : (
+                          <span
+                            className="flex h-6 w-6 items-center justify-center rounded-lg opacity-0 transition-all group-hover:opacity-100"
+                            style={{
+                              border: '1px solid var(--cp-border2)',
+                              color: 'var(--cp-green)',
+                            }}
+                          >
+                            <svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 14 14"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M5 3l4 4-4 4" />
+                            </svg>
+                          </span>
+                        )}
                       </td>
                     )}
                   </tr>

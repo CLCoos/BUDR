@@ -28,6 +28,8 @@ import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 import { enumerateCivilMedicationSlotDates } from '@/lib/medicationScheduleSlots';
 import { createClient } from '@/lib/supabase/client';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
+import DepartmentSelect from '@/components/DepartmentSelect';
+import { getWidgetStatus, widgetStatusVar } from '@/lib/widgetStatus';
 
 export interface MedicationTask {
   id: string;
@@ -802,6 +804,16 @@ export default function MedicationWidget() {
   const { pastDue, upcoming, laterToday, stats: listStats } = listView;
   const { stats, pendingCount, prepOverview, doseTotals } = scopedView;
 
+  const medicStatusView = useMemo(() => buildMedicationView(entries, nowTick), [entries, nowTick]);
+  const medicBorderStatus = getWidgetStatus('widget_medicin_today', {
+    delayedMedicationCount: medicStatusView.stats.overdueN,
+  });
+
+  const departmentOptions = useMemo(
+    () => CARE_HOUSES.map((h) => ({ id: h, label: carePortalHouseChipLabel(h) })),
+    []
+  );
+
   const groupedTimeline = useMemo(() => {
     const now = new Date(nowTick);
     const sorted = [...filteredEntries].sort(
@@ -848,12 +860,12 @@ export default function MedicationWidget() {
     <section
       className="cp-card-elevated relative w-full min-w-[min(100%,280px)] max-w-full overflow-hidden p-6 sm:p-7"
       aria-label="Medicinudleveringer"
+      style={{
+        border: '1px solid var(--cp-border)',
+        borderTop: `2px solid ${widgetStatusVar(medicBorderStatus)}`,
+        boxShadow: '0 4px 28px rgba(0, 0, 0, 0.35)',
+      }}
     >
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/12 to-transparent"
-        aria-hidden
-      />
-
       <header className="relative mb-5 flex flex-col gap-4 sm:mb-6 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-4">
           <div
@@ -929,31 +941,13 @@ export default function MedicationWidget() {
               </>
             )}
           </span>
-          <div className="flex flex-wrap justify-start gap-1.5 sm:justify-end">
-            {(['alle', ...CARE_HOUSES] as const).map((key) => {
-              const label = key === 'alle' ? 'Alle' : carePortalHouseChipLabel(key);
-              const selected = houseFilter === key;
-              return (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => setHouseFilter(key)}
-                  className="rounded-full px-2.5 py-1 text-xs font-medium transition-all duration-200"
-                  style={
-                    selected
-                      ? { backgroundColor: 'var(--cp-green)', color: '#fff' }
-                      : {
-                          backgroundColor: 'var(--cp-bg3)',
-                          color: 'var(--cp-muted)',
-                          border: '1px solid var(--cp-border)',
-                        }
-                  }
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
+          <DepartmentSelect
+            value={houseFilter}
+            onChange={(v) => setHouseFilter((v === 'alle' ? 'alle' : v) as 'alle' | CareHouse)}
+            departments={departmentOptions}
+            className="sm:ml-auto"
+            aria-label="Filtrér medicin efter afdeling"
+          />
         </div>
       </header>
 

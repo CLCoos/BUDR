@@ -1,6 +1,6 @@
 'use client';
 import React, { useMemo, useState } from 'react';
-import { Search, ChevronRight, Clock } from 'lucide-react';
+import { Search, ChevronRight, Clock, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   CARE_DEMO_RESIDENT_PROFILES,
@@ -8,6 +8,7 @@ import {
   carePortalHouseChipLabel,
   type CareHouse,
 } from '@/lib/careDemoResidents';
+import DepartmentSelect from '@/components/DepartmentSelect';
 
 type TrafficUi = 'groen' | 'gul' | 'roed';
 
@@ -179,7 +180,11 @@ const DEMO_RESIDENTS: DemoResident[] = CARE_DEMO_RESIDENT_PROFILES.map((p) => {
   };
 });
 
-export default function ResidentListDemo() {
+type ResidentListDemoProps = {
+  onNewJournal?: (residentId: string) => void;
+};
+
+export default function ResidentListDemo({ onNewJournal }: ResidentListDemoProps) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'alle' | TrafficUi | 'ingen'>('alle');
   const [houseFilter, setHouseFilter] = useState<'alle' | CareHouse>('alle');
@@ -201,6 +206,11 @@ export default function ResidentListDemo() {
   }, [search, filter, houseFilter]);
 
   const checkinCount = DEMO_RESIDENTS.filter((r) => r.checkinToday).length;
+
+  const departmentOptions = useMemo(
+    () => CARE_HOUSES.map((h) => ({ id: h, label: carePortalHouseChipLabel(h) })),
+    []
+  );
 
   return (
     <div className="cp-card-elevated overflow-hidden">
@@ -232,33 +242,13 @@ export default function ResidentListDemo() {
             {DEMO_RESIDENTS.length} beboere · {checkinCount} check-in i dag
           </span>
         </div>
-        <div className="mb-2 flex flex-wrap gap-1.5">
-          {(['alle', ...CARE_HOUSES] as const).map((key) => {
-            const label = key === 'alle' ? 'Alle huse' : carePortalHouseChipLabel(key);
-            const active = houseFilter === key;
-            return (
-              <button
-                key={label}
-                type="button"
-                onClick={() => setHouseFilter(key)}
-                className="rounded-full px-2.5 py-1 text-[11px] font-medium transition-all"
-                style={
-                  active
-                    ? {
-                        backgroundColor: 'var(--cp-green)',
-                        color: '#fff',
-                      }
-                    : {
-                        backgroundColor: 'var(--cp-bg3)',
-                        color: 'var(--cp-muted)',
-                        border: '1px solid var(--cp-border)',
-                      }
-                }
-              >
-                {label}
-              </button>
-            );
-          })}
+        <div className="mb-2">
+          <DepartmentSelect
+            value={houseFilter}
+            onChange={(v) => setHouseFilter((v === 'alle' ? 'alle' : v) as 'alle' | CareHouse)}
+            departments={departmentOptions}
+            aria-label="Filtrér demo-beboere efter afdeling"
+          />
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:gap-2">
           <div className="relative min-w-0 flex-1">
@@ -364,7 +354,12 @@ export default function ResidentListDemo() {
               >
                 Note
               </th>
-              <th className="px-3 py-2.5" style={{ borderBottom: '1px solid var(--cp-border)' }} />
+              <th
+                className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide"
+                style={{ color: 'var(--cp-muted)', borderBottom: '1px solid var(--cp-border)' }}
+              >
+                {onNewJournal ? '\u00A0' : ''}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -491,16 +486,35 @@ export default function ResidentListDemo() {
                       {r.notePreview}
                     </span>
                   </td>
-                  <td className="px-3 py-3">
-                    <span
-                      className="flex h-7 w-7 items-center justify-center rounded-lg opacity-0 transition-all group-hover:opacity-100"
-                      style={{
-                        border: '1px solid var(--cp-border)',
-                        color: 'var(--cp-muted)',
-                      }}
-                    >
-                      <ChevronRight size={14} />
-                    </span>
+                  <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
+                    {onNewJournal ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onNewJournal(r.id);
+                        }}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border opacity-0 transition-opacity duration-150 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
+                        style={{
+                          borderColor: 'var(--cp-border2)',
+                          color: 'var(--cp-green)',
+                          backgroundColor: 'var(--cp-bg3)',
+                        }}
+                        aria-label={`Ny journal for ${r.name}`}
+                      >
+                        <Plus className="h-4 w-4" strokeWidth={2.5} aria-hidden />
+                      </button>
+                    ) : (
+                      <span
+                        className="flex h-7 w-7 items-center justify-center rounded-lg opacity-0 transition-all group-hover:opacity-100"
+                        style={{
+                          border: '1px solid var(--cp-border)',
+                          color: 'var(--cp-muted)',
+                        }}
+                      >
+                        <ChevronRight size={14} />
+                      </span>
+                    )}
                   </td>
                 </tr>
               );

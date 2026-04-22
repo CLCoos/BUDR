@@ -13,6 +13,7 @@ import { BINGBONG_DEMO_ORG_SLUG } from '@/lib/bingbongOrg';
 import { createClient } from '@/lib/supabase/client';
 import { parseStaffOrgId } from '@/lib/staffOrgScope';
 import { isResidentUuidForCloud } from '@/lib/residentUuid';
+import DepartmentSelect from '@/components/DepartmentSelect';
 
 export type { CareHouse } from '@/lib/careDemoResidents';
 
@@ -236,6 +237,11 @@ export default function KalenderWidget({ variant = 'live' }: KalenderWidgetProps
   const [formResponsible, setFormResponsible] = useState('');
   const [formLocation, setFormLocation] = useState('');
 
+  const calendarDepartmentOptions = useMemo(
+    () => CARE_HOUSES.map((h) => ({ id: h, label: carePortalHouseChipLabel(h) })),
+    []
+  );
+
   useEffect(() => {
     const d = new Date();
     setToday(d);
@@ -420,31 +426,13 @@ export default function KalenderWidget({ variant = 'live' }: KalenderWidgetProps
             <Plus className="h-3.5 w-3.5" aria-hidden />
             Tilføj aftale
           </button>
-          <div className="flex flex-wrap justify-start gap-1.5 sm:justify-end">
-            {(['alle', ...CARE_HOUSES] as const).map((key) => {
-              const label = key === 'alle' ? 'Alle' : carePortalHouseChipLabel(key);
-              const selected = houseFilter === key;
-              return (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => setHouseFilter(key)}
-                  className="rounded-full px-2.5 py-1 text-xs font-medium transition-all duration-200"
-                  style={
-                    selected
-                      ? { backgroundColor: 'var(--cp-green)', color: '#fff' }
-                      : {
-                          backgroundColor: 'var(--cp-bg3)',
-                          color: 'var(--cp-muted)',
-                          border: '1px solid var(--cp-border)',
-                        }
-                  }
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
+          <DepartmentSelect
+            value={houseFilter}
+            onChange={(v) => setHouseFilter((v === 'alle' ? 'alle' : v) as 'alle' | CareHouse)}
+            departments={calendarDepartmentOptions}
+            className="sm:ml-auto"
+            aria-label="Filtrér aftaler efter afdeling"
+          />
         </div>
       </div>
 

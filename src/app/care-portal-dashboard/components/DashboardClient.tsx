@@ -1,5 +1,5 @@
 'use client';
-import React, { Suspense, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -17,9 +17,11 @@ import ActionCards from './ActionCards';
 import DashboardModule from './DashboardModule';
 import OnboardingChecklist from './OnboardingChecklist';
 import ResidentListDemo from './ResidentListDemo';
-import { BookOpen, RefreshCw } from 'lucide-react';
+import { Plus, RefreshCw } from 'lucide-react';
 import { useStaffOrgIsBingbong } from '@/hooks/useStaffOrgIsBingbong';
 import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
+import { useAlertCount } from '@/hooks/useAlertCount';
+import { getWidgetStatus, widgetStatusVar } from '@/lib/widgetStatus';
 
 const OverrapportModal = dynamic(() => import('./OverrapportModal'), { ssr: false });
 const OverrapportPanel = dynamic(() => import('./OverrapportPanel'), { ssr: false });
@@ -172,6 +174,8 @@ function DashboardClientInner({
   }, []);
 
   const [journalOpen, setJournalOpen] = useState(false);
+  const [journalResidentPrefill, setJournalResidentPrefill] = useState<string | null>(null);
+  const alertCountZone = useAlertCount(true);
   const [overrapportOpen, setOverrapportOpen] = useState(false);
   const [overrapportPanelOpen, setOverrapportPanelOpen] = useState(false);
   const [indsatsOpen, setIndsatsOpen] = useState(false);
@@ -231,10 +235,21 @@ function DashboardClientInner({
 
   const closeJournal = () => {
     setJournalOpen(false);
+    setJournalResidentPrefill(null);
     if (searchParams.get('tab') === 'journal') {
       router.replace('/care-portal-dashboard', { scroll: false });
     }
   };
+
+  const openJournalComposer = useCallback(() => {
+    setJournalResidentPrefill(null);
+    setJournalOpen(true);
+  }, []);
+
+  const openJournalForResident = useCallback((residentId: string) => {
+    setJournalResidentPrefill(residentId);
+    setJournalOpen(true);
+  }, []);
 
   const facilityLabel = headerSubtitle.split('·')[0]?.trim().replace(/\s+/g, ' ') || 'Organisation';
 
@@ -293,10 +308,10 @@ function DashboardClientInner({
           id: 'dash-live-residents',
           title: 'Beboere',
           subtitle: 'Check-ins og overblik',
-          content: <ResidentList />,
+          content: <ResidentList onNewJournal={openJournalForResident} />,
         },
       }) as Record<DashboardWidgetKey, DashboardWidgetMeta>,
-    [medicationWidget]
+    [medicationWidget, openJournalForResident]
   );
 
   // ── Pilot-sim path (skip for BingBong org: real residents + live widgets) ──
@@ -396,6 +411,15 @@ function DashboardClientInner({
             ))}
             <button
               type="button"
+              onClick={openJournalComposer}
+              className="flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-90"
+              style={{ backgroundColor: 'var(--cp-green)' }}
+            >
+              <Plus size={14} aria-hidden />
+              Ny journal
+            </button>
+            <button
+              type="button"
               className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs transition-colors"
               style={{
                 border: '1px solid var(--cp-border)',
@@ -452,25 +476,14 @@ function DashboardClientInner({
 
         <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[1fr_1.4fr]">
           <AlertPanel variant="demo" />
-          <ResidentListDemo />
+          <ResidentListDemo onNewJournal={openJournalForResident} />
         </div>
 
-        <button
-          type="button"
-          onClick={() => setJournalOpen(true)}
-          className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full px-5 py-3.5 text-sm font-semibold text-white transition-all duration-200 hover:scale-[1.03] hover:brightness-110 active:scale-[0.98]"
-          style={{
-            background: 'linear-gradient(135deg, #8b84e8 0%, #5E56C0 55%, #4c3d91 100%)',
-            boxShadow: '0 8px 32px rgba(94, 86, 192, 0.45), 0 0 0 1px rgba(255,255,255,0.08)',
-          }}
-          aria-label="Åbn journaludkast med AI (pilot)"
-        >
-          <BookOpen className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
-          <span className="hidden sm:inline">Journal · AI-demo</span>
-          <span className="sm:hidden">Journal</span>
-        </button>
-
-        <JournalAiDemoModal open={journalOpen} onClose={closeJournal} />
+        <JournalAiDemoModal
+          open={journalOpen}
+          onClose={closeJournal}
+          initialResidentId={journalResidentPrefill}
+        />
         <OverrapportModal
           open={overrapportOpen}
           onClose={() => setOverrapportOpen(false)}
@@ -505,7 +518,11 @@ function DashboardClientInner({
         >
           {meta.content}
         </DashboardModule>
-        <HurtigJournalModal open={journalOpen} onClose={closeJournal} />
+        <HurtigJournalModal
+          open={journalOpen}
+          onClose={closeJournal}
+          initialResidentId={journalResidentPrefill}
+        />
         <OverrapportModal open={overrapportOpen} onClose={() => setOverrapportOpen(false)} />
         <IndsatsModal open={indsatsOpen} onClose={() => setIndsatsOpen(false)} />
         <TilsynsrapportModal
@@ -521,6 +538,11 @@ function DashboardClientInner({
   }
 
   // ── Main cockpit dashboard layout ─────────────────────────
+  const alertZoneAccent = widgetStatusVar(
+    getWidgetStatus('widget_alert_list', { openAlertCount: alertCountZone })
+  );
+  const residentsZoneAccent = widgetStatusVar(getWidgetStatus('widget_residents_list', {}));
+
   return (
     <div className="relative">
       {/* ── Page header ─────────────────────────────────────── */}
@@ -546,6 +568,15 @@ function DashboardClientInner({
             Indsatsdok.
           </PillButton>
           <PillButton onClick={() => setTilsynsrapportOpen(true)}>Tilsynsrapport</PillButton>
+          <button
+            type="button"
+            onClick={openJournalComposer}
+            className="flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-90"
+            style={{ backgroundColor: 'var(--cp-green)' }}
+          >
+            <Plus size={14} aria-hidden />
+            Ny journal
+          </button>
           <PillButton onClick={() => window.location.reload()}>
             <RefreshCw size={11} />
             Opdater
@@ -568,24 +599,19 @@ function DashboardClientInner({
         style={{ alignItems: 'start' }}
       >
         <div className="min-w-0">
-          <Zone2Card accent="var(--cp-red)">
+          <Zone2Card accent={alertZoneAccent}>
             <AlertPanel />
           </Zone2Card>
         </div>
 
         <div className="min-w-0">
-          <Zone2Card accent="var(--cp-green)">
-            <ResidentList compact />
+          <Zone2Card accent={residentsZoneAccent}>
+            <ResidentList compact onNewJournal={openJournalForResident} />
           </Zone2Card>
         </div>
 
         <div className="min-w-0 md:col-span-2 lg:col-span-1">
-          <div
-            className="overflow-hidden rounded-xl"
-            style={{ borderTop: '2px solid var(--cp-amber)' }}
-          >
-            {medicationWidget}
-          </div>
+          <div className="overflow-hidden rounded-xl">{medicationWidget}</div>
         </div>
       </div>
 
@@ -622,19 +648,12 @@ function DashboardClientInner({
         </DashboardModule>
       </div>
 
-      {/* ── FAB ────────────────────────────────────────────────── */}
-      <button
-        type="button"
-        onClick={() => setJournalOpen(true)}
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-budr-purple px-4 py-3 text-sm font-medium text-white shadow-lg transition-all duration-200 hover:scale-105"
-        aria-label="Åbn hurtigt stikord (kladde til Aftenopsamling)"
-      >
-        <BookOpen className="h-5 w-5 shrink-0" aria-hidden />
-        <span>Hurtigt stikord</span>
-      </button>
-
       {/* ── Modals ─────────────────────────────────────────────── */}
-      <HurtigJournalModal open={journalOpen} onClose={closeJournal} />
+      <HurtigJournalModal
+        open={journalOpen}
+        onClose={closeJournal}
+        initialResidentId={journalResidentPrefill}
+      />
       <OverrapportModal open={overrapportOpen} onClose={() => setOverrapportOpen(false)} />
       <IndsatsModal open={indsatsOpen} onClose={() => setIndsatsOpen(false)} />
       <TilsynsrapportModal open={tilsynsrapportOpen} onClose={() => setTilsynsrapportOpen(false)} />

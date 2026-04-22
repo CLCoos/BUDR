@@ -9,6 +9,7 @@ import {
   sortResidentsBySearchRelevance,
 } from '@/lib/residentSearchMatch';
 import type { ResidentItem } from '../page';
+import DepartmentSelect from '@/components/DepartmentSelect';
 
 // ── Colour tokens ─────────────────────────────────────────────
 
@@ -67,6 +68,11 @@ export default function ResidentOverviewGrid({ residents }: Props) {
     const set = new Set(residents.map((r) => r.house || '—'));
     return [...set].sort((a, b) => houseRank(a) - houseRank(b) || a.localeCompare(b, 'da'));
   }, [residents]);
+
+  const departmentSelectOptions = useMemo(
+    () => houseOptions.map((h) => ({ id: h, label: h })),
+    [houseOptions]
+  );
 
   const sorted = useMemo(
     () =>
@@ -263,29 +269,19 @@ export default function ResidentOverviewGrid({ residents }: Props) {
         {/* ── Hus-filter ───────────────────────────────────── */}
         {houseOptions.length > 0 && (
           <div
-            className="px-4 py-2.5 flex flex-wrap items-center gap-2 border-b"
+            className="flex flex-wrap items-center gap-2 border-b px-4 py-2.5"
             style={{ borderColor: 'var(--cp-border)' }}
           >
             <span className="text-xs font-medium" style={{ color: 'var(--cp-muted2)' }}>
               Afdeling
             </span>
-            <select
+            <DepartmentSelect
               value={houseFilter}
-              onChange={(e) => setHouseFilter(e.target.value)}
-              className="text-xs rounded-lg px-2 py-1.5 focus:outline-none"
-              style={{
-                border: '1px solid var(--cp-border)',
-                backgroundColor: 'var(--cp-bg)',
-                color: 'var(--cp-text)',
-              }}
-            >
-              <option value="alle">Alle huse</option>
-              {houseOptions.map((h) => (
-                <option key={h} value={h}>
-                  {h}
-                </option>
-              ))}
-            </select>
+              onChange={setHouseFilter}
+              departments={departmentSelectOptions}
+              allLabel="Alle afdelinger"
+              aria-label="Filtrér beboere efter afdeling"
+            />
           </div>
         )}
 

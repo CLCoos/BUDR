@@ -56,9 +56,14 @@ function getSpeechRecognitionCtor(): (new () => SpeechRec) | null {
 export type HurtigJournalModalProps = {
   open: boolean;
   onClose: () => void;
+  initialResidentId?: string | null;
 };
 
-export default function HurtigJournalModal({ open, onClose }: HurtigJournalModalProps) {
+export default function HurtigJournalModal({
+  open,
+  onClose,
+  initialResidentId = null,
+}: HurtigJournalModalProps) {
   const [mounted, setMounted] = useState(false);
   const [residentId, setResidentId] = useState('');
   const [note, setNote] = useState('');
@@ -109,6 +114,11 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
       setNoteAi('');
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    setResidentId(initialResidentId ?? '');
+  }, [open, initialResidentId]);
 
   useEffect(() => {
     if (!open) return;
@@ -472,7 +482,7 @@ export default function HurtigJournalModal({ open, onClose }: HurtigJournalModal
             <BookOpen className="h-5 w-5 shrink-0 text-budr-purple" aria-hidden />
             <div>
               <h2 id="hurtig-journal-title" className="text-sm font-semibold text-gray-900">
-                Hurtigt stikord
+                Ny journal
               </h2>
               <details className="mt-1 text-[11px] leading-snug text-gray-500">
                 <summary className="cursor-pointer font-medium text-gray-600 underline-offset-2 hover:underline">

@@ -10,11 +10,17 @@ import { getJournalDemoDraft } from '@/lib/journalDemoDrafts';
 export type JournalAiDemoModalProps = {
   open: boolean;
   onClose: () => void;
+  /** Når modal åbnes: vælg denne beboer (demo-id) med det samme */
+  initialResidentId?: string | null;
 };
 
 const GEN_MS = 850;
 
-export default function JournalAiDemoModal({ open, onClose }: JournalAiDemoModalProps) {
+export default function JournalAiDemoModal({
+  open,
+  onClose,
+  initialResidentId = null,
+}: JournalAiDemoModalProps) {
   const [mounted, setMounted] = useState(false);
   const [residentId, setResidentId] = useState('');
   const [lysSummary, setLysSummary] = useState('');
@@ -82,8 +88,10 @@ export default function JournalAiDemoModal({ open, onClose }: JournalAiDemoModal
       setHandling('');
       setReflection('');
       setGenerating(false);
+      return;
     }
-  }, [open, clearTimer]);
+    setResidentId(initialResidentId ?? '');
+  }, [open, initialResidentId, clearTimer]);
 
   useEffect(() => {
     if (!open) return;
