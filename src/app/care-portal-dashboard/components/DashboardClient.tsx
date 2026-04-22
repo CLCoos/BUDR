@@ -561,24 +561,31 @@ function DashboardClientInner({
         <StatCards />
       </div>
 
-      {/* ── Zone 2: Hero grid (3 cols → 2 → 1) ─────────────── */}
+      {/* ── Zone 2: Hero grid (3 cols → 2 → 1) ───────────────
+          md: medicin lå i én kolonne (halv bredde) — fuld række md, min. 280px tredje spor lg+. */}
       <div
-        className="mb-5 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3"
+        className="mb-5 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(280px,1fr)]"
         style={{ alignItems: 'start' }}
       >
-        <Zone2Card accent="var(--cp-red)">
-          <AlertPanel />
-        </Zone2Card>
+        <div className="min-w-0">
+          <Zone2Card accent="var(--cp-red)">
+            <AlertPanel />
+          </Zone2Card>
+        </div>
 
-        <Zone2Card accent="var(--cp-green)">
-          <ResidentList compact />
-        </Zone2Card>
+        <div className="min-w-0">
+          <Zone2Card accent="var(--cp-green)">
+            <ResidentList compact />
+          </Zone2Card>
+        </div>
 
-        <div
-          className="overflow-hidden rounded-xl"
-          style={{ borderTop: '2px solid var(--cp-amber)' }}
-        >
-          {medicationWidget}
+        <div className="min-w-0 md:col-span-2 lg:col-span-1">
+          <div
+            className="overflow-hidden rounded-xl"
+            style={{ borderTop: '2px solid var(--cp-amber)' }}
+          >
+            {medicationWidget}
+          </div>
         </div>
       </div>
 

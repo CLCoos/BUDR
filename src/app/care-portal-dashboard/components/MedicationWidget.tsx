@@ -833,7 +833,7 @@ export default function MedicationWidget() {
 
   if (!hydrated) {
     return (
-      <div className="cp-card-elevated w-full animate-pulse overflow-hidden p-6">
+      <div className="cp-card-elevated w-full min-w-[min(100%,280px)] max-w-full animate-pulse overflow-hidden p-6">
         <div className="mb-6 flex justify-between">
           <div className="h-12 w-52 rounded-2xl" style={{ backgroundColor: 'var(--cp-bg3)' }} />
           <div className="h-8 w-24 rounded-full" style={{ backgroundColor: 'var(--cp-bg3)' }} />
@@ -846,7 +846,7 @@ export default function MedicationWidget() {
 
   return (
     <section
-      className="cp-card-elevated relative w-full overflow-hidden p-6 sm:p-7"
+      className="cp-card-elevated relative w-full min-w-[min(100%,280px)] max-w-full overflow-hidden p-6 sm:p-7"
       aria-label="Medicinudleveringer"
     >
       <div
@@ -854,7 +854,7 @@ export default function MedicationWidget() {
         aria-hidden
       />
 
-      <header className="relative mb-5 flex flex-col gap-4 sm:mb-6 sm:flex-row sm:items-start sm:justify-between">
+      <header className="relative mb-5 flex flex-col gap-4 sm:mb-6 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-4">
           <div
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl shadow-lg shadow-black/20"
@@ -899,7 +899,10 @@ export default function MedicationWidget() {
                 </span>
               )}
             </div>
-            <p className="mt-1 text-sm leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
+            <p
+              className="mt-1 break-words text-sm leading-relaxed"
+              style={{ color: 'var(--cp-muted)' }}
+            >
               Et tryk for at registrere udlevering · fortryd når som helst. Initialer viser fuldt
               navn ved hover.
             </p>
