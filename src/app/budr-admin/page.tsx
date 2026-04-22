@@ -1,10 +1,7 @@
 import BudrAdminClient from './BudrAdminClient';
 import { getBudrAdminOverview } from './adminOverview';
 
-type SearchParams =
-  | Record<string, string | string[] | undefined>
-  | Promise<Record<string, string | string[] | undefined>>
-  | undefined;
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 function parseHealthFilter(
   value: string | string[] | undefined
@@ -15,7 +12,7 @@ function parseHealthFilter(
 }
 
 export default async function BudrAdminPage({ searchParams }: { searchParams?: SearchParams }) {
-  const resolvedSearchParams = (await Promise.resolve(searchParams)) ?? {};
+  const resolvedSearchParams = (await searchParams) ?? {};
   const initialHealthFilter = parseHealthFilter(resolvedSearchParams.health);
   const { rows, error } = await getBudrAdminOverview();
   return (
