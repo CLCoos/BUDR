@@ -33,3 +33,8 @@ export const CARE_DEMO_RESIDENT_PROFILES: CareDemoResidentProfile[] = [
 export function careDemoProfileById(id: string): CareDemoResidentProfile | undefined {
   return CARE_DEMO_RESIDENT_PROFILES.find((r) => r.id === id);
 }
+
+/** Til `DepartmentSelect` i Care Portal (uden "Alle" — den håndteres af komponenten). */
+export const CARE_PORTAL_DEPARTMENT_OPTIONS: { id: CareHouse; label: string }[] = CARE_HOUSES.map(
+  (id) => ({ id, label: carePortalHouseChipLabel(id) })
+);

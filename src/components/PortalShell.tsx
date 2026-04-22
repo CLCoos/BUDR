@@ -1,6 +1,7 @@
 import React from 'react';
 import CarePortalTopNav from '@/components/CarePortalTopNav';
 import PortalMobileNav from '@/components/PortalMobileNav';
+import { CarePortalDepartmentProvider } from '@/contexts/CarePortalDepartmentContext';
 import { getStaffPermissions } from '@/lib/auth/getStaffPermissions';
 import { getPortalStaffRole } from '@/lib/portalAuth';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
@@ -15,26 +16,28 @@ export default async function PortalShell({ children }: { children: React.ReactN
   ]);
 
   return (
-    <div
-      id="care-portal-shell"
-      data-theme="dark"
-      className="cp-demo-ambient flex h-screen flex-col overflow-hidden text-[15px] antialiased"
-      style={{ backgroundColor: 'var(--cp-bg)' }}
-    >
-      <CarePortalTopNav />
+    <CarePortalDepartmentProvider>
       <div
-        className="flex min-h-0 flex-1 flex-col overflow-hidden pt-[52px]"
+        id="care-portal-shell"
+        data-theme="dark"
+        className="cp-demo-ambient flex h-screen flex-col overflow-hidden text-[15px] antialiased"
         style={{ backgroundColor: 'var(--cp-bg)' }}
       >
-        <PortalMobileNav
-          orgName={org?.name ?? null}
-          orgLogoUrl={org?.logo_url ?? null}
-          staffRole={staffRole}
-          permissions={permissions}
+        <CarePortalTopNav />
+        <div
+          className="flex min-h-0 flex-1 flex-col overflow-hidden pt-[52px]"
+          style={{ backgroundColor: 'var(--cp-bg)' }}
         >
-          <div className="cp-page-enter">{children}</div>
-        </PortalMobileNav>
+          <PortalMobileNav
+            orgName={org?.name ?? null}
+            orgLogoUrl={org?.logo_url ?? null}
+            staffRole={staffRole}
+            permissions={permissions}
+          >
+            <div className="cp-page-enter">{children}</div>
+          </PortalMobileNav>
+        </div>
       </div>
-    </div>
+    </CarePortalDepartmentProvider>
   );
 }

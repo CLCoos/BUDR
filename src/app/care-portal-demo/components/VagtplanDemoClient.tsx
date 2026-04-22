@@ -20,6 +20,7 @@ import {
   loadShifts,
   shiftsInPeriod,
 } from '@/lib/demoShiftPlan';
+import { VAGTPLAN_CORE_SHIFT_LOCATIONS } from '@/lib/vagtplanInferDepartment';
 
 type VagtplanDemoClientProps = { basePath?: string };
 type CoreShift = 'dag' | 'aften' | 'nat';
@@ -43,13 +44,27 @@ const SHIFT_META: Record<
   CoreShift,
   { start: string; end: string; hours: number; location: string; weekday: number; weekend: number }
 > = {
-  dag: { start: '07:30', end: '15:30', hours: 8, location: 'Hus A + B', weekday: 4, weekend: 3 },
-  aften: { start: '15:00', end: '23:00', hours: 8, location: 'Hus B + C', weekday: 3, weekend: 3 },
+  dag: {
+    start: '07:30',
+    end: '15:30',
+    hours: 8,
+    location: VAGTPLAN_CORE_SHIFT_LOCATIONS.dag,
+    weekday: 4,
+    weekend: 3,
+  },
+  aften: {
+    start: '15:00',
+    end: '23:00',
+    hours: 8,
+    location: VAGTPLAN_CORE_SHIFT_LOCATIONS.aften,
+    weekday: 3,
+    weekend: 3,
+  },
   nat: {
     start: '23:00',
     end: '07:00',
     hours: 8,
-    location: 'Nattevagt (hele huset)',
+    location: VAGTPLAN_CORE_SHIFT_LOCATIONS.nat,
     weekday: 2,
     weekend: 2,
   },

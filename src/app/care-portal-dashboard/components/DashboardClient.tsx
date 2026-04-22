@@ -21,6 +21,7 @@ import { Plus, RefreshCw } from 'lucide-react';
 import { useStaffOrgIsBingbong } from '@/hooks/useStaffOrgIsBingbong';
 import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 import { useAlertCount } from '@/hooks/useAlertCount';
+import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
 import { getWidgetStatus, widgetStatusVar } from '@/lib/widgetStatus';
 
 const OverrapportModal = dynamic(() => import('./OverrapportModal'), { ssr: false });
@@ -141,6 +142,7 @@ function DashboardClientInner({
   mode = 'dashboard',
   singleWidget,
 }: DashboardClientProps) {
+  const { department } = useCarePortalDepartment();
   const pilotSim = carePortalPilotSimulatedData();
   const { isBingbong, ready: bingbongReady } = useStaffOrgIsBingbong();
   const [headerSubtitle, setHeaderSubtitle] = useState('Care Portal');
@@ -175,7 +177,7 @@ function DashboardClientInner({
 
   const [journalOpen, setJournalOpen] = useState(false);
   const [journalResidentPrefill, setJournalResidentPrefill] = useState<string | null>(null);
-  const alertCountZone = useAlertCount(true);
+  const alertCountZone = useAlertCount(true, department);
   const [overrapportOpen, setOverrapportOpen] = useState(false);
   const [overrapportPanelOpen, setOverrapportPanelOpen] = useState(false);
   const [indsatsOpen, setIndsatsOpen] = useState(false);

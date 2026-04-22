@@ -1,11 +1,16 @@
 'use client';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AlertTriangle, Clock, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
-import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
+import { careDemoProfileById } from '@/lib/careDemoResidents';
+import {
+  resolveStaffOrgResidentsForDepartment,
+  type StaffOrgDepartmentScope,
+} from '@/lib/staffOrgScope';
+import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
 
 async function loadResidentNamesByUserId(
   supabase: SupabaseClient,
@@ -87,7 +92,7 @@ function formatTimestamp(iso: string): string {
 const DEMO_ALERT_SEED: AlertRow[] = [
   {
     id: 'demo-alert-1',
-    residentId: 'demo-resident-1',
+    residentId: 'res-002',
     residentName: 'Finn L.',
     initials: 'FL',
     type: 'crisis_alert',
@@ -99,7 +104,7 @@ const DEMO_ALERT_SEED: AlertRow[] = [
   },
   {
     id: 'demo-alert-2',
-    residentId: 'demo-resident-2',
+    residentId: 'res-003',
     residentName: 'Kirsten R.',
     initials: 'KR',
     type: 'lav_stemning',
@@ -110,7 +115,7 @@ const DEMO_ALERT_SEED: AlertRow[] = [
   },
   {
     id: 'demo-alert-3',
-    residentId: 'demo-resident-3',
+    residentId: 'res-005',
     residentName: 'Thomas B.',
     initials: 'TB',
     type: 'inaktivitet',
@@ -122,7 +127,12 @@ const DEMO_ALERT_SEED: AlertRow[] = [
   },
 ];
 
-export const DEMO_ALERT_PANEL_COUNT = DEMO_ALERT_SEED.length;
+/** Antal demo-advarsler synlige for valgt afdeling (matcher `StatCards` / hus-filter). */
+export function demoAlertPanelCount(department: StaffOrgDepartmentScope): number {
+  if (department === 'alle') return DEMO_ALERT_SEED.length;
+  return DEMO_ALERT_SEED.filter((a) => careDemoProfileById(a.residentId)?.house === department)
+    .length;
+}
 
 function isCritical(alert: AlertRow): boolean {
   return alert.source === 'crisis' || alert.severity === 'roed';
@@ -223,12 +233,18 @@ function AlertCard({ alert, group }: { alert: AlertRow; group: 'roed' | 'gul' })
 type AlertPanelProps = { variant?: 'live' | 'demo' };
 
 export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
+  const { department } = useCarePortalDepartment();
   const [dbAlerts, setDbAlerts] = useState<AlertRow[]>([]);
   const [crisisAlerts, setCrisisAlerts] = useState<AlertRow[]>([]);
   const [inactiveAlerts, setInactiveAlerts] = useState<AlertRow[]>([]);
   const [loading, setLoading] = useState(variant !== 'demo');
   const [inaktivitetExpanded, setInaktivitetExpanded] = useState(false);
-  const [demoAlerts] = useState<AlertRow[]>(() => (variant === 'demo' ? [...DEMO_ALERT_SEED] : []));
+
+  const demoAlertsScoped = useMemo(() => {
+    if (variant !== 'demo') return [] as AlertRow[];
+    if (department === 'alle') return [...DEMO_ALERT_SEED];
+    return DEMO_ALERT_SEED.filter((a) => careDemoProfileById(a.residentId)?.house === department);
+  }, [variant, department]);
 
   const fetchDbAlerts = useCallback(async () => {
     const supabase = createClient();
@@ -237,7 +253,11 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
       return;
     }
 
-    const { orgId, residentIds, error: orgErr } = await resolveStaffOrgResidents(supabase);
+    const {
+      orgId,
+      residentIds,
+      error: orgErr,
+    } = await resolveStaffOrgResidentsForDepartment(supabase, department);
     if (orgErr || !orgId || residentIds.length === 0) {
       setDbAlerts([]);
       setLoading(false);
@@ -276,13 +296,17 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
 
     setDbAlerts(rows);
     setLoading(false);
-  }, []);
+  }, [department]);
 
   const fetchCrisisAlerts = useCallback(async () => {
     const supabase = createClient();
     if (!supabase) return;
 
-    const { orgId, residentIds, error: orgErr } = await resolveStaffOrgResidents(supabase);
+    const {
+      orgId,
+      residentIds,
+      error: orgErr,
+    } = await resolveStaffOrgResidentsForDepartment(supabase, department);
     if (orgErr || !orgId || residentIds.length === 0) {
       setCrisisAlerts([]);
       return;
@@ -319,13 +343,17 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
     });
 
     setCrisisAlerts(rows);
-  }, []);
+  }, [department]);
 
   const fetchInactivity = useCallback(async () => {
     const supabase = createClient();
     if (!supabase) return;
 
-    const { orgId, residentIds, error: orgErr } = await resolveStaffOrgResidents(supabase);
+    const {
+      orgId,
+      residentIds,
+      error: orgErr,
+    } = await resolveStaffOrgResidentsForDepartment(supabase, department);
     if (orgErr || !orgId || residentIds.length === 0) {
       setInactiveAlerts([]);
       return;
@@ -340,6 +368,8 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
 
     if (!residents) return;
 
+    const scopedSet = new Set(residentIds);
+
     const { data: recentCheckins } = await supabase
       .from('park_daily_checkin')
       .select('resident_id, created_at')
@@ -349,7 +379,7 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
     const activeIds = new Set((recentCheckins ?? []).map((c) => c.resident_id as string));
 
     const inactive: AlertRow[] = residents
-      .filter((r) => !activeIds.has(r.user_id))
+      .filter((r) => scopedSet.has(r.user_id as string) && !activeIds.has(r.user_id))
       .map((r) => {
         const name = (r.display_name as string | null) ?? 'Ukendt beboer';
         return {
@@ -367,7 +397,7 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
       });
 
     setInactiveAlerts(inactive);
-  }, []);
+  }, [department]);
 
   useEffect(() => {
     if (variant === 'demo') {
@@ -432,10 +462,10 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
       void supabase.removeChannel(checkinChannel);
       clearInterval(timer);
     };
-  }, [variant, fetchDbAlerts, fetchCrisisAlerts, fetchInactivity]);
+  }, [variant, department, fetchDbAlerts, fetchCrisisAlerts, fetchInactivity]);
 
   const allAlerts =
-    variant === 'demo' ? demoAlerts : [...crisisAlerts, ...dbAlerts, ...inactiveAlerts];
+    variant === 'demo' ? demoAlertsScoped : [...crisisAlerts, ...dbAlerts, ...inactiveAlerts];
 
   const group1 = allAlerts.filter(isCritical);
   const group2 = allAlerts.filter(isWatchout);

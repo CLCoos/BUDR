@@ -5,6 +5,10 @@ import Link from 'next/link';
 import { Menu, Sparkles } from 'lucide-react';
 import DemoPortalSidebar from '@/components/demo/DemoPortalSidebar';
 import DokumentSøgning from '@/components/DokumentSøgning';
+import DepartmentSelect from '@/components/DepartmentSelect';
+import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
+import { CARE_PORTAL_DEPARTMENT_OPTIONS } from '@/lib/careDemoResidents';
+import { parseCarePortalDepartment } from '@/lib/carePortalHouse';
 
 type Props = {
   children: React.ReactNode;
@@ -12,6 +16,8 @@ type Props = {
 
 export default function DemoPortalMobileNav({ children }: Props) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const { department, setDepartment } = useCarePortalDepartment();
+  const deptSelectValue = department === 'alle' ? 'alle' : department;
 
   return (
     <>
@@ -40,6 +46,14 @@ export default function DemoPortalMobileNav({ children }: Props) {
           >
             Bosted Nordlys
           </span>
+        </div>
+        <div className="w-full min-w-0">
+          <DepartmentSelect
+            value={deptSelectValue}
+            onChange={(id) => setDepartment(parseCarePortalDepartment(id))}
+            departments={CARE_PORTAL_DEPARTMENT_OPTIONS}
+            aria-label="Vælg afdeling for demo-overblikket"
+          />
         </div>
         <div className="w-full min-w-0 sm:hidden" aria-label="Dokumentsøgning">
           <DokumentSøgning carePortalDark linkTarget="demo" />

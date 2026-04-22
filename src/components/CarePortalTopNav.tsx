@@ -3,10 +3,16 @@
 import Link from 'next/link';
 import { Sparkles } from 'lucide-react';
 import DokumentSøgning from '@/components/DokumentSøgning';
+import DepartmentSelect from '@/components/DepartmentSelect';
+import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
+import { CARE_PORTAL_DEPARTMENT_OPTIONS } from '@/lib/careDemoResidents';
+import { parseCarePortalDepartment } from '@/lib/carePortalHouse';
 import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 
 export default function CarePortalTopNav() {
   const pilot = carePortalPilotSimulatedData();
+  const { department, setDepartment } = useCarePortalDepartment();
+  const deptSelectValue = department === 'alle' ? 'alle' : department;
 
   return (
     <nav
@@ -45,6 +51,15 @@ export default function CarePortalTopNav() {
           Pilot
         </span>
       ) : null}
+
+      <div className="hidden shrink-0 sm:block sm:w-[min(9.5rem,28vw)]">
+        <DepartmentSelect
+          value={deptSelectValue}
+          onChange={(id) => setDepartment(parseCarePortalDepartment(id))}
+          departments={CARE_PORTAL_DEPARTMENT_OPTIONS}
+          aria-label="Vælg afdeling for overblikket"
+        />
+      </div>
 
       <div className="mx-1 hidden min-w-0 flex-1 justify-center sm:flex sm:px-2">
         <DokumentSøgning carePortalDark linkTarget={pilot ? 'pilot' : 'live'} />

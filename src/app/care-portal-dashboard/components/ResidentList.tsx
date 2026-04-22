@@ -8,6 +8,9 @@ import {
   residentNameRoomInitialsMatch,
   sortResidentsBySearchRelevance,
 } from '@/lib/residentSearchMatch';
+import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
+import type { CareHouse } from '@/lib/careDemoResidents';
+import { onboardingHouseToCareHouse } from '@/lib/carePortalHouse';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
 
 // ── Types ────────────────────────────────────────────────────
@@ -39,6 +42,7 @@ interface Resident {
   name: string;
   initials: string;
   room: string;
+  house: CareHouse;
   trafficLight: TrafficUi | null;
   moodScore: number | null;
   lastCheckin: string;
@@ -58,7 +62,7 @@ interface CheckinRow {
 interface CareResidentRow {
   user_id: string;
   display_name: string;
-  onboarding_data: Record<string, string> | null;
+  onboarding_data: Record<string, unknown> | null;
 }
 
 // ── Colour tokens ─────────────────────────────────────────────
@@ -134,6 +138,7 @@ export default function ResidentList({
   compact?: boolean;
   onNewJournal?: (residentId: string) => void;
 }) {
+  const { department } = useCarePortalDepartment();
   const router = useRouter();
   const [residents, setResidents] = useState<Resident[]>([]);
   const [loading, setLoading] = useState(true);
@@ -252,8 +257,12 @@ export default function ResidentList({
         const base: Resident = {
           id: r.user_id,
           name: r.display_name,
-          initials: od.avatar_initials ?? r.display_name.slice(0, 2).toUpperCase(),
-          room: od.room ?? '—',
+          initials:
+            typeof od.avatar_initials === 'string' && od.avatar_initials.trim().length > 0
+              ? od.avatar_initials.trim().toUpperCase().slice(0, 4)
+              : r.display_name.slice(0, 2).toUpperCase(),
+          room: typeof od.room === 'string' && od.room.trim() ? od.room.trim() : '—',
+          house: onboardingHouseToCareHouse(od.house),
           trafficLight: null,
           moodScore: null,
           lastCheckin: 'Ingen check-in',
@@ -289,18 +298,23 @@ export default function ResidentList({
 
   // ── Filter + search ────────────────────────────────────────
 
+  const residentsInDept = useMemo(() => {
+    if (department === 'alle') return residents;
+    return residents.filter((r) => r.house === department);
+  }, [residents, department]);
+
   const filtered = useMemo(() => {
     const q = search.trim();
-    const base = residents.filter((r) => {
+    const base = residentsInDept.filter((r) => {
       const matchSearch = residentNameRoomInitialsMatch(r.name, r.room, r.initials, search);
       const matchFilter =
         filter === 'alle' ? true : filter === 'ingen' ? !r.trafficLight : r.trafficLight === filter;
       return matchSearch && matchFilter;
     });
     return q ? sortResidentsBySearchRelevance(base, q) : base;
-  }, [residents, search, filter]);
+  }, [residentsInDept, search, filter]);
 
-  const checkinTodayCount = residents.filter((r) => r.checkinToday).length;
+  const checkinTodayCount = residentsInDept.filter((r) => r.checkinToday).length;
 
   // ── Render ─────────────────────────────────────────────────
 
@@ -361,7 +375,7 @@ export default function ResidentList({
             {loading ? (
               <Loader2 size={12} className="animate-spin inline" />
             ) : (
-              `${residents.length} beboere · ${checkinTodayCount} check-in i dag`
+              `${residentsInDept.length} beboere · ${checkinTodayCount} check-in i dag`
             )}
           </span>
         </div>
@@ -669,14 +683,14 @@ export default function ResidentList({
         </div>
       )}
 
-      {compact && !loading && residents.length > 0 && (
+      {compact && !loading && residentsInDept.length > 0 && (
         <div className="px-4 py-2.5" style={{ borderTop: '1px solid var(--cp-border)' }}>
           <Link
             href="/care-portal-residents"
             className="text-xs font-medium transition-colors hover:underline"
             style={{ color: 'var(--cp-green)' }}
           >
-            Se alle {residents.length} beboere →
+            Se alle {residentsInDept.length} beboere →
           </Link>
         </div>
       )}

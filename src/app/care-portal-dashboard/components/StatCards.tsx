@@ -1,10 +1,12 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAlertCount } from '@/hooks/useAlertCount';
+import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
+import { CARE_DEMO_RESIDENT_PROFILES } from '@/lib/careDemoResidents';
 import { createClient } from '@/lib/supabase/client';
-import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
-import { DEMO_ALERT_PANEL_COUNT } from './AlertPanel';
+import { resolveStaffOrgResidentsForDepartment } from '@/lib/staffOrgScope';
+import { demoAlertPanelCount } from './AlertPanel';
 import { getWidgetStatus, widgetStatusVar, type WidgetStatusKey } from '@/lib/widgetStatus';
 
 const demoStats = [
@@ -42,7 +44,8 @@ function statTopBorderStatus(
   statId: string,
   variant: 'demo' | 'live',
   live: { total: number; checkinToday: number; avgMood: number | null } | null,
-  alertCount: number
+  alertCount: number,
+  demoAlertCount: number
 ): WidgetStatusKey {
   const hour = new Date().getHours();
   if (statId === 'stat-residents') {
@@ -64,7 +67,7 @@ function statTopBorderStatus(
     });
   }
   if (statId === 'stat-alerts') {
-    const n = variant === 'demo' ? DEMO_ALERT_PANEL_COUNT : alertCount;
+    const n = variant === 'demo' ? demoAlertCount : alertCount;
     return getWidgetStatus('stat_open_alerts', { openAlertCount: n });
   }
   if (statId === 'stat-avg-mood') {
@@ -88,12 +91,30 @@ type Props = { variant?: 'demo' | 'live' };
 export default function StatCards({ variant = 'live' }: Props) {
   const router = useRouter();
   const pathname = usePathname();
-  const alertCount = useAlertCount(variant !== 'demo');
+  const { department } = useCarePortalDepartment();
+  const alertCount = useAlertCount(variant !== 'demo', department);
   const [live, setLive] = useState<{
     total: number;
     checkinToday: number;
     avgMood: number | null;
   } | null>(null);
+
+  const demoScope = useMemo(() => {
+    const profiles = CARE_DEMO_RESIDENT_PROFILES;
+    const total =
+      department === 'alle'
+        ? profiles.length
+        : profiles.filter((p) => p.house === department).length;
+    const baselineCheckin = 10;
+    const baselineTotal = 12;
+    const checkinToday =
+      total === 0
+        ? 0
+        : Math.min(total, Math.max(0, Math.round((total * baselineCheckin) / baselineTotal)));
+    return { total, checkinToday, avgMood: total === 0 ? null : 6.2 };
+  }, [department]);
+
+  const demoAlertCount = useMemo(() => demoAlertPanelCount(department), [department]);
 
   useEffect(() => {
     if (variant !== 'live') return;
@@ -107,7 +128,11 @@ export default function StatCards({ variant = 'live' }: Props) {
         return;
       }
 
-      const { orgId, residentIds, error: orgErr } = await resolveStaffOrgResidents(supabase);
+      const {
+        orgId,
+        residentIds,
+        error: orgErr,
+      } = await resolveStaffOrgResidentsForDepartment(supabase, department);
       if (cancelled) return;
 
       if (orgErr || !orgId || residentIds.length === 0) {
@@ -150,22 +175,47 @@ export default function StatCards({ variant = 'live' }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [variant]);
+  }, [variant, department]);
 
   const stats =
     variant === 'demo'
-      ? demoStats.map((s) =>
-          s.alertLink
-            ? {
-                ...s,
-                value: String(DEMO_ALERT_PANEL_COUNT),
-                sub:
-                  DEMO_ALERT_PANEL_COUNT === 1
-                    ? '1 aktiv advarsel'
-                    : `${DEMO_ALERT_PANEL_COUNT} aktive advarsler`,
-              }
-            : s
-        )
+      ? demoStats.map((s) => {
+          if (s.id === 'stat-residents') {
+            return {
+              ...s,
+              value: String(demoScope.total),
+              sub:
+                demoScope.total === 0
+                  ? 'Ingen beboere på afdelingen'
+                  : `${Math.max(0, demoScope.total - demoScope.checkinToday)} fraværende i dag`,
+            };
+          }
+          if (s.id === 'stat-checkins') {
+            return {
+              ...s,
+              value: String(demoScope.checkinToday),
+              sub:
+                demoScope.total === 0
+                  ? '—'
+                  : `${Math.max(0, demoScope.total - demoScope.checkinToday)} mangler endnu`,
+            };
+          }
+          if (s.id === 'stat-avg-mood') {
+            return {
+              ...s,
+              value: demoScope.avgMood === null ? '—' : demoScope.avgMood.toFixed(1),
+              sub: demoScope.checkinToday === 0 ? 'Ingen check-in i dag' : 'Af 10 mulige',
+            };
+          }
+          if (s.alertLink) {
+            return {
+              ...s,
+              value: String(demoAlertCount),
+              sub: demoAlertCount === 1 ? '1 aktiv advarsel' : `${demoAlertCount} aktive advarsler`,
+            };
+          }
+          return s;
+        })
       : [
           {
             ...demoStats[0],
@@ -204,7 +254,7 @@ export default function StatCards({ variant = 'live' }: Props) {
       {stats.map((stat) => {
         const liveAlertCount = stat.alertLink ? alertCount : 0;
         const isAlertActive =
-          stat.alertLink && (variant === 'demo' ? DEMO_ALERT_PANEL_COUNT > 0 : liveAlertCount > 0);
+          stat.alertLink && (variant === 'demo' ? demoAlertCount > 0 : liveAlertCount > 0);
 
         const numberColor = isAlertActive
           ? 'var(--cp-red)'
@@ -212,7 +262,7 @@ export default function StatCards({ variant = 'live' }: Props) {
             ? 'var(--cp-amber)'
             : 'var(--cp-text)';
 
-        const topStatus = statTopBorderStatus(stat.id, variant, live, alertCount);
+        const topStatus = statTopBorderStatus(stat.id, variant, live, alertCount, demoAlertCount);
 
         return (
           <div

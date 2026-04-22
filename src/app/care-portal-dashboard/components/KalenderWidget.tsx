@@ -3,17 +3,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { CalendarDays, Clock, MapPin, Plus, User } from 'lucide-react';
 import type { CareHouse } from '@/lib/careDemoResidents';
-import {
-  CARE_DEMO_RESIDENT_PROFILES,
-  CARE_HOUSES,
-  careDemoProfileById,
-  carePortalHouseChipLabel,
-} from '@/lib/careDemoResidents';
+import { CARE_DEMO_RESIDENT_PROFILES, careDemoProfileById } from '@/lib/careDemoResidents';
 import { BINGBONG_DEMO_ORG_SLUG } from '@/lib/bingbongOrg';
 import { createClient } from '@/lib/supabase/client';
 import { parseStaffOrgId } from '@/lib/staffOrgScope';
 import { isResidentUuidForCloud } from '@/lib/residentUuid';
-import DepartmentSelect from '@/components/DepartmentSelect';
+import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
+import { onboardingHouseToCareHouse } from '@/lib/carePortalHouse';
 
 export type { CareHouse } from '@/lib/careDemoResidents';
 
@@ -48,16 +44,6 @@ const DEMO_RESIDENT_OPTIONS: ResidentOption[] = CARE_DEMO_RESIDENT_PROFILES.map(
   initials: r.initials,
   house: r.house,
 }));
-
-function onboardingHouseToCareHouse(raw: unknown): CareHouse {
-  const s = String(raw ?? '').trim();
-  const u = s.toUpperCase();
-  if (u === 'TLS') return 'TLS';
-  const m = s.match(/hus\s*([ABCD])/i);
-  if (m?.[1]) return m[1].toUpperCase() as CareHouse;
-  if (u === 'A' || u === 'B' || u === 'C' || u === 'D') return u;
-  return 'A';
-}
 
 function formatDanishLongDate(d: Date): string {
   const wd = d.toLocaleDateString('da-DK', { weekday: 'long' });
@@ -223,11 +209,11 @@ type KalenderWidgetProps = {
 };
 
 export default function KalenderWidget({ variant = 'live' }: KalenderWidgetProps) {
+  const { department: houseFilter } = useCarePortalDepartment();
   const [hydrated, setHydrated] = useState(false);
   const [today, setToday] = useState<Date>(() => new Date());
   const [appointments, setAppointments] = useState<CareAppointment[]>([]);
   const [residentOptions, setResidentOptions] = useState<ResidentOption[]>(DEMO_RESIDENT_OPTIONS);
-  const [houseFilter, setHouseFilter] = useState<'alle' | CareHouse>('alle');
   const [residentFilter, setResidentFilter] = useState<string>('alle');
   const [showForm, setShowForm] = useState(false);
   const [formTitle, setFormTitle] = useState('');
@@ -236,11 +222,6 @@ export default function KalenderWidget({ variant = 'live' }: KalenderWidgetProps
   const [formResidentId, setFormResidentId] = useState('');
   const [formResponsible, setFormResponsible] = useState('');
   const [formLocation, setFormLocation] = useState('');
-
-  const calendarDepartmentOptions = useMemo(
-    () => CARE_HOUSES.map((h) => ({ id: h, label: carePortalHouseChipLabel(h) })),
-    []
-  );
 
   useEffect(() => {
     const d = new Date();
@@ -426,13 +407,6 @@ export default function KalenderWidget({ variant = 'live' }: KalenderWidgetProps
             <Plus className="h-3.5 w-3.5" aria-hidden />
             Tilføj aftale
           </button>
-          <DepartmentSelect
-            value={houseFilter}
-            onChange={(v) => setHouseFilter((v === 'alle' ? 'alle' : v) as 'alle' | CareHouse)}
-            departments={calendarDepartmentOptions}
-            className="sm:ml-auto"
-            aria-label="Filtrér aftaler efter afdeling"
-          />
         </div>
       </div>
 

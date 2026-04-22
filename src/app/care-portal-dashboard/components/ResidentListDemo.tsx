@@ -2,13 +2,8 @@
 import React, { useMemo, useState } from 'react';
 import { Search, ChevronRight, Clock, Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  CARE_DEMO_RESIDENT_PROFILES,
-  CARE_HOUSES,
-  carePortalHouseChipLabel,
-  type CareHouse,
-} from '@/lib/careDemoResidents';
-import DepartmentSelect from '@/components/DepartmentSelect';
+import { CARE_DEMO_RESIDENT_PROFILES, type CareHouse } from '@/lib/careDemoResidents';
+import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
 
 type TrafficUi = 'groen' | 'gul' | 'roed';
 
@@ -185,14 +180,18 @@ type ResidentListDemoProps = {
 };
 
 export default function ResidentListDemo({ onNewJournal }: ResidentListDemoProps) {
+  const { department: houseFilter } = useCarePortalDepartment();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'alle' | TrafficUi | 'ingen'>('alle');
-  const [houseFilter, setHouseFilter] = useState<'alle' | CareHouse>('alle');
+
+  const residentsInDept = useMemo(() => {
+    if (houseFilter === 'alle') return DEMO_RESIDENTS;
+    return DEMO_RESIDENTS.filter((r) => r.house === houseFilter);
+  }, [houseFilter]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return DEMO_RESIDENTS.filter((r) => {
-      const matchHouse = houseFilter === 'alle' || r.house === houseFilter;
+    return residentsInDept.filter((r) => {
       const matchSearch =
         !q ||
         r.name.toLowerCase().includes(q) ||
@@ -201,16 +200,11 @@ export default function ResidentListDemo({ onNewJournal }: ResidentListDemoProps
         r.house.toLowerCase().includes(q);
       const matchFilter =
         filter === 'alle' ? true : filter === 'ingen' ? !r.trafficLight : r.trafficLight === filter;
-      return matchSearch && matchFilter && matchHouse;
+      return matchSearch && matchFilter;
     });
-  }, [search, filter, houseFilter]);
+  }, [search, filter, residentsInDept]);
 
-  const checkinCount = DEMO_RESIDENTS.filter((r) => r.checkinToday).length;
-
-  const departmentOptions = useMemo(
-    () => CARE_HOUSES.map((h) => ({ id: h, label: carePortalHouseChipLabel(h) })),
-    []
-  );
+  const checkinCount = residentsInDept.filter((r) => r.checkinToday).length;
 
   return (
     <div className="cp-card-elevated overflow-hidden">
@@ -239,16 +233,8 @@ export default function ResidentListDemo({ onNewJournal }: ResidentListDemoProps
             </span>
           </div>
           <span className="text-xs tabular-nums" style={{ color: 'var(--cp-muted)' }}>
-            {DEMO_RESIDENTS.length} beboere · {checkinCount} check-in i dag
+            {residentsInDept.length} beboere · {checkinCount} check-in i dag
           </span>
-        </div>
-        <div className="mb-2">
-          <DepartmentSelect
-            value={houseFilter}
-            onChange={(v) => setHouseFilter((v === 'alle' ? 'alle' : v) as 'alle' | CareHouse)}
-            departments={departmentOptions}
-            aria-label="Filtrér demo-beboere efter afdeling"
-          />
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:gap-2">
           <div className="relative min-w-0 flex-1">

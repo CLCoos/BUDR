@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
-  CARE_HOUSES,
   careDemoProfileById,
   carePortalHouseChipLabel,
   type CareHouse,
@@ -28,7 +27,7 @@ import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 import { enumerateCivilMedicationSlotDates } from '@/lib/medicationScheduleSlots';
 import { createClient } from '@/lib/supabase/client';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
-import DepartmentSelect from '@/components/DepartmentSelect';
+import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
 import { getWidgetStatus, widgetStatusVar } from '@/lib/widgetStatus';
 
 export interface MedicationTask {
@@ -704,6 +703,7 @@ function ResidentAbbr({
 type TaskFilter = 'alle' | 'ventende' | 'forsinkede';
 
 export default function MedicationWidget() {
+  const { department: houseFilter } = useCarePortalDepartment();
   const simulatedMedicin = carePortalPilotSimulatedData();
   const { isBingbong, ready: bingbongReady } = useStaffOrgIsBingbong();
   const pilotMedicinMock = simulatedMedicin && (!bingbongReady || !isBingbong);
@@ -712,7 +712,6 @@ export default function MedicationWidget() {
   const [laterExpanded, setLaterExpanded] = useState(false);
   const [prepExpanded, setPrepExpanded] = useState(false);
   const [nowTick, setNowTick] = useState(() => Date.now());
-  const [houseFilter, setHouseFilter] = useState<'alle' | CareHouse>('alle');
   const [taskFilter, setTaskFilter] = useState<TaskFilter>('alle');
   const [viewMode, setViewMode] = useState<'koe' | 'liste'>('koe');
 
@@ -808,11 +807,6 @@ export default function MedicationWidget() {
   const medicBorderStatus = getWidgetStatus('widget_medicin_today', {
     delayedMedicationCount: medicStatusView.stats.overdueN,
   });
-
-  const departmentOptions = useMemo(
-    () => CARE_HOUSES.map((h) => ({ id: h, label: carePortalHouseChipLabel(h) })),
-    []
-  );
 
   const groupedTimeline = useMemo(() => {
     const now = new Date(nowTick);
@@ -941,13 +935,6 @@ export default function MedicationWidget() {
               </>
             )}
           </span>
-          <DepartmentSelect
-            value={houseFilter}
-            onChange={(v) => setHouseFilter((v === 'alle' ? 'alle' : v) as 'alle' | CareHouse)}
-            departments={departmentOptions}
-            className="sm:ml-auto"
-            aria-label="Filtrér medicin efter afdeling"
-          />
         </div>
       </header>
 

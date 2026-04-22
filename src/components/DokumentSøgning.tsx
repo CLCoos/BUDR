@@ -10,6 +10,9 @@ import {
   sortResidentsBySearchRelevance,
 } from '@/lib/residentSearchMatch';
 import { isResidentUuidForCloud } from '@/lib/residentUuid';
+import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
+import { careDemoProfileById, type CareHouse } from '@/lib/careDemoResidents';
+import { onboardingHouseToCareHouse } from '@/lib/carePortalHouse';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
 
 type CategoryKey = 'journal' | 'handleplan' | 'medicin' | 'bekymringsnotater' | 'aftaler';
@@ -50,6 +53,8 @@ interface MockResident {
   name: string;
   initials: string;
   room: string;
+  /** Til afdelingsopdeling af søgeresultater (demo + live). */
+  house: CareHouse;
   documents: MockDoc[];
 }
 
@@ -59,6 +64,7 @@ const MOCK_RESIDENTS: MockResident[] = [
     name: 'Anders M.',
     initials: 'AM',
     room: '104',
+    house: careDemoProfileById('res-001')?.house ?? 'A',
     documents: [
       { category: 'journal', title: 'Dagsnotat 24. marts — god dagsform' },
       { category: 'handleplan', title: 'Handleplan Q1 2026 — opdateret' },
@@ -71,6 +77,7 @@ const MOCK_RESIDENTS: MockResident[] = [
     name: 'Finn L.',
     initials: 'FL',
     room: '108',
+    house: careDemoProfileById('res-002')?.house ?? 'A',
     documents: [
       { category: 'journal', title: 'Kriseplan gennemgang' },
       { category: 'bekymringsnotater', title: 'Bekymring: søvn og social kontakt' },
@@ -83,6 +90,7 @@ const MOCK_RESIDENTS: MockResident[] = [
     name: 'Kirsten R.',
     initials: 'KR',
     room: '102',
+    house: careDemoProfileById('res-003')?.house ?? 'A',
     documents: [
       { category: 'journal', title: 'Notat efter lægesamtale' },
       { category: 'medicin', title: 'Risperidon — bivirkninger vurderet' },
@@ -95,6 +103,7 @@ const MOCK_RESIDENTS: MockResident[] = [
     name: 'Maja T.',
     initials: 'MT',
     room: '106',
+    house: careDemoProfileById('res-004')?.house ?? 'B',
     documents: [
       { category: 'journal', title: 'Samtale om angst' },
       { category: 'handleplan', title: 'Handleplan — sociale aktiviteter' },
@@ -107,6 +116,7 @@ const MOCK_RESIDENTS: MockResident[] = [
     name: 'Thomas B.',
     initials: 'TB',
     room: '110',
+    house: careDemoProfileById('res-005')?.house ?? 'D',
     documents: [
       { category: 'journal', title: 'Status ved indflytning' },
       { category: 'handleplan', title: 'Økonomisk støtte — koordinering med kommune' },
@@ -119,6 +129,7 @@ const MOCK_RESIDENTS: MockResident[] = [
     name: 'Lena P.',
     initials: 'LP',
     room: '103',
+    house: careDemoProfileById('res-006')?.house ?? 'A',
     documents: [
       { category: 'journal', title: 'Ugentlig trivselsnotat' },
       { category: 'medicin', title: 'Panodil — PN log' },
@@ -170,6 +181,7 @@ function DokumentSøgningInner({
 }: DokumentSøgningProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { department, label: deptLabel, isScoped } = useCarePortalDepartment();
   const dark = carePortalDark;
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
@@ -227,7 +239,14 @@ function DokumentSøgningInner({
             : name.slice(0, 2).toUpperCase();
         const rawRoom = od.room;
         const room = typeof rawRoom === 'string' && rawRoom.trim() ? rawRoom.trim() : '—';
-        mapped.push({ id, name, initials, room, documents: [] });
+        mapped.push({
+          id,
+          name,
+          initials,
+          room,
+          house: onboardingHouseToCareHouse(od.house),
+          documents: [],
+        });
       }
       setLiveResidents(mapped);
       setLiveResidentsLoading(false);
@@ -286,16 +305,54 @@ function DokumentSøgningInner({
     return out;
   }, [q, residentsForSearch]);
 
+  const searchSplitMode = q.length >= 1 && isScoped;
+
+  const inDeptResidents = useMemo(() => {
+    if (!searchSplitMode) return matchedResidents;
+    return matchedResidents.filter((r) => r.house === department);
+  }, [searchSplitMode, matchedResidents, department]);
+
+  const otherResidents = useMemo(() => {
+    if (!searchSplitMode) return [] as MockResident[];
+    return matchedResidents.filter((r) => r.house !== department);
+  }, [searchSplitMode, matchedResidents, department]);
+
+  const inDeptDocs = useMemo(() => {
+    if (!searchSplitMode) return matchedDocs;
+    return matchedDocs.filter((x) => x.resident.house === department);
+  }, [searchSplitMode, matchedDocs, department]);
+
+  const otherDocs = useMemo(() => {
+    if (!searchSplitMode) return [] as { resident: MockResident; doc: MockDoc }[];
+    return matchedDocs.filter((x) => x.resident.house !== department);
+  }, [searchSplitMode, matchedDocs, department]);
+
   const navEntries = useMemo((): NavEntry[] => {
     const e: NavEntry[] = [];
-    for (const r of matchedResidents) e.push({ kind: 'resident', resident: r });
-    for (const { resident, doc } of matchedDocs) e.push({ kind: 'doc', resident, doc });
+    const ingest = (res: MockResident[], docs: { resident: MockResident; doc: MockDoc }[]) => {
+      for (const r of res) e.push({ kind: 'resident', resident: r });
+      for (const { resident, doc } of docs) e.push({ kind: 'doc', resident, doc });
+    };
+    if (!searchSplitMode) {
+      ingest(matchedResidents, matchedDocs);
+      return e;
+    }
+    ingest(inDeptResidents, inDeptDocs);
+    ingest(otherResidents, otherDocs);
     return e;
-  }, [matchedResidents, matchedDocs]);
+  }, [
+    searchSplitMode,
+    matchedResidents,
+    matchedDocs,
+    inDeptResidents,
+    inDeptDocs,
+    otherResidents,
+    otherDocs,
+  ]);
 
   useEffect(() => {
     setActiveIndex(0);
-  }, [q]);
+  }, [q, department]);
 
   useEffect(() => {
     if (activeIndex >= navEntries.length) setActiveIndex(Math.max(0, navEntries.length - 1));
@@ -452,6 +509,91 @@ function DokumentSøgningInner({
     ? 'mt-0.5 h-4 w-4 shrink-0 text-[var(--cp-muted2)]'
     : 'mt-0.5 h-4 w-4 shrink-0 text-gray-400';
 
+  const renderResidentRows = (list: MockResident[], counter: { n: number }) =>
+    list.map((r) => {
+      const globalIdx = counter.n++;
+      const active = globalIdx === activeIndex;
+      return (
+        <div
+          key={`res-${r.id}`}
+          role="option"
+          aria-selected={active}
+          className={`rounded-lg transition-all duration-200 ${rowActive(active)}`}
+        >
+          <button
+            type="button"
+            onMouseEnter={() => setActiveIndex(globalIdx)}
+            onClick={() => navigateTo(r.id, defaultResidentTab)}
+            className="flex w-full items-start gap-3 px-3 py-2.5 text-left"
+          >
+            <div
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
+              style={
+                dark
+                  ? {
+                      background:
+                        'linear-gradient(135deg, rgba(110,231,183,0.9), rgba(5,150,105,0.95))',
+                    }
+                  : { backgroundColor: '#7F77DD' }
+              }
+            >
+              {r.initials}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className={residentNameCls}>{r.name}</div>
+              <div className={roomCls}>
+                <User className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
+                <span>Værelse {r.room}</span>
+              </div>
+            </div>
+            <div className="flex max-w-[48%] shrink-0 flex-wrap justify-end gap-1">
+              {uniqueCategories(r).map((cat) => (
+                <button
+                  key={`${r.id}-${cat}`}
+                  type="button"
+                  onClick={(ev) => {
+                    ev.stopPropagation();
+                    navigateTo(r.id, categoryTab(cat));
+                  }}
+                  className={chipCls}
+                >
+                  {CATEGORY_LABEL[cat]}
+                </button>
+              ))}
+            </div>
+          </button>
+        </div>
+      );
+    });
+
+  const renderDocRows = (
+    docs: { resident: MockResident; doc: MockDoc }[],
+    counter: { n: number }
+  ) =>
+    docs.map(({ resident, doc }, i) => {
+      const globalIdx = counter.n++;
+      const active = globalIdx === activeIndex;
+      return (
+        <button
+          key={`${resident.id}-${doc.category}-${doc.title}-${i}`}
+          type="button"
+          role="option"
+          aria-selected={active}
+          onMouseEnter={() => setActiveIndex(globalIdx)}
+          onClick={() => navigateTo(resident.id, categoryTab(doc.category))}
+          className={`flex w-full items-start gap-2 rounded-lg px-3 py-2 text-left transition-all duration-200 ${rowActive(active)}`}
+        >
+          <FileText className={fileIconCls} aria-hidden />
+          <div className="min-w-0 flex-1">
+            <div className={docTitleCls}>{doc.title}</div>
+            <div className={docMetaCls}>
+              {CATEGORY_LABEL[doc.category]} · {resident.name}
+            </div>
+          </div>
+        </button>
+      );
+    });
+
   return (
     <div ref={rootRef} className="relative w-full max-w-md min-w-0 flex-1">
       <div className={`flex items-center gap-2 rounded-full ${shellCls}`} style={shellStyle}>
@@ -516,100 +658,90 @@ function DokumentSøgningInner({
             <div className={emptyCls}>Ingen resultater for &apos;{q}&apos;</div>
           ) : (
             <div className="max-h-[min(70vh,28rem)] overflow-y-auto py-2">
-              {matchedResidents.length > 0 ? (
-                <div className="px-2">
-                  <div className={sectionHdrCls}>Beboere</div>
-                  {matchedResidents.map((r, i) => {
-                    const globalIdx = i;
-                    const active = globalIdx === activeIndex;
-                    return (
-                      <div
-                        key={r.id}
-                        role="option"
-                        aria-selected={active}
-                        className={`rounded-lg transition-all duration-200 ${rowActive(active)}`}
-                      >
-                        <button
-                          type="button"
-                          onMouseEnter={() => setActiveIndex(globalIdx)}
-                          onClick={() => navigateTo(r.id, defaultResidentTab)}
-                          className="flex w-full items-start gap-3 px-3 py-2.5 text-left"
-                        >
-                          <div
-                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-                            style={
-                              dark
-                                ? {
-                                    background:
-                                      'linear-gradient(135deg, rgba(110,231,183,0.9), rgba(5,150,105,0.95))',
-                                  }
-                                : { backgroundColor: '#7F77DD' }
-                            }
-                          >
-                            {r.initials}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className={residentNameCls}>{r.name}</div>
-                            <div className={roomCls}>
-                              <User className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
-                              <span>Værelse {r.room}</span>
-                            </div>
-                          </div>
-                          <div className="flex max-w-[48%] shrink-0 flex-wrap justify-end gap-1">
-                            {uniqueCategories(r).map((cat) => (
-                              <button
-                                key={`${r.id}-${cat}`}
-                                type="button"
-                                onClick={(ev) => {
-                                  ev.stopPropagation();
-                                  navigateTo(r.id, categoryTab(cat));
-                                }}
-                                className={chipCls}
-                              >
-                                {CATEGORY_LABEL[cat]}
-                              </button>
-                            ))}
-                          </div>
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : null}
-
-              {matchedDocs.length > 0 ? (
-                <div className={`px-2 ${matchedResidents.length > 0 ? dividerCls : ''}`}>
-                  <div
-                    className={`flex items-center gap-1.5 px-2 pb-2 text-xs font-semibold uppercase tracking-wide ${dark ? 'text-[var(--cp-muted2)]' : 'text-gray-400'}`}
-                  >
-                    <FileText className="h-3.5 w-3.5" aria-hidden />
-                    Dokumenter
-                  </div>
-                  {matchedDocs.map(({ resident, doc }, i) => {
-                    const globalIdx = matchedResidents.length + i;
-                    const active = globalIdx === activeIndex;
-                    return (
-                      <button
-                        key={`${resident.id}-${doc.category}-${doc.title}-${i}`}
-                        type="button"
-                        role="option"
-                        aria-selected={active}
-                        onMouseEnter={() => setActiveIndex(globalIdx)}
-                        onClick={() => navigateTo(resident.id, categoryTab(doc.category))}
-                        className={`flex w-full items-start gap-2 rounded-lg px-3 py-2 text-left transition-all duration-200 ${rowActive(active)}`}
-                      >
-                        <FileText className={fileIconCls} aria-hidden />
-                        <div className="min-w-0 flex-1">
-                          <div className={docTitleCls}>{doc.title}</div>
-                          <div className={docMetaCls}>
-                            {CATEGORY_LABEL[doc.category]} · {resident.name}
-                          </div>
+              {searchSplitMode ? (
+                <>
+                  {inDeptResidents.length > 0 || inDeptDocs.length > 0 ? (
+                    <div className="px-2">
+                      <div className={sectionHdrCls}>{`På ${deptLabel}`}</div>
+                      {inDeptResidents.length > 0 ? (
+                        <div className="mt-1">
+                          <div className={sectionHdrCls}>Beboere</div>
+                          {renderResidentRows(inDeptResidents, { n: 0 })}
                         </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : null}
+                      ) : null}
+                      {inDeptDocs.length > 0 ? (
+                        <div className={`px-0 ${inDeptResidents.length > 0 ? dividerCls : ''}`}>
+                          <div
+                            className={`flex items-center gap-1.5 px-2 pb-2 text-xs font-semibold uppercase tracking-wide ${dark ? 'text-[var(--cp-muted2)]' : 'text-gray-400'}`}
+                          >
+                            <FileText className="h-3.5 w-3.5" aria-hidden />
+                            Dokumenter
+                          </div>
+                          {(() => {
+                            const c = { n: inDeptResidents.length };
+                            return renderDocRows(inDeptDocs, c);
+                          })()}
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  {otherResidents.length > 0 || otherDocs.length > 0 ? (
+                    <div
+                      className={`px-2 ${inDeptResidents.length > 0 || inDeptDocs.length > 0 ? dividerCls : ''}`}
+                    >
+                      <div className={sectionHdrCls}>Alle afdelinger</div>
+                      {otherResidents.length > 0 ? (
+                        <div className="mt-1">
+                          <div className={sectionHdrCls}>Beboere</div>
+                          {(() => {
+                            const c = { n: inDeptResidents.length + inDeptDocs.length };
+                            return renderResidentRows(otherResidents, c);
+                          })()}
+                        </div>
+                      ) : null}
+                      {otherDocs.length > 0 ? (
+                        <div className={`px-0 ${otherResidents.length > 0 ? dividerCls : ''}`}>
+                          <div
+                            className={`flex items-center gap-1.5 px-2 pb-2 text-xs font-semibold uppercase tracking-wide ${dark ? 'text-[var(--cp-muted2)]' : 'text-gray-400'}`}
+                          >
+                            <FileText className="h-3.5 w-3.5" aria-hidden />
+                            Dokumenter
+                          </div>
+                          {(() => {
+                            const c = {
+                              n: inDeptResidents.length + inDeptDocs.length + otherResidents.length,
+                            };
+                            return renderDocRows(otherDocs, c);
+                          })()}
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  {matchedResidents.length > 0 ? (
+                    <div className="px-2">
+                      <div className={sectionHdrCls}>Beboere</div>
+                      {renderResidentRows(matchedResidents, { n: 0 })}
+                    </div>
+                  ) : null}
+                  {matchedDocs.length > 0 ? (
+                    <div className={`px-2 ${matchedResidents.length > 0 ? dividerCls : ''}`}>
+                      <div
+                        className={`flex items-center gap-1.5 px-2 pb-2 text-xs font-semibold uppercase tracking-wide ${dark ? 'text-[var(--cp-muted2)]' : 'text-gray-400'}`}
+                      >
+                        <FileText className="h-3.5 w-3.5" aria-hidden />
+                        Dokumenter
+                      </div>
+                      {(() => {
+                        const c = { n: matchedResidents.length };
+                        return renderDocRows(matchedDocs, c);
+                      })()}
+                    </div>
+                  ) : null}
+                </>
+              )}
             </div>
           )}
         </div>

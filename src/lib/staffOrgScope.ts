@@ -1,4 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { CareHouse } from '@/lib/careDemoResidents';
+import { onboardingHouseToCareHouse } from '@/lib/carePortalHouse';
+
+export type StaffOrgDepartmentScope = 'alle' | CareHouse;
 
 /** Validates `org_id` from Supabase Auth user_metadata (UUID v4). */
 export function parseStaffOrgId(raw: unknown): string | null {
@@ -62,4 +66,47 @@ export async function resolveStaffOrgResidents(supabase: SupabaseClient | null):
       .filter(isUuidString),
     error: null,
   };
+}
+
+/** Samme som `resolveStaffOrgResidents`, men filtreret til én afdeling når `department !== 'alle'`. */
+export async function resolveStaffOrgResidentsForDepartment(
+  supabase: SupabaseClient | null,
+  department: StaffOrgDepartmentScope
+): Promise<{
+  orgId: string | null;
+  residentIds: string[];
+  error: StaffOrgResolveError | null;
+  queryMessage?: string;
+}> {
+  const base = await resolveStaffOrgResidents(supabase);
+  if (base.error || !base.orgId || department === 'alle') return base;
+  if (!supabase) return base;
+
+  const { data, error } = await supabase
+    .from('care_residents')
+    .select('user_id, onboarding_data')
+    .eq('org_id', base.orgId);
+
+  if (error) {
+    return {
+      orgId: base.orgId,
+      residentIds: [],
+      error: 'query_failed',
+      queryMessage: error.message,
+    };
+  }
+
+  const ids = (data ?? [])
+    .filter((row) => {
+      const uid = (row as { user_id: string | null }).user_id;
+      if (!isUuidString(uid)) return false;
+      const od = (row as { onboarding_data: unknown }).onboarding_data as Record<
+        string,
+        unknown
+      > | null;
+      return onboardingHouseToCareHouse(od?.house) === department;
+    })
+    .map((r) => (r as { user_id: string }).user_id);
+
+  return { orgId: base.orgId, residentIds: ids, error: null };
 }

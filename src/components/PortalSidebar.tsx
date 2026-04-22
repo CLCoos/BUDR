@@ -25,6 +25,7 @@ import { createClient } from '@/lib/supabase/client';
 import { hasPermission } from '@/lib/auth/hasPermission';
 import { PERMISSIONS, type Permission } from '@/lib/permissions';
 import { useAlertCount } from '@/hooks/useAlertCount';
+import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
 import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 
 type NavItem = {
@@ -109,7 +110,8 @@ function PortalSidebarInner({
   const [collapsed, setCollapsed] = useState(false);
   const [displayName, setDisplayName] = useState<string>('');
   const [initials, setInitials] = useState<string>('');
-  const alertCount = useAlertCount();
+  const { department } = useCarePortalDepartment();
+  const alertCount = useAlertCount(true, department);
   const pilot = carePortalPilotSimulatedData();
 
   const navItems = useMemo((): NavItem[] => {

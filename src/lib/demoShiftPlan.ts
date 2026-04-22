@@ -1,6 +1,9 @@
 /** Simuleret vagtplan / løn for Care Portal demo (localStorage). */
 
 export const DEMO_SHIFTS_KEY = 'budr_demo_shifts_v1';
+
+/** Fyres i samme fane når demo-vagter gemmes (localStorage udløser ikke `storage` her). */
+export const DEMO_SHIFTS_UPDATED_EVENT = 'budr-demo-shifts-updated';
 export const DEMO_VACATION_KEY = 'budr_demo_vacation_days_v1';
 
 export type DemoShiftType = 'dag' | 'aften' | 'nat' | 'vagt' | 'uddannelse';
@@ -120,6 +123,9 @@ export function loadShifts(): DemoShift[] {
 export function saveShifts(shifts: DemoShift[]) {
   try {
     localStorage.setItem(DEMO_SHIFTS_KEY, JSON.stringify(shifts));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event(DEMO_SHIFTS_UPDATED_EVENT));
+    }
   } catch {
     /* ignore */
   }

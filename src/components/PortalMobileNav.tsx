@@ -6,7 +6,11 @@ import { Menu, Sparkles } from 'lucide-react';
 import PortalSidebar from '@/components/PortalSidebar';
 import type { Permission } from '@/lib/permissions';
 import DokumentSøgning from '@/components/DokumentSøgning';
+import DepartmentSelect from '@/components/DepartmentSelect';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
+import { CARE_PORTAL_DEPARTMENT_OPTIONS } from '@/lib/careDemoResidents';
+import { parseCarePortalDepartment } from '@/lib/carePortalHouse';
 import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 
 type Props = {
@@ -27,6 +31,8 @@ export default function PortalMobileNav({
 }: Props) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const pilot = carePortalPilotSimulatedData();
+  const { department, setDepartment } = useCarePortalDepartment();
+  const deptSelectValue = department === 'alle' ? 'alle' : department;
 
   const mobileTitle = orgName?.trim() || 'Care Portal';
 
@@ -67,6 +73,14 @@ export default function PortalMobileNav({
             )}
           </span>
           <ThemeToggle />
+        </div>
+        <div className="w-full min-w-0">
+          <DepartmentSelect
+            value={deptSelectValue}
+            onChange={(id) => setDepartment(parseCarePortalDepartment(id))}
+            departments={CARE_PORTAL_DEPARTMENT_OPTIONS}
+            aria-label="Vælg afdeling for overblikket"
+          />
         </div>
         <div className="w-full min-w-0 sm:hidden" aria-label="Dokumentsøgning">
           <DokumentSøgning carePortalDark linkTarget={pilot ? 'pilot' : 'live'} />

@@ -9,7 +9,8 @@ import {
   sortResidentsBySearchRelevance,
 } from '@/lib/residentSearchMatch';
 import type { ResidentItem } from '../page';
-import DepartmentSelect from '@/components/DepartmentSelect';
+import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
+import { onboardingHouseToCareHouse } from '@/lib/carePortalHouse';
 
 // ── Colour tokens ─────────────────────────────────────────────
 
@@ -60,28 +61,23 @@ type Props = { residents: ResidentItem[] };
 
 export default function ResidentOverviewGrid({ residents }: Props) {
   const router = useRouter();
+  const { department } = useCarePortalDepartment();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'alle' | TrafficUi | 'ingen'>('alle');
-  const [houseFilter, setHouseFilter] = useState<string>('alle');
 
-  const houseOptions = useMemo(() => {
-    const set = new Set(residents.map((r) => r.house || '—'));
-    return [...set].sort((a, b) => houseRank(a) - houseRank(b) || a.localeCompare(b, 'da'));
-  }, [residents]);
-
-  const departmentSelectOptions = useMemo(
-    () => houseOptions.map((h) => ({ id: h, label: h })),
-    [houseOptions]
-  );
+  const residentsInDept = useMemo(() => {
+    if (department === 'alle') return residents;
+    return residents.filter((r) => onboardingHouseToCareHouse(r.house) === department);
+  }, [residents, department]);
 
   const sorted = useMemo(
     () =>
-      [...residents].sort(
+      [...residentsInDept].sort(
         (a, b) =>
           houseRank(a.house) - houseRank(b.house) ||
           a.name.localeCompare(b.name, 'da', { sensitivity: 'base' })
       ),
-    [residents]
+    [residentsInDept]
   );
 
   const filtered = useMemo(() => {
@@ -92,16 +88,15 @@ export default function ResidentOverviewGrid({ residents }: Props) {
         (ql.length > 0 && r.house.toLowerCase().includes(ql));
       const matchFilter =
         filter === 'alle' ? true : filter === 'ingen' ? !r.trafficLight : r.trafficLight === filter;
-      const matchHouse = houseFilter === 'alle' || r.house === houseFilter;
-      return matchSearch && matchFilter && matchHouse;
+      return matchSearch && matchFilter;
     });
     const q = search.trim();
     return q ? sortResidentsBySearchRelevance(base, q) : base;
-  }, [sorted, search, filter, houseFilter]);
+  }, [sorted, search, filter]);
 
-  const checkinCount = residents.filter((r) => r.checkinToday).length;
-  const missingCheckin = residents.length - checkinCount;
-  const alertCount = residents.filter((r) => r.trafficLight === 'roed').length;
+  const checkinCount = residentsInDept.filter((r) => r.checkinToday).length;
+  const missingCheckin = residentsInDept.length - checkinCount;
+  const alertCount = residentsInDept.filter((r) => r.trafficLight === 'roed').length;
 
   const cardStyle: React.CSSProperties = {
     backgroundColor: 'var(--cp-bg2)',
@@ -134,7 +129,7 @@ export default function ResidentOverviewGrid({ residents }: Props) {
             Beboere
           </h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--cp-muted)' }}>
-            {residents.length} beboere · {checkinCount} check-in i dag
+            {residentsInDept.length} beboere · {checkinCount} check-in i dag
             {alertCount > 0 && (
               <span className="ml-2 font-medium" style={{ color: 'var(--cp-red)' }}>
                 · {alertCount} rød trafiklys
@@ -165,7 +160,7 @@ export default function ResidentOverviewGrid({ residents }: Props) {
                 lineHeight: 1,
               }}
             >
-              {residents.length}
+              {residentsInDept.length}
             </div>
             <div style={statLabel}>Beboere i alt</div>
           </div>
@@ -265,25 +260,6 @@ export default function ResidentOverviewGrid({ residents }: Props) {
             ))}
           </div>
         </div>
-
-        {/* ── Hus-filter ───────────────────────────────────── */}
-        {houseOptions.length > 0 && (
-          <div
-            className="flex flex-wrap items-center gap-2 border-b px-4 py-2.5"
-            style={{ borderColor: 'var(--cp-border)' }}
-          >
-            <span className="text-xs font-medium" style={{ color: 'var(--cp-muted2)' }}>
-              Afdeling
-            </span>
-            <DepartmentSelect
-              value={houseFilter}
-              onChange={setHouseFilter}
-              departments={departmentSelectOptions}
-              allLabel="Alle afdelinger"
-              aria-label="Filtrér beboere efter afdeling"
-            />
-          </div>
-        )}
 
         {/* ── Tabel ────────────────────────────────────────── */}
         <div className="overflow-x-auto">

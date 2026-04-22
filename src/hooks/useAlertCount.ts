@@ -1,13 +1,19 @@
 'use client';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
+import {
+  resolveStaffOrgResidentsForDepartment,
+  type StaffOrgDepartmentScope,
+} from '@/lib/staffOrgScope';
 
 // Each hook instance gets a unique channel name to avoid Supabase
 // removing a shared channel when one of several consumers unmounts.
 let _instanceId = 0;
 
-export function useAlertCount(enabled: boolean = true): number {
+export function useAlertCount(
+  enabled: boolean = true,
+  department: StaffOrgDepartmentScope = 'alle'
+): number {
   const [count, setCount] = useState(0);
   const instanceId = useRef<number | null>(null);
   if (instanceId.current === null) instanceId.current = ++_instanceId;
@@ -16,7 +22,11 @@ export function useAlertCount(enabled: boolean = true): number {
     const supabase = createClient();
     if (!supabase) return;
 
-    const { orgId, residentIds, error: orgErr } = await resolveStaffOrgResidents(supabase);
+    const {
+      orgId,
+      residentIds,
+      error: orgErr,
+    } = await resolveStaffOrgResidentsForDepartment(supabase, department);
     if (orgErr || !orgId || residentIds.length === 0) {
       setCount(0);
       return;
@@ -39,7 +49,7 @@ export function useAlertCount(enabled: boolean = true): number {
     const inactiveCount = residentIds.filter((id) => !activeIdSet.has(id)).length;
 
     setCount((dbCount ?? 0) + inactiveCount);
-  }, []);
+  }, [department]);
 
   useEffect(() => {
     if (!enabled) {
@@ -71,7 +81,7 @@ export function useAlertCount(enabled: boolean = true): number {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [refresh, enabled]);
+  }, [refresh, enabled, department]);
 
   return count;
 }
