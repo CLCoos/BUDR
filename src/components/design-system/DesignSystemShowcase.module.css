@@ -1,0 +1,59 @@
+.page {
+  min-height: 100%;
+  overflow: auto;
+  padding: var(--page-padding-y) var(--page-padding-x);
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+}
+
+.section {
+  margin-bottom: var(--space-12);
+}
+
+.sectionTitle {
+  font-family: var(--font-body);
+  font-size: var(--text-heading-lg-size);
+  line-height: var(--text-heading-lg-line-height);
+  font-weight: 600;
+  margin: 0 0 var(--space-4);
+  color: var(--text-primary);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.swatch {
+  border-radius: var(--radius-md);
+  border: var(--border-width) solid var(--border-default);
+  min-height: 72px;
+  padding: var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-body-xs-size);
+  line-height: var(--text-body-xs-line-height);
+  color: var(--text-inverse);
+  display: flex;
+  align-items: flex-end;
+}
+
+.swatchLabel {
+  background: var(--bg-overlay);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+}
+
+.tokenName {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  word-break: break-all;
+}

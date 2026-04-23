@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next';
 import { DM_Sans, DM_Serif_Display } from 'next/font/google';
 import AnalyticsGate from '@/components/AnalyticsGate';
 import SonnerToaster from '@/components/SonnerToaster';
+import BudrThemeProvider from '@/components/theme/BudrThemeProvider';
 import './globals.css';
 
 const dmSans = DM_Sans({
@@ -45,9 +46,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="da" className={`${dmSans.variable} ${dmSerifDisplay.variable}`}>
       <body>
-        <AnalyticsGate />
-        {children}
-        <SonnerToaster />
+        <BudrThemeProvider>
+          <AnalyticsGate />
+          {children}
+          <SonnerToaster />
+        </BudrThemeProvider>
       </body>
     </html>
   );

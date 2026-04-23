@@ -57,6 +57,7 @@ function isCarePortalDemoRoute(pathname: string): boolean {
 function isCarePortalStaffRoute(pathname: string): boolean {
   if (pathname === '/care-portal-login') return false;
   if (isCarePortalDemoRoute(pathname)) return false;
+  if (pathname === '/design-system' || pathname.startsWith('/design-system/')) return true;
   if (pathname.startsWith('/care-portal-')) return true;
   return (
     pathname.startsWith('/handover-workspace') || pathname.startsWith('/resident-360-view')
@@ -352,6 +353,8 @@ export const config = {
     '/budr-admin',
     '/budr-admin/:path*',
     '/care-portal-login',
+    '/design-system',
+    '/design-system/:path*',
     '/care-portal-demo',
     '/care-portal-demo/:path*',
     '/care-portal-dashboard',

@@ -2,22 +2,21 @@
 
 import { useEffect, useState } from 'react';
 import { Sun, Moon } from 'lucide-react';
+import { applyBudrTheme, readStoredBudrTheme, type BudrTheme } from '@/lib/budrTheme';
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [theme, setTheme] = useState<BudrTheme>('dark');
 
   useEffect(() => {
-    const stored = localStorage.getItem('budr-theme') as 'dark' | 'light' | null;
-    const initial = stored || 'dark';
+    const initial = readStoredBudrTheme();
     setTheme(initial);
-    document.getElementById('care-portal-shell')?.setAttribute('data-theme', initial);
+    applyBudrTheme(initial);
   }, []);
 
   const toggle = () => {
-    const next = theme === 'dark' ? 'light' : 'dark';
+    const next: BudrTheme = theme === 'dark' ? 'light' : 'dark';
     setTheme(next);
-    localStorage.setItem('budr-theme', next);
-    document.getElementById('care-portal-shell')?.setAttribute('data-theme', next);
+    applyBudrTheme(next);
   };
 
   return (

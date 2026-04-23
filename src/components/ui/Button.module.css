@@ -1,0 +1,115 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: var(--text-body-md-size);
+  line-height: var(--text-body-md-line-height);
+  border-radius: var(--radius-md);
+  border: var(--border-width) solid transparent;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    opacity var(--duration-fast) var(--ease-out);
+}
+
+.button:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.button:disabled,
+.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.sm {
+  min-height: 32px;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line-height);
+}
+
+.md {
+  min-height: 40px;
+  padding: var(--space-3) var(--space-4);
+}
+
+.lg {
+  min-height: 48px;
+  padding: var(--space-4) var(--space-6);
+  font-size: var(--text-body-lg-size);
+  line-height: var(--text-body-lg-line-height);
+}
+
+.primary {
+  background-color: var(--brand-primary);
+  color: var(--text-inverse);
+}
+
+.primary:hover:not(:disabled) {
+  background-color: var(--brand-primary-hover);
+}
+
+.secondary {
+  background-color: transparent;
+  color: var(--text-primary);
+  border-color: var(--border-default);
+}
+
+.secondary:hover:not(:disabled) {
+  background-color: var(--bg-surface-3);
+}
+
+.tertiary {
+  background-color: transparent;
+  color: var(--status-neutral);
+}
+
+.tertiary:hover:not(:disabled) {
+  background-color: var(--status-neutral-bg);
+}
+
+.destructive {
+  background-color: var(--status-action);
+  color: var(--text-inverse);
+}
+
+.destructive:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.ghost {
+  background-color: transparent;
+  color: var(--text-secondary);
+}
+
+.ghost:hover:not(:disabled) {
+  background-color: var(--bg-surface-3);
+  color: var(--text-primary);
+}
+
+.spinner {
+  animation: budrSpin 0.7s linear infinite;
+}
+
+@keyframes budrSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}
