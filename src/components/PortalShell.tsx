@@ -7,6 +7,7 @@ import { getPortalStaffRole } from '@/lib/portalAuth';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getOrganisationForStaff } from '@/lib/supabase/organisation';
 import { CurrentOrgProvider } from '@/contexts/CurrentOrgContext';
+import { AuthenticatedUserProvider } from '@/contexts/AuthenticatedUserContext';
 
 export default async function PortalShell({ children }: { children: React.ReactNode }) {
   const supabase = await createServerSupabaseClient();
@@ -25,27 +26,30 @@ export default async function PortalShell({ children }: { children: React.ReactN
       }}
     >
       <CarePortalDepartmentProvider>
-        <div
-          id="care-portal-shell"
-          data-theme="dark"
-          className="cp-demo-ambient flex h-screen flex-col overflow-hidden text-[15px] antialiased"
-          style={{ backgroundColor: 'var(--cp-bg)' }}
-        >
-          <CarePortalTopNav />
+        <AuthenticatedUserProvider>
           <div
-            className="flex min-h-0 flex-1 flex-col overflow-hidden pt-[var(--header-height)]"
+            id="care-portal-shell"
+            data-theme="dark"
+            className="cp-demo-ambient flex h-screen flex-col overflow-hidden text-[15px] antialiased"
             style={{ backgroundColor: 'var(--cp-bg)' }}
           >
-            <PortalMobileNav
-              orgName={org?.name ?? null}
-              orgLogoUrl={org?.logo_url ?? null}
-              staffRole={staffRole}
-              permissions={permissions}
+            <CarePortalTopNav />
+            <div
+              className="flex min-h-0 flex-1 flex-col overflow-hidden pt-[var(--header-height)]"
+              style={{ backgroundColor: 'var(--cp-bg)' }}
             >
-              <div className="cp-page-enter">{children}</div>
-            </PortalMobileNav>
+              <PortalMobileNav
+                orgId={org?.id ?? null}
+                orgName={org?.name ?? null}
+                orgLogoUrl={org?.logo_url ?? null}
+                staffRole={staffRole}
+                permissions={permissions}
+              >
+                <div className="cp-page-enter">{children}</div>
+              </PortalMobileNav>
+            </div>
           </div>
-        </div>
+        </AuthenticatedUserProvider>
       </CarePortalDepartmentProvider>
     </CurrentOrgProvider>
   );

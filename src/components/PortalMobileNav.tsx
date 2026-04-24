@@ -10,6 +10,7 @@ import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 
 type Props = {
   children: React.ReactNode;
+  orgId: string | null;
   orgName: string | null;
   orgLogoUrl: string | null;
   /** Fra server (`care_staff.role`); bruges til rolle-baseret nav. */
@@ -19,6 +20,7 @@ type Props = {
 
 export default function PortalMobileNav({
   children,
+  orgId,
   orgName,
   orgLogoUrl,
   staffRole,
@@ -75,7 +77,7 @@ export default function PortalMobileNav({
       {mobileNavOpen && (
         <div
           role="presentation"
-          className="fixed inset-0 top-[52px] z-[10050] bg-black/50 md:hidden"
+          className="fixed inset-0 top-[var(--header-height)] z-[10050] bg-black/50 md:hidden"
           onClick={() => setMobileNavOpen(false)}
           aria-hidden
         />
@@ -85,6 +87,7 @@ export default function PortalMobileNav({
         <PortalSidebar
           mobileOpen={mobileNavOpen}
           onMobileClose={() => setMobileNavOpen(false)}
+          orgId={orgId}
           orgName={orgName}
           orgLogoUrl={orgLogoUrl}
           staffRole={staffRole}

@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { DesignSystemShowcase } from '@/components/design-system/DesignSystemShowcase';
+import { DesignSystemWithAuth } from '@/app/design-system/DesignSystemWithAuth';
 import { canAccessDesignSystemPage } from '@/lib/designSystemAccess';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
@@ -13,5 +13,5 @@ export default async function DesignSystemPage() {
     notFound();
   }
 
-  return <DesignSystemShowcase />;
+  return <DesignSystemWithAuth />;
 }

@@ -21,7 +21,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
-import DepartmentSelect from '@/components/DepartmentSelect';
+import DepartmentSelect, { type DepartmentOption } from '@/components/DepartmentSelect';
 import { createClient } from '@/lib/supabase/client';
 import { hasPermission } from '@/lib/auth/hasPermission';
 import { PERMISSIONS, type Permission } from '@/lib/permissions';
@@ -30,8 +30,6 @@ import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext'
 import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 import { CARE_PORTAL_DEPARTMENT_OPTIONS, type CareHouse } from '@/lib/careDemoResidents';
 import { parseCarePortalDepartment } from '@/lib/carePortalHouse';
-import { useAuthenticatedUser } from '@/lib/auth/useAuthenticatedUser';
-
 type NavItem = {
   icon: typeof LayoutDashboard;
   label: string;
@@ -99,6 +97,7 @@ function navItemActive(
 type InnerProps = {
   mobileOpen: boolean;
   onMobileClose: () => void;
+  orgId: string | null;
   orgName: string | null;
   orgLogoUrl: string | null;
   staffRole: string | null;
@@ -108,6 +107,7 @@ type InnerProps = {
 function PortalSidebarInner({
   mobileOpen,
   onMobileClose,
+  orgId,
   orgName,
   orgLogoUrl,
   staffRole,
@@ -117,8 +117,10 @@ function PortalSidebarInner({
   const searchParams = useSearchParams();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
-  const [departmentOptions, setDepartmentOptions] = useState(CARE_PORTAL_DEPARTMENT_OPTIONS);
-  const authState = useAuthenticatedUser();
+  /** `null` = afventer server/org-afledt liste (undgaar flash af fuld demo-liste). */
+  const [departmentOptions, setDepartmentOptions] = useState<readonly DepartmentOption[] | null>(
+    null
+  );
   const { department, setDepartment } = useCarePortalDepartment();
   const alertCount = useAlertCount(true, department);
   const pilot = carePortalPilotSimulatedData();
@@ -252,15 +254,26 @@ function PortalSidebarInner({
   }, [pilot, alertCount, staffRole, permissions]);
 
   useEffect(() => {
-    if (authState.status !== 'authenticated') return;
+    if (!orgId) {
+      setDepartmentOptions([]);
+      return;
+    }
     const supabase = createClient();
-    if (!supabase) return;
+    if (!supabase) {
+      setDepartmentOptions([]);
+      return;
+    }
+    let cancelled = false;
     void supabase
       .from('care_residents')
       .select('onboarding_data')
-      .eq('org_id', authState.org.id)
+      .eq('org_id', orgId)
       .then(({ data }) => {
-        if (!data || data.length === 0) return;
+        if (cancelled) return;
+        if (!data || data.length === 0) {
+          setDepartmentOptions(CARE_PORTAL_DEPARTMENT_OPTIONS);
+          return;
+        }
         const validHouses = new Set<CareHouse>();
         for (const row of data as { onboarding_data?: { house?: string } | null }[]) {
           const house = row.onboarding_data?.house;
@@ -268,13 +281,19 @@ function PortalSidebarInner({
             validHouses.add(house as CareHouse);
           }
         }
-        if (validHouses.size === 0) return;
+        if (validHouses.size === 0) {
+          setDepartmentOptions(CARE_PORTAL_DEPARTMENT_OPTIONS);
+          return;
+        }
         const filtered = CARE_PORTAL_DEPARTMENT_OPTIONS.filter((option) =>
           validHouses.has(option.id)
         );
         setDepartmentOptions(filtered);
       });
-  }, [authState]);
+    return () => {
+      cancelled = true;
+    };
+  }, [orgId]);
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -354,7 +373,7 @@ function PortalSidebarInner({
                 >
                   Care Portal
                 </div>
-                {departmentOptions.length > 1 ? (
+                {departmentOptions !== null && departmentOptions.length > 1 ? (
                   <div className="mt-2 w-full">
                     <DepartmentSelect
                       value={department === 'alle' ? 'alle' : department}
@@ -535,6 +554,7 @@ function PortalSidebarInner({
 type PortalSidebarProps = {
   mobileOpen?: boolean;
   onMobileClose?: () => void;
+  orgId?: string | null;
   orgName?: string | null;
   orgLogoUrl?: string | null;
   staffRole: string | null;
@@ -544,6 +564,7 @@ type PortalSidebarProps = {
 export default function PortalSidebar({
   mobileOpen = false,
   onMobileClose = () => {},
+  orgId = null,
   orgName = null,
   orgLogoUrl = null,
   staffRole,
@@ -566,6 +587,7 @@ export default function PortalSidebar({
       <PortalSidebarInner
         mobileOpen={mobileOpen}
         onMobileClose={onMobileClose}
+        orgId={orgId}
         orgName={orgName}
         orgLogoUrl={orgLogoUrl}
         staffRole={staffRole}
