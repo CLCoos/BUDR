@@ -5,6 +5,11 @@
   width: 100%;
 }
 
+.control {
+  position: relative;
+  width: 100%;
+}
+
 .label {
   font-family: var(--font-body);
   font-size: var(--text-label-size);
@@ -29,6 +34,53 @@
   transition:
     border-color var(--duration-fast) var(--ease-out),
     box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.sm {
+  min-height: 32px;
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line-height);
+}
+
+.md {
+  min-height: 40px;
+}
+
+.lg {
+  min-height: 48px;
+  font-size: var(--text-body-lg-size);
+  line-height: var(--text-body-lg-line-height);
+}
+
+.withLeftIcon {
+  padding-left: calc(var(--space-3) + 20px);
+}
+
+.withRightElement {
+  padding-right: calc(var(--space-3) + 28px);
+}
+
+.leftIcon {
+  position: absolute;
+  top: 50%;
+  left: var(--space-3);
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.rightElement {
+  position: absolute;
+  top: 50%;
+  right: var(--space-3);
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .input::placeholder {

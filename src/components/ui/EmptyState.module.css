@@ -7,6 +7,7 @@
   gap: var(--space-3);
   padding: var(--space-10) var(--space-6);
   color: var(--text-primary);
+  border-left: var(--border-width-strong) solid transparent;
 }
 
 .icon {
@@ -43,4 +44,18 @@
   gap: var(--space-3);
   justify-content: center;
   margin-top: var(--space-2);
+}
+
+.default {
+  border-left-color: var(--border-default);
+}
+
+.positive {
+  border-left-color: var(--status-ok);
+  background: color-mix(in srgb, var(--status-ok-bg) 40%, transparent);
+}
+
+.action {
+  border-left-color: var(--status-attention);
+  background: color-mix(in srgb, var(--status-attention-bg) 40%, transparent);
 }

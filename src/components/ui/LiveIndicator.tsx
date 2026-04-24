@@ -6,17 +6,19 @@ import styles from './LiveIndicator.module.css';
 
 export type LiveIndicatorProps = {
   label?: string;
+  live?: boolean;
   className?: string;
 };
 
-export function LiveIndicator({ label = 'Live', className }: LiveIndicatorProps) {
+export function LiveIndicator({ label, live = true, className }: LiveIndicatorProps) {
+  const text = label ?? (live ? 'Live' : 'Offline');
   return (
-    <span className={cn(styles.root, className)}>
+    <span className={cn(styles.root, !live && styles.offline, className)}>
       <span className={styles.dotWrap} aria-hidden>
         <span className={styles.pulse} />
         <span className={styles.dot} />
       </span>
-      {label}
+      {text}
     </span>
   );
 }

@@ -5,6 +5,7 @@ import { cn } from '@/lib/cn';
 import styles from './EmptyState.module.css';
 
 export type EmptyStateProps = {
+  variant?: 'default' | 'positive' | 'action';
   icon?: React.ReactNode;
   title: string;
   description?: string;
@@ -12,9 +13,16 @@ export type EmptyStateProps = {
   className?: string;
 };
 
-export function EmptyState({ icon, title, description, actions, className }: EmptyStateProps) {
+export function EmptyState({
+  variant = 'default',
+  icon,
+  title,
+  description,
+  actions,
+  className,
+}: EmptyStateProps) {
   return (
-    <div className={cn(styles.root, className)}>
+    <div className={cn(styles.root, styles[variant], className)}>
       {icon ? <div className={styles.icon}>{icon}</div> : null}
       <h2 className={styles.title}>{title}</h2>
       {description ? <p className={styles.description}>{description}</p> : null}

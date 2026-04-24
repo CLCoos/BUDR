@@ -49,3 +49,11 @@
     opacity: 0;
   }
 }
+
+.offline .dot {
+  background-color: var(--text-tertiary);
+}
+
+.offline .pulse {
+  display: none;
+}

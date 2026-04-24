@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation';
-import PortalShell from '@/components/PortalShell';
 import { DesignSystemShowcase } from '@/components/design-system/DesignSystemShowcase';
 import { canAccessDesignSystemPage } from '@/lib/designSystemAccess';
 import { requirePortalAuth } from '@/lib/portalAuth';
@@ -10,9 +9,5 @@ export default async function DesignSystemPage() {
     notFound();
   }
 
-  return (
-    <PortalShell>
-      <DesignSystemShowcase />
-    </PortalShell>
-  );
+  return <DesignSystemShowcase />;
 }
