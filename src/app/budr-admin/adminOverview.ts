@@ -13,6 +13,16 @@ export type OrgAdminOverviewRow = {
   activitySeries: OrgActivityPoint[];
 };
 
+export type IncompleteUserRow = {
+  userId: string;
+  email: string;
+  orgId: string | null;
+  issue: 'missing_org_id' | 'org_not_found' | 'no_care_staff_row';
+};
+
+export type OrgOption = { id: string; name: string };
+export type RoleOption = { id: string; orgId: string; name: string };
+
 export type OrgActivityPoint = {
   date: string;
   label: string;
@@ -54,12 +64,18 @@ function getAuditBucket(action: string): 'journalEntries' | 'checkIns' | 'logins
 
 export async function getBudrAdminOverview(): Promise<{
   rows: OrgAdminOverviewRow[];
+  incompleteUsers: IncompleteUserRow[];
+  orgOptions: OrgOption[];
+  roleOptions: RoleOption[];
   error: string | null;
 }> {
   const admin = createAdminClient();
   if (!admin) {
     return {
       rows: [],
+      incompleteUsers: [],
+      orgOptions: [],
+      roleOptions: [],
       error: 'Supabase service role mangler. Kan ikke hente organisations-overblik.',
     };
   }
@@ -70,7 +86,13 @@ export async function getBudrAdminOverview(): Promise<{
     .order('created_at', { ascending: false });
 
   if (orgError) {
-    return { rows: [], error: orgError.message };
+    return {
+      rows: [],
+      incompleteUsers: [],
+      orgOptions: [],
+      roleOptions: [],
+      error: orgError.message,
+    };
   }
 
   const orgIds = (orgs ?? []).map((org) => org.id);
@@ -142,5 +164,55 @@ export async function getBudrAdminOverview(): Promise<{
     })
   );
 
-  return { rows, error: null };
+  const orgOptions: OrgOption[] = (orgs ?? []).map((org) => ({ id: org.id, name: org.name }));
+  const { data: rolesData } = await admin
+    .from('org_roles')
+    .select('id,org_id,name')
+    .order('name', { ascending: true });
+  const roleOptions: RoleOption[] = (rolesData ?? []).map((role) => ({
+    id: role.id,
+    orgId: role.org_id,
+    name: role.name,
+  }));
+
+  const usersResult = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  const users = usersResult.data.users ?? [];
+  const userIds = users.map((u) => u.id);
+  const { data: staffRows } = await admin
+    .from('care_staff')
+    .select('id,org_id')
+    .in('id', userIds.length > 0 ? userIds : ['00000000-0000-0000-0000-000000000000']);
+  const staffIndex = new Map((staffRows ?? []).map((row) => [row.id, row.org_id]));
+  const orgIdSet = new Set((orgs ?? []).map((org) => org.id));
+
+  const incompleteUsers: IncompleteUserRow[] = [];
+  for (const user of users) {
+    const email = user.email ?? '(ingen email)';
+    const metadataOrgId =
+      typeof user.user_metadata?.org_id === 'string' ? user.user_metadata.org_id : null;
+    if (!metadataOrgId) {
+      incompleteUsers.push({ userId: user.id, email, orgId: null, issue: 'missing_org_id' });
+      continue;
+    }
+    if (!orgIdSet.has(metadataOrgId)) {
+      incompleteUsers.push({
+        userId: user.id,
+        email,
+        orgId: metadataOrgId,
+        issue: 'org_not_found',
+      });
+      continue;
+    }
+    const staffOrgId = staffIndex.get(user.id) ?? null;
+    if (staffOrgId !== metadataOrgId) {
+      incompleteUsers.push({
+        userId: user.id,
+        email,
+        orgId: metadataOrgId,
+        issue: 'no_care_staff_row',
+      });
+    }
+  }
+
+  return { rows, incompleteUsers, orgOptions, roleOptions, error: null };
 }

@@ -2,8 +2,6 @@
 import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { parseStaffOrgId } from '@/lib/staffOrgScope';
 import AlertPanel from './AlertPanel';
 import BekymringsnotatWidget from './BekymringsnotatWidget';
 import KalenderWidget from './KalenderWidget';
@@ -23,6 +21,7 @@ import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 import { useAlertCount } from '@/hooks/useAlertCount';
 import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
 import { getWidgetStatus, widgetStatusVar } from '@/lib/widgetStatus';
+import { useAuthenticatedUser } from '@/lib/auth/useAuthenticatedUser';
 
 const OverrapportModal = dynamic(() => import('./OverrapportModal'), { ssr: false });
 const OverrapportPanel = dynamic(() => import('./OverrapportPanel'), { ssr: false });
@@ -143,6 +142,7 @@ function DashboardClientInner({
   singleWidget,
 }: DashboardClientProps) {
   const { department } = useCarePortalDepartment();
+  const authState = useAuthenticatedUser();
   const pilotSim = carePortalPilotSimulatedData();
   const { isBingbong, ready: bingbongReady } = useStaffOrgIsBingbong();
   const [headerSubtitle, setHeaderSubtitle] = useState('Care Portal');
@@ -188,39 +188,26 @@ function DashboardClientInner({
   const tab = searchParams.get('tab');
 
   useEffect(() => {
-    const supabase = createClient();
-    if (!supabase) return;
-    void (async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const user = session?.user;
-      if (!user) {
-        setHeaderSubtitle('Care Portal');
-        return;
-      }
+    if (authState.status === 'authenticated') {
       const staffLabel =
-        (typeof user.user_metadata?.display_name === 'string' &&
-        user.user_metadata.display_name.trim().length > 0
-          ? user.user_metadata.display_name.trim()
+        (typeof authState.user.user_metadata?.display_name === 'string' &&
+        authState.user.user_metadata.display_name.trim().length > 0
+          ? authState.user.user_metadata.display_name.trim()
           : null) ??
-        user.email?.split('@')[0] ??
+        authState.user.email?.split('@')[0] ??
         'Team';
-      const orgId = parseStaffOrgId(user.user_metadata?.org_id);
-      if (!orgId) {
-        setHeaderSubtitle(`${staffLabel} · angiv organisation (org_id) på brugeren`);
-        return;
-      }
-      const { data: org } = await supabase
-        .from('organisations')
-        .select('name')
-        .eq('id', orgId)
-        .maybeSingle();
-      const orgName =
-        typeof org?.name === 'string' && org.name.trim() ? org.name.trim() : 'Organisation';
+      const orgName = authState.org.name?.trim() || 'Organisation';
       setHeaderSubtitle(`${orgName} · ${staffLabel}`);
-    })();
-  }, []);
+      return;
+    }
+    if (authState.status === 'authenticated-incomplete') {
+      setHeaderSubtitle('Kontoopsaetning mangler');
+      return;
+    }
+    if (authState.status === 'unauthenticated') {
+      setHeaderSubtitle('Care Portal');
+    }
+  }, [authState]);
 
   useEffect(() => {
     if (tab === 'journal') setJournalOpen(true);

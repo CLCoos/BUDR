@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { useAuthenticatedUser } from '@/lib/auth/useAuthenticatedUser';
 import styles from './UserMenu.module.css';
 
 function getInitials(name: string): string {
@@ -21,26 +22,11 @@ export function UserMenu({ forceOpen = false }: UserMenuProps) {
   const router = useRouter();
   const rootRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(forceOpen);
-  const [name, setName] = useState('Personale');
-  const [email, setEmail] = useState('');
-  const [role, setRole] = useState('Personale');
+  const authState = useAuthenticatedUser();
 
   useEffect(() => {
     setOpen(forceOpen);
   }, [forceOpen]);
-
-  useEffect(() => {
-    const supabase = createClient();
-    if (!supabase) return;
-    supabase.auth.getUser().then(({ data }) => {
-      const user = data.user;
-      if (!user) return;
-      const fullName = (user.user_metadata?.full_name as string | undefined)?.trim();
-      setName(fullName || user.email || 'Personale');
-      setEmail(user.email || '');
-      setRole((user.user_metadata?.role as string | undefined) || 'Personale');
-    });
-  }, []);
 
   useEffect(() => {
     if (!open || forceOpen) return;
@@ -57,6 +43,24 @@ export function UserMenu({ forceOpen = false }: UserMenuProps) {
       document.removeEventListener('keydown', onEscape);
     };
   }, [open, forceOpen]);
+
+  const name = useMemo(() => {
+    if (authState.status === 'authenticated' || authState.status === 'authenticated-incomplete') {
+      const fullName = (authState.user.user_metadata?.full_name as string | undefined)?.trim();
+      return fullName || authState.user.email || 'Personale';
+    }
+    return 'Personale';
+  }, [authState]);
+  const email =
+    authState.status === 'authenticated' || authState.status === 'authenticated-incomplete'
+      ? authState.user.email || ''
+      : '';
+  const role =
+    authState.status === 'authenticated'
+      ? authState.staff.role || 'Personale'
+      : authState.status === 'authenticated-incomplete'
+        ? ((authState.user.user_metadata?.role as string | undefined) ?? 'Personale')
+        : 'Personale';
 
   const initials = useMemo(() => getInitials(name), [name]);
 

@@ -197,7 +197,7 @@ export default function ResidentList({
 
       if (orgErr === 'no_org') {
         setOrgScopeError(
-          'Din bruger mangler org_id i profilen. Tilføj organisationens UUID under bruger-metadata i Supabase Auth.'
+          'Din konto mangler fuld tilknytning til en organisation. Gaa til konto-opsaetning eller kontakt din leder.'
         );
         setResidents([]);
         setLoading(false);

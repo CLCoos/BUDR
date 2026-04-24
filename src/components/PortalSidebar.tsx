@@ -30,6 +30,7 @@ import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext'
 import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 import { CARE_PORTAL_DEPARTMENT_OPTIONS, type CareHouse } from '@/lib/careDemoResidents';
 import { parseCarePortalDepartment } from '@/lib/carePortalHouse';
+import { useAuthenticatedUser } from '@/lib/auth/useAuthenticatedUser';
 
 type NavItem = {
   icon: typeof LayoutDashboard;
@@ -117,6 +118,7 @@ function PortalSidebarInner({
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [departmentOptions, setDepartmentOptions] = useState(CARE_PORTAL_DEPARTMENT_OPTIONS);
+  const authState = useAuthenticatedUser();
   const { department, setDepartment } = useCarePortalDepartment();
   const alertCount = useAlertCount(true, department);
   const pilot = carePortalPilotSimulatedData();
@@ -250,33 +252,29 @@ function PortalSidebarInner({
   }, [pilot, alertCount, staffRole, permissions]);
 
   useEffect(() => {
+    if (authState.status !== 'authenticated') return;
     const supabase = createClient();
     if (!supabase) return;
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
-      const orgId = (user.user_metadata?.org_id as string | undefined) ?? null;
-      if (!orgId) return;
-      void supabase
-        .from('care_residents')
-        .select('onboarding_data')
-        .eq('org_id', orgId)
-        .then(({ data }) => {
-          if (!data || data.length === 0) return;
-          const validHouses = new Set<CareHouse>();
-          for (const row of data as { onboarding_data?: { house?: string } | null }[]) {
-            const house = row.onboarding_data?.house;
-            if (house && ['A', 'B', 'C', 'D', 'TLS'].includes(house)) {
-              validHouses.add(house as CareHouse);
-            }
+    void supabase
+      .from('care_residents')
+      .select('onboarding_data')
+      .eq('org_id', authState.org.id)
+      .then(({ data }) => {
+        if (!data || data.length === 0) return;
+        const validHouses = new Set<CareHouse>();
+        for (const row of data as { onboarding_data?: { house?: string } | null }[]) {
+          const house = row.onboarding_data?.house;
+          if (house && ['A', 'B', 'C', 'D', 'TLS'].includes(house)) {
+            validHouses.add(house as CareHouse);
           }
-          if (validHouses.size === 0) return;
-          const filtered = CARE_PORTAL_DEPARTMENT_OPTIONS.filter((option) =>
-            validHouses.has(option.id)
-          );
-          setDepartmentOptions(filtered);
-        });
-    });
-  }, []);
+        }
+        if (validHouses.size === 0) return;
+        const filtered = CARE_PORTAL_DEPARTMENT_OPTIONS.filter((option) =>
+          validHouses.has(option.id)
+        );
+        setDepartmentOptions(filtered);
+      });
+  }, [authState]);
 
   const handleLogout = async () => {
     const supabase = createClient();

@@ -302,7 +302,8 @@ export default function SettingsClient({
             </div>
             {!orgId && (
               <p className="mt-1.5 text-xs" style={{ color: 'var(--cp-amber)', fontSize: 11 }}>
-                Din bruger mangler org_id i metadata — du kan ikke invitere kolleger endnu.
+                Din konto er ikke fuldt koblet til en organisation endnu, saa du kan ikke invitere
+                kolleger endnu.
               </p>
             )}
           </div>

@@ -58,9 +58,7 @@ function isCarePortalStaffRoute(pathname: string): boolean {
   if (pathname === '/care-portal-login') return false;
   if (isCarePortalDemoRoute(pathname)) return false;
   if (pathname.startsWith('/care-portal-')) return true;
-  return (
-    pathname.startsWith('/handover-workspace') || pathname.startsWith('/resident-360-view')
-  );
+  return pathname.startsWith('/handover-workspace') || pathname.startsWith('/resident-360-view');
 }
 
 function isResidentRoute(pathname: string): boolean {
@@ -146,6 +144,7 @@ async function residentExistsInDb(userId: string): Promise<boolean | null> {
 type StaffAuthResult =
   | { kind: 'ok'; response: NextResponse; permissions: string[] }
   | { kind: 'deactivated'; response: NextResponse }
+  | { kind: 'incomplete'; response: NextResponse }
   | { kind: 'no_session'; response: NextResponse }
   | { kind: 'no_staff_row'; response: NextResponse }
   | { kind: 'misconfigured'; response: NextResponse };
@@ -169,7 +168,7 @@ async function checkStaffAuth(req: NextRequest): Promise<StaffAuthResult> {
         cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value));
         supabaseResponse = NextResponse.next({ request: req });
         cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, options),
+          supabaseResponse.cookies.set(name, value, options)
         );
       },
     },
@@ -183,6 +182,21 @@ async function checkStaffAuth(req: NextRequest): Promise<StaffAuthResult> {
     return { kind: 'no_session', response: supabaseResponse };
   }
 
+  const orgIdFromMetadata =
+    typeof user.user_metadata?.org_id === 'string' ? user.user_metadata.org_id : null;
+  if (!orgIdFromMetadata) {
+    return { kind: 'incomplete', response: supabaseResponse };
+  }
+
+  const { data: orgFromMetadata } = await supabase
+    .from('organisations')
+    .select('id,deactivated_at')
+    .eq('id', orgIdFromMetadata)
+    .maybeSingle();
+  if (!orgFromMetadata || orgFromMetadata.deactivated_at) {
+    return { kind: 'incomplete', response: supabaseResponse };
+  }
+
   const { data: staffRow, error } = await supabase
     .from('care_staff')
     .select('id, role, role_id, org_id')
@@ -190,7 +204,10 @@ async function checkStaffAuth(req: NextRequest): Promise<StaffAuthResult> {
     .maybeSingle();
 
   if (error || !staffRow) {
-    return { kind: 'no_staff_row', response: supabaseResponse };
+    return { kind: 'incomplete', response: supabaseResponse };
+  }
+  if (staffRow.org_id !== orgIdFromMetadata) {
+    return { kind: 'incomplete', response: supabaseResponse };
   }
 
   if (staffRow.org_id) {
@@ -278,6 +295,9 @@ export async function middleware(req: NextRequest) {
     }
     if (auth.kind === 'deactivated') {
       return NextResponse.redirect(new URL('/care-portal-login?error=deactivated', req.url));
+    }
+    if (auth.kind === 'incomplete' && pathname !== '/care-portal-dashboard/setup') {
+      return NextResponse.redirect(new URL('/care-portal-dashboard/setup', req.url));
     }
     if (auth.kind === 'no_staff_row') {
       return NextResponse.redirect(new URL('/care-portal-login?error=unauthorized', req.url));

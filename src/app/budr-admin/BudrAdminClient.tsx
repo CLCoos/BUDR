@@ -31,6 +31,14 @@ type OrgAdminOverviewRow = {
   latestAuditAt: string | null;
   activitySeries: OrgActivityPoint[];
 };
+type IncompleteUserRow = {
+  userId: string;
+  email: string;
+  orgId: string | null;
+  issue: 'missing_org_id' | 'org_not_found' | 'no_care_staff_row';
+};
+type OrgOption = { id: string; name: string };
+type RoleOption = { id: string; orgId: string; name: string };
 
 type HealthFilter = 'all' | 'critical' | 'warning' | 'healthy';
 
@@ -113,10 +121,16 @@ function ActivityTooltip({
 
 export default function BudrAdminClient({
   overviewRows,
+  incompleteUsers,
+  orgOptions,
+  roleOptions,
   overviewError,
   initialHealthFilter,
 }: {
   overviewRows: OrgAdminOverviewRow[];
+  incompleteUsers: IncompleteUserRow[];
+  orgOptions: OrgOption[];
+  roleOptions: RoleOption[];
   overviewError: string | null;
   initialHealthFilter: HealthFilter;
 }) {
@@ -130,6 +144,8 @@ export default function BudrAdminClient({
   const [busyOrgId, setBusyOrgId] = React.useState<string | null>(null);
   const [opsError, setOpsError] = React.useState<string | null>(null);
   const [healthFilter, setHealthFilter] = React.useState<HealthFilter>(initialHealthFilter);
+  const [selectedOrgByUser, setSelectedOrgByUser] = React.useState<Record<string, string>>({});
+  const [selectedRoleByUser, setSelectedRoleByUser] = React.useState<Record<string, string>>({});
   React.useEffect(() => {
     setHealthFilter(parseHealthFilter(searchParams.get('health')));
   }, [searchParams]);
@@ -178,6 +194,34 @@ export default function BudrAdminClient({
       router.refresh();
     } catch {
       setOpsError('Netværksfejl under deaktivering.');
+    } finally {
+      setBusyOrgId(null);
+    }
+  }
+
+  async function attachUser(user: IncompleteUserRow) {
+    const orgId = selectedOrgByUser[user.userId];
+    const roleId = selectedRoleByUser[user.userId];
+    if (!orgId || !roleId) {
+      setOpsError('Vaelg baade organisation og rolle foer tilknytning.');
+      return;
+    }
+    setOpsError(null);
+    setBusyOrgId(user.userId);
+    try {
+      const res = await fetch('/budr-admin/attach-user', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ userId: user.userId, orgId, roleId }),
+      });
+      const payload = (await res.json()) as { ok?: boolean; error?: string };
+      if (!res.ok || !payload.ok) {
+        setOpsError(payload.error ?? 'Kunne ikke tilknytte bruger.');
+        return;
+      }
+      router.refresh();
+    } catch {
+      setOpsError('Netvaerksfejl under tilknytning.');
     } finally {
       setBusyOrgId(null);
     }
@@ -338,6 +382,100 @@ export default function BudrAdminClient({
             </div>
           </section>
         )}
+
+        <section
+          className="rounded-2xl border p-5 sm:p-6"
+          style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
+        >
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold">Brugere uden fuld tilknytning</h2>
+            <p className="text-xs" style={{ color: 'var(--cp-muted)' }}>
+              Knyt brugeren til en organisation og en rolle uden at gaa i Supabase dashboardet.
+            </p>
+          </div>
+          <div className="space-y-2">
+            {incompleteUsers.length === 0 ? (
+              <p className="text-sm" style={{ color: 'var(--cp-muted)' }}>
+                Ingen brugere mangler tilknytning lige nu.
+              </p>
+            ) : (
+              incompleteUsers.map((user) => {
+                const selectedOrg = selectedOrgByUser[user.userId] ?? user.orgId ?? '';
+                const roleCandidates = roleOptions.filter((role) => role.orgId === selectedOrg);
+                return (
+                  <div
+                    key={user.userId}
+                    className="grid grid-cols-1 gap-2 rounded-xl border p-3 md:grid-cols-[2fr_1fr_1fr_auto]"
+                    style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg3)' }}
+                  >
+                    <div>
+                      <p className="text-sm font-medium">{user.email}</p>
+                      <p className="text-xs" style={{ color: 'var(--cp-muted)' }}>
+                        {user.issue === 'missing_org_id'
+                          ? 'Mangler org_id'
+                          : user.issue === 'org_not_found'
+                            ? 'Org findes ikke'
+                            : 'Ingen care_staff-raekke'}
+                      </p>
+                    </div>
+                    <select
+                      value={selectedOrg}
+                      onChange={(event) => {
+                        const orgId = event.target.value;
+                        setSelectedOrgByUser((prev) => ({ ...prev, [user.userId]: orgId }));
+                        setSelectedRoleByUser((prev) => ({ ...prev, [user.userId]: '' }));
+                      }}
+                      className="h-9 rounded-lg border px-2 text-xs"
+                      style={{
+                        borderColor: 'var(--cp-border)',
+                        backgroundColor: 'var(--cp-bg2)',
+                        color: 'var(--cp-text)',
+                      }}
+                    >
+                      <option value="">Vaelg organisation</option>
+                      {orgOptions.map((org) => (
+                        <option key={org.id} value={org.id}>
+                          {org.name}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      value={selectedRoleByUser[user.userId] ?? ''}
+                      onChange={(event) =>
+                        setSelectedRoleByUser((prev) => ({
+                          ...prev,
+                          [user.userId]: event.target.value,
+                        }))
+                      }
+                      className="h-9 rounded-lg border px-2 text-xs"
+                      style={{
+                        borderColor: 'var(--cp-border)',
+                        backgroundColor: 'var(--cp-bg2)',
+                        color: 'var(--cp-text)',
+                      }}
+                    >
+                      <option value="">Vaelg rolle</option>
+                      {roleCandidates.map((role) => (
+                        <option key={role.id} value={role.id}>
+                          {role.name}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => void attachUser(user)}
+                      disabled={busyOrgId === user.userId}
+                      className="h-9 rounded-lg px-3 text-xs font-semibold text-white disabled:opacity-60"
+                      style={{ backgroundColor: 'var(--cp-green)' }}
+                    >
+                      {busyOrgId === user.userId ? 'Gemmer...' : 'Tilknyt bruger'}
+                    </button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </section>
 
         <section
           className="rounded-2xl border p-5 sm:p-6"

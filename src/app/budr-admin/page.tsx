@@ -14,10 +14,13 @@ function parseHealthFilter(
 export default async function BudrAdminPage({ searchParams }: { searchParams?: SearchParams }) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const initialHealthFilter = parseHealthFilter(resolvedSearchParams.health);
-  const { rows, error } = await getBudrAdminOverview();
+  const { rows, incompleteUsers, orgOptions, roleOptions, error } = await getBudrAdminOverview();
   return (
     <BudrAdminClient
       overviewRows={rows}
+      incompleteUsers={incompleteUsers}
+      orgOptions={orgOptions}
+      roleOptions={roleOptions}
       overviewError={error}
       initialHealthFilter={initialHealthFilter}
     />
