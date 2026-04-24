@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { parseStaffOrgId, resolveStaffOrgResidents } from '@/lib/staffOrgScope';
 import { loadShifts } from '@/lib/demoShiftPlan';
+import { useNameDisplay } from '@/lib/residents/useNameDisplay';
 
 function formatHandoverFileDate(d: Date): string {
   const y = d.getFullYear();
@@ -146,6 +147,7 @@ export default function HandoverClient({
   carePortalDark = true,
   useDemoData = false,
 }: HandoverClientProps) {
+  const { formatName, getInitials } = useNameDisplay();
   const [entries, setEntries] = useState<HandoverEntry[]>(() =>
     useDemoData ? initialEntries : []
   );
@@ -273,7 +275,7 @@ export default function HandoverClient({
 
       const { data: rows, error: rowsErr } = await supabase
         .from('care_residents')
-        .select('user_id, display_name, onboarding_data')
+        .select('user_id, first_name, last_name, display_name, onboarding_data')
         .eq('org_id', orgId)
         .order('display_name');
 
@@ -307,11 +309,19 @@ export default function HandoverClient({
 
       const next: HandoverEntry[] = rows.map((r) => {
         const od = (r.onboarding_data as Record<string, string> | null) ?? {};
-        const name = (r.display_name as string)?.trim() || '—';
+        const resident = {
+          first_name: (r.first_name as string | null) ?? null,
+          last_name: (r.last_name as string | null) ?? null,
+          display_name: (r.display_name as string | null) ?? null,
+        };
+        const name = formatName(resident);
         return {
           residentId: r.user_id as string,
           residentName: name,
-          initials: (od.avatar_initials ?? name.slice(0, 2)).toUpperCase(),
+          initials:
+            typeof od.avatar_initials === 'string' && od.avatar_initials.trim()
+              ? od.avatar_initials.toUpperCase()
+              : getInitials(resident),
           flagColor: mapCheckinTraffic(tlByRes.get(r.user_id as string) ?? null),
           note: '',
           shiftLabel: currentShift,
@@ -325,7 +335,7 @@ export default function HandoverClient({
     return () => {
       cancelled = true;
     };
-  }, [useDemoData, currentShift]);
+  }, [useDemoData, currentShift, formatName, getInitials]);
 
   const updateEntry = (residentId: string, updates: Partial<HandoverEntry>) => {
     setEntries((prev) => prev.map((e) => (e.residentId === residentId ? { ...e, ...updates } : e)));

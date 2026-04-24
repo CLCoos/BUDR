@@ -29,6 +29,8 @@ import { createClient } from '@/lib/supabase/client';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
 import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
 import { getWidgetStatus, widgetStatusVar } from '@/lib/widgetStatus';
+import { useNameDisplay } from '@/lib/residents/useNameDisplay';
+import type { ResidentNameFields } from '@/lib/residents/formatName';
 
 export interface MedicationTask {
   id: string;
@@ -123,7 +125,10 @@ type DbResidentMedRow = {
   notes: string | null;
 };
 
-async function fetchLiveMedicationTasksForOrg(): Promise<MedicationTask[]> {
+async function fetchLiveMedicationTasksForOrg(
+  formatName: (resident: ResidentNameFields) => string,
+  getInitials: (resident: ResidentNameFields) => string
+): Promise<MedicationTask[]> {
   const supabase = createClient();
   if (!supabase) return [];
 
@@ -132,7 +137,7 @@ async function fetchLiveMedicationTasksForOrg(): Promise<MedicationTask[]> {
 
   const { data: resRows } = await supabase
     .from('care_residents')
-    .select('user_id, display_name, onboarding_data')
+    .select('user_id, first_name, last_name, display_name, onboarding_data')
     .eq('org_id', orgId)
     .in('user_id', residentIds);
 
@@ -144,6 +149,8 @@ async function fetchLiveMedicationTasksForOrg(): Promise<MedicationTask[]> {
   for (const row of resRows ?? []) {
     const r = row as {
       user_id: string;
+      first_name: string | null;
+      last_name: string | null;
       display_name: string;
       onboarding_data: unknown;
     };
@@ -152,15 +159,9 @@ async function fetchLiveMedicationTasksForOrg(): Promise<MedicationTask[]> {
     const initials =
       typeof initialsRaw === 'string' && initialsRaw.trim().length > 0
         ? initialsRaw.trim().slice(0, 3).toUpperCase()
-        : r.display_name
-            .split(/\s+/)
-            .filter(Boolean)
-            .map((w) => w[0]!)
-            .join('')
-            .slice(0, 3)
-            .toUpperCase();
+        : getInitials(r);
     resMeta.set(r.user_id, {
-      name: r.display_name,
+      name: formatName(r),
       initials,
       house: careHouseFromOnboarding(od),
       room: String(od.room ?? '—'),
@@ -703,6 +704,7 @@ function ResidentAbbr({
 type TaskFilter = 'alle' | 'ventende' | 'forsinkede';
 
 export default function MedicationWidget() {
+  const { formatName, getInitials } = useNameDisplay();
   const { department: houseFilter } = useCarePortalDepartment();
   const simulatedMedicin = carePortalPilotSimulatedData();
   const { isBingbong, ready: bingbongReady } = useStaffOrgIsBingbong();
@@ -728,7 +730,7 @@ export default function MedicationWidget() {
         }
         return;
       }
-      const live = await fetchLiveMedicationTasksForOrg();
+      const live = await fetchLiveMedicationTasksForOrg(formatName, getInitials);
       if (!cancelled) {
         setEntries(live);
         setHydrated(true);
@@ -738,7 +740,7 @@ export default function MedicationWidget() {
     return () => {
       cancelled = true;
     };
-  }, [simulatedMedicin, bingbongReady, pilotMedicinMock]);
+  }, [simulatedMedicin, bingbongReady, pilotMedicinMock, formatName, getInitials]);
 
   useEffect(() => {
     const t = window.setInterval(() => setNowTick(Date.now()), 60_000);

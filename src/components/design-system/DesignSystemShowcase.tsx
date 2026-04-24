@@ -55,7 +55,7 @@ const spacingTokens = ['1', '2', '3', '4', '5', '6', '8', '10', '12', '16', '20'
 const typographyRows = [
   {
     token: 'text-display-xl',
-    text: 'Varm Praecision',
+    text: 'Varm Præcision',
     style: {
       fontFamily: 'var(--font-display)',
       fontSize: 'var(--text-display-xl-size)',
@@ -64,7 +64,7 @@ const typographyRows = [
   },
   {
     token: 'text-display-lg',
-    text: 'Varm Praecision',
+    text: 'Varm Præcision',
     style: {
       fontFamily: 'var(--font-display)',
       fontSize: 'var(--text-display-lg-size)',
@@ -73,7 +73,7 @@ const typographyRows = [
   },
   {
     token: 'text-display-md',
-    text: 'Varm Praecision',
+    text: 'Varm Præcision',
     style: {
       fontFamily: 'var(--font-display)',
       fontSize: 'var(--text-display-md-size)',
@@ -82,7 +82,7 @@ const typographyRows = [
   },
   {
     token: 'text-display-sm',
-    text: 'Varm Praecision',
+    text: 'Varm Præcision',
     style: {
       fontFamily: 'var(--font-display)',
       fontSize: 'var(--text-display-sm-size)',
@@ -186,7 +186,7 @@ export function DesignSystemShowcase() {
                 applyBudrTheme(next);
               }}
             >
-              <option value="dark">mork</option>
+              <option value="dark">mørk</option>
               <option value="light">lyst</option>
             </select>
           </label>
@@ -236,7 +236,7 @@ export function DesignSystemShowcase() {
               ))}
             </div>
             <pre className={styles.code}>
-              <code>{`<p style={{ fontSize: 'var(--text-body-md-size)' }}>Eksempeltekst</p>`}</code>
+              <code>{`<p className="text-body-md">Eksempeltekst</p>`}</code>
             </pre>
           </section>
 
@@ -244,14 +244,18 @@ export function DesignSystemShowcase() {
             <h2 className={styles.sectionTitle}>Spacing</h2>
             <div className={styles.stack}>
               {spacingTokens.map((space) => (
-                <div className={styles.spacingItem} key={space}>
-                  <span className={styles.typeLabel}>{`space-${space}`}</span>
-                  <div className={styles.spacingBar} style={{ height: `var(--space-${space})` }} />
+                <div className={styles.spaceRow} key={space}>
+                  <code className={styles.typeLabel}>{`space-${space}`}</code>
+                  <div
+                    className={styles.spaceSquare}
+                    style={{ width: `var(--space-${space})`, height: `var(--space-${space})` }}
+                  />
+                  <span className={styles.mono}>{`var(--space-${space})`}</span>
                 </div>
               ))}
             </div>
             <pre className={styles.code}>
-              <code>{`<div style={{ padding: 'var(--space-4)' }} />`}</code>
+              <code>{`<div className="text-body-md">Spacing med tokens</div>`}</code>
             </pre>
           </section>
 
@@ -286,9 +290,14 @@ export function DesignSystemShowcase() {
                 <Button fullWidth>Full width</Button>
               </div>
               <div style={{ marginTop: 'var(--space-3)' }}>
-                <Button onClick={() => setFocusCount((n) => n + 1)}>
-                  Interaktiv test (klik: {focusCount})
-                </Button>
+                <div className={styles.row}>
+                  <Button onClick={() => setFocusCount((n) => n + 1)}>
+                    Interaktiv test (klik: {focusCount})
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setFocusCount(0)}>
+                    Reset
+                  </Button>
+                </div>
               </div>
             </div>
             <pre className={styles.code}>

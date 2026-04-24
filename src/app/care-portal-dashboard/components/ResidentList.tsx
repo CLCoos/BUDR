@@ -12,6 +12,7 @@ import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext'
 import type { CareHouse } from '@/lib/careDemoResidents';
 import { onboardingHouseToCareHouse } from '@/lib/carePortalHouse';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
+import { useNameDisplay } from '@/lib/residents/useNameDisplay';
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -61,6 +62,8 @@ interface CheckinRow {
 
 interface CareResidentRow {
   user_id: string;
+  first_name: string | null;
+  last_name: string | null;
   display_name: string;
   onboarding_data: Record<string, unknown> | null;
 }
@@ -138,6 +141,7 @@ export default function ResidentList({
   compact?: boolean;
   onNewJournal?: (residentId: string) => void;
 }) {
+  const { formatName, getInitials } = useNameDisplay();
   const { department } = useCarePortalDepartment();
   const router = useRouter();
   const [residents, setResidents] = useState<Resident[]>([]);
@@ -210,7 +214,7 @@ export default function ResidentList({
 
       const { data: careResidents, error: resErr } = await supabase
         .from('care_residents')
-        .select('user_id, display_name, onboarding_data')
+        .select('user_id, first_name, last_name, display_name, onboarding_data')
         .eq('org_id', orgId)
         .order('display_name');
 
@@ -254,13 +258,14 @@ export default function ResidentList({
 
       const merged: Resident[] = ((careResidents ?? []) as CareResidentRow[]).map((r) => {
         const od = r.onboarding_data ?? {};
+        const renderedName = formatName(r);
         const base: Resident = {
           id: r.user_id,
-          name: r.display_name,
+          name: renderedName,
           initials:
             typeof od.avatar_initials === 'string' && od.avatar_initials.trim().length > 0
               ? od.avatar_initials.trim().toUpperCase().slice(0, 4)
-              : r.display_name.slice(0, 2).toUpperCase(),
+              : getInitials(r),
           room: typeof od.room === 'string' && od.room.trim() ? od.room.trim() : '—',
           house: onboardingHouseToCareHouse(od.house),
           trafficLight: null,
@@ -294,7 +299,7 @@ export default function ResidentList({
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [handleRealtimeInsert]);
+  }, [handleRealtimeInsert, formatName, getInitials]);
 
   // ── Filter + search ────────────────────────────────────────
 

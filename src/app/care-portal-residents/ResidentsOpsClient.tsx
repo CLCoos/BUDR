@@ -2,18 +2,22 @@
 
 import React, { useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { formatResidentName, type NameDisplayMode } from '@/lib/residents/formatName';
 
 type ResidentRow = {
   user_id: string;
+  first_name: string | null;
+  last_name: string | null;
   display_name: string;
   created_at: string;
 };
 
 type Props = {
   residents: ResidentRow[];
+  residentNameDisplayMode: NameDisplayMode;
 };
 
-export default function ResidentsOpsClient({ residents }: Props) {
+export default function ResidentsOpsClient({ residents, residentNameDisplayMode }: Props) {
   const [activeResident, setActiveResident] = useState<ResidentRow | null>(null);
   const [pin, setPin] = useState('');
   const [saving, setSaving] = useState(false);
@@ -22,10 +26,13 @@ export default function ResidentsOpsClient({ residents }: Props) {
 
   const sorted = useMemo(
     () =>
-      [...residents].sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      ),
-    [residents]
+      [...residents]
+        .map((resident) => ({
+          ...resident,
+          formatted_name: formatResidentName(resident, residentNameDisplayMode),
+        }))
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+    [residents, residentNameDisplayMode]
   );
 
   async function savePin() {
@@ -116,7 +123,7 @@ export default function ResidentsOpsClient({ residents }: Props) {
                 style={{ borderColor: 'var(--cp-border)' }}
               >
                 <td className="px-4 py-3" style={{ color: 'var(--cp-text)' }}>
-                  {resident.display_name}
+                  {resident.formatted_name}
                 </td>
                 <td className="px-4 py-3" style={{ color: 'var(--cp-muted)' }}>
                   {new Date(resident.created_at).toLocaleDateString('da-DK')}
@@ -159,7 +166,7 @@ export default function ResidentsOpsClient({ residents }: Props) {
               Nulstil PIN
             </h2>
             <p className="mt-1 text-xs" style={{ color: 'var(--cp-muted)' }}>
-              {activeResident.display_name}
+              {formatResidentName(activeResident, residentNameDisplayMode)}
             </p>
             <input
               type="text"

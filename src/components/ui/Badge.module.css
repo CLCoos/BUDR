@@ -11,7 +11,10 @@
 }
 
 .sm {
-  padding: 2px var(--space-2);
+  padding: 3px var(--space-2);
+  font-size: var(--text-label-size);
+  line-height: var(--text-label-line-height);
+  font-weight: 600;
 }
 
 .md {

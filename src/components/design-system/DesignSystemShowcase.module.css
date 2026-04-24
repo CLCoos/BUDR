@@ -147,16 +147,17 @@
   font-size: var(--text-body-xs-size);
 }
 
-.spacingItem {
-  display: grid;
-  grid-template-columns: 120px 1fr;
-  gap: var(--space-4);
-  align-items: center;
+.spaceRow {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-6);
+  padding: var(--space-2) 0;
 }
 
-.spacingBar {
+.spaceSquare {
   background: var(--brand-primary);
   border-radius: var(--radius-sm);
+  flex-shrink: 0;
 }
 
 .componentGrid {

@@ -11,21 +11,32 @@ import {
   type StaffOrgDepartmentScope,
 } from '@/lib/staffOrgScope';
 import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
+import { useNameDisplay } from '@/lib/residents/useNameDisplay';
 
 async function loadResidentNamesByUserId(
   supabase: SupabaseClient,
-  orgId: string
+  orgId: string,
+  formatName: (resident: {
+    first_name: string | null;
+    last_name: string | null;
+    display_name: string | null;
+  }) => string
 ): Promise<Record<string, string>> {
   const { data } = await supabase
     .from('care_residents')
-    .select('user_id, display_name')
+    .select('user_id, first_name, last_name, display_name')
     .eq('org_id', orgId);
 
   const map: Record<string, string> = {};
   for (const r of data ?? []) {
-    const row = r as { user_id: string; display_name: string | null };
+    const row = r as {
+      user_id: string;
+      first_name: string | null;
+      last_name: string | null;
+      display_name: string | null;
+    };
     if (!row.user_id) continue;
-    map[row.user_id] = String(row.display_name ?? '').trim() || 'Ukendt beboer';
+    map[row.user_id] = formatName(row);
   }
   return map;
 }
@@ -72,12 +83,6 @@ interface CrisisAlertDb {
   triggered_at: string;
   status: 'active' | 'acknowledged' | 'resolved';
   trin: number;
-}
-
-function toInitials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
 }
 
 function formatTimestamp(iso: string): string {
@@ -233,6 +238,7 @@ function AlertCard({ alert, group }: { alert: AlertRow; group: 'roed' | 'gul' })
 type AlertPanelProps = { variant?: 'live' | 'demo' };
 
 export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
+  const { formatName, getInitials } = useNameDisplay();
   const { department } = useCarePortalDepartment();
   const [dbAlerts, setDbAlerts] = useState<AlertRow[]>([]);
   const [crisisAlerts, setCrisisAlerts] = useState<AlertRow[]>([]);
@@ -264,7 +270,7 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
       return;
     }
 
-    const nameByUserId = await loadResidentNamesByUserId(supabase, orgId);
+    const nameByUserId = await loadResidentNamesByUserId(supabase, orgId, formatName);
 
     const { data, error } = await supabase
       .from('care_portal_notifications')
@@ -285,7 +291,7 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
         id: n.id,
         residentId: n.resident_id,
         residentName: name,
-        initials: toInitials(name),
+        initials: getInitials({ first_name: null, last_name: null, display_name: name }),
         type: n.type,
         detail: n.detail,
         severity: n.severity,
@@ -296,7 +302,7 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
 
     setDbAlerts(rows);
     setLoading(false);
-  }, [department]);
+  }, [department, formatName, getInitials]);
 
   const fetchCrisisAlerts = useCallback(async () => {
     const supabase = createClient();
@@ -312,7 +318,7 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
       return;
     }
 
-    const nameByUserId = await loadResidentNamesByUserId(supabase, orgId);
+    const nameByUserId = await loadResidentNamesByUserId(supabase, orgId, formatName);
 
     const { data, error } = await supabase
       .from('crisis_alerts')
@@ -332,7 +338,7 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
         id: n.id,
         residentId: n.resident_id,
         residentName: name,
-        initials: toInitials(name),
+        initials: getInitials({ first_name: null, last_name: null, display_name: name }),
         type: 'crisis_alert',
         detail: `Krisehjælp aktiveret (trin ${n.trin})`,
         severity: n.status === 'active' ? 'roed' : 'gul',
@@ -343,7 +349,7 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
     });
 
     setCrisisAlerts(rows);
-  }, [department]);
+  }, [department, formatName, getInitials]);
 
   const fetchInactivity = useCallback(async () => {
     const supabase = createClient();
@@ -363,7 +369,7 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
 
     const { data: residents } = await supabase
       .from('care_residents')
-      .select('user_id, display_name')
+      .select('user_id, first_name, last_name, display_name')
       .eq('org_id', orgId);
 
     if (!residents) return;
@@ -381,12 +387,16 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
     const inactive: AlertRow[] = residents
       .filter((r) => scopedSet.has(r.user_id as string) && !activeIds.has(r.user_id))
       .map((r) => {
-        const name = (r.display_name as string | null) ?? 'Ukendt beboer';
+        const name = formatName({
+          first_name: (r.first_name as string | null) ?? null,
+          last_name: (r.last_name as string | null) ?? null,
+          display_name: (r.display_name as string | null) ?? null,
+        });
         return {
           id: `inaktiv-${r.user_id as string}`,
           residentId: r.user_id as string,
           residentName: name,
-          initials: toInitials(name),
+          initials: getInitials({ first_name: null, last_name: null, display_name: name }),
           type: 'inaktivitet' as AlertType,
           detail: 'Ingen check-in i over 48 timer',
           severity: 'gul' as Severity,
@@ -397,7 +407,7 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
       });
 
     setInactiveAlerts(inactive);
-  }, [department]);
+  }, [department, formatName, getInitials]);
 
   useEffect(() => {
     if (variant === 'demo') {

@@ -72,11 +72,11 @@
 
 .tertiary {
   background-color: transparent;
-  color: var(--status-neutral);
+  color: var(--brand-primary);
 }
 
 .tertiary:hover:not(:disabled) {
-  background-color: var(--status-neutral-bg);
+  background-color: var(--status-ok-bg);
 }
 
 .destructive {

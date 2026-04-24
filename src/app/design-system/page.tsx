@@ -1,11 +1,15 @@
 import { notFound } from 'next/navigation';
 import { DesignSystemShowcase } from '@/components/design-system/DesignSystemShowcase';
 import { canAccessDesignSystemPage } from '@/lib/designSystemAccess';
-import { requirePortalAuth } from '@/lib/portalAuth';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export default async function DesignSystemPage() {
-  const user = await requirePortalAuth();
-  if (!canAccessDesignSystemPage(user.email ?? undefined)) {
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
+
+  if (!canAccessDesignSystemPage(user?.email ?? undefined)) {
     notFound();
   }
 

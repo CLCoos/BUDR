@@ -16,6 +16,7 @@ import type { DailyPlan, PendingProposal } from './components/DagsPlanPortal';
 import type { MedDefinition } from './components/types';
 import type { ResidentExportInput } from '@/lib/residentExport/types';
 import { copenhagenStartOfTodayUtcIso } from '@/lib/copenhagenDay';
+import { formatResidentName, getInitials } from '@/lib/residents/formatName';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -69,7 +70,7 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
   ] = await Promise.all([
     supabase
       .from('care_residents')
-      .select('user_id, display_name, onboarding_data')
+      .select('user_id, first_name, last_name, display_name, onboarding_data')
       .eq('user_id', residentId)
       .single(),
     supabase
@@ -201,8 +202,22 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
   return {
     resident: {
       id: r.user_id as string,
-      name: r.display_name as string,
-      initials: od.avatar_initials ?? (r.display_name as string).slice(0, 2).toUpperCase(),
+      name: formatResidentName(
+        {
+          first_name: (r.first_name as string | null) ?? null,
+          last_name: (r.last_name as string | null) ?? null,
+          display_name: (r.display_name as string | null) ?? null,
+        },
+        'full_name'
+      ),
+      initials:
+        typeof od.avatar_initials === 'string' && od.avatar_initials.trim()
+          ? od.avatar_initials.toUpperCase()
+          : getInitials({
+              first_name: (r.first_name as string | null) ?? null,
+              last_name: (r.last_name as string | null) ?? null,
+              display_name: (r.display_name as string | null) ?? null,
+            }),
       room: od.room ?? '—',
       trafficLight: tl,
       moodScore: c ? (c.mood_score as number) : null,

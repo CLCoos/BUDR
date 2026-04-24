@@ -5,6 +5,7 @@ import { Loader2, UserPlus, CheckCircle2, Copy } from 'lucide-react';
 import { PERMISSIONS, type Permission } from '@/lib/permissions';
 import MarketingCopyCmsCard from './MarketingCopyCmsCard';
 import MarketingSectionsCmsCard from './MarketingSectionsCmsCard';
+import type { NameDisplayMode } from '@/lib/residents/formatName';
 
 type OrgRole = {
   id: string;
@@ -19,6 +20,7 @@ type Props = {
   initialRoles: OrgRole[];
   canManageRoles: boolean;
   canInviteStaff: boolean;
+  initialResidentNameDisplayMode: NameDisplayMode;
 };
 
 type InviteState = 'idle' | 'submitting' | 'success' | 'error';
@@ -29,6 +31,7 @@ export default function SettingsClient({
   initialRoles,
   canManageRoles,
   canInviteStaff,
+  initialResidentNameDisplayMode,
 }: Props) {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -45,6 +48,10 @@ export default function SettingsClient({
   const [editingRoleName, setEditingRoleName] = useState('');
   const [editingPermissions, setEditingPermissions] = useState<Permission[]>([]);
   const [savingRoleId, setSavingRoleId] = useState<string | null>(null);
+  const [residentNameDisplayMode, setResidentNameDisplayMode] = useState<NameDisplayMode>(
+    initialResidentNameDisplayMode
+  );
+  const [savingNameMode, setSavingNameMode] = useState(false);
 
   useEffect(() => {
     void (async () => {
@@ -173,6 +180,25 @@ export default function SettingsClient({
     }
     setRoles((prev) => prev.filter((r) => r.id !== role.id));
     setSelectedRoleId((prev) => (prev === role.id ? (initialRoles[0]?.id ?? '') : prev));
+  };
+
+  const saveResidentNameMode = async (mode: NameDisplayMode) => {
+    setResidentNameDisplayMode(mode);
+    setSavingNameMode(true);
+    try {
+      const res = await fetch('/api/portal/resident-name-display-mode', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ mode }),
+      });
+      if (!res.ok) {
+        setRoleError('Kunne ikke gemme visning af beboernavne.');
+        setResidentNameDisplayMode(initialResidentNameDisplayMode);
+      }
+    } finally {
+      setSavingNameMode(false);
+    }
   };
 
   return (
@@ -502,6 +528,48 @@ export default function SettingsClient({
               )}
             </button>
           </form>
+        )}
+      </section>
+
+      <section
+        className="rounded-xl p-5 space-y-4"
+        style={{
+          backgroundColor: 'var(--cp-bg2)',
+          border: '1px solid var(--cp-border)',
+        }}
+      >
+        <h2 className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+          Visning af beboere
+        </h2>
+        {!canManageRoles ? (
+          <p className="text-xs" style={{ color: 'var(--cp-muted)' }}>
+            Kun ledelse kan ændre navneformat.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {(
+              [
+                ['first_name_initial', 'Fornavn + initial (Christian C.)'],
+                ['full_name', 'Fulde navne (Christian Cloos)'],
+                ['initials_only', 'Kun initialer (CJT)'],
+              ] as Array<[NameDisplayMode, string]>
+            ).map(([mode, label]) => (
+              <label
+                key={mode}
+                className="flex cursor-pointer items-center gap-2 text-sm"
+                style={{ color: 'var(--cp-text)' }}
+              >
+                <input
+                  type="radio"
+                  name="resident_name_mode"
+                  checked={residentNameDisplayMode === mode}
+                  disabled={savingNameMode}
+                  onChange={() => void saveResidentNameMode(mode)}
+                />
+                <span>{label}</span>
+              </label>
+            ))}
+          </div>
         )}
       </section>
 

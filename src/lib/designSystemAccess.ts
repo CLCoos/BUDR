@@ -5,8 +5,13 @@ const ALLOWED_EMAIL = 'christian@budrcare.dk';
  * Bruges af `/design-system` (staff-login + allowlist).
  */
 export function canAccessDesignSystemPage(email: string | undefined): boolean {
+  if (process.env.NODE_ENV !== 'production') return true;
+
   const flag = process.env.NEXT_PUBLIC_DESIGN_SYSTEM_ENABLED?.trim();
-  if (flag === 'true') return true;
+  const legacyFlag = process.env.NEXT_PUBLIC_DESIGN_SYSTEM_ACCESS?.trim().toLowerCase();
+  if (flag === 'true' || legacyFlag === 'true' || legacyFlag === '1' || legacyFlag === 'yes')
+    return true;
+
   const normalized = email?.trim().toLowerCase();
   return normalized === ALLOWED_EMAIL;
 }

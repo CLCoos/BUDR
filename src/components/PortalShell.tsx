@@ -6,6 +6,7 @@ import { getStaffPermissions } from '@/lib/auth/getStaffPermissions';
 import { getPortalStaffRole } from '@/lib/portalAuth';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getOrganisationForStaff } from '@/lib/supabase/organisation';
+import { CurrentOrgProvider } from '@/contexts/CurrentOrgContext';
 
 export default async function PortalShell({ children }: { children: React.ReactNode }) {
   const supabase = await createServerSupabaseClient();
@@ -16,28 +17,36 @@ export default async function PortalShell({ children }: { children: React.ReactN
   ]);
 
   return (
-    <CarePortalDepartmentProvider>
-      <div
-        id="care-portal-shell"
-        data-theme="dark"
-        className="cp-demo-ambient flex h-screen flex-col overflow-hidden text-[15px] antialiased"
-        style={{ backgroundColor: 'var(--cp-bg)' }}
-      >
-        <CarePortalTopNav />
+    <CurrentOrgProvider
+      value={{
+        id: org?.id ?? null,
+        name: org?.name ?? null,
+        resident_name_display_mode: org?.resident_name_display_mode ?? 'first_name_initial',
+      }}
+    >
+      <CarePortalDepartmentProvider>
         <div
-          className="flex min-h-0 flex-1 flex-col overflow-hidden pt-[52px]"
+          id="care-portal-shell"
+          data-theme="dark"
+          className="cp-demo-ambient flex h-screen flex-col overflow-hidden text-[15px] antialiased"
           style={{ backgroundColor: 'var(--cp-bg)' }}
         >
-          <PortalMobileNav
-            orgName={org?.name ?? null}
-            orgLogoUrl={org?.logo_url ?? null}
-            staffRole={staffRole}
-            permissions={permissions}
+          <CarePortalTopNav />
+          <div
+            className="flex min-h-0 flex-1 flex-col overflow-hidden pt-[52px]"
+            style={{ backgroundColor: 'var(--cp-bg)' }}
           >
-            <div className="cp-page-enter">{children}</div>
-          </PortalMobileNav>
+            <PortalMobileNav
+              orgName={org?.name ?? null}
+              orgLogoUrl={org?.logo_url ?? null}
+              staffRole={staffRole}
+              permissions={permissions}
+            >
+              <div className="cp-page-enter">{children}</div>
+            </PortalMobileNav>
+          </div>
         </div>
-      </div>
-    </CarePortalDepartmentProvider>
+      </CarePortalDepartmentProvider>
+    </CurrentOrgProvider>
   );
 }

@@ -5,6 +5,7 @@ import PortalShell from '@/components/PortalShell';
 import ResidentOverviewGrid from './components/ResidentOverviewGrid';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { parseStaffOrgId } from '@/lib/staffOrgScope';
+import { formatResidentName, getInitials, type NameDisplayMode } from '@/lib/residents/formatName';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -36,7 +37,8 @@ export type ResidentItem = {
 
 async function fetchResidentsOverview(
   supabase: SupabaseClient,
-  orgId: string
+  orgId: string,
+  mode: NameDisplayMode
 ): Promise<ResidentItem[]> {
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
@@ -44,7 +46,7 @@ async function fetchResidentsOverview(
   const [residentsRes, checkinsRes, proposalsRes] = await Promise.all([
     supabase
       .from('care_residents')
-      .select('user_id, display_name, onboarding_data')
+      .select('user_id, first_name, last_name, display_name, onboarding_data')
       .eq('org_id', orgId)
       .order('display_name'),
     supabase
@@ -57,6 +59,8 @@ async function fetchResidentsOverview(
 
   const residents = (residentsRes.data ?? []) as {
     user_id: string;
+    first_name: string | null;
+    last_name: string | null;
     display_name: string;
     onboarding_data: Record<string, string> | null;
   }[];
@@ -98,8 +102,11 @@ async function fetchResidentsOverview(
 
     return {
       id: r.user_id,
-      name: r.display_name,
-      initials: od.avatar_initials ?? r.display_name.slice(0, 2).toUpperCase(),
+      name: formatResidentName(r, mode),
+      initials:
+        typeof od.avatar_initials === 'string' && od.avatar_initials.trim()
+          ? od.avatar_initials.toUpperCase()
+          : getInitials(r),
       room: od.room ?? '—',
       house: od.house ?? '—',
       trafficLight: tl,
@@ -125,7 +132,18 @@ export default async function Resident360ViewPage() {
   const orgId = parseStaffOrgId(user.user_metadata?.org_id);
   if (!orgId) redirect('/care-portal-dashboard/settings');
 
-  const residents = await fetchResidentsOverview(supabase, orgId);
+  const { data: org } = await supabase
+    .from('organisations')
+    .select('resident_name_display_mode')
+    .eq('id', orgId)
+    .maybeSingle();
+  const mode: NameDisplayMode =
+    org?.resident_name_display_mode === 'full_name' ||
+    org?.resident_name_display_mode === 'initials_only'
+      ? org.resident_name_display_mode
+      : 'first_name_initial';
+
+  const residents = await fetchResidentsOverview(supabase, orgId, mode);
 
   return (
     <PortalShell>

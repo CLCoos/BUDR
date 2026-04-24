@@ -1,10 +1,13 @@
 import { createServerSupabaseClient } from './server';
+import type { NameDisplayMode } from '@/lib/residents/formatName';
 
 export interface OrgBranding {
+  id: string;
   name: string;
   logo_url: string | null;
   primary_color: string;
   slug: string | null;
+  resident_name_display_mode: NameDisplayMode;
 }
 
 /**
@@ -26,16 +29,22 @@ export async function getOrganisationForStaff(): Promise<OrgBranding | null> {
 
   const { data, error } = await supabase
     .from('organisations')
-    .select('name, logo_url, primary_color, slug')
+    .select('id, name, logo_url, primary_color, slug, resident_name_display_mode')
     .eq('id', orgId)
     .single();
 
   if (error || !data) return null;
 
   return {
+    id: data.id as string,
     name: data.name as string,
     logo_url: (data.logo_url as string | null) ?? null,
     primary_color: (data.primary_color as string) ?? '#1D9E75',
     slug: typeof data.slug === 'string' && data.slug.trim() ? data.slug.trim() : null,
+    resident_name_display_mode:
+      data.resident_name_display_mode === 'full_name' ||
+      data.resident_name_display_mode === 'initials_only'
+        ? data.resident_name_display_mode
+        : 'first_name_initial',
   };
 }
