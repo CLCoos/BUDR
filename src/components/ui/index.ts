@@ -5,4 +5,5 @@ export { EmptyState, type EmptyStateProps } from './EmptyState';
 export { Input, type InputProps } from './Input';
 export { LiveIndicator, type LiveIndicatorProps } from './LiveIndicator';
 export { PageHeader, type PageHeaderProps } from './PageHeader';
+export { TrafficDot, type TrafficDotSize, type TrafficValue } from './TrafficDot';
 export { ThemeToggle } from './ThemeToggle';

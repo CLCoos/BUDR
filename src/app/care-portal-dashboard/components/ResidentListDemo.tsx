@@ -4,6 +4,10 @@ import { Search, ChevronRight, Clock, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { CARE_DEMO_RESIDENT_PROFILES, type CareHouse } from '@/lib/careDemoResidents';
 import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
+import {
+  TrafficLightFilter,
+  type TrafficFilterValue,
+} from '@/components/patterns/TrafficLightFilter';
 
 type TrafficUi = 'groen' | 'gul' | 'roed';
 
@@ -182,7 +186,7 @@ type ResidentListDemoProps = {
 export default function ResidentListDemo({ onNewJournal }: ResidentListDemoProps) {
   const { department: houseFilter } = useCarePortalDepartment();
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'alle' | TrafficUi | 'ingen'>('alle');
+  const [filter, setFilter] = useState<TrafficFilterValue>('all');
 
   const residentsInDept = useMemo(() => {
     if (houseFilter === 'alle') return DEMO_RESIDENTS;
@@ -199,12 +203,27 @@ export default function ResidentListDemo({ onNewJournal }: ResidentListDemoProps
         r.room.toLowerCase().includes(q) ||
         r.house.toLowerCase().includes(q);
       const matchFilter =
-        filter === 'alle' ? true : filter === 'ingen' ? !r.trafficLight : r.trafficLight === filter;
+        filter === 'all'
+          ? true
+          : filter === 'none'
+            ? !r.trafficLight
+            : (filter === 'red' ? 'roed' : filter === 'yellow' ? 'gul' : 'groen') ===
+              r.trafficLight;
       return matchSearch && matchFilter;
     });
   }, [search, filter, residentsInDept]);
 
   const checkinCount = residentsInDept.filter((r) => r.checkinToday).length;
+  const trafficCounts = useMemo(
+    () => ({
+      all: residentsInDept.length,
+      red: residentsInDept.filter((r) => r.trafficLight === 'roed').length,
+      yellow: residentsInDept.filter((r) => r.trafficLight === 'gul').length,
+      green: residentsInDept.filter((r) => r.trafficLight === 'groen').length,
+      none: residentsInDept.filter((r) => !r.trafficLight).length,
+    }),
+    [residentsInDept]
+  );
 
   return (
     <div className="cp-card-elevated overflow-hidden">
@@ -255,42 +274,13 @@ export default function ResidentListDemo({ onNewJournal }: ResidentListDemoProps
               }}
             />
           </div>
-          <div className="flex shrink-0 flex-wrap gap-1">
-            {(['alle', 'roed', 'gul', 'groen', 'ingen'] as const).map((f) => {
-              const active = filter === f;
-              return (
-                <button
-                  key={`filter-${f}`}
-                  type="button"
-                  onClick={() => setFilter(f)}
-                  className="rounded-[10px] px-2.5 py-2 text-xs font-medium transition-all"
-                  style={
-                    active
-                      ? {
-                          backgroundColor: 'var(--cp-green-dim)',
-                          color: 'var(--cp-green)',
-                          border: '1px solid rgba(45,212,160,0.35)',
-                        }
-                      : {
-                          backgroundColor: 'var(--cp-bg3)',
-                          color: 'var(--cp-muted)',
-                          border: '1px solid var(--cp-border)',
-                        }
-                  }
-                >
-                  {f === 'alle'
-                    ? 'Alle'
-                    : f === 'roed'
-                      ? '🔴'
-                      : f === 'gul'
-                        ? '🟡'
-                        : f === 'groen'
-                          ? '🟢'
-                          : '—'}
-                </button>
-              );
-            })}
-          </div>
+          <TrafficLightFilter
+            value={filter}
+            onChange={setFilter}
+            size="sm"
+            showLabels={false}
+            counts={trafficCounts}
+          />
         </div>
       </div>
 

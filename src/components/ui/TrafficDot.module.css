@@ -1,0 +1,22 @@
+.dot {
+  display: inline-block;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.red {
+  background: var(--traffic-red);
+}
+
+.yellow {
+  background: var(--traffic-yellow);
+}
+
+.green {
+  background: var(--traffic-green);
+}
+
+.none {
+  background: transparent;
+  border: var(--border-width) dashed var(--border-default);
+}

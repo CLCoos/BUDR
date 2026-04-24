@@ -21,12 +21,15 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import DepartmentSelect from '@/components/DepartmentSelect';
 import { createClient } from '@/lib/supabase/client';
 import { hasPermission } from '@/lib/auth/hasPermission';
 import { PERMISSIONS, type Permission } from '@/lib/permissions';
 import { useAlertCount } from '@/hooks/useAlertCount';
 import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
 import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
+import { CARE_PORTAL_DEPARTMENT_OPTIONS, type CareHouse } from '@/lib/careDemoResidents';
+import { parseCarePortalDepartment } from '@/lib/carePortalHouse';
 
 type NavItem = {
   icon: typeof LayoutDashboard;
@@ -38,6 +41,11 @@ type NavItem = {
   activeMatch?: 'residents' | 'vagtplan' | 'park' | 'dagbog' | 'alerts' | 'planner' | 'journal';
   /** Vis kun for staff med denne rolle */
   roleOnly?: 'leder' | 'medarbejder';
+};
+
+type NavGroup = {
+  label: string;
+  items: NavItem[];
 };
 
 function pathFromHref(href: string): string {
@@ -108,113 +116,137 @@ function PortalSidebarInner({
   const searchParams = useSearchParams();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
-  const [displayName, setDisplayName] = useState<string>('');
-  const [initials, setInitials] = useState<string>('');
-  const { department } = useCarePortalDepartment();
+  const [departmentOptions, setDepartmentOptions] = useState(CARE_PORTAL_DEPARTMENT_OPTIONS);
+  const { department, setDepartment } = useCarePortalDepartment();
   const alertCount = useAlertCount(true, department);
   const pilot = carePortalPilotSimulatedData();
 
-  const navItems = useMemo((): NavItem[] => {
+  const navGroups = useMemo((): NavGroup[] => {
     const residentsHref = pilot ? '/care-portal-residents' : '/resident-360-view';
     const msgBadge = pilot ? 2 : 0;
-    const base: NavItem[] = [
+    const groups: NavGroup[] = [
       {
-        icon: LayoutDashboard,
-        label: 'Dashboard',
-        href: '/care-portal-dashboard',
-        badge: 0,
-        cpActiveTab: null,
-      },
-      { icon: ClipboardList, label: 'Vagtoverlev.', href: '/handover-workspace', badge: 0 },
-      {
-        icon: Users,
-        label: 'Beboere',
-        href: residentsHref,
-        badge: 0,
-        activeMatch: 'residents',
-      },
-      ...(pilot
-        ? []
-        : [
-            {
-              icon: BookMarked,
-              label: 'Aftenopsamling',
-              href: '/resident-360-view/dagbog',
-              badge: 0,
-              activeMatch: 'dagbog' as const,
-            },
-          ]),
-      {
-        icon: Bell,
-        label: 'Advarsler',
-        href: '/care-portal-alerts',
-        badge: 0,
-        activeMatch: 'alerts',
+        label: 'Overblik',
+        items: [
+          {
+            icon: LayoutDashboard,
+            label: 'Dashboard',
+            href: '/care-portal-dashboard',
+            badge: 0,
+            cpActiveTab: null,
+          },
+        ],
       },
       {
-        icon: Calendar,
-        label: 'Planlægger',
-        href: '/care-portal-planner',
-        badge: 0,
-        activeMatch: 'planner',
+        label: 'Dagligt arbejde',
+        items: [
+          { icon: ClipboardList, label: 'Vagtoverlev.', href: '/handover-workspace', badge: 0 },
+          {
+            icon: Users,
+            label: 'Beboere',
+            href: residentsHref,
+            badge: 0,
+            activeMatch: 'residents',
+          },
+          ...(pilot
+            ? []
+            : [
+                {
+                  icon: BookMarked,
+                  label: 'Aftenopsamling',
+                  href: '/resident-360-view/dagbog',
+                  badge: 0,
+                  activeMatch: 'dagbog' as const,
+                },
+              ]),
+          {
+            icon: Bell,
+            label: 'Advarsler',
+            href: '/care-portal-alerts',
+            badge: 0,
+            activeMatch: 'alerts',
+          },
+        ],
       },
-      ...(hasPermission(permissions, PERMISSIONS.MANAGE_SHIFTS)
-        ? [
-            {
-              icon: CalendarClock,
-              label: 'Vagtplan',
-              href: '/care-portal-vagtplan',
-              badge: 0,
-              activeMatch: 'vagtplan' as const,
-            },
-          ]
-        : []),
       {
-        icon: MessageSquare,
-        label: 'Beskeder',
-        href: '/care-portal-beskeder',
-        badge: msgBadge,
+        label: 'Planlægning',
+        items: [
+          {
+            icon: Calendar,
+            label: 'Planlægger',
+            href: '/care-portal-planner',
+            badge: 0,
+            activeMatch: 'planner',
+          },
+          ...(hasPermission(permissions, PERMISSIONS.MANAGE_SHIFTS)
+            ? [
+                {
+                  icon: CalendarClock,
+                  label: 'Vagtplan',
+                  href: '/care-portal-vagtplan',
+                  badge: 0,
+                  activeMatch: 'vagtplan' as const,
+                },
+              ]
+            : []),
+          {
+            icon: MessageSquare,
+            label: 'Beskeder',
+            href: '/care-portal-beskeder',
+            badge: msgBadge,
+          },
+          {
+            icon: BookOpen,
+            label: 'Journal',
+            href: '/care-portal-journal',
+            badge: 0,
+            activeMatch: 'journal',
+          },
+        ],
       },
       {
-        icon: BookOpen,
-        label: 'Journal',
-        href: '/care-portal-journal',
-        badge: 0,
-        activeMatch: 'journal',
+        label: 'Værktøjer',
+        items: [
+          ...(hasPermission(permissions, PERMISSIONS.IMPORT_RESIDENTS)
+            ? [
+                {
+                  icon: Upload,
+                  label: 'Importer beboere',
+                  href: '/care-portal-import',
+                  badge: 0,
+                },
+              ]
+            : []),
+          ...(hasPermission(permissions, PERMISSIONS.MANAGE_ROLES)
+            ? [
+                {
+                  icon: Settings,
+                  label: 'Roller',
+                  href: '/care-portal-roles',
+                  badge: 0,
+                },
+              ]
+            : []),
+          { icon: BrainCircuit, label: 'Faglig støtte', href: '/care-portal-assistant', badge: 0 },
+          {
+            icon: Sparkles,
+            label: 'Borger-app (Lys)',
+            href: '/park-hub',
+            badge: 0,
+            activeMatch: 'park',
+          },
+        ],
       },
-      ...(hasPermission(permissions, PERMISSIONS.IMPORT_RESIDENTS)
-        ? [
-            {
-              icon: Upload,
-              label: 'Importer beboere',
-              href: '/care-portal-import',
-              badge: 0,
-            },
-          ]
-        : []),
-      ...(hasPermission(permissions, PERMISSIONS.MANAGE_ROLES)
-        ? [
-            {
-              icon: Settings,
-              label: 'Roller',
-              href: '/care-portal-roles',
-              badge: 0,
-            },
-          ]
-        : []),
-      { icon: BrainCircuit, label: 'Faglig støtte', href: '/care-portal-assistant', badge: 0 },
-      {
-        icon: Sparkles,
-        label: 'Borger-app (Lys)',
-        href: '/park-hub',
-        badge: 0,
-        activeMatch: 'park',
-      },
-      { icon: Settings, label: 'Indstillinger', href: '/care-portal-dashboard/settings', badge: 0 },
     ];
-    return base
-      .filter((item) => !item.roleOnly || item.roleOnly === staffRole)
-      .map((item) => (item.cpActiveTab === 'alerts' ? { ...item, badge: alertCount } : item));
+
+    return groups
+      .map((group) => ({
+        ...group,
+        items: group.items
+          .filter((item) => !item.roleOnly || item.roleOnly === staffRole)
+          .map((item) => (item.cpActiveTab === 'alerts' ? { ...item, badge: alertCount } : item)),
+      }))
+      .filter((group) => group.items.length > 0);
   }, [pilot, alertCount, staffRole, permissions]);
 
   useEffect(() => {
@@ -222,15 +254,27 @@ function PortalSidebarInner({
     if (!supabase) return;
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
-      const full = user.user_metadata?.full_name as string | undefined;
-      const name = full ?? user.email ?? '';
-      setDisplayName(full ?? user.email ?? '');
-      const parts = name.split(/[\s@]/);
-      setInitials(
-        parts.length >= 2
-          ? (parts[0][0] + parts[1][0]).toUpperCase()
-          : name.slice(0, 2).toUpperCase()
-      );
+      const orgId = (user.user_metadata?.org_id as string | undefined) ?? null;
+      if (!orgId) return;
+      void supabase
+        .from('care_residents')
+        .select('onboarding_data')
+        .eq('org_id', orgId)
+        .then(({ data }) => {
+          if (!data || data.length === 0) return;
+          const validHouses = new Set<CareHouse>();
+          for (const row of data as { onboarding_data?: { house?: string } | null }[]) {
+            const house = row.onboarding_data?.house;
+            if (house && ['A', 'B', 'C', 'D', 'TLS'].includes(house)) {
+              validHouses.add(house as CareHouse);
+            }
+          }
+          if (validHouses.size === 0) return;
+          const filtered = CARE_PORTAL_DEPARTMENT_OPTIONS.filter((option) =>
+            validHouses.has(option.id)
+          );
+          setDepartmentOptions(filtered);
+        });
     });
   }, []);
 
@@ -247,7 +291,7 @@ function PortalSidebarInner({
       className={`
         fixed bottom-0 left-0 z-[10060] flex shrink-0 flex-col
         transition-[transform,width] duration-300
-        top-[calc(52px+9.5rem)] sm:top-[calc(52px+3.5rem)] md:top-[52px]
+        top-[calc(52px+9.5rem)] sm:top-[calc(52px+3.5rem)] md:top-[var(--header-height)]
         md:static md:top-auto md:bottom-auto md:z-auto md:translate-x-0 md:pointer-events-auto
         ${collapsed ? 'w-16' : 'w-56'}
         ${mobileClosed ? '-translate-x-full md:translate-x-0' : 'translate-x-0'}
@@ -312,6 +356,16 @@ function PortalSidebarInner({
                 >
                   Care Portal
                 </div>
+                {departmentOptions.length > 1 ? (
+                  <div className="mt-2 w-full">
+                    <DepartmentSelect
+                      value={department === 'alle' ? 'alle' : department}
+                      onChange={(id) => setDepartment(parseCarePortalDepartment(id))}
+                      departments={departmentOptions}
+                      aria-label="Vælg afdeling for overblikket"
+                    />
+                  </div>
+                ) : null}
               </div>
             )}
           </>
@@ -319,90 +373,131 @@ function PortalSidebarInner({
       </div>
 
       <div className="flex-1 overflow-y-auto py-3 scrollbar-hide cp-scroll">
-        {navItems.map((item) => {
-          const active = navItemActive(pathname, searchParams, item, pilot);
-          return (
-            <Link
-              key={item.label}
-              href={item.href}
-              scroll={item.cpActiveTab === undefined || item.cpActiveTab === null}
-              onClick={() => onMobileClose()}
-            >
+        {navGroups.map((group, groupIndex) => (
+          <section key={group.label} className={groupIndex > 0 ? 'mt-2' : ''}>
+            {!collapsed ? (
               <div
-                className="relative mx-2 mb-0.5 flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 transition-all duration-150 hover:bg-[var(--cp-sidebar-hover-bg)]"
-                style={
-                  active
-                    ? {
-                        backgroundColor: 'var(--cp-sidebar-active-bg)',
-                        color: 'var(--cp-sidebar-text)',
-                      }
-                    : {
-                        color: 'var(--cp-sidebar-muted)',
-                      }
-                }
+                className="px-4 pb-2 pt-4 text-[11px] font-semibold uppercase tracking-[0.08em]"
+                style={{ color: 'var(--cp-sidebar-muted)' }}
               >
-                {active && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: 0,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      width: 2,
-                      height: '60%',
-                      backgroundColor: 'var(--cp-green)',
-                      borderRadius: '0 2px 2px 0',
-                    }}
-                  />
-                )}
-                <item.icon size={16} className="flex-shrink-0" />
-                {!collapsed && (
-                  <span className="flex-1 truncate" style={{ fontSize: 13, fontWeight: 400 }}>
-                    {item.label}
-                  </span>
-                )}
-                {!collapsed && item.badge > 0 && (
-                  <span
-                    className="flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-xs font-bold"
-                    style={{ backgroundColor: 'var(--cp-red-dim)', color: 'var(--cp-red)' }}
-                  >
-                    {item.badge}
-                  </span>
-                )}
+                {group.label}
               </div>
-            </Link>
-          );
-        })}
+            ) : null}
+            {group.items.map((item) => {
+              const active = navItemActive(pathname, searchParams, item, pilot);
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  scroll={item.cpActiveTab === undefined || item.cpActiveTab === null}
+                  onClick={() => onMobileClose()}
+                  title={collapsed ? item.label : undefined}
+                >
+                  <div
+                    className="relative mx-2 mb-0.5 flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 transition-all duration-150 hover:bg-[var(--cp-sidebar-hover-bg)]"
+                    style={
+                      active
+                        ? {
+                            backgroundColor: 'var(--cp-sidebar-active-bg)',
+                            color: 'var(--cp-sidebar-text)',
+                          }
+                        : {
+                            color: 'var(--cp-sidebar-muted)',
+                          }
+                    }
+                  >
+                    {active && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          width: 2,
+                          height: '60%',
+                          backgroundColor: 'var(--cp-green)',
+                          borderRadius: '0 2px 2px 0',
+                        }}
+                      />
+                    )}
+                    <item.icon size={16} className="flex-shrink-0" />
+                    {!collapsed && (
+                      <span className="flex-1 truncate" style={{ fontSize: 13, fontWeight: 400 }}>
+                        {item.label}
+                      </span>
+                    )}
+                    {!collapsed && item.badge > 0 && (
+                      <span
+                        className="flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-xs font-bold"
+                        style={{ backgroundColor: 'var(--cp-red-dim)', color: 'var(--cp-red)' }}
+                      >
+                        {item.badge}
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
+          </section>
+        ))}
       </div>
 
-      <div className="p-3" style={{ borderTop: '1px solid var(--cp-sidebar-border)' }}>
-        {!collapsed && displayName && (
-          <div className="mb-3 flex items-center gap-2 px-1">
+      <div className="p-3">
+        <div
+          className={collapsed ? 'mx-auto my-4 h-1 w-1 rounded-full' : 'mx-4 my-4 h-px'}
+          style={{ background: 'var(--cp-sidebar-border)' }}
+          aria-hidden
+        />
+        {!collapsed ? (
+          <Link href="/care-portal-dashboard/settings" onClick={onMobileClose}>
             <div
-              className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-              style={{ background: 'linear-gradient(135deg, #2dd4a0, #0694a2)' }}
+              className="relative mx-2 mb-2 flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 transition-all duration-150 hover:bg-[var(--cp-sidebar-hover-bg)]"
+              style={{
+                color: navItemActive(
+                  pathname,
+                  searchParams,
+                  {
+                    icon: Settings,
+                    label: 'Indstillinger',
+                    href: '/care-portal-dashboard/settings',
+                    badge: 0,
+                  },
+                  pilot
+                )
+                  ? 'var(--cp-sidebar-text)'
+                  : 'var(--cp-sidebar-muted)',
+              }}
             >
-              {initials}
+              <Settings size={16} className="flex-shrink-0" />
+              <span className="flex-1 truncate" style={{ fontSize: 13, fontWeight: 400 }}>
+                Indstillinger
+              </span>
             </div>
-            <div className="min-w-0">
-              <div
-                className="truncate text-xs font-medium"
-                style={{ color: 'var(--cp-sidebar-text)' }}
-              >
-                {displayName}
-              </div>
-              <div className="truncate text-xs" style={{ color: 'var(--cp-sidebar-muted)' }}>
-                Personale
-              </div>
-            </div>
-          </div>
-        )}
+          </Link>
+        ) : null}
         {!collapsed && (
           <div className="mx-1 mb-2">
             <ThemeToggle />
           </div>
         )}
         <div className="mx-1 flex items-center gap-2">
+          <Link href="/care-portal-dashboard/settings" onClick={onMobileClose}>
+            <button
+              type="button"
+              className="rounded p-1 transition-colors"
+              style={{ color: 'var(--cp-sidebar-muted)' }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.color = 'var(--cp-sidebar-text)';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.color = 'var(--cp-sidebar-muted)';
+              }}
+              aria-label="Indstillinger"
+              title={collapsed ? 'Indstillinger' : undefined}
+            >
+              <Settings size={16} />
+            </button>
+          </Link>
           <button
             type="button"
             onClick={() => void handleLogout()}
@@ -415,27 +510,10 @@ function PortalSidebarInner({
               (e.currentTarget as HTMLElement).style.color = 'var(--cp-sidebar-muted)';
             }}
             aria-label="Log ud"
+            title={collapsed ? 'Log ud' : undefined}
           >
             <LogOut size={16} />
           </button>
-          {!collapsed && (
-            <Link href="/care-portal-dashboard/settings" onClick={onMobileClose}>
-              <button
-                type="button"
-                className="rounded p-1 transition-colors"
-                style={{ color: 'var(--cp-sidebar-muted)' }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.color = 'var(--cp-sidebar-text)';
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.color = 'var(--cp-sidebar-muted)';
-                }}
-                aria-label="Indstillinger"
-              >
-                <Settings size={16} />
-              </button>
-            </Link>
-          )}
         </div>
       </div>
 
@@ -479,7 +557,7 @@ export default function PortalSidebar({
         <aside
           className="fixed bottom-0 left-0 z-40 hidden w-56 shrink-0 md:block"
           style={{
-            top: '52px',
+            top: 'var(--header-height)',
             background: 'var(--cp-sidebar-bg)',
             borderRight: '1px solid var(--cp-sidebar-border)',
           }}

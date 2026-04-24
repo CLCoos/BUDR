@@ -33,7 +33,7 @@ export default async function PortalShell({ children }: { children: React.ReactN
         >
           <CarePortalTopNav />
           <div
-            className="flex min-h-0 flex-1 flex-col overflow-hidden pt-[52px]"
+            className="flex min-h-0 flex-1 flex-col overflow-hidden pt-[var(--header-height)]"
             style={{ backgroundColor: 'var(--cp-bg)' }}
           >
             <PortalMobileNav

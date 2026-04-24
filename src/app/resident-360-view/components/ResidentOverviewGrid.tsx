@@ -11,6 +11,10 @@ import {
 import type { ResidentItem } from '../page';
 import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
 import { onboardingHouseToCareHouse } from '@/lib/carePortalHouse';
+import {
+  TrafficLightFilter,
+  type TrafficFilterValue,
+} from '@/components/patterns/TrafficLightFilter';
 
 // ── Colour tokens ─────────────────────────────────────────────
 
@@ -63,7 +67,7 @@ export default function ResidentOverviewGrid({ residents }: Props) {
   const router = useRouter();
   const { department } = useCarePortalDepartment();
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'alle' | TrafficUi | 'ingen'>('alle');
+  const [filter, setFilter] = useState<TrafficFilterValue>('all');
 
   const residentsInDept = useMemo(() => {
     if (department === 'alle') return residents;
@@ -87,7 +91,12 @@ export default function ResidentOverviewGrid({ residents }: Props) {
         residentNameRoomInitialsMatch(r.name, r.room, r.initials, search) ||
         (ql.length > 0 && r.house.toLowerCase().includes(ql));
       const matchFilter =
-        filter === 'alle' ? true : filter === 'ingen' ? !r.trafficLight : r.trafficLight === filter;
+        filter === 'all'
+          ? true
+          : filter === 'none'
+            ? !r.trafficLight
+            : (filter === 'red' ? 'roed' : filter === 'yellow' ? 'gul' : 'groen') ===
+              r.trafficLight;
       return matchSearch && matchFilter;
     });
     const q = search.trim();
@@ -97,6 +106,16 @@ export default function ResidentOverviewGrid({ residents }: Props) {
   const checkinCount = residentsInDept.filter((r) => r.checkinToday).length;
   const missingCheckin = residentsInDept.length - checkinCount;
   const alertCount = residentsInDept.filter((r) => r.trafficLight === 'roed').length;
+  const trafficCounts = useMemo(
+    () => ({
+      all: residentsInDept.length,
+      red: residentsInDept.filter((r) => r.trafficLight === 'roed').length,
+      yellow: residentsInDept.filter((r) => r.trafficLight === 'gul').length,
+      green: residentsInDept.filter((r) => r.trafficLight === 'groen').length,
+      none: residentsInDept.filter((r) => !r.trafficLight).length,
+    }),
+    [residentsInDept]
+  );
 
   const cardStyle: React.CSSProperties = {
     backgroundColor: 'var(--cp-bg2)',
@@ -227,38 +246,7 @@ export default function ResidentOverviewGrid({ residents }: Props) {
               }}
             />
           </div>
-          <div className="flex flex-wrap gap-1">
-            {(['alle', 'roed', 'gul', 'groen', 'ingen'] as const).map((f) => (
-              <button
-                key={f}
-                type="button"
-                onClick={() => setFilter(f)}
-                className="px-3 py-2 rounded-lg text-xs font-medium transition-all"
-                style={
-                  filter === f
-                    ? {
-                        backgroundColor: 'var(--cp-green-dim)',
-                        color: 'var(--cp-green)',
-                        boxShadow: '0 0 0 1px rgba(45,212,160,0.2)',
-                      }
-                    : {
-                        backgroundColor: 'var(--cp-bg3)',
-                        color: 'var(--cp-muted)',
-                      }
-                }
-              >
-                {f === 'alle'
-                  ? 'Alle'
-                  : f === 'roed'
-                    ? '🔴 Rød'
-                    : f === 'gul'
-                      ? '🟡 Gul'
-                      : f === 'groen'
-                        ? '🟢 Grøn'
-                        : '— Ingen'}
-              </button>
-            ))}
-          </div>
+          <TrafficLightFilter value={filter} onChange={setFilter} counts={trafficCounts} />
         </div>
 
         {/* ── Tabel ────────────────────────────────────────── */}

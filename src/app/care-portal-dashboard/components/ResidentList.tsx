@@ -13,6 +13,10 @@ import type { CareHouse } from '@/lib/careDemoResidents';
 import { onboardingHouseToCareHouse } from '@/lib/carePortalHouse';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
 import { useNameDisplay } from '@/lib/residents/useNameDisplay';
+import {
+  TrafficLightFilter,
+  type TrafficFilterValue,
+} from '@/components/patterns/TrafficLightFilter';
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -149,7 +153,7 @@ export default function ResidentList({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [orgScopeError, setOrgScopeError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'alle' | TrafficUi | 'ingen'>('alle');
+  const [filter, setFilter] = useState<TrafficFilterValue>('all');
 
   const handleRealtimeInsert = useCallback((row: CheckinRow) => {
     setResidents((prev) => prev.map((r) => (r.id === row.resident_id ? applyCheckin(r, row) : r)));
@@ -313,13 +317,28 @@ export default function ResidentList({
     const base = residentsInDept.filter((r) => {
       const matchSearch = residentNameRoomInitialsMatch(r.name, r.room, r.initials, search);
       const matchFilter =
-        filter === 'alle' ? true : filter === 'ingen' ? !r.trafficLight : r.trafficLight === filter;
+        filter === 'all'
+          ? true
+          : filter === 'none'
+            ? !r.trafficLight
+            : (filter === 'red' ? 'roed' : filter === 'yellow' ? 'gul' : 'groen') ===
+              r.trafficLight;
       return matchSearch && matchFilter;
     });
     return q ? sortResidentsBySearchRelevance(base, q) : base;
   }, [residentsInDept, search, filter]);
 
   const checkinTodayCount = residentsInDept.filter((r) => r.checkinToday).length;
+  const trafficCounts = useMemo(
+    () => ({
+      all: residentsInDept.length,
+      red: residentsInDept.filter((r) => r.trafficLight === 'roed').length,
+      yellow: residentsInDept.filter((r) => r.trafficLight === 'gul').length,
+      green: residentsInDept.filter((r) => r.trafficLight === 'groen').length,
+      none: residentsInDept.filter((r) => !r.trafficLight).length,
+    }),
+    [residentsInDept]
+  );
 
   // ── Render ─────────────────────────────────────────────────
 
@@ -406,39 +425,13 @@ export default function ResidentList({
               }}
             />
           </div>
-          <div className="flex gap-1">
-            {(['alle', 'roed', 'gul', 'groen', 'ingen'] as const).map((f) => (
-              <button
-                key={`filter-${f}`}
-                type="button"
-                onClick={() => setFilter(f)}
-                className="px-2.5 py-2 rounded-lg text-xs font-medium transition-all"
-                style={
-                  filter === f
-                    ? {
-                        backgroundColor: 'var(--cp-bg3)',
-                        color: 'var(--cp-text)',
-                        border: '1px solid var(--cp-border2)',
-                      }
-                    : {
-                        backgroundColor: 'transparent',
-                        color: 'var(--cp-muted)',
-                        border: '1px solid var(--cp-border)',
-                      }
-                }
-              >
-                {f === 'alle'
-                  ? 'Alle'
-                  : f === 'roed'
-                    ? '🔴'
-                    : f === 'gul'
-                      ? '🟡'
-                      : f === 'groen'
-                        ? '🟢'
-                        : '—'}
-              </button>
-            ))}
-          </div>
+          <TrafficLightFilter
+            value={filter}
+            onChange={setFilter}
+            size="sm"
+            showLabels={false}
+            counts={trafficCounts}
+          />
         </div>
       </div>
 

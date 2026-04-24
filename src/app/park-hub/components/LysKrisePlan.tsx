@@ -24,7 +24,7 @@ type KrisePlanData = {
 const SECTIONS: PlanSection[] = [
   {
     key: 'feeling_ok',
-    icon: '🟢',
+    icon: '●',
     title: 'Når jeg har det godt',
     prompt: 'Hvad er normalt for dig — hvad ligner du, når du har det godt?',
     placeholder: 'Fx jeg sover godt, spiser, har lyst til aktiviteter…',
@@ -32,7 +32,7 @@ const SECTIONS: PlanSection[] = [
   },
   {
     key: 'early_signs',
-    icon: '🟡',
+    icon: '●',
     title: 'Tidlige advarselstegn',
     prompt: 'Hvad mærker du selv — eller hvad bemærker andre — før du får det rigtig skidt?',
     placeholder: 'Fx jeg trækker mig, sover dårligt, bliver mere irritabel…',

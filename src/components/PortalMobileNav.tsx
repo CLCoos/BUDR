@@ -1,16 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
-import { Menu, Sparkles } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import PortalSidebar from '@/components/PortalSidebar';
 import type { Permission } from '@/lib/permissions';
 import DokumentSøgning from '@/components/DokumentSøgning';
-import DepartmentSelect from '@/components/DepartmentSelect';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
-import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
-import { CARE_PORTAL_DEPARTMENT_OPTIONS } from '@/lib/careDemoResidents';
-import { parseCarePortalDepartment } from '@/lib/carePortalHouse';
 import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 
 type Props = {
@@ -31,8 +26,6 @@ export default function PortalMobileNav({
 }: Props) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const pilot = carePortalPilotSimulatedData();
-  const { department, setDepartment } = useCarePortalDepartment();
-  const deptSelectValue = department === 'alle' ? 'alle' : department;
 
   const mobileTitle = orgName?.trim() || 'Care Portal';
 
@@ -74,28 +67,9 @@ export default function PortalMobileNav({
           </span>
           <ThemeToggle />
         </div>
-        <div className="w-full min-w-0">
-          <DepartmentSelect
-            value={deptSelectValue}
-            onChange={(id) => setDepartment(parseCarePortalDepartment(id))}
-            departments={CARE_PORTAL_DEPARTMENT_OPTIONS}
-            aria-label="Vælg afdeling for overblikket"
-          />
-        </div>
         <div className="w-full min-w-0 sm:hidden" aria-label="Dokumentsøgning">
           <DokumentSøgning carePortalDark linkTarget={pilot ? 'pilot' : 'live'} />
         </div>
-        <Link
-          href="/park-hub"
-          className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-white transition-opacity active:opacity-90"
-          style={{
-            background: 'linear-gradient(135deg, #8b84e8 0%, #5E56C0 55%, #4c3d91 100%)',
-            boxShadow: '0 4px 18px rgba(94, 86, 192, 0.35)',
-          }}
-        >
-          <Sparkles className="h-4 w-4 shrink-0 opacity-95" aria-hidden />
-          Åbn borger-app (Lys)
-        </Link>
       </header>
 
       {mobileNavOpen && (

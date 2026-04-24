@@ -2,6 +2,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Search, Download } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import {
+  TrafficLightFilter,
+  type TrafficFilterValue,
+} from '@/components/patterns/TrafficLightFilter';
 
 interface ShiftNote {
   id: string;
@@ -144,7 +148,7 @@ interface Props {
 export default function ShiftNotesFeed({ variant = 'mock', residentId, carePortalDark }: Props) {
   const d = carePortalDark === true;
   const [search, setSearch] = useState('');
-  const [flagFilter, setFlagFilter] = useState<string>('alle');
+  const [flagFilter, setFlagFilter] = useState<TrafficFilterValue>('all');
   const [notes, setNotes] = useState<ShiftNote[]>(() => (variant === 'mock' ? mockShiftNotes : []));
   const [loading, setLoading] = useState(variant === 'live');
 
@@ -260,7 +264,13 @@ export default function ShiftNotesFeed({ variant = 'mock', residentId, carePorta
     const matchSearch =
       n.body.toLowerCase().includes(search.toLowerCase()) ||
       n.staffName.toLowerCase().includes(search.toLowerCase());
-    const matchFlag = flagFilter === 'alle' || n.flagColor === flagFilter;
+    const matchFlag =
+      flagFilter === 'all'
+        ? true
+        : flagFilter === 'none'
+          ? false
+          : (flagFilter === 'red' ? 'roed' : flagFilter === 'yellow' ? 'gul' : 'groen') ===
+            n.flagColor;
     return matchSearch && matchFlag;
   });
 
@@ -269,6 +279,13 @@ export default function ShiftNotesFeed({ variant = 'mock', residentId, carePorta
     if (!grouped[note.date]) grouped[note.date] = [];
     grouped[note.date].push(note);
   });
+  const trafficCounts = {
+    all: notes.length,
+    red: notes.filter((n) => n.flagColor === 'roed').length,
+    yellow: notes.filter((n) => n.flagColor === 'gul').length,
+    green: notes.filter((n) => n.flagColor === 'groen').length,
+    none: 0,
+  } as const;
 
   const title = variant === 'live' ? 'Journal (godkendt)' : 'Vagtnotat';
 
@@ -363,35 +380,15 @@ export default function ShiftNotesFeed({ variant = 'mock', residentId, carePorta
               }
             />
           </div>
-          <div className="flex gap-1">
-            {(['alle', 'groen', 'gul', 'roed'] as const).map((f) => (
-              <button
-                key={`notefilter-${f}`}
-                type="button"
-                onClick={() => setFlagFilter(f)}
-                className={`rounded-lg px-2.5 py-2 text-xs font-medium transition-all ${
-                  d
-                    ? flagFilter === f
-                      ? ''
-                      : 'bg-[var(--cp-bg3)] text-[var(--cp-muted)] hover:bg-white/5'
-                    : flagFilter === f
-                      ? 'bg-gray-800 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-                style={
-                  d && flagFilter === f
-                    ? {
-                        backgroundColor: 'var(--cp-green-dim)',
-                        color: 'var(--cp-green)',
-                        boxShadow: '0 0 0 1px rgba(45,212,160,0.2)',
-                      }
-                    : undefined
-                }
-              >
-                {f === 'alle' ? 'Alle' : f === 'roed' ? '🔴' : f === 'gul' ? '🟡' : '🟢'}
-              </button>
-            ))}
-          </div>
+          <TrafficLightFilter
+            value={flagFilter}
+            onChange={(next) => {
+              if (next !== 'none') setFlagFilter(next);
+            }}
+            size="sm"
+            showLabels={false}
+            counts={trafficCounts}
+          />
         </div>
       </div>
 

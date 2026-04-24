@@ -19,10 +19,10 @@ export type ProgramItem = {
 };
 
 const TYPE_DOT: Record<ProgramItemType, string> = {
-  struktur: '🔵',
-  aftale: '🟣',
-  aktivitet: '🟢',
-  andet: '🟡',
+  struktur: '●',
+  aftale: '●',
+  aktivitet: '●',
+  andet: '●',
 };
 
 const TYPE_LABEL: Record<ProgramItemType, string> = {

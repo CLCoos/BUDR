@@ -20,16 +20,16 @@ const MOOD_LABELS = [
 ];
 
 const TRAFFIC_OPTIONS: { value: TrafficLight; label: string; desc: string; color: string }[] = [
-  { value: 'green', label: '🟢 Grøn', desc: 'Det går godt. Jeg har det fint.', color: '#22c55e' },
+  { value: 'green', label: 'Grøn', desc: 'Det går godt. Jeg har det fint.', color: '#22c55e' },
   {
     value: 'yellow',
-    label: '🟡 Gul',
+    label: 'Gul',
     desc: 'Det er lidt svært. Jeg har brug for lidt støtte.',
     color: '#eab308',
   },
   {
     value: 'red',
-    label: '🔴 Rød',
+    label: 'Rød',
     desc: 'Det er meget svært. Jeg har brug for hjælp nu.',
     color: '#ef4444',
   },

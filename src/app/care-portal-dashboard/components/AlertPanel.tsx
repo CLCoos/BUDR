@@ -562,7 +562,7 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
                 className="px-5 py-2 text-[10px] font-semibold uppercase tracking-widest"
                 style={{ color: 'var(--cp-red)', borderBottom: '1px solid var(--cp-border)' }}
               >
-                🔴 Kræver handling nu
+                Kræver handling nu
               </div>
               {group1.map((alert) => (
                 <AlertCard key={alert.id} alert={alert} group="roed" />
@@ -577,7 +577,7 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
                 className="px-5 py-2 text-[10px] font-semibold uppercase tracking-widest"
                 style={{ color: 'var(--cp-amber)', borderBottom: '1px solid var(--cp-border)' }}
               >
-                🟡 Hold øje med
+                Hold øje med
               </div>
               {group2.map((alert) => (
                 <AlertCard key={alert.id} alert={alert} group="gul" />

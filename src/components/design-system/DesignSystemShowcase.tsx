@@ -1,9 +1,15 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Eye, FileQuestion, Home, Search } from 'lucide-react';
+import { Bell, BookOpen, ChevronLeft, Eye, FileQuestion, Home, Search, Users } from 'lucide-react';
 import { applyBudrTheme, readStoredBudrTheme, type BudrTheme } from '@/lib/budrTheme';
 import { Badge, Button, Card, EmptyState, Input, LiveIndicator, PageHeader } from '@/components/ui';
+import { TopHeader } from '@/components/layouts/TopHeader';
+import { UserMenu } from '@/components/patterns/UserMenu';
+import {
+  TrafficLightFilter,
+  type TrafficFilterValue,
+} from '@/components/patterns/TrafficLightFilter';
 import styles from './DesignSystemShowcase.module.css';
 
 const sections = [
@@ -17,6 +23,10 @@ const sections = [
   'Badge',
   'PageHeader',
   'LiveIndicator',
+  'TrafficLightFilter',
+  'Layout-TopHeader',
+  'Layout-Sidebar',
+  'UserMenu',
 ] as const;
 
 const colorTokens = [
@@ -153,6 +163,7 @@ const typographyRows = [
 export function DesignSystemShowcase() {
   const [theme, setTheme] = useState<BudrTheme>('dark');
   const [focusCount, setFocusCount] = useState(0);
+  const [trafficFilterValue, setTrafficFilterValue] = useState<TrafficFilterValue>('all');
 
   useEffect(() => {
     const initial = readStoredBudrTheme();
@@ -473,6 +484,78 @@ export function DesignSystemShowcase() {
             <pre className={styles.code}>
               <code>{`import { LiveIndicator } from '@/components/ui';\n\n<LiveIndicator live={false} />`}</code>
             </pre>
+          </section>
+
+          <section id="trafficlightfilter" className={styles.section}>
+            <h2 className={styles.sectionTitle}>TrafficLightFilter</h2>
+            <div className={styles.stack}>
+              <TrafficLightFilter
+                value={trafficFilterValue}
+                onChange={setTrafficFilterValue}
+                counts={{ all: 18, red: 3, yellow: 6, green: 7, none: 2 }}
+              />
+              <TrafficLightFilter value="yellow" onChange={() => null} />
+              <TrafficLightFilter value="green" onChange={() => null} size="sm" />
+              <TrafficLightFilter value="none" onChange={() => null} size="sm" showLabels={false} />
+            </div>
+            <pre className={styles.code}>
+              <code>{`import { TrafficLightFilter } from '@/components/patterns/TrafficLightFilter';\n\n<TrafficLightFilter value="all" onChange={setFilter} counts={counts} />`}</code>
+            </pre>
+          </section>
+
+          <section id="layout-topheader" className={styles.section}>
+            <h2 className={styles.sectionTitle}>Layout / TopHeader</h2>
+            <div className={styles.previewFrame}>
+              <TopHeader fixed={false} />
+            </div>
+          </section>
+
+          <section id="layout-sidebar" className={styles.section}>
+            <h2 className={styles.sectionTitle}>Layout / Sidebar</h2>
+            <div className={styles.sidebarStates}>
+              <Card>
+                <div className={styles.sidebarPreview}>
+                  <p className={styles.sidebarGroupLabel}>Overblik</p>
+                  <div className={styles.sidebarItem}>Dashboard</div>
+                  <p className={styles.sidebarGroupLabel}>Dagligt arbejde</p>
+                  <div className={styles.sidebarItem}>Beboere</div>
+                  <div className={styles.sidebarItem}>Advarsler</div>
+                </div>
+                <p className={styles.mono}>Udvidet / ingen aktiv side</p>
+              </Card>
+              <Card>
+                <div className={styles.sidebarPreview}>
+                  <p className={styles.sidebarGroupLabel}>Overblik</p>
+                  <div className={styles.sidebarItemActive}>Dashboard</div>
+                  <p className={styles.sidebarGroupLabel}>Planlægning</p>
+                  <div className={styles.sidebarItem}>
+                    <BookOpen size={14} aria-hidden /> Journal
+                  </div>
+                  <div className={styles.sidebarItem}>
+                    <Bell size={14} aria-hidden /> Advarsler
+                  </div>
+                </div>
+                <p className={styles.mono}>Udvidet / aktiv side</p>
+              </Card>
+              <Card>
+                <div className={styles.sidebarCollapsedPreview}>
+                  <Users size={16} aria-hidden />
+                  <BookOpen size={16} aria-hidden />
+                  <Bell size={16} aria-hidden />
+                  <div className={styles.sidebarCollapsedDivider} />
+                  <ChevronLeft size={16} aria-hidden />
+                </div>
+                <p className={styles.mono}>Kollapset</p>
+              </Card>
+            </div>
+          </section>
+
+          <section id="usermenu" className={styles.section}>
+            <h2 className={styles.sectionTitle}>UserMenu</h2>
+            <div className={styles.row}>
+              <UserMenu />
+              <UserMenu forceOpen />
+            </div>
           </section>
         </main>
       </div>
