@@ -17,15 +17,24 @@ export interface OrgBranding {
  */
 export async function getOrganisationForStaff(): Promise<OrgBranding | null> {
   const supabase = await createServerSupabaseClient();
-  if (!supabase) return null;
+  if (!supabase) {
+    console.log('[BUDR-DIAGNOSE] no_server_client');
+    return null;
+  }
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return null;
+  if (!user) {
+    console.log('[BUDR-DIAGNOSE] no_user_in_session');
+    return null;
+  }
 
   const orgId = user.user_metadata?.org_id as string | undefined;
-  if (!orgId) return null;
+  if (!orgId) {
+    console.log(`[BUDR-DIAGNOSE] user_id: ${user.id}, missing_org_id_in_metadata`);
+    return null;
+  }
 
   const { data, error } = await supabase
     .from('organisations')
@@ -33,7 +42,30 @@ export async function getOrganisationForStaff(): Promise<OrgBranding | null> {
     .eq('id', orgId)
     .single();
 
-  if (error || !data) return null;
+  if (error) {
+    if (error.code === 'PGRST116') {
+      console.log(
+        `[BUDR-DIAGNOSE] user_id: ${user.id}, org_id: ${orgId}, organisations_query_returned_zero_rows`
+      );
+    } else {
+      console.log(
+        `[BUDR-DIAGNOSE] user_id: ${user.id}, org_id: ${orgId}, organisations_query_failed: ${error.message}`
+      );
+      console.log('[BUDR-DIAGNOSE] organisations_query_error_payload', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
+    }
+    return null;
+  }
+  if (!data) {
+    console.log(
+      `[BUDR-DIAGNOSE] user_id: ${user.id}, org_id: ${orgId}, organisations_query_returned_zero_rows`
+    );
+    return null;
+  }
 
   return {
     id: data.id as string,
