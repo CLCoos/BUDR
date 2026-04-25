@@ -36,11 +36,26 @@ export async function getOrganisationForStaff(): Promise<OrgBranding | null> {
     return null;
   }
 
-  const { data, error } = await supabase
+  const selectWithResidentMode =
+    'id, name, logo_url, primary_color, slug, resident_name_display_mode';
+  const baseSelect = 'id, name, logo_url, primary_color, slug';
+
+  let { data, error } = await supabase
     .from('organisations')
-    .select('id, name, logo_url, primary_color, slug, resident_name_display_mode')
+    .select(selectWithResidentMode)
     .eq('id', orgId)
     .single();
+
+  // Backward compatibility: some environments may miss this column until migrations are applied.
+  if (error?.code === '42703') {
+    const fallbackRes = await supabase
+      .from('organisations')
+      .select(baseSelect)
+      .eq('id', orgId)
+      .single();
+    data = fallbackRes.data as typeof data;
+    error = fallbackRes.error;
+  }
 
   if (error) {
     if (error.code === 'PGRST116') {
