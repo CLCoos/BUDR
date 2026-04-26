@@ -7,6 +7,81 @@ import MarketingCopyCmsCard from './MarketingCopyCmsCard';
 import MarketingSectionsCmsCard from './MarketingSectionsCmsCard';
 import type { NameDisplayMode } from '@/lib/residents/formatName';
 
+/** Danske titler til tekniske permission-id’er (vises i rolle-redigering). */
+const PERMISSION_LABEL_DA: Record<Permission, string> = {
+  [PERMISSIONS.VIEW_DASHBOARD]: 'Dashboard',
+  [PERMISSIONS.VIEW_RESIDENTS]: 'Beboere (liste og overblik)',
+  [PERMISSIONS.WRITE_JOURNAL]: 'Skriv journal',
+  [PERMISSIONS.VIEW_JOURNAL]: 'Se journal',
+  [PERMISSIONS.VIEW_360]: '360° beboeroverblik',
+  [PERMISSIONS.WRITE_HANDOVER]: 'Skriv vagtoverlevering',
+  [PERMISSIONS.VIEW_HANDOVER]: 'Se vagtoverlevering',
+  [PERMISSIONS.SEND_MESSAGES]: 'Send beskeder',
+  [PERMISSIONS.VIEW_MESSAGES]: 'Se beskeder',
+  [PERMISSIONS.VIEW_MEDICATIONS]: 'Se medicin',
+  [PERMISSIONS.VIEW_CONCERN_NOTES]: 'Se bekymringsnotater',
+  [PERMISSIONS.WRITE_CONCERN_NOTES]: 'Skriv bekymringsnotater',
+  [PERMISSIONS.VIEW_CRISIS_PLANS]: 'Se kriseplaner',
+  [PERMISSIONS.WRITE_MEDICATIONS]: 'Rediger medicin',
+  [PERMISSIONS.APPROVE_JOURNAL]: 'Godkend journal',
+  [PERMISSIONS.VIEW_PARK_PLANS]: 'Se Lys-planer',
+  [PERMISSIONS.EDIT_PARK_PLANS]: 'Rediger Lys-planer',
+  [PERMISSIONS.MANAGE_SHIFTS]: 'Administrer vagter',
+  [PERMISSIONS.VIEW_SALARY_ESTIMATE]: 'Se lønestimat (vagtplan)',
+  [PERMISSIONS.INVITE_STAFF]: 'Invitér kolleger',
+  [PERMISSIONS.MANAGE_ROLES]: 'Administrer roller',
+  [PERMISSIONS.IMPORT_RESIDENTS]: 'Importer beboere',
+  [PERMISSIONS.VIEW_AUDIT_LOG]: 'Se aktivitetslog',
+  [PERMISSIONS.MANAGE_RESIDENTS]: 'Administrer beboere',
+};
+
+const PERMISSION_GROUPS: { title: string; keys: Permission[] }[] = [
+  {
+    title: 'Daglig drift',
+    keys: [
+      PERMISSIONS.VIEW_DASHBOARD,
+      PERMISSIONS.VIEW_RESIDENTS,
+      PERMISSIONS.VIEW_360,
+      PERMISSIONS.VIEW_JOURNAL,
+      PERMISSIONS.WRITE_JOURNAL,
+      PERMISSIONS.VIEW_HANDOVER,
+      PERMISSIONS.WRITE_HANDOVER,
+      PERMISSIONS.VIEW_MESSAGES,
+      PERMISSIONS.SEND_MESSAGES,
+    ],
+  },
+  {
+    title: 'Medicin, journal og observationer',
+    keys: [
+      PERMISSIONS.VIEW_MEDICATIONS,
+      PERMISSIONS.WRITE_MEDICATIONS,
+      PERMISSIONS.VIEW_CONCERN_NOTES,
+      PERMISSIONS.WRITE_CONCERN_NOTES,
+      PERMISSIONS.VIEW_CRISIS_PLANS,
+      PERMISSIONS.APPROVE_JOURNAL,
+    ],
+  },
+  {
+    title: 'Plan, Lys og vagt',
+    keys: [
+      PERMISSIONS.VIEW_PARK_PLANS,
+      PERMISSIONS.EDIT_PARK_PLANS,
+      PERMISSIONS.MANAGE_SHIFTS,
+      PERMISSIONS.VIEW_SALARY_ESTIMATE,
+    ],
+  },
+  {
+    title: 'Organisation og administration',
+    keys: [
+      PERMISSIONS.INVITE_STAFF,
+      PERMISSIONS.MANAGE_ROLES,
+      PERMISSIONS.IMPORT_RESIDENTS,
+      PERMISSIONS.VIEW_AUDIT_LOG,
+      PERMISSIONS.MANAGE_RESIDENTS,
+    ],
+  },
+];
+
 type OrgRole = {
   id: string;
   name: string;
@@ -52,6 +127,7 @@ export default function SettingsClient({
     initialResidentNameDisplayMode
   );
   const [savingNameMode, setSavingNameMode] = useState(false);
+  const [permissionSearch, setPermissionSearch] = useState('');
 
   useEffect(() => {
     void (async () => {
@@ -140,6 +216,7 @@ export default function SettingsClient({
     setEditingRoleId(role.id);
     setEditingRoleName(role.name);
     setEditingPermissions((role.permissions ?? []) as Permission[]);
+    setPermissionSearch('');
   };
 
   const savePermissions = async (roleId: string) => {
@@ -164,6 +241,7 @@ export default function SettingsClient({
       )
     );
     setEditingRoleId(null);
+    setPermissionSearch('');
   };
 
   const deleteRole = async (role: OrgRole) => {
@@ -199,6 +277,13 @@ export default function SettingsClient({
     } finally {
       setSavingNameMode(false);
     }
+  };
+
+  const permissionMatchesSearch = (perm: Permission) => {
+    const t = permissionSearch.trim().toLowerCase();
+    if (!t) return true;
+    const label = PERMISSION_LABEL_DA[perm].toLowerCase();
+    return label.includes(t) || perm.toLowerCase().includes(t);
   };
 
   return (
@@ -269,7 +354,7 @@ export default function SettingsClient({
                 textTransform: 'uppercase',
               }}
             >
-              Organisation (org_id)
+              Organisations-ID
             </p>
             <div className="flex items-center gap-2">
               <div
@@ -300,6 +385,12 @@ export default function SettingsClient({
                 </button>
               )}
             </div>
+            {orgId && (
+              <p className="mt-1.5 text-xs leading-relaxed" style={{ color: 'var(--cp-muted)', fontSize: 11 }}>
+                Bruges ved support og ved tilknytning af integrationer. Det er ikke det samme som din
+                rolle i portalen (roller styres under «Roller og rettigheder»).
+              </p>
+            )}
             {!orgId && (
               <p className="mt-1.5 text-xs" style={{ color: 'var(--cp-amber)', fontSize: 11 }}>
                 Din konto er ikke fuldt koblet til en organisation endnu, saa du kan ikke invitere
@@ -328,8 +419,10 @@ export default function SettingsClient({
           Kollegaen modtager en invitation på email og sættes automatisk i din organisation.
         </p>
         {!canInviteStaff && (
-          <p className="text-xs" style={{ color: 'var(--cp-amber)' }}>
-            Du har ikke rettighed til at invitere medarbejdere.
+          <p className="text-xs leading-relaxed" style={{ color: 'var(--cp-amber)' }}>
+            Du har ikke rettighed til at invitere medarbejdere. Det afhænger af din rolle i
+            organisationen (rettigheden «Invitér kolleger»). En leder eller administrator kan tildele
+            dig en rolle med den rettighed.
           </p>
         )}
 
@@ -547,6 +640,11 @@ export default function SettingsClient({
             Kun ledelse kan ændre navneformat.
           </p>
         ) : (
+          <p className="text-xs leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
+            Vælg hvordan beboernavne vises i portalen (lister, widgets og lignende).
+          </p>
+        )}
+        {canManageRoles && (
           <div className="space-y-2">
             {(
               [
@@ -663,24 +761,76 @@ export default function SettingsClient({
                           opacity: role.is_system_role ? 0.6 : 1,
                         }}
                       />
-                      <div className="grid grid-cols-1 gap-1 md:grid-cols-2">
-                        {Object.values(PERMISSIONS).map((perm) => (
-                          <label key={perm} className="flex items-center gap-2 text-xs">
-                            <input
-                              type="checkbox"
-                              checked={editingPermissions.includes(perm)}
-                              onChange={(e) =>
-                                setEditingPermissions((prev) =>
-                                  e.target.checked
-                                    ? [...prev, perm]
-                                    : prev.filter((x) => x !== perm)
-                                )
-                              }
-                            />
-                            <span style={{ color: 'var(--cp-text)' }}>{perm}</span>
-                          </label>
-                        ))}
+                      <input
+                        type="search"
+                        value={permissionSearch}
+                        onChange={(e) => setPermissionSearch(e.target.value)}
+                        placeholder="Søg rettighed…"
+                        className="w-full rounded-md border px-2 py-1.5 text-xs"
+                        style={{
+                          borderColor: 'var(--cp-border)',
+                          backgroundColor: 'var(--cp-bg2)',
+                          color: 'var(--cp-text)',
+                        }}
+                        aria-label="Filtrer liste over rettigheder"
+                      />
+                      <div className="max-h-[min(60vh,28rem)] space-y-3 overflow-y-auto pr-1">
+                        {PERMISSION_GROUPS.map((group) => {
+                          const keys = group.keys.filter((perm) => permissionMatchesSearch(perm));
+                          if (keys.length === 0) return null;
+                          return (
+                            <div key={group.title}>
+                              <p
+                                className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide"
+                                style={{ color: 'var(--cp-muted)' }}
+                              >
+                                {group.title}
+                              </p>
+                              <div className="grid grid-cols-1 gap-1.5 md:grid-cols-2">
+                                {keys.map((perm) => (
+                                  <label
+                                    key={perm}
+                                    className="flex cursor-pointer items-start gap-2 rounded-md border px-2 py-1.5 text-xs"
+                                    style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      className="mt-0.5 shrink-0"
+                                      checked={editingPermissions.includes(perm)}
+                                      onChange={(e) =>
+                                        setEditingPermissions((prev) =>
+                                          e.target.checked
+                                            ? [...prev, perm]
+                                            : prev.filter((x) => x !== perm)
+                                        )
+                                      }
+                                    />
+                                    <span className="min-w-0">
+                                      <span className="block font-medium" style={{ color: 'var(--cp-text)' }}>
+                                        {PERMISSION_LABEL_DA[perm]}
+                                      </span>
+                                      <span
+                                        className="block truncate font-mono text-[10px]"
+                                        style={{ color: 'var(--cp-muted)' }}
+                                      >
+                                        {perm}
+                                      </span>
+                                    </span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
+                      {permissionSearch.trim() &&
+                        !PERMISSION_GROUPS.some((g) =>
+                          g.keys.some((perm) => permissionMatchesSearch(perm))
+                        ) && (
+                          <p className="text-xs" style={{ color: 'var(--cp-muted)' }}>
+                            Ingen rettighed matcher søgningen.
+                          </p>
+                        )}
                       <div className="flex gap-2">
                         <button
                           type="button"
@@ -693,7 +843,10 @@ export default function SettingsClient({
                         </button>
                         <button
                           type="button"
-                          onClick={() => setEditingRoleId(null)}
+                          onClick={() => {
+                            setEditingRoleId(null);
+                            setPermissionSearch('');
+                          }}
                           className="rounded-md px-3 py-1.5 text-xs font-semibold"
                           style={{ color: 'var(--cp-muted)', border: '1px solid var(--cp-border)' }}
                         >
