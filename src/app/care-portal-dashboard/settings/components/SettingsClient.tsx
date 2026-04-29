@@ -6,6 +6,12 @@ import { PERMISSIONS, type Permission } from '@/lib/permissions';
 import MarketingCopyCmsCard from './MarketingCopyCmsCard';
 import MarketingSectionsCmsCard from './MarketingSectionsCmsCard';
 import type { NameDisplayMode } from '@/lib/residents/formatName';
+import {
+  DEFAULT_FEMALE_VOICE_ID,
+  isKnownElevenLabsVoiceId,
+  LYS_VOICE_CHOICES,
+} from '@/lib/voice/voices';
+import { getVoiceTelemetrySnapshot, resetVoiceTelemetry } from '@/lib/voice/voiceObservability';
 
 /** Danske titler til tekniske permission-id’er (vises i rolle-redigering). */
 const PERMISSION_LABEL_DA: Record<Permission, string> = {
@@ -96,6 +102,7 @@ type Props = {
   canManageRoles: boolean;
   canInviteStaff: boolean;
   initialResidentNameDisplayMode: NameDisplayMode;
+  initialLysDefaultVoiceId: string | null;
 };
 
 type InviteState = 'idle' | 'submitting' | 'success' | 'error';
@@ -107,7 +114,10 @@ export default function SettingsClient({
   canManageRoles,
   canInviteStaff,
   initialResidentNameDisplayMode,
+  initialLysDefaultVoiceId,
 }: Props) {
+  const showVoiceTelemetry =
+    canManageRoles && process.env.NEXT_PUBLIC_LYS_VOICE_OBSERVABILITY === 'true';
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [selectedRoleId, setSelectedRoleId] = useState<string>(initialRoles[0]?.id ?? '');
@@ -127,7 +137,34 @@ export default function SettingsClient({
     initialResidentNameDisplayMode
   );
   const [savingNameMode, setSavingNameMode] = useState(false);
+  const [lysOrgVoiceId, setLysOrgVoiceId] = useState(
+    initialLysDefaultVoiceId && isKnownElevenLabsVoiceId(initialLysDefaultVoiceId)
+      ? initialLysDefaultVoiceId
+      : DEFAULT_FEMALE_VOICE_ID
+  );
+  const [savingLysVoice, setSavingLysVoice] = useState(false);
+  const [lysVoiceMsg, setLysVoiceMsg] = useState<string | null>(null);
   const [permissionSearch, setPermissionSearch] = useState('');
+  const [voiceTelemetryTick, setVoiceTelemetryTick] = useState(0);
+
+  const telemetry = getVoiceTelemetrySnapshot();
+  const firstTokenSorted = [...telemetry.firstTokenMs].sort((a, b) => a - b);
+  const pickPercentile = (pct: number) => {
+    if (firstTokenSorted.length === 0) return 0;
+    const idx = Math.min(
+      firstTokenSorted.length - 1,
+      Math.max(0, Math.ceil((pct / 100) * firstTokenSorted.length) - 1)
+    );
+    return firstTokenSorted[idx] ?? 0;
+  };
+  const fttP50 = pickPercentile(50);
+  const fttP95 = pickPercentile(95);
+  const streamTotal =
+    telemetry.streamBySource.anthropic +
+    telemetry.streamBySource.fallback +
+    telemetry.streamBySource.local;
+  const fallbackRatePct =
+    streamTotal > 0 ? Math.round((telemetry.streamBySource.fallback / streamTotal) * 100) : 0;
 
   useEffect(() => {
     void (async () => {
@@ -386,9 +423,12 @@ export default function SettingsClient({
               )}
             </div>
             {orgId && (
-              <p className="mt-1.5 text-xs leading-relaxed" style={{ color: 'var(--cp-muted)', fontSize: 11 }}>
-                Bruges ved support og ved tilknytning af integrationer. Det er ikke det samme som din
-                rolle i portalen (roller styres under «Roller og rettigheder»).
+              <p
+                className="mt-1.5 text-xs leading-relaxed"
+                style={{ color: 'var(--cp-muted)', fontSize: 11 }}
+              >
+                Bruges ved support og ved tilknytning af integrationer. Det er ikke det samme som
+                din rolle i portalen (roller styres under «Roller og rettigheder»).
               </p>
             )}
             {!orgId && (
@@ -400,6 +440,98 @@ export default function SettingsClient({
           </div>
         </div>
       </section>
+
+      {showVoiceTelemetry ? (
+        <section
+          className="rounded-xl p-5 space-y-4"
+          style={{
+            backgroundColor: 'var(--cp-bg2)',
+            border: '1px solid var(--cp-border)',
+          }}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+              Lys — voice kvalitet (test)
+            </h2>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setVoiceTelemetryTick((n) => n + 1)}
+                className="rounded-md border px-2.5 py-1 text-xs font-medium"
+                style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-muted)' }}
+              >
+                Opdater
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  resetVoiceTelemetry();
+                  setVoiceTelemetryTick((n) => n + 1);
+                }}
+                className="rounded-md border px-2.5 py-1 text-xs font-medium"
+                style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-muted)' }}
+              >
+                Nulstil
+              </button>
+            </div>
+          </div>
+          <p className="text-xs leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
+            Lokale målinger fra denne browser: first-token latenstid, fallback-rate og afbrydelser i
+            voice-turns.
+          </p>
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+            <div
+              className="rounded-lg border px-3 py-2"
+              style={{ borderColor: 'var(--cp-border)' }}
+            >
+              <p className="text-[11px]" style={{ color: 'var(--cp-muted)' }}>
+                FTT p50
+              </p>
+              <p className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+                {fttP50} ms
+              </p>
+            </div>
+            <div
+              className="rounded-lg border px-3 py-2"
+              style={{ borderColor: 'var(--cp-border)' }}
+            >
+              <p className="text-[11px]" style={{ color: 'var(--cp-muted)' }}>
+                FTT p95
+              </p>
+              <p className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+                {fttP95} ms
+              </p>
+            </div>
+            <div
+              className="rounded-lg border px-3 py-2"
+              style={{ borderColor: 'var(--cp-border)' }}
+            >
+              <p className="text-[11px]" style={{ color: 'var(--cp-muted)' }}>
+                Fallback-rate
+              </p>
+              <p className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+                {fallbackRatePct}%
+              </p>
+            </div>
+            <div
+              className="rounded-lg border px-3 py-2"
+              style={{ borderColor: 'var(--cp-border)' }}
+            >
+              <p className="text-[11px]" style={{ color: 'var(--cp-muted)' }}>
+                Interrupts
+              </p>
+              <p className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+                {telemetry.interruptsTotal}
+              </p>
+            </div>
+          </div>
+          <p className="text-[11px]" style={{ color: 'var(--cp-muted)' }}>
+            Samples: {telemetry.firstTokenMs.length} · Sidst opdateret:{' '}
+            {new Date(telemetry.updatedAt).toLocaleTimeString('da-DK')}
+            <span className="sr-only">{voiceTelemetryTick}</span>
+          </p>
+        </section>
+      ) : null}
 
       {/* Invite staff */}
       <section
@@ -421,8 +553,8 @@ export default function SettingsClient({
         {!canInviteStaff && (
           <p className="text-xs leading-relaxed" style={{ color: 'var(--cp-amber)' }}>
             Du har ikke rettighed til at invitere medarbejdere. Det afhænger af din rolle i
-            organisationen (rettigheden «Invitér kolleger»). En leder eller administrator kan tildele
-            dig en rolle med den rettighed.
+            organisationen (rettigheden «Invitér kolleger»). En leder eller administrator kan
+            tildele dig en rolle med den rettighed.
           </p>
         )}
 
@@ -680,6 +812,82 @@ export default function SettingsClient({
         }}
       >
         <h2 className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+          Lys — stemme
+        </h2>
+        {!canManageRoles ? (
+          <p className="text-xs" style={{ color: 'var(--cp-muted)' }}>
+            Kun ledelse kan sætte standard-stemme for nye beboere.
+          </p>
+        ) : (
+          <>
+            <p className="text-xs leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
+              Standard ElevenLabs-stemme for beboere, der ikke har valgt egen stemme i Lys endnu.
+            </p>
+            <label className="block text-xs font-medium" style={{ color: 'var(--cp-muted)' }}>
+              Standard-stemme for nye beboere
+            </label>
+            <select
+              value={lysOrgVoiceId}
+              onChange={(e) => setLysOrgVoiceId(e.target.value)}
+              className="mt-1 w-full max-w-md rounded-lg border px-3 py-2 text-sm"
+              style={{
+                borderColor: 'var(--cp-border)',
+                backgroundColor: 'var(--cp-bg)',
+                color: 'var(--cp-text)',
+              }}
+            >
+              {LYS_VOICE_CHOICES.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.name} — {v.description}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              disabled={savingLysVoice || !orgId}
+              onClick={async () => {
+                setSavingLysVoice(true);
+                setLysVoiceMsg(null);
+                try {
+                  const res = await fetch('/api/portal/org-lys-default-voice', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lys_default_voice_id: lysOrgVoiceId }),
+                  });
+                  const j = (await res.json().catch(() => ({}))) as { error?: string };
+                  if (!res.ok) {
+                    setLysVoiceMsg(j.error ?? 'Kunne ikke gemme');
+                    return;
+                  }
+                  setLysVoiceMsg('Gemt.');
+                } catch {
+                  setLysVoiceMsg('Netværksfejl');
+                } finally {
+                  setSavingLysVoice(false);
+                }
+              }}
+              className="mt-2 rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+              style={{ backgroundColor: 'var(--cp-green)' }}
+            >
+              {savingLysVoice ? 'Gemmer…' : 'Gem standard-stemme'}
+            </button>
+            {lysVoiceMsg ? (
+              <p className="text-xs" style={{ color: 'var(--cp-muted)' }}>
+                {lysVoiceMsg}
+              </p>
+            ) : null}
+          </>
+        )}
+      </section>
+
+      <section
+        className="rounded-xl p-5 space-y-4"
+        style={{
+          backgroundColor: 'var(--cp-bg2)',
+          border: '1px solid var(--cp-border)',
+        }}
+      >
+        <h2 className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
           Roller og rettigheder
         </h2>
         {!canManageRoles ? (
@@ -791,7 +999,10 @@ export default function SettingsClient({
                                   <label
                                     key={perm}
                                     className="flex cursor-pointer items-start gap-2 rounded-md border px-2 py-1.5 text-xs"
-                                    style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
+                                    style={{
+                                      borderColor: 'var(--cp-border)',
+                                      backgroundColor: 'var(--cp-bg2)',
+                                    }}
                                   >
                                     <input
                                       type="checkbox"
@@ -806,7 +1017,10 @@ export default function SettingsClient({
                                       }
                                     />
                                     <span className="min-w-0">
-                                      <span className="block font-medium" style={{ color: 'var(--cp-text)' }}>
+                                      <span
+                                        className="block font-medium"
+                                        style={{ color: 'var(--cp-text)' }}
+                                      >
                                         {PERMISSION_LABEL_DA[perm]}
                                       </span>
                                       <span
