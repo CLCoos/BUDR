@@ -1,9 +1,10 @@
 .wrap {
-  max-width: 100%;
+  width: min(100%, 980px);
+  margin-inline: auto;
 }
 
 .intro {
-  margin: 0 0 18px;
+  margin: 0 0 24px;
 }
 
 .title {
@@ -25,7 +26,7 @@
 
 .timeline {
   display: grid;
-  gap: 14px;
+  gap: 18px;
 }
 
 .scene {
@@ -33,7 +34,7 @@
   border: 1px solid rgba(133, 183, 235, 0.2);
   background: linear-gradient(160deg, rgba(21, 36, 54, 0.86) 0%, rgba(12, 21, 35, 0.9) 100%);
   box-shadow: 0 24px 56px rgba(0, 0, 0, 0.34);
-  padding: 16px 14px;
+  padding: 18px 16px;
   opacity: 0;
   transform: translateY(22px);
   transition:
@@ -59,7 +60,7 @@
 }
 
 .sceneTitle {
-  margin: 0 0 10px;
+  margin: 0 0 12px;
   font-family: 'DM Serif Display', Georgia, serif;
   font-size: clamp(1.55rem, 6vw, 2rem);
   line-height: 1.1;
@@ -69,10 +70,14 @@
 
 .contrast {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
 .card {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: 100%;
   border-radius: 12px;
   border: 1px solid rgba(133, 183, 235, 0.18);
   padding: 12px;
@@ -125,7 +130,7 @@
 }
 
 .quote {
-  margin: 12px 0 0;
+  margin: 16px 0 0;
   padding-left: 12px;
   border-left: 2px solid rgba(93, 202, 165, 0.45);
   font-style: italic;
@@ -140,6 +145,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  margin: -2px 0 2px;
   color: rgba(93, 202, 165, 0.75);
   opacity: 0.9;
 }
@@ -151,7 +157,7 @@
 }
 
 .outro {
-  margin-top: 14px;
+  margin-top: 20px;
   border-radius: 14px;
   border: 1px solid rgba(133, 183, 235, 0.18);
   background: rgba(12, 20, 30, 0.64);
@@ -183,7 +189,7 @@
 
 @media (min-width: 768px) {
   .wrap {
-    max-width: 980px;
+    width: min(100%, 980px);
   }
 
   .intro {
@@ -195,20 +201,21 @@
   }
 
   .timeline {
-    gap: 16px;
+    gap: 20px;
   }
 
   .scene {
-    padding: 20px 20px;
+    padding: 22px 22px;
   }
 
   .contrast {
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 14px;
   }
 
   .body {
     font-size: 1rem;
+    line-height: 1.68;
   }
 
   .quote {
@@ -226,6 +233,10 @@
 }
 
 @media (min-width: 1024px) {
+  .wrap {
+    width: min(100%, 1020px);
+  }
+
   .title {
     font-size: 2.35rem;
   }
@@ -235,7 +246,7 @@
   }
 
   .scene {
-    padding: 24px 24px;
+    padding: 26px 26px;
   }
 
   .sceneTitle {
@@ -250,5 +261,6 @@
   .quote {
     font-size: 1.65rem;
     line-height: 1.24;
+    max-width: 32ch;
   }
 }
