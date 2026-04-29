@@ -1,0 +1,42 @@
+.wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.trigger {
+  display: inline-flex;
+}
+
+.content {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%);
+  z-index: 10080;
+  max-width: 260px;
+  min-width: 120px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  border: 1px solid rgba(146, 168, 199, 0.25);
+  background: #0f1b2d;
+  color: #eaf1ff;
+  font-family: var(--font-landing-body, 'DM Sans', sans-serif);
+  font-size: 12px;
+  line-height: 1.35;
+  box-shadow:
+    0 8px 24px rgba(5, 10, 20, 0.55),
+    0 0 10px rgba(45, 212, 160, 0.14);
+  pointer-events: none;
+}
+
+.arrow {
+  position: absolute;
+  left: 50%;
+  top: calc(100% - 5px);
+  width: 10px;
+  height: 10px;
+  transform: translateX(-50%) rotate(45deg);
+  border-right: 1px solid rgba(146, 168, 199, 0.25);
+  border-bottom: 1px solid rgba(146, 168, 199, 0.25);
+  background: #ffffff;
+}
