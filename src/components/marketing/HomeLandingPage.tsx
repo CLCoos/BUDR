@@ -7,10 +7,10 @@ import { BudrLogo } from '@/components/brand/BudrLogo';
 import MarketingFooter from '@/components/marketing/MarketingFooter';
 import { useBudrLandingFadeIn } from '@/components/marketing/useBudrLandingFadeIn';
 
-const LandingInteractiveDemo = dynamic(
+const DayInLifeDemo = dynamic(
   () =>
-    import('@/components/marketing/LandingInteractiveDemo').then((m) => ({
-      default: m.LandingInteractiveDemo,
+    import('@/components/marketing/DayInLifeDemo').then((m) => ({
+      default: m.DayInLifeDemo,
     })),
   {
     ssr: false,
@@ -210,12 +210,11 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
         <section className="home-demo fi" id="live-demo">
           <div className="shell">
             <p className="eyebrow">Se det i aktion</p>
-            <h2 className="section-h">Borgeren check-er ind. Teamet ser det med det samme.</h2>
+            <h2 className="section-h">Når dagen kører, skal overblikket følge med.</h2>
             <p className="section-p">
-              Vælg humør, energi og hvad der fylder — og se præcis hvad der lander i Care Portal.
-              Det her er ikke en animation. Det er den rigtige logik.
+              En konkret fortælling fra en pædagogs dag — med tydelig forskel på før og med BUDR.
             </p>
-            <LandingInteractiveDemo />
+            <DayInLifeDemo />
           </div>
         </section>
 
