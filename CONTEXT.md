@@ -2,7 +2,7 @@
 
 **Til AI/assistenter:** Læs denne fil først. Kort indgang: [`AGENTS.md`](./AGENTS.md).
 
-**Sidst opdateret (manuelt):** 2026-04-29 — **Deploy-fix (manglende Tooltip-komponent):** `src/components/ui/Tooltip.tsx` + `src/components/ui/Tooltip.module.css` er tilføjet til git, så importen `@/components/ui/Tooltip` i `ResidentLysSamtalerTab` kan resolv'es på Linux/case-sensitive build-miljøer (Netlify). Verificeret med lokal `npm run build`.
+**Sidst opdateret (manuelt):** 2026-04-29 — **Deploy-fix (Settings prop til Lys standardstemme):** `src/app/care-portal-dashboard/settings/page.tsx` sender nu `initialLysDefaultVoiceId` til `SettingsClient`, og henter `lys_default_voice_id` sammen med `resident_name_display_mode` fra `organisations` (fallback `null`). Løser TypeScript-buildfejl i Netlify om manglende required prop. Verificeret med lokal `npm run build`.
 
 **Forrige:** 2026-04-28 — **Care Portal Lys safety-events UI:** Ny delt service `src/lib/lys/safetyEventsService.ts` til hent/ack/realtime af `lys_safety_events` + danske relative tidslabels. Ny `PortalNotificationBar` i header (`TopHeader`) viser bell-badge, dropdown med 5 nyeste ubekræftede events og realtime-opdatering med cleanup. `ActionCards` udvidet med “Lys-advarsler” (acute/elevated sortering, udtalelses-uddrag, “Åbn samtale” + “Bekræft set”). Nyt `ResidentLysSamtalerTab` på beboerkortet (`resident-360-view`) viser `lys_conversations`, modal-transskript, inline risk-flags med reasoning-tooltip og samlet “Bekræft set”.
 

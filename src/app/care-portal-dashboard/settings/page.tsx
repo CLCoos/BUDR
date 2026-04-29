@@ -18,10 +18,11 @@ export default async function CarePortalDashboardSettingsPage() {
   ]);
   const supabase = await createServerSupabaseClient();
   let initialResidentNameDisplayMode: NameDisplayMode = 'first_name_initial';
+  let initialLysDefaultVoiceId: string | null = null;
   if (supabase && orgId) {
     const { data } = await supabase
       .from('organisations')
-      .select('resident_name_display_mode')
+      .select('resident_name_display_mode, lys_default_voice_id')
       .eq('id', orgId)
       .maybeSingle();
     if (
@@ -29,6 +30,9 @@ export default async function CarePortalDashboardSettingsPage() {
       data?.resident_name_display_mode === 'initials_only'
     ) {
       initialResidentNameDisplayMode = data.resident_name_display_mode;
+    }
+    if (typeof data?.lys_default_voice_id === 'string' && data.lys_default_voice_id.trim()) {
+      initialLysDefaultVoiceId = data.lys_default_voice_id.trim();
     }
   }
 
@@ -42,6 +46,7 @@ export default async function CarePortalDashboardSettingsPage() {
           canManageRoles={canManageRoles}
           canInviteStaff={canInviteStaff}
           initialResidentNameDisplayMode={initialResidentNameDisplayMode}
+          initialLysDefaultVoiceId={initialLysDefaultVoiceId}
         />
       </div>
     </PortalShell>
