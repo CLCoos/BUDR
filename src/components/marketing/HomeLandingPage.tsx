@@ -112,6 +112,14 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
           </div>
         </section>
 
+        <section className="home-credibility fi">
+          <div className="shell">
+            <p className="home-credibility-line">
+              Bygget i Danmark af folk der selv arbejder på socialpsykiatriske bosteder.
+            </p>
+          </div>
+        </section>
+
         <section className="home-cta-simple fi" id="kontakt">
           <div className="shell">
             <div className="home-cta-simple-inner">

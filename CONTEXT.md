@@ -2,7 +2,7 @@
 
 **Til AI/assistenter:** Læs denne fil først. Kort indgang: [`AGENTS.md`](./AGENTS.md).
 
-**Sidst opdateret (manuelt):** 2026-04-29 — **Forside skåret ned til 4 sektioner:** `HomeLandingPage` reduceret til Hero, “Tre situationer”, “En dag på arbejde” (`DayInLifeDemo`) og ny enkel CTA (`id="kontakt"`). Fjernet proof/USP/problem/feature-toggle/top-5/live-flow-sektioner og opdateret nav til kun `#se-det-i-aktion` + `#kontakt`. Hero-claims under knapper er fjernet, CTA har nu kun overskrift + primær knap. Relaterede hjemme-side CSS-regler i `budr-landing.css` ryddet op. Verificeret med lokal `npm run build`.
+**Sidst opdateret (manuelt):** 2026-04-29 — **Forside (3 efterfix):** Kriseboksen i `DayInLifeDemo` beholdes som intern outro og har nu tydeligere outro-spacing (`margin-top: clamp(60px, 8vw, 80px)`) efter sidste scene. Ny editorial credibility-linje tilføjet mellem narrativ-sektion og CTA i `HomeLandingPage` (`home-credibility`). CTA gjort mere monumental i `budr-landing.css` (centreret indhold, større indre padding, større vertikal gap, center-tekst og bredere headline-max-width). Verificeret med lokal `npm run build`.
 
 **Forrige:** 2026-04-28 — **Care Portal Lys safety-events UI:** Ny delt service `src/lib/lys/safetyEventsService.ts` til hent/ack/realtime af `lys_safety_events` + danske relative tidslabels. Ny `PortalNotificationBar` i header (`TopHeader`) viser bell-badge, dropdown med 5 nyeste ubekræftede events og realtime-opdatering med cleanup. `ActionCards` udvidet med “Lys-advarsler” (acute/elevated sortering, udtalelses-uddrag, “Åbn samtale” + “Bekræft set”). Nyt `ResidentLysSamtalerTab` på beboerkortet (`resident-360-view`) viser `lys_conversations`, modal-transskript, inline risk-flags med reasoning-tooltip og samlet “Bekræft set”.
 

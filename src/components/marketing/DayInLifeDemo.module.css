@@ -157,7 +157,7 @@
 }
 
 .outro {
-  margin-top: 20px;
+  margin-top: clamp(60px, 8vw, 80px);
   border-radius: 14px;
   border: 1px solid rgba(133, 183, 235, 0.18);
   background: rgba(12, 20, 30, 0.64);
@@ -223,7 +223,6 @@
   }
 
   .outro {
-    margin-top: 18px;
     padding: 14px 16px;
   }
 
