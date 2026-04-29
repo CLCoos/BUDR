@@ -1017,8 +1017,7 @@ html {
     display: none;
   }
 
-  .budr-landing .live-demo-grid,
-  .budr-landing .interactive-demo-grid {
+  .budr-landing .live-demo-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1522,77 +1521,12 @@ html {
   margin: 0;
 }
 
-.budr-landing .home-hero-points {
-  margin-top: 8px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.budr-landing .home-hero-points span {
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid rgba(133, 183, 235, 0.24);
-  background: rgba(133, 183, 235, 0.08);
-  border-radius: 999px;
-  padding: 8px 12px;
-  font-size: 0.78rem;
-  color: var(--white-dim);
-}
-
-.budr-landing .home-overview-cards {
-  margin-top: 40px;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  width: 100%;
-}
-
-.budr-landing .home-overview-card {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
-  border-radius: 16px;
-  padding: 22px 20px;
-}
-
 .budr-landing .home-card-label {
   margin: 0 0 8px;
   font-size: 0.68rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--amber);
-}
-
-.budr-landing .home-overview-card h3 {
-  margin: 0 0 12px;
-  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
-  font-size: 1.22rem;
-  font-weight: 400;
-}
-
-.budr-landing .home-overview-card ul {
-  margin: 0;
-  padding-left: 18px;
-  color: var(--white-dim);
-  display: grid;
-  gap: 8px;
-  line-height: 1.55;
-  font-size: 0.9rem;
-}
-
-.budr-landing .home-proof {
-  padding-top: 34px;
-  padding-bottom: 34px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.budr-landing .home-proof p {
-  margin: 0;
-  color: var(--fog);
-  font-size: 0.85rem;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
 }
 
 .budr-landing .home-usp {
@@ -1629,34 +1563,6 @@ html {
   margin: 0;
   color: var(--white-dim);
   font-size: 0.84rem;
-  line-height: 1.55;
-}
-
-.budr-landing .home-usp-grid {
-  margin-top: 20px;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.budr-landing .home-usp-card {
-  border: 1px solid rgba(133, 183, 235, 0.22);
-  background: linear-gradient(145deg, rgba(133, 183, 235, 0.09), rgba(133, 183, 235, 0.03));
-  border-radius: 14px;
-  padding: 16px;
-}
-
-.budr-landing .home-usp-card h3 {
-  margin: 0 0 8px;
-  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
-  font-size: 1.18rem;
-  font-weight: 400;
-}
-
-.budr-landing .home-usp-card p {
-  margin: 0;
-  color: var(--white-dim);
-  font-size: 0.88rem;
   line-height: 1.55;
 }
 
@@ -1697,207 +1603,28 @@ html {
   line-height: 1.55;
 }
 
-.budr-landing .home-view-switch {
-  margin-top: 24px;
-  display: inline-flex;
-  border: 1px solid rgba(133, 183, 235, 0.24);
-  border-radius: 999px;
-  padding: 4px;
-  gap: 4px;
+.budr-landing .home-cta-simple {
+  padding-top: clamp(90px, 11vw, 148px);
+  padding-bottom: clamp(90px, 11vw, 148px);
 }
 
-.budr-landing .home-view-switch button {
-  appearance: none;
-  border: none;
-  background: transparent;
-  color: var(--fog);
-  font-size: 0.84rem;
-  font-family: inherit;
-  border-radius: 999px;
-  padding: 8px 14px;
-  cursor: pointer;
-}
-
-.budr-landing .home-view-switch button.is-active {
-  background: rgba(133, 183, 235, 0.2);
-  color: var(--white);
-}
-
-.budr-landing .home-feature-box {
-  margin-top: 16px;
-  border: 1px solid rgba(133, 183, 235, 0.28);
-  border-radius: 14px;
-  background: rgba(133, 183, 235, 0.08);
-  padding: 20px;
-}
-
-.budr-landing .home-feature-box h3 {
-  margin: 0 0 10px;
-  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
-  font-size: 1.26rem;
-  font-weight: 400;
-}
-
-.budr-landing .home-feature-box ul {
-  margin: 0;
-  padding-left: 18px;
+.budr-landing .home-cta-simple-inner {
   display: grid;
-  gap: 8px;
-  color: var(--white-dim);
-  font-size: 0.92rem;
-}
-
-.budr-landing .home-story {
-  padding-top: clamp(68px, 8vw, 108px);
-  padding-bottom: clamp(68px, 8vw, 108px);
-}
-
-.budr-landing .home-top-usp {
-  padding-top: clamp(68px, 8vw, 104px);
-  padding-bottom: clamp(68px, 8vw, 104px);
-}
-
-.budr-landing .home-top-usp-grid {
-  margin-top: 20px;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.budr-landing .home-top-usp-panel {
-  border: 1px solid rgba(93, 202, 165, 0.24);
-  border-radius: 16px;
-  padding: 18px;
-  background: linear-gradient(150deg, rgba(93, 202, 165, 0.11), rgba(133, 183, 235, 0.06));
-}
-
-.budr-landing .home-top-usp-panel ol {
-  margin: 10px 0 0;
-  padding: 0;
-  list-style: none;
-  counter-reset: usp-rank;
-  display: grid;
-  gap: 8px;
-}
-
-.budr-landing .home-top-usp-panel li {
-  counter-increment: usp-rank;
-  position: relative;
-  padding: 10px 10px 10px 38px;
-  border-radius: 11px;
-  background: rgba(10, 22, 20, 0.52);
-  color: var(--white-dim);
-  line-height: 1.5;
-  font-size: 0.88rem;
-}
-
-.budr-landing .home-top-usp-panel li::before {
-  content: counter(usp-rank);
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 20px;
-  height: 20px;
-  border-radius: 999px;
-  background: rgba(93, 202, 165, 0.22);
-  color: var(--amber-lt);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.72rem;
-  font-weight: 600;
-}
-
-.budr-landing .home-story-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.9fr);
-  gap: 20px;
-  align-items: start;
-}
-
-.budr-landing .home-story-steps {
-  display: grid;
-  gap: 12px;
-}
-
-.budr-landing .home-story-step {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 14px;
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.budr-landing .home-story-step h3 {
-  margin: 0 0 8px;
-  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
-  font-weight: 400;
-  font-size: 1.3rem;
-}
-
-.budr-landing .home-story-step p {
-  margin: 0;
-  color: var(--white-dim);
-  font-size: 0.9rem;
-}
-
-.budr-landing .home-story-panel {
-  position: sticky;
-  top: 102px;
-  border: 1px solid rgba(93, 202, 165, 0.28);
-  border-radius: 16px;
-  padding: 20px;
-  background: linear-gradient(145deg, rgba(93, 202, 165, 0.12), rgba(10, 22, 20, 0.35));
-}
-
-.budr-landing .home-story-panel h3 {
-  margin: 0 0 12px;
-  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
-  font-size: 1.45rem;
-  font-weight: 400;
-}
-
-.budr-landing .home-story-panel ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 10px;
-}
-
-.budr-landing .home-story-panel li {
-  display: grid;
-  gap: 2px;
-  color: var(--white-dim);
-  font-size: 0.88rem;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.budr-landing .home-story-panel li strong {
-  color: var(--amber-lt);
-  font-size: 0.8rem;
-}
-
-.budr-landing .home-cta-band {
-  text-align: left;
-}
-
-.budr-landing .home-cta-band-inner {
+  justify-items: start;
+  gap: 18px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 18px;
-  padding: clamp(24px, 4vw, 42px);
+  padding: clamp(28px, 4.4vw, 48px);
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
 }
 
-.budr-landing .home-cta-band-inner h2 {
-  margin: 0 0 18px;
+.budr-landing .home-cta-simple-inner h2 {
+  margin: 0;
   font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
-  font-size: clamp(1.8rem, 3vw, 2.8rem);
-  line-height: 1.16;
+  font-size: clamp(1.9rem, 3vw, 2.9rem);
+  line-height: 1.14;
   font-weight: 400;
-  max-width: 22ch;
+  max-width: 20ch;
 }
 
 /* ── /institutioner rewrite ─────────────────────────────────────────────── */
@@ -2308,34 +2035,13 @@ html {
     justify-content: center;
   }
 
-  .budr-landing .home-proof p {
-    letter-spacing: 0.04em;
-    line-height: 1.7;
-  }
-
-  .budr-landing .home-overview-cards,
-  .budr-landing .home-usp-grid,
   .budr-landing .home-problem-grid,
-  .budr-landing .home-top-usp-grid,
-  .budr-landing .home-metrics-grid,
-  .budr-landing .home-story-grid,
   .budr-landing .institutioner-list-grid,
   .budr-landing .institutioner-list-grid--four {
     grid-template-columns: 1fr;
   }
 
-  .budr-landing .home-story-panel {
-    position: static;
-  }
-
-  .budr-landing .home-feature-box,
-  .budr-landing .home-overview-card,
-  .budr-landing .home-usp-card,
-  .budr-landing .home-metric-card,
-  .budr-landing .home-story-step,
-  .budr-landing .home-story-panel,
-  .budr-landing .institutioner-list-card,
-  .budr-landing .home-cta-band-inner {
+  .budr-landing .home-cta-simple-inner {
     border-radius: 14px;
   }
 
