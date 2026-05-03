@@ -2,7 +2,9 @@
 
 **Til AI/assistenter:** Læs denne fil først. Kort indgang: [`AGENTS.md`](./AGENTS.md).
 
-**Sidst opdateret (manuelt):** 2026-04-29 — **Care Portal-demo (WhyBox udvidelse):** `DemoWhyBox` på **`/care-portal-demo/assistant`** (faglig støtte = udkast, demo-endpoint) og **`/care-portal-demo/import`** (kun flow, ingen upload til server). `docs/care-portal-demo.md` ajourført.
+**Sidst opdateret (manuelt):** 2026-04-29 — **Marketing forside (`/#se-det-i-aktion`):** `useBudrLandingFadeIn` og `DayInLifeDemo` håndterer nu manglende/fejlende `IntersectionObserver` (vis alt indhold i stedet for at crashe). `DayInLifeDemo` bruger `useLayoutEffect` for mere stabil observe efter DOM; `HomeLandingPage` loader demoen med **SSR** (fjernet `dynamic(..., { ssr: false })`) så sektionen ikke afhænger af et separat client-chunk ved dybt anker-link.
+
+**Forrige (samme dag):** **Care Portal-demo (WhyBox udvidelse):** `DemoWhyBox` på **`/care-portal-demo/assistant`** (faglig støtte = udkast, demo-endpoint) og **`/care-portal-demo/import`** (kun flow, ingen upload til server). `docs/care-portal-demo.md` ajourført.
 
 **Forrige (samme dag):** **Care Portal-demo (salgsflow):** `DemoGuidedTourProvider`, guidet tour, WhyBox’es på dashboard/handover/360/Lys, `DemoAiBadge` i journal-AI-modal, CTA-sektion, m.m. Se `docs/care-portal-demo.md` og `src/lib/carePortalDemoGuidedTour.ts`.
 

@@ -13,7 +13,6 @@ const DayInLifeDemo = dynamic(
       default: m.DayInLifeDemo,
     })),
   {
-    ssr: false,
     loading: () => (
       <div className="live-demo-skeleton" role="status" aria-label="Indlæser interaktiv demo" />
     ),

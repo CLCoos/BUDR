@@ -1,7 +1,7 @@
 'use client';
 
 import { Shield } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import styles from './DayInLifeDemo.module.css';
 
 type Scene = {
@@ -48,21 +48,32 @@ export function DayInLifeDemo() {
 
   const sceneIds = useMemo(() => SCENES.map((scene) => scene.time), []);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        setVisible((prev) => {
-          const next = { ...prev };
-          for (const entry of entries) {
-            const id = (entry.target as HTMLElement).dataset.sceneId;
-            if (!id) continue;
-            if (entry.isIntersecting) next[id] = true;
-          }
-          return next;
-        });
-      },
-      { root: null, threshold: 0.28, rootMargin: '0px 0px -8% 0px' }
-    );
+  useLayoutEffect(() => {
+    if (typeof IntersectionObserver === 'undefined') {
+      setVisible(Object.fromEntries(sceneIds.map((id) => [id, true])));
+      return;
+    }
+
+    let observer: IntersectionObserver;
+    try {
+      observer = new IntersectionObserver(
+        (entries) => {
+          setVisible((prev) => {
+            const next = { ...prev };
+            for (const entry of entries) {
+              const id = (entry.target as HTMLElement).dataset.sceneId;
+              if (!id) continue;
+              if (entry.isIntersecting) next[id] = true;
+            }
+            return next;
+          });
+        },
+        { root: null, threshold: 0.28, rootMargin: '0px 0px -8% 0px' }
+      );
+    } catch {
+      setVisible(Object.fromEntries(sceneIds.map((id) => [id, true])));
+      return;
+    }
 
     for (const id of sceneIds) {
       const node = nodeMapRef.current[id];
