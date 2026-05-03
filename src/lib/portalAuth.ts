@@ -10,10 +10,14 @@ import { parseStaffOrgId } from './staffOrgScope';
 export async function getPortalSession(): Promise<Session | null> {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return null;
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  return session;
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    return session;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -25,7 +29,7 @@ export async function getPortalStaffOrgId(): Promise<string | null> {
   if (!supabase) return null;
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
   if (!user) return null;
   const { data } = await supabase.from('care_staff').select('org_id').eq('id', user.id).single();
   return parseStaffOrgId(data?.org_id ?? null);
@@ -37,7 +41,7 @@ export async function getPortalStaffRole(): Promise<string | null> {
   if (!supabase) return null;
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
   if (!user) return null;
   const { data } = await supabase.from('care_staff').select('role').eq('id', user.id).single();
   const role = (data as { role?: string } | null)?.role;
@@ -56,7 +60,7 @@ export async function requirePortalAuth(): Promise<User> {
   }
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
   if (!user) {
     redirect('/care-portal-login');
   }

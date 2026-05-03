@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -252,12 +252,22 @@ export default function ResidentOverblikTab({
   const medicationGivenCount = givenCount;
   const medicationTotalCount = activeMeds.length;
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.location.hash !== '#resident-park-checkin') return;
+    const el = document.getElementById('resident-park-checkin');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
+
   return (
     <div className="space-y-5">
       {/* ── Critical status row ─────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {/* Traffic light */}
+        {/* Traffic light + dagens PARK check-in */}
         <div
+          id="resident-park-checkin"
           className="flex flex-col gap-1 rounded-xl border"
           style={{
             padding: '1rem',
@@ -604,7 +614,13 @@ export default function ResidentOverblikTab({
                 </span>
               )}
             </div>
-            <WriteJournalEntry residentId={residentId} residentName={residentName} carePortalDark />
+            <Suspense fallback={null}>
+              <WriteJournalEntry
+                residentId={residentId}
+                residentName={residentName}
+                carePortalDark
+              />
+            </Suspense>
           </div>
           <div className="divide-y divide-[var(--cp-border)]">
             {journalList.length === 0 ? (

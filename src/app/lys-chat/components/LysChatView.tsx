@@ -1,16 +1,28 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, Mic, MicOff, Send, WifiOff } from 'lucide-react';
+import { ArrowLeft, Mic, MicOff, Send, Settings, WifiOff } from 'lucide-react';
+import { VoiceMessageButton } from '@/components/lys/VoiceMessageButton';
+import { VoiceInputWhisper } from '@/components/lys/VoiceInputWhisper';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { trackEvent } from '@/lib/analytics';
 import { tryEarnFirstChatBadge } from '@/lib/residentBadgeSync';
+import { CHRIS_VOICE_ID, LYS_VOICE_CHOICES, STINE_VOICE_ID } from '@/lib/voice/voices';
 import { getLysPhase, lysTheme, phaseDaLabel } from '@/app/park-hub/lib/lysTheme';
+import {
+  recordStreamCompleted,
+  recordStreamFirstToken,
+  recordStreamNotUsed,
+  recordVoiceInterrupt,
+  type VoiceStreamSource,
+} from '@/lib/voice/voiceObservability';
 import type { LysChatMessage } from '@/app/api/lys-chat/route';
 
 const LYS_CHAT_DRAFT_KEY = 'budr_lys_chat_draft';
+const LYS_VOICE_INTERRUPT_EVENT = 'lys:voice-interrupt';
+type VoiceInterruptSource = 'browser_stt' | 'whisper' | 'manual';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -20,6 +32,48 @@ type SavedConversation = {
   messages: LysChatMessage[];
   updated_at: string;
 };
+
+type ResidentProfileResponse = {
+  nickname?: string | null;
+  display_name?: string | null;
+  lys_voice_effective_id?: string;
+  lys_voice_autoplay?: boolean;
+  lys_voice_intro_played_at?: string | null;
+};
+
+function getTtsErrorMessage(status: number): string {
+  if (status === 401) return 'Log ind igen for at bruge oplæsning.';
+  if (status === 429) return 'Der er travlt med oplæsning lige nu. Prøv igen om lidt.';
+  if (status >= 500) return 'Oplæsning er midlertidigt utilgængelig.';
+  return 'Kunne ikke afspille lyd lige nu.';
+}
+
+function splitTtsChunks(text: string): string[] {
+  const rawParts = text
+    .split(/(?<=[.!?])\s+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  const out: string[] = [];
+  for (const part of rawParts) {
+    if (part.length <= 220) {
+      out.push(part);
+      continue;
+    }
+    const words = part.split(/\s+/).filter(Boolean);
+    let current = '';
+    for (const word of words) {
+      const next = current ? `${current} ${word}` : word;
+      if (next.length > 180) {
+        if (current) out.push(current);
+        current = word;
+      } else {
+        current = next;
+      }
+    }
+    if (current) out.push(current);
+  }
+  return out;
+}
 
 // ── Hooks ────────────────────────────────────────────────────────────────────
 
@@ -71,6 +125,51 @@ export default function LysChatView() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const draftRestored = useRef(false);
 
+  type VoicePrefs = {
+    lys_voice_effective_id: string;
+    lys_voice_autoplay: boolean;
+    lys_voice_intro_played_at: string | null;
+  };
+  const [voicePrefs, setVoicePrefs] = useState<VoicePrefs | null>(null);
+  const [residentName, setResidentName] = useState<string>('');
+  const [introMarkedLocal, setIntroMarkedLocal] = useState(false);
+  const [voiceSwitchSaving, setVoiceSwitchSaving] = useState(false);
+  const [voiceSwitchMsg, setVoiceSwitchMsg] = useState<string | null>(null);
+  const userGesturedRef = useRef(false);
+  const lastAutoplayContentRef = useRef<string | null>(null);
+  const playedWelcomeRef = useRef(false);
+  const [voiceBanner, setVoiceBanner] = useState<string | null>(null);
+  const [pendingTtsText, setPendingTtsText] = useState<string | null>(null);
+  const ttsAbortRef = useRef<AbortController | null>(null);
+  const activeAutoplaySignatureRef = useRef<string | null>(null);
+  const lastInterruptSourceRef = useRef<VoiceInterruptSource | null>(null);
+
+  const emitVoiceInterrupt = useCallback((source: VoiceInterruptSource) => {
+    lastInterruptSourceRef.current = source;
+    window.dispatchEvent(new Event(LYS_VOICE_INTERRUPT_EVENT));
+  }, []);
+
+  const interruptVoicePlayback = useCallback(() => {
+    const hadActivePlayback = !!ttsAbortRef.current;
+    ttsAbortRef.current?.abort();
+    ttsAbortRef.current = null;
+    setPendingTtsText(null);
+    if (hadActivePlayback) {
+      trackEvent('lys_voice_interrupt', {
+        source: lastInterruptSourceRef.current ?? 'manual',
+      });
+      recordVoiceInterrupt(lastInterruptSourceRef.current ?? 'manual');
+    }
+  }, []);
+
+  const quickVoiceChoices = useMemo(
+    () =>
+      LYS_VOICE_CHOICES.filter((v) => v.id === STINE_VOICE_ID || v.id === CHRIS_VOICE_ID).map(
+        (v) => ({ id: v.id, name: v.name })
+      ),
+    []
+  );
+
   // Gendan kladde (kun én gang, tom tråd)
   useEffect(() => {
     if (draftRestored.current || messages.length > 0) return;
@@ -82,6 +181,186 @@ export default function LysChatView() {
       /* ignore */
     }
   }, [messages.length]);
+
+  useEffect(() => {
+    const onFirst = () => {
+      userGesturedRef.current = true;
+    };
+    window.addEventListener('pointerdown', onFirst, { once: true });
+    return () => window.removeEventListener('pointerdown', onFirst);
+  }, []);
+
+  useEffect(() => {
+    if (!residentId) {
+      setVoicePrefs(null);
+      return;
+    }
+    let cancelled = false;
+    fetch('/api/park/resident-me', { credentials: 'same-origin' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: ResidentProfileResponse | null) => {
+        if (cancelled || !d?.lys_voice_effective_id) return;
+        const preferredName =
+          (typeof d.nickname === 'string' && d.nickname.trim()) ||
+          (typeof d.display_name === 'string' && d.display_name.trim()) ||
+          '';
+        setResidentName(preferredName);
+        setVoicePrefs({
+          lys_voice_effective_id: String(d.lys_voice_effective_id),
+          lys_voice_autoplay: !!d.lys_voice_autoplay,
+          lys_voice_intro_played_at:
+            typeof d.lys_voice_intro_played_at === 'string' ? d.lys_voice_intro_played_at : null,
+        });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [residentId]);
+
+  const playTts = useCallback(
+    async (text: string, signal?: AbortSignal) => {
+      if (!voicePrefs) return { ok: false, blocked: false as const };
+      if (signal?.aborted) return { ok: false, blocked: false as const };
+      try {
+        const res = await fetch('/api/voice/tts', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({
+            text,
+            voiceId: voicePrefs.lys_voice_effective_id,
+          }),
+        });
+        if (!res.ok) {
+          if (signal?.aborted) return { ok: false, blocked: false as const };
+          setVoiceBanner(getTtsErrorMessage(res.status));
+          return { ok: false, blocked: false as const };
+        }
+        const blob = await res.blob();
+        if (signal?.aborted) return { ok: false, blocked: false as const };
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.onended = () => URL.revokeObjectURL(url);
+        if (signal) {
+          signal.addEventListener(
+            'abort',
+            () => {
+              audio.pause();
+              URL.revokeObjectURL(url);
+            },
+            { once: true }
+          );
+        }
+        try {
+          await audio.play();
+          if (signal?.aborted) return { ok: false, blocked: false as const };
+          setVoiceBanner(null);
+          setPendingTtsText(null);
+          return { ok: true, blocked: false as const };
+        } catch {
+          URL.revokeObjectURL(url);
+          setPendingTtsText(text);
+          setVoiceBanner('Lyd er slået fra i browseren. Tryk "Aktiver lyd" for at høre svar.');
+          return { ok: false, blocked: true as const };
+        }
+      } catch {
+        if (signal?.aborted) return { ok: false, blocked: false as const };
+        setVoiceBanner('Netværksfejl ved oplæsning. Tekstchat virker stadig.');
+        return { ok: false, blocked: false as const };
+      }
+    },
+    [voicePrefs]
+  );
+
+  const playTtsQueue = useCallback(
+    async (text: string) => {
+      interruptVoicePlayback();
+      const controller = new AbortController();
+      ttsAbortRef.current = controller;
+      const chunks = splitTtsChunks(text);
+      for (const chunk of chunks) {
+        if (controller.signal.aborted) return;
+        const result = await playTts(chunk, controller.signal);
+        if (!result.ok && !result.blocked) return;
+        if (result.blocked) return;
+      }
+    },
+    [interruptVoicePlayback, playTts]
+  );
+
+  useEffect(() => {
+    const onInterrupt = () => interruptVoicePlayback();
+    window.addEventListener(LYS_VOICE_INTERRUPT_EVENT, onInterrupt);
+    return () => {
+      window.removeEventListener(LYS_VOICE_INTERRUPT_EVENT, onInterrupt);
+      interruptVoicePlayback();
+    };
+  }, [interruptVoicePlayback]);
+
+  useEffect(() => {
+    if (!voicePrefs || playedWelcomeRef.current) return;
+    playedWelcomeRef.current = true;
+    const namePart = residentName ? ` ${residentName}` : '';
+    const welcomeText = `Hej${namePart}, du kan enten tale med mig eller skrive til mig.`;
+
+    void playTts(welcomeText).then((result) => {
+      if (result.ok || result.blocked) return;
+      const onFirstPointer = () => void playTts(welcomeText);
+      window.addEventListener('pointerdown', onFirstPointer, { once: true });
+    });
+  }, [playTts, residentName, voicePrefs]);
+
+  useEffect(() => {
+    if (!voicePrefs?.lys_voice_autoplay || !userGesturedRef.current) return;
+    const last = messages[messages.length - 1];
+    if (!last || last.role !== 'assistant') return;
+    const signature = `${messages.length}:${last.content}`;
+    if (signature === activeAutoplaySignatureRef.current) return;
+    activeAutoplaySignatureRef.current = signature;
+    lastAutoplayContentRef.current = last.content;
+    void (async () => {
+      await playTtsQueue(last.content);
+    })();
+  }, [messages, playTtsQueue, voicePrefs]);
+
+  const setQuickVoice = useCallback(
+    async (voiceId: string) => {
+      if (!voicePrefs || voicePrefs.lys_voice_effective_id === voiceId) return;
+      setVoiceSwitchSaving(true);
+      setVoiceSwitchMsg(null);
+      try {
+        const res = await fetch('/api/voice/save-preference', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({
+            lys_voice_id: voiceId,
+            lys_voice_autoplay: !!voicePrefs.lys_voice_autoplay,
+          }),
+        });
+        if (!res.ok) {
+          const j = (await res.json().catch(() => ({}))) as { error?: string };
+          setVoiceSwitchMsg(j.error ?? 'Kunne ikke skifte stemme');
+          return;
+        }
+        setVoicePrefs((prev) =>
+          prev
+            ? {
+                ...prev,
+                lys_voice_effective_id: voiceId,
+              }
+            : prev
+        );
+        setVoiceSwitchMsg(null);
+      } catch {
+        setVoiceSwitchMsg('Netværksfejl ved stemmeskift');
+      } finally {
+        setVoiceSwitchSaving(false);
+      }
+    },
+    [voicePrefs]
+  );
 
   // Gem kladde løbende
   useEffect(() => {
@@ -146,6 +425,7 @@ export default function LysChatView() {
       setLoading(true);
 
       try {
+        const requestStartedAt = Date.now();
         const res = await fetch('/api/lys-chat', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
@@ -156,11 +436,12 @@ export default function LysChatView() {
             timeOfDay: phaseDaLabel(phase),
             mood: null,
             sessionContext: '',
+            stream: true,
+            conversation_id: convId ?? undefined,
           }),
         });
-        const data = (await res.json().catch(() => ({}))) as { text?: string; error?: string };
-
         if (!res.ok) {
+          const data = (await res.json().catch(() => ({}))) as { text?: string; error?: string };
           const errReply =
             res.status === 429
               ? 'Der blev sendt mange beskeder på kort tid. Vent lidt og prøv igen.'
@@ -173,7 +454,78 @@ export default function LysChatView() {
           return;
         }
 
-        const reply = data.text ?? 'Jeg hørte dig. Fortæl mig gerne mere.';
+        const contentType = res.headers.get('content-type') ?? '';
+        const streamSourceRaw = res.headers.get('x-lys-stream-source') ?? 'none';
+        const streamSource: VoiceStreamSource =
+          streamSourceRaw === 'anthropic' ||
+          streamSourceRaw === 'fallback' ||
+          streamSourceRaw === 'local'
+            ? streamSourceRaw
+            : 'none';
+        let reply = '';
+        if (contentType.includes('text/event-stream') && res.body) {
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let buffered = '';
+          let assembled = '';
+          let firstTokenTracked = false;
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buffered += decoder.decode(value, { stream: true });
+            let splitIndex = buffered.indexOf('\n\n');
+            while (splitIndex >= 0) {
+              const frame = buffered.slice(0, splitIndex);
+              buffered = buffered.slice(splitIndex + 2);
+              const lines = frame.split('\n');
+              const eventLine = lines.find((line) => line.startsWith('event: '));
+              const dataLine = lines.find((line) => line.startsWith('data: '));
+              const eventType = eventLine?.slice(7).trim() ?? '';
+              if (dataLine) {
+                const jsonPart = dataLine.slice(6);
+                try {
+                  const payload = JSON.parse(jsonPart) as { text?: string };
+                  if (typeof payload.text === 'string' && payload.text.length > 0) {
+                    if (eventType === 'token') {
+                      if (!firstTokenTracked) {
+                        firstTokenTracked = true;
+                        trackEvent('lys_stream_first_token', {
+                          ms: Date.now() - requestStartedAt,
+                          source: streamSource,
+                        });
+                        recordStreamFirstToken(Date.now() - requestStartedAt);
+                      }
+                      assembled += payload.text;
+                      setMessages([...next, { role: 'assistant' as const, content: assembled }]);
+                    } else if (eventType === 'end') {
+                      assembled = payload.text;
+                      setMessages([...next, { role: 'assistant' as const, content: assembled }]);
+                    }
+                  }
+                } catch {
+                  /* ignorer ukendt stream-frame */
+                }
+              }
+              splitIndex = buffered.indexOf('\n\n');
+            }
+          }
+          reply = assembled.trim();
+          trackEvent('lys_stream_completed', {
+            source: streamSource,
+            chars: reply.length,
+          });
+          recordStreamCompleted(streamSource, reply.length);
+        } else {
+          const data = (await res.json().catch(() => ({}))) as { text?: string };
+          reply = data.text?.trim() ?? '';
+          trackEvent('lys_stream_not_used', {
+            source: streamSource,
+          });
+          recordStreamNotUsed(streamSource);
+        }
+        if (!reply) {
+          reply = 'Jeg hørte dig. Fortæl mig gerne mere.';
+        }
         const final = [...next, { role: 'assistant' as const, content: reply }];
         setMessages(final);
         try {
@@ -232,6 +584,7 @@ export default function LysChatView() {
     };
     const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
     if (!Ctor) return;
+    emitVoiceInterrupt('browser_stt');
     stopMic();
     accRef.current = '';
     setInput('');
@@ -266,7 +619,7 @@ export default function LysChatView() {
     } catch {
       setIsListening(false);
     }
-  }, [stopMic]);
+  }, [emitVoiceInterrupt, stopMic]);
 
   const toggleMic = () => {
     if (isListening) {
@@ -274,6 +627,7 @@ export default function LysChatView() {
       stopMic();
       if (t) void handleSend(t);
     } else {
+      emitVoiceInterrupt('browser_stt');
       startMic();
     }
   };
@@ -302,6 +656,7 @@ export default function LysChatView() {
   };
 
   const loadConversation = (conv: SavedConversation) => {
+    lastAutoplayContentRef.current = null;
     setMessages(conv.messages);
     setConvId(conv.id);
     setShowHistory(false);
@@ -314,6 +669,7 @@ export default function LysChatView() {
   };
 
   const startNew = () => {
+    lastAutoplayContentRef.current = null;
     setMessages([]);
     setConvId(null);
     setShowHistory(false);
@@ -370,8 +726,18 @@ export default function LysChatView() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setVoiceMode((v) => !v)}
+            onClick={() => router.push('/lys-settings')}
             className="flex h-9 w-9 items-center justify-center rounded-full transition-all duration-150 active:scale-90"
+            style={{ backgroundColor: tokens.cardBg, color: tokens.textMuted }}
+            aria-label="Stemmeindstillinger"
+            title="Stemme"
+          >
+            <Settings className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setVoiceMode((v) => !v)}
+            className="flex h-12 min-w-[64px] items-center justify-center gap-1.5 rounded-full px-3 transition-all duration-150 active:scale-90"
             style={{
               backgroundColor: voiceMode ? `${accent}22` : tokens.cardBg,
               color: voiceMode ? accent : tokens.textMuted,
@@ -380,6 +746,7 @@ export default function LysChatView() {
             title={voiceMode ? 'Skift til tekst' : 'Skift til tale'}
           >
             <Mic className="h-4 w-4" />
+            <span className="text-[11px] font-semibold">Tal</span>
           </button>
           <button
             type="button"
@@ -401,6 +768,46 @@ export default function LysChatView() {
           )}
         </div>
       </header>
+      {voicePrefs ? (
+        <div
+          className="sticky top-[61px] z-10 px-4 py-2 backdrop-blur-xl"
+          style={{
+            backgroundColor: `${tokens.bg}E8`,
+            borderBottom: `1px solid ${accent}14`,
+          }}
+        >
+          <div className="mx-auto flex w-full max-w-[430px] items-center gap-2">
+            <p className="shrink-0 text-xs font-semibold" style={{ color: tokens.textMuted }}>
+              Stemme:
+            </p>
+            <div className="flex items-center gap-2">
+              {quickVoiceChoices.map((v) => {
+                const active = voicePrefs.lys_voice_effective_id === v.id;
+                return (
+                  <button
+                    key={v.id}
+                    type="button"
+                    disabled={voiceSwitchSaving}
+                    onClick={() => void setQuickVoice(v.id)}
+                    className="rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150 disabled:opacity-50"
+                    style={{
+                      backgroundColor: active ? `${accent}22` : tokens.cardBg,
+                      color: active ? accent : tokens.textMuted,
+                      border: `1px solid ${active ? `${accent}44` : `${accent}14`}`,
+                    }}
+                    aria-pressed={active}
+                  >
+                    {v.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          {voiceSwitchMsg ? (
+            <p className="mx-auto mt-1 max-w-[430px] text-xs text-amber-300">{voiceSwitchMsg}</p>
+          ) : null}
+        </div>
+      ) : null}
 
       {!online && (
         <div
@@ -414,6 +821,29 @@ export default function LysChatView() {
         >
           <WifiOff className="h-3.5 w-3.5 shrink-0 opacity-90" aria-hidden />
           <span>Du er offline — beskeder kan ikke sendes, før du har net igen.</span>
+        </div>
+      )}
+      {voiceBanner && (
+        <div
+          className="sticky top-0 z-10 flex items-center justify-center gap-2 px-4 py-2 text-center text-xs font-semibold"
+          style={{
+            backgroundColor: 'rgba(30,41,59,0.95)',
+            color: '#e2e8f0',
+            borderBottom: '1px solid rgba(148,163,184,0.25)',
+          }}
+          role="status"
+        >
+          <span>{voiceBanner}</span>
+          {pendingTtsText ? (
+            <button
+              type="button"
+              onClick={() => void playTts(pendingTtsText)}
+              className="rounded-full px-2.5 py-1 text-[11px] font-bold"
+              style={{ backgroundColor: `${accent}26`, color: accent }}
+            >
+              Aktiver lyd
+            </button>
+          ) : null}
         </div>
       )}
 
@@ -465,22 +895,34 @@ export default function LysChatView() {
                 </div>
               )}
               <div
-                className="max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed"
-                style={
-                  m.role === 'user'
-                    ? {
-                        backgroundColor: `${accent}22`,
-                        color: tokens.text,
-                        border: `1px solid ${accent}33`,
-                      }
-                    : {
-                        backgroundColor: tokens.cardBg,
-                        color: tokens.text,
-                        boxShadow: tokens.shadow,
-                      }
-                }
+                className={`flex max-w-[85%] items-start gap-2 ${m.role === 'user' ? '' : 'flex-row'}`}
               >
-                {m.content}
+                <div
+                  className="min-w-0 flex-1 rounded-2xl px-4 py-3 text-sm leading-relaxed"
+                  style={
+                    m.role === 'user'
+                      ? {
+                          backgroundColor: `${accent}22`,
+                          color: tokens.text,
+                          border: `1px solid ${accent}33`,
+                        }
+                      : {
+                          backgroundColor: tokens.cardBg,
+                          color: tokens.text,
+                          boxShadow: tokens.shadow,
+                        }
+                  }
+                >
+                  {m.content}
+                </div>
+                {m.role === 'assistant' && voicePrefs ? (
+                  <VoiceMessageButton
+                    text={m.content}
+                    voiceId={voicePrefs.lys_voice_effective_id}
+                    accentColor={accent}
+                    mutedColor={tokens.textMuted}
+                  />
+                ) : null}
               </div>
             </div>
           ))}
@@ -519,6 +961,28 @@ export default function LysChatView() {
         style={{ backgroundColor: `${tokens.bg}F0`, borderTop: `1px solid ${accent}14` }}
       >
         <div className="mx-auto flex w-full max-w-full items-end gap-2">
+          {residentId && voicePrefs && !voiceMode ? (
+            <VoiceInputWhisper
+              onTranscript={(t) => setInput((prev) => (prev.trim() ? `${prev.trim()} ${t}` : t))}
+              onStartCapture={() => emitVoiceInterrupt('whisper')}
+              disabled={loading || !online}
+              accentColor={accent}
+              mutedColor={tokens.textMuted}
+              introAlreadyPlayed={!!voicePrefs.lys_voice_intro_played_at || introMarkedLocal}
+              onIntroMarkedPlayed={() => {
+                setIntroMarkedLocal(true);
+                setVoicePrefs((p) =>
+                  p
+                    ? {
+                        ...p,
+                        lys_voice_intro_played_at: new Date().toISOString(),
+                      }
+                    : p
+                );
+              }}
+              voiceIdForIntro={voicePrefs.lys_voice_effective_id}
+            />
+          ) : null}
           {voiceMode ? (
             /* Voice mode: big mic button + live transcript */
             <div className="flex-1 flex flex-col gap-2">

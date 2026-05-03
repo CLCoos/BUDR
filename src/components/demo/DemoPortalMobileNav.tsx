@@ -9,6 +9,7 @@ import DepartmentSelect from '@/components/DepartmentSelect';
 import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
 import { CARE_PORTAL_DEPARTMENT_OPTIONS } from '@/lib/careDemoResidents';
 import { parseCarePortalDepartment } from '@/lib/carePortalHouse';
+import { CARE_PORTAL_DEMO_FACILITY_NAME } from '@/lib/carePortalDemoBranding';
 
 type Props = {
   children: React.ReactNode;
@@ -44,7 +45,7 @@ export default function DemoPortalMobileNav({ children }: Props) {
             className="min-w-0 flex-1 truncate text-sm font-medium"
             style={{ color: 'var(--cp-text)' }}
           >
-            Bosted Nordlys
+            {CARE_PORTAL_DEMO_FACILITY_NAME}
           </span>
         </div>
         <div className="w-full min-w-0">
@@ -74,7 +75,7 @@ export default function DemoPortalMobileNav({ children }: Props) {
       {mobileNavOpen && (
         <div
           role="presentation"
-          className="fixed inset-0 top-[52px] z-[10050] bg-black/50 md:hidden"
+          className="fixed inset-0 top-[var(--cp-demo-stack-top)] z-[10050] bg-black/50 md:hidden"
           onClick={() => setMobileNavOpen(false)}
           aria-hidden
         />
@@ -84,7 +85,7 @@ export default function DemoPortalMobileNav({ children }: Props) {
         <DemoPortalSidebar
           mobileOpen={mobileNavOpen}
           onMobileClose={() => setMobileNavOpen(false)}
-          orgName="Bosted Nordlys"
+          orgName={CARE_PORTAL_DEMO_FACILITY_NAME}
           orgLogoUrl={null}
         />
         <main className="cp-scroll min-w-0 flex-1 overflow-y-auto">{children}</main>

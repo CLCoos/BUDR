@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import LysShell from '../park-hub/components/LysShell';
 import ResidentDemoWelcomeOverlay from './ResidentDemoWelcomeOverlay';
+import DemoWhyBox from '@/components/demo/DemoWhyBox';
 
 // ── Demo data seeder ──────────────────────────────────────────────────────────
 
@@ -482,6 +483,17 @@ export default function ResidentDemoPage() {
 
       {/* Offset for banner */}
       <div className="pt-8">
+        <div className="mx-auto mb-6 max-w-2xl px-4">
+          <DemoWhyBox
+            title="Hvorfor Lys i samme produkt som portalen?"
+            storageKey="budr_demo_why_lys"
+          >
+            Lys er beboerens app — dagsplan, mål, check-in og støtte. Når I er live, deler portal og
+            app den <strong style={{ color: 'var(--cp-text)' }}>samme plan og status</strong>, så
+            personalet og borgeren ikke arbejder i to parallelle virkeligheder. Her er alt demo-data
+            i browseren.
+          </DemoWhyBox>
+        </div>
         <LysShell
           firstName="Anders"
           initials="AM"

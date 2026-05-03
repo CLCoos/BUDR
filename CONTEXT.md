@@ -2,7 +2,13 @@
 
 **Til AI/assistenter:** Læs denne fil først. Kort indgang: [`AGENTS.md`](./AGENTS.md).
 
-**Sidst opdateret (manuelt):** 2026-04-29 — **Forside (3 efterfix):** Kriseboksen i `DayInLifeDemo` beholdes som intern outro og har nu tydeligere outro-spacing (`margin-top: clamp(60px, 8vw, 80px)`) efter sidste scene. Ny editorial credibility-linje tilføjet mellem narrativ-sektion og CTA i `HomeLandingPage` (`home-credibility`). CTA gjort mere monumental i `budr-landing.css` (centreret indhold, større indre padding, større vertikal gap, center-tekst og bredere headline-max-width). Verificeret med lokal `npm run build`.
+**Sidst opdateret (manuelt):** 2026-04-29 — **Care Portal-demo (WhyBox udvidelse):** `DemoWhyBox` på **`/care-portal-demo/assistant`** (faglig støtte = udkast, demo-endpoint) og **`/care-portal-demo/import`** (kun flow, ingen upload til server). `docs/care-portal-demo.md` ajourført.
+
+**Forrige (samme dag):** **Care Portal-demo (salgsflow):** `DemoGuidedTourProvider`, guidet tour, WhyBox’es på dashboard/handover/360/Lys, `DemoAiBadge` i journal-AI-modal, CTA-sektion, m.m. Se `docs/care-portal-demo.md` og `src/lib/carePortalDemoGuidedTour.ts`.
+
+**Forrige (samme dag):** **Care Portal-demo (tydeliggørelse):** `carePortalDemoBranding`, `DemoModeRibbon`, `om-demo`, harmoniseret DEMO-tekst.
+
+**Forrige (samme dag):** **Delivery workflow/tooling:** PR-skabelon `.github/pull_request_template.md`, `docs/migrations-playbook.md`, `docs/release-checklist.md`, safety-eval (`npm run eval:safety`), README workflow-sektion.
 
 **Forrige:** 2026-04-28 — **Care Portal Lys safety-events UI:** Ny delt service `src/lib/lys/safetyEventsService.ts` til hent/ack/realtime af `lys_safety_events` + danske relative tidslabels. Ny `PortalNotificationBar` i header (`TopHeader`) viser bell-badge, dropdown med 5 nyeste ubekræftede events og realtime-opdatering med cleanup. `ActionCards` udvidet med “Lys-advarsler” (acute/elevated sortering, udtalelses-uddrag, “Åbn samtale” + “Bekræft set”). Nyt `ResidentLysSamtalerTab` på beboerkortet (`resident-360-view`) viser `lys_conversations`, modal-transskript, inline risk-flags med reasoning-tooltip og samlet “Bekræft set”.
 

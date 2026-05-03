@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { Mic } from 'lucide-react';
 import PortalShell from '@/components/PortalShell';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import ResidentHeader from '../components/ResidentHeader';
@@ -12,6 +13,7 @@ import ResidentOverblikTab from './components/ResidentOverblikTab';
 import ResidentMedicinTab from './components/ResidentMedicinTab';
 import WriteJournalEntry from './components/WriteJournalEntry';
 import ResidentOverflowMenu from './components/ResidentOverflowMenu';
+import ResidentLysSamtalerTab from '@/app/care-portal-dashboard/components/ResidentLysSamtalerTab';
 import type { DailyPlan, PendingProposal } from './components/DagsPlanPortal';
 import type { MedDefinition } from './components/types';
 import type { ResidentExportInput } from '@/lib/residentExport/types';
@@ -251,10 +253,10 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
 
 type Props = {
   params: Promise<{ residentId: string }>;
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; writeJournal?: string }>;
 };
 
-const ALL_TABS = ['overblik', 'medicin', 'dagsplan', 'plan', 'haven'] as const;
+const ALL_TABS = ['overblik', 'medicin', 'dagsplan', 'plan', 'haven', 'lys-samtaler'] as const;
 type TabId = (typeof ALL_TABS)[number];
 
 const TAB_LABELS: Record<TabId, string> = {
@@ -263,11 +265,15 @@ const TAB_LABELS: Record<TabId, string> = {
   dagsplan: 'Dagsplan',
   plan: 'Plan',
   haven: 'Haven 🌿',
+  'lys-samtaler': 'Lys-samtaler',
 };
 
 export default async function ResidentDagPage({ params, searchParams }: Props) {
   const { residentId } = await params;
-  const { tab = 'overblik' } = (await searchParams) as { tab?: string };
+  const { tab = 'overblik', writeJournal } = (await searchParams) as {
+    tab?: string;
+    writeJournal?: string;
+  };
   const activeTab = (ALL_TABS as readonly string[]).includes(tab) ? (tab as TabId) : 'overblik';
 
   const supabase = await createServerSupabaseClient();
@@ -359,7 +365,14 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
 
         {/* Action bar */}
         <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
-          <WriteJournalEntry residentId={residentId} residentName={resident.name} carePortalDark />
+          <Suspense fallback={null}>
+            <WriteJournalEntry
+              residentId={residentId}
+              residentName={resident.name}
+              carePortalDark
+              openFromQueryParam={writeJournal === '1'}
+            />
+          </Suspense>
           <ResidentOverflowMenu exportInput={exportInput} />
         </div>
 
@@ -389,6 +402,7 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
                 }
               >
                 {TAB_LABELS[t]}
+                {t === 'lys-samtaler' && <Mic size={13} className="ml-1 inline" aria-hidden />}
                 {t === 'dagsplan' && proposals.length > 0 && (
                   <span
                     className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
@@ -439,6 +453,8 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
         {activeTab === 'haven' && (
           <ResidentHavenTab residentId={residentId} residentName={resident.name} />
         )}
+
+        {activeTab === 'lys-samtaler' && <ResidentLysSamtalerTab residentId={residentId} />}
       </div>
     </PortalShell>
   );

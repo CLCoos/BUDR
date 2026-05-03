@@ -1574,13 +1574,13 @@
 
 .budr-landing .interactive-demo-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  grid-template-columns: 1fr;
+  gap: 14px;
   align-items: stretch;
 }
 
 .budr-landing .interactive-demo-lys {
-  padding: 22px 22px 24px;
+  padding: 18px 16px 20px;
   border-radius: var(--r);
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: linear-gradient(165deg, #152536 0%, #0e1828 100%);
@@ -1620,15 +1620,15 @@
 }
 
 .budr-landing .idemo-lys-sub {
-  font-size: 0.78rem;
+  font-size: 0.9rem;
   color: var(--fog);
-  line-height: 1.5;
+  line-height: 1.55;
   margin-top: 4px;
-  font-weight: 300;
+  font-weight: 400;
 }
 
 .budr-landing .idemo-block-label {
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1637,7 +1637,7 @@
 }
 
 .budr-landing .idemo-block-hint {
-  font-size: 0.72rem;
+  font-size: 0.88rem;
   color: var(--fog);
   line-height: 1.45;
   margin: -2px 0 10px;
@@ -1657,7 +1657,7 @@
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(0, 0, 0, 0.25);
   color: var(--white-dim);
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   line-height: 1.45;
   font-family: inherit;
   resize: vertical;
@@ -1675,7 +1675,7 @@
 }
 
 .budr-landing .idemo-comment-meta {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   color: var(--fog-dim);
   margin-top: 6px;
   text-align: right;
@@ -1687,15 +1687,22 @@
   gap: 8px;
 }
 
+.budr-landing .idemo-chips--mood {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
 .budr-landing .idemo-chip {
   appearance: none;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.04);
   color: var(--white-dim);
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: 500;
-  padding: 8px 14px;
-  border-radius: 100px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 12px;
   cursor: pointer;
   transition:
     background 0.15s ease,
@@ -1708,6 +1715,7 @@
 .budr-landing .idemo-chip:hover {
   border-color: rgba(93, 202, 165, 0.35);
   color: var(--white);
+  background: rgba(93, 202, 165, 0.08);
 }
 
 .budr-landing .idemo-chip.is-selected {
@@ -1726,7 +1734,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   margin-top: 8px;
   padding-top: 16px;
   border-top: 1px solid rgba(255, 255, 255, 0.07);
@@ -1742,7 +1750,7 @@
   background: none;
   border: none;
   color: var(--fog);
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -1765,6 +1773,32 @@
   transition:
     border-color 0.35s ease,
     box-shadow 0.35s ease;
+}
+
+.budr-landing .idemo-flow-connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 2px 0;
+  color: var(--fog);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.budr-landing .idemo-flow-arrow {
+  color: rgba(93, 202, 165, 0.95);
+  font-weight: 700;
+}
+
+.budr-landing .idemo-flow-arrow--mobile {
+  display: inline;
+}
+
+.budr-landing .idemo-flow-text {
+  font-size: 0.72rem;
+  font-weight: 600;
 }
 
 .budr-landing .interactive-demo-portal.is-live {
@@ -1792,12 +1826,12 @@
 }
 
 .budr-landing .idemo-portal-inner {
-  padding: 18px 18px 20px;
+  padding: 16px 14px 18px;
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-height: 280px;
+  min-height: 240px;
 }
 
 .budr-landing .idemo-portal-h {
@@ -1809,7 +1843,7 @@
 }
 
 .budr-landing .idemo-portal-lead {
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   color: var(--white-dim);
   line-height: 1.55;
   margin: 0;
@@ -1820,7 +1854,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 0.78rem;
+  font-size: 0.86rem;
   padding: 10px 12px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.03);
@@ -1857,7 +1891,7 @@
 }
 
 .budr-landing .idemo-portal-meta {
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   color: var(--fog);
   text-align: right;
   max-width: 52%;
@@ -1872,7 +1906,7 @@
   border-radius: 10px;
   background: rgba(217, 85, 85, 0.1);
   border: 1px solid rgba(217, 85, 85, 0.28);
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   color: #e8a8a8;
   line-height: 1.5;
   animation: idemo-notify-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -1965,7 +1999,7 @@
 .budr-landing .idemo-portal-foot {
   margin: 0;
   padding: 10px 14px;
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   color: var(--fog-dim);
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -1975,8 +2009,91 @@
 
 .budr-landing .idemo-full-demo-links {
   text-align: center;
-  margin: 28px 0 0;
-  font-size: 0.88rem;
+  margin: 18px 0 0;
+  font-size: 0.92rem;
+}
+
+@media (min-width: 768px) {
+  .budr-landing .interactive-demo-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .budr-landing .interactive-demo-lys {
+    padding: 22px 22px 24px;
+  }
+
+  .budr-landing .idemo-flow-connector {
+    display: none;
+  }
+
+  .budr-landing .idemo-chips--mood {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .budr-landing .idemo-chip {
+    min-height: 40px;
+    border-radius: 100px;
+    padding: 8px 14px;
+    font-size: 0.8rem;
+  }
+
+  .budr-landing .idemo-lys-sub {
+    font-size: 0.78rem;
+    font-weight: 300;
+  }
+
+  .budr-landing .idemo-block-label {
+    font-size: 0.65rem;
+  }
+
+  .budr-landing .idemo-block-hint {
+    font-size: 0.72rem;
+  }
+
+  .budr-landing .idemo-comment {
+    font-size: 0.82rem;
+  }
+
+  .budr-landing .idemo-comment-meta {
+    font-size: 0.65rem;
+  }
+
+  .budr-landing .idemo-reset {
+    font-size: 0.82rem;
+  }
+
+  .budr-landing .idemo-portal-inner {
+    padding: 18px 18px 20px;
+    min-height: 280px;
+  }
+
+  .budr-landing .idemo-portal-lead {
+    font-size: 0.82rem;
+  }
+
+  .budr-landing .idemo-portal-row {
+    font-size: 0.78rem;
+  }
+
+  .budr-landing .idemo-portal-meta {
+    font-size: 0.68rem;
+  }
+
+  .budr-landing .idemo-portal-notify {
+    font-size: 0.78rem;
+  }
+
+  .budr-landing .idemo-portal-foot {
+    font-size: 0.65rem;
+  }
+
+  .budr-landing .idemo-full-demo-links {
+    margin: 28px 0 0;
+    font-size: 0.88rem;
+  }
 }
 
 .budr-landing .idemo-full-demo-links a {

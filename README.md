@@ -77,6 +77,14 @@ Efter **hver** session med kodeændringer:
 2. Opdater relevante docs (typisk `README.md`), hvis workflows, ruter eller driftskrav ændres.
 3. Kør minimum `npm run lint` og helst `npm run type-check && npm run build` før aflevering.
 
+## 🧭 Delivery workflow (ROI)
+
+- **PR-template:** Brug `.github/pull_request_template.md` for fast sikkerheds-, RLS- og smoke-disciplin.
+- **DB playbook:** Følg `docs/migrations-playbook.md` ved alle migrationer.
+- **Release-checklist:** Brug `docs/release-checklist.md` ved hver release/hotfix.
+- **Lys safety-eval:** Kør `npm run eval:safety` (kræver `ANTHROPIC_API_KEY`) efter ændringer i safety/prompt/model.
+- **Care Portal-demo:** `/care-portal-demo` + **guidet tour** (knap nederst til venstre / start fra overlay eller dashboard) og **WhyBox**-forklaringer — se `docs/care-portal-demo.md` og `/care-portal-demo/om-demo`.
+
 ## Care Portal — journal AI (kvalitet)
 
 **Fagliggør med AI** (`/api/portal/journal-polish`) bruger Anthropic. For at tune sprog og pålidelighed:

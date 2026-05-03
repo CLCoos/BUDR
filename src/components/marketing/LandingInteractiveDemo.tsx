@@ -352,7 +352,7 @@ export function LandingInteractiveDemo() {
             <p className="idemo-block-hint">
               Fra lyst til tungt — vælg det, der passer bedst lige nu.
             </p>
-            <div className="idemo-chips" role="group" aria-label="Humør">
+            <div className="idemo-chips idemo-chips--mood" role="group" aria-label="Humør">
               {MOODS.map((opt) => (
                 <button
                   key={opt.id}
@@ -431,6 +431,12 @@ export function LandingInteractiveDemo() {
               Nulstil
             </button>
           </div>
+        </div>
+
+        <div className="idemo-flow-connector" aria-hidden>
+          <span className="idemo-flow-arrow">→</span>
+          <span className="idemo-flow-text">Resultat i Care Portal</span>
+          <span className="idemo-flow-arrow idemo-flow-arrow--mobile">↓</span>
         </div>
 
         <div className={`interactive-demo-portal ${sent ? 'is-live' : ''}`}>

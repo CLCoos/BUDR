@@ -7,7 +7,9 @@ export default async function DesignSystemPage() {
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
-  } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
+  } = supabase
+    ? await supabase.auth.getUser().catch(() => ({ data: { user: null } }))
+    : { data: { user: null } };
 
   if (!canAccessDesignSystemPage(user?.email ?? undefined)) {
     notFound();

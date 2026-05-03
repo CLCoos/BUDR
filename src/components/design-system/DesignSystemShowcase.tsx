@@ -10,6 +10,12 @@ import {
   TrafficLightFilter,
   type TrafficFilterValue,
 } from '@/components/patterns/TrafficLightFilter';
+import { FilterBar, FilterBarDensityToggle } from '@/components/patterns/FilterBar';
+import { ResidentRow } from '@/components/patterns/ResidentRow';
+import type { ResidentItem } from '@/app/resident-360-view/residentOverviewTypes';
+import { VoiceMessageButton } from '@/components/lys/VoiceMessageButton';
+import { VoiceInputWhisper } from '@/components/lys/VoiceInputWhisper';
+import { DEFAULT_FEMALE_VOICE_ID } from '@/lib/voice/voices';
 import styles from './DesignSystemShowcase.module.css';
 
 const sections = [
@@ -24,6 +30,10 @@ const sections = [
   'PageHeader',
   'LiveIndicator',
   'TrafficLightFilter',
+  'Patterns-FilterBar',
+  'Patterns-ResidentRow',
+  'Voice-VoiceMessageButton',
+  'Voice-VoiceInputWhisper',
   'Layout-TopHeader',
   'Layout-Sidebar',
   'UserMenu',
@@ -61,6 +71,34 @@ const colorTokens = [
 ];
 
 const spacingTokens = ['1', '2', '3', '4', '5', '6', '8', '10', '12', '16', '20', '24'] as const;
+
+const MOCK_RESIDENT_ROW: ResidentItem = {
+  id: 'demo-1',
+  name: 'Kirsten Rasmussen',
+  initials: 'KR',
+  room: '109',
+  house: 'Hus A',
+  trafficLight: 'gul',
+  moodScore: 6,
+  lastCheckinIso: new Date().toISOString(),
+  notePreview: 'Vil gerne have besøg i eftermiddag.',
+  checkinToday: true,
+  pendingProposals: 1,
+  nameFieldsMissing: false,
+};
+
+const MOCK_RESIDENT_ROW_ALERT: ResidentItem = {
+  ...MOCK_RESIDENT_ROW,
+  id: 'demo-2',
+  name: 'Ole Nielsen',
+  initials: 'ON',
+  trafficLight: 'roed',
+  moodScore: 3,
+  checkinToday: false,
+  lastCheckinIso: null,
+  notePreview: 'Ingen check-in i dag',
+  pendingProposals: 0,
+};
 
 const typographyRows = [
   {
@@ -164,6 +202,10 @@ export function DesignSystemShowcase() {
   const [theme, setTheme] = useState<BudrTheme>('dark');
   const [focusCount, setFocusCount] = useState(0);
   const [trafficFilterValue, setTrafficFilterValue] = useState<TrafficFilterValue>('all');
+  const [patternSearch, setPatternSearch] = useState('');
+  const [patternTraffic, setPatternTraffic] = useState<TrafficFilterValue>('all');
+  const [patternDensity, setPatternDensity] = useState<'compact' | 'comfortable'>('comfortable');
+  const [voiceDemoTranscript, setVoiceDemoTranscript] = useState('');
 
   useEffect(() => {
     const initial = readStoredBudrTheme();
@@ -500,6 +542,123 @@ export function DesignSystemShowcase() {
             </div>
             <pre className={styles.code}>
               <code>{`import { TrafficLightFilter } from '@/components/patterns/TrafficLightFilter';\n\n<TrafficLightFilter value="all" onChange={setFilter} counts={counts} />`}</code>
+            </pre>
+          </section>
+
+          <section id="patterns-filterbar" className={styles.section}>
+            <h2 className={styles.sectionTitle}>Patterns / FilterBar</h2>
+            <p className={styles.mono} style={{ marginBottom: '0.75rem' }}>
+              Bruges på beboerlisten; kræver Care Portal tokens (<code>--cp-*</code>) fra global
+              stylesheet.
+            </p>
+            <Card>
+              <FilterBar
+                searchPlaceholder="Søg beboer…"
+                searchValue={patternSearch}
+                onSearchChange={setPatternSearch}
+                trafficFilter={patternTraffic}
+                onTrafficFilterChange={setPatternTraffic}
+                trafficCounts={{ all: 12, red: 1, yellow: 2, green: 8, none: 1 }}
+                departmentLabel="Hus"
+                departmentOptions={[
+                  { value: 'alle', label: 'Alle huse' },
+                  { value: 'A', label: 'Hus A' },
+                  { value: 'B', label: 'Hus B' },
+                ]}
+                departmentValue="alle"
+                onDepartmentChange={() => null}
+                actions={
+                  <FilterBarDensityToggle
+                    density={patternDensity}
+                    onToggle={() =>
+                      setPatternDensity((d) => (d === 'comfortable' ? 'compact' : 'comfortable'))
+                    }
+                  />
+                }
+              />
+            </Card>
+            <pre className={styles.code}>
+              <code>{`import { FilterBar, FilterBarDensityToggle } from '@/components/patterns/FilterBar';`}</code>
+            </pre>
+          </section>
+
+          <section id="patterns-residentrow" className={styles.section}>
+            <h2 className={styles.sectionTitle}>Patterns / ResidentRow</h2>
+            <div className={styles.stack}>
+              <Card padding="none">
+                <ResidentRow
+                  resident={MOCK_RESIDENT_ROW}
+                  density={patternDensity}
+                  onRowClick={() => setFocusCount((c) => c + 1)}
+                  onQuickAction={() => setFocusCount((c) => c + 1)}
+                />
+                <ResidentRow
+                  resident={MOCK_RESIDENT_ROW_ALERT}
+                  density={patternDensity}
+                  onRowClick={() => setFocusCount((c) => c + 1)}
+                  onQuickAction={() => setFocusCount((c) => c + 1)}
+                />
+              </Card>
+            </div>
+            <pre className={styles.code}>
+              <code>{`import { ResidentRow } from '@/components/patterns/ResidentRow';`}</code>
+            </pre>
+          </section>
+
+          <section id="voice-voicemessagebutton" className={styles.section}>
+            <h2 className={styles.sectionTitle}>Voice / VoiceMessageButton</h2>
+            <p className={styles.mono} style={{ marginBottom: '0.75rem' }}>
+              Afspiller TTS via <code>/api/voice/tts</code> (kræver env + staff- eller
+              beboer-session).
+            </p>
+            <Card>
+              <div
+                className="flex flex-wrap items-center gap-4 p-4"
+                style={{ background: 'var(--bg-surface-2)' }}
+              >
+                <VoiceMessageButton
+                  text="Hej — dette er en kort test af stemmen."
+                  voiceId={DEFAULT_FEMALE_VOICE_ID}
+                  accentColor="var(--brand-primary)"
+                  mutedColor="var(--text-tertiary)"
+                />
+                <span className="text-sm text-[var(--text-secondary)]">
+                  Tryk for idle → loading → playing
+                </span>
+              </div>
+            </Card>
+            <pre className={styles.code}>
+              <code>{`import { VoiceMessageButton } from '@/components/lys/VoiceMessageButton';`}</code>
+            </pre>
+          </section>
+
+          <section id="voice-voiceinputwhisper" className={styles.section}>
+            <h2 className={styles.sectionTitle}>Voice / VoiceInputWhisper</h2>
+            <p className={styles.mono} style={{ marginBottom: '0.75rem' }}>
+              Whisper via <code>/api/voice/stt</code>. Intro springes over her (allerede afspillet).
+            </p>
+            <Card>
+              <div
+                className="flex flex-wrap items-end gap-3 p-4"
+                style={{ background: 'var(--bg-surface-2)' }}
+              >
+                <VoiceInputWhisper
+                  onTranscript={(t) => setVoiceDemoTranscript(t)}
+                  introAlreadyPlayed
+                  onIntroMarkedPlayed={() => null}
+                  voiceIdForIntro={DEFAULT_FEMALE_VOICE_ID}
+                  accentColor="#2DD4A5"
+                  mutedColor="#6b7280"
+                />
+                <span className="text-sm text-[var(--text-secondary)] max-w-xs">
+                  {voiceDemoTranscript
+                    ? `Transkription: ${voiceDemoTranscript}`
+                    : 'Optag → stop → tekst vises her'}
+                </span>
+              </div>
+            </Card>
+            <pre className={styles.code}>
+              <code>{`import { VoiceInputWhisper } from '@/components/lys/VoiceInputWhisper';`}</code>
             </pre>
           </section>
 

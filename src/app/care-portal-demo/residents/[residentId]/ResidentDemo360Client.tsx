@@ -33,6 +33,7 @@ import {
   getResidentDemoDetail,
   SITUATION_TEMPLATES,
 } from '@/lib/careDemoResidentDetail';
+import DemoWhyBox from '@/components/demo/DemoWhyBox';
 import { HavenGardenScene } from '@/components/haven/HavenGardenScene';
 import { getHavenAmbientPeriod } from '@/components/haven/havenConstants';
 import type {
@@ -1292,6 +1293,17 @@ export default function ResidentDemo360Client({
               </div>
             </div>
           </SectionCard>
+
+          <DemoWhyBox
+            title="Hvorfor journal som kladde før godkendelse?"
+            storageKey="budr_demo_why_journal_360"
+            className="mb-5"
+          >
+            Tale og AI kan hjælpe med formulering, men i BUDR tæller notatet først som journal i
+            overblik og videre flow, når det er{' '}
+            <strong style={{ color: 'var(--cp-text)' }}>godkendt</strong>. Det beskytter både
+            beboer, personale og dokumentationskvalitet.
+          </DemoWhyBox>
 
           <div className="grid gap-5 lg:grid-cols-2">
             <SectionCard id="journal" title="Journal" icon={Stethoscope}>

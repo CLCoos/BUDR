@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getResidentId } from '@/lib/residentAuth';
+import { DEFAULT_FEMALE_VOICE_ID, isKnownElevenLabsVoiceId } from '@/lib/voice/voices';
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -23,7 +24,9 @@ export async function GET(): Promise<NextResponse> {
 
   const { data, error } = await supabase
     .from('care_residents')
-    .select('user_id, display_name, onboarding_data, org_id, nickname, color_theme, avatar_url')
+    .select(
+      'user_id, display_name, onboarding_data, org_id, nickname, color_theme, avatar_url, lys_voice_id, lys_voice_autoplay, lys_voice_intro_played_at'
+    )
     .eq('user_id', residentId)
     .maybeSingle();
 
@@ -34,7 +37,34 @@ export async function GET(): Promise<NextResponse> {
     return NextResponse.json({ error: 'Ikke fundet' }, { status: 404 });
   }
 
-  return NextResponse.json(data);
+  let orgDefaultVoice: string | null = null;
+  const orgId = (data as { org_id?: string | null }).org_id;
+  if (orgId) {
+    const { data: orgRow } = await supabase
+      .from('organisations')
+      .select('lys_default_voice_id')
+      .eq('id', orgId)
+      .maybeSingle();
+    const v = (orgRow as { lys_default_voice_id?: string | null } | null)?.lys_default_voice_id;
+    orgDefaultVoice = typeof v === 'string' && isKnownElevenLabsVoiceId(v) ? v : null;
+  }
+
+  const row = data as {
+    lys_voice_id?: string | null;
+    lys_voice_autoplay?: boolean | null;
+    lys_voice_intro_played_at?: string | null;
+  };
+  const selfVoice =
+    typeof row.lys_voice_id === 'string' && isKnownElevenLabsVoiceId(row.lys_voice_id)
+      ? row.lys_voice_id
+      : null;
+  const lys_voice_effective_id = selfVoice ?? orgDefaultVoice ?? DEFAULT_FEMALE_VOICE_ID;
+
+  return NextResponse.json({
+    ...data,
+    lys_voice_effective_id,
+    lys_org_default_voice_id: orgDefaultVoice,
+  });
 }
 
 export async function PATCH(req: Request): Promise<NextResponse> {
