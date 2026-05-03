@@ -5,6 +5,7 @@ import AnalyticsGate from '@/components/AnalyticsGate';
 import DemoGuidedTourProvider from '@/components/demo/DemoGuidedTourProvider';
 import SonnerToaster from '@/components/SonnerToaster';
 import BudrThemeProvider from '@/components/theme/BudrThemeProvider';
+import { AuthenticatedUserProvider } from '@/contexts/AuthenticatedUserContext';
 import './globals.css';
 
 const dmSans = DM_Sans({
@@ -48,11 +49,13 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="da" className={`${dmSans.variable} ${dmSerifDisplay.variable}`}>
       <body>
         <BudrThemeProvider>
-          <DemoGuidedTourProvider>
-            <AnalyticsGate />
-            {children}
-            <SonnerToaster />
-          </DemoGuidedTourProvider>
+          <AuthenticatedUserProvider>
+            <DemoGuidedTourProvider>
+              <AnalyticsGate />
+              {children}
+              <SonnerToaster />
+            </DemoGuidedTourProvider>
+          </AuthenticatedUserProvider>
         </BudrThemeProvider>
       </body>
     </html>
