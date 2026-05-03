@@ -149,13 +149,24 @@ export async function acknowledgeSafetyEvent(eventId: string, staffId: string): 
   if (error) throw error;
 }
 
+function uniqueSafetyChannelTopic(organisationId: string): string {
+  /* Hvert kald skal have eget topic: `supabase.channel(name)` genbruger eksisterende kanal, og
+   * man må ikke tilføje nye `postgres_changes`-callbacks efter `subscribe()` (fx når både
+   * `PortalNotificationBar` og `ActionCards` abonnerer på samme org). */
+  const suffix =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+  return `lys-safety-events-${organisationId}-${suffix}`;
+}
+
 export function subscribeSafetyEvents(
   organisationId: string,
   callback: (payload: { eventType: 'INSERT' | 'UPDATE'; event: SafetyEventRow }) => void
 ): () => void {
   const supabase = supabaseOrThrow();
   const channel: RealtimeChannel = supabase
-    .channel(`lys-safety-events-${organisationId}`)
+    .channel(uniqueSafetyChannelTopic(organisationId))
     .on(
       'postgres_changes',
       {
