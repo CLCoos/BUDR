@@ -1076,8 +1076,12 @@ export default function SettingsClient({
         )}
       </section>
 
-      <MarketingCopyCmsCard />
-      <MarketingSectionsCmsCard />
+      {canManageRoles && (
+        <>
+          <MarketingCopyCmsCard />
+          <MarketingSectionsCmsCard />
+        </>
+      )}
     </div>
   );
 }

@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requirePortalAuth } from '@/lib/portalAuth';
 import { parseStaffOrgId } from '@/lib/staffOrgScope';
+import { PERMISSIONS } from '@/lib/permissions';
+import { hasPortalPermission } from '@/lib/portalPermissions';
 import {
   DEFAULT_INSTITUTIONER_HERO_COPY,
   sanitizeInstitutionerHeroCopy,
@@ -25,6 +27,10 @@ function getAdminClient() {
 
 export async function GET(): Promise<NextResponse> {
   const user = await requirePortalAuth();
+  const canManage = await hasPortalPermission(PERMISSIONS.MANAGE_ROLES);
+  if (!canManage) {
+    return NextResponse.json({ error: 'Manglende rettighed' }, { status: 403 });
+  }
   const orgId = parseStaffOrgId(user.user_metadata?.org_id);
   if (!orgId) {
     return NextResponse.json({ error: 'Manglende org_id på bruger' }, { status: 403 });
@@ -65,6 +71,10 @@ export async function GET(): Promise<NextResponse> {
 
 export async function PUT(req: Request): Promise<NextResponse> {
   const user = await requirePortalAuth();
+  const canManage = await hasPortalPermission(PERMISSIONS.MANAGE_ROLES);
+  if (!canManage) {
+    return NextResponse.json({ error: 'Manglende rettighed' }, { status: 403 });
+  }
   const orgId = parseStaffOrgId(user.user_metadata?.org_id);
   if (!orgId) {
     return NextResponse.json({ error: 'Manglende org_id på bruger' }, { status: 403 });

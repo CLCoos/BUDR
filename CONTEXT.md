@@ -2,7 +2,9 @@
 
 **Til AI/assistenter:** Læs denne fil først. Kort indgang: [`AGENTS.md`](./AGENTS.md).
 
-**Sidst opdateret (manuelt):** 2026-04-29 — **Lys safety realtime (dashboard-crash):** `subscribeSafetyEvents` bruger nu **unikt Realtime-kanalnavn** pr. abonnement (`safetyEventsService.ts`). Ellers genbrugte Supabase `channel('lys-safety-events-<org>')` mellem `PortalNotificationBar` og `ActionCards`, og den anden `.on()` landede efter `subscribe()` → client exception på `/care-portal-dashboard`.
+**Sidst opdateret (manuelt):** 2026-05-07 — **Sikkerhedshotfix (RLS/API-scope):** Baseline + ny migration `20260507111000_drop_permissive_staff_rls_policies.sql` fjerner legacy permissive RLS policies (`USING (true)`) på `journal_entries` og `resident_medications`, så org-scopede staff policies ikke omgås af Postgres OR-semantik. `staff-assistant` kræver nu `care_staff`-række + org-scope og bruger service-role kun med eksplicit `org_id`-filter; marketing-CMS API’er kræver `MANAGE_ROLES`, og settings viser CMS-kort kun for brugere med den rettighed.
+
+**Forrige:** 2026-04-29 — **Lys safety realtime (dashboard-crash):** `subscribeSafetyEvents` bruger nu **unikt Realtime-kanalnavn** pr. abonnement (`safetyEventsService.ts`). Ellers genbrugte Supabase `channel('lys-safety-events-<org>')` mellem `PortalNotificationBar` og `ActionCards`, og den anden `.on()` landede efter `subscribe()` → client exception på `/care-portal-dashboard`.
 
 **Forrige (samme dag):** **Root auth-provider (fix blank forside):** `AuthenticatedUserProvider` ligger nu i **`src/app/layout.tsx`**, så delt client-chunk (fx `PortalNotificationBar` / `useAuthenticatedUser`) ikke crasher på marketing-sider. `PortalShell` og `care-portal-dashboard/setup/layout` bruger ikke længere duplikat-provider; `DesignSystemWithAuth` stoler på root-layout.
 

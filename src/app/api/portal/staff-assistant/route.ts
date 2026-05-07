@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { parseBudrFollowUpsBlock } from '@/lib/portalStaffAssistantFollowUps';
+import { parseStaffOrgId } from '@/lib/staffOrgScope';
 
 function getServiceClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false } }
-  );
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceKey) return null;
+  return createClient(url, serviceKey, { auth: { persistSession: false } });
 }
 
 export async function POST(req: NextRequest) {
@@ -20,6 +20,16 @@ export async function POST(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { data: staffRow, error: staffError } = await supabase
+    .from('care_staff')
+    .select('org_id')
+    .eq('id', user.id)
+    .maybeSingle();
+  const orgId = parseStaffOrgId(staffRow?.org_id ?? null);
+  if (staffError || !orgId) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
 
   let body: { messages?: Array<{ role: 'user' | 'assistant'; content: string }> };
   try {
@@ -37,11 +47,15 @@ export async function POST(req: NextRequest) {
   if (!key) return NextResponse.json({ error: 'AI ikke konfigureret' }, { status: 503 });
 
   const service = getServiceClient();
+  if (!service) {
+    return NextResponse.json({ error: 'Server ikke konfigureret' }, { status: 503 });
+  }
 
   // Fetch resident context
   const { data: residents } = await service
     .from('care_residents')
     .select('user_id, display_name, onboarding_data')
+    .eq('org_id', orgId)
     .order('display_name');
 
   // Fetch recent journal entries for context (last 7 days, capped at 15)
@@ -50,6 +64,7 @@ export async function POST(req: NextRequest) {
     .from('journal_entries')
     .select('entry_text, category, created_at, care_residents(display_name)')
     .eq('journal_status', 'godkendt')
+    .eq('org_id', orgId)
     .gte('created_at', since)
     .order('created_at', { ascending: false })
     .limit(15);
