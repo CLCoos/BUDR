@@ -1,19 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const getResidentIdMock = vi.fn();
-const createServerSupabaseClientMock = vi.fn();
-const createClientMock = vi.fn();
+const mocks = vi.hoisted(() => ({
+  getResidentId: vi.fn(),
+  createServerSupabaseClient: vi.fn(),
+  createClient: vi.fn(),
+}));
 
 vi.mock('@/lib/residentAuth', () => ({
-  getResidentId: getResidentIdMock,
+  getResidentId: mocks.getResidentId,
 }));
 
 vi.mock('@/lib/supabase/server', () => ({
-  createServerSupabaseClient: createServerSupabaseClientMock,
+  createServerSupabaseClient: mocks.createServerSupabaseClient,
 }));
 
 vi.mock('@supabase/supabase-js', () => ({
-  createClient: createClientMock,
+  createClient: mocks.createClient,
 }));
 
 import { assertVoiceApiCaller, validateActiveResidentId } from './voiceApiAuth';
@@ -43,8 +45,8 @@ describe('voice API auth', () => {
   });
 
   it('does not authorize paid voice calls from a forged non-UUID resident cookie', async () => {
-    getResidentIdMock.mockResolvedValue('not-a-resident-id');
-    createServerSupabaseClientMock.mockResolvedValue({
+    mocks.getResidentId.mockResolvedValue('not-a-resident-id');
+    mocks.createServerSupabaseClient.mockResolvedValue({
       auth: { getUser: vi.fn(async () => ({ data: { user: null } })) },
     });
 
@@ -53,13 +55,13 @@ describe('voice API auth', () => {
       status: 401,
       message: 'Unauthorized',
     });
-    expect(createClientMock).not.toHaveBeenCalled();
+    expect(mocks.createClient).not.toHaveBeenCalled();
   });
 
   it('authorizes a resident cookie only after the resident and org are active', async () => {
     const residentId = '550e8400-e29b-41d4-a716-446655440000';
-    getResidentIdMock.mockResolvedValue(residentId);
-    createClientMock.mockReturnValue(
+    mocks.getResidentId.mockResolvedValue(residentId);
+    mocks.createClient.mockReturnValue(
       serviceClient({
         care_residents: () =>
           queryResult({ data: { user_id: residentId, org_id: 'org-1' }, error: null }),
@@ -68,12 +70,12 @@ describe('voice API auth', () => {
     );
 
     await expect(assertVoiceApiCaller()).resolves.toEqual({ ok: true, kind: 'resident' });
-    expect(createServerSupabaseClientMock).not.toHaveBeenCalled();
+    expect(mocks.createServerSupabaseClient).not.toHaveBeenCalled();
   });
 
   it('rejects residents from deactivated organisations', async () => {
     const residentId = '550e8400-e29b-41d4-a716-446655440000';
-    createClientMock.mockReturnValue(
+    mocks.createClient.mockReturnValue(
       serviceClient({
         care_residents: () =>
           queryResult({ data: { user_id: residentId, org_id: 'org-1' }, error: null }),
