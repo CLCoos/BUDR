@@ -1,23 +1,19 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getResidentId } from '@/lib/residentAuth';
+import { assertResidentVoiceApiCaller } from '@/lib/voice/voiceApiAuth';
 import { isKnownElevenLabsVoiceId } from '@/lib/voice/voices';
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return null;
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
 export async function POST(req: Request) {
-  const residentId = await getResidentId();
-  if (!residentId) {
-    const guidance =
-      process.env.NODE_ENV !== 'production'
-        ? 'Ingen beboersession fundet. Åbn /lys-chat eller /park-hub først, og prøv igen.'
-        : 'Unauthorized';
-    return NextResponse.json({ error: guidance }, { status: 401 });
+  const auth = await assertResidentVoiceApiCaller();
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.message }, { status: auth.status });
   }
 
   let body: { lys_voice_id?: unknown; lys_voice_autoplay?: unknown };
@@ -48,7 +44,7 @@ export async function POST(req: Request) {
       lys_voice_id: voiceId,
       lys_voice_autoplay: autoplay,
     })
-    .eq('user_id', residentId);
+    .eq('user_id', auth.residentId);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

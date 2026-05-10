@@ -95,6 +95,10 @@ Efter **hver** session med kodeændringer:
 
 Detaljer og sikkerhed: [`CONTEXT.md`](./CONTEXT.md) → *Environment variables*.
 
+## Lys voice — lokal test
+
+`/api/voice/tts` og `/api/voice/stt` kræver som udgangspunkt staff-session eller en validerbar beboer-cookie. Hvis `/lys-voice-test` skal kalde voice-API'erne uden session i lokal udvikling, sæt `BUDR_ALLOW_UNAUTHENTICATED_VOICE_TEST=true` i `.env.local`.
+
 ## 📱 Deployment
 
 Build the application for production:
