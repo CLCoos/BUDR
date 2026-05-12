@@ -5,7 +5,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
  * TTS/STT må kaldes af indlogget beboer (resident-session) eller staff (Supabase session).
  */
 export async function assertVoiceApiCaller(): Promise<
-  { ok: true; kind: 'resident' | 'staff' } | { ok: false; status: 401 | 503; message: string }
+  { ok: true; kind: 'resident' | 'staff' } | { ok: false; status: 401 | 403 | 503; message: string }
 > {
   const resident = await requireResidentApiSession();
   if (resident.ok) {
