@@ -2,7 +2,9 @@
 
 **Til AI/assistenter:** Læs denne fil først. Kort indgang: [`AGENTS.md`](./AGENTS.md).
 
-**Sidst opdateret (manuelt):** 2026-04-29 — **Lys safety realtime (dashboard-crash):** `subscribeSafetyEvents` bruger nu **unikt Realtime-kanalnavn** pr. abonnement (`safetyEventsService.ts`). Ellers genbrugte Supabase `channel('lys-safety-events-<org>')` mellem `PortalNotificationBar` og `ActionCards`, og den anden `.on()` landede efter `subscribe()` → client exception på `/care-portal-dashboard`.
+**Sidst opdateret (manuelt):** 2026-05-12 — **Resident API auth hardening:** `/api/park/*`, `/api/lys*` og resident voice-pref endpoints validerer nu `budr_resident_session` (HttpOnly token i `resident_sessions`) mod `budr_resident_id` før service-role writes/reads. `/api/voice/tts` og `/api/voice/stt` kræver enten gyldig resident-session eller en rigtig `care_staff` Supabase-session (ingen generel dev-bypass). `/app/[resident_id]` sender igen til PIN/WebAuthn-login, og `/api/resident-session` validerer tokenet server-side og sætter både session- og resident-id-cookie.
+
+**Forrige:** 2026-04-29 — **Lys safety realtime (dashboard-crash):** `subscribeSafetyEvents` bruger nu **unikt Realtime-kanalnavn** pr. abonnement (`safetyEventsService.ts`). Ellers genbrugte Supabase `channel('lys-safety-events-<org>')` mellem `PortalNotificationBar` og `ActionCards`, og den anden `.on()` landede efter `subscribe()` → client exception på `/care-portal-dashboard`.
 
 **Forrige (samme dag):** **Root auth-provider (fix blank forside):** `AuthenticatedUserProvider` ligger nu i **`src/app/layout.tsx`**, så delt client-chunk (fx `PortalNotificationBar` / `useAuthenticatedUser`) ikke crasher på marketing-sider. `PortalShell` og `care-portal-dashboard/setup/layout` bruger ikke længere duplikat-provider; `DesignSystemWithAuth` stoler på root-layout.
 

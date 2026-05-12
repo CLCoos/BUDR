@@ -70,6 +70,16 @@ function isResidentRoute(pathname: string): boolean {
   );
 }
 
+function isResidentApiRoute(pathname: string): boolean {
+  return (
+    pathname === '/api/lys-chat' ||
+    pathname.startsWith('/api/park/') ||
+    pathname.startsWith('/api/lys/') ||
+    pathname === '/api/voice/save-preference' ||
+    pathname === '/api/voice/mark-intro-played'
+  );
+}
+
 function isBudrAdminRoute(pathname: string): boolean {
   return pathname === '/budr-admin' || pathname.startsWith('/budr-admin/');
 }
@@ -142,6 +152,39 @@ async function residentExistsInDb(userId: string): Promise<boolean | null> {
     .maybeSingle();
   if (orgErr) return null;
   return !orgRow?.deactivated_at;
+}
+
+async function validResidentSession(req: NextRequest): Promise<'ok' | 'invalid' | 'misconfigured'> {
+  const residentId = req.cookies.get(RESIDENT_ID_COOKIE)?.value?.trim();
+  const sessionToken = req.cookies.get(RESIDENT_SESSION_COOKIE)?.value?.trim();
+  if (!residentId || !sessionToken || !isUuid(residentId) || !isUuid(sessionToken)) {
+    return 'invalid';
+  }
+
+  const admin = getServiceClient();
+  if (!admin) return 'misconfigured';
+
+  const { data: session, error } = await admin
+    .from('resident_sessions')
+    .select('resident_id')
+    .eq('token', sessionToken)
+    .gt('expires_at', new Date().toISOString())
+    .maybeSingle();
+  if (error || !session || (session as { resident_id?: string }).resident_id !== residentId) {
+    return 'invalid';
+  }
+
+  const exists = await residentExistsInDb(residentId);
+  if (exists === null) return 'misconfigured';
+  return exists ? 'ok' : 'invalid';
+}
+
+function residentApiAuthFailure(status: 401 | 503, message: string): NextResponse {
+  const res = NextResponse.json({ error: message }, { status });
+  if (status === 401) {
+    clearResidentCookies(res);
+  }
+  return res;
 }
 
 // ── Staff auth (Supabase Auth JWT + care_staff) ───────────────
@@ -270,6 +313,16 @@ export async function middleware(req: NextRequest) {
   // 1) Demo-portal: kun synlig når simulerings-flag er sat
   if (isCarePortalDemoRoute(pathname) && !carePortalSimulated()) {
     return new NextResponse(null, { status: 404 });
+  }
+
+  // 1b) Resident API'er må ikke stole på den client-læsbare resident-id-cookie alene.
+  if (isResidentApiRoute(pathname)) {
+    const session = await validResidentSession(req);
+    if (session === 'ok') return NextResponse.next();
+    if (session === 'misconfigured') {
+      return residentApiAuthFailure(503, 'Server ikke konfigureret');
+    }
+    return residentApiAuthFailure(401, 'Unauthorized');
   }
 
   // 2) Staff login-side: altid åben; redirect hvis allerede autoriseret
@@ -418,5 +471,10 @@ export const config = {
     '/lys-chat/:path*',
     '/lys-settings',
     '/lys-settings/:path*',
+    '/api/lys-chat',
+    '/api/lys/:path*',
+    '/api/park/:path*',
+    '/api/voice/save-preference',
+    '/api/voice/mark-intro-played',
   ],
 };

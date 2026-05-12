@@ -95,6 +95,10 @@ Efter **hver** session med kodeændringer:
 
 Detaljer og sikkerhed: [`CONTEXT.md`](./CONTEXT.md) → *Environment variables*.
 
+## Resident API sessions
+
+Resident service-role APIs require a validated `budr_resident_session` cookie from PIN/WebAuthn login; `/app/<resident_id>` redirects through `/login/<resident_id>` before opening `/park-hub`.
+
 ## 📱 Deployment
 
 Build the application for production:

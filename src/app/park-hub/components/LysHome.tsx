@@ -368,6 +368,7 @@ export default function LysHome({
 
   const handleLogout = () => {
     document.cookie = 'budr_resident_id=; path=/; max-age=0';
+    void fetch('/api/resident-session', { method: 'DELETE', credentials: 'same-origin' });
     router.replace('/');
   };
 

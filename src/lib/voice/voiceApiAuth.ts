@@ -1,22 +1,17 @@
-import { getResidentId } from '@/lib/residentAuth';
+import { requireResidentApiSession } from '@/lib/residentApiSession';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 /**
- * TTS/STT må kaldes af indlogget beboer (resident-cookie) eller staff (Supabase session).
- * I development tillades kald uden session, så `/lys-voice-test` matcher sidens adgang
- * (localhost — ikke i production).
+ * TTS/STT må kaldes af indlogget beboer (resident-session) eller staff (Supabase session).
  */
 export async function assertVoiceApiCaller(): Promise<
   { ok: true; kind: 'resident' | 'staff' } | { ok: false; status: 401 | 503; message: string }
 > {
-  if (process.env.NODE_ENV !== 'production') {
-    return { ok: true, kind: 'staff' };
-  }
-
-  const residentId = await getResidentId();
-  if (residentId) {
+  const resident = await requireResidentApiSession();
+  if (resident.ok) {
     return { ok: true, kind: 'resident' };
   }
+
   const supabase = await createServerSupabaseClient();
   if (!supabase) {
     return { ok: false, status: 503, message: 'Server ikke konfigureret' };
@@ -25,6 +20,15 @@ export async function assertVoiceApiCaller(): Promise<
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
+    return { ok: false, status: resident.status, message: resident.message };
+  }
+
+  const { data: staffRow, error } = await supabase
+    .from('care_staff')
+    .select('id')
+    .eq('id', user.id)
+    .maybeSingle();
+  if (error || !staffRow) {
     return { ok: false, status: 401, message: 'Unauthorized' };
   }
   return { ok: true, kind: 'staff' };

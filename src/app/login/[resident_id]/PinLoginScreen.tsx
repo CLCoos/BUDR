@@ -89,12 +89,18 @@ export default function PinLoginScreen({
           return;
         }
 
-        // Store session via server action
-        await fetch('/api/resident-session', {
+        // Store validated session + resident-id cookies via server route.
+        const sessionRes = await fetch('/api/resident-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token: json.data.session_token }),
         });
+        if (!sessionRes.ok) {
+          setError('Session kunne ikke gemmes — prøv igen');
+          setDigits([]);
+          triggerShake();
+          return;
+        }
 
         router.replace(redirectTo);
       } catch {
