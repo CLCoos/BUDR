@@ -26,7 +26,7 @@ describe('squashed Supabase baseline', () => {
 
   it('does not recreate tenant-bypassing authenticated policies', () => {
     expect(baselineSql).not.toMatch(
-      /CREATE POLICY (?!\"service insert notifications\").*(USING \(true\)|WITH CHECK \(true\))/
+      /CREATE POLICY (?!"service insert notifications").*(USING \(true\)|WITH CHECK \(true\))/
     );
     expect(baselineSql).toContain('CREATE POLICY care_residents_staff_select');
     expect(baselineSql).toContain('CREATE POLICY journal_staff_select_org');
