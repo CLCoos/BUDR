@@ -2,7 +2,9 @@
 
 **Til AI/assistenter:** Læs denne fil først. Kort indgang: [`AGENTS.md`](./AGENTS.md).
 
-**Sidst opdateret (manuelt):** 2026-04-29 — **Lys safety realtime (dashboard-crash):** `subscribeSafetyEvents` bruger nu **unikt Realtime-kanalnavn** pr. abonnement (`safetyEventsService.ts`). Ellers genbrugte Supabase `channel('lys-safety-events-<org>')` mellem `PortalNotificationBar` og `ActionCards`, og den anden `.on()` landede efter `subscribe()` → client exception på `/care-portal-dashboard`.
+**Sidst opdateret (manuelt):** 2026-05-13 — **Supabase baseline hotfix:** `20260101000000_baseline.sql` er sanitiseret til plain SQL (`CREATE SCHEMA IF NOT EXISTS`, ingen `\restrict`), indeholder igen journal-workflowkolonner (`journal_status`, `approved_at`, `approved_by`) og CMS `revisions`, og de tenant-bypassing `USING (true)`/`WITH CHECK (true)` policies fra squashed dump er fjernet til fordel for org-scopede policies. Ny aktiv repair-migration `20260513111500_repair_baseline_schema_rls.sql` retter miljøer hvor den dårlige baseline allerede er anvendt; `migrationBaseline.test.ts` låser invariants.
+
+**Forrige:** 2026-04-29 — **Lys safety realtime (dashboard-crash):** `subscribeSafetyEvents` bruger nu **unikt Realtime-kanalnavn** pr. abonnement (`safetyEventsService.ts`). Ellers genbrugte Supabase `channel('lys-safety-events-<org>')` mellem `PortalNotificationBar` og `ActionCards`, og den anden `.on()` landede efter `subscribe()` → client exception på `/care-portal-dashboard`.
 
 **Forrige (samme dag):** **Root auth-provider (fix blank forside):** `AuthenticatedUserProvider` ligger nu i **`src/app/layout.tsx`**, så delt client-chunk (fx `PortalNotificationBar` / `useAuthenticatedUser`) ikke crasher på marketing-sider. `PortalShell` og `care-portal-dashboard/setup/layout` bruger ikke længere duplikat-provider; `DesignSystemWithAuth` stoler på root-layout.
 

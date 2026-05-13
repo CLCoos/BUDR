@@ -2,8 +2,6 @@
 -- PostgreSQL database dump
 --
 
-\restrict ClK9lP0RJHAi3Jgha6A92yCgNsvkDK0buiLPwRw9sCEEKhhfILyu9H6yXppgB86
-
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 18.3
 
@@ -23,7 +21,7 @@ SET row_security = off;
 -- Name: public; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE SCHEMA public;
+CREATE SCHEMA IF NOT EXISTS public;
 
 
 --
@@ -602,7 +600,10 @@ CREATE TABLE public.journal_entries (
     category text DEFAULT 'observation'::text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     show_in_diary boolean DEFAULT true NOT NULL,
-    org_id uuid
+    org_id uuid,
+    journal_status text DEFAULT 'godkendt'::text NOT NULL,
+    approved_at timestamp with time zone,
+    approved_by uuid
 );
 
 
@@ -663,7 +664,8 @@ CREATE TABLE public.marketing_content_blocks (
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_by uuid,
     published_at timestamp with time zone,
-    published_by uuid
+    published_by uuid,
+    revisions jsonb DEFAULT '[]'::jsonb NOT NULL
 );
 
 
@@ -1266,6 +1268,14 @@ ALTER TABLE ONLY public.journal_entries
 
 
 --
+-- Name: journal_entries journal_entries_journal_status_check; Type: CHECK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.journal_entries
+    ADD CONSTRAINT journal_entries_journal_status_check CHECK ((journal_status = ANY (ARRAY['kladde'::text, 'godkendt'::text])));
+
+
+--
 -- Name: lys_conversations lys_conversations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1713,6 +1723,13 @@ CREATE INDEX journal_entries_resident_id_idx ON public.journal_entries USING btr
 
 
 --
+-- Name: idx_journal_entries_resident_status_created; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_journal_entries_resident_status_created ON public.journal_entries USING btree (resident_id, journal_status, created_at DESC);
+
+
+--
 -- Name: lys_conversations_resident_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2030,6 +2047,14 @@ ALTER TABLE ONLY public.journal_entries
 
 
 --
+-- Name: journal_entries journal_entries_approved_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.journal_entries
+    ADD CONSTRAINT journal_entries_approved_by_fkey FOREIGN KEY (approved_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+
+--
 -- Name: lys_conversations lys_conversations_resident_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2238,41 +2263,6 @@ ALTER TABLE ONLY public.user_profiles
 
 
 --
--- Name: resident_medications Authenticated users can insert medications; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Authenticated users can insert medications" ON public.resident_medications FOR INSERT TO authenticated WITH CHECK (true);
-
-
---
--- Name: resident_medications Authenticated users can read medications; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Authenticated users can read medications" ON public.resident_medications FOR SELECT TO authenticated USING (true);
-
-
---
--- Name: resident_medications Authenticated users can update medications; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Authenticated users can update medications" ON public.resident_medications FOR UPDATE TO authenticated USING (true);
-
-
---
--- Name: journal_entries Staff can insert journal entries; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Staff can insert journal entries" ON public.journal_entries FOR INSERT TO authenticated WITH CHECK (true);
-
-
---
--- Name: journal_entries Staff can read journal entries; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Staff can read journal entries" ON public.journal_entries FOR SELECT TO authenticated USING (true);
-
-
---
 -- Name: daily_plans Staff manage plans; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -2312,20 +2302,6 @@ CREATE POLICY adu_self_select ON public.ai_daily_usage FOR SELECT TO authenticat
 --
 
 ALTER TABLE public.ai_daily_usage ENABLE ROW LEVEL SECURITY;
-
---
--- Name: garden_plots anon_all_plots; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY anon_all_plots ON public.garden_plots TO authenticated, anon USING (true) WITH CHECK (true);
-
-
---
--- Name: facility_contacts anon_read_facility_contacts; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY anon_read_facility_contacts ON public.facility_contacts FOR SELECT TO authenticated, anon USING (true);
-
 
 --
 -- Name: audit_logs; Type: ROW SECURITY; Schema: public; Owner: -
@@ -2794,6 +2770,35 @@ CREATE POLICY gp_staff_update ON public.garden_plots FOR UPDATE TO authenticated
 
 ALTER TABLE public.journal_entries ENABLE ROW LEVEL SECURITY;
 
+
+--
+-- Name: journal_entries journal_staff_select_org; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY journal_staff_select_org ON public.journal_entries FOR SELECT TO authenticated USING ((public.care_is_portal_staff() AND (EXISTS ( SELECT 1
+   FROM public.care_residents cr
+  WHERE (((cr.user_id)::text = (journal_entries.resident_id)::text) AND (cr.org_id IS NOT NULL) AND (cr.org_id = ANY (public.care_visible_facility_ids())))))));
+
+
+--
+-- Name: journal_entries journal_staff_insert_org; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY journal_staff_insert_org ON public.journal_entries FOR INSERT TO authenticated WITH CHECK ((public.care_is_portal_staff() AND (EXISTS ( SELECT 1
+   FROM public.care_residents cr
+  WHERE (((cr.user_id)::text = (journal_entries.resident_id)::text) AND (cr.org_id IS NOT NULL) AND (cr.org_id = ANY (public.care_visible_facility_ids())))))));
+
+
+--
+-- Name: journal_entries journal_staff_update_org; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY journal_staff_update_org ON public.journal_entries FOR UPDATE TO authenticated USING ((public.care_is_portal_staff() AND (EXISTS ( SELECT 1
+   FROM public.care_residents cr
+  WHERE (((cr.user_id)::text = (journal_entries.resident_id)::text) AND (cr.org_id IS NOT NULL) AND (cr.org_id = ANY (public.care_visible_facility_ids())))))) WITH CHECK ((public.care_is_portal_staff() AND (EXISTS ( SELECT 1
+   FROM public.care_residents cr
+  WHERE (((cr.user_id)::text = (journal_entries.resident_id)::text) AND (cr.org_id IS NOT NULL) AND (cr.org_id = ANY (public.care_visible_facility_ids())))))));
+
 --
 -- Name: lys_conversations lc_resident_delete; Type: POLICY; Schema: public; Owner: -
 --
@@ -2981,10 +2986,24 @@ CREATE POLICY on_call_staff_staff_update_own_org ON public.on_call_staff FOR UPD
 
 
 --
--- Name: care_residents open_select; Type: POLICY; Schema: public; Owner: -
+-- Name: care_residents care_residents_staff_select; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY open_select ON public.care_residents FOR SELECT USING (true);
+CREATE POLICY care_residents_staff_select ON public.care_residents FOR SELECT TO authenticated USING ((public.care_is_portal_staff() AND (org_id IS NOT NULL) AND (org_id = ANY (public.care_visible_facility_ids()))));
+
+
+--
+-- Name: care_residents care_residents_self_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY care_residents_self_select ON public.care_residents FOR SELECT TO authenticated USING (auth.uid() = user_id);
+
+
+--
+-- Name: care_residents care_residents_self_update; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY care_residents_self_update ON public.care_residents FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 
 --
@@ -3135,38 +3154,47 @@ CREATE POLICY pgs_staff_update ON public.park_goal_steps FOR UPDATE TO authentic
 ALTER TABLE public.plan_proposals ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: park_daily_checkin portal can read all checkins; Type: POLICY; Schema: public; Owner: -
+-- Name: park_daily_checkin pdc_staff_select; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY "portal can read all checkins" ON public.park_daily_checkin FOR SELECT USING (true);
-
-
---
--- Name: portal_messages portal insert messages; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "portal insert messages" ON public.portal_messages FOR INSERT WITH CHECK (true);
+CREATE POLICY pdc_staff_select ON public.park_daily_checkin FOR SELECT TO authenticated USING (public.care_staff_can_access_resident((resident_id)::text));
 
 
 --
--- Name: portal_message_threads portal insert threads; Type: POLICY; Schema: public; Owner: -
+-- Name: portal_messages portal_messages_insert_own_org; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY "portal insert threads" ON public.portal_message_threads FOR INSERT WITH CHECK (true);
-
-
---
--- Name: portal_messages portal read messages; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "portal read messages" ON public.portal_messages FOR SELECT USING (true);
+CREATE POLICY portal_messages_insert_own_org ON public.portal_messages FOR INSERT TO authenticated WITH CHECK ((public.care_is_portal_staff() AND ((org_id)::uuid = ANY (public.care_visible_facility_ids())) AND (EXISTS ( SELECT 1
+   FROM public.portal_message_threads t
+  WHERE ((t.id = portal_messages.thread_id) AND (t.org_id = portal_messages.org_id))))));
 
 
 --
--- Name: portal_message_threads portal read threads; Type: POLICY; Schema: public; Owner: -
+-- Name: portal_message_threads portal_threads_insert_own_org; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY "portal read threads" ON public.portal_message_threads FOR SELECT USING (true);
+CREATE POLICY portal_threads_insert_own_org ON public.portal_message_threads FOR INSERT TO authenticated WITH CHECK ((public.care_is_portal_staff() AND ((org_id)::uuid = ANY (public.care_visible_facility_ids()))));
+
+
+--
+-- Name: portal_messages portal_messages_select_own_org; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY portal_messages_select_own_org ON public.portal_messages FOR SELECT TO authenticated USING ((public.care_is_portal_staff() AND ((org_id)::uuid = ANY (public.care_visible_facility_ids()))));
+
+
+--
+-- Name: portal_message_threads portal_threads_select_own_org; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY portal_threads_select_own_org ON public.portal_message_threads FOR SELECT TO authenticated USING ((public.care_is_portal_staff() AND ((org_id)::uuid = ANY (public.care_visible_facility_ids()))));
+
+
+--
+-- Name: portal_message_threads portal_threads_update_own_org; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY portal_threads_update_own_org ON public.portal_message_threads FOR UPDATE TO authenticated USING ((public.care_is_portal_staff() AND ((org_id)::uuid = ANY (public.care_visible_facility_ids())))) WITH CHECK ((public.care_is_portal_staff() AND ((org_id)::uuid = ANY (public.care_visible_facility_ids()))));
 
 
 --
@@ -3365,10 +3393,10 @@ ALTER TABLE public.resident_plan_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.resident_xp ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: park_daily_checkin residents can insert own checkins; Type: POLICY; Schema: public; Owner: -
+-- Name: park_daily_checkin pdc_resident_insert; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY "residents can insert own checkins" ON public.park_daily_checkin FOR INSERT WITH CHECK (true);
+CREATE POLICY pdc_resident_insert ON public.park_daily_checkin FOR INSERT TO authenticated WITH CHECK (((auth.uid())::text = resident_id));
 
 
 --
@@ -3547,13 +3575,6 @@ CREATE POLICY sm_sender_insert ON public.support_messages FOR INSERT TO authenti
 
 
 --
--- Name: care_portal_notifications staff acknowledge notifications; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "staff acknowledge notifications" ON public.care_portal_notifications FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
-
-
---
 -- Name: organisations staff can read own org; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -3565,20 +3586,6 @@ CREATE POLICY "staff can read own org" ON public.organisations FOR SELECT TO aut
 --
 
 CREATE POLICY "staff can read own org audit logs" ON public.audit_logs FOR SELECT TO authenticated USING ((public.care_is_portal_staff() AND (actor_org_id = ANY (public.care_visible_facility_ids()))));
-
-
---
--- Name: care_portal_notifications staff read notifications; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "staff read notifications" ON public.care_portal_notifications FOR SELECT TO authenticated USING (true);
-
-
---
--- Name: facility_contacts staff_all_facility_contacts; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY staff_all_facility_contacts ON public.facility_contacts TO authenticated USING (true) WITH CHECK (true);
 
 
 --
@@ -3751,6 +3758,4 @@ ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
 --
 -- PostgreSQL database dump complete
 --
-
-\unrestrict ClK9lP0RJHAi3Jgha6A92yCgNsvkDK0buiLPwRw9sCEEKhhfILyu9H6yXppgB86
 
