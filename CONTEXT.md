@@ -2,7 +2,9 @@
 
 **Til AI/assistenter:** Læs denne fil først. Kort indgang: [`AGENTS.md`](./AGENTS.md).
 
-**Sidst opdateret (manuelt):** 2026-04-29 — **Lys safety realtime (dashboard-crash):** `subscribeSafetyEvents` bruger nu **unikt Realtime-kanalnavn** pr. abonnement (`safetyEventsService.ts`). Ellers genbrugte Supabase `channel('lys-safety-events-<org>')` mellem `PortalNotificationBar` og `ActionCards`, og den anden `.on()` landede efter `subscribe()` → client exception på `/care-portal-dashboard`.
+**Sidst opdateret (manuelt):** 2026-05-14 — **Kritisk RLS-fix (squashed baseline):** `20260101000000_baseline.sql` indeholder ikke længere psql-only `\restrict`/`\unrestrict` eller legacy åbne RLS-politikker (`USING/WITH CHECK true`) for beboere, journal, medicin, check-ins, beskeder, notifikationer, facility contacts og garden plots. Ny migration `20260514110500_lock_down_legacy_open_rls_policies.sql` dropper de samme policy-navne på miljøer hvor baseline/ældre manuelle policies allerede er anvendt og genskaber org-/beboer-scopede policies. Kør `supabase db push --linked --include-all` efter merge.
+
+**Forrige:** 2026-04-29 — **Lys safety realtime (dashboard-crash):** `subscribeSafetyEvents` bruger nu **unikt Realtime-kanalnavn** pr. abonnement (`safetyEventsService.ts`). Ellers genbrugte Supabase `channel('lys-safety-events-<org>')` mellem `PortalNotificationBar` og `ActionCards`, og den anden `.on()` landede efter `subscribe()` → client exception på `/care-portal-dashboard`.
 
 **Forrige (samme dag):** **Root auth-provider (fix blank forside):** `AuthenticatedUserProvider` ligger nu i **`src/app/layout.tsx`**, så delt client-chunk (fx `PortalNotificationBar` / `useAuthenticatedUser`) ikke crasher på marketing-sider. `PortalShell` og `care-portal-dashboard/setup/layout` bruger ikke længere duplikat-provider; `DesignSystemWithAuth` stoler på root-layout.
 
