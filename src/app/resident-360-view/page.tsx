@@ -6,34 +6,8 @@ import ResidentOverviewGrid from './components/ResidentOverviewGrid';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { parseStaffOrgId } from '@/lib/staffOrgScope';
 import { formatResidentName, getInitials, type NameDisplayMode } from '@/lib/residents/formatName';
-
-// ── Types ─────────────────────────────────────────────────────
-
-type TrafficDb = 'grøn' | 'gul' | 'rød';
-type TrafficUi = 'groen' | 'gul' | 'roed';
-
-const DB_TO_UI: Record<TrafficDb, TrafficUi> = {
-  grøn: 'groen',
-  gul: 'gul',
-  rød: 'roed',
-};
-
-export type ResidentItem = {
-  id: string;
-  name: string;
-  initials: string;
-  room: string;
-  /** Afdeling/hus fra onboarding_data (fx Hus A, TLS) */
-  house: string;
-  trafficLight: TrafficUi | null;
-  moodScore: number | null;
-  lastCheckinIso: string | null;
-  notePreview: string;
-  checkinToday: boolean;
-  pendingProposals: number;
-};
-
-// ── Data fetching ─────────────────────────────────────────────
+import { copenhagenStartOfTodayUtcIso, copenhagenYmd } from '@/lib/copenhagenDay';
+import { DB_TO_UI, type ResidentItem, type TrafficDb } from './residentOverviewTypes';
 
 async function fetchResidentsOverview(
   supabase: SupabaseClient,
@@ -41,7 +15,8 @@ async function fetchResidentsOverview(
   mode: NameDisplayMode
 ): Promise<ResidentItem[]> {
   const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  const todayStart = copenhagenStartOfTodayUtcIso(now);
+  const todayYmd = copenhagenYmd(now);
 
   const [residentsRes, checkinsRes, proposalsRes] = await Promise.all([
     supabase
@@ -75,7 +50,6 @@ async function fetchResidentsOverview(
 
   const proposals = (proposalsRes.data ?? []) as { resident_id: string }[];
 
-  // Latest check-in per resident (already ordered desc)
   const latestCheckin = new Map<string, (typeof checkins)[0]>();
   for (const c of checkins) {
     if (!latestCheckin.has(c.resident_id)) latestCheckin.set(c.resident_id, c);
@@ -86,19 +60,16 @@ async function fetchResidentsOverview(
     pendingCount.set(p.resident_id, (pendingCount.get(p.resident_id) ?? 0) + 1);
   }
 
-  const today = new Date();
-
   return residents.map((r) => {
     const od = r.onboarding_data ?? {};
     const c = latestCheckin.get(r.user_id);
     const tl = c ? (DB_TO_UI[c.traffic_light as TrafficDb] ?? null) : null;
 
-    const checkinDate = c ? new Date(c.created_at) : null;
-    const checkinToday = checkinDate
-      ? checkinDate.getFullYear() === today.getFullYear() &&
-        checkinDate.getMonth() === today.getMonth() &&
-        checkinDate.getDate() === today.getDate()
-      : false;
+    const checkinToday = c ? copenhagenYmd(new Date(c.created_at)) === todayYmd : false;
+
+    const fn = (r.first_name ?? '').trim();
+    const ln = (r.last_name ?? '').trim();
+    const nameFieldsMissing = !fn && !ln;
 
     return {
       id: r.user_id,
@@ -115,11 +86,10 @@ async function fetchResidentsOverview(
       notePreview: c?.note?.trim() || 'Ingen check-in i dag',
       checkinToday,
       pendingProposals: pendingCount.get(r.user_id) ?? 0,
+      nameFieldsMissing,
     };
   });
 }
-
-// ── Page ──────────────────────────────────────────────────────
 
 export default async function Resident360ViewPage() {
   const supabase = await createServerSupabaseClient();
@@ -147,7 +117,7 @@ export default async function Resident360ViewPage() {
 
   return (
     <PortalShell>
-      <ResidentOverviewGrid residents={residents} />
+      <ResidentOverviewGrid residents={residents} orgId={orgId} />
     </PortalShell>
   );
 }

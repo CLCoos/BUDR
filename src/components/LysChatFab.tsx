@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Sparkles } from 'lucide-react';
 
-const HIDDEN_PREFIXES = ['/lys-chat', '/onboarding', '/morning-check-in', '/portal'];
+const HIDDEN_PREFIXES = ['/lys-chat', '/onboarding', '/portal'];
 
 /**
  * FAB: ét tap til Lys-chat på alle skærme med bottom navigation.

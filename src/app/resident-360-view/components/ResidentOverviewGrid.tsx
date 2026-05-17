@@ -1,58 +1,30 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Search, Users, CheckCircle, AlertTriangle } from 'lucide-react';
+import { ArrowDownAZ, ArrowUpDown, BookOpen, Users } from 'lucide-react';
 import {
   residentNameRoomInitialsMatch,
   sortResidentsBySearchRelevance,
 } from '@/lib/residentSearchMatch';
-import type { ResidentItem } from '../page';
+import { copenhagenIsAtOrAfterClock } from '@/lib/copenhagenDay';
+import type { ResidentItem, TrafficUi } from '../residentOverviewTypes';
 import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
-import { onboardingHouseToCareHouse } from '@/lib/carePortalHouse';
 import {
-  TrafficLightFilter,
-  type TrafficFilterValue,
-} from '@/components/patterns/TrafficLightFilter';
-
-// ── Colour tokens ─────────────────────────────────────────────
-
-type TrafficUi = 'groen' | 'gul' | 'roed';
-
-function trafficDotColor(tl: TrafficUi): string {
-  const style = getComputedStyle(document.documentElement);
-  if (tl === 'groen') return style.getPropertyValue('--cp-green').trim();
-  if (tl === 'gul') return style.getPropertyValue('--cp-amber').trim();
-  if (tl === 'roed') return style.getPropertyValue('--cp-red').trim();
-  return style.getPropertyValue('--cp-muted').trim();
-}
-
-const TRAFFIC_LABEL: Record<TrafficUi, string> = {
-  groen: 'Grøn',
-  gul: 'Gul',
-  roed: 'Rød',
-};
-
-function avatarStyle(tl: TrafficUi | null): React.CSSProperties {
-  if (tl === 'roed') return { backgroundColor: 'var(--cp-red-dim)', color: 'var(--cp-red)' };
-  if (tl === 'gul') return { backgroundColor: 'var(--cp-amber-dim)', color: 'var(--cp-amber)' };
-  return { backgroundColor: 'var(--cp-bg3)', color: 'var(--cp-muted)' };
-}
-
-function formatCheckin(iso: string | null): string {
-  if (!iso) return '—';
-  const date = new Date(iso);
-  const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const yesterdayStart = new Date(todayStart.getTime() - 86400000);
-  const timeStr = date.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
-  if (date >= todayStart) return timeStr;
-  if (date >= yesterdayStart) return `I går ${timeStr}`;
-  return date.toLocaleDateString('da-DK', { day: 'numeric', month: 'short' });
-}
-
-// ── Component ────────────────────────────────────────────────
+  onboardingHouseToCareHouse,
+  parseCarePortalDepartment,
+  type CarePortalDepartment,
+} from '@/lib/carePortalHouse';
+import { CARE_PORTAL_DEPARTMENT_OPTIONS } from '@/lib/careDemoResidents';
+import type { TrafficFilterValue } from '@/components/patterns/TrafficLightFilter';
+import { FilterBar, FilterBarDensityToggle } from '@/components/patterns/FilterBar';
+import { ResidentRow, type ResidentQuickAction } from '@/components/patterns/ResidentRow';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { LiveIndicator } from '@/components/ui/LiveIndicator';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { cn } from '@/lib/cn';
+import styles from './ResidentOverviewGrid.module.css';
 
 const HOUSE_ORDER = ['Hus A', 'Hus B', 'Hus C', 'Hus D', 'TLS', '—'];
 
@@ -61,32 +33,120 @@ function houseRank(h: string): number {
   return i === -1 ? 99 : i;
 }
 
-type Props = { residents: ResidentItem[] };
+function trafficRank(tl: TrafficUi | null): number {
+  if (tl === 'roed') return 0;
+  if (tl === 'gul') return 1;
+  if (tl === 'groen') return 2;
+  return 3;
+}
 
-export default function ResidentOverviewGrid({ residents }: Props) {
+type SortKey = 'status' | 'name' | 'checkin';
+type SortDir = 'asc' | 'desc';
+
+const NAME_TIP_KEY = (orgId: string) => `budr-resident-name-tip-dismissed-${orgId}`;
+
+type Props = { residents: ResidentItem[]; orgId: string };
+
+export default function ResidentOverviewGrid({ residents, orgId }: Props) {
   const router = useRouter();
-  const { department } = useCarePortalDepartment();
+  const { department, setDepartment } = useCarePortalDepartment();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<TrafficFilterValue>('all');
+  const [density, setDensity] = useState<'compact' | 'comfortable'>('comfortable');
+  const [sortKey, setSortKey] = useState<SortKey>('status');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const [nameTipDismissed, setNameTipDismissed] = useState(false);
+  const [nameTipReady, setNameTipReady] = useState(false);
+  const [afterTenToday, setAfterTenToday] = useState(false);
+
+  useEffect(() => {
+    try {
+      setNameTipDismissed(localStorage.getItem(NAME_TIP_KEY(orgId)) === '1');
+    } catch {
+      setNameTipDismissed(false);
+    } finally {
+      setNameTipReady(true);
+    }
+  }, [orgId]);
+
+  useEffect(() => {
+    const tick = () => {
+      setAfterTenToday(copenhagenIsAtOrAfterClock(new Date(), 10, 0));
+    };
+    tick();
+    const id = window.setInterval(tick, 60_000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const dismissNameTip = useCallback(() => {
+    setNameTipDismissed(true);
+    try {
+      localStorage.setItem(NAME_TIP_KEY(orgId), '1');
+    } catch {
+      /* ignore */
+    }
+  }, [orgId]);
+
+  const incompleteNameCount = useMemo(
+    () => residents.filter((r) => r.nameFieldsMissing).length,
+    [residents]
+  );
 
   const residentsInDept = useMemo(() => {
     if (department === 'alle') return residents;
     return residents.filter((r) => onboardingHouseToCareHouse(r.house) === department);
   }, [residents, department]);
 
-  const sorted = useMemo(
-    () =>
-      [...residentsInDept].sort(
-        (a, b) =>
-          houseRank(a.house) - houseRank(b.house) ||
-          a.name.localeCompare(b.name, 'da', { sensitivity: 'base' })
-      ),
+  const trafficCounts = useMemo(
+    () => ({
+      all: residentsInDept.length,
+      red: residentsInDept.filter((r) => r.trafficLight === 'roed').length,
+      yellow: residentsInDept.filter((r) => r.trafficLight === 'gul').length,
+      green: residentsInDept.filter((r) => r.trafficLight === 'groen').length,
+      none: residentsInDept.filter((r) => !r.trafficLight).length,
+    }),
     [residentsInDept]
   );
 
+  const sortedBase = useMemo(() => {
+    const copy = [...residentsInDept];
+    const cmpStatus = (a: ResidentItem, b: ResidentItem) => {
+      const ta = trafficRank(a.trafficLight);
+      const tb = trafficRank(b.trafficLight);
+      if (ta !== tb) return ta - tb;
+      // Uden check-in i dag først (inden for samme trafiklys)
+      if (a.checkinToday !== b.checkinToday) {
+        return (a.checkinToday ? 1 : 0) - (b.checkinToday ? 1 : 0);
+      }
+      return (
+        houseRank(a.house) - houseRank(b.house) ||
+        a.name.localeCompare(b.name, 'da', { sensitivity: 'base' })
+      );
+    };
+    const cmpName = (a: ResidentItem, b: ResidentItem) =>
+      a.name.localeCompare(b.name, 'da', { sensitivity: 'base' });
+    const cmpCheckin = (a: ResidentItem, b: ResidentItem) => {
+      if (!a.lastCheckinIso && !b.lastCheckinIso) return 0;
+      if (!a.lastCheckinIso) return 1;
+      if (!b.lastCheckinIso) return -1;
+      return a.lastCheckinIso.localeCompare(b.lastCheckinIso);
+    };
+
+    if (sortKey === 'status') {
+      copy.sort((a, b) => (sortDir === 'asc' ? 1 : -1) * cmpStatus(a, b));
+      return copy;
+    }
+    if (sortKey === 'name') {
+      copy.sort((a, b) => (sortDir === 'asc' ? 1 : -1) * cmpName(a, b));
+      return copy;
+    }
+    copy.sort((a, b) => (sortDir === 'asc' ? 1 : -1) * cmpCheckin(a, b));
+    return copy;
+  }, [residentsInDept, sortKey, sortDir]);
+
   const filtered = useMemo(() => {
     const ql = search.trim().toLowerCase();
-    const base = sorted.filter((r) => {
+    const base = sortedBase.filter((r) => {
       const matchSearch =
         residentNameRoomInitialsMatch(r.name, r.room, r.initials, search) ||
         (ql.length > 0 && r.house.toLowerCase().includes(ql));
@@ -101,371 +161,298 @@ export default function ResidentOverviewGrid({ residents }: Props) {
     });
     const q = search.trim();
     return q ? sortResidentsBySearchRelevance(base, q) : base;
-  }, [sorted, search, filter]);
+  }, [sortedBase, search, filter]);
 
   const checkinCount = residentsInDept.filter((r) => r.checkinToday).length;
   const missingCheckin = residentsInDept.length - checkinCount;
   const alertCount = residentsInDept.filter((r) => r.trafficLight === 'roed').length;
-  const trafficCounts = useMemo(
-    () => ({
-      all: residentsInDept.length,
-      red: residentsInDept.filter((r) => r.trafficLight === 'roed').length,
-      yellow: residentsInDept.filter((r) => r.trafficLight === 'gul').length,
-      green: residentsInDept.filter((r) => r.trafficLight === 'groen').length,
-      none: residentsInDept.filter((r) => !r.trafficLight).length,
-    }),
-    [residentsInDept]
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir(key === 'checkin' ? 'desc' : 'asc');
+    }
+  };
+
+  const deptOptions = useMemo(
+    () => [
+      { value: 'alle', label: 'Alle huse' },
+      ...CARE_PORTAL_DEPARTMENT_OPTIONS.map((o) => ({ value: o.id, label: o.label })),
+    ],
+    []
   );
 
-  const cardStyle: React.CSSProperties = {
-    backgroundColor: 'var(--cp-bg2)',
-    borderColor: 'var(--cp-border)',
+  const onDeptChange = (value: string) => {
+    setDepartment(parseCarePortalDepartment(value) as CarePortalDepartment);
   };
 
-  const miniStatCard: React.CSSProperties = {
-    background: 'var(--cp-bg2)',
-    border: '1px solid var(--cp-border)',
-    borderRadius: '12px',
-    padding: '14px 20px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '14px',
-    boxShadow: 'var(--cp-card-shadow)',
+  const onQuickAction = (r: ResidentItem, action: ResidentQuickAction) => {
+    const base = `/resident-360-view/${r.id}`;
+    if (action === 'note') {
+      router.push(`${base}?tab=overblik&writeJournal=1`);
+      return;
+    }
+    if (action === 'medication') {
+      router.push(`${base}?tab=medicin`);
+      return;
+    }
+    if (action === 'check-in') {
+      router.push(`${base}?tab=overblik#resident-park-checkin`);
+      return;
+    }
+    router.push(`${base}?tab=overblik`);
   };
 
-  const statLabel: React.CSSProperties = {
-    fontSize: '0.75rem',
-    color: 'var(--cp-muted)',
-    textTransform: 'uppercase',
-    letterSpacing: '0.06em',
-  };
+  const subtitle = (
+    <>
+      <span className={styles.subtitleStrong}>{residentsInDept.length}</span> beboere i udvalg ·{' '}
+      <span className={styles.subtitleStrong}>{checkinCount}</span> check-in i dag
+      {afterTenToday && missingCheckin > 0 ? (
+        <>
+          {' '}
+          · <span className={styles.subtitleWarn}>{missingCheckin} mangler check-in</span>
+        </>
+      ) : missingCheckin > 0 ? (
+        <> · {missingCheckin} mangler check-in</>
+      ) : null}
+      {alertCount > 0 ? (
+        <>
+          {' '}
+          · <span style={{ color: 'var(--cp-red)', fontWeight: 600 }}>{alertCount} rød</span>
+        </>
+      ) : null}
+    </>
+  );
+
+  const showNameTip = nameTipReady && incompleteNameCount > 0 && !nameTipDismissed;
+
+  if (residents.length === 0) {
+    return (
+      <div className={styles.page}>
+        <PageHeader
+          title="Beboere"
+          subtitle="Oversigt over alle beboere med daglig status."
+          liveIndicator={<LiveIndicator label="Live data" />}
+          actions={
+            <Link
+              href="/resident-360-view/dagbog"
+              className="text-sm font-semibold shrink-0 hover:underline"
+              style={{ color: 'var(--cp-green)' }}
+            >
+              Aftenopsamling →
+            </Link>
+          }
+        />
+        <div className={styles.emptyPad}>
+          <EmptyState
+            variant="action"
+            icon={<Users size={28} strokeWidth={1.5} />}
+            title="Ingen beboere endnu"
+            description="Når beboere er tilknyttet organisationen, vises de her med check-in og stemning."
+            actions={
+              <Link
+                href="/care-portal-dashboard/settings"
+                className="text-sm font-semibold"
+                style={{ color: 'var(--cp-green)' }}
+              >
+                Gå til indstillinger
+              </Link>
+            }
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (residentsInDept.length === 0 && department !== 'alle') {
+    return (
+      <div className={styles.page}>
+        <PageHeader
+          title="Beboere"
+          subtitle={subtitle}
+          liveIndicator={<LiveIndicator label="Live data" />}
+          actions={
+            <Link
+              href="/resident-360-view/dagbog"
+              className="text-sm font-semibold shrink-0 hover:underline"
+              style={{ color: 'var(--cp-green)' }}
+            >
+              Aftenopsamling →
+            </Link>
+          }
+        />
+        <FilterBar
+          searchPlaceholder="Søg initialer, navn, værelse eller hus…"
+          searchValue={search}
+          onSearchChange={setSearch}
+          trafficFilter={filter}
+          onTrafficFilterChange={setFilter}
+          trafficCounts={trafficCounts}
+          departmentLabel="Hus"
+          departmentOptions={deptOptions}
+          departmentValue={department}
+          onDepartmentChange={onDeptChange}
+          actions={
+            <FilterBarDensityToggle
+              density={density}
+              onToggle={() => setDensity((d) => (d === 'comfortable' ? 'compact' : 'comfortable'))}
+            />
+          }
+        />
+        <div className={styles.emptyPad}>
+          <EmptyState
+            icon={<Users size={28} strokeWidth={1.5} />}
+            title="Ingen beboere i dette hus"
+            description="Skift hus-filter eller vælg «Alle huse» for at se hele listen."
+            actions={
+              <button
+                type="button"
+                className="text-sm font-semibold"
+                style={{
+                  color: 'var(--cp-green)',
+                  background: 'none',
+                  border: 0,
+                  cursor: 'pointer',
+                }}
+                onClick={() => setDepartment('alle')}
+              >
+                Vis alle huse
+              </button>
+            }
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6 max-w-screen-xl">
-      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--cp-text)' }}>
-            Beboere
-          </h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--cp-muted)' }}>
-            {residentsInDept.length} beboere · {checkinCount} check-in i dag
-            {alertCount > 0 && (
-              <span className="ml-2 font-medium" style={{ color: 'var(--cp-red)' }}>
-                · {alertCount} rød trafiklys
-              </span>
-            )}
+    <div className={styles.page}>
+      <PageHeader
+        title="Beboere"
+        subtitle={subtitle}
+        liveIndicator={<LiveIndicator label="Live data" />}
+        actions={
+          <Link
+            href="/resident-360-view/dagbog"
+            className="text-sm font-semibold shrink-0 hover:underline"
+            style={{ color: 'var(--cp-green)' }}
+          >
+            Aftenopsamling →
+          </Link>
+        }
+      />
+
+      {showNameTip ? (
+        <div className={styles.nameTip} role="status">
+          <p style={{ margin: 0 }}>
+            <strong>{incompleteNameCount}</strong> beboer{incompleteNameCount === 1 ? '' : 'e'}{' '}
+            mangler fornavn eller efternavn i registret. Navne kan se ufuldstændige ud — ret i{' '}
+            <Link
+              href="/care-portal-dashboard/settings"
+              style={{ color: 'var(--cp-green)', fontWeight: 600 }}
+            >
+              indstillinger
+            </Link>
+            .
           </p>
+          <button type="button" className={styles.nameTipDismiss} onClick={dismissNameTip}>
+            Skjul
+          </button>
         </div>
-        <Link
-          href="/resident-360-view/dagbog"
-          className="text-sm font-semibold shrink-0 hover:underline"
-          style={{ color: 'var(--cp-green)' }}
-        >
-          Aftenopsamling →
-        </Link>
-      </div>
+      ) : null}
 
-      {/* ── Stat-bar ─────────────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
-        {/* Total beboere */}
-        <div style={miniStatCard}>
-          <Users size={20} strokeWidth={1.5} style={{ color: 'var(--cp-muted)' }} />
-          <div>
-            <div
-              style={{
-                fontSize: '1.6rem',
-                fontWeight: 300,
-                color: 'var(--cp-text)',
-                lineHeight: 1,
-              }}
-            >
-              {residentsInDept.length}
-            </div>
-            <div style={statLabel}>Beboere i alt</div>
-          </div>
-        </div>
-
-        {/* Check-in i dag */}
-        <div style={miniStatCard}>
-          <CheckCircle size={20} strokeWidth={1.5} style={{ color: 'var(--cp-green)' }} />
-          <div>
-            <div
-              style={{
-                fontSize: '1.6rem',
-                fontWeight: 300,
-                color: 'var(--cp-green)',
-                lineHeight: 1,
-              }}
-            >
-              {checkinCount}
-            </div>
-            <div style={statLabel}>Check-in i dag</div>
-          </div>
-        </div>
-
-        {/* Mangler check-in */}
-        <div style={miniStatCard}>
-          <AlertTriangle size={20} strokeWidth={1.5} style={{ color: 'var(--cp-amber)' }} />
-          <div>
-            <div
-              style={{
-                fontSize: '1.6rem',
-                fontWeight: 300,
-                color: 'var(--cp-amber)',
-                lineHeight: 1,
-              }}
-            >
-              {missingCheckin}
-            </div>
-            <div style={statLabel}>Mangler check-in</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="rounded-lg border overflow-hidden" style={cardStyle}>
-        {/* ── Søg + trafiklys-filter ────────────────────────── */}
-        <div
-          className="px-4 py-3 flex flex-wrap items-center gap-3 border-b"
-          style={{ borderColor: 'var(--cp-border)' }}
-        >
-          <div className="relative flex-1 min-w-[200px] max-w-xs">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
-              style={{ color: 'var(--cp-muted2)' }}
+      <div className={styles.card}>
+        <FilterBar
+          stickyOnMobile
+          searchPlaceholder="Søg initialer, navn, værelse eller hus…"
+          searchValue={search}
+          onSearchChange={setSearch}
+          trafficFilter={filter}
+          onTrafficFilterChange={setFilter}
+          trafficCounts={trafficCounts}
+          departmentLabel="Hus"
+          departmentOptions={deptOptions}
+          departmentValue={department}
+          onDepartmentChange={onDeptChange}
+          actions={
+            <FilterBarDensityToggle
+              density={density}
+              onToggle={() => setDensity((d) => (d === 'comfortable' ? 'compact' : 'comfortable'))}
             />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Søg initialer, navn, værelse eller hus…"
-              className="w-full pl-8 pr-3 py-2 text-sm rounded-lg focus:outline-none transition-colors"
-              style={{
-                border: '1px solid var(--cp-border)',
-                backgroundColor: 'var(--cp-bg)',
-                color: 'var(--cp-text)',
-              }}
+          }
+        />
+
+        {filtered.length === 0 ? (
+          <div className={styles.emptyPad}>
+            <EmptyState
+              variant="default"
+              icon={<BookOpen size={28} strokeWidth={1.5} />}
+              title="Ingen beboere matcher"
+              description="Prøv at rydde søgning eller vælge et andet trafiklys-filter."
+              actions={
+                <button
+                  type="button"
+                  className="text-sm font-semibold"
+                  style={{
+                    color: 'var(--cp-green)',
+                    background: 'none',
+                    border: 0,
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => {
+                    setSearch('');
+                    setFilter('all');
+                  }}
+                >
+                  Nulstil filtre
+                </button>
+              }
             />
           </div>
-          <TrafficLightFilter value={filter} onChange={setFilter} counts={trafficCounts} />
-        </div>
-
-        {/* ── Tabel ────────────────────────────────────────── */}
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr
-                style={{
-                  background: 'var(--cp-bg3)',
-                  borderBottom: '2px solid var(--cp-border2)',
-                  position: 'sticky',
-                  top: 0,
-                  zIndex: 1,
-                }}
+        ) : (
+          <>
+            <div className={styles.sortHead} aria-hidden={false}>
+              <button
+                type="button"
+                className={cn(styles.sortBtn, sortKey === 'name' && styles.sortBtnActive)}
+                onClick={() => toggleSort('name')}
               >
-                {[
-                  { label: 'Beboer', w: '200px', px: '16px' },
-                  { label: 'Hus', w: '88px', px: '12px' },
-                  { label: 'Værelse', w: '90px', px: '12px' },
-                  { label: 'Trafiklys', w: '110px', px: '12px' },
-                  { label: 'Stemning', w: '120px', px: '12px' },
-                  { label: 'Check-in', w: '120px', px: '12px' },
-                  { label: 'Note', w: undefined, px: '12px' },
-                  { label: '', w: '40px', px: '12px' },
-                ].map(({ label, w, px }) => (
-                  <th
-                    key={label || 'arrow'}
-                    className="text-left"
-                    style={{
-                      width: w,
-                      padding: `10px ${px}`,
-                      fontSize: '0.7rem',
-                      fontWeight: 600,
-                      letterSpacing: '0.08em',
-                      textTransform: 'uppercase',
-                      color: 'var(--cp-muted)',
-                    }}
-                  >
-                    {label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((r, index) => {
-                const dotColor = r.trafficLight
-                  ? trafficDotColor(r.trafficLight)
-                  : 'var(--cp-muted2)';
-                const avStyle = avatarStyle(r.trafficLight);
-                const zebraColor = index % 2 === 0 ? 'var(--cp-bg)' : 'var(--cp-bg2)';
-                return (
-                  <tr
-                    key={r.id}
-                    onClick={() => router.push(`/resident-360-view/${r.id}`)}
-                    className="border-b transition-colors group cursor-pointer"
-                    style={{ borderColor: 'var(--cp-border)', backgroundColor: zebraColor }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--cp-sidebar-hover-bg)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = zebraColor;
-                    }}
-                  >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2.5">
-                        <div
-                          className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                          style={avStyle}
-                        >
-                          {r.initials}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span
-                              className="text-sm font-medium"
-                              style={{ color: 'var(--cp-text)' }}
-                            >
-                              {r.name}
-                            </span>
-                            {r.pendingProposals > 0 && (
-                              <span
-                                className="text-xs font-medium px-1.5 py-0.5 rounded-full whitespace-nowrap border"
-                                style={{
-                                  color: 'var(--cp-amber)',
-                                  borderColor: 'rgba(245,158,11,0.35)',
-                                  backgroundColor: 'var(--cp-amber-dim)',
-                                }}
-                              >
-                                ⏳ {r.pendingProposals}
-                              </span>
-                            )}
-                          </div>
-                          {!r.checkinToday && (
-                            <span className="text-xs" style={{ color: 'var(--cp-muted2)' }}>
-                              Ingen check-in i dag
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-
-                    <td
-                      className="px-3 py-3 text-xs font-medium"
-                      style={{ color: 'var(--cp-muted)' }}
-                    >
-                      {r.house}
-                    </td>
-
-                    <td className="px-3 py-3 text-sm" style={{ color: 'var(--cp-muted)' }}>
-                      {r.room}
-                    </td>
-
-                    <td className="px-3 py-3">
-                      {r.trafficLight ? (
-                        <div className="flex items-center gap-1.5">
-                          <div
-                            className="rounded-full flex-shrink-0"
-                            style={{ width: 10, height: 10, backgroundColor: dotColor }}
-                          />
-                          <span className="text-xs" style={{ color: 'var(--cp-muted)' }}>
-                            {TRAFFIC_LABEL[r.trafficLight]}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-xs" style={{ color: 'var(--cp-muted2)' }}>
-                          —
-                        </span>
-                      )}
-                    </td>
-
-                    <td className="px-3 py-3">
-                      {r.moodScore !== null ? (
-                        <div className="flex items-center gap-2">
-                          <span
-                            className="text-sm font-bold tabular-nums"
-                            style={{ color: 'var(--cp-text)' }}
-                          >
-                            {r.moodScore}
-                            <span
-                              className="text-xs font-normal"
-                              style={{ color: 'var(--cp-muted2)' }}
-                            >
-                              /10
-                            </span>
-                          </span>
-                          <div
-                            className="w-10 h-1 rounded-full overflow-hidden flex-shrink-0"
-                            style={{ backgroundColor: 'var(--cp-bg3)' }}
-                          >
-                            <div
-                              className="h-full rounded-full"
-                              style={{
-                                width: `${(r.moodScore / 10) * 100}%`,
-                                backgroundColor: dotColor,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-xs" style={{ color: 'var(--cp-muted2)' }}>
-                          —
-                        </span>
-                      )}
-                    </td>
-
-                    <td className="px-3 py-3 text-xs" style={{ color: 'var(--cp-muted)' }}>
-                      {r.checkinToday ? (
-                        <span className="flex items-center gap-1">
-                          <span
-                            className="w-1.5 h-1.5 rounded-full inline-block"
-                            style={{ backgroundColor: 'var(--cp-green)' }}
-                          />
-                          {formatCheckin(r.lastCheckinIso)}
-                        </span>
-                      ) : (
-                        formatCheckin(r.lastCheckinIso)
-                      )}
-                    </td>
-
-                    <td className="px-3 py-3 max-w-[240px]">
-                      <span className="text-xs truncate block" style={{ color: 'var(--cp-muted)' }}>
-                        {r.notePreview}
-                      </span>
-                    </td>
-
-                    <td className="px-3 py-3">
-                      <div
-                        className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-lg flex items-center justify-center transition-all border"
-                        style={{
-                          borderColor: 'var(--cp-border)',
-                          color: 'var(--cp-muted2)',
-                        }}
-                      >
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 14 14"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M5 3l4 4-4 4" />
-                        </svg>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-
-          {filtered.length === 0 && (
-            <div className="py-12 text-center text-sm" style={{ color: 'var(--cp-muted2)' }}>
-              Ingen beboere matcher søgningen
+                Beboer
+                <ArrowDownAZ size={12} />
+              </button>
+              <button
+                type="button"
+                className={cn(styles.sortBtn, sortKey === 'status' && styles.sortBtnActive)}
+                onClick={() => toggleSort('status')}
+              >
+                Trafik
+                <ArrowUpDown size={12} />
+              </button>
+              <span className={styles.sortBtn}>Stemning</span>
+              <button
+                type="button"
+                className={cn(styles.sortBtn, sortKey === 'checkin' && styles.sortBtnActive)}
+                onClick={() => toggleSort('checkin')}
+              >
+                Check-in
+                <ArrowUpDown size={12} />
+              </button>
+              <span />
             </div>
-          )}
-        </div>
+            {filtered.map((r, index) => (
+              <div key={r.id} className={cn(styles.rowWrap, index % 2 === 1 && styles.rowWrapAlt)}>
+                <ResidentRow
+                  resident={r}
+                  density={density}
+                  onRowClick={() => router.push(`/resident-360-view/${r.id}`)}
+                  onQuickAction={(action) => onQuickAction(r, action)}
+                />
+              </div>
+            ))}
+          </>
+        )}
       </div>
     </div>
   );

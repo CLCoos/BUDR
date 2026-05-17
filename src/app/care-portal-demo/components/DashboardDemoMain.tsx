@@ -13,6 +13,12 @@ import KalenderWidget from '@/app/care-portal-dashboard/components/KalenderWidge
 import OpgaveWidget from '@/app/care-portal-dashboard/components/OpgaveWidget';
 import ResidentListDemo from '@/app/care-portal-dashboard/components/ResidentListDemo';
 import DemoActionCards from './DemoActionCards';
+import DemoWhyBox from '@/components/demo/DemoWhyBox';
+import {
+  CARE_PORTAL_DEMO_DISCLAIMER_SHORT,
+  CARE_PORTAL_DEMO_FACILITY_NAME,
+} from '@/lib/carePortalDemoBranding';
+import { useDemoGuidedTour } from '@/components/demo/DemoGuidedTourProvider';
 
 const OverrapportModal = dynamic(
   () => import('@/app/care-portal-dashboard/components/OverrapportModal'),
@@ -158,6 +164,7 @@ function ToolbarButton({
 export default function DashboardDemoMain() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { startGuidedTour } = useDemoGuidedTour();
   const tab = searchParams.get('tab');
 
   const [lastUpdated, setLastUpdated] = useState(() =>
@@ -224,14 +231,17 @@ export default function DashboardDemoMain() {
   };
 
   return (
-    <div className="mx-auto max-w-[1600px] px-4 pb-28 pt-8 sm:px-6 lg:px-10">
+    <div
+      id="demo-tour-dashboard"
+      className="mx-auto max-w-[1600px] px-4 pb-28 pt-8 sm:px-6 lg:px-10"
+    >
       <header className="mb-8 flex flex-col gap-6 lg:mb-10 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-xl">
           <p
             className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em]"
             style={{ color: 'var(--cp-muted)' }}
           >
-            Care Portal · Bosted Nordlys (fiktivt)
+            Care Portal · DEMO · {CARE_PORTAL_DEMO_FACILITY_NAME}
           </p>
           <h1
             className="text-[1.75rem] font-normal leading-tight sm:text-[2rem]"
@@ -243,7 +253,10 @@ export default function DashboardDemoMain() {
             Dagsoverblik
           </h1>
           <p className="mt-2 text-sm leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
-            Dagvagt · Sara K. — samme overblik som efter login, med demo-data.
+            Dagvagt · Sara K. — samme overblik som efter login, med simuleret data.{' '}
+            <span className="font-medium" style={{ color: 'var(--cp-amber)' }}>
+              {CARE_PORTAL_DEMO_DISCLAIMER_SHORT}
+            </span>
           </p>
         </div>
 
@@ -268,6 +281,19 @@ export default function DashboardDemoMain() {
             </span>
           </div>
           <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={startGuidedTour}
+              className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-opacity hover:opacity-90"
+              style={{
+                borderColor: 'rgba(139, 132, 232, 0.45)',
+                color: '#c4bffc',
+                backgroundColor: 'rgba(139, 132, 232, 0.12)',
+              }}
+            >
+              <Sparkles size={14} aria-hidden />
+              Guidet tour
+            </button>
             <Link
               href="/resident-demo"
               className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors hover:opacity-90"
@@ -295,7 +321,18 @@ export default function DashboardDemoMain() {
         </div>
       </header>
 
-      <DemoActionCards onOpenOverrapport={() => setOverrapportPanelOpen(true)} />
+      <div id="demo-tour-handlinger" className="mb-6 space-y-4">
+        <DemoActionCards onOpenOverrapport={() => setOverrapportPanelOpen(true)} />
+        <DemoWhyBox
+          title="Hvorfor AI-udkast og godkendelse?"
+          storageKey="budr_demo_why_ai_godkendelse"
+        >
+          Andre systemer kan lade AI skrive direkte ind i journalen. I BUDR er AI et{' '}
+          <strong style={{ color: 'var(--cp-text)' }}>hjælpeværktøj</strong>: udkast og forslag —
+          intet går ud til teamet som endelig journal før personalet godkender. Fagligt ansvar
+          ligger hos jer, ikke i modellen.
+        </DemoWhyBox>
+      </div>
 
       <div className="mb-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
         <MedicationWidget />
@@ -308,10 +345,62 @@ export default function DashboardDemoMain() {
         <StatCards variant="demo" />
       </div>
 
+      <div className="mb-4">
+        <DemoWhyBox
+          title="Hvorfor advarsler og krisehåndtering?"
+          storageKey="budr_demo_why_advarsler"
+        >
+          Varsler samler signaler (humør, beskeder, mønstre), så vagten kan prioritere. Kriseflow
+          understøtter <strong style={{ color: 'var(--cp-text)' }}>strukturerede trin</strong> og
+          dokumentation — det erstatter ikke 112, lægevurdering eller jeres egne procedurer.
+        </DemoWhyBox>
+      </div>
+
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.45fr)] xl:gap-8">
         <AlertPanel variant="demo" />
-        <ResidentListDemo />
+        <div id="demo-tour-beboerliste">
+          <ResidentListDemo />
+        </div>
       </div>
+
+      <section
+        id="demo-tour-cta"
+        className="mt-14 rounded-2xl border p-6 sm:p-8"
+        style={{
+          borderColor: 'rgba(45,212,160,0.28)',
+          backgroundColor: 'var(--cp-green-dim)',
+        }}
+      >
+        <h2
+          className="text-lg font-normal sm:text-xl"
+          style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--cp-text)' }}
+        >
+          Vil du se BUDR med jeres egne data?
+        </h2>
+        <p className="mt-2 max-w-xl text-sm leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
+          Denne demo bruger fiktive beboere. I en pilot kobles Care Portal og Lys på jeres
+          organisation — med uddannelse og løbende sparring.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link
+            href="/institutioner#kontakt"
+            className="inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-95"
+            style={{
+              background: 'linear-gradient(135deg, #2dd4a0 0%, #0d9488 100%)',
+              boxShadow: '0 2px 14px rgba(45,212,160,0.35)',
+            }}
+          >
+            Kontakt BUDR
+          </Link>
+          <Link
+            href="/care-portal-demo/om-demo"
+            className="inline-flex items-center justify-center rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors"
+            style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-text)' }}
+          >
+            Om demoen
+          </Link>
+        </div>
+      </section>
 
       <button
         type="button"
@@ -343,7 +432,7 @@ export default function DashboardDemoMain() {
         open={tilsynsrapportOpen}
         onClose={() => setTilsynsrapportOpen(false)}
         preferDemoWhenNoResidents
-        facilityName="Demo (fiktivt bosted)"
+        facilityName={`${CARE_PORTAL_DEMO_FACILITY_NAME} (DEMO)`}
       />
     </div>
   );

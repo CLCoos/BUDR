@@ -37,14 +37,14 @@ export default function DemoTopNav() {
       </div>
 
       <span
-        className="hidden items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider sm:inline-flex"
+        className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider sm:px-2.5 sm:text-[10px]"
         style={{
           borderColor: 'rgba(246, 173, 85, 0.35)',
           backgroundColor: 'var(--cp-amber-dim)',
           color: 'var(--cp-amber)',
         }}
       >
-        <Sparkles className="h-3 w-3" aria-hidden />
+        <Sparkles className="h-3 w-3 shrink-0" aria-hidden />
         Demo
       </span>
 

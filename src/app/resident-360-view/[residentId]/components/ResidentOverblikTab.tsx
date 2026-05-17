@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -17,6 +17,8 @@ import { createClient } from '@/lib/supabase/client';
 import { copenhagenStartOfTodayUtcIso } from '@/lib/copenhagenDay';
 import type { MedDefinition } from './types';
 import WriteJournalEntry from './WriteJournalEntry';
+import type { LysRecoveryStory } from '@/types/lys';
+import JournalRowRecoveryStory from './JournalRowRecoveryStory';
 import GoalProgress from '../../components/GoalProgress';
 import ShiftNotesFeed from '../../components/ShiftNotesFeed';
 
@@ -60,6 +62,7 @@ interface Props {
   checkinVoiceTranscript: string | null;
   medications: MedDefinition[];
   journalEntries: JournalEntry[];
+  recoveryStoriesByJournalId?: Record<string, LysRecoveryStory>;
   todayPlanItems: PlanItem[];
   pendingProposals: number;
 }
@@ -106,6 +109,7 @@ export default function ResidentOverblikTab({
   checkinVoiceTranscript,
   medications,
   journalEntries,
+  recoveryStoriesByJournalId = {},
   todayPlanItems,
   pendingProposals,
 }: Props) {
@@ -252,12 +256,22 @@ export default function ResidentOverblikTab({
   const medicationGivenCount = givenCount;
   const medicationTotalCount = activeMeds.length;
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.location.hash !== '#resident-park-checkin') return;
+    const el = document.getElementById('resident-park-checkin');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
+
   return (
     <div className="space-y-5">
       {/* ── Critical status row ─────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {/* Traffic light */}
+        {/* Traffic light + dagens PARK check-in */}
         <div
+          id="resident-park-checkin"
           className="flex flex-col gap-1 rounded-xl border"
           style={{
             padding: '1rem',
@@ -604,7 +618,13 @@ export default function ResidentOverblikTab({
                 </span>
               )}
             </div>
-            <WriteJournalEntry residentId={residentId} residentName={residentName} carePortalDark />
+            <Suspense fallback={null}>
+              <WriteJournalEntry
+                residentId={residentId}
+                residentName={residentName}
+                carePortalDark
+              />
+            </Suspense>
           </div>
           <div className="divide-y divide-[var(--cp-border)]">
             {journalList.length === 0 ? (
@@ -698,32 +718,36 @@ export default function ResidentOverblikTab({
                     </span>
                   </div>
                 )}
-                {shownGodkendt.map((entry) => (
-                  <div key={entry.id} className="px-4 py-3">
-                    <div className="mb-1 flex items-center justify-between">
-                      <span className="text-xs font-semibold" style={{ color: 'var(--cp-text)' }}>
-                        {entry.staff_name}
-                      </span>
-                      <span className="text-xs" style={{ color: 'var(--cp-muted)' }}>
-                        {formatTime(entry.created_at)}
-                      </span>
+                {shownGodkendt.map((entry) => {
+                  const story = recoveryStoriesByJournalId[entry.id];
+                  return (
+                    <div key={entry.id} className="px-4 py-3">
+                      <div className="mb-1 flex items-center justify-between">
+                        <span className="text-xs font-semibold" style={{ color: 'var(--cp-text)' }}>
+                          {entry.staff_name}
+                        </span>
+                        <span className="text-xs" style={{ color: 'var(--cp-muted)' }}>
+                          {formatTime(entry.created_at)}
+                        </span>
+                      </div>
+                      <p className="line-clamp-2 text-xs" style={{ color: 'var(--cp-muted)' }}>
+                        {entry.entry_text}
+                      </p>
+                      {entry.category && (
+                        <span
+                          className="mt-1 inline-block rounded px-1.5 py-0.5 text-[10px]"
+                          style={{
+                            backgroundColor: 'var(--cp-bg3)',
+                            color: 'var(--cp-muted)',
+                          }}
+                        >
+                          {entry.category}
+                        </span>
+                      )}
+                      {story && <JournalRowRecoveryStory story={story} />}
                     </div>
-                    <p className="line-clamp-2 text-xs" style={{ color: 'var(--cp-muted)' }}>
-                      {entry.entry_text}
-                    </p>
-                    {entry.category && (
-                      <span
-                        className="mt-1 inline-block rounded px-1.5 py-0.5 text-[10px]"
-                        style={{
-                          backgroundColor: 'var(--cp-bg3)',
-                          color: 'var(--cp-muted)',
-                        }}
-                      >
-                        {entry.category}
-                      </span>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </>
             )}
           </div>

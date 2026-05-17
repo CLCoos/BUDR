@@ -241,7 +241,7 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
   async function handleAlertStaff() {
     setAlertUiState('loading');
     try {
-      const res = await fetch('/api/park/crisis-alert', {
+      const res = await fetch('/api/lys/crisis-alert', {
         method: 'POST',
         credentials: 'include',
       });

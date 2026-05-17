@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import {
-  Sun,
   LayoutList,
   BookOpen,
   Zap,
@@ -17,7 +16,6 @@ import {
 import LysChatFab from '@/components/LysChatFab';
 
 const primaryNavItems = [
-  { key: 'nav-morning', label: 'Morgen', icon: Sun, path: '/morning-check-in' },
   { key: 'nav-structure', label: 'Dag', icon: LayoutList, path: '/daily-structure' },
   { key: 'nav-challenges', label: 'Udfordringer', icon: Zap, path: '/daily-challenges' },
   { key: 'nav-journal', label: 'Journal', icon: BookOpen, path: '/journal' },

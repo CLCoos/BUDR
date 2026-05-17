@@ -8,4 +8,6 @@ export type LysFlowOverlay =
   | 'sanser'
   | 'kriseplan'
   | 'aac'
-  | 'vagtplan';
+  | 'vagtplan'
+  | 'weekly'
+  | 'mineHistorier';

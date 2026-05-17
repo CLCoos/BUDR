@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Volume2 } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { BookOpen, Volume2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useResidentSession } from '@/hooks/useResidentSession';
 import * as dataService from '@/lib/dataService';
-import { syncBadgesAfterCheckin } from '@/lib/residentBadgeSync';
 import { isLysDemoResidentId } from '@/lib/lysDemoResident';
 import type { LysChatMessage } from '@/app/api/lys-chat/route';
 import type { LysFlowOverlay } from '../lib/lysOverlay';
@@ -26,14 +25,6 @@ const COMPANION_MESSAGES = [
   'Du gør det godt — bare det at du er her.',
   'Hvad har du brug for lige nu?',
   'Tage et åndedræt. Vi tager det stille.',
-];
-
-const ENERGY_OPTIONS = [
-  { level: 1, emoji: '😴', label: 'Svært', color: '#EF4444' },
-  { level: 2, emoji: '😔', label: 'Dårligt', color: '#F97316' },
-  { level: 3, emoji: '😐', label: 'OK', color: '#EAB308' },
-  { level: 4, emoji: '🙂', label: 'Godt', color: '#84CC16' },
-  { level: 5, emoji: '😁', label: 'Fantastisk', color: '#22C55E' },
 ];
 
 type Props = {
@@ -215,8 +206,6 @@ function greetingLine(phase: LysPhase, name: string): { static: string; italic: 
   }
 }
 
-type CheckIn = { level: number; label: string; ts: number };
-
 export default function LysHome({
   firstName,
   initials,
@@ -239,10 +228,8 @@ export default function LysHome({
   const session = useResidentSession();
 
   const [companionIdx, setCompanionIdx] = useState(0);
-  const [lastCheckIn, setLastCheckIn] = useState<CheckIn | null>(null);
   const [planStats, setPlanStats] = useState<{ total: number } | null>(null);
   const [showLysCard, setShowLysCard] = useState(false);
-  const [checkInSaving, setCheckInSaving] = useState(false);
   const [todayPreview, setTodayPreview] = useState<
     Array<{ id: string; title: string; time: string }>
   >([]);
@@ -257,19 +244,6 @@ export default function LysHome({
       setCompanionIdx((i) => (i + 1) % COMPANION_MESSAGES.length);
     }, 7000);
     return () => window.clearInterval(t);
-  }, []);
-
-  // Load latest check-in from localStorage
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('budr_last_checkin');
-      if (raw) {
-        const d = JSON.parse(raw) as CheckIn;
-        if (Date.now() - d.ts < 2 * 60 * 60 * 1000) setLastCheckIn(d);
-      }
-    } catch {
-      /* ignore */
-    }
   }, []);
 
   // Fetch plan item count (demo: local plan-items fra DemoSeeder; live: daily_plans)
@@ -342,29 +316,6 @@ export default function LysHome({
   useEffect(() => {
     if (moodTick > 0) setShowLysCard(true);
   }, [moodTick]);
-
-  const handleCheckIn = useCallback(
-    async (level: number, label: string) => {
-      if (checkInSaving) return;
-      setCheckInSaving(true);
-      const entry: CheckIn = { level, label, ts: Date.now() };
-      setLastCheckIn(entry);
-      try {
-        localStorage.setItem('budr_last_checkin', JSON.stringify(entry));
-      } catch {
-        /* ignore */
-      }
-      await dataService.saveCheckin(session.storageMode, session.activeId || residentId, {
-        energy_level: level,
-        label,
-      });
-      await dataService.addXp(session.storageMode, session.activeId || residentId, 'hum_check', 10);
-      void syncBadgesAfterCheckin(session.storageMode, session.activeId || residentId);
-      setCheckInSaving(false);
-      void sendToLys(`Jeg har det sådan her: ${label}.`).then(() => setShowLysCard(true));
-    },
-    [checkInSaving, residentId, sendToLys, session.activeId, session.storageMode]
-  );
 
   const handleLogout = () => {
     document.cookie = 'budr_resident_id=; path=/; max-age=0';
@@ -552,6 +503,12 @@ export default function LysHome({
                 onClick: () => onOpenFlow('goals'),
               },
               {
+                label: 'Dine historier',
+                sub: 'Læs og godkend hvad du har delt',
+                icon: <BookOpen size={16} aria-hidden />,
+                onClick: () => onOpenFlow('mineHistorier'),
+              },
+              {
                 label: 'Aktiviteter',
                 sub: 'Dagens program',
                 icon: '✦',
@@ -641,54 +598,6 @@ export default function LysHome({
           >
             Skriv til Lys →
           </button>
-        </section>
-
-        {/* Humørtjek */}
-        <section
-          className="rounded-2xl px-5 py-4"
-          style={{ backgroundColor: 'var(--lys-bg3)', border: '1px solid var(--lys-border)' }}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-semibold" style={{ color: 'var(--lys-text)' }}>
-              Humørtjek
-            </p>
-            {lastCheckIn && (
-              <span
-                className="text-xs font-semibold rounded-full px-2.5 py-1"
-                style={{ backgroundColor: 'var(--lys-green-dim)', color: 'var(--lys-green)' }}
-              >
-                Sidst: {lastCheckIn.label}
-              </span>
-            )}
-          </div>
-          <div className="flex gap-2">
-            {ENERGY_OPTIONS.map((opt) => (
-              <button
-                key={opt.level}
-                type="button"
-                onClick={() => void handleCheckIn(opt.level, opt.label)}
-                disabled={checkInSaving}
-                className="flex flex-1 flex-col items-center gap-1.5 rounded-xl py-3 transition-all duration-150 active:scale-[0.93] disabled:opacity-40"
-                style={{
-                  backgroundColor:
-                    lastCheckIn?.level === opt.level ? 'var(--lys-green-dim)' : 'var(--lys-bg4)',
-                  border: `1px solid ${lastCheckIn?.level === opt.level ? `${accent}55` : 'var(--lys-border)'}`,
-                }}
-                title={opt.label}
-              >
-                <span className="text-xl leading-none">{opt.emoji}</span>
-                <span
-                  className="text-[9px] font-bold uppercase tracking-wide"
-                  style={{
-                    color:
-                      lastCheckIn?.level === opt.level ? 'var(--lys-green)' : 'var(--lys-muted)',
-                  }}
-                >
-                  {opt.label}
-                </span>
-              </button>
-            ))}
-          </div>
         </section>
 
         {/* Today summary */}

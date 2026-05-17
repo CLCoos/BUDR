@@ -12,14 +12,27 @@ export function useBudrLandingFadeIn(rootRef: RefObject<HTMLElement | null>) {
     if (!root) return;
     const els = Array.from(root.querySelectorAll<HTMLElement>('.fi'));
     if (els.length === 0) return;
-    const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) e.target.classList.add('vis');
-        });
-      },
-      { threshold: 0.06, rootMargin: '0px 0px -6% 0px' }
-    );
+
+    if (typeof IntersectionObserver === 'undefined') {
+      els.forEach((el) => el.classList.add('vis'));
+      return;
+    }
+
+    let obs: IntersectionObserver;
+    try {
+      obs = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) e.target.classList.add('vis');
+          });
+        },
+        { threshold: 0.06, rootMargin: '0px 0px -6% 0px' }
+      );
+    } catch {
+      els.forEach((el) => el.classList.add('vis'));
+      return;
+    }
+
     els.forEach((el) => obs.observe(el));
     return () => obs.disconnect();
   }, [rootRef]);

@@ -1,12 +1,6 @@
-'use client';
-
-import { AuthenticatedUserProvider } from '@/contexts/AuthenticatedUserContext';
 import { DesignSystemShowcase } from '@/components/design-system/DesignSystemShowcase';
 
+/** Auth ligger i root `layout.tsx` (`AuthenticatedUserProvider`). */
 export function DesignSystemWithAuth() {
-  return (
-    <AuthenticatedUserProvider>
-      <DesignSystemShowcase />
-    </AuthenticatedUserProvider>
-  );
+  return <DesignSystemShowcase />;
 }

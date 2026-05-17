@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { CARE_PORTAL_DEMO_FACILITY_NAME } from '@/lib/carePortalDemoBranding';
 
 export default function SettingsDemoPage() {
   return (
@@ -12,7 +13,7 @@ export default function SettingsDemoPage() {
         Indstillinger
       </h1>
       <p className="mt-1 text-sm" style={{ color: 'var(--cp-muted)' }}>
-        Demo — krisekontakter og organisation administreres efter login.
+        DEMO — krisekontakter og organisation administreres efter login.
       </p>
       <div
         className="mt-8 space-y-4 rounded-xl border p-5"
@@ -26,7 +27,7 @@ export default function SettingsDemoPage() {
             Bosted
           </label>
           <p className="mt-1 text-sm" style={{ color: 'var(--cp-text)' }}>
-            Nordlys Botilbud (fiktivt)
+            {CARE_PORTAL_DEMO_FACILITY_NAME} (fiktivt)
           </p>
         </div>
         <div>

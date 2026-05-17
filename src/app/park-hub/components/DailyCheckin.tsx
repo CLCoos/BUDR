@@ -30,7 +30,7 @@ export default function DailyCheckin() {
     }
     setLoading(true);
     try {
-      const res = await fetch('/api/park/daily-checkin', {
+      const res = await fetch('/api/lys/daily-checkin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

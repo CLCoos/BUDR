@@ -2,7 +2,13 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { ArrowRight, X } from 'lucide-react';
+import {
+  CARE_PORTAL_DEMO_DISCLAIMER_SHORT,
+  CARE_PORTAL_DEMO_FACILITY_NAME,
+} from '@/lib/carePortalDemoBranding';
+import { useDemoGuidedTour } from '@/components/demo/DemoGuidedTourProvider';
 
 type Step = {
   num: number;
@@ -51,6 +57,7 @@ type Props = {
 export default function DemoWelcomeOverlay({ onOpenOverrapport }: Props) {
   const [open, setOpen] = useState(true);
   const router = useRouter();
+  const { startGuidedTour } = useDemoGuidedTour();
 
   function dismiss() {
     setOpen(false);
@@ -116,7 +123,7 @@ export default function DemoWelcomeOverlay({ onOpenOverrapport }: Props) {
             className="text-[11px] font-semibold uppercase tracking-[0.14em]"
             style={{ color: 'var(--cp-muted)' }}
           >
-            Demo · Bosted Solhaven
+            DEMO · {CARE_PORTAL_DEMO_FACILITY_NAME}
           </span>
         </div>
 
@@ -124,13 +131,27 @@ export default function DemoWelcomeOverlay({ onOpenOverrapport }: Props) {
           className="mb-1 text-[1.4rem] font-normal leading-tight"
           style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--cp-text)' }}
         >
-          Velkommen til BUDR Care Portal
+          Velkommen til BUDR Care Portal (DEMO)
         </h2>
 
+        <p
+          className="mb-2 text-xs font-medium leading-relaxed"
+          style={{ color: 'var(--cp-amber)' }}
+        >
+          {CARE_PORTAL_DEMO_DISCLAIMER_SHORT}
+        </p>
+
         <p className="mb-5 text-sm leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
-          Du er <strong style={{ color: 'var(--cp-text)' }}>Sara K., dagvagt</strong> på Bosted
-          Solhaven — mandag morgen. En beboer er i rød, en er ikke mødt til morgenmad. Prøv trinene
-          herunder, eller udforsk selv.
+          Du er <strong style={{ color: 'var(--cp-text)' }}>Sara K., dagvagt</strong> på{' '}
+          {CARE_PORTAL_DEMO_FACILITY_NAME} — mandag morgen. En beboer er i rød, en er ikke mødt til
+          morgenmad. Prøv trinene herunder, eller udforsk selv. Læs mere under{' '}
+          <Link
+            href="/care-portal-demo/om-demo"
+            className="font-semibold underline underline-offset-2"
+          >
+            Om demoen
+          </Link>
+          .
         </p>
 
         {/* Steps */}
@@ -185,27 +206,48 @@ export default function DemoWelcomeOverlay({ onOpenOverrapport }: Props) {
         </ol>
 
         {/* CTA */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={dismiss}
+              className="flex-1 rounded-xl py-2.5 text-sm font-semibold text-white transition-all duration-150 hover:brightness-110 active:scale-[0.98]"
+              style={{
+                background: 'linear-gradient(135deg, #8b84e8 0%, #5E56C0 55%, #4c3d91 100%)',
+                boxShadow: '0 6px 20px rgba(94, 86, 192, 0.35)',
+              }}
+            >
+              Start demo
+            </button>
+            <button
+              type="button"
+              onClick={dismiss}
+              className="rounded-xl px-4 py-2.5 text-sm transition-colors"
+              style={{ color: 'var(--cp-muted)' }}
+              onMouseEnter={(e) =>
+                ((e.currentTarget as HTMLElement).style.color = 'var(--cp-text)')
+              }
+              onMouseLeave={(e) =>
+                ((e.currentTarget as HTMLElement).style.color = 'var(--cp-muted)')
+              }
+            >
+              Spring over
+            </button>
+          </div>
           <button
             type="button"
-            onClick={dismiss}
-            className="flex-1 rounded-xl py-2.5 text-sm font-semibold text-white transition-all duration-150 hover:brightness-110 active:scale-[0.98]"
+            onClick={() => {
+              dismiss();
+              startGuidedTour();
+            }}
+            className="w-full rounded-xl border py-2.5 text-sm font-semibold transition-colors"
             style={{
-              background: 'linear-gradient(135deg, #8b84e8 0%, #5E56C0 55%, #4c3d91 100%)',
-              boxShadow: '0 6px 20px rgba(94, 86, 192, 0.35)',
+              borderColor: 'rgba(45,212,160,0.35)',
+              color: 'var(--cp-green)',
+              backgroundColor: 'var(--cp-green-dim)',
             }}
           >
-            Start demo
-          </button>
-          <button
-            type="button"
-            onClick={dismiss}
-            className="rounded-xl px-4 py-2.5 text-sm transition-colors"
-            style={{ color: 'var(--cp-muted)' }}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--cp-text)')}
-            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--cp-muted)')}
-          >
-            Spring over
+            Start guidet tour (ca. 5 min.)
           </button>
         </div>
       </div>

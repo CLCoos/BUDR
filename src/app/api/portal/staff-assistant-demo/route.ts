@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseBudrFollowUpsBlock } from '@/lib/portalStaffAssistantFollowUps';
 import { CARE_DEMO_RESIDENT_PROFILES } from '@/lib/careDemoResidents';
+import { CARE_PORTAL_DEMO_FACILITY_NAME } from '@/lib/carePortalDemoBranding';
 
 /**
  * Public demo endpoint for /care-portal-demo/assistant — same Anthropic integration as
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
 
   const system = `Du er en erfaren faglig kollega og supervisor på et socialpsykiatrisk bosted i Danmark. Du er ikke en robot eller AI-assistent — du er "den erfarne kollega" der altid har tid og aldrig dømmer.
 
-Du taler med demo-personale der prøver Care Portal-demo (Bosted Nordlys, fiktivt).
+Du taler med demo-personale der prøver Care Portal-demo (${CARE_PORTAL_DEMO_FACILITY_NAME}, fiktivt).
 
 BEBOERE I DEMoen (fiktive profiler):
 ${residentContext}

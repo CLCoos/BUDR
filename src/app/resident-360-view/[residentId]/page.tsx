@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { Mic } from 'lucide-react';
 import PortalShell from '@/components/PortalShell';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import ResidentHeader from '../components/ResidentHeader';
@@ -9,14 +10,24 @@ import DagsPlanPortal from './components/DagsPlanPortal';
 import ResidentPlanTab from './components/ResidentPlanTab';
 import ResidentHavenTab from './components/ResidentHavenTab';
 import ResidentOverblikTab from './components/ResidentOverblikTab';
+import ResidentRecoveryTab from './components/ResidentRecoveryTab';
 import ResidentMedicinTab from './components/ResidentMedicinTab';
 import WriteJournalEntry from './components/WriteJournalEntry';
 import ResidentOverflowMenu from './components/ResidentOverflowMenu';
+import ResidentLysSamtalerTab from '@/app/care-portal-dashboard/components/ResidentLysSamtalerTab';
 import type { DailyPlan, PendingProposal } from './components/DagsPlanPortal';
 import type { MedDefinition } from './components/types';
 import type { ResidentExportInput } from '@/lib/residentExport/types';
 import { copenhagenStartOfTodayUtcIso } from '@/lib/copenhagenDay';
 import { formatResidentName, getInitials } from '@/lib/residents/formatName';
+import {
+  getRecoveryProfile,
+  computeRecoveryProfileCompletion,
+  getActiveNextSteps,
+  getReflectionHistory,
+  getCheckinHistory,
+} from '@/lib/lys-queries';
+import type { LysRecoveryStory } from '@/types/lys';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -178,6 +189,26 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
     }
   }
 
+  const lysJournalIds = journalEntriesResolved
+    .filter((j) => j.category === 'Lys journal')
+    .map((j) => j.id);
+
+  const recoveryStoriesByJournalId: Record<string, LysRecoveryStory> = {};
+  if (lysJournalIds.length > 0) {
+    const { data: stories } = await supabase
+      .from('lys_recovery_stories')
+      .select('*')
+      .in('related_journal_entry_id', lysJournalIds);
+
+    if (stories) {
+      for (const s of stories as LysRecoveryStory[]) {
+        if (s.related_journal_entry_id) {
+          recoveryStoriesByJournalId[s.related_journal_entry_id] = s;
+        }
+      }
+    }
+  }
+
   if (residentRes.error || !residentRes.data) return null;
 
   const r = residentRes.data;
@@ -198,6 +229,17 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
     done: item.done ?? false,
     time: item.time,
   }));
+
+  const [recoveryProfile, activeNextSteps, recentReflections, allCheckins] = await Promise.all([
+    getRecoveryProfile(residentId, supabase).catch(() => null),
+    getActiveNextSteps(residentId, supabase).catch(() => []),
+    getReflectionHistory(residentId, 20, supabase).catch(() => []),
+    getCheckinHistory(residentId, 30, supabase).catch(() => []),
+  ]);
+
+  const recentWeeklyCheckins = allCheckins.filter((c) => c.checkin_type === 'weekly').slice(0, 8);
+
+  const profileCompletionPercent = computeRecoveryProfileCompletion(recoveryProfile);
 
   return {
     resident: {
@@ -233,6 +275,7 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
     plan: (planRes.data as DailyPlan | null) ?? null,
     proposals: (proposalsRes.data ?? []) as PendingProposal[],
     journalEntries: journalEntriesResolved,
+    recoveryStoriesByJournalId,
     journalEntriesForExport: journalExportResolved,
     concernNotesForExport: (concernRes.data ?? []) as {
       id: string;
@@ -244,6 +287,11 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
     }[],
     todayPlanItems: planItems,
     medications: (medsRes.data ?? []) as MedDefinition[],
+    recoveryProfile,
+    profileCompletionPercent,
+    activeNextSteps,
+    recentReflections,
+    recentWeeklyCheckins,
   };
 }
 
@@ -251,23 +299,36 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
 
 type Props = {
   params: Promise<{ residentId: string }>;
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; writeJournal?: string }>;
 };
 
-const ALL_TABS = ['overblik', 'medicin', 'dagsplan', 'plan', 'haven'] as const;
+const ALL_TABS = [
+  'overblik',
+  'recovery',
+  'medicin',
+  'dagsplan',
+  'plan',
+  'haven',
+  'lys-samtaler',
+] as const;
 type TabId = (typeof ALL_TABS)[number];
 
 const TAB_LABELS: Record<TabId, string> = {
   overblik: 'Overblik',
+  recovery: 'Recovery',
   medicin: 'Medicin',
   dagsplan: 'Dagsplan',
   plan: 'Plan',
   haven: 'Haven 🌿',
+  'lys-samtaler': 'Lys-samtaler',
 };
 
 export default async function ResidentDagPage({ params, searchParams }: Props) {
   const { residentId } = await params;
-  const { tab = 'overblik' } = (await searchParams) as { tab?: string };
+  const { tab = 'overblik', writeJournal } = (await searchParams) as {
+    tab?: string;
+    writeJournal?: string;
+  };
   const activeTab = (ALL_TABS as readonly string[]).includes(tab) ? (tab as TabId) : 'overblik';
 
   const supabase = await createServerSupabaseClient();
@@ -289,10 +350,16 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
     plan,
     proposals,
     journalEntries,
+    recoveryStoriesByJournalId,
     journalEntriesForExport,
     concernNotesForExport,
     todayPlanItems,
     medications,
+    recoveryProfile,
+    profileCompletionPercent,
+    activeNextSteps,
+    recentReflections,
+    recentWeeklyCheckins,
   } = data;
 
   const exportInput: ResidentExportInput = {
@@ -359,7 +426,14 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
 
         {/* Action bar */}
         <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
-          <WriteJournalEntry residentId={residentId} residentName={resident.name} carePortalDark />
+          <Suspense fallback={null}>
+            <WriteJournalEntry
+              residentId={residentId}
+              residentName={resident.name}
+              carePortalDark
+              openFromQueryParam={writeJournal === '1'}
+            />
+          </Suspense>
           <ResidentOverflowMenu exportInput={exportInput} />
         </div>
 
@@ -389,6 +463,7 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
                 }
               >
                 {TAB_LABELS[t]}
+                {t === 'lys-samtaler' && <Mic size={13} className="ml-1 inline" aria-hidden />}
                 {t === 'dagsplan' && proposals.length > 0 && (
                   <span
                     className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
@@ -414,8 +489,20 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
             checkinVoiceTranscript={checkinVoiceTranscript}
             medications={medications}
             journalEntries={journalEntries}
+            recoveryStoriesByJournalId={recoveryStoriesByJournalId}
             todayPlanItems={todayPlanItems}
             pendingProposals={proposals.length}
+          />
+        )}
+
+        {activeTab === 'recovery' && (
+          <ResidentRecoveryTab
+            residentId={residentId}
+            recoveryProfile={recoveryProfile}
+            profileCompletionPercent={profileCompletionPercent}
+            activeNextSteps={activeNextSteps}
+            recentReflections={recentReflections}
+            recentWeeklyCheckins={recentWeeklyCheckins}
           />
         )}
 
@@ -439,6 +526,8 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
         {activeTab === 'haven' && (
           <ResidentHavenTab residentId={residentId} residentName={resident.name} />
         )}
+
+        {activeTab === 'lys-samtaler' && <ResidentLysSamtalerTab residentId={residentId} />}
       </div>
     </PortalShell>
   );

@@ -13,8 +13,6 @@ const MOCK_SNIPPETS = `Seneste fra Lys (tidligere samtaler):
 • Lys spurgte ind til søvn — kort svar om urolig nat.
 • Lille sejr: hjalp med at sætte vasketøj over.`;
 
-type ThoughtSteps = { situation?: string; thought?: string; feeling?: string };
-
 type UseLysConversationOpts = {
   firstName: string;
   phase: LysPhase;
@@ -99,59 +97,7 @@ export function useLysConversation({
     [messages, firstName, phase, moodLabel, onAssistantSuccess]
   );
 
-  const sendCounterThought = useCallback(
-    async (thoughtSteps: ThoughtSteps) => {
-      const trigger: LysChatMessage = {
-        role: 'user',
-        content: 'Giv en mild modtanke og afslut med ét kort spørgsmål.',
-      };
-      setMessages((m) => [...m, trigger]);
-      setLoading(true);
-      try {
-        const res = await fetch('/api/lys-chat', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            messages: [trigger],
-            residentFirstName: firstName,
-            timeOfDay: phaseDaLabel(phase),
-            mood: moodLabel,
-            sessionContext: MOCK_SNIPPETS,
-            mode: 'counter_thought',
-            thoughtSteps,
-          }),
-        });
-        const data = (await res.json().catch(() => ({}))) as { text?: string; error?: string };
-
-        if (!res.ok) {
-          const reply =
-            res.status === 429
-              ? 'Vent lidt før du prøver igen — der blev sendt mange beskeder.'
-              : res.status === 503
-                ? 'Lys er ikke tilgængelig lige nu. Prøv igen om lidt.'
-                : `Det lykkedes ikke lige nu. Tjek nettet og prøv igen.`;
-          setMessages((curr) => [...curr, { role: 'assistant', content: reply }]);
-          return reply;
-        }
-
-        const reply =
-          data.text ??
-          data.error ??
-          `Hvad hvis man også kunne se det sådan her: du gør dit bedste, og det er nok lige nu. Hvordan føles det at høre?`;
-        setMessages((curr) => [...curr, { role: 'assistant', content: reply }]);
-        return reply;
-      } catch {
-        const fallback = `Du er ikke alene med det her. Prøv igen, når dit net er stabilt.`;
-        setMessages((curr) => [...curr, { role: 'assistant', content: fallback }]);
-        return fallback;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [firstName, phase, moodLabel]
-  );
-
   const resetThread = useCallback(() => setMessages([]), []);
 
-  return { messages, loading, sendToLys, sendCounterThought, resetThread, setMessages };
+  return { messages, loading, sendToLys, resetThread, setMessages };
 }

@@ -89,7 +89,7 @@ export default function LysMigScreen({
     if (!staffMsg.trim() || sendState === 'sending') return;
     setSendState('sending');
     try {
-      const res = await fetch('/api/park/message-staff', {
+      const res = await fetch('/api/lys/message-staff', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: staffMsg }),
@@ -197,7 +197,7 @@ export default function LysMigScreen({
       const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
       const url = urlData.publicUrl;
       setAvatarUrl(url);
-      await fetch('/api/park/resident-me', {
+      await fetch('/api/lys/resident-me', {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'content-type': 'application/json' },
