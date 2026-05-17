@@ -62,7 +62,12 @@ function isCarePortalStaffRoute(pathname: string): boolean {
 }
 
 function isResidentRoute(pathname: string): boolean {
-  return pathname.startsWith('/park-hub') || pathname.startsWith('/park/');
+  return (
+    pathname.startsWith('/park-hub') ||
+    pathname.startsWith('/park/') ||
+    pathname.startsWith('/lys-chat') ||
+    pathname.startsWith('/lys-settings')
+  );
 }
 
 function isBudrAdminRoute(pathname: string): boolean {
@@ -409,5 +414,9 @@ export const config = {
     '/park-hub',
     '/park-hub/:path*',
     '/park/:path*',
+    '/lys-chat',
+    '/lys-chat/:path*',
+    '/lys-settings',
+    '/lys-settings/:path*',
   ],
 };
