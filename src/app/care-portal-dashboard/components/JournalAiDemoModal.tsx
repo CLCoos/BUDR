@@ -4,7 +4,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { BookOpen, RefreshCw, Save, Sparkles, X } from 'lucide-react';
 import { toast } from 'sonner';
-import DemoAiBadge from '@/components/demo/DemoAiBadge';
 import { CARE_DEMO_RESIDENT_PROFILES } from '@/lib/careDemoResidents';
 import { getJournalDemoDraft } from '@/lib/journalDemoDrafts';
 
@@ -180,16 +179,13 @@ export default function JournalAiDemoModal({
             style={{ color: 'var(--cp-purple, #8b84e8)' }}
           />
           <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h2
-                id="journal-ai-demo-title"
-                className="text-base font-semibold"
-                style={{ color: 'var(--cp-text)' }}
-              >
-                Journaludkast fra AI
-              </h2>
-              <DemoAiBadge />
-            </div>
+            <h2
+              id="journal-ai-demo-title"
+              className="text-base font-semibold"
+              style={{ color: 'var(--cp-text)' }}
+            >
+              Journaludkast fra AI
+            </h2>
             <p className="mt-1 text-xs leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
               Demo: udkast genereres ud fra <strong style={{ color: 'var(--cp-text)' }}>Lys</strong>{' '}
               (check-in, humør, tema) og en simuleret dag — tilpasset den valgte beboer. I drift

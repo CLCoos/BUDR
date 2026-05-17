@@ -2,10 +2,8 @@ import React from 'react';
 import type { Metadata, Viewport } from 'next';
 import { DM_Sans, DM_Serif_Display } from 'next/font/google';
 import AnalyticsGate from '@/components/AnalyticsGate';
-import DemoGuidedTourProvider from '@/components/demo/DemoGuidedTourProvider';
 import SonnerToaster from '@/components/SonnerToaster';
 import BudrThemeProvider from '@/components/theme/BudrThemeProvider';
-import { AuthenticatedUserProvider } from '@/contexts/AuthenticatedUserContext';
 import './globals.css';
 
 const dmSans = DM_Sans({
@@ -49,13 +47,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="da" className={`${dmSans.variable} ${dmSerifDisplay.variable}`}>
       <body>
         <BudrThemeProvider>
-          <AuthenticatedUserProvider>
-            <DemoGuidedTourProvider>
-              <AnalyticsGate />
-              {children}
-              <SonnerToaster />
-            </DemoGuidedTourProvider>
-          </AuthenticatedUserProvider>
+          <AnalyticsGate />
+          {children}
+          <SonnerToaster />
         </BudrThemeProvider>
       </body>
     </html>

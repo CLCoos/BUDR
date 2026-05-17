@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { BudrLogo } from '@/components/brand/BudrLogo';
 import { GlobalSearch } from '@/components/patterns/GlobalSearch';
 import { UserMenu } from '@/components/patterns/UserMenu';
-import PortalNotificationBar from '@/app/care-portal-dashboard/components/PortalNotificationBar';
 import { cn } from '@/lib/cn';
 import styles from './TopHeader.module.css';
 
@@ -24,7 +23,6 @@ export function TopHeader({ fixed = true }: TopHeaderProps) {
         <GlobalSearch />
       </div>
       <div className={styles.right}>
-        <PortalNotificationBar />
         <UserMenu />
       </div>
     </header>

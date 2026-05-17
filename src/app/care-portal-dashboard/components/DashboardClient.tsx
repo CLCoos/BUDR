@@ -573,8 +573,6 @@ function DashboardClientInner({
         </div>
       </div>
 
-      <ActionCards onOpenOverrapport={() => setOverrapportOpen(true)} />
-
       {/* ── Zone 1: Status bar (full width) ─────────────────── */}
       <OnboardingChecklist />
 

@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Plus, X, Loader2, Sparkles } from 'lucide-react';
 import { compareEditorChrome } from '@/components/journal/compareEditorChrome';
 import { JournalVersionToggle } from '@/components/journal/JournalVersionToggle';
@@ -108,20 +108,10 @@ interface Props {
   residentId: string;
   residentName: string;
   carePortalDark?: boolean;
-  /** Kun på primær «Skriv notat»-knap: åbn modal når URL har `?writeJournal=1` (fjernes efter åbning). */
-  openFromQueryParam?: boolean;
 }
 
-export default function WriteJournalEntry({
-  residentId,
-  residentName,
-  carePortalDark,
-  openFromQueryParam = false,
-}: Props) {
+export default function WriteJournalEntry({ residentId, residentName, carePortalDark }: Props) {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const openedFromQueryRef = useRef(false);
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<JournalCategory>('Døgnnotat');
   const [title, setTitle] = useState('');
@@ -192,7 +182,7 @@ export default function WriteJournalEntry({
     setPairAiOther(null);
   }
 
-  const handleOpen = useCallback(() => {
+  function handleOpen() {
     setCategory('Døgnnotat');
     setTitle('');
     setBody('');
@@ -201,26 +191,9 @@ export default function WriteJournalEntry({
     setSaveMode('kladde');
     setShowInDiary(true);
     setError(null);
-    setCompareMode(false);
-    setCompareSource('ai');
-    setPairOriginalDoegn(null);
-    setPairAiDoegn(null);
-    setPairOriginalOther(null);
-    setPairAiOther(null);
+    resetCompareState();
     setOpen(true);
-  }, []);
-
-  useEffect(() => {
-    if (!openFromQueryParam || openedFromQueryRef.current) return;
-    if (searchParams.get('writeJournal') !== '1') return;
-    openedFromQueryRef.current = true;
-    handleOpen();
-    const next = new URLSearchParams(searchParams.toString());
-    next.delete('writeJournal');
-    const qs = next.toString();
-    const path = pathname || '';
-    router.replace(qs ? `${path}?${qs}` : path, { scroll: false });
-  }, [openFromQueryParam, searchParams, pathname, router, handleOpen]);
+  }
 
   /** Afslut sammenligning og fortsæt med den version der vises nu */
   function dismissCompare() {

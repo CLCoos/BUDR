@@ -3,7 +3,6 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import DokumentSøgning from '@/components/DokumentSøgning';
-import { CARE_PORTAL_DEMO_FACILITY_NAME } from '@/lib/carePortalDemoBranding';
 
 const borgerRoutes = ['/park-hub'];
 const portalRoutes = ['/care-portal-dashboard', '/handover-workspace', '/resident-360-view'];
@@ -81,7 +80,7 @@ export default function TopNav() {
       </div>
       <div className="ml-auto flex shrink-0 items-center gap-3">
         <span className="text-xs" style={{ color: 'var(--cp-muted)' }}>
-          DEMO · {CARE_PORTAL_DEMO_FACILITY_NAME}
+          Demo · Bosted Nordlys
         </span>
         <div
           className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-semibold"

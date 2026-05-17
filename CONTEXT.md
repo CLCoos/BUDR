@@ -2,19 +2,7 @@
 
 **Til AI/assistenter:** Læs denne fil først. Kort indgang: [`AGENTS.md`](./AGENTS.md).
 
-**Sidst opdateret (manuelt):** 2026-04-29 — **Lys safety realtime (dashboard-crash):** `subscribeSafetyEvents` bruger nu **unikt Realtime-kanalnavn** pr. abonnement (`safetyEventsService.ts`). Ellers genbrugte Supabase `channel('lys-safety-events-<org>')` mellem `PortalNotificationBar` og `ActionCards`, og den anden `.on()` landede efter `subscribe()` → client exception på `/care-portal-dashboard`.
-
-**Forrige (samme dag):** **Root auth-provider (fix blank forside):** `AuthenticatedUserProvider` ligger nu i **`src/app/layout.tsx`**, så delt client-chunk (fx `PortalNotificationBar` / `useAuthenticatedUser`) ikke crasher på marketing-sider. `PortalShell` og `care-portal-dashboard/setup/layout` bruger ikke længere duplikat-provider; `DesignSystemWithAuth` stoler på root-layout.
-
-**Forrige (samme dag):** **Marketing forside (`/#se-det-i-aktion`):** `useBudrLandingFadeIn` og `DayInLifeDemo` håndterer nu manglende/fejlende `IntersectionObserver` (vis alt indhold i stedet for at crashe). `DayInLifeDemo` bruger `useLayoutEffect` for mere stabil observe efter DOM; `HomeLandingPage` loader demoen med **SSR** (fjernet `dynamic(..., { ssr: false })`) så sektionen ikke afhænger af et separat client-chunk ved dybt anker-link.
-
-**Forrige (samme dag):** **Care Portal-demo (WhyBox udvidelse):** `DemoWhyBox` på **`/care-portal-demo/assistant`** (faglig støtte = udkast, demo-endpoint) og **`/care-portal-demo/import`** (kun flow, ingen upload til server). `docs/care-portal-demo.md` ajourført.
-
-**Forrige (samme dag):** **Care Portal-demo (salgsflow):** `DemoGuidedTourProvider`, guidet tour, WhyBox’es på dashboard/handover/360/Lys, `DemoAiBadge` i journal-AI-modal, CTA-sektion, m.m. Se `docs/care-portal-demo.md` og `src/lib/carePortalDemoGuidedTour.ts`.
-
-**Forrige (samme dag):** **Care Portal-demo (tydeliggørelse):** `carePortalDemoBranding`, `DemoModeRibbon`, `om-demo`, harmoniseret DEMO-tekst.
-
-**Forrige (samme dag):** **Delivery workflow/tooling:** PR-skabelon `.github/pull_request_template.md`, `docs/migrations-playbook.md`, `docs/release-checklist.md`, safety-eval (`npm run eval:safety`), README workflow-sektion.
+**Sidst opdateret (manuelt):** 2026-04-29 — **Deploy-fix (Settings prop til Lys standardstemme):** `src/app/care-portal-dashboard/settings/page.tsx` sender nu `initialLysDefaultVoiceId` til `SettingsClient`, og henter `lys_default_voice_id` sammen med `resident_name_display_mode` fra `organisations` (fallback `null`). Løser TypeScript-buildfejl i Netlify om manglende required prop. Verificeret med lokal `npm run build`.
 
 **Forrige:** 2026-04-28 — **Care Portal Lys safety-events UI:** Ny delt service `src/lib/lys/safetyEventsService.ts` til hent/ack/realtime af `lys_safety_events` + danske relative tidslabels. Ny `PortalNotificationBar` i header (`TopHeader`) viser bell-badge, dropdown med 5 nyeste ubekræftede events og realtime-opdatering med cleanup. `ActionCards` udvidet med “Lys-advarsler” (acute/elevated sortering, udtalelses-uddrag, “Åbn samtale” + “Bekræft set”). Nyt `ResidentLysSamtalerTab` på beboerkortet (`resident-360-view`) viser `lys_conversations`, modal-transskript, inline risk-flags med reasoning-tooltip og samlet “Bekræft set”.
 

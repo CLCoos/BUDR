@@ -6,7 +6,7 @@ import styles from './PageHeader.module.css';
 
 export type PageHeaderProps = {
   title: string;
-  subtitle?: React.ReactNode;
+  subtitle?: string;
   breadcrumbs?: React.ReactNode;
   liveIndicator?: React.ReactNode;
   actions?: React.ReactNode;
