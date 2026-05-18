@@ -12,7 +12,7 @@ export const BOOKING_URL_DETAILED = 'https://cal.com/budr-care/udvidet';
 export const CONTACT_URL = '/institutioner#kontakt';
 
 /** Kontakt-email — bruges i CTA-fodtekster og footer. */
-export const CONTACT_EMAIL = 'christian@budrcare.dk';
+export const CONTACT_EMAIL = 'hej@budrcare.dk';
 
 /** Firmalokation — bruges i footer og structured data. */
 export const COMPANY_LOCATION = 'Aalborg, Danmark';
