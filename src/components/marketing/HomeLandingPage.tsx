@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRef } from 'react';
 import { BudrLogo } from '@/components/brand/BudrLogo';
-import { BOOKING_URL, CONTACT_URL } from '@/components/marketing/constants';
+import { BOOKING_URL, CONTACT_EMAIL, CONTACT_URL } from '@/components/marketing/constants';
 import { IconDocMemory, IconMoodSignal, IconShiftGap } from '@/components/marketing/LandingIcons';
 import MarketingFooter from '@/components/marketing/MarketingFooter';
 import { useBudrLandingFadeIn } from '@/components/marketing/useBudrLandingFadeIn';
@@ -53,6 +53,41 @@ const CHIME_DIMENSIONS = [
   },
 ] as const;
 
+const HOME_FAQ = [
+  {
+    q: 'Erstatter BUDR vores nuværende journalsystem?',
+    a: 'Nej. BUDR supplerer. Den daglige journal kan ligge i Sensum, Nexus eller Planner4You — BUDR tilføjer recovery-laget ovenpå.',
+  },
+  {
+    q: 'Hvad med GDPR?',
+    a: "Vi indgår databehandleraftale før pilotstart. Data hostes i Tyskland (Hetzner FSN1) under EU's databeskyttelseslovgivning. Borgerdata krypteres i hvile og under transport.",
+  },
+  {
+    q: "Hvad kan AI'en gøre — og hvad kan den ikke?",
+    a: "AI'en hjælper med at strukturere refleksioner og foreslå mønstre. Den diagnosticerer ikke, behandler ikke, og tager aldrig beslutninger. Personalet er altid i førersædet.",
+  },
+  {
+    q: 'Hvad hvis en borger ikke kan bruge en app?',
+    a: "Lys er designet til at være brugbar selv ved svære dage — minimal kognitiv belastning, store knapper, stemme-input. Men hvis en borger ikke kan eller vil bruge app'en, fungerer Care Portal alligevel; personalet kan bruge det som dokumentationsværktøj uden borger-app'en.",
+  },
+  {
+    q: 'Hvad koster det?',
+    a: 'Pilot er gratis i 3 måneder. Efterfølgende: tre prismodeller (Start/Vækst/Organisation) afhængigt af bostedets størrelse. Vi sender den fulde prisstruktur efter indledende samtale.',
+  },
+  {
+    q: 'Hvem ejer dataene?',
+    a: 'Bostedet og borgeren. Vi er databehandler — ikke ejer. Fuld eksport ved opsigelse.',
+  },
+  {
+    q: 'Kan vi se en demo?',
+    a: 'Ja. Book en samtale, så viser vi Saras reelle forløb live i systemet.',
+  },
+  {
+    q: 'Hvad med integration til kommunens systemer?',
+    a: 'Vi har eksport-formater for de mest brugte. Direkte integration er mulig efter pilot — det vurderes case-by-case.',
+  },
+] as const;
+
 export default function HomeLandingPage({ className = '' }: HomeLandingPageProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   useBudrLandingFadeIn(rootRef);
@@ -68,7 +103,9 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
             <div className="home-nav-links">
               <a href="#recovery">Recovery</a>
               <a href="#sara-forloeb">Saras forløb</a>
-              <a href={CONTACT_URL}>Kontakt</a>
+              <a href="#pilot">Pilot</a>
+              <a href="#faq">FAQ</a>
+              <a href="#kontakt">Kontakt</a>
             </div>
             <div className="home-nav-cta">
               <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="btn-sm">
@@ -189,22 +226,141 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
             </div>
           </section>
 
-          <section className="home-credibility fi">
-            <div className="shell">
-              <p className="home-credibility-line">
-                Bygget i Danmark af folk der selv arbejder på socialpsykiatriske bosteder.
-              </p>
+          <section className="home-two-entrances fi" id="to-indgange">
+            <div className="shell home-copy-shell">
+              <h2 className="section-h">Ét system. To indgange.</h2>
+              <div className="two-entrances-grid">
+                <article className="entrance-card">
+                  <h3>Personalet</h3>
+                  <p className="entrance-product-name">Care Portal</p>
+                  <p>
+                    Webbaseret dashboard til hele teamet. Vagtoverdragelse med kontekst,
+                    journal-skrivning støttet af AI, advarselssystem ved kritiske mønstre,
+                    recovery-trends over tid. Bygget til at fjerne dokumentationsbyrden — ikke
+                    tilføje endnu en fane.
+                  </p>
+                  <Link href="/institutioner#loesning" className="entrance-link">
+                    Læs mere om Care Portal →
+                  </Link>
+                </article>
+                <article className="entrance-card">
+                  <h3>Borgeren</h3>
+                  <p className="entrance-product-name">Lys</p>
+                  <p>
+                    Personlig recovery-app. Daglig check-in, refleksioner som tekst eller stemme,
+                    egne næste skridt, samling af recovery-fortællinger. Borgeren bestemmer hvad
+                    personalet ser. Ingen overvågning, ingen alarm-spam.
+                  </p>
+                  <Link href="/institutioner#maalgruppe" className="entrance-link">
+                    Læs mere om Lys →
+                  </Link>
+                </article>
+              </div>
             </div>
           </section>
 
-          <section className="home-cta-simple fi" id="kontakt">
-            <div className="shell">
-              <div className="home-cta-simple-inner">
-                <h2>Klar til at se BUDR i drift?</h2>
-                <Link href={CONTACT_URL} className="btn-primary">
-                  Book gratis demo
-                </Link>
+          <section className="home-founder fi" id="grundlaegger">
+            <div className="shell home-copy-shell home-founder-shell">
+              <h2 className="section-h">Bygget af én der har arbejdet på gulvet</h2>
+              <div className="founder-content">
+                <p>
+                  BUDR er grundlagt af Christian Cloos, der selv har arbejdet som pædagogmedhjælper
+                  på et socialpsykiatrisk bosted. Frustrationen over værktøjer der ikke understøtter
+                  recovery-praksis — kun dokumenterer den — var udgangspunktet for hele systemet.
+                </p>
+                <p>
+                  Faglig sparring undervejs med psykologer, socialpædagoger og bostedsledere fra
+                  hele landet. CHIME-rammeværket er valgt fordi det er evidensbaseret,
+                  internationalt anerkendt, og oversætter sig direkte til daglig praksis.
+                </p>
               </div>
+            </div>
+          </section>
+
+          <section className="home-pilot-steps fi" id="pilot">
+            <div className="shell home-copy-shell">
+              <h2 className="section-h">Vi starter småt, sammen</h2>
+              <div className="pilot-steps-grid">
+                <article className="pilot-step">
+                  <span className="step-number" aria-hidden>
+                    1
+                  </span>
+                  <h3>Indledende samtale</h3>
+                  <p className="step-duration">15 min</p>
+                  <p>
+                    Vi forstår jeres hverdag, jeres dokumentationsbyrde, jeres recovery-arbejde i
+                    dag.
+                  </p>
+                  <a
+                    href={BOOKING_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="step-cta"
+                  >
+                    Book intromøde →
+                  </a>
+                </article>
+                <article className="pilot-step">
+                  <span className="step-number" aria-hidden>
+                    2
+                  </span>
+                  <h3>Pilot på én afdeling</h3>
+                  <p className="step-duration">3 måneder</p>
+                  <p>5-10 borgere. Vi sætter op, træner personalet, justerer løbende.</p>
+                </article>
+                <article className="pilot-step">
+                  <span className="step-number" aria-hidden>
+                    3
+                  </span>
+                  <h3>Evaluering og udrulning</h3>
+                  <p className="step-duration">Sammen</p>
+                  <p>Konkret data på hvad der virkede. Beslutning tages sammen.</p>
+                </article>
+              </div>
+              <ul className="pilot-trust-signals">
+                <li>Ingen binding ud over pilotperioden</li>
+                <li>Dansk hosting (Hetzner FSN1)</li>
+                <li>GDPR-databehandleraftale</li>
+                <li>Fuld dataeksport ved opsigelse</li>
+              </ul>
+            </div>
+          </section>
+
+          <section className="home-faq fi" id="faq">
+            <div className="shell home-copy-shell">
+              <h2 className="section-h">Spørgsmål vi får oftest</h2>
+              <div className="inst-faq-list home-faq-list">
+                {HOME_FAQ.map((item) => (
+                  <details key={item.q} className="inst-faq-item">
+                    <summary>{item.q}</summary>
+                    <p>{item.a}</p>
+                  </details>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="home-final-cta fi" id="kontakt">
+            <div className="shell home-final-cta-inner">
+              <h2 className="section-h">Klar til at se det på jeres bosted?</h2>
+              <p className="final-cta-subtext">
+                15 minutters samtale. Ingen forpligtelser. Vi viser konkret hvordan Saras forløb ser
+                ud i systemet, og vi lytter til hvor jeres bosted er i dag.
+              </p>
+              <a
+                href={BOOKING_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary final-cta-button"
+              >
+                Book pilot-samtale →
+              </a>
+              <p className="final-cta-fineprint">
+                Vi svarer inden for 1 hverdag · {CONTACT_EMAIL} · BUDR ApS, Aalborg
+              </p>
+              <p className="final-cta-secondary">
+                <Link href={CONTACT_URL}>Skriv til os</Link> i stedet for booking
+              </p>
             </div>
           </section>
         </main>
