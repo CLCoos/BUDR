@@ -29,6 +29,34 @@ type HomeLandingPageProps = {
   className?: string;
 };
 
+const CHIME_DIMENSIONS = [
+  {
+    en: 'Connectedness',
+    da: 'Forbundethed',
+    body: 'Relationer, fællesskab, ikke-isolation. BUDR fanger små sociale skridt — som Saras «smile og sige hej til Sofie» — og gør dem synlige over tid.',
+  },
+  {
+    en: 'Hope',
+    da: 'Håb',
+    body: 'Recovery-fortællinger fra borgeren selv. Små sejre der ellers ville forsvinde, bliver gemt og kan genbesøges på svære dage.',
+  },
+  {
+    en: 'Identity',
+    da: 'Identitet',
+    body: 'Borgerprofiler der bygger på styrker, værdier, drømme — ikke kun diagnoser. Personalet møder mennesket, ikke journalen.',
+  },
+  {
+    en: 'Meaning',
+    da: 'Mening',
+    body: 'Refleksioner over hverdagen. Hvad gav mening i dag? Hvor sad det fast? Borgeren skriver eller taler ind i Lys — personalet ser mønstret.',
+  },
+  {
+    en: 'Empowerment',
+    da: 'Handlekraft',
+    body: 'Næste skridt formuleres af borgeren, støttet af personalet. Ikke mål sat for borgeren — mål sat med borgeren.',
+  },
+] as const;
+
 export default function HomeLandingPage({ className = '' }: HomeLandingPageProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   useBudrLandingFadeIn(rootRef);
@@ -42,7 +70,7 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
               <BudrLogo dark size={36} />
             </a>
             <div className="home-nav-links">
-              <a href="#problem">Problemet</a>
+              <a href="#recovery">Recovery</a>
               <a href="#sara-forloeb">Saras forløb</a>
               <a href={CONTACT_URL}>Kontakt</a>
             </div>
@@ -136,6 +164,27 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
                     <p>Borgeren har ingen plads i sit eget forløb.</p>
                   </div>
                 </li>
+              </ul>
+            </div>
+          </section>
+
+          <section className="home-chime fi" id="recovery">
+            <div className="shell home-copy-shell">
+              <h2 className="section-h">Recovery, gjort konkret</h2>
+              <p className="section-p">
+                BUDR bygger på CHIME — det internationalt anerkendte rammeværk for personlig
+                recovery (Leamy et al., British Journal of Psychiatry, 2011). Fem dimensioner som
+                personale og borger arbejder med sammen, ikke ovenpå hinanden.
+              </p>
+              <ul className="home-chime-grid">
+                {CHIME_DIMENSIONS.map((dim) => (
+                  <li key={dim.en} className="home-chime-card">
+                    <p className="home-chime-label">
+                      {dim.en} — {dim.da}
+                    </p>
+                    <p>{dim.body}</p>
+                  </li>
+                ))}
               </ul>
             </div>
           </section>
