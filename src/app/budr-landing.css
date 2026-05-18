@@ -353,7 +353,6 @@ html {
   color: var(--budr-blue);
 }
 
-
 /* Knap-række under intro (institutioner / pilot / SEO) — base lå tidligere i longform sammen med .hero */
 .budr-landing .hero-actions {
   margin-top: 36px;
@@ -362,12 +361,10 @@ html {
   flex-wrap: wrap;
 }
 
-
 .budr-landing section {
   padding: 110px 52px;
   position: relative;
 }
-
 
 .budr-landing .intro-section {
   position: relative;
@@ -476,7 +473,6 @@ html {
   text-align: left;
 }
 
-
 .budr-landing .intro-section::before {
   content: '';
   position: absolute;
@@ -565,7 +561,6 @@ html {
   line-height: 1.65;
   margin-bottom: 16px;
 }
-
 
 .budr-landing .cta-section {
   padding: 130px 52px;
@@ -2306,9 +2301,59 @@ html {
   font-size: 0.9rem;
   color: var(--white-dim);
   line-height: 1.8;
-  padding-bottom: 20px;
+  padding-bottom: 0;
   margin: 0;
   max-width: 60ch;
+}
+
+.budr-landing .inst-faq-item p + p {
+  margin-top: 12px;
+}
+
+.budr-landing .inst-faq-item p:last-child {
+  padding-bottom: 20px;
+}
+
+.budr-landing .institutioner-fit {
+  background: rgba(93, 202, 165, 0.04);
+}
+
+.budr-landing .institutioner-fit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  margin: 28px 0 24px;
+  max-width: 72ch;
+}
+
+.budr-landing .institutioner-fit-col h3 {
+  font-size: 1.05rem;
+  margin: 0 0 14px;
+  color: var(--white);
+}
+
+.budr-landing .institutioner-fit-col ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--white-dim);
+  line-height: 1.65;
+}
+
+.budr-landing .institutioner-fit-col li {
+  margin-bottom: 10px;
+}
+
+.budr-landing .institutioner-fit-note {
+  font-size: 0.95rem;
+  color: var(--white-dim);
+  max-width: 52ch;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .budr-landing .institutioner-fit-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .budr-landing .institutioner-sub-h {

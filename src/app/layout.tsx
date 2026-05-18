@@ -51,7 +51,7 @@ const organizationSchema = {
   name: 'BUDR ApS',
   url: 'https://budrcare.dk',
   description:
-    'Recovery-system til socialpsykiatriske bosteder i Danmark. Bygget på CHIME-rammeværket.',
+    'Driftssystem til socialpsykiatriske bosteder i Danmark. Bygget på CHIME-rammeværket og VUM 2.0-kompatibelt.',
   founder: {
     '@type': 'Person',
     name: 'Christian Cloos',

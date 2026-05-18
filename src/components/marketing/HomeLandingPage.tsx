@@ -56,35 +56,52 @@ const CHIME_DIMENSIONS = [
 const HOME_FAQ = [
   {
     q: 'Erstatter BUDR vores nuværende journalsystem?',
-    a: 'Nej. BUDR supplerer. Den daglige journal kan ligge i Sensum, Nexus eller Planner4You — BUDR tilføjer recovery-laget ovenpå.',
+    paragraphs: [
+      'For mindre socialpsykiatriske bosteder med 5-25 borgere, hvor BUDR-funktionaliteten dækker jeres dokumentationsbehov: ja. BUDR er bygget som komplet driftssystem — journal, vagtoverdragelse, dokumentation, recovery-arbejde og borgerinddragelse i ét system.',
+      'For større bosteder eller bosteder med intern medicinhåndtering har vi FMK- og MedCom-integration på roadmap for 2027. Vi vurderer det altid konkret sammen ved indledende samtale.',
+    ],
+  },
+  {
+    q: 'Understøtter BUDR VUM 2.0?',
+    paragraphs: [
+      "Ja. BUDR's datamodel mapper direkte til VUM 2.0's 11 udredningstemaer og Fælles Faglige Begreber. CHIME-rammeværket, som BUDR er bygget på, matcher VUM 2.0's eget fokus på recovery-orienteret rehabilitering — det er ikke to konkurrerende rammer, men to lag af samme faglige praksis.",
+    ],
   },
   {
     q: 'Hvad med GDPR?',
-    a: "Vi indgår databehandleraftale før pilotstart. Data hostes i Tyskland (Hetzner FSN1) under EU's databeskyttelseslovgivning. Borgerdata krypteres i hvile og under transport.",
+    paragraphs: [
+      "Vi indgår databehandleraftale før pilotstart. Data hostes i Tyskland (Hetzner FSN1) under EU's databeskyttelseslovgivning. Borgerdata krypteres i hvile (AES-256) og under transport (TLS 1.3).",
+    ],
   },
   {
     q: "Hvad kan AI'en gøre — og hvad kan den ikke?",
-    a: "AI'en hjælper med at strukturere refleksioner og foreslå mønstre. Den diagnosticerer ikke, behandler ikke, og tager aldrig beslutninger. Personalet er altid i førersædet.",
+    paragraphs: [
+      "AI'en hjælper med at strukturere refleksioner, foreslå journalformuleringer og synliggøre mønstre i borgerens recovery. Den diagnosticerer ikke, behandler ikke, og tager aldrig beslutninger. Personalet er altid i førersædet.",
+    ],
   },
   {
     q: 'Hvad hvis en borger ikke kan bruge en app?',
-    a: "Lys er designet til at være brugbar selv ved svære dage — minimal kognitiv belastning, store knapper, stemme-input. Men hvis en borger ikke kan eller vil bruge app'en, fungerer Care Portal alligevel; personalet kan bruge det som dokumentationsværktøj uden borger-app'en.",
+    paragraphs: [
+      "Lys er designet til at være brugbar selv ved svære dage — minimal kognitiv belastning, store knapper, stemme-input. Men hvis en borger ikke kan eller vil bruge app'en, fungerer Care Portal alligevel; personalet kan dokumentere uden borger-app'en.",
+    ],
   },
   {
     q: 'Hvad koster det?',
-    a: 'Pilot er gratis i 3 måneder. Efterfølgende: tre prismodeller (Start/Vækst/Organisation) afhængigt af bostedets størrelse. Vi sender den fulde prisstruktur efter indledende samtale.',
+    paragraphs: [
+      'Pilot er gratis i 3 måneder. Efterfølgende: tre prismodeller (Start/Vækst/Organisation) afhængigt af bostedets størrelse. Vi sender den fulde prisstruktur efter indledende samtale.',
+    ],
   },
   {
     q: 'Hvem ejer dataene?',
-    a: 'Bostedet og borgeren. Vi er databehandler — ikke ejer. Fuld eksport ved opsigelse.',
+    paragraphs: [
+      'Bostedet og borgeren. Vi er databehandler — ikke ejer. Fuld eksport ved opsigelse i standardformater (CSV, JSON, PDF).',
+    ],
   },
   {
-    q: 'Kan vi se en demo?',
-    a: 'Ja. Book en samtale, så viser vi Saras reelle forløb live i systemet.',
-  },
-  {
-    q: 'Hvad med integration til kommunens systemer?',
-    a: 'Vi har eksport-formater for de mest brugte. Direkte integration er mulig efter pilot — det vurderes case-by-case.',
+    q: 'Hvad med tilsynsrapporter?',
+    paragraphs: [
+      'BUDR genererer eksportbare dokumentationsrapporter til socialtilsyn baseret på Social- og Boligstyrelsens kvalitetsmodel. Personalet kan fremvise journalhistorik, indsatsmål og recovery-progression direkte fra systemet.',
+    ],
   },
 ] as const;
 
@@ -121,11 +138,12 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
               <div className="home-brand-row">
                 <BudrLogo dark size={42} />
               </div>
-              <p className="eyebrow">Recovery-system til socialpsykiatriske bosteder</p>
+              <p className="eyebrow">Driftssystem til socialpsykiatriske bosteder</p>
               <h1>Vagtoverdragelsen sker stadig på hukommelse. Borgerens recovery på papir.</h1>
               <p>
-                BUDR er det første danske system der binder vagtoverdragelse, dokumentation og
-                borgerens egen recovery sammen — bygget på CHIME-rammeværket.
+                BUDR er det første danske driftssystem der samler vagtoverdragelse, journal,
+                dokumentation og recovery-arbejde i ét — bygget på CHIME-rammeværket og VUM
+                2.0-kompatibelt.
               </p>
               <div className="hero-actions">
                 <a
@@ -234,10 +252,10 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
                   <h3>Personalet</h3>
                   <p className="entrance-product-name">Care Portal</p>
                   <p>
-                    Webbaseret dashboard til hele teamet. Vagtoverdragelse med kontekst,
-                    journal-skrivning støttet af AI, advarselssystem ved kritiske mønstre,
-                    recovery-trends over tid. Bygget til at fjerne dokumentationsbyrden — ikke
-                    tilføje endnu en fane.
+                    Webbaseret driftssystem til hele teamet. Journal, vagtoverdragelse,
+                    AI-assisteret dokumentation, advarselssystem, recovery-trends og VUM
+                    2.0-understøttelse. Bygget til at samle hele jeres dokumentationsarbejde — ikke
+                    supplere det.
                   </p>
                   <Link href="/institutioner#loesning" className="entrance-link">
                     Læs mere om Care Portal →
@@ -269,9 +287,15 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
                   recovery-praksis — kun dokumenterer den — var udgangspunktet for hele systemet.
                 </p>
                 <p>
+                  CHIME-rammeværket er valgt fordi det er evidensbaseret, internationalt anerkendt,
+                  og oversætter sig direkte til daglig praksis. Det matcher VUM 2.0&apos;s eget
+                  fokus på recovery-orienteret rehabilitering, som Social- og Boligstyrelsen har
+                  defineret som ét af fire faglige fokusområder i implementeringsforløb for
+                  kommuner.
+                </p>
+                <p>
                   Faglig sparring undervejs med psykologer, socialpædagoger og bostedsledere fra
-                  hele landet. CHIME-rammeværket er valgt fordi det er evidensbaseret,
-                  internationalt anerkendt, og oversætter sig direkte til daglig praksis.
+                  hele landet.
                 </p>
               </div>
             </div>
@@ -289,7 +313,7 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
                   <p className="step-duration">15 min</p>
                   <p>
                     Vi forstår jeres hverdag, jeres dokumentationsbyrde, jeres recovery-arbejde i
-                    dag.
+                    dag. Vi afklarer sammen om BUDR passer til jeres bosted.
                   </p>
                   <a
                     href={BOOKING_URL}
@@ -306,7 +330,7 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
                   </span>
                   <h3>Pilot på én afdeling</h3>
                   <p className="step-duration">3 måneder</p>
-                  <p>5-10 borgere. Vi sætter op, træner personalet, justerer løbende.</p>
+                  <p>5-15 borgere. Vi sætter op, træner personalet, justerer løbende.</p>
                 </article>
                 <article className="pilot-step">
                   <span className="step-number" aria-hidden>
@@ -333,7 +357,9 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
                 {HOME_FAQ.map((item) => (
                   <details key={item.q} className="inst-faq-item">
                     <summary>{item.q}</summary>
-                    <p>{item.a}</p>
+                    {item.paragraphs.map((paragraph) => (
+                      <p key={paragraph}>{paragraph}</p>
+                    ))}
                   </details>
                 ))}
               </div>

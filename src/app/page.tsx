@@ -5,13 +5,13 @@ import './budr-landing.css';
 import './budr-landing-longform.css';
 
 export const metadata: Metadata = {
-  title: 'BUDR — Recovery-system til socialpsykiatriske bosteder',
+  title: 'BUDR — Driftssystem til socialpsykiatriske bosteder',
   description:
-    'Det første danske recovery-system bygget på CHIME-rammeværket. BUDR binder vagtoverdragelse, dokumentation og borgerens egen recovery sammen.',
+    'Det første danske driftssystem til socialpsykiatriske bosteder bygget på CHIME-rammeværket. Journal, vagtoverdragelse, recovery og borgerinddragelse i ét.',
   openGraph: {
-    title: 'BUDR — Recovery-system til socialpsykiatriske bosteder',
+    title: 'BUDR — Driftssystem til socialpsykiatriske bosteder',
     description:
-      'Det første danske recovery-system bygget på CHIME-rammeværket. BUDR binder vagtoverdragelse, dokumentation og borgerens egen recovery sammen.',
+      'Det første danske driftssystem til socialpsykiatriske bosteder bygget på CHIME-rammeværket. Journal, vagtoverdragelse, recovery og borgerinddragelse i ét.',
     url: 'https://budrcare.dk',
     siteName: 'BUDR',
     locale: 'da_DK',
@@ -19,8 +19,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'BUDR — Recovery-system til socialpsykiatriske bosteder',
-    description: 'Det første danske recovery-system bygget på CHIME-rammeværket.',
+    title: 'BUDR — Driftssystem til socialpsykiatriske bosteder',
+    description:
+      'Det første danske driftssystem til socialpsykiatriske bosteder bygget på CHIME-rammeværket.',
   },
 };
 

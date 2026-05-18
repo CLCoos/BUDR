@@ -150,11 +150,11 @@ export default function PilotpakkePage({ className = '' }: Props) {
                 Fast tilbud til beslutningstagere
               </div>
               <h1 className="section-h" style={{ maxWidth: '40rem', margin: '0 auto' }}>
-                <em>Pilotpakker</em> — recovery i praksis på jeres bosted
+                Pilotpakker
               </h1>
               <p className="intro-lead" style={{ maxWidth: '44rem' }}>
-                Tre niveauer til at starte, skalere eller forankre recovery som organisatorisk DNA.
-                Alle pakker bygger på CHIME-rammeværket med Care Portal og Lys.
+                Tre niveauer afhængigt af bostedets størrelse og behov. Alle pakker bygger på
+                CHIME-rammeværket med Care Portal og Lys.
               </p>
               <div
                 className="hero-actions pilotpakke-no-print"
@@ -186,31 +186,31 @@ export default function PilotpakkePage({ className = '' }: Props) {
               <article className="pilot-tier-card">
                 <h3>Start</h3>
                 <p className="pilot-tier-tagline">
-                  For bosteder der vil teste recovery-arbejde struktureret
+                  For mindre bosteder der vil bygge recovery-praksis fra grunden
                 </p>
                 <ul className="pilot-tier-includes">
                   <li>1 afdeling, op til 10 borgere</li>
-                  <li>3 måneders pilot</li>
+                  <li>3 måneders pilot, gratis</li>
                   <li>Onboarding + ugentlig support</li>
                   <li>Effektmåling efter 6 og 12 uger</li>
+                  <li>VUM 2.0-skabeloner inkluderet</li>
                 </ul>
               </article>
               <article className="pilot-tier-card pilot-tier-card--featured">
                 <h3>Vækst</h3>
                 <p className="pilot-tier-tagline">
-                  For organisationer der skalerer recovery-praksis
+                  For mellemstore bosteder der skalerer recovery-praksis
                 </p>
                 <ul className="pilot-tier-includes">
                   <li>Op til 3 afdelinger, op til 30 borgere</li>
                   <li>6 måneders pilot</li>
-                  <li>Onboarding + dedikeret kontaktperson</li>
+                  <li>Onboarding + dedicated kontaktperson</li>
                   <li>Kvartalsvis evaluering med ledelsen</li>
-                  <li>Eksport-integrationer til kommunale systemer</li>
                 </ul>
               </article>
               <article className="pilot-tier-card">
                 <h3>Organisation</h3>
-                <p className="pilot-tier-tagline">Recovery som organisatorisk DNA</p>
+                <p className="pilot-tier-tagline">For større botilbud med flere huse</p>
                 <ul className="pilot-tier-includes">
                   <li>Ubegrænset antal afdelinger</li>
                   <li>Tilpasset implementering</li>

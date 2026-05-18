@@ -12,40 +12,83 @@ const BOOK_DEMO_CTA = 'Book pilot-samtale →';
 
 const INSTITUTIONER_FAQ = [
   {
-    q: 'Kræver det godkendelse fra vores IT-afdeling?',
-    a: 'Platformen kører i skyen med EU-hosting og kræver ikke lokal installation. Teknisk dokumentation og underdatabehandlerliste kan udleveres til jeres IT og DPO inden piloten sættes i gang.',
-  },
-  {
     q: 'Erstatter BUDR vores nuværende journalsystem?',
-    a: 'Nej. BUDR supplerer. Den daglige journal kan ligge i Sensum, Nexus eller Planner4You — BUDR tilføjer recovery-laget ovenpå.',
+    paragraphs: [
+      'For mindre socialpsykiatriske bosteder med 5-25 borgere, hvor BUDR-funktionaliteten dækker jeres dokumentationsbehov: ja. BUDR er bygget som komplet driftssystem — journal, vagtoverdragelse, dokumentation, recovery-arbejde og borgerinddragelse i ét system.',
+      'For større bosteder eller bosteder med intern medicinhåndtering har vi FMK- og MedCom-integration på roadmap for 2027. Vi vurderer det altid konkret sammen ved indledende samtale.',
+    ],
   },
   {
-    q: 'Kan systemet bruges sammen med eksisterende journalsystem?',
-    a: 'Ja. BUDR er designet til at køre parallelt med jeres journal. Recovery-data kan eksporteres og — efter pilot — integreres case-by-case med kommunale systemer.',
+    q: 'Understøtter BUDR VUM 2.0?',
+    paragraphs: [
+      "Ja. BUDR's datamodel mapper direkte til VUM 2.0's 11 udredningstemaer og Fælles Faglige Begreber. CHIME-rammeværket matcher VUM 2.0's fokus på recovery-orienteret rehabilitering — to lag af samme faglige praksis.",
+    ],
+  },
+  {
+    q: 'Hvad med GDPR?',
+    paragraphs: [
+      "Vi indgår databehandleraftale før pilotstart. Data hostes i Tyskland (Hetzner FSN1) under EU's databeskyttelseslovgivning. Borgerdata krypteres i hvile (AES-256) og under transport (TLS 1.3).",
+    ],
+  },
+  {
+    q: "Hvad kan AI'en gøre — og hvad kan den ikke?",
+    paragraphs: [
+      "AI'en hjælper med at strukturere refleksioner, foreslå journalformuleringer og synliggøre mønstre i borgerens recovery. Den diagnosticerer ikke, behandler ikke, og tager aldrig beslutninger. Personalet er altid i førersædet.",
+    ],
+  },
+  {
+    q: 'Hvad hvis en borger ikke kan bruge en app?',
+    paragraphs: [
+      "Lys er designet til at være brugbar selv ved svære dage. Men hvis en borger ikke kan eller vil bruge app'en, fungerer Care Portal alligevel; personalet kan dokumentere uden borger-app'en.",
+    ],
   },
   {
     q: 'Hvad koster det?',
-    a: 'Piloten er gratis i 3 måneder. Efterfølgende prissættes efter størrelse (Start/Vækst/Organisation). Vi sender den fulde prisstruktur efter indledende samtale.',
+    paragraphs: [
+      'Pilot er gratis i 3 måneder. Efterfølgende: tre prismodeller (Start/Vækst/Organisation) afhængigt af bostedets størrelse. Vi sender den fulde prisstruktur efter indledende samtale.',
+    ],
   },
   {
-    q: 'Hvad hvis personalet ikke vil bruge et nyt system?',
-    a: 'Onboarding er tilrettelagt så personalet mærker effekt fra dag ét: færre huller ved vagtskifte, tydeligere recovery-billede, borgerens stemme synlig. Vi følger op tæt i opstartsperioden.',
+    q: 'Hvem ejer dataene?',
+    paragraphs: [
+      'Bostedet og borgeren. Vi er databehandler — ikke ejer. Fuld eksport ved opsigelse i standardformater (CSV, JSON, PDF).',
+    ],
   },
   {
-    q: 'Overholder BUDR Care GDPR?',
-    a: 'Data behandles og opbevares i EU. Platformen er bygget med rollebaseret adgangsstyring, og borgernes data er adskilt fra personalets. Vi leverer databehandleraftale og teknisk dokumentation til DPO-gennemgang.',
+    q: 'Hvad med tilsynsrapporter?',
+    paragraphs: [
+      'BUDR genererer eksportbare dokumentationsrapporter til socialtilsyn baseret på Social- og Boligstyrelsens kvalitetsmodel. Personalet kan fremvise journalhistorik, indsatsmål og recovery-progression direkte fra systemet.',
+    ],
   },
   {
-    q: 'Hvordan håndterer I borgere uden samtykke-evne?',
-    a: 'Processen for information og samtykke er bostedets ansvar. Care Portal kan bruges af personalet uden borger-app, når Lys ikke er relevant for den enkelte borger.',
+    q: 'Kræver det godkendelse fra vores IT-afdeling?',
+    paragraphs: [
+      'Platformen kører i skyen med EU-hosting og kræver ikke lokal installation. Teknisk dokumentation og underdatabehandlerliste kan udleveres til jeres IT og DPO inden piloten sættes i gang.',
+    ],
+  },
+  {
+    q: 'Kan vi eksportere VUM 2.0-status til vores kommunes myndighedssystem?',
+    paragraphs: [
+      'Ja. BUDR genererer strukturerede VUM 2.0-rapporter i standardformater (PDF, JSON) der kan importeres i Sensum, Nexus eller andre myndighedssystemer.',
+    ],
+  },
+  {
+    q: 'Hvordan håndterer I borgere uden samtykkeevne?',
+    paragraphs: [
+      'BUDR understøtter §129-procedurer og pårørende-adgang når relevant. Borgerprofiler kan konfigureres til at undlade Lys-app for borgere der ikke har samtykkeevne.',
+    ],
   },
   {
     q: 'Hvad sker der hvis I lukker ned som firma?',
-    a: 'Databehandleraftalen regulerer overdragelse og sletning. Bostedet kan til enhver tid eksportere data. Ved opsigelse følger vi aftalt dataansættelsesplan.',
+    paragraphs: [
+      'Fuld dataeksport i standardformater er garanteret i databehandleraftalen. Vi forpligter os på 90 dages overgangsperiode for migration.',
+    ],
   },
   {
-    q: 'Kan vi se referencer fra andre bosteder?',
-    a: 'Vi deler erfaringer fra pilotforløb efter aftale, når bosteder ønsker det. Kontakt os for at høre om aktuelle forløb.',
+    q: 'Kan vi se referencer?',
+    paragraphs: [
+      'Vi er i pilotfase med vores første kunder. Når referencer er klare med samtykke, deler vi dem. Indtil da kan vi vise Saras reelle forløb live i systemet.',
+    ],
   },
 ] as const;
 
@@ -72,27 +115,21 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
                 </a>
               </div>
               <nav className="institutioner-nav-links" aria-label="Sidenavigation">
-                <a href="#problem">Problemet</a>
-                <a href="#loesning">Løsningen</a>
+                <a href="#passer-budr">Passer det?</a>
+                <a href="#loesning">Driftssystem</a>
                 <a href="#pilot">Pilot</a>
                 <a href="#teknik">IT og DPO</a>
                 <a href="#faq">FAQ</a>
               </nav>
             </div>
-            <p className="eyebrow">Til ledere, fagchefer og kommunale indkøbere</p>
+            <p className="eyebrow">Til ledere og fagchefer på socialpsykiatriske bosteder</p>
             <h1 className="section-h institutioner-hero-title">
-              Recovery, dokumentation og overlevering — bundet sammen
+              Det første driftssystem bygget på recovery
             </h1>
             <p className="section-p">
-              BUDR er det første danske system bygget på CHIME-rammeværket (Leamy et al., 2011).
-              Personalet får sammenhæng. Borgeren får en stemme i sit eget forløb. Ledelsen får
-              dokumentation der dækker både tilsyn og recovery-praksis.
+              BUDR samler journal, vagtoverdragelse, dokumentation og recovery-arbejde i ét system.
+              Bygget på CHIME-rammeværket og VUM 2.0-kompatibelt.
             </p>
-            <ul className="intro-detail-list institutioner-hero-list">
-              <li>CHIME som faglig rygrad — ikke kun journal og vagtskifte.</li>
-              <li>Care Portal og Lys i samme recovery-flow.</li>
-              <li>Pilot med klare mål før fuld udrulning.</li>
-            </ul>
             <div className="hero-actions">
               <a
                 href={BOOKING_URL}
@@ -106,6 +143,41 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
                 Prøv demo
               </Link>
             </div>
+          </div>
+        </section>
+
+        <section className="institutioner-fit fi" id="passer-budr">
+          <div className="shell institutioner-copy-shell">
+            <h2 className="section-h">Er BUDR det rigtige for jer?</h2>
+            <div className="institutioner-fit-grid">
+              <div className="institutioner-fit-col fit-yes">
+                <h3>Ja, hvis I er:</h3>
+                <ul>
+                  <li>Socialpsykiatrisk bosted med 5-25 borgere</li>
+                  <li>Privat eller selvejende tilbud</li>
+                  <li>Leverer §85-støtte og recovery-orienteret rehabilitering</li>
+                  <li>
+                    Medicinhåndtering via beboers egen læge, hjemmesygepleje eller eksisterende
+                    FMK-løsning
+                  </li>
+                  <li>Klar til at give borgeren en stemme i sit eget forløb</li>
+                </ul>
+              </div>
+              <div className="institutioner-fit-col fit-no">
+                <h3>Endnu ikke, hvis I:</h3>
+                <ul>
+                  <li>
+                    Har intern medicinhåndtering med behov for FMK-integration (på roadmap 2027)
+                  </li>
+                  <li>Skal kommunikere med læger via MedCom (på roadmap 2027)</li>
+                  <li>Har behov for kommunal myndighedsintegration på direktørniveau</li>
+                </ul>
+              </div>
+            </div>
+            <p className="institutioner-fit-note">
+              Vi vurderer det altid konkret sammen ved indledende samtale. Ærlighed sparer os begge
+              for tid.
+            </p>
           </div>
         </section>
 
@@ -132,26 +204,27 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
 
         <section className="institutioner-solution fi" id="loesning">
           <div className="shell institutioner-copy-shell">
-            <h2 className="section-h">Ét system. To produkter. Samme recovery.</h2>
+            <h2 className="section-h">BUDR som komplet driftssystem</h2>
             <p className="section-p">
-              Care Portal er personalets cockpit til vagtoverdragelse, journal, recovery-trends og
-              AI-støttet dokumentation. Lys er borgerens egen app til check-in, refleksioner og
-              næste skridt — med kontrol over hvad personalet ser.
+              Care Portal samler personalets daglige arbejde: journal, vagtoverdragelse,
+              AI-assisteret dokumentation, advarselssystem ved kritiske mønstre, VUM 2.0-skabeloner
+              og recovery-trends over tid.
+            </p>
+            <p className="section-p">
+              Lys giver borgeren plads i sit eget forløb: refleksioner, daglige check-ins, egne
+              næste skridt formuleret med personalet, samling af recovery-fortællinger.
+            </p>
+            <p className="section-p">
+              Når borgeren registrerer i Lys, handler personalet i Care Portal. Ingen
+              dobbeltarbejde. Ingen tabt kontekst. Et system.
             </p>
 
-            <h3 className="institutioner-sub-h">CHIME som faglig rygrad</h3>
+            <h3 className="institutioner-sub-h">To rammer. Samme retning.</h3>
             <p className="section-p">
-              BUDR er bygget på CHIME (Connectedness, Hope, Identity, Meaning, Empowerment) — et
-              internationalt anerkendt rammeværk for personlig recovery (Leamy et al., British
-              Journal of Psychiatry, 2011). Hver borgerprofil, hver refleksion, hvert næste skridt
-              forholder sig til mindst én CHIME-dimension.
-            </p>
-
-            <h3 className="institutioner-sub-h">Hvorfor CHIME, og ikke andre rammeværk?</h3>
-            <p className="section-p">
-              CHIME er valgt frem for Recovery Star eller WRAP fordi det er evidensbaseret og
-              peer-reviewed, bredt anvendt internationalt (UK, Australien, Skandinavien), og
-              oversætter sig direkte til daglig praksis — ikke kun assessment.
+              BUDR er bygget på CHIME — det internationalt anerkendte rammeværk for personlig
+              recovery (Leamy et al., British Journal of Psychiatry, 2011). Fem dimensioner som
+              personale og borger arbejder med sammen: Connectedness, Hope, Identity, Meaning,
+              Empowerment.
             </p>
             <p className="section-p">
               <a
@@ -163,16 +236,25 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
               </a>
             </p>
 
-            <h3 className="institutioner-sub-h">KRAP-kompatibilitet</h3>
+            <h3 className="institutioner-sub-h">VUM 2.0-kompatibel</h3>
             <p className="section-p">
-              Mange danske bosteder arbejder allerede med KRAP (Kognitiv, Ressourcefokuseret og
-              Anerkendende Praksis). BUDR er designet til at supplere KRAP-arbejdet, ikke erstatte
-              det.
+              Social- og Boligstyrelsens Voksenudredningsmetode 2.0 har &quot;recovery-orienteret
+              rehabilitering&quot; som ét af fire faglige fokusområder. BUDR&apos;s datamodel mapper
+              direkte til VUM 2.0&apos;s 11 udredningstemaer og Fælles Faglige Begreber.
             </p>
             <p className="section-p">
-              CHIME&apos;s fem dimensioner og KRAP&apos;s grundprincipper overlapper betydeligt —
-              men hvor KRAP fokuserer på kognitiv metode, fokuserer CHIME på recovery-udfald. Sammen
-              giver de en helstøbt faglig praksis.
+              Det betyder: I kan dokumentere recovery-arbejde i BUDR og levere VUM 2.0-status til
+              kommunen i samme arbejdsgang.
+            </p>
+
+            <h3 className="institutioner-sub-h">KRAP-kompatibel</h3>
+            <p className="section-p">
+              Mange danske bosteder arbejder allerede med KRAP (Kognitiv, Ressourcefokuseret og
+              Anerkendende Praksis). BUDR&apos;s PARK-metodologi bygger på samme tre søjler: fakta
+              og ressourcer, tankemønstre og mestring, måltrappe og handlingsplan.
+            </p>
+            <p className="section-p">
+              CHIME, VUM 2.0 og KRAP/PARK arbejder sammen — ikke ovenpå hinanden.
             </p>
           </div>
         </section>
@@ -181,9 +263,9 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
           <div className="shell institutioner-copy-shell">
             <h2 className="section-h">Vi bygger til recovery-praksis, ikke bare drift</h2>
             <p className="section-p">
-              BUDR er ikke et journalværktøj med ekstra knapper. Det er et recovery-system der
-              binder vagtoverdragelse, dokumentation og borgerens egen stemme — uden at personalet
-              skal arbejde i parallelle virkeligheder.
+              BUDR er ikke et journalværktøj med ekstra knapper. Det er et driftssystem der samler
+              vagtoverdragelse, dokumentation og borgerens egen stemme — uden at personalet skal
+              arbejde i parallelle virkeligheder.
             </p>
             <p className="section-p">
               I starter med en pilot med målbare succeskriterier. Når recovery-praksis styrkes,
@@ -300,7 +382,7 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
                 </span>
                 <h3>Pilot på én afdeling</h3>
                 <p className="step-duration">3 måneder</p>
-                <p>5-10 borgere. Vi sætter op, træner personalet, justerer løbende.</p>
+                <p>5-15 borgere. Vi sætter op, træner personalet, justerer løbende.</p>
               </article>
               <article className="pilot-step">
                 <span className="step-number" aria-hidden>
@@ -335,8 +417,7 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
                 recovery-fortællinger
               </li>
               <li>
-                <strong>Personale-data:</strong> Journal-indtastninger, vagtoverdragelser,
-                AI-foreslåede mønstre
+                <strong>Personale-data:</strong> Journal, vagtoverdragelser, AI-foreslåede mønstre
               </li>
               <li>
                 <strong>System-logs:</strong> Login-events, fejlrapporter (anonymiseret)
@@ -352,8 +433,14 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
 
             <h3 className="institutioner-sub-h">Datalokation</h3>
             <p className="section-p">
-              Alt data hostes hos Hetzner i Falkenstein, Tyskland (EU). Krypteret i hvile (AES-256)
-              og under transport (TLS 1.3). Ingen data forlader EU.
+              Hetzner Falkenstein (FSN1), Tyskland (EU). AES-256 i hvile, TLS 1.3 under transport.
+              Ingen data forlader EU.
+            </p>
+
+            <h3 className="institutioner-sub-h">Roadmap-transparens</h3>
+            <p className="section-p">
+              Vi er ikke ISO 27001-certificeret endnu. Det er roadmap for 2027. Vi tror på ærlighed
+              frem for marketing-claims vi ikke kan stå inde for.
             </p>
 
             <h3 className="institutioner-sub-h">DPA-skabelon</h3>
@@ -375,7 +462,9 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
               {INSTITUTIONER_FAQ.map((item) => (
                 <details key={item.q} className="inst-faq-item">
                   <summary>{item.q}</summary>
-                  <p>{item.a}</p>
+                  {item.paragraphs.map((paragraph) => (
+                    <p key={paragraph}>{paragraph}</p>
+                  ))}
                 </details>
               ))}
             </div>
