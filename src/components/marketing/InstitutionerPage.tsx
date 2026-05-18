@@ -4,13 +4,11 @@ import Link from 'next/link';
 import { useRef } from 'react';
 import { BudrLogo } from '@/components/brand/BudrLogo';
 import MarketingContactForm from '@/components/marketing/MarketingContactForm';
+import { BOOKING_URL } from '@/components/marketing/constants';
 import MarketingFooter from '@/components/marketing/MarketingFooter';
 import { useBudrLandingFadeIn } from '@/components/marketing/useBudrLandingFadeIn';
 
-// Skift denne URL ud når Cal.com-kontoen er oprettet.
-// Opret konto på cal.com → "New event type" → "20 min demo" → kopiér dit link hertil.
-const BOOKING_URL = 'https://cal.eu/budr-care/20-min-demo-budr-care';
-const BOOK_DEMO_CTA = 'Book 20 min. demo →';
+const BOOK_DEMO_CTA = 'Book pilot-samtale →';
 
 type InstitutionerPageProps = {
   className?: string;
