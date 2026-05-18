@@ -1645,6 +1645,16 @@ html {
   font-weight: 600;
 }
 
+.budr-landing .home-sara {
+  padding-top: clamp(64px, 8vw, 104px);
+  padding-bottom: clamp(64px, 8vw, 104px);
+}
+
+.budr-landing .home-sara .section-h {
+  max-width: 22ch;
+  margin-bottom: 8px;
+}
+
 .budr-landing .home-card-label {
   margin: 0 0 8px;
   font-size: 0.68rem;

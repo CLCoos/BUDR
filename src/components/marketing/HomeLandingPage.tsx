@@ -189,13 +189,11 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
             </div>
           </section>
 
-          <section className="home-demo fi" id="se-det-i-aktion">
-            <div className="shell">
-              <p className="eyebrow">Se det i aktion</p>
-              <h2 className="section-h">Når dagen kører, skal overblikket følge med.</h2>
-              <p className="section-p">
-                En konkret fortælling fra en pædagogs dag — med tydelig forskel på før og med BUDR.
-              </p>
+          <section className="home-sara fi" id="sara-forloeb" aria-labelledby="sara-forloeb-title">
+            <div className="shell home-copy-shell">
+              <h2 className="section-h" id="sara-forloeb-title">
+                Møde Sara, ikke bare hendes journal
+              </h2>
               <DayInLifeDemo />
             </div>
           </section>
