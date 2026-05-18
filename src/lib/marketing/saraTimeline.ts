@@ -60,8 +60,7 @@ export const SARA_RECOVERY_TIMELINE: SaraRecoveryTimelineResponse = {
       id: 'week1-wednesday-meeting',
       periodLabel: 'Uge 1, onsdag kl. 10',
       body: 'I samtalen formulerer Sara og kontaktpersonen et næste skridt sammen:',
-      quote:
-        'Smile og sige hej til Sofie én gang i denne uge — også selvom det føles småt.',
+      quote: 'Smile og sige hej til Sofie én gang i denne uge — også selvom det føles småt.',
       outcome: 'Mål sat med Sara. Ikke for hende.',
     },
     {

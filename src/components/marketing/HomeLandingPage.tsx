@@ -5,11 +5,7 @@ import Link from 'next/link';
 import { useRef } from 'react';
 import { BudrLogo } from '@/components/brand/BudrLogo';
 import { BOOKING_URL, CONTACT_URL } from '@/components/marketing/constants';
-import {
-  IconDocMemory,
-  IconMoodSignal,
-  IconShiftGap,
-} from '@/components/marketing/LandingIcons';
+import { IconDocMemory, IconMoodSignal, IconShiftGap } from '@/components/marketing/LandingIcons';
 import MarketingFooter from '@/components/marketing/MarketingFooter';
 import { useBudrLandingFadeIn } from '@/components/marketing/useBudrLandingFadeIn';
 
@@ -75,12 +71,7 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
               <a href={CONTACT_URL}>Kontakt</a>
             </div>
             <div className="home-nav-cta">
-              <a
-                href={BOOKING_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-sm"
-              >
+              <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="btn-sm">
                 Book pilot-samtale
               </a>
             </div>
@@ -94,9 +85,7 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
                 <BudrLogo dark size={42} />
               </div>
               <p className="eyebrow">Recovery-system til socialpsykiatriske bosteder</p>
-              <h1>
-                Vagtoverdragelsen sker stadig på hukommelse. Borgerens recovery på papir.
-              </h1>
+              <h1>Vagtoverdragelsen sker stadig på hukommelse. Borgerens recovery på papir.</h1>
               <p>
                 BUDR er det første danske system der binder vagtoverdragelse, dokumentation og
                 borgerens egen recovery sammen — bygget på CHIME-rammeværket.
@@ -135,7 +124,9 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
                 mønstre over uger — det er ofte usynligt for personalet, og næsten altid usynligt
                 for borgeren selv.
               </p>
-              <p className="section-p">Det er ikke personalets fejl. Det er værktøjet der mangler.</p>
+              <p className="section-p">
+                Det er ikke personalets fejl. Det er værktøjet der mangler.
+              </p>
               <ul className="home-pain-list">
                 <li>
                   <span className="home-pain-icon" aria-hidden>
