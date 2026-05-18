@@ -2,7 +2,9 @@
 
 **Til AI/assistenter:** Læs denne fil først. Kort indgang: [`AGENTS.md`](./AGENTS.md).
 
-**Sidst opdateret (manuelt):** 2026-04-29 — **Lys safety realtime (dashboard-crash):** `subscribeSafetyEvents` bruger nu **unikt Realtime-kanalnavn** pr. abonnement (`safetyEventsService.ts`). Ellers genbrugte Supabase `channel('lys-safety-events-<org>')` mellem `PortalNotificationBar` og `ActionCards`, og den anden `.on()` landede efter `subscribe()` → client exception på `/care-portal-dashboard`.
+**Sidst opdateret (manuelt):** 2026-05-18 — **Marketing Del 4 (revideret):** Positionering som **komplet driftssystem** (ikke tillægslag). Forside: opdateret FAQ (VUM 2.0, tilsyn, ærlig journalsystem-svar), Care Portal som driftssystem, grundlægger + pilot 5–15 borgere. `/institutioner`: ny hero, sektion **Er BUDR det rigtige for jer?**, løsning/faglig (CHIME + VUM 2.0 + KRAP/PARK), IT roadmap-transparens (ISO 2027), udvidet FAQ. `/pilotpakke`: tre tiers med VUM-skabeloner og gratis Start-pilot. SEO: `page.tsx` + JSON-LD «driftssystem». Branch `marketing/recovery-narrative`, PR #9.
+
+**Forrige:** 2026-04-29 — **Lys safety realtime (dashboard-crash):** `subscribeSafetyEvents` bruger nu **unikt Realtime-kanalnavn** pr. abonnement (`safetyEventsService.ts`). Ellers genbrugte Supabase `channel('lys-safety-events-<org>')` mellem `PortalNotificationBar` og `ActionCards`, og den anden `.on()` landede efter `subscribe()` → client exception på `/care-portal-dashboard`.
 
 **Forrige (samme dag):** **Root auth-provider (fix blank forside):** `AuthenticatedUserProvider` ligger nu i **`src/app/layout.tsx`**, så delt client-chunk (fx `PortalNotificationBar` / `useAuthenticatedUser`) ikke crasher på marketing-sider. `PortalShell` og `care-portal-dashboard/setup/layout` bruger ikke længere duplikat-provider; `DesignSystemWithAuth` stoler på root-layout.
 

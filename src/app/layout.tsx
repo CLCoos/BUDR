@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import { DM_Sans, DM_Serif_Display } from 'next/font/google';
 import AnalyticsGate from '@/components/AnalyticsGate';
 import DemoGuidedTourProvider from '@/components/demo/DemoGuidedTourProvider';
@@ -44,10 +45,36 @@ export const metadata: Metadata = {
   },
 };
 
+const organizationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'BUDR ApS',
+  url: 'https://budrcare.dk',
+  description:
+    'Driftssystem til socialpsykiatriske bosteder i Danmark. Bygget på CHIME-rammeværket og VUM 2.0-kompatibelt.',
+  founder: {
+    '@type': 'Person',
+    name: 'Christian Cloos',
+  },
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: 'Aalborg',
+    addressCountry: 'DK',
+  },
+  email: 'hej@budrcare.dk',
+  sameAs: [] as string[],
+};
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="da" className={`${dmSans.variable} ${dmSerifDisplay.variable}`}>
       <body>
+        <Script
+          id="budr-organization-schema"
+          type="application/ld+json"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
         <BudrThemeProvider>
           <AuthenticatedUserProvider>
             <DemoGuidedTourProvider>
