@@ -2,7 +2,9 @@
 
 **Til AI/assistenter:** Læs denne fil først. Kort indgang: [`AGENTS.md`](./AGENTS.md).
 
-**Sidst opdateret (manuelt):** 2026-05-18 — **Marketing Del 4 (revideret):** Positionering som **komplet driftssystem** (ikke tillægslag). Forside: opdateret FAQ (VUM 2.0, tilsyn, ærlig journalsystem-svar), Care Portal som driftssystem, grundlægger + pilot 5–15 borgere. `/institutioner`: ny hero, sektion **Er BUDR det rigtige for jer?**, løsning/faglig (CHIME + VUM 2.0 + KRAP/PARK), IT roadmap-transparens (ISO 2027), udvidet FAQ. `/pilotpakke`: tre tiers med VUM-skabeloner og gratis Start-pilot. SEO: `page.tsx` + JSON-LD «driftssystem». Branch `marketing/recovery-narrative`, PR #9.
+**Sidst opdateret (manuelt):** 2026-05-18 — **VUM 2.0 Sprint 1 (datamodel + portal):** Migration `20260518120000_vum_assessments.sql` (`vum_assessments`, `chime_to_vum_mapping`). API `/api/portal/vum-assessments`. Beboer-360° fane `?tab=vum` (`ResidentVumTab`). Lib under `src/lib/vum/`. Roadmap: `docs/vum-2-technical-roadmap.md`. Demo-seed: `supabase/seed/vum_demo_seed.sql` (manuel). Sprint 2–3 (auto-mapping, PDF) planlagt.
+
+**Forrige:** 2026-05-18 — **Marketing Del 4 (revideret):** Positionering som **komplet driftssystem** (ikke tillægslag). Forside: opdateret FAQ (VUM 2.0, tilsyn, ærlig journalsystem-svar), Care Portal som driftssystem, grundlægger + pilot 5–15 borgere. `/institutioner`: ny hero, sektion **Er BUDR det rigtige for jer?**, løsning/faglig (CHIME + VUM 2.0 + KRAP/PARK), IT roadmap-transparens (ISO 2027), udvidet FAQ. `/pilotpakke`: tre tiers med VUM-skabeloner og gratis Start-pilot. SEO: `page.tsx` + JSON-LD «driftssystem». Branch `marketing/recovery-narrative`, PR #9.
 
 **Forrige:** 2026-04-29 — **Lys safety realtime (dashboard-crash):** `subscribeSafetyEvents` bruger nu **unikt Realtime-kanalnavn** pr. abonnement (`safetyEventsService.ts`). Ellers genbrugte Supabase `channel('lys-safety-events-<org>')` mellem `PortalNotificationBar` og `ActionCards`, og den anden `.on()` landede efter `subscribe()` → client exception på `/care-portal-dashboard`.
 
