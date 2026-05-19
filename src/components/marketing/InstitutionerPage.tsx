@@ -228,7 +228,7 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
             </p>
             <p className="section-p">
               <a
-                href="https://pubmed.ncbi.nlm.nih.gov/21245157/"
+                href="https://pubmed.ncbi.nlm.nih.gov/22130746/"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -445,8 +445,8 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
 
             <h3 className="institutioner-sub-h">DPA-skabelon</h3>
             <p className="section-p">
-              <a href="/legal/budr-dpa-template-v1.pdf">
-                Download databehandleraftale-skabelon (PDF)
+              <a href="mailto:hej@budrcare.dk?subject=Anmodning%20om%20DPA-skabelon">
+                Anmod om DPA-skabelon (sendes pr. mail)
               </a>
             </p>
             <p className="section-p">
