@@ -483,19 +483,19 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
           <>
             <ResidentActiveDevices residentUserId={residentId} />
             <ResidentOverblikTab
-            residentId={residentId}
-            residentName={resident.name}
-            trafficLight={resident.trafficLight}
-            moodScore={resident.moodScore}
-            checkinNote={checkinNote}
-            checkinAiSummary={checkinAiSummary}
-            checkinVoiceTranscript={checkinVoiceTranscript}
-            medications={medications}
-            journalEntries={journalEntries}
-            recoveryStoriesByJournalId={recoveryStoriesByJournalId}
-            todayPlanItems={todayPlanItems}
-            pendingProposals={proposals.length}
-          />
+              residentId={residentId}
+              residentName={resident.name}
+              trafficLight={resident.trafficLight}
+              moodScore={resident.moodScore}
+              checkinNote={checkinNote}
+              checkinAiSummary={checkinAiSummary}
+              checkinVoiceTranscript={checkinVoiceTranscript}
+              medications={medications}
+              journalEntries={journalEntries}
+              recoveryStoriesByJournalId={recoveryStoriesByJournalId}
+              todayPlanItems={todayPlanItems}
+              pendingProposals={proposals.length}
+            />
           </>
         )}
 
