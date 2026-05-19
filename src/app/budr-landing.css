@@ -2589,3 +2589,358 @@ html {
     margin-bottom: 18px;
   }
 }
+
+/* ─── CHIME interactive (forside #recovery) ─── */
+.budr-landing .home-chime .chime-interactive {
+  padding: 0;
+}
+
+.budr-landing .chime-interactive {
+  max-width: 920px;
+  margin: 0 auto;
+  color: var(--white);
+  font-family: var(--font-landing-body, 'DM Sans', system-ui, sans-serif);
+}
+
+.budr-landing .chime-interactive .chime-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--budr-teal);
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.budr-landing .chime-interactive .chime-h1 {
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
+  font-size: 40px;
+  line-height: 1.15;
+  font-weight: 400;
+  margin: 0 0 1.25rem;
+  color: var(--white);
+  letter-spacing: -0.015em;
+}
+
+.budr-landing .chime-interactive .chime-intro {
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--white-dim);
+  max-width: 600px;
+  margin: 0;
+}
+
+.budr-landing .chime-interactive .chime-intro em {
+  color: var(--white);
+  font-style: italic;
+}
+
+.budr-landing .chime-interactive .chime-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin: 2.5rem 0 0;
+}
+
+.budr-landing .chime-interactive .chime-btn {
+  cursor: pointer;
+  padding: 1.5rem 0.5rem 1.25rem;
+  background: rgba(93, 202, 165, 0.05);
+  border: 1px solid rgba(93, 202, 165, 0.15);
+  border-radius: 8px;
+  text-align: center;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.2s;
+  position: relative;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: inherit;
+  font: inherit;
+}
+
+.budr-landing .chime-interactive .chime-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--budr-teal) 0%, var(--amber-lt) 100%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 0;
+}
+
+.budr-landing .chime-interactive .chime-btn > * {
+  position: relative;
+  z-index: 1;
+}
+
+.budr-landing .chime-interactive .chime-btn:hover {
+  background: rgba(93, 202, 165, 0.1);
+  border-color: rgba(93, 202, 165, 0.35);
+  transform: translateY(-1px);
+}
+
+.budr-landing .chime-interactive .chime-btn.active::before {
+  opacity: 1;
+}
+
+.budr-landing .chime-interactive .chime-btn.active {
+  border-color: transparent;
+}
+
+.budr-landing .chime-interactive .chime-btn.active .chime-letter {
+  color: var(--budr-brand-dark);
+}
+
+.budr-landing .chime-interactive .chime-btn.active .chime-en {
+  color: var(--budr-brand-dark);
+}
+
+.budr-landing .chime-interactive .chime-btn.active .chime-da {
+  color: rgba(10, 26, 20, 0.7);
+}
+
+.budr-landing .chime-interactive .chime-btn:focus-visible {
+  outline: 2px solid var(--budr-teal);
+  outline-offset: 2px;
+}
+
+.budr-landing .chime-interactive .chime-letter {
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
+  font-size: 48px;
+  line-height: 1;
+  font-weight: 400;
+  color: var(--budr-teal);
+  margin-bottom: 10px;
+  transition: color 0.2s;
+}
+
+.budr-landing .chime-interactive .chime-en {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--white);
+  margin-bottom: 3px;
+  transition: color 0.2s;
+}
+
+.budr-landing .chime-interactive .chime-da {
+  font-size: 11px;
+  color: var(--fog);
+  transition: color 0.2s;
+  letter-spacing: 0.02em;
+}
+
+.budr-landing .chime-interactive .chime-detail {
+  background: rgba(93, 202, 165, 0.04);
+  border: 1px solid rgba(93, 202, 165, 0.15);
+  border-radius: 10px;
+  padding: 2.25rem;
+  margin-top: 14px;
+  min-height: 320px;
+  transition: opacity 0.25s ease;
+  box-sizing: border-box;
+}
+
+.budr-landing .chime-interactive .chime-detail-inner {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.budr-landing .chime-interactive .chime-detail-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--budr-teal);
+  font-weight: 500;
+  margin-bottom: 0.65rem;
+}
+
+.budr-landing .chime-interactive .chime-detail-title {
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 400;
+  margin: 0 0 0.4rem;
+  color: var(--white);
+}
+
+.budr-landing .chime-interactive .chime-detail-translation {
+  font-size: 15px;
+  color: var(--budr-teal);
+  margin: 0 0 1.25rem;
+  font-style: italic;
+}
+
+.budr-landing .chime-interactive .chime-detail-def {
+  font-size: 16.5px;
+  line-height: 1.6;
+  color: var(--white);
+  margin: 0 0 1.75rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(93, 202, 165, 0.12);
+}
+
+.budr-landing .chime-interactive .chime-blocks {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.budr-landing .chime-interactive .chime-block-label {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fog);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.budr-landing .chime-interactive .chime-block-text {
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--white-dim);
+  margin: 0;
+}
+
+.budr-landing .chime-interactive .chime-example {
+  background: rgba(93, 202, 165, 0.06);
+  border-left: 2px solid var(--budr-teal);
+  border-radius: 0 4px 4px 0;
+  padding: 1.1rem 1.4rem;
+}
+
+.budr-landing .chime-interactive .chime-example-label {
+  color: var(--budr-teal);
+}
+
+.budr-landing .chime-interactive .chime-example-quote {
+  font-family: var(--font-budr-wordmark, 'DM Serif Display', Georgia, serif);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--white);
+  margin: 0;
+  font-style: italic;
+}
+
+.budr-landing .chime-interactive .chime-source {
+  font-size: 12px;
+  color: var(--fog);
+  margin: 1.5rem 0 0;
+  text-align: right;
+  letter-spacing: 0.02em;
+}
+
+.budr-landing .chime-interactive .chime-source a {
+  color: var(--budr-teal);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(93, 202, 165, 0.25);
+  padding-bottom: 1px;
+  transition: border-color 0.2s;
+}
+
+.budr-landing .chime-interactive .chime-source a:hover {
+  border-bottom-color: var(--budr-teal);
+}
+
+@keyframes chimePulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(93, 202, 165, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 0 12px rgba(93, 202, 165, 0);
+  }
+}
+
+.budr-landing .chime-interactive .chime-pulse {
+  animation: chimePulse 0.8s ease-out;
+}
+
+@media (max-width: 720px) {
+  .budr-landing .chime-interactive .chime-grid {
+    gap: 5px;
+  }
+
+  .budr-landing .chime-interactive .chime-btn {
+    padding: 1rem 0.2rem 0.85rem;
+    border-radius: 6px;
+  }
+
+  .budr-landing .chime-interactive .chime-letter {
+    font-size: 30px;
+    margin-bottom: 6px;
+  }
+
+  .budr-landing .chime-interactive .chime-en {
+    font-size: 10.5px;
+  }
+
+  .budr-landing .chime-interactive .chime-da {
+    font-size: 9.5px;
+    letter-spacing: 0;
+  }
+
+  .budr-landing .chime-interactive .chime-h1 {
+    font-size: 28px;
+    line-height: 1.2;
+  }
+
+  .budr-landing .chime-interactive .chime-intro {
+    font-size: 15px;
+  }
+
+  .budr-landing .chime-interactive .chime-detail {
+    padding: 1.5rem 1.25rem;
+    min-height: 280px;
+  }
+
+  .budr-landing .chime-interactive .chime-detail-title {
+    font-size: 22px;
+  }
+
+  .budr-landing .chime-interactive .chime-detail-def {
+    font-size: 15px;
+  }
+
+  .budr-landing .chime-interactive .chime-example {
+    padding: 0.9rem 1.1rem;
+  }
+
+  .budr-landing .chime-interactive .chime-example-quote {
+    font-size: 14.5px;
+  }
+}
+
+@media (max-width: 380px) {
+  .budr-landing .chime-interactive .chime-btn {
+    padding: 0.85rem 0.15rem 0.7rem;
+  }
+
+  .budr-landing .chime-interactive .chime-letter {
+    font-size: 26px;
+  }
+
+  .budr-landing .chime-interactive .chime-en {
+    font-size: 9.5px;
+  }
+
+  .budr-landing .chime-interactive .chime-da {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .budr-landing .chime-interactive .chime-btn,
+  .budr-landing .chime-interactive .chime-detail,
+  .budr-landing .chime-interactive .chime-letter,
+  .budr-landing .chime-interactive .chime-en,
+  .budr-landing .chime-interactive .chime-da {
+    transition: none;
+  }
+
+  .budr-landing .chime-interactive .chime-pulse {
+    animation: none;
+  }
+}
