@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { validateSessionToken } from '@/lib/residentSessions';
 
 const RESIDENT_ID_COOKIE = 'budr_resident_id';
 const RESIDENT_SESSION_COOKIE = 'budr_resident_session';
@@ -313,7 +314,8 @@ export async function middleware(req: NextRequest) {
   // 4) Beboer-ruter (Lys / park)
   if (isResidentRoute(pathname)) {
     const ip = clientIp(req);
-    const residentId = req.cookies.get(RESIDENT_ID_COOKIE)?.value?.trim();
+    const sessionToken = req.cookies.get(RESIDENT_SESSION_COOKIE)?.value?.trim();
+    const legacyResidentId = req.cookies.get(RESIDENT_ID_COOKIE)?.value?.trim();
 
     const redirectHomeClear = (rateLimited: boolean) => {
       const home = new URL('/', req.url);
@@ -332,7 +334,21 @@ export async function middleware(req: NextRequest) {
       return redirectHomeClear(blocked);
     };
 
-    if (!residentId) {
+    // HttpOnly session (preferred) — rollout: legacy cookie still accepted below
+    if (sessionToken) {
+      const validation = await validateSessionToken(sessionToken);
+      if (validation.valid) {
+        const exists = await residentExistsInDb(validation.residentUserId);
+        if (exists === true) return NextResponse.next();
+        if (exists === false) return failAndMaybeBlock();
+        return failAndMaybeBlock();
+      }
+    }
+
+    const residentId = legacyResidentId;
+
+    // Under rollout: accept session OR legacy; after rollout remove legacy-only path
+    if (!sessionToken && !legacyResidentId) {
       if (!allowParkDemoCookie()) {
         return redirectHomeClear(false);
       }
@@ -345,6 +361,10 @@ export async function middleware(req: NextRequest) {
         path: '/',
       });
       return res;
+    }
+
+    if (!residentId) {
+      return failAndMaybeBlock();
     }
 
     if (residentId === DEMO_RESIDENT_ID) {
