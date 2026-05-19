@@ -7,6 +7,7 @@ import { BudrLogo } from '@/components/brand/BudrLogo';
 import { BOOKING_URL, CONTACT_EMAIL, CONTACT_URL } from '@/components/marketing/constants';
 import { IconDocMemory, IconMoodSignal, IconShiftGap } from '@/components/marketing/LandingIcons';
 import MarketingFooter from '@/components/marketing/MarketingFooter';
+import { ChimeInteractive } from '@/components/marketing/ChimeInteractive';
 import { useBudrLandingFadeIn } from '@/components/marketing/useBudrLandingFadeIn';
 
 const DayInLifeDemo = dynamic(
@@ -24,34 +25,6 @@ const DayInLifeDemo = dynamic(
 type HomeLandingPageProps = {
   className?: string;
 };
-
-const CHIME_DIMENSIONS = [
-  {
-    en: 'Connectedness',
-    da: 'Forbundethed',
-    body: 'Relationer, fællesskab, ikke-isolation. BUDR fanger små sociale skridt — som Saras «smile og sige hej til Sofie» — og gør dem synlige over tid.',
-  },
-  {
-    en: 'Hope',
-    da: 'Håb',
-    body: 'Recovery-fortællinger fra borgeren selv. Små sejre der ellers ville forsvinde, bliver gemt og kan genbesøges på svære dage.',
-  },
-  {
-    en: 'Identity',
-    da: 'Identitet',
-    body: 'Borgerprofiler der bygger på styrker, værdier, drømme — ikke kun diagnoser. Personalet møder mennesket, ikke journalen.',
-  },
-  {
-    en: 'Meaning',
-    da: 'Mening',
-    body: 'Refleksioner over hverdagen. Hvad gav mening i dag? Hvor sad det fast? Borgeren skriver eller taler ind i Lys — personalet ser mønstret.',
-  },
-  {
-    en: 'Empowerment',
-    da: 'Handlekraft',
-    body: 'Næste skridt formuleres af borgeren, støttet af personalet. Ikke mål sat for borgeren — mål sat med borgeren.',
-  },
-] as const;
 
 const HOME_FAQ = [
   {
@@ -216,22 +189,7 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
 
           <section className="home-chime fi" id="recovery">
             <div className="shell home-copy-shell">
-              <h2 className="section-h">Recovery, gjort konkret</h2>
-              <p className="section-p">
-                BUDR bygger på CHIME — det internationalt anerkendte rammeværk for personlig
-                recovery (Leamy et al., British Journal of Psychiatry, 2011). Fem dimensioner som
-                personale og borger arbejder med sammen, ikke ovenpå hinanden.
-              </p>
-              <ul className="home-chime-grid">
-                {CHIME_DIMENSIONS.map((dim) => (
-                  <li key={dim.en} className="home-chime-card">
-                    <p className="home-chime-label">
-                      {dim.en} — {dim.da}
-                    </p>
-                    <p>{dim.body}</p>
-                  </li>
-                ))}
-              </ul>
+              <ChimeInteractive />
             </div>
           </section>
 
