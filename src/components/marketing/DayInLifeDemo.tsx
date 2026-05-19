@@ -54,7 +54,7 @@ export function DayInLifeDemo() {
         {intro.summary}
       </p>
 
-      <ol className={styles.timeline} aria-label="Saras recovery-forløb, uge 1–3">
+      <ol className={styles.timeline} aria-label="Saras recoveryforløb, uge 1–3">
         {beats.map((beat, index) => (
           <li key={beat.id} className={styles.timelineItem}>
             <article

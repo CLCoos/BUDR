@@ -134,6 +134,11 @@ export default function PilotpakkePage({ className = '' }: Props) {
               </button>
             </li>
             <li>
+              <Link href="/care-portal-login" className="budr-nav-login" onClick={closeNav}>
+                Log ind
+              </Link>
+            </li>
+            <li>
               <a href="#kontakt" className="nav-cta" onClick={closeNav}>
                 Kontakt →
               </a>
@@ -186,7 +191,7 @@ export default function PilotpakkePage({ className = '' }: Props) {
               <article className="pilot-tier-card">
                 <h3>Start</h3>
                 <p className="pilot-tier-tagline">
-                  For mindre bosteder der vil bygge recovery-praksis fra grunden
+                  For mindre bosteder der vil bygge recoverypraksis fra grunden
                 </p>
                 <ul className="pilot-tier-includes">
                   <li>1 afdeling, op til 10 borgere</li>
@@ -199,7 +204,7 @@ export default function PilotpakkePage({ className = '' }: Props) {
               <article className="pilot-tier-card pilot-tier-card--featured">
                 <h3>Vækst</h3>
                 <p className="pilot-tier-tagline">
-                  For mellemstore bosteder der skalerer recovery-praksis
+                  For mellemstore bosteder der skalerer recoverypraksis
                 </p>
                 <ul className="pilot-tier-includes">
                   <li>Op til 3 afdelinger, op til 30 borgere</li>
@@ -276,7 +281,7 @@ export default function PilotpakkePage({ className = '' }: Props) {
               >
                 <li style={{ marginBottom: 10 }}>
                   <strong style={{ color: 'var(--white)' }}>Forberedelse (ca. 2–6 uger):</strong>{' '}
-                  aftale, roller, IT/DPO, brugeroprettelse, baseline-måling, oplæringsplan.
+                  aftale, roller, IT/DPO, brugeroprettelse, baselinemåling, oplæringsplan.
                 </li>
                 <li style={{ marginBottom: 10 }}>
                   <strong style={{ color: 'var(--white)' }}>Drift (kerne 6–10 uger):</strong> daglig
@@ -378,7 +383,7 @@ export default function PilotpakkePage({ className = '' }: Props) {
               </li>
               <li>
                 <strong style={{ color: 'var(--white)' }}>Baseline:</strong> kort registrering før
-                start (fx tid til overblik ved vagtskifte, andel åbne journal-kladder) så vi kan
+                start (fx tid til overblik ved vagtskifte, andel åbne journalkladder) så vi kan
                 sammenligne med slutpunktet.
               </li>
             </ul>
@@ -416,7 +421,7 @@ export default function PilotpakkePage({ className = '' }: Props) {
               </li>
               <li style={{ marginBottom: 12 }}>
                 <strong style={{ color: 'var(--white)' }}>Borgerinvolvering:</strong> antal borgere
-                med mindst ét struktureret tjek-in pr. uge i Lys (eller anden aftalt aktivitet dér).
+                med mindst ét struktureret tjekin pr. uge i Lys (eller anden aftalt aktivitet dér).
               </li>
               <li style={{ marginBottom: 12 }}>
                 <strong style={{ color: 'var(--white)' }}>Medarbejderoplevelse:</strong> kort

@@ -19,7 +19,7 @@ export default function MarketingFooter() {
         <div className="footer-col">
           <h5>Produkter</h5>
           <Link href="/care-portal-demo">Care Portal demo</Link>
-          <Link href="/app">Lys borger-app</Link>
+          <Link href="/app">Lys borgerapp</Link>
           <Link href="/pilotpakke">Pilotpakke</Link>
         </div>
         <div className="footer-col">
@@ -28,6 +28,7 @@ export default function MarketingFooter() {
           <Link href="/for-botilbud/journal-og-digital-tilsyn">Journal &amp; digitalt tilsyn</Link>
           <Link href="/for-botilbud/varsling-socialpsykiatri">Varsling socialpsykiatri</Link>
           <Link href="/for-botilbud/plan-og-medicinoverblik">Plan &amp; medicinvisning</Link>
+          <Link href="/care-portal-login">Personalelogin</Link>
           <a href="https://www.linkedin.com/company/budr" target="_blank" rel="noopener noreferrer">
             LinkedIn
           </a>
