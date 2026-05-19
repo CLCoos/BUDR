@@ -10,6 +10,7 @@ import DagsPlanPortal from './components/DagsPlanPortal';
 import ResidentPlanTab from './components/ResidentPlanTab';
 import ResidentHavenTab from './components/ResidentHavenTab';
 import ResidentOverblikTab from './components/ResidentOverblikTab';
+import ResidentActiveDevices from './components/ResidentActiveDevices';
 import ResidentRecoveryTab from './components/ResidentRecoveryTab';
 import ResidentMedicinTab from './components/ResidentMedicinTab';
 import WriteJournalEntry from './components/WriteJournalEntry';
@@ -479,7 +480,9 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
 
         {/* Tab content */}
         {activeTab === 'overblik' && (
-          <ResidentOverblikTab
+          <>
+            <ResidentActiveDevices residentUserId={residentId} />
+            <ResidentOverblikTab
             residentId={residentId}
             residentName={resident.name}
             trafficLight={resident.trafficLight}
@@ -493,6 +496,7 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
             todayPlanItems={todayPlanItems}
             pendingProposals={proposals.length}
           />
+          </>
         )}
 
         {activeTab === 'recovery' && (

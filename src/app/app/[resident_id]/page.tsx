@@ -1,29 +1,80 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import {
+  createSession,
+  validateSessionToken,
+  SESSION_COOKIE_NAME,
+  LEGACY_COOKIE_NAME,
+} from '@/lib/residentSessions';
 
 interface Props {
   params: Promise<{ resident_id: string }>;
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const COOKIE_MAX_AGE = 30 * 24 * 60 * 60;
+
 /**
  * Entry point for device-linked resident access.
- * Visiting /app/<uuid> stores the resident_id in a long-lived cookie
- * and immediately redirects to the app.
- *
- * This URL is typically delivered via QR code or a saved bookmark
- * on the resident's personal device.
+ * Visiting /app/<uuid> bootstraps an HttpOnly session cookie (hashed server-side)
+ * and keeps the legacy resident id cookie during rollout.
  */
-export default async function ResidentEntryPage({ params }: Props) {
-  const { resident_id } = await params;
-
+async function bootstrapSession(residentId: string): Promise<{ valid: boolean }> {
   const cookieStore = await cookies();
-  cookieStore.set('budr_resident_id', resident_id, {
+  const existingToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+
+  if (existingToken) {
+    const validation = await validateSessionToken(existingToken);
+    if (validation.valid && validation.residentUserId === residentId) {
+      return { valid: true };
+    }
+  }
+
+  const session = await createSession({ residentUserId: residentId });
+  if (!session) return { valid: false };
+
+  cookieStore.set(SESSION_COOKIE_NAME, session.token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: COOKIE_MAX_AGE,
+  });
+
+  cookieStore.set(LEGACY_COOKIE_NAME, residentId, {
     httpOnly: false,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 31536000,
     path: '/',
+    maxAge: COOKIE_MAX_AGE,
   });
+
+  return { valid: true };
+}
+
+export default async function ResidentEntryPage({ params }: Props) {
+  const { resident_id } = await params;
+
+  if (!UUID_RE.test(resident_id)) {
+    return (
+      <main className="mx-auto max-w-md px-6 py-16 text-center">
+        <h1 className="text-lg font-semibold text-slate-900">Ugyldigt link</h1>
+        <p className="mt-2 text-sm text-slate-600">Borger-id&apos;et i linket er ikke gyldigt.</p>
+      </main>
+    );
+  }
+
+  const boot = await bootstrapSession(resident_id);
+  if (!boot.valid) {
+    return (
+      <main className="mx-auto max-w-md px-6 py-16 text-center">
+        <h1 className="text-lg font-semibold text-slate-900">Kunne ikke starte session</h1>
+        <p className="mt-2 text-sm text-slate-600">
+          Kontakt personalet, hvis problemet fortsætter.
+        </p>
+      </main>
+    );
+  }
 
   redirect('/park-hub');
 }
