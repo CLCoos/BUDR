@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BudrLogo } from '@/components/brand/BudrLogo';
+import { BOOKING_URL_DETAILED } from '@/components/marketing/constants';
 import MarketingContactForm from '@/components/marketing/MarketingContactForm';
 import { useBudrLandingFadeIn } from '@/components/marketing/useBudrLandingFadeIn';
 import { Printer } from 'lucide-react';
@@ -149,13 +150,11 @@ export default function PilotpakkePage({ className = '' }: Props) {
                 Fast tilbud til beslutningstagere
               </div>
               <h1 className="section-h" style={{ maxWidth: '40rem', margin: '0 auto' }}>
-                <em>Pilotpakken</em> — hvad I køber, hvad I bidrager, hvordan vi måler
+                Pilotpakker
               </h1>
               <p className="intro-lead" style={{ maxWidth: '44rem' }}>
-                Denne side er en <strong>konkret ramme</strong> for et pilotforløb med BUDR Care (
-                <strong>Lys</strong> + <strong>Care Portal</strong>). Den kan gemmes som PDF via
-                print-funktionen i browseren og deles internt til ledelse, økonomi og DPO — uden at
-                I skal gætte jer til indholdet.
+                Tre niveauer afhængigt af bostedets størrelse og behov. Alle pakker bygger på
+                CHIME-rammeværket med Care Portal og Lys.
               </p>
               <div
                 className="hero-actions pilotpakke-no-print"
@@ -171,6 +170,69 @@ export default function PilotpakkePage({ className = '' }: Props) {
                 </Link>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="intro-section fi" aria-labelledby="pp-tiers">
+          <div className="shell">
+            <h2
+              className="section-h"
+              id="pp-tiers"
+              style={{ textAlign: 'center', margin: '0 auto' }}
+            >
+              Vælg jeres pilotniveau
+            </h2>
+            <div className="pilot-tier-grid">
+              <article className="pilot-tier-card">
+                <h3>Start</h3>
+                <p className="pilot-tier-tagline">
+                  For mindre bosteder der vil bygge recovery-praksis fra grunden
+                </p>
+                <ul className="pilot-tier-includes">
+                  <li>1 afdeling, op til 10 borgere</li>
+                  <li>3 måneders pilot, gratis</li>
+                  <li>Onboarding + ugentlig support</li>
+                  <li>Effektmåling efter 6 og 12 uger</li>
+                  <li>VUM 2.0-skabeloner inkluderet</li>
+                </ul>
+              </article>
+              <article className="pilot-tier-card pilot-tier-card--featured">
+                <h3>Vækst</h3>
+                <p className="pilot-tier-tagline">
+                  For mellemstore bosteder der skalerer recovery-praksis
+                </p>
+                <ul className="pilot-tier-includes">
+                  <li>Op til 3 afdelinger, op til 30 borgere</li>
+                  <li>6 måneders pilot</li>
+                  <li>Onboarding + dedicated kontaktperson</li>
+                  <li>Kvartalsvis evaluering med ledelsen</li>
+                </ul>
+              </article>
+              <article className="pilot-tier-card">
+                <h3>Organisation</h3>
+                <p className="pilot-tier-tagline">For større botilbud med flere huse</p>
+                <ul className="pilot-tier-includes">
+                  <li>Ubegrænset antal afdelinger</li>
+                  <li>Tilpasset implementering</li>
+                  <li>Strategisk sparring med BUDR-team</li>
+                  <li>Custom integration og rapportering</li>
+                </ul>
+              </article>
+            </div>
+            <p
+              className="section-p"
+              style={{ maxWidth: '42rem', margin: '28px auto 0', textAlign: 'center' }}
+            >
+              <a
+                href={BOOKING_URL_DETAILED}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary"
+                style={{ display: 'inline-flex', minHeight: '48px', alignItems: 'center' }}
+              >
+                Book uddybende samtale (30–60 min) →
+              </a>
+            </p>
           </div>
         </section>
 

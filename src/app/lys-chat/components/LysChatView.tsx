@@ -196,7 +196,7 @@ export default function LysChatView() {
       return;
     }
     let cancelled = false;
-    fetch('/api/park/resident-me', { credentials: 'same-origin' })
+    fetch('/api/lys/resident-me', { credentials: 'same-origin' })
       .then((r) => (r.ok ? r.json() : null))
       .then((d: ResidentProfileResponse | null) => {
         if (cancelled || !d?.lys_voice_effective_id) return;

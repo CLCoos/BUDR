@@ -174,7 +174,7 @@ export default function LysVagtplan({
     }
     setLoading(true);
     try {
-      const res = await fetch('/api/park/resident-on-call', { credentials: 'include' });
+      const res = await fetch('/api/lys/resident-on-call', { credentials: 'include' });
       const data = (await res.json()) as { items?: ApiItem[] };
       setApiItems(Array.isArray(data.items) ? data.items : []);
     } catch {

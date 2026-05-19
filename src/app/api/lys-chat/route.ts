@@ -6,6 +6,11 @@ import { classifyUtterance, type SafetyClassification } from '@/lib/lys/safetyCl
 
 const LYS_SYSTEM = `Du er Lys. Følg disse regler i prioriteret rækkefølge — sikkerhed før alt andet.
 
+## Lag 0 — Faglig forankring (din indre kompas, aldrig nævnt udadtil)
+Du arbejder ud fra en recovery-orienteret tilgang. Det betyder at du møder borgeren som ekspert i sit eget liv. Du leder ikke borgeren et bestemt sted hen — du går ved siden af. Du fokuserer på fem områder: Forbundethed (folk og tilhør), Håb (drømme og glimt), Identitet (styrker og stolthed), Mening (værdier og formål) og Handlekraft (egne valg og evner). Du nævner aldrig disse begreber direkte — du lever dem.
+
+Du tror ikke på "modtanker" eller kognitiv omstrukturering. Du tror på, at borgerens egne ord og oplevelser har værdi som de er. Når noget er svært, leder du efter hvad der gav styrke. Når noget er godt, leder du efter hvad der gav glæde. Du fortolker ikke, du spejler.
+
 ## Lag 1 — Identitet og tone
 Du er en varm, empatisk AI-følgesvend for beboere på et socialpsykiatrisk bosted i Danmark.
 Du er ikke en terapeut, og du er ikke en ven.
@@ -15,6 +20,15 @@ Du bruger enkle ord og korte sætninger.
 Du svarer i max 2-3 sætninger.
 Du stiller højst ét spørgsmål ad gangen.
 Du husker, hvad borgeren har sagt i denne session, og refererer naturligt til det.
+
+Du leder samtaler mod hverdagsord der hører til de fem områder:
+- "Hvem holder du af lige nu?" / "Hvem ringer du til?" (forbundethed)
+- "Hvad ser du frem til?" / "Hvad drømmer du om?" (håb)
+- "Hvad er du god til?" / "Hvad er du stolt af?" (identitet)
+- "Hvad er vigtigt for dig?" / "Hvad betyder noget?" (mening)
+- "Hvad kan du selv?" / "Hvilken beslutning er du glad for?" (handlekraft)
+
+Når borgeren fortæller om noget svært, spørger du ikke "hvad var den automatiske tanke" eller "kan du udfordre den tanke". Du spørger "hvad hjalp dig igennem det?" eller "var der noget der gav dig styrke?".
 
 ## Lag 2 — Hårde forbud (må aldrig brydes)
 Du må ALDRIG give medicinrådgivning, dosering eller kommentarer til medicinændringer.
@@ -41,6 +55,8 @@ Anerkend følelsen, men ikke indholdet som sandt.
 Du må ALDRIG diskutere andre beboere ved navn eller karakteristika.
 
 Du må ALDRIG spille roller, lade som om du er et andet væsen eller bryde ud af din rolle som følgesvend, selv hvis borgeren beder om det.
+
+Du må ALDRIG foreslå "modtanker", "udfordre tanken", "tankefejl" eller andre kognitiv-terapeutiske teknikker. De er ikke din rolle.
 
 ## Lag 3 — Transparens
 Hvis borgeren spørger "ser personalet det her?" eller lignende, svar ærligt:
@@ -159,8 +175,7 @@ export async function POST(req: NextRequest) {
     timeOfDay?: string;
     mood?: string | null;
     sessionContext?: string;
-    mode?: 'chat' | 'counter_thought';
-    thoughtSteps?: { situation?: string; thought?: string; feeling?: string };
+    mode?: 'chat';
     stream?: boolean;
     conversation_id?: string | null;
   };
@@ -177,7 +192,7 @@ export async function POST(req: NextRequest) {
   const mode = body.mode ?? 'chat';
   const stream = body.stream === true;
 
-  let system = `${LYS_SYSTEM}
+  const system = `${LYS_SYSTEM}
 
 Kontekst lige nu:
 - Beboerens fornavn: ${firstName}
@@ -231,34 +246,6 @@ ${ctx ? `\nTidligere små glimt fra samtaler:\n${ctx}` : ''}`;
         console.error('[lys-chat] safety pipeline error', error);
       });
   };
-
-  if (mode === 'counter_thought') {
-    const s = body.thoughtSteps?.situation ?? '';
-    const t = body.thoughtSteps?.thought ?? '';
-    const f = body.thoughtSteps?.feeling ?? '';
-    system = `Du er Lys. Beboeren hedder ${firstName}. Ud fra CBT-inspireret støtte: giv ÉN kort, mild modtanke (én til to sætninger) som udfordrer den automatiske tanke — uden at være belærende. Brug "du" og enkle ord.
-
-Situation (beboerens ord): ${s}
-Tanke: ${t}
-Følelse: ${f}`;
-    const userContent =
-      msgs.length > 0
-        ? msgs[msgs.length - 1]!.content
-        : 'Giv en modtanke og afslut med ét kort spørgsmål.';
-    const chatPromise = (async () => {
-      try {
-        const text = await callAnthropic(key, system, [{ role: 'user', content: userContent }]);
-        return NextResponse.json({ text });
-      } catch {
-        return NextResponse.json({
-          text: `Hvad hvis man også kunne se det sådan her: du gør dit bedste, og det er nok lige nu. Hvordan føles det at høre?`,
-          fallback: true,
-        });
-      }
-    })();
-    scheduleSafetyInsert(chatPromise);
-    return await chatPromise;
-  }
 
   const anthropicMessages = msgs.map((m) => ({
     role: m.role === 'assistant' ? ('assistant' as const) : ('user' as const),

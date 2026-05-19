@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { useResidentSession } from '@/hooks/useResidentSession';
 import { trackEvent } from '@/lib/analytics';
@@ -16,9 +17,11 @@ import LysMigScreen from './LysMigScreen';
 import LysDagTab from './LysDagTab';
 import LysJournalTab from './LysJournalTab';
 import LysStemningskort from './LysStemningskort';
-import LysBlomst from './LysBlomst';
-import LysTankefanger from './LysTankefanger';
-import LysMaaltrappe from './LysMaaltrappe';
+import LysRecoveryProfile from './LysRecoveryProfile';
+import LysReflection from './LysReflection';
+import LysNextSteps from './LysNextSteps';
+import LysWeeklyReflection from './LysWeeklyReflection';
+import { LysWeeklyBanner } from './LysWeeklyBanner';
 import LysDagligSejr from './LysDagligSejr';
 import LysSansekasse from './LysSansekasse';
 import LysAACBoard from './LysAACBoard';
@@ -26,6 +29,7 @@ import LysOnboarding from './LysOnboarding';
 import LysStatusChrome from './LysStatusChrome';
 import LysKrisekort from './LysKrisekort';
 import LysVagtplan from './LysVagtplan';
+import LysMyStories from './LysMyStories';
 import { createClient } from '@/lib/supabase/client';
 import { Moon, Sun } from 'lucide-react';
 
@@ -77,6 +81,21 @@ export default function LysShell({
   const [simpleMode, setSimpleMode] = useState(false);
   const [appearance, setAppearance] = useState<'light' | 'dark'>('light');
 
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (searchParams?.get('openCheckin') === '1') {
+      setOverlay('mood');
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('openCheckin');
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const phase = useMemo(() => getLysPhase(now), [now]);
   /** Én palet for faner + fuldskærms-flows — følger brugerens lys/mørk-valg */
   const shellTokens = useMemo(
@@ -91,7 +110,7 @@ export default function LysShell({
     void tryEarnFirstChatBadge(session.storageMode, session.activeId);
   }, [session.storageMode, session.activeId]);
 
-  const { messages, loading, sendToLys, sendCounterThought } = useLysConversation({
+  const { messages, loading, sendToLys } = useLysConversation({
     firstName,
     phase,
     moodLabel,
@@ -196,7 +215,7 @@ export default function LysShell({
       toast.success('📋 Sendt til portalen: Personalet ser, at du har haft det svært');
     }
     try {
-      await fetch('/api/park/daily-checkin', {
+      await fetch('/api/lys/daily-checkin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -303,25 +322,37 @@ export default function LysShell({
             }}
           >
             {tab === 'hjem' && (
-              <LysHome
-                firstName={firstName}
-                initials={initials}
-                residentId={residentId}
-                tokens={shellTokens}
-                accent={shellAccent}
-                phase={phase}
-                now={now}
-                reducedMotion={reducedMotion}
-                messages={messages}
-                loading={loading}
-                sendToLys={sendToLys}
-                speakSafe={speakSafe}
-                onOpenFlow={setOverlay}
-                onSwitchTab={setTab}
-                moodLabel={moodLabel}
-                moodTraffic={moodTraffic}
-                moodTick={moodTick}
-              />
+              <>
+                {!overlay && (
+                  <div className="px-5 pt-2">
+                    <LysWeeklyBanner
+                      tokens={shellTokens}
+                      accent={shellAccent}
+                      reducedMotion={reducedMotion}
+                      onOpen={() => setOverlay('weekly')}
+                    />
+                  </div>
+                )}
+                <LysHome
+                  firstName={firstName}
+                  initials={initials}
+                  residentId={residentId}
+                  tokens={shellTokens}
+                  accent={shellAccent}
+                  phase={phase}
+                  now={now}
+                  reducedMotion={reducedMotion}
+                  messages={messages}
+                  loading={loading}
+                  sendToLys={sendToLys}
+                  speakSafe={speakSafe}
+                  onOpenFlow={setOverlay}
+                  onSwitchTab={setTab}
+                  moodLabel={moodLabel}
+                  moodTraffic={moodTraffic}
+                  moodTick={moodTick}
+                />
+              </>
             )}
 
             {tab === 'dag' && <LysDagTab tokens={shellTokens} accent={shellAccent} />}
@@ -375,7 +406,7 @@ export default function LysShell({
 
         {overlay === 'flower' && (
           <LysPhoneOverlayShell backgroundColor={shellTokens.bg}>
-            <LysBlomst
+            <LysRecoveryProfile
               tokens={shellTokens}
               accent={shellAccent}
               firstName={firstName}
@@ -388,13 +419,12 @@ export default function LysShell({
 
         {overlay === 'thought' && (
           <LysPhoneOverlayShell backgroundColor={shellTokens.bg}>
-            <LysTankefanger
+            <LysReflection
               tokens={shellTokens}
               accent={shellAccent}
               firstName={firstName}
               reducedMotion={reducedMotion}
               speak={speakSafe}
-              sendCounterThought={sendCounterThought}
               storageMode={session.storageMode}
               activeId={session.activeId}
               onBack={() => setOverlay(null)}
@@ -404,12 +434,38 @@ export default function LysShell({
 
         {overlay === 'goals' && (
           <LysPhoneOverlayShell backgroundColor={shellTokens.bg}>
-            <LysMaaltrappe
+            <LysNextSteps
               tokens={shellTokens}
               accent={shellAccent}
               firstName={firstName}
               reducedMotion={reducedMotion}
               onBack={() => setOverlay(null)}
+            />
+          </LysPhoneOverlayShell>
+        )}
+
+        {overlay === 'weekly' && (
+          <LysPhoneOverlayShell backgroundColor={shellTokens.bg}>
+            <LysWeeklyReflection
+              tokens={shellTokens}
+              accent={shellAccent}
+              firstName={firstName}
+              reducedMotion={reducedMotion}
+              onBack={() => setOverlay(null)}
+              onDone={() => setOverlay(null)}
+            />
+          </LysPhoneOverlayShell>
+        )}
+
+        {overlay === 'mineHistorier' && (
+          <LysPhoneOverlayShell backgroundColor={shellTokens.bg}>
+            <LysMyStories
+              tokens={shellTokens}
+              accent={shellAccent}
+              firstName={firstName}
+              reducedMotion={reducedMotion}
+              onBack={() => setOverlay(null)}
+              onDone={() => setOverlay(null)}
             />
           </LysPhoneOverlayShell>
         )}

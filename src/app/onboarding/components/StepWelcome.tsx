@@ -93,7 +93,7 @@ export default function StepWelcome({ data, setData, onNext }: StepProps) {
 
       <p className="w-full text-center mb-2">
         <Link
-          href="/daily-structure"
+          href="/park-hub"
           className="text-xs font-medium text-midnight-500 hover:text-sunrise-400 transition-colors underline underline-offset-2"
         >
           Spring over

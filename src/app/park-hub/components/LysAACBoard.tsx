@@ -184,7 +184,7 @@ export default function LysAACBoard({ tokens, accent, residentId, onClose }: Pro
     setSending(true);
     try {
       if (residentId) {
-        await fetch('/api/park/lys-plan-proposal', {
+        await fetch('/api/lys/lys-plan-proposal', {
           method: 'POST',
           credentials: 'include',
           headers: { 'content-type': 'application/json' },

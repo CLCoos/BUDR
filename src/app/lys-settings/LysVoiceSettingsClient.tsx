@@ -24,7 +24,7 @@ export default function LysVoiceSettingsClient() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/park/resident-me', { credentials: 'same-origin' })
+    fetch('/api/lys/resident-me', { credentials: 'same-origin' })
       .then(async (r) => {
         if (r.ok) return r.json();
         if (r.status === 401) {

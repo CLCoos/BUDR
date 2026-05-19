@@ -59,7 +59,7 @@ export default function OnboardingFlow() {
 
   const handleComplete = () => {
     toast.success('Profil gemt! Velkommen til BUDR2.0 🎉');
-    setTimeout(() => router.push('/morning-check-in'), 1500);
+    setTimeout(() => router.push('/park-hub?openCheckin=1'), 1500);
   };
 
   const stepProps = { data, setData, onNext: goNext, onBack: goBack, onComplete: handleComplete };

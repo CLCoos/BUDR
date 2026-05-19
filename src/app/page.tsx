@@ -5,12 +5,23 @@ import './budr-landing.css';
 import './budr-landing-longform.css';
 
 export const metadata: Metadata = {
-  title: 'BUDR Care — Driftssystem til socialpsykiatriske botilbud',
+  title: 'BUDR — Driftssystem til socialpsykiatriske bosteder',
   description:
-    'Care Portal og Lys i ét system til socialpsykiatrien. Få stærkere overdragelse, klarere dokumentation og borgeren med i samme workflow.',
+    'Det første danske driftssystem til socialpsykiatriske bosteder bygget på CHIME-rammeværket. Journal, vagtoverdragelse, recovery og borgerinddragelse i ét.',
   openGraph: {
-    title: 'BUDR Care — Ny standard for socialpsykiatrisk drift',
-    description: 'BUDR Care samler Care Portal og borger-appen Lys i ét driftsflow til botilbud.',
+    title: 'BUDR — Driftssystem til socialpsykiatriske bosteder',
+    description:
+      'Det første danske driftssystem til socialpsykiatriske bosteder bygget på CHIME-rammeværket. Journal, vagtoverdragelse, recovery og borgerinddragelse i ét.',
+    url: 'https://budrcare.dk',
+    siteName: 'BUDR',
+    locale: 'da_DK',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'BUDR — Driftssystem til socialpsykiatriske bosteder',
+    description:
+      'Det første danske driftssystem til socialpsykiatriske bosteder bygget på CHIME-rammeværket.',
   },
 };
 

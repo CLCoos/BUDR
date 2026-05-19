@@ -44,48 +44,27 @@ function canAwardXp(activity: string): boolean {
 
 // ── Humørtjek ─────────────────────────────────────────────────────────────────
 
+/**
+ * @deprecated Daglig check-in skal nu gå via POST /api/lys/daily-checkin.
+ * Denne funktion er bevaret som no-op for at undgå at brække ældre importer.
+ * Vil blive fjernet i en senere oprydning når alle kaldere er migreret.
+ */
 export async function saveCheckin(
-  mode: StorageMode,
-  activeId: string,
-  data: { energy_level: number; label: string }
+  _mode: StorageMode,
+  _activeId: string,
+  _data: { energy_level: number; label: string }
 ): Promise<void> {
-  if (mode === 'supabase') {
-    const supabase = createClient();
-    if (!supabase) return;
-    const today = new Date().toISOString().slice(0, 10);
-    await supabase.from('park_daily_checkin').insert({
-      resident_id: activeId,
-      check_in_date: today,
-      energy_level: data.energy_level,
-      label: data.label,
-    });
-    return;
-  }
-  const entries = ls.getItem<CheckIn[]>(LOCAL_KEYS.checkins) ?? [];
-  entries.unshift({
-    id: safeRandomUUID(),
-    resident_id: activeId,
-    check_in_date: new Date().toISOString().slice(0, 10),
-    energy_level: data.energy_level,
-    label: data.label,
-    created_at: new Date().toISOString(),
-  });
-  ls.setItem(LOCAL_KEYS.checkins, entries.slice(0, 100));
+  // No-op. Tidligere skrev denne til legacy check-in-lagring (fjernet).
+  return;
 }
 
-export async function getCheckins(mode: StorageMode, activeId: string): Promise<CheckIn[]> {
-  if (mode === 'supabase') {
-    const supabase = createClient();
-    if (!supabase) return [];
-    const { data } = await supabase
-      .from('park_daily_checkin')
-      .select('*')
-      .eq('resident_id', activeId)
-      .order('created_at', { ascending: false })
-      .limit(30);
-    return (data ?? []) as CheckIn[];
-  }
-  return ls.getItem<CheckIn[]>(LOCAL_KEYS.checkins) ?? [];
+/**
+ * @deprecated Læsning af daglige check-ins skal ske via /api/lys/daily-checkin eller
+ * direkte query mod lys_checkin. Denne funktion er bevaret som no-op-stub for
+ * importer i residentBadgeSync.ts og LysMigScreen.tsx.
+ */
+export async function getCheckins(_mode: StorageMode, _activeId: string): Promise<CheckIn[]> {
+  return [];
 }
 
 // ── Journal ───────────────────────────────────────────────────────────────────
@@ -101,7 +80,7 @@ export async function saveJournalEntry(
   entry: Omit<JournalEntry, 'id'>
 ): Promise<{ lysEntryCount?: number }> {
   if (shouldUseCloudJournal(mode, activeId)) {
-    const res = await fetch('/api/park/resident-journal', {
+    const res = await fetch('/api/lys/resident-journal', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -136,7 +115,7 @@ export async function getJournalEntries(
   activeId = ''
 ): Promise<JournalEntry[]> {
   if (shouldUseCloudJournal(mode, activeId)) {
-    const res = await fetch('/api/park/resident-journal', { credentials: 'include' });
+    const res = await fetch('/api/lys/resident-journal', { credentials: 'include' });
     if (!res.ok) {
       return [];
     }
@@ -258,7 +237,7 @@ export async function getGardenPlots(mode: StorageMode, activeId: string): Promi
   if (mode === 'supabase') {
     if (shouldUseResidentGardenApi(activeId, mode)) {
       const { ok, body } = await gardenApiJson<{ data?: GardenPlot[]; error?: string }>(
-        '/api/park/garden-plot'
+        '/api/lys/garden-plot'
       );
       if (!ok) throw new Error(body.error ?? 'Kunne ikke hente haven');
       return (body.data ?? []) as GardenPlot[];
@@ -283,7 +262,7 @@ export async function savePlot(
 ): Promise<void> {
   if (mode === 'supabase') {
     if (shouldUseResidentGardenApi(activeId, mode)) {
-      const { ok, body } = await gardenApiJson<{ error?: string }>('/api/park/garden-plot', {
+      const { ok, body } = await gardenApiJson<{ error?: string }>('/api/lys/garden-plot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -331,7 +310,7 @@ export async function updatePlot(
 ): Promise<void> {
   if (mode === 'supabase') {
     if (shouldUseResidentGardenApi(activeId, mode)) {
-      const { ok, body } = await gardenApiJson<{ error?: string }>('/api/park/garden-plot', {
+      const { ok, body } = await gardenApiJson<{ error?: string }>('/api/lys/garden-plot', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, ...data }),
@@ -357,7 +336,7 @@ export async function deletePlot(mode: StorageMode, activeId: string, id: string
   if (mode === 'supabase') {
     if (shouldUseResidentGardenApi(activeId, mode)) {
       const { ok, body } = await gardenApiJson<{ error?: string }>(
-        `/api/park/garden-plot?id=${encodeURIComponent(id)}`,
+        `/api/lys/garden-plot?id=${encodeURIComponent(id)}`,
         { method: 'DELETE' }
       );
       if (!ok) throw new Error(body.error ?? 'Kunne ikke slette planten');
@@ -453,7 +432,7 @@ export async function getProfile(mode: StorageMode, activeId: string): Promise<L
   void activeId;
   if (mode === 'supabase') {
     try {
-      const res = await fetch('/api/park/resident-me', { credentials: 'include' });
+      const res = await fetch('/api/lys/resident-me', { credentials: 'include' });
       if (!res.ok) return { nickname: '', theme: 'purple', avatar: null };
       const data = (await res.json()) as {
         nickname?: string | null;
@@ -482,7 +461,7 @@ export async function saveProfile(
   void activeId;
   if (mode === 'supabase') {
     try {
-      await fetch('/api/park/resident-me', {
+      await fetch('/api/lys/resident-me', {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'content-type': 'application/json' },

@@ -337,7 +337,7 @@ export default function LysJournalTab({ tokens, accent }: Props) {
     setParkDraftState('processing');
     setParkDraftContent(null);
     try {
-      const res = await fetch('/api/park/voice-journal', {
+      const res = await fetch('/api/lys/voice-journal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ transcript: t }),

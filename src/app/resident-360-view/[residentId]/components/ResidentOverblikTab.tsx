@@ -17,6 +17,8 @@ import { createClient } from '@/lib/supabase/client';
 import { copenhagenStartOfTodayUtcIso } from '@/lib/copenhagenDay';
 import type { MedDefinition } from './types';
 import WriteJournalEntry from './WriteJournalEntry';
+import type { LysRecoveryStory } from '@/types/lys';
+import JournalRowRecoveryStory from './JournalRowRecoveryStory';
 import GoalProgress from '../../components/GoalProgress';
 import ShiftNotesFeed from '../../components/ShiftNotesFeed';
 
@@ -60,6 +62,7 @@ interface Props {
   checkinVoiceTranscript: string | null;
   medications: MedDefinition[];
   journalEntries: JournalEntry[];
+  recoveryStoriesByJournalId?: Record<string, LysRecoveryStory>;
   todayPlanItems: PlanItem[];
   pendingProposals: number;
 }
@@ -106,6 +109,7 @@ export default function ResidentOverblikTab({
   checkinVoiceTranscript,
   medications,
   journalEntries,
+  recoveryStoriesByJournalId = {},
   todayPlanItems,
   pendingProposals,
 }: Props) {
@@ -714,32 +718,36 @@ export default function ResidentOverblikTab({
                     </span>
                   </div>
                 )}
-                {shownGodkendt.map((entry) => (
-                  <div key={entry.id} className="px-4 py-3">
-                    <div className="mb-1 flex items-center justify-between">
-                      <span className="text-xs font-semibold" style={{ color: 'var(--cp-text)' }}>
-                        {entry.staff_name}
-                      </span>
-                      <span className="text-xs" style={{ color: 'var(--cp-muted)' }}>
-                        {formatTime(entry.created_at)}
-                      </span>
+                {shownGodkendt.map((entry) => {
+                  const story = recoveryStoriesByJournalId[entry.id];
+                  return (
+                    <div key={entry.id} className="px-4 py-3">
+                      <div className="mb-1 flex items-center justify-between">
+                        <span className="text-xs font-semibold" style={{ color: 'var(--cp-text)' }}>
+                          {entry.staff_name}
+                        </span>
+                        <span className="text-xs" style={{ color: 'var(--cp-muted)' }}>
+                          {formatTime(entry.created_at)}
+                        </span>
+                      </div>
+                      <p className="line-clamp-2 text-xs" style={{ color: 'var(--cp-muted)' }}>
+                        {entry.entry_text}
+                      </p>
+                      {entry.category && (
+                        <span
+                          className="mt-1 inline-block rounded px-1.5 py-0.5 text-[10px]"
+                          style={{
+                            backgroundColor: 'var(--cp-bg3)',
+                            color: 'var(--cp-muted)',
+                          }}
+                        >
+                          {entry.category}
+                        </span>
+                      )}
+                      {story && <JournalRowRecoveryStory story={story} />}
                     </div>
-                    <p className="line-clamp-2 text-xs" style={{ color: 'var(--cp-muted)' }}>
-                      {entry.entry_text}
-                    </p>
-                    {entry.category && (
-                      <span
-                        className="mt-1 inline-block rounded px-1.5 py-0.5 text-[10px]"
-                        style={{
-                          backgroundColor: 'var(--cp-bg3)',
-                          color: 'var(--cp-muted)',
-                        }}
-                      >
-                        {entry.category}
-                      </span>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </>
             )}
           </div>
