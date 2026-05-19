@@ -18,7 +18,7 @@ const DIMENSIONS: Dimension[] = [
     en: 'Connectedness',
     da: 'Forbundethed',
     def: 'Meningsfulde relationer, oplevelsen af at høre til, ikke at være alene med sin lidelse.',
-    forskning: 'Identificeret i 82% af de gennemgåede recovery-studier som central faktor.',
+    forskning: 'Identificeret i 82% af de gennemgåede recoverystudier som central faktor.',
     budr: 'BUDR fanger små sociale skridt — som «Sara smilede til Sofie i fællesrummet» — og gør dem synlige som mønster over uger. Personalet ser om en borger trækker sig eller åbner op.',
     eksempel:
       '«Jeg ville gerne have hilst. Men jeg blev så bange.» — Sara, uge 1. Tre uger senere: «Jeg sagde hej. Sofie smilede tilbage.»',
@@ -28,8 +28,8 @@ const DIMENSIONS: Dimension[] = [
     en: 'Hope',
     da: 'Håb',
     def: 'Tro på at forandring er mulig. Motivation til at fortsætte, særligt på svære dage.',
-    forskning: 'Den mest gennemgående tema i recovery-fortællinger fra brugere selv.',
-    budr: 'Borgerens egne recovery-fortællinger gemmes og kan genbesøges. Små sejre, der ellers ville forsvinde i hverdagens støj, bliver til ressourcer for fremtiden.',
+    forskning: 'Den mest gennemgående tema i recoveryfortællinger fra brugere selv.',
+    budr: 'Borgerens egne recoveryfortællinger gemmes og kan genbesøges. Små sejre, der ellers ville forsvinde i hverdagens støj, bliver til ressourcer for fremtiden.',
     eksempel:
       'Sara læser sin egen besked fra forrige uge på en dårlig dag: «Jeg gjorde det én gang. Måske kan jeg igen.»',
   },
@@ -60,7 +60,7 @@ const DIMENSIONS: Dimension[] = [
     da: 'Handlekraft',
     def: 'Kontrol over eget liv. Ansvar. Ressourcefokus frem for mangelfokus.',
     forskning:
-      'Borgere der formulerer egne mål har markant højere recovery-rater end borgere med mål sat af andre.',
+      'Borgere der formulerer egne mål har markant højere recoveryrater end borgere med mål sat af andre.',
     budr: 'Næste skridt formuleres af borgeren, støttet af personalet — ikke pålagt borgeren. KRAP-kompatibelt: konkret, ressourcefokuseret, anerkendende.',
     eksempel:
       'Sara og kontaktpersonen aftaler sammen: «Smile og sige hej til Sofie én gang denne uge.» Mål sat med Sara, ikke for hende.',

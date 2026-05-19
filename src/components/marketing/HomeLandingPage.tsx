@@ -30,14 +30,14 @@ const HOME_FAQ = [
   {
     q: 'Erstatter BUDR vores nuværende journalsystem?',
     paragraphs: [
-      'For mindre socialpsykiatriske bosteder med 5-25 borgere, hvor BUDR-funktionaliteten dækker jeres dokumentationsbehov: ja. BUDR er bygget som komplet driftssystem — journal, vagtoverdragelse, dokumentation, recovery-arbejde og borgerinddragelse i ét system.',
+      'For mindre socialpsykiatriske bosteder med 5-25 borgere, hvor BUDR-funktionaliteten dækker jeres dokumentationsbehov: ja. BUDR er bygget som komplet driftssystem — journal, vagtoverdragelse, dokumentation, recoveryarbejde og borgerinddragelse i ét system.',
       'For større bosteder eller bosteder med intern medicinhåndtering har vi FMK- og MedCom-integration på roadmap for 2027. Vi vurderer det altid konkret sammen ved indledende samtale.',
     ],
   },
   {
     q: 'Understøtter BUDR VUM 2.0?',
     paragraphs: [
-      "Ja. BUDR's datamodel mapper direkte til VUM 2.0's 11 udredningstemaer og Fælles Faglige Begreber. CHIME-rammeværket, som BUDR er bygget på, matcher VUM 2.0's eget fokus på recovery-orienteret rehabilitering — det er ikke to konkurrerende rammer, men to lag af samme faglige praksis.",
+      "Ja. BUDR's datamodel mapper direkte til VUM 2.0's 11 udredningstemaer og Fælles Faglige Begreber. CHIME-rammeværket, som BUDR er bygget på, matcher VUM 2.0's eget fokus på recoveryorienteret rehabilitering — det er ikke to konkurrerende rammer, men to lag af samme faglige praksis.",
     ],
   },
   {
@@ -55,7 +55,7 @@ const HOME_FAQ = [
   {
     q: 'Hvad hvis en borger ikke kan bruge en app?',
     paragraphs: [
-      "Lys er designet til at være brugbar selv ved svære dage — minimal kognitiv belastning, store knapper, stemme-input. Men hvis en borger ikke kan eller vil bruge app'en, fungerer Care Portal alligevel; personalet kan dokumentere uden borger-app'en.",
+      "Lys er designet til at være brugbar selv ved svære dage — minimal kognitiv belastning, store knapper, stemmeinput. Men hvis en borger ikke kan eller vil bruge app'en, fungerer Care Portal alligevel; personalet kan dokumentere uden borgerapp'en.",
     ],
   },
   {
@@ -73,7 +73,7 @@ const HOME_FAQ = [
   {
     q: 'Hvad med tilsynsrapporter?',
     paragraphs: [
-      'BUDR genererer eksportbare dokumentationsrapporter til socialtilsyn baseret på Social- og Boligstyrelsens kvalitetsmodel. Personalet kan fremvise journalhistorik, indsatsmål og recovery-progression direkte fra systemet.',
+      'BUDR genererer eksportbare dokumentationsrapporter til socialtilsyn baseret på Social- og Boligstyrelsens kvalitetsmodel. Personalet kan fremvise journalhistorik, indsatsmål og recoveryprogression direkte fra systemet.',
     ],
   },
 ] as const;
@@ -98,8 +98,11 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
               <a href="#kontakt">Kontakt</a>
             </div>
             <div className="home-nav-cta">
+              <Link href="/care-portal-login" className="budr-nav-login">
+                Log ind
+              </Link>
               <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="btn-sm">
-                Book pilot-samtale
+                Book pilotsamtale
               </a>
             </div>
           </div>
@@ -115,7 +118,7 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
               <h1>Vagtoverdragelsen sker stadig på hukommelse. Borgerens recovery på papir.</h1>
               <p>
                 BUDR er det første danske driftssystem der samler vagtoverdragelse, journal,
-                dokumentation og recovery-arbejde i ét — bygget på CHIME-rammeværket og VUM
+                dokumentation og recoveryarbejde i ét — bygget på CHIME-rammeværket og VUM
                 2.0-kompatibelt.
               </p>
               <div className="hero-actions">
@@ -125,10 +128,10 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
                   rel="noopener noreferrer"
                   className="btn-primary"
                 >
-                  Book pilot-samtale
+                  Book pilotsamtale
                 </a>
                 <a href="#sara-forloeb" className="btn-ghost">
-                  Se Saras recovery-forløb ↓
+                  Se Saras recoveryforløb ↓
                 </a>
               </div>
               <ul className="home-trust-strip" aria-label="Tillid og compliance">
@@ -171,7 +174,7 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
                   </span>
                   <div>
                     <strong>Dokumentation uden retning</strong>
-                    <p>Journaler fyldes, men recovery-billedet bliver aldrig hel.</p>
+                    <p>Journaler fyldes, men recoverybilledet bliver aldrig hel.</p>
                   </div>
                 </li>
                 <li>
@@ -211,7 +214,7 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
                   <p className="entrance-product-name">Care Portal</p>
                   <p>
                     Webbaseret driftssystem til hele teamet. Journal, vagtoverdragelse,
-                    AI-assisteret dokumentation, advarselssystem, recovery-trends og VUM
+                    AI-assisteret dokumentation, advarselssystem, recoverytrends og VUM
                     2.0-understøttelse. Bygget til at samle hele jeres dokumentationsarbejde — ikke
                     supplere det.
                   </p>
@@ -223,9 +226,9 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
                   <h3>Borgeren</h3>
                   <p className="entrance-product-name">Lys</p>
                   <p>
-                    Personlig recovery-app. Daglig check-in, refleksioner som tekst eller stemme,
-                    egne næste skridt, samling af recovery-fortællinger. Borgeren bestemmer hvad
-                    personalet ser. Ingen overvågning, ingen alarm-spam.
+                    Personlig recoveryapp. Daglig checkin, refleksioner som tekst eller stemme, egne
+                    næste skridt, samling af recoveryfortællinger. Borgeren bestemmer hvad
+                    personalet ser. Ingen overvågning, ingen alarmspam.
                   </p>
                   <Link href="/institutioner#maalgruppe" className="entrance-link">
                     Læs mere om Lys →
@@ -242,12 +245,12 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
                 <p>
                   BUDR er grundlagt af Christian Cloos, der selv har arbejdet som pædagogmedhjælper
                   på et socialpsykiatrisk bosted. Frustrationen over værktøjer der ikke understøtter
-                  recovery-praksis — kun dokumenterer den — var udgangspunktet for hele systemet.
+                  recoverypraksis — kun dokumenterer den — var udgangspunktet for hele systemet.
                 </p>
                 <p>
                   CHIME-rammeværket er valgt fordi det er evidensbaseret, internationalt anerkendt,
                   og oversætter sig direkte til daglig praksis. Det matcher VUM 2.0&apos;s eget
-                  fokus på recovery-orienteret rehabilitering, som Social- og Boligstyrelsen har
+                  fokus på recoveryorienteret rehabilitering, som Social- og Boligstyrelsen har
                   defineret som ét af fire faglige fokusområder i implementeringsforløb for
                   kommuner.
                 </p>
@@ -270,7 +273,7 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
                   <h3>Indledende samtale</h3>
                   <p className="step-duration">15 min</p>
                   <p>
-                    Vi forstår jeres hverdag, jeres dokumentationsbyrde, jeres recovery-arbejde i
+                    Vi forstår jeres hverdag, jeres dokumentationsbyrde, jeres recoveryarbejde i
                     dag. Vi afklarer sammen om BUDR passer til jeres bosted.
                   </p>
                   <a
@@ -337,7 +340,7 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
                 rel="noopener noreferrer"
                 className="btn-primary final-cta-button"
               >
-                Book pilot-samtale →
+                Book pilotsamtale →
               </a>
               <p className="final-cta-fineprint">
                 Vi svarer inden for 1 hverdag · {CONTACT_EMAIL} · BUDR ApS, Aalborg

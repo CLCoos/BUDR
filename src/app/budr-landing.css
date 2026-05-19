@@ -1467,7 +1467,35 @@ html {
 .budr-landing .home-nav-cta {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
+}
+
+.budr-landing .budr-nav-login {
+  color: var(--white-dim);
+  font-family: var(--font-landing-body, 'DM Sans', system-ui, sans-serif);
+  font-size: 14px;
+  text-decoration: none;
+  padding: 0.5rem 0.75rem;
+  transition: color 0.2s;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.budr-landing .budr-nav-login:hover {
+  color: var(--budr-teal);
+}
+
+.budr-landing .budr-nav-login:focus-visible {
+  outline: 2px solid var(--budr-teal);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (max-width: 720px) {
+  .budr-landing .budr-nav-login {
+    font-size: 13px;
+    padding: 0.4rem 0.5rem;
+  }
 }
 
 .budr-landing .home-nav-links a {

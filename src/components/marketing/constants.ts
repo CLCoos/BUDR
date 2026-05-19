@@ -2,7 +2,7 @@
  * Marketing-wide konstanter.
  */
 
-/** Primær booking-URL — 15 min indledende intromøde. Brug overalt hvor "Book pilot-samtale" CTA forekommer. */
+/** Primær booking-URL — 15 min indledende intromøde. Brug overalt hvor "Book pilotsamtale" CTA forekommer. */
 export const BOOKING_URL = 'https://cal.com/budr-care/introduktion';
 
 /** Uddybende opfølgningsmøde — 30-60 min. Bruges på /pilotpakke og i second-touch CTAs. */
