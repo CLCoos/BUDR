@@ -2891,23 +2891,19 @@ html {
     gap: 5px;
   }
 
+  .budr-landing .chime-interactive .chime-en,
+  .budr-landing .chime-interactive .chime-da {
+    display: none;
+  }
+
   .budr-landing .chime-interactive .chime-btn {
-    padding: 1rem 0.2rem 0.85rem;
+    padding: 1.25rem 0.5rem;
     border-radius: 6px;
   }
 
   .budr-landing .chime-interactive .chime-letter {
-    font-size: 30px;
-    margin-bottom: 6px;
-  }
-
-  .budr-landing .chime-interactive .chime-en {
-    font-size: 10.5px;
-  }
-
-  .budr-landing .chime-interactive .chime-da {
-    font-size: 9.5px;
-    letter-spacing: 0;
+    font-size: 36px;
+    margin-bottom: 0;
   }
 
   .budr-landing .chime-interactive .chime-h1 {
@@ -2948,14 +2944,6 @@ html {
 
   .budr-landing .chime-interactive .chime-letter {
     font-size: 26px;
-  }
-
-  .budr-landing .chime-interactive .chime-en {
-    font-size: 9.5px;
-  }
-
-  .budr-landing .chime-interactive .chime-da {
-    display: none;
   }
 }
 
