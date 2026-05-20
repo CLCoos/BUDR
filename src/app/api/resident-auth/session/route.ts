@@ -27,6 +27,12 @@ function sanitizeNext(next: string | null): string {
   return next;
 }
 
+function redirectToNext(request: NextRequest, path: string): NextResponse {
+  const redirectUrl = new URL(path, request.url);
+  redirectUrl.search = '';
+  return NextResponse.redirect(redirectUrl);
+}
+
 function setSessionCookies(res: NextResponse, token: string, residentId: string): void {
   res.cookies.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
@@ -56,7 +62,7 @@ export async function GET(request: NextRequest) {
   if (existingToken) {
     const validation = await validateSessionToken(existingToken);
     if (validation.valid && validation.residentUserId === rid) {
-      return NextResponse.redirect(new URL(next, request.url));
+      return redirectToNext(request, next);
     }
   }
 
@@ -72,7 +78,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const res = NextResponse.redirect(new URL(next, request.url));
+  const res = redirectToNext(request, next);
   setSessionCookies(res, session.token, rid);
   return res;
 }
