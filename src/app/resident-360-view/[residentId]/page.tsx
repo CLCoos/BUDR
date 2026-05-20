@@ -12,6 +12,7 @@ import ResidentHavenTab from './components/ResidentHavenTab';
 import ResidentOverblikTab from './components/ResidentOverblikTab';
 import ResidentActiveDevices from './components/ResidentActiveDevices';
 import ResidentRecoveryTab from './components/ResidentRecoveryTab';
+import ResidentTodayTab from './components/ResidentTodayTab';
 import ResidentMedicinTab from './components/ResidentMedicinTab';
 import WriteJournalEntry from './components/WriteJournalEntry';
 import ResidentOverflowMenu from './components/ResidentOverflowMenu';
@@ -304,6 +305,7 @@ type Props = {
 };
 
 const ALL_TABS = [
+  'i-dag',
   'overblik',
   'recovery',
   'medicin',
@@ -315,6 +317,7 @@ const ALL_TABS = [
 type TabId = (typeof ALL_TABS)[number];
 
 const TAB_LABELS: Record<TabId, string> = {
+  'i-dag': 'I dag',
   overblik: 'Overblik',
   recovery: 'Recovery',
   medicin: 'Medicin',
@@ -326,11 +329,11 @@ const TAB_LABELS: Record<TabId, string> = {
 
 export default async function ResidentDagPage({ params, searchParams }: Props) {
   const { residentId } = await params;
-  const { tab = 'overblik', writeJournal } = (await searchParams) as {
+  const { tab = 'i-dag', writeJournal } = (await searchParams) as {
     tab?: string;
     writeJournal?: string;
   };
-  const activeTab = (ALL_TABS as readonly string[]).includes(tab) ? (tab as TabId) : 'overblik';
+  const activeTab = (ALL_TABS as readonly string[]).includes(tab) ? (tab as TabId) : 'i-dag';
 
   const supabase = await createServerSupabaseClient();
   if (!supabase) redirect('/care-portal-login?err=config');
@@ -479,6 +482,8 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
         </div>
 
         {/* Tab content */}
+        {activeTab === 'i-dag' && <ResidentTodayTab residentName="Sara DEMO Kristensen" />}
+
         {activeTab === 'overblik' && (
           <>
             <ResidentActiveDevices residentUserId={residentId} />
