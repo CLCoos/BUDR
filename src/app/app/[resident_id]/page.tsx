@@ -1,7 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import {
-  createSession,
   validateSessionToken,
   SESSION_COOKIE_NAME,
   LEGACY_COOKIE_NAME,
@@ -15,9 +14,8 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const COOKIE_MAX_AGE = 30 * 24 * 60 * 60;
 
 /**
- * Entry point for device-linked resident access.
- * Visiting /app/<uuid> bootstraps an HttpOnly session cookie (hashed server-side)
- * and keeps the legacy resident id cookie during rollout.
+ * Entry point for device-linked resident access. It never creates sessions from
+ * the URL alone; a valid PIN/WebAuthn-backed server session is required first.
  */
 async function bootstrapSession(residentId: string): Promise<{ valid: boolean }> {
   const cookieStore = await cookies();
@@ -26,30 +24,18 @@ async function bootstrapSession(residentId: string): Promise<{ valid: boolean }>
   if (existingToken) {
     const validation = await validateSessionToken(existingToken);
     if (validation.valid && validation.residentUserId === residentId) {
+      cookieStore.set(LEGACY_COOKIE_NAME, residentId, {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: COOKIE_MAX_AGE,
+      });
       return { valid: true };
     }
   }
 
-  const session = await createSession({ residentUserId: residentId });
-  if (!session) return { valid: false };
-
-  cookieStore.set(SESSION_COOKIE_NAME, session.token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: COOKIE_MAX_AGE,
-  });
-
-  cookieStore.set(LEGACY_COOKIE_NAME, residentId, {
-    httpOnly: false,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: COOKIE_MAX_AGE,
-  });
-
-  return { valid: true };
+  return { valid: false };
 }
 
 export default async function ResidentEntryPage({ params }: Props) {
@@ -66,14 +52,7 @@ export default async function ResidentEntryPage({ params }: Props) {
 
   const boot = await bootstrapSession(resident_id);
   if (!boot.valid) {
-    return (
-      <main className="mx-auto max-w-md px-6 py-16 text-center">
-        <h1 className="text-lg font-semibold text-slate-900">Kunne ikke starte session</h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Kontakt personalet, hvis problemet fortsætter.
-        </p>
-      </main>
-    );
+    redirect(`/login/${resident_id}`);
   }
 
   redirect('/park-hub');

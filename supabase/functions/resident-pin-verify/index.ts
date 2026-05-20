@@ -13,7 +13,7 @@ const corsHeaders = {
 // This makes brute-forcing a 4-digit PIN (~10 000 combinations) take ~16 hours
 // even if an attacker cycles through IPs, it remains a meaningful barrier.
 const rateMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT     = 10;
+const RATE_LIMIT = 10;
 const RATE_WINDOW_MS = 60_000;
 
 function getClientIp(req: Request): string {
@@ -26,7 +26,7 @@ function getClientIp(req: Request): string {
 }
 
 function isRateLimited(ip: string): boolean {
-  const now   = Date.now();
+  const now = Date.now();
   const entry = rateMap.get(ip);
 
   if (!entry || now > entry.resetAt) {
@@ -44,6 +44,54 @@ function isRateLimited(ip: string): boolean {
 // ── UUID helper ───────────────────────────────────────────────────────────────
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+function randomSessionToken(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  let binary = '';
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+async function sha256Hex(value: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function createResidentSession(
+  supabase: ReturnType<typeof createClient>,
+  residentId: string,
+  req: Request,
+  clientIp: string
+): Promise<string | null> {
+  const { data: resident, error: residentErr } = await supabase
+    .from('care_residents')
+    .select('org_id')
+    .eq('user_id', residentId)
+    .maybeSingle();
+
+  if (residentErr || !resident?.org_id) return null;
+
+  const token = randomSessionToken();
+  const ipHash =
+    clientIp && clientIp !== 'unknown' ? (await sha256Hex(clientIp)).slice(0, 16) : null;
+
+  const { error } = await supabase.from('resident_sessions').insert({
+    resident_user_id: residentId,
+    org_id: resident.org_id,
+    session_token_hash: await sha256Hex(token),
+    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    user_agent: req.headers.get('user-agent'),
+    ip_hash: ipHash,
+  });
+
+  if (error) return null;
+  return token;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -52,10 +100,10 @@ serve(async (req) => {
   // ── 1. Rate limit ──────────────────────────────────────────────────────────
   const clientIp = getClientIp(req);
   if (isRateLimited(clientIp)) {
-    return new Response(
-      JSON.stringify({ error: 'too_many_requests' }),
-      { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    );
+    return new Response(JSON.stringify({ error: 'too_many_requests' }), {
+      status: 429,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 
   // ── 2. Input validation ────────────────────────────────────────────────────
@@ -64,32 +112,32 @@ serve(async (req) => {
   let pin: string;
 
   try {
-    const body = await req.json() as Record<string, unknown>;
+    const body = (await req.json()) as Record<string, unknown>;
     // resident_id must be a string (UUID validated below); pin must be exactly 4 digits
     if (
       typeof body.resident_id !== 'string' ||
-      typeof body.pin         !== 'string' ||
-      !UUID_RE.test(body.resident_id)       ||
+      typeof body.pin !== 'string' ||
+      !UUID_RE.test(body.resident_id) ||
       !/^\d{4}$/.test(body.pin)
     ) {
-      return new Response(
-        JSON.stringify({ error: 'invalid_input' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
+      return new Response(JSON.stringify({ error: 'invalid_input' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
     residentId = body.resident_id;
-    pin        = body.pin;
+    pin = body.pin;
   } catch {
     // req.json() threw — malformed JSON body
-    return new Response(
-      JSON.stringify({ error: 'invalid_input' }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    );
+    return new Response(JSON.stringify({ error: 'invalid_input' }), {
+      status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   );
 
   try {
@@ -103,60 +151,59 @@ serve(async (req) => {
       .eq('resident_id', residentId)
       .maybeSingle();
 
-    const valid = !fetchErr && pinRow?.pin_hash
-      ? await bcrypt.compare(pin, pinRow.pin_hash)
-      : false;
+    const valid =
+      !fetchErr && pinRow?.pin_hash ? await bcrypt.compare(pin, pinRow.pin_hash) : false;
 
     if (!valid) {
       // ── Audit: failed login attempt (best-effort, never blocks response) ──
-      await supabase.rpc('create_audit_log', {
-        p_actor_type: 'resident',
-        p_action:     'resident.login_failed',
-        p_actor_id:   residentId,
-        p_metadata:   { reason: 'invalid_pin' },
-        p_ip_address: clientIp,
-      }).catch(() => { /* audit failure must not affect auth response */ });
+      await supabase
+        .rpc('create_audit_log', {
+          p_actor_type: 'resident',
+          p_action: 'resident.login_failed',
+          p_actor_id: residentId,
+          p_metadata: { reason: 'invalid_pin' },
+          p_ip_address: clientIp,
+        })
+        .catch(() => {
+          /* audit failure must not affect auth response */
+        });
 
-      return new Response(
-        JSON.stringify({ error: 'Ugyldig PIN' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
+      return new Response(JSON.stringify({ error: 'Ugyldig PIN' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    // ── 4. Create 12-hour session ──────────────────────────────────────────
-    const { data: session, error: sessionErr } = await supabase
-      .from('resident_sessions')
-      .insert({
-        resident_id: residentId,
-        token:       crypto.randomUUID(),
-        expires_at:  new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
-      })
-      .select('token')
-      .single();
+    // ── 4. Create hashed server session ─────────────────────────────────────
+    const sessionToken = await createResidentSession(supabase, residentId, req, clientIp);
 
-    if (sessionErr || !session) {
-      return new Response(
-        JSON.stringify({ error: 'Kunne ikke oprette session' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
+    if (!sessionToken) {
+      return new Response(JSON.stringify({ error: 'Kunne ikke oprette session' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // ── Audit: successful login ────────────────────────────────────────────
-    await supabase.rpc('create_audit_log', {
-      p_actor_type: 'resident',
-      p_action:     'resident.login',
-      p_actor_id:   residentId,
-      p_ip_address: clientIp,
-    }).catch(() => { /* best-effort */ });
+    await supabase
+      .rpc('create_audit_log', {
+        p_actor_type: 'resident',
+        p_action: 'resident.login',
+        p_actor_id: residentId,
+        p_ip_address: clientIp,
+      })
+      .catch(() => {
+        /* best-effort */
+      });
 
-    return new Response(
-      JSON.stringify({ data: { session_token: session.token } }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    );
+    return new Response(JSON.stringify({ data: { session_token: sessionToken } }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   } catch {
-    return new Response(
-      JSON.stringify({ error: 'Intern fejl' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    );
+    return new Response(JSON.stringify({ error: 'Intern fejl' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });

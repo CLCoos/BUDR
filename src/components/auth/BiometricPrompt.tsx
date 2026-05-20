@@ -71,12 +71,13 @@ export default function BiometricPrompt({ residentId, redirectTo }: Props) {
       const json = (await res.json()) as { data?: { session_token: string }; error?: string };
       if (!res.ok || !json.data?.session_token) return; // silent fallback to PIN
 
-      // Set session cookie via API route
-      await fetch('/api/resident-session', {
+      // Set session cookie via API route after server-side token validation.
+      const sessionRes = await fetch('/api/resident-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: json.data.session_token }),
       });
+      if (!sessionRes.ok) return;
 
       router.replace(redirectTo);
     } catch {
