@@ -317,7 +317,8 @@ export default function LysHome({
     if (moodTick > 0) setShowLysCard(true);
   }, [moodTick]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await fetch('/api/resident-session', { method: 'DELETE' }).catch(() => null);
     document.cookie = 'budr_resident_id=; path=/; max-age=0';
     router.replace('/');
   };
