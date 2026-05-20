@@ -22,22 +22,111 @@ const PLAN_TASKS: PlanTask[] = [
   { time: '18:00', label: 'Aftens check-in' },
 ];
 
-const MOOD_SPARKLINE: Array<'green' | 'amber' | 'red'> = [
+/** 14 dage: start grønt, flere gule mod slut, én rød */
+const MOOD_14_DAYS: Array<'green' | 'amber' | 'red'> = [
+  'green',
+  'green',
+  'green',
   'green',
   'amber',
   'green',
   'amber',
   'amber',
   'green',
+  'amber',
   'amber',
   'red',
   'amber',
-  'green',
-  'amber',
-  'amber',
-  'green',
   'amber',
 ];
+
+const EXTRA_JOURNAL_SOURCES = [
+  '14. maj · Lars DEMO Nielsen · observation',
+  '16. maj · Anne DEMO Sørensen · samtale',
+  '19. maj · Peter DEMO Jensen · observation',
+] as const;
+
+type WeekPill = { label: string; tone?: 'amber' | 'default' };
+
+type WeekDayRow = { day: string; pills: WeekPill[] };
+
+const WEEK_OVERVIEW: WeekDayRow[] = [
+  { day: 'Man 19', pills: [{ label: 'Morgenmøde hus A' }, { label: 'Tegne-tid' }] },
+  { day: 'Tir 20', pills: [{ label: 'CTI-samtale 10:00' }, { label: 'Hvile / egentid 14:00' }] },
+  {
+    day: 'Ons 21',
+    pills: [{ label: 'Én-til-én med Lars' }, { label: 'Fællesspisning' }],
+  },
+  {
+    day: 'Tor 22',
+    pills: [{ label: 'Mor-besøg 14:00', tone: 'amber' }, { label: 'CTI-opfølgning' }],
+  },
+  { day: 'Fre 23', pills: [{ label: 'Gåtur med Lars' }, { label: 'Tegne-workshop' }] },
+  { day: 'Lør 24', pills: [{ label: 'Rolig formiddag' }, { label: 'Film i fællesstue' }] },
+  { day: 'Søn 25', pills: [{ label: 'Besøg søster Anna' }, { label: 'Ugentlig check-in' }] },
+];
+
+const CHIME_SCORES: Array<{ label: string; score: number }> = [
+  { label: 'Forbundethed', score: 3 },
+  { label: 'Håb', score: 2 },
+  { label: 'Identitet', score: 4 },
+  { label: 'Mening', score: 3 },
+  { label: 'Bemyndigelse', score: 2 },
+];
+
+/** grøn = taget, rød = glemt, grå = fremtid */
+type DoseStatus = 'taken' | 'missed' | 'future';
+
+const OLANZAPIN_DOSES: DoseStatus[] = [
+  'taken',
+  'taken',
+  'taken',
+  'missed',
+  'taken',
+  'taken',
+  'taken',
+  'taken',
+  'taken',
+  'missed',
+  'taken',
+  'taken',
+  'future',
+  'future',
+];
+
+const MIRTAZAPIN_DOSES: DoseStatus[] = [
+  'taken',
+  'taken',
+  'taken',
+  'taken',
+  'taken',
+  'taken',
+  'taken',
+  'taken',
+  'taken',
+  'taken',
+  'taken',
+  'taken',
+  'future',
+  'future',
+];
+
+const ACTIVITY_BY_DAY = [
+  { label: 'Man', count: 3 },
+  { label: 'Tir', count: 4 },
+  { label: 'Ons', count: 2 },
+  { label: 'Tor', count: 1 },
+  { label: 'Fre', count: 2 },
+  { label: 'Lør', count: 5 },
+  { label: 'Søn', count: 3 },
+];
+
+const ACTIVITY_MAX = Math.max(...ACTIVITY_BY_DAY.map((d) => d.count));
+
+const innerBlockStyle: React.CSSProperties = {
+  backgroundColor: 'var(--cp-bg3)',
+  borderColor: 'var(--cp-border)',
+};
 
 type JournalEntry = {
   id: string;
@@ -92,6 +181,26 @@ function secondaryButtonStyle(): React.CSSProperties {
     backgroundColor: 'transparent',
     color: 'var(--cp-text)',
   };
+}
+
+function journalSourceLinkStyle(): React.CSSProperties {
+  return {
+    color: 'var(--cp-blue)',
+    cursor: 'pointer',
+    textDecoration: 'underline',
+    textDecorationColor: 'var(--cp-border2)',
+    textUnderlineOffset: 2,
+  };
+}
+
+function doseSquareColor(status: DoseStatus): string {
+  if (status === 'taken') return 'var(--cp-green)';
+  if (status === 'missed') return 'var(--cp-red)';
+  return 'var(--cp-muted2)';
+}
+
+function chimeBarColor(score: number): string {
+  return score <= 2 ? 'var(--cp-amber)' : 'var(--cp-green)';
 }
 
 export default function ResidentTodayTab({ residentName: _residentName }: Props) {
@@ -191,6 +300,28 @@ export default function ResidentTodayTab({ residentName: _residentName }: Props)
                 Overvej en kort forberedende samtale onsdag eller torsdag formiddag før morens
                 besøg. Brug Saras tegne-tid som åbning hvis samtalen bliver svær.
               </p>
+            </div>
+            <div>
+              <div
+                className="text-xs font-semibold uppercase tracking-wider"
+                style={{ color: 'var(--cp-muted)' }}
+              >
+                Flere journal-kilder
+              </div>
+              <ul className="mt-2 space-y-2">
+                {EXTRA_JOURNAL_SOURCES.map((source) => (
+                  <li key={source}>
+                    <button
+                      type="button"
+                      className="border-0 bg-transparent p-0 text-left text-sm"
+                      style={journalSourceLinkStyle()}
+                      onClick={() => openDrawer('journal')}
+                    >
+                      {source}
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         ) : null}
@@ -298,20 +429,72 @@ export default function ResidentTodayTab({ residentName: _residentName }: Props)
         </ul>
 
         {planExpanded ? (
-          <div className="mt-4 border-t pt-4" style={{ borderColor: 'var(--cp-border)' }}>
-            <button
-              type="button"
-              className="rounded-lg px-3 py-2 text-sm font-medium"
-              style={{
-                ...secondaryButtonStyle(),
-                color: 'var(--cp-muted)',
-              }}
-            >
-              Tilføj opgave
-            </button>
-            <p className="mt-2 text-xs" style={{ color: 'var(--cp-muted2)' }}>
-              Planen synkroniseres fra Saras dagsplan i Lys-appen.
-            </p>
+          <div className="mt-4 space-y-5 border-t pt-4" style={{ borderColor: 'var(--cp-border)' }}>
+            <div>
+              <div
+                className="text-xs font-semibold uppercase tracking-wider"
+                style={{ color: 'var(--cp-muted)' }}
+              >
+                Resten af ugen
+              </div>
+              <ul className="mt-3 space-y-3">
+                {WEEK_OVERVIEW.map((row) => (
+                  <li key={row.day} className="flex flex-wrap items-start gap-2 text-sm">
+                    <span
+                      className="w-14 shrink-0 font-medium tabular-nums"
+                      style={{ color: 'var(--cp-text)' }}
+                    >
+                      {row.day}
+                    </span>
+                    <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+                      {row.pills.map((pill) => (
+                        <span
+                          key={`${row.day}-${pill.label}`}
+                          className="rounded-full px-2 py-0.5 text-xs"
+                          style={{
+                            backgroundColor:
+                              pill.tone === 'amber' ? 'var(--cp-amber-dim)' : 'var(--cp-bg3)',
+                            color: pill.tone === 'amber' ? 'var(--cp-amber)' : 'var(--cp-muted)',
+                            border: '1px solid var(--cp-border)',
+                          }}
+                        >
+                          {pill.label}
+                        </span>
+                      ))}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <div
+                className="text-xs font-semibold uppercase tracking-wider"
+                style={{ color: 'var(--cp-muted)' }}
+              >
+                Ansvar i dag
+              </div>
+              <ul className="mt-2 space-y-1 text-sm" style={{ color: 'var(--cp-text)' }}>
+                <li>Lars DEMO Nielsen (dagvagt)</li>
+                <li>Peter DEMO Jensen (aftenvagt)</li>
+              </ul>
+            </div>
+
+            <div>
+              <button
+                type="button"
+                className="rounded-lg px-3 py-2 text-sm font-medium"
+                style={{
+                  ...secondaryButtonStyle(),
+                  color: 'var(--cp-muted)',
+                }}
+              >
+                Tilføj opgave
+              </button>
+              <p className="mt-2 text-xs" style={{ color: 'var(--cp-muted2)' }}>
+                Planen synkroniseres fra Saras dagsplan i Lys-appen.
+              </p>
+            </div>
           </div>
         ) : null}
       </section>
@@ -363,34 +546,147 @@ export default function ResidentTodayTab({ residentName: _residentName }: Props)
         </div>
 
         {metricsExpanded ? (
-          <div className="mt-4 rounded-xl border p-4" style={panelStyle}>
-            <div
-              className="mb-2 text-xs font-semibold uppercase tracking-wider"
-              style={{ color: 'var(--cp-muted)' }}
-            >
-              Stemning · 14 dage
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+            {/* Blok A — humør */}
+            <div className="rounded-xl border p-4" style={innerBlockStyle}>
+              <div
+                className="text-xs font-semibold uppercase tracking-wider"
+                style={{ color: 'var(--cp-muted)' }}
+              >
+                Humør over 14 dage
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-1.5" aria-hidden>
+                {MOOD_14_DAYS.map((tone, i) => (
+                  <span
+                    key={i}
+                    className="inline-block rounded-full"
+                    style={{
+                      width: 8,
+                      height: 8,
+                      backgroundColor:
+                        tone === 'green'
+                          ? 'var(--cp-green)'
+                          : tone === 'amber'
+                            ? 'var(--cp-amber)'
+                            : 'var(--cp-red)',
+                    }}
+                  />
+                ))}
+              </div>
+              <p className="mt-3 text-xs" style={{ color: 'var(--cp-muted)' }}>
+                Tendens: let nedadgående sidste uge
+              </p>
             </div>
-            <div className="flex flex-wrap items-center gap-1.5" aria-hidden>
-              {MOOD_SPARKLINE.map((tone, i) => (
-                <span
-                  key={i}
-                  className="inline-block rounded-full"
-                  style={{
-                    width: 8,
-                    height: 8,
-                    backgroundColor:
-                      tone === 'green'
-                        ? 'var(--cp-green)'
-                        : tone === 'amber'
-                          ? 'var(--cp-amber)'
-                          : 'var(--cp-red)',
-                  }}
-                />
-              ))}
+
+            {/* Blok B — CHIME */}
+            <div className="rounded-xl border p-4" style={innerBlockStyle}>
+              <div
+                className="text-xs font-semibold uppercase tracking-wider"
+                style={{ color: 'var(--cp-muted)' }}
+              >
+                CHIME recovery-scores
+              </div>
+              <ul className="mt-3 space-y-2.5">
+                {CHIME_SCORES.map((item) => (
+                  <li key={item.label}>
+                    <div className="mb-1 flex items-center justify-between gap-2 text-xs">
+                      <span style={{ color: 'var(--cp-text)' }}>{item.label}</span>
+                      <span className="tabular-nums" style={{ color: 'var(--cp-muted)' }}>
+                        {item.score}/5
+                      </span>
+                    </div>
+                    <div
+                      className="h-2 overflow-hidden rounded-full"
+                      style={{ backgroundColor: 'var(--cp-bg3)' }}
+                    >
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${(item.score / 5) * 100}%`,
+                          backgroundColor: chimeBarColor(item.score),
+                        }}
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-3 text-xs" style={{ color: 'var(--cp-muted)' }}>
+                Sammenlignet med sidste uge: Håb -1, Mening +1
+              </p>
             </div>
-            <p className="mt-3 text-sm" style={{ color: 'var(--cp-muted)' }}>
-              Søvn-gennemsnit 5,8t denne uge
-            </p>
+
+            {/* Blok C — medicin */}
+            <div className="rounded-xl border p-4" style={innerBlockStyle}>
+              <div
+                className="text-xs font-semibold uppercase tracking-wider"
+                style={{ color: 'var(--cp-muted)' }}
+              >
+                Medicin-compliance (14 dage)
+              </div>
+              <div className="mt-3 space-y-3">
+                {(
+                  [
+                    { name: 'Olanzapin', doses: OLANZAPIN_DOSES },
+                    { name: 'Mirtazapin', doses: MIRTAZAPIN_DOSES },
+                  ] as const
+                ).map((med) => (
+                  <div key={med.name}>
+                    <div className="mb-1.5 text-xs font-medium" style={{ color: 'var(--cp-text)' }}>
+                      {med.name}
+                    </div>
+                    <div className="flex flex-wrap gap-1" aria-hidden>
+                      {med.doses.map((status, i) => (
+                        <span
+                          key={i}
+                          className="inline-block rounded-sm"
+                          style={{
+                            width: 10,
+                            height: 10,
+                            backgroundColor: doseSquareColor(status),
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-xs" style={{ color: 'var(--cp-green)' }}>
+                26 af 28 doser taget (93%)
+              </p>
+            </div>
+
+            {/* Blok D — aktivitet */}
+            <div className="rounded-xl border p-4" style={innerBlockStyle}>
+              <div
+                className="text-xs font-semibold uppercase tracking-wider"
+                style={{ color: 'var(--cp-muted)' }}
+              >
+                Aktivitetsniveau (7 dage)
+              </div>
+              <div
+                className="mt-4 flex items-end justify-between gap-2"
+                style={{ height: 72 }}
+                aria-hidden
+              >
+                {ACTIVITY_BY_DAY.map((day) => (
+                  <div key={day.label} className="flex flex-1 flex-col items-center gap-1">
+                    <div
+                      className="w-full max-w-[28px] rounded-t-sm"
+                      style={{
+                        height: Math.max(4, Math.round((day.count / ACTIVITY_MAX) * 72)),
+                        backgroundColor: 'var(--cp-blue)',
+                      }}
+                    />
+                    <span className="text-[10px]" style={{ color: 'var(--cp-muted)' }}>
+                      {day.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-xs" style={{ color: 'var(--cp-muted)' }}>
+                Gennemsnit 2,9 aktiviteter/dag — lavere mandag-tirsdag
+              </p>
+            </div>
           </div>
         ) : null}
       </section>
