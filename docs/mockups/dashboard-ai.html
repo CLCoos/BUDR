@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BUDR — Dashboard med AI-lag (prototype)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #FAF8F3;
+      --surface: #FFFFFF;
+      --text: #1A2332;
+      --muted: #6B7280;
+      --accent: #2D6A4F;
+      --accent-light: #E8F3ED;
+      --border: #E8E4DC;
+      --shadow: 0 4px 24px rgba(26, 35, 50, 0.06);
+      --tl-green: #16A34A;
+      --tl-yellow: #EAB308;
+      --tl-red: #DC2626;
+      --ai-from: #FFF9F0;
+      --ai-to: #F5F0E8;
+      --ai-border: #D4C4A8;
+    }
+    body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+    .font-serif { font-family: 'DM Serif Display', Georgia, serif; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); }
+    .ai-card {
+      background: linear-gradient(135deg, var(--ai-from) 0%, var(--ai-to) 100%);
+      border: 1px solid var(--ai-border);
+      border-radius: 16px;
+      box-shadow: 0 6px 28px rgba(180, 140, 80, 0.12);
+    }
+    .collapsible-body { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
+    .collapsible-body.open { max-height: 400px; }
+    button:hover { opacity: 0.92; }
+  </style>
+</head>
+<body class="min-h-screen">
+  <!-- Top nav stub -->
+  <nav class="border-b border-[#E8E4DC] bg-white">
+    <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
+      <span class="font-serif text-lg text-[#2D6A4F]">BUDR Care Portal</span>
+      <div class="flex gap-4 text-sm text-[#6B7280]">
+        <span class="font-medium text-[#1A2332]">Dashboard</span>
+        <span>Beboere</span>
+        <span>Vagtoverlev.</span>
+        <span>Beskeder</span>
+      </div>
+      <div class="flex h-8 w-8 items-center justify-center rounded-full bg-[#E8F3ED] text-xs font-bold text-[#2D6A4F]">LN</div>
+    </div>
+  </nav>
+
+  <main class="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+    <!-- A. AI Morgenbrief -->
+    <article class="ai-card p-6 sm:p-8">
+      <div class="mb-4 flex flex-wrap items-center gap-2 text-xs text-[#6B7280]">
+        <span class="flex items-center gap-2">☀️ Morgenbrief · Onsdag 20. maj 2026 · Genereret kl. 07:30</span>
+        <span class="rounded-full border border-[#D4C4A8] bg-white/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#8B7355]">AI-genereret</span>
+      </div>
+      <h1 class="font-serif mb-5 text-3xl text-[#1A2332] sm:text-4xl">I morges på BUDR Demo Botilbud</h1>
+      <div class="space-y-4 text-base leading-relaxed text-[#1A2332]">
+        <p>Det har overordnet været en <strong>rolig nat</strong>. <strong>Sara DEMO Kristensen</strong> viste tegn på øget paranoid tematik i Lys-samtale søndag aften og har sovet under 5 timer to nætter i træk — <strong>Lars DEMO Nielsen følger op i dag</strong>. <strong>Anders DEMO Mortensen</strong> har haft en god stabilisering siden mandag med tre grønne dage i træk.</p>
+        <p>To kalender-events kræver opmærksomhed: <strong>Mette DEMO Holms pårørende-besøg kl. 14</strong> (første besøg fra moren i 3 uger), og <strong>Saras CTI-samtale kl. 10</strong>. <strong>Medicin-dispensering</strong> er på plan for alle. <strong>Jonas DEMO Andersen</strong> mangler aftens-check-in i går — værd at tjekke ind med ham.</p>
+      </div>
+      <div class="mt-6 flex flex-wrap items-center gap-3 border-t border-[#D4C4A8]/50 pt-5">
+        <button type="button" onclick="document.getElementById('sourcesBrief').classList.toggle('hidden')" class="rounded-xl border border-[#E8E4DC] bg-white px-4 py-2.5 text-sm font-medium hover:bg-[#FAF8F3]">Vis kilder</button>
+        <button type="button" class="rounded-xl border border-[#E8E4DC] bg-white px-4 py-2.5 text-sm font-medium hover:bg-[#FAF8F3]">Eksport som vagtskifte-rapport</button>
+        <p class="w-full text-xs text-[#6B7280]">Næste vagtskifte-brief kl. 14:30</p>
+      </div>
+      <ul id="sourcesBrief" class="hidden mt-4 space-y-2 text-sm text-[#6B7280]">
+        <li>· 4 borgere check-in status · 2 journal-notater nattevagt · 1 aktiv safety event</li>
+      </ul>
+    </article>
+
+    <!-- B. Vagtskifte preview -->
+    <section class="mt-6 space-y-3">
+      <h2 class="text-sm font-semibold uppercase tracking-wide text-[#6B7280]">Kommende vagtskifte-briefs</h2>
+      <div class="card overflow-hidden">
+        <button type="button" onclick="toggleBrief('brief1')" class="flex w-full items-center justify-between p-4 text-left">
+          <span class="font-medium">Aftenvagt-brief — genereres kl. 14:30 i dag</span>
+          <span id="brief1Icon">▶</span>
+        </button>
+        <div id="brief1" class="collapsible-body border-t border-[#E8E4DC] px-4 pb-4">
+          <p class="pt-3 text-sm text-[#6B7280]">Vi opsummerer hvad der er sket siden sidste brief, så du som vagtskifter er ajour på 30 sekunder.</p>
+        </div>
+      </div>
+      <div class="card overflow-hidden">
+        <button type="button" onclick="toggleBrief('brief2')" class="flex w-full items-center justify-between p-4 text-left">
+          <span class="font-medium">Nattevagt-brief — genereres kl. 22:00 i dag</span>
+          <span id="brief2Icon">▶</span>
+        </button>
+        <div id="brief2" class="collapsible-body border-t border-[#E8E4DC] px-4 pb-4">
+          <p class="pt-3 text-sm text-[#6B7280]">Vi opsummerer hvad der er sket siden sidste brief, så du som vagtskifter er ajour på 30 sekunder.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- C. Aktive krise-eskalationer -->
+    <article class="card mt-6 border-l-4 p-5" style="border-left-color: var(--tl-red);">
+      <h2 class="font-semibold text-[#DC2626]">1 borger har aktivt eskalationstegn</h2>
+      <button type="button" onclick="alert('Prototype: åbner 360-resident-view.html for Sara')" class="mt-3 flex w-full items-center justify-between rounded-xl border border-[#E8E4DC] bg-[#FAF8F3] p-4 text-left hover:bg-white">
+        <div>
+          <p class="font-medium">Sara DEMO Kristensen</p>
+          <p class="text-sm text-[#6B7280]">Paranoid tematik + søvnmangel</p>
+        </div>
+        <span class="text-[#2D6A4F]">→</span>
+      </button>
+    </article>
+
+    <!-- D. Traditional widgets -->
+    <section class="mt-8 grid gap-6 lg:grid-cols-2">
+      <div class="card p-5">
+        <h3 class="font-semibold">Alle borgere i dag</h3>
+        <div class="mt-4 grid grid-cols-2 gap-3">
+          <div class="rounded-xl border border-[#E8E4DC] p-3 hover:bg-[#FAF8F3]">
+            <div class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-[#EAB308]"></span><span class="text-sm font-medium">Sara DEMO K.</span></div>
+            <p class="mt-1 text-xs text-[#6B7280]">Gul · check-in 09:14</p>
+          </div>
+          <div class="rounded-xl border border-[#E8E4DC] p-3 hover:bg-[#FAF8F3]">
+            <div class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-[#16A34A]"></span><span class="text-sm font-medium">Mette DEMO P.</span></div>
+            <p class="mt-1 text-xs text-[#6B7280]">Grøn · stabil</p>
+          </div>
+          <div class="rounded-xl border border-[#E8E4DC] p-3 hover:bg-[#FAF8F3]">
+            <div class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-[#EAB308]"></span><span class="text-sm font-medium">Jonas DEMO A.</span></div>
+            <p class="mt-1 text-xs text-[#6B7280]">Gul · mangler check-in</p>
+          </div>
+          <div class="rounded-xl border border-[#E8E4DC] p-3 hover:bg-[#FAF8F3]">
+            <div class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-[#16A34A]"></span><span class="text-sm font-medium">Anders DEMO M.</span></div>
+            <p class="mt-1 text-xs text-[#6B7280]">Grøn · 3 dage stabil</p>
+          </div>
+        </div>
+      </div>
+      <div class="card flex min-h-[180px] flex-col items-center justify-center p-5 text-center text-[#6B7280]">
+        <p class="font-semibold text-[#1A2332]">Åbne opgaver på tværs</p>
+        <p class="mt-2 text-sm">Placeholder — 12 opgaver, 3 forfaldne</p>
+      </div>
+      <div class="card flex min-h-[140px] flex-col items-center justify-center p-5 text-center text-[#6B7280] lg:col-span-2">
+        <p class="font-semibold text-[#1A2332]">Beskeder</p>
+        <p class="mt-2 text-sm">Placeholder — 5 ulæste tråde</p>
+      </div>
+    </section>
+
+    <p class="mt-12 text-center text-xs text-[#6B7280]">Design-prototype · ingen backend · BUDR Demo Botilbud</p>
+  </main>
+
+  <script>
+    function toggleBrief(id) {
+      const el = document.getElementById(id);
+      const icon = document.getElementById(id + 'Icon');
+      el.classList.toggle('open');
+      icon.textContent = el.classList.contains('open') ? '▼' : '▶';
+    }
+  </script>
+</body>
+</html>

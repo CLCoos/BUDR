@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BUDR — 360° borgerindblik (prototype)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #FAF8F3;
+      --surface: #FFFFFF;
+      --text: #1A2332;
+      --muted: #6B7280;
+      --accent: #2D6A4F;
+      --accent-light: #E8F3ED;
+      --border: #E8E4DC;
+      --shadow: 0 4px 24px rgba(26, 35, 50, 0.06);
+      --tl-green: #16A34A;
+      --tl-yellow: #EAB308;
+      --tl-red: #DC2626;
+      --ai-from: #FFF9F0;
+      --ai-to: #F5F0E8;
+      --ai-border: #D4C4A8;
+    }
+    body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+    .font-serif { font-family: 'DM Serif Display', Georgia, serif; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); }
+    .ai-card {
+      background: linear-gradient(135deg, var(--ai-from) 0%, var(--ai-to) 100%);
+      border: 1px solid var(--ai-border);
+      border-radius: 16px;
+      box-shadow: 0 6px 28px rgba(180, 140, 80, 0.12);
+    }
+    .tab-btn.active { background: var(--accent-light); color: var(--accent); border-color: var(--accent); font-weight: 600; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .badge-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--tl-red); }
+    .chime-bar { height: 6px; border-radius: 3px; background: #E8E4DC; overflow: hidden; }
+    .chime-fill { height: 100%; border-radius: 3px; background: var(--accent); }
+    .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(26,35,50,0.45); z-index: 100; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-backdrop.open { display: flex; }
+    .drag-handle { cursor: grab; color: var(--muted); }
+    .event-block { border-radius: 8px; padding: 4px 8px; font-size: 11px; font-weight: 600; color: #fff; }
+    .popover { display: none; position: absolute; right: 0; top: 100%; margin-top: 8px; width: 320px; z-index: 50; }
+    .popover.open { display: block; }
+    button, .clickable { transition: opacity 0.15s, transform 0.15s; }
+    button:hover, .clickable:hover { opacity: 0.92; }
+    .collapsible-body { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
+    .collapsible-body.open { max-height: 2000px; }
+  </style>
+</head>
+<body class="min-h-screen pb-16">
+  <!-- A. STICKY HEADER -->
+  <header class="sticky top-0 z-40 border-b border-[#E8E4DC] bg-white/95 backdrop-blur-md">
+    <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3 sm:px-6">
+      <div class="flex min-w-0 flex-1 items-center gap-3">
+        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white" style="background: linear-gradient(135deg, #EAB308, #CA8A04);">SK</div>
+        <div>
+          <h1 class="font-serif text-xl text-[#1A2332]">Sara DEMO Kristensen</h1>
+          <p class="text-sm text-[#6B7280]">34 år · Lejlighed 4 · Indflyttet 14. jan 2026</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 rounded-full border border-[#E8E4DC] bg-[#FAF8F3] px-4 py-2">
+        <span class="h-3 w-3 rounded-full" style="background: var(--tl-yellow); box-shadow: 0 0 0 3px rgba(234,179,8,0.25);"></span>
+        <span class="text-sm font-medium">Brug for opmærksomhed i dag</span>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <button type="button" onclick="switchTab('journal')" class="rounded-xl border border-[#E8E4DC] px-3 py-2 text-sm font-medium hover:bg-[#FAF8F3]" title="Skriv journal">✎ Journal</button>
+        <button type="button" class="rounded-xl border border-[#E8E4DC] px-3 py-2 text-sm font-medium hover:bg-[#FAF8F3]">+ Opgave</button>
+        <button type="button" class="rounded-xl border border-[#E8E4DC] px-3 py-2 text-sm font-medium hover:bg-[#FAF8F3]">📞 Lars</button>
+        <button type="button" onclick="openSettings()" class="rounded-xl border border-[#E8E4DC] px-3 py-2 text-sm hover:bg-[#FAF8F3]" aria-label="Indstillinger">⚙</button>
+      </div>
+    </div>
+    <!-- B. TAB BAR -->
+    <nav class="mx-auto max-w-6xl overflow-x-auto px-4 pb-2 sm:px-6">
+      <div id="tabBar" class="flex gap-1 rounded-xl border border-[#E8E4DC] bg-[#FAF8F3] p-1">
+        <button data-tab="idag" onclick="switchTab('idag')" class="tab-btn active relative whitespace-nowrap rounded-lg border border-transparent px-4 py-2 text-sm">I dag <span class="badge-dot absolute -right-0.5 -top-0.5"></span></button>
+        <button data-tab="journal" onclick="switchTab('journal')" class="tab-btn whitespace-nowrap rounded-lg border border-transparent px-4 py-2 text-sm text-[#6B7280]">Journal</button>
+        <button data-tab="plan" onclick="switchTab('plan')" class="tab-btn whitespace-nowrap rounded-lg border border-transparent px-4 py-2 text-sm text-[#6B7280]">Plan &amp; kalender <span class="ml-1 rounded-full bg-[#DC2626] px-1.5 text-[10px] font-bold text-white">3</span></button>
+        <button data-tab="medicin" onclick="switchTab('medicin')" class="tab-btn whitespace-nowrap rounded-lg border border-transparent px-4 py-2 text-sm text-[#6B7280]">Medicin</button>
+        <button data-tab="recovery" onclick="switchTab('recovery')" class="tab-btn whitespace-nowrap rounded-lg border border-transparent px-4 py-2 text-sm text-[#6B7280]">Recovery</button>
+        <button data-tab="beskeder" onclick="switchTab('beskeder')" class="tab-btn whitespace-nowrap rounded-lg border border-transparent px-4 py-2 text-sm text-[#6B7280]">Beskeder <span class="ml-1 rounded-full bg-[#DC2626] px-1.5 text-[10px] font-bold text-white">2</span></button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+    <!-- TAB 1: I DAG -->
+    <section id="panel-idag" class="tab-panel active space-y-5">
+      <!-- C1 AI Borger-overblik -->
+      <article class="ai-card p-5 sm:p-6">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-2 text-xs text-[#6B7280]">
+          <span class="flex items-center gap-2"><span>🧭</span> Fagligt overblik · Genereret i morges kl. 07:30</span>
+          <span class="rounded-full border border-[#D4C4A8] bg-white/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#8B7355]">AI-genereret</span>
+        </div>
+        <h2 class="font-serif mb-4 text-2xl text-[#1A2332]">Sara DEMO Kristensen — fagligt overblik</h2>
+        <dl class="grid gap-4 sm:grid-cols-2">
+          <div><dt class="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">Status</dt><dd class="mt-1 text-sm">Tre gule dage på 7 — let nedadgående tendens</dd>
+            <svg class="mt-2 h-8 w-full max-w-xs" viewBox="0 0 120 24"><circle cx="10" cy="12" r="5" fill="#EAB308"/><circle cx="30" cy="12" r="5" fill="#EAB308"/><circle cx="50" cy="12" r="5" fill="#16A34A"/><circle cx="70" cy="12" r="5" fill="#EAB308"/><circle cx="90" cy="12" r="5" fill="#EAB308"/><circle cx="110" cy="10" r="5" fill="#EAB308"/><polyline points="10,12 30,12 50,12 70,12 90,12 110,10" fill="none" stroke="#D4C4A8" stroke-width="1.5"/></svg>
+          </div>
+          <div class="sm:col-span-2"><dt class="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">Sidste 1–3 dage</dt><dd class="mt-1 text-sm leading-relaxed">Søndag aften: paranoid tematik i Lys-samtale om naboer. Mandag og tirsdag: lavt energiniveau, færre samtaler initieret. Søvn under 5 timer to nætter i træk.</dd></div>
+          <div class="sm:col-span-2"><dt class="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">Nærmeste fremtid</dt><dd class="mt-1 text-sm leading-relaxed">I dag 10:00 CTI-samtale med Mette DEMO Holm (kommunens sagsbehandler). Torsdag: pårørende-besøg fra moren — historisk en udfordrende dag for Sara.</dd></div>
+          <div class="sm:col-span-2"><dt class="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">Faglig anbefaling</dt><dd class="mt-1 text-sm leading-relaxed">Tilbyd struktureret én-til-én samtale i dag, gerne i kendt miljø. Undgå pres om social aktivitet. Overvej forberedende samtale før torsdagens pårørende-besøg.</dd></div>
+          <div class="sm:col-span-2"><dt class="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">Mestring der virker</dt><dd class="mt-1 text-sm">Tegne-tid (5× sidste uge, alle positive), gåtur med Lars DEMO Nielsen (3×), telefonopkald med søster Anna DEMO Kristensen</dd></div>
+        </dl>
+        <div class="relative mt-6 flex flex-wrap items-center gap-3 border-t border-[#D4C4A8]/50 pt-4">
+          <button type="button" onclick="toggleAiChat()" class="rounded-xl px-4 py-2.5 text-sm font-semibold text-white" style="background: var(--accent);">Spørg AI om Sara <span class="ml-1 rounded bg-white/20 px-1.5 text-[10px]">Organisation</span></button>
+          <button type="button" onclick="openSources()" class="rounded-xl border border-[#E8E4DC] bg-white px-4 py-2.5 text-sm font-medium hover:bg-[#FAF8F3]">Vis kilder</button>
+          <p class="w-full text-xs text-[#6B7280]">Næste opdatering i morgen kl. 07:30 · Vagtskifte-brief kl. 14:30 og 22:00</p>
+          <div id="aiChatPopover" class="popover card p-4 shadow-lg">
+            <p class="mb-2 text-xs font-semibold text-[#6B7280]">Spørg AI om Sara</p>
+            <textarea class="w-full rounded-lg border border-[#E8E4DC] p-2 text-sm" rows="2" placeholder="Fx: Hvad skete sidst mor var på besøg?"></textarea>
+            <button type="button" class="mt-2 w-full rounded-lg py-2 text-sm font-semibold text-white" style="background: var(--accent);">Send</button>
+          </div>
+        </div>
+      </article>
+
+      <!-- C2 Safety event -->
+      <article class="card border-l-4 p-5" style="border-left-color: var(--tl-red);">
+        <h3 class="font-semibold text-[#DC2626]">AI har registreret muligt eskalationstegn</h3>
+        <p class="mt-2 text-sm text-[#6B7280]">Søvn under 5 timer i 2 nætter + paranoid tematik i Lys-samtale søndag aften. Overvej kontakt til behandler.</p>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button type="button" onclick="openSources()" class="rounded-lg border px-3 py-1.5 text-sm hover:bg-[#FAF8F3]">Se kilder</button>
+          <button type="button" onclick="this.closest('article').style.opacity='0.5'" class="rounded-lg border px-3 py-1.5 text-sm hover:bg-[#FAF8F3]">Marker som set</button>
+          <button type="button" class="rounded-lg px-3 py-1.5 text-sm font-medium text-white" style="background: var(--tl-red);">Eskalér til kontaktpædagog</button>
+        </div>
+      </article>
+
+      <!-- C3 Grid -->
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div class="card p-4">
+          <h4 class="text-sm font-semibold">Seneste check-in</h4>
+          <p class="mt-1 text-xs text-[#6B7280]">I morges 09:14</p>
+          <div class="mt-3 space-y-2 text-xs">
+            <div><span class="text-[#6B7280]">Forbundethed</span><div class="chime-bar mt-0.5"><div class="chime-fill" style="width:60%"></div></div></div>
+            <div><span class="text-[#6B7280]">Håb</span><div class="chime-bar mt-0.5"><div class="chime-fill" style="width:40%"></div></div></div>
+            <div><span class="text-[#6B7280]">Identitet</span><div class="chime-bar mt-0.5"><div class="chime-fill" style="width:80%"></div></div></div>
+            <div><span class="text-[#6B7280]">Mening</span><div class="chime-bar mt-0.5"><div class="chime-fill" style="width:60%"></div></div></div>
+            <div><span class="text-[#6B7280]">Bemyndigelse</span><div class="chime-bar mt-0.5"><div class="chime-fill" style="width:40%"></div></div></div>
+          </div>
+        </div>
+        <div class="card p-4">
+          <h4 class="text-sm font-semibold">Dagens plan</h4>
+          <ul class="mt-3 space-y-2 text-sm">
+            <li class="flex gap-2"><input type="checkbox" /> <span><strong>10:00</strong> CTI-samtale</span></li>
+            <li class="flex gap-2"><input type="checkbox" /> <span><strong>12:00</strong> Frokost fælles</span></li>
+            <li class="flex gap-2"><input type="checkbox" /> <span><strong>14:00</strong> Hvile/egentid</span></li>
+            <li class="flex gap-2"><input type="checkbox" /> <span><strong>18:00</strong> Aftens-check-in</span></li>
+          </ul>
+        </div>
+        <div class="card p-4">
+          <h4 class="text-sm font-semibold">Stemning over 14 dage</h4>
+          <svg class="mt-3 h-16 w-full" viewBox="0 0 280 48"><text x="0" y="44" font-size="8" fill="#6B7280">6/5</text>
+            <circle cx="20" cy="20" r="4" fill="#16A34A"/><circle cx="40" cy="18" r="4" fill="#16A34A"/><circle cx="60" cy="28" r="4" fill="#EAB308"/><circle cx="80" cy="30" r="4" fill="#EAB308"/><circle cx="100" cy="22" r="4" fill="#16A34A"/><circle cx="120" cy="26" r="4" fill="#EAB308"/><circle cx="140" cy="32" r="4" fill="#DC2626"/><circle cx="160" cy="24" r="4" fill="#EAB308"/><circle cx="180" cy="20" r="4" fill="#16A34A"/><circle cx="200" cy="28" r="4" fill="#EAB308"/><circle cx="220" cy="30" r="4" fill="#EAB308"/><circle cx="240" cy="26" r="4" fill="#EAB308"/><circle cx="260" cy="28" r="4" fill="#EAB308"/>
+            <text x="250" y="44" font-size="8" fill="#6B7280">i dag</text></svg>
+        </div>
+        <div class="card p-4">
+          <h4 class="text-sm font-semibold">Seneste journal-uddrag</h4>
+          <button type="button" onclick="switchTab('journal')" class="clickable mt-3 block w-full rounded-lg border border-[#E8E4DC] p-3 text-left text-xs hover:bg-[#FAF8F3]">
+            <span class="font-semibold">Lars DEMO Nielsen</span> · 19. maj · <span class="rounded bg-[#E8F3ED] px-1 text-[#2D6A4F]">observation</span><br/>Sara rolig efter morgenmad, ønsker ikke fællesaktivitet.
+          </button>
+          <button type="button" onclick="switchTab('journal')" class="clickable mt-2 block w-full rounded-lg border border-[#E8E4DC] p-3 text-left text-xs hover:bg-[#FAF8F3]">
+            <span class="font-semibold">Peter DEMO Jensen</span> · 18. maj · <span class="rounded bg-amber-100 px-1 text-amber-800">samtale</span><br/>Kort check-in, træt men samarbejdsvillig.
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: JOURNAL -->
+    <section id="panel-journal" class="tab-panel space-y-5">
+      <div class="card p-4">
+        <h3 class="font-semibold">Skriv journal</h3>
+        <textarea class="mt-2 w-full rounded-xl border border-[#E8E4DC] p-3 text-sm" rows="3" placeholder="Observation, samtale eller refleksion…"></textarea>
+        <div class="mt-2 flex flex-wrap gap-2">
+          <select class="rounded-lg border border-[#E8E4DC] px-3 py-2 text-sm"><option>observation</option><option>samtale</option><option>refleksion</option><option>krise</option></select>
+          <button type="button" class="rounded-full border px-3 py-1 text-xs">S1</button>
+          <button type="button" class="rounded-full border px-3 py-1 text-xs">S2</button>
+          <button type="button" class="rounded-full border px-3 py-1 text-xs bg-[#E8F3ED] text-[#2D6A4F]">S3</button>
+        </div>
+        <button type="button" class="mt-3 rounded-xl px-4 py-2 text-sm font-semibold text-white" style="background:var(--accent)">Gem</button>
+      </div>
+      <div class="flex flex-wrap gap-2 text-sm">
+        <span class="rounded-full bg-[#E8F3ED] px-3 py-1 font-medium text-[#2D6A4F]">Alle</span>
+        <span class="rounded-full border px-3 py-1">observation</span>
+        <span class="rounded-full border px-3 py-1">samtale</span>
+        <span class="rounded-full border px-3 py-1">S1</span>
+        <span class="rounded-full border px-3 py-1">S2</span>
+      </div>
+      <div id="journalFeed" class="space-y-3"></div>
+    </section>
+
+    <!-- TAB 3: PLAN -->
+    <section id="panel-plan" class="tab-panel space-y-5">
+      <div class="inline-flex rounded-xl border border-[#E8E4DC] bg-white p-1">
+        <button class="rounded-lg px-4 py-2 text-sm text-[#6B7280]">Dag</button>
+        <button class="rounded-lg bg-[#E8F3ED] px-4 py-2 text-sm font-semibold text-[#2D6A4F]">Uge</button>
+        <button class="rounded-lg px-4 py-2 text-sm text-[#6B7280]">Måned</button>
+      </div>
+      <div class="grid gap-4 lg:grid-cols-3">
+        <div class="card overflow-x-auto p-3 lg:col-span-2">
+          <div class="grid min-w-[600px] grid-cols-8 gap-px text-[10px]">
+            <div class="p-1 text-[#6B7280]"></div>
+            <div class="p-1 text-center font-medium">Man</div><div class="p-1 text-center font-medium">Tir</div><div class="p-1 text-center font-medium">Ons</div><div class="p-1 text-center font-medium">Tor</div><div class="p-1 text-center font-medium">Fre</div><div class="p-1 text-center font-medium">Lør</div><div class="p-1 text-center font-medium">Søn</div>
+            <div class="p-1 text-[#6B7280]">07</div><div class="col-span-7 row-span-12 grid grid-cols-7 gap-1 relative" style="min-height:280px" id="weekGrid"></div>
+          </div>
+        </div>
+        <div class="card p-4">
+          <h4 class="font-semibold">Recovery-mål</h4>
+          <div class="mt-4 space-y-4">
+            <div><p class="text-sm">Genopbygge tillid til omverden</p><div class="chime-bar mt-1"><div class="chime-fill" style="width:40%"></div></div><p class="text-xs text-[#6B7280]">40%</p></div>
+            <div><p class="text-sm">Etablere stabil søvnrytme</p><div class="chime-bar mt-1"><div class="chime-fill" style="width:65%"></div></div><p class="text-xs text-[#6B7280]">65%</p></div>
+            <div><p class="text-sm">Genoptage kontakt til søster</p><div class="chime-bar mt-1"><div class="chime-fill" style="width:80%"></div></div><p class="text-xs text-[#6B7280]">80%</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: MEDICIN -->
+    <section id="panel-medicin" class="tab-panel space-y-4">
+      <div class="card p-5">
+        <div class="flex justify-between"><h3 class="font-semibold">Olanzapin 10 mg</h3><span class="rounded-full bg-[#E8F3ED] px-2 py-0.5 text-xs text-[#2D6A4F]">aktiv</span></div>
+        <p class="text-sm text-[#6B7280]">1× dagligt aften · Dr. Hansen</p>
+        <div class="mt-3 flex flex-wrap gap-1 text-xs" id="med1"></div>
+      </div>
+      <div class="card p-5">
+        <div class="flex justify-between"><h3 class="font-semibold">Mirtazapin 30 mg</h3><span class="rounded-full bg-[#E8F3ED] px-2 py-0.5 text-xs text-[#2D6A4F]">aktiv</span></div>
+        <p class="text-sm text-[#6B7280]">1× dagligt aften · Dr. Hansen</p>
+        <div class="mt-3 flex flex-wrap gap-1 text-xs" id="med2"></div>
+      </div>
+      <button type="button" class="rounded-xl border border-dashed border-[#2D6A4F] px-4 py-3 text-sm font-medium text-[#2D6A4F]">+ Tilføj medicin</button>
+    </section>
+
+    <!-- TAB 5: RECOVERY -->
+    <section id="panel-recovery" class="tab-panel space-y-5">
+      <div class="card p-5">
+        <h3 class="font-serif text-xl">Recovery-profil</h3>
+        <canvas id="radarChart" class="mx-auto mt-4 max-h-64 max-w-sm"></canvas>
+      </div>
+      <div>
+        <h3 class="mb-3 font-semibold">Lys-samtaler</h3>
+        <div class="grid gap-3 sm:grid-cols-2" id="convList"></div>
+      </div>
+      <div>
+        <h3 class="mb-3 font-semibold">Refleksioner</h3>
+        <div class="space-y-2" id="reflList"></div>
+      </div>
+      <div class="card overflow-hidden">
+        <button type="button" onclick="toggleCollapse('crisis')" class="flex w-full items-center justify-between p-4 text-left font-semibold">Kriseplan <span id="crisisIcon">▼</span></button>
+        <div id="crisis" class="collapsible-body open border-t border-[#E8E4DC] px-4 pb-4">
+          <p class="mt-3 text-sm"><strong>Triggers:</strong> høje lyde, uventede besøg, manglende søvn under 5 timer</p>
+          <p class="mt-2 text-sm"><strong>Advarselssignaler:</strong> tilbagetrækning, øget rygning, paranoid tematik om naboer</p>
+          <p class="mt-2 text-sm"><strong>Mestring:</strong> tegne-tid, gåtur med Lars, telefon med søster</p>
+          <p class="mt-2 text-sm"><strong>Akut:</strong> Lars (kontaktpædagog), Dr. Hansen, 112</p>
+        </div>
+      </div>
+      <div>
+        <h3 class="mb-3 font-semibold">Recovery-historier</h3>
+        <div class="card p-4"><p class="text-sm italic">«Da jeg tegnede i stuen i mandags, følte jeg ro i kroppen for første gang den uge…»</p><button class="mt-2 text-sm font-medium text-[#2D6A4F]">Læs hele</button></div>
+        <div class="card mt-2 p-4"><p class="text-sm italic">«Gåturen med Lars hjalp mig at sortere tankerne om naboerne…»</p><button class="mt-2 text-sm font-medium text-[#2D6A4F]">Læs hele</button></div>
+      </div>
+    </section>
+
+    <!-- TAB 6: BESKEDER -->
+    <section id="panel-beskeder" class="tab-panel space-y-5">
+      <div class="space-y-2" id="threadList"></div>
+      <h3 class="mt-6 font-semibold">Netværk</h3>
+      <div class="grid gap-3 sm:grid-cols-2" id="networkCards"></div>
+    </section>
+  </main>
+
+  <!-- Settings modal -->
+  <div id="settingsModal" class="modal-backdrop" onclick="if(event.target===this)closeSettings()">
+    <div class="card max-h-[90vh] w-full max-w-md overflow-y-auto p-6" onclick="event.stopPropagation()">
+      <h2 class="font-serif text-xl">Tilpas borger-visning</h2>
+      <p class="mt-2 text-sm text-[#6B7280]">Træk fanerne i den rækkefølge der passer dig bedst. Indstillingen gælder alle borgere du tilgår.</p>
+      <ul id="sortableTabs" class="mt-4 space-y-2">
+        <li class="flex items-center gap-2 rounded-lg border border-[#E8E4DC] bg-white p-3" data-tab="idag"><span class="drag-handle">⠿</span> I dag</li>
+        <li class="flex items-center gap-2 rounded-lg border border-[#E8E4DC] bg-white p-3" data-tab="journal"><span class="drag-handle">⠿</span> Journal</li>
+        <li class="flex items-center gap-2 rounded-lg border border-[#E8E4DC] bg-white p-3" data-tab="plan"><span class="drag-handle">⠿</span> Plan &amp; kalender</li>
+        <li class="flex items-center gap-2 rounded-lg border border-[#E8E4DC] bg-white p-3" data-tab="medicin"><span class="drag-handle">⠿</span> Medicin</li>
+        <li class="flex items-center gap-2 rounded-lg border border-[#E8E4DC] bg-white p-3" data-tab="recovery"><span class="drag-handle">⠿</span> Recovery</li>
+        <li class="flex items-center gap-2 rounded-lg border border-[#E8E4DC] bg-white p-3" data-tab="beskeder"><span class="drag-handle">⠿</span> Beskeder</li>
+      </ul>
+      <label class="mt-4 block text-sm font-medium">Default fane ved åbning</label>
+      <select id="defaultTab" class="mt-1 w-full rounded-lg border border-[#E8E4DC] p-2 text-sm">
+        <option value="idag">I dag</option><option value="journal">Journal</option><option value="plan">Plan &amp; kalender</option><option value="medicin">Medicin</option><option value="recovery">Recovery</option><option value="beskeder">Beskeder</option>
+      </select>
+      <div class="mt-6 flex gap-2">
+        <button type="button" onclick="closeSettings()" class="flex-1 rounded-xl py-2.5 text-sm font-semibold text-white" style="background:var(--accent)">Gem</button>
+        <button type="button" onclick="resetTabs()" class="rounded-xl border px-4 py-2.5 text-sm">Nulstil</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sources modal -->
+  <div id="sourcesModal" class="modal-backdrop" onclick="if(event.target===this)closeSources()">
+    <div class="card max-h-[85vh] w-full max-w-lg overflow-y-auto p-6" onclick="event.stopPropagation()">
+      <h2 class="font-serif text-xl">Kilder til overblik</h2>
+      <ul class="mt-4 space-y-3 text-sm" id="sourcesList"></ul>
+      <button type="button" onclick="closeSources()" class="mt-4 w-full rounded-xl border py-2 text-sm">Luk</button>
+    </div>
+  </div>
+
+  <script>
+    const DEFAULT_TAB_ORDER = ['idag','journal','plan','medicin','recovery','beskeder'];
+    const TAB_LABELS = { idag:'I dag', journal:'Journal', plan:'Plan & kalender', medicin:'Medicin', recovery:'Recovery', beskeder:'Beskeder' };
+
+    function switchTab(id) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.classList.add('text-[#6B7280]'); });
+      document.getElementById('panel-' + id)?.classList.add('active');
+      const btn = document.querySelector('[data-tab="'+id+'"]');
+      if (btn) { btn.classList.add('active'); btn.classList.remove('text-[#6B7280]'); }
+      if (id === 'recovery' && !window.radarDone) initRadar();
+    }
+    function openSettings() { document.getElementById('settingsModal').classList.add('open'); }
+    function closeSettings() { document.getElementById('settingsModal').classList.remove('open'); }
+    function openSources() { document.getElementById('sourcesModal').classList.add('open'); }
+    function closeSources() { document.getElementById('sourcesModal').classList.remove('open'); }
+    function toggleAiChat() { document.getElementById('aiChatPopover').classList.toggle('open'); }
+    function toggleCollapse(id) {
+      const el = document.getElementById(id);
+      el.classList.toggle('open');
+      document.getElementById('crisisIcon').textContent = el.classList.contains('open') ? '▼' : '▶';
+    }
+    function resetTabs() {
+      const ul = document.getElementById('sortableTabs');
+      DEFAULT_TAB_ORDER.forEach(t => {
+        const li = ul.querySelector('[data-tab="'+t+'"]');
+        if (li) ul.appendChild(li);
+      });
+      document.getElementById('defaultTab').value = 'idag';
+    }
+
+    const journals = [
+      { who:'Lars DEMO Nielsen', date:'20. maj 2026', cat:'observation', park:['S2'], text:'Sara rolig efter morgenmad. Afviste fællesaktivitet uden konflikt.' },
+      { who:'Anne DEMO Sørensen', date:'19. maj 2026', cat:'samtale', park:['S1'], text:'Kort leder-samtale om torsdagens pårørende-besøg — Sara bekymret men villig til forberedelse.' },
+      { who:'Peter DEMO Jensen', date:'18. maj 2026', cat:'observation', park:[], text:'Nattevagt: sov 4,5 timer ifølge egen opgivelse. Ingen akutte hændelser.' },
+      { who:'Lars DEMO Nielsen', date:'17. maj 2026', cat:'refleksion', park:['S3'], text:'Opfølgning på søndagens Lys-samtale — paranoid tematik om naboer, ingen eskalation i mødet.' },
+      { who:'Peter DEMO Jensen', date:'16. maj 2026', cat:'samtale', park:['S2'], text:'Gåtur 20 min med Lars, humør lettet bagefter.' },
+      { who:'Lars DEMO Nielsen', date:'15. maj 2026', cat:'observation', park:['S1'], text:'Mor-besøg lørdag — Sara trækker sig efter besøg, gul trafiklys.' },
+      { who:'Anne DEMO Sørensen', date:'14. maj 2026', cat:'krise', park:['S3'], text:'Journalnotat: mønster efter mor-besøg dokumenteret. Plan forberedende samtale.' },
+      { who:'Lars DEMO Nielsen', date:'13. maj 2026', cat:'observation', park:[], text:'Tegne-tid 45 min, positiv feedback fra Sara.' },
+      { who:'Peter DEMO Jensen', date:'12. maj 2026', cat:'samtale', park:['S2'], text:'Telefon med søster Anna — god samtale, kort varighed.' },
+      { who:'Lars DEMO Nielsen', date:'11. maj 2026', cat:'observation', park:['S1'], text:'Medicin givet til tiden. Ingen bivirkninger rapporteret.' },
+      { who:'Peter DEMO Jensen', date:'10. maj 2026', cat:'refleksion', park:[], text:'Ugentlig CHIME-refleksion gennemgået — håb-score lav.' },
+      { who:'Anne DEMO Sørensen', date:'9. maj 2026', cat:'observation', park:['S2'], text:'Deltog i fællesspisning 15 min, derefter egentid.' },
+    ];
+    document.getElementById('journalFeed').innerHTML = journals.map(j => `
+      <article class="card p-4 hover:shadow-md">
+        <div class="flex gap-3">
+          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#E8F3ED] text-xs font-bold text-[#2D6A4F]">${j.who.split(' ').map(n=>n[0]).join('').slice(0,2)}</div>
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap gap-2 text-xs"><span class="font-semibold">${j.who}</span><span class="text-[#6B7280]">${j.date}</span>
+              <span class="rounded bg-[#FAF8F3] px-1.5">${j.cat}</span>${j.park.map(p=>`<span class="rounded bg-amber-50 px-1.5 text-amber-800">${p}</span>`).join('')}</div>
+            <p class="mt-2 text-sm leading-relaxed">${j.text}</p>
+          </div>
+        </div>
+      </article>`).join('');
+
+    const events = [
+      { day:1, top:8, h:3, color:'#2D6A4F', title:'Morgenmad' },
+      { day:2, top:12, h:2, color:'#2563EB', title:'CTI-samtale' },
+      { day:3, top:20, h:2, color:'#7C3AED', title:'Tegne-tid' },
+      { day:4, top:28, h:2, color:'#2D6A4F', title:'Frokost' },
+      { day:5, top:40, h:3, color:'#DC2626', title:'Mor-besøg' },
+      { day:2, top:48, h:2, color:'#2563EB', title:'1:1 Lars' },
+      { day:6, top:56, h:2, color:'#7C3AED', title:'Gåtur' },
+      { day:0, top:64, h:2, color:'#2D6A4F', title:'Aftensmad' },
+      { day:3, top:72, h:2, color:'#EAB308', title:'Check-in' },
+      { day:4, top:80, h:2, color:'#2563EB', title:'Lys-samtale' },
+    ];
+    const wg = document.getElementById('weekGrid');
+    events.forEach(e => {
+      const d = document.createElement('div');
+      d.className = 'event-block absolute cursor-grab';
+      d.style.cssText = `left:${(e.day/7)*100}%; width:13%; top:${e.top}px; height:${e.h*12}px; background:${e.color}`;
+      d.innerHTML = '⠿ '+e.title;
+      wg.appendChild(d);
+    });
+
+    ['LN','LN','LN','LN','LN','LN','LN','LN','LN','LN','LN','LN','LN','LN'].forEach((ini,i) => {
+      const s = i<7 ? 'bg-[#E8F3ED] text-[#2D6A4F]' : 'bg-gray-100';
+      document.getElementById('med1').innerHTML += `<span class="inline-flex h-6 w-6 items-center justify-center rounded ${s}">${ini}</span>`;
+      document.getElementById('med2').innerHTML += `<span class="inline-flex h-6 w-6 items-center justify-center rounded ${s}">${ini}</span>`;
+    });
+
+    const convs = [
+      { title:'Søndag aften (paranoid tematik)', date:'17. maj', msgs:24, flag:true },
+      { title:'Mandag — lav energi', date:'18. maj', msgs:8, flag:false },
+      { title:'Tirsdag check-in', date:'19. maj', msgs:12, flag:false },
+      { title:'Onsdag morgen', date:'20. maj', msgs:5, flag:false },
+      { title:'Ugentlig refleksion', date:'15. maj', msgs:18, flag:false },
+      { title:'Plan for ugen', date:'12. maj', msgs:9, flag:false },
+    ];
+    document.getElementById('convList').innerHTML = convs.map(c => `
+      <div class="card clickable cursor-pointer p-4 hover:border-[#2D6A4F] ${c.flag?'border-l-4 border-l-red-500':''}">
+        <p class="font-medium">${c.title}</p><p class="text-xs text-[#6B7280]">${c.date} · ${c.msgs} beskeder</p>
+      </div>`).join('');
+
+    const refls = ['Situation: Følte mig overvåget i fællesstuen. Styrke: Tegning hjalp.', 'Valgte at gå en kort tur med Lars i stedet for at isolere mig.', 'Håb-score lav — savner mere kontakt til søster.', 'Mening: Vil gerne bidrage til fælles middag næste uge, på mine præmisser.'];
+    document.getElementById('reflList').innerHTML = refls.map(r => `<div class="card p-3 text-sm">${r}</div>`).join('');
+
+    const threads = [
+      { sub:'CTI-forberedelse med Mette', preview:'Kan vi koordinere kl. 10 i dag?', unread:1 },
+      { sub:'Pårørende-besøg torsdag', preview:'Lone har bekræftet ankomst 14:00', unread:1 },
+      { sub:'Intern: vagtoverlevering', preview:'Peter: medicin OK', unread:0 },
+      { sub:'Lars ↔ Sara opfølgning', preview:'Tak for notat i journal', unread:0 },
+      { sub:'Anna (søster)', preview:'Håber det går bedre', unread:0 },
+    ];
+    document.getElementById('threadList').innerHTML = threads.map(t => `
+      <div class="card clickable flex cursor-pointer justify-between p-4 hover:bg-[#FAF8F3]">
+        <div><p class="font-medium">${t.sub}</p><p class="text-sm text-[#6B7280]">${t.preview}</p></div>
+        ${t.unread ? '<span class="rounded-full bg-red-500 px-2 py-0.5 text-xs text-white">'+t.unread+'</span>' : ''}
+      </div>`).join('');
+
+    const net = [
+      { name:'Lars DEMO Nielsen', role:'Kontaktpædagog' },
+      { name:'Mette DEMO Holm', role:'Sagsbehandler, Aalborg Kommune' },
+      { name:'Lone DEMO Kristensen', role:'Mor' },
+      { name:'Anna DEMO Kristensen', role:'Søster' },
+    ];
+    document.getElementById('networkCards').innerHTML = net.map(n => `
+      <div class="card p-4">
+        <p class="font-semibold">${n.name}</p><p class="text-xs text-[#6B7280]">${n.role}</p>
+        <div class="mt-3 flex gap-2"><button class="rounded-lg border px-3 py-1.5 text-xs">📞 Ring</button><button class="rounded-lg px-3 py-1.5 text-xs text-white" style="background:var(--accent)">Besked</button></div>
+      </div>`).join('');
+
+    const sources = [
+      { type:'Journal', date:'17. maj', text:'Lys-samtale om naboer — paranoid tematik' },
+      { type:'Check-in', date:'20. maj', text:'Trafiklys gul, humør 4/10' },
+      { type:'Check-in', date:'19. maj', text:'Søvn under 5 timer' },
+      { type:'Samtale', date:'18. maj', text:'Lav energi, færre beskeder i Lys' },
+      { type:'Journal', date:'15. maj', text:'Mor-besøg — efterfølgende tilbagetrækning' },
+      { type:'Plan', date:'20. maj', text:'CTI kl. 10 med Mette' },
+      { type:'Medicin', date:'19. maj', text:'Olanzapin + Mirtazapin givet' },
+      { type:'Mestring', date:'Uge 20', text:'Gåtur med Lars 5× positiv' },
+    ];
+    document.getElementById('sourcesList').innerHTML = sources.map(s => `<li class="rounded-lg border border-[#E8E4DC] p-3"><span class="text-xs font-semibold text-[#2D6A4F]">${s.type}</span> · ${s.date}<br/>${s.text}</li>`).join('');
+
+    window.radarDone = false;
+    function initRadar() {
+      window.radarDone = true;
+      new Chart(document.getElementById('radarChart'), {
+        type: 'radar',
+        data: {
+          labels: ['Forbundethed','Håb','Identitet','Mening','Bemyndigelse'],
+          datasets: [{ label: 'Denne uge', data: [3,2,4,3,2], borderColor:'#2D6A4F', backgroundColor:'rgba(45,106,79,0.15)' }]
+        },
+        options: { scales: { r: { min:0, max:5, ticks:{ stepSize:1 } } }, plugins:{ legend:{ display:false } } }
+      });
+    }
+
+    new Sortable(document.getElementById('sortableTabs'), { handle: '.drag-handle', animation: 150 });
+  </script>
+</body>
+</html>
