@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="da">
+<html lang="da" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,42 +8,74 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
   <style>
+    /* BUDR Design System v1.0 — lys Care Portal. Retning: Varm præcision. */
     :root {
-      --bg: #FAF8F3;
-      --surface: #FFFFFF;
-      --text: #1A2332;
-      --muted: #6B7280;
-      --accent: #2D6A4F;
-      --accent-light: #E8F3ED;
-      --border: #E8E4DC;
-      --shadow: 0 4px 24px rgba(26, 35, 50, 0.06);
-      --tl-green: #16A34A;
-      --tl-yellow: #EAB308;
-      --tl-red: #DC2626;
-      --ai-from: #FFF9F0;
-      --ai-to: #F5F0E8;
-      --ai-border: #D4C4A8;
+      --bg-canvas: #faf7f2;
+      --bg-surface: #ffffff;
+      --bg-surface-2: #f5f2ec;
+      --text-primary: #1a1a1a;
+      --text-secondary: #4a4a4a;
+      --text-tertiary: #7a7a7a;
+      --border-default: #d9d2c5;
+      --brand-teal: #1d9e75;
+      --brand-teal-surface: #e1f5ee;
+      --brand-blue: #378add;
+      --brand-blue-surface: #e6f1fb;
+      --traffic-green: #16a34a;
+      --traffic-yellow: #eab308;
+      --traffic-red: #dc2626;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --ai-from: #e1f5ee;
+      --ai-to: #e6f1fb;
+      --ai-border: #9fe1cb;
+      --bg: var(--bg-canvas);
+      --surface: var(--bg-surface);
+      --text: var(--text-primary);
+      --muted: var(--text-tertiary);
+      --accent: var(--brand-teal);
+      --accent-light: var(--brand-teal-surface);
+      --border: var(--border-default);
+      --shadow: var(--shadow-md);
+      --tl-green: var(--traffic-green);
+      --tl-yellow: var(--traffic-yellow);
+      --tl-red: var(--traffic-red);
     }
-    body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); }
-    .font-serif { font-family: 'DM Serif Display', Georgia, serif; }
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); }
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      background: var(--bg-canvas);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+    }
+    .font-serif { font-family: 'DM Serif Display', Georgia, serif; font-weight: 400; }
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+    }
     .ai-card {
       background: linear-gradient(135deg, var(--ai-from) 0%, var(--ai-to) 100%);
       border: 1px solid var(--ai-border);
-      border-radius: 16px;
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-md);
     }
     .week-cell { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
   </style>
 </head>
 <body class="min-h-screen pb-12">
-  <header class="border-b border-[#E8E4DC] bg-white">
+  <header class="border-b border-[#d9d2c5] bg-white">
     <div class="mx-auto max-w-4xl px-4 py-6 sm:px-6">
-      <p class="text-xs text-[#6B7280]">Genereret søndag 17. maj kl. 20:00</p>
+      <p class="text-xs text-[#7a7a7a]">Genereret søndag 17. maj kl. 20:00</p>
       <h1 class="font-serif mt-1 text-2xl sm:text-3xl">Ugentlig mønster-rapport · Sara DEMO Kristensen</h1>
-      <p class="mt-1 text-sm text-[#6B7280]">Uge 20, 2026 · BUDR Demo Botilbud</p>
-      <span class="mt-3 inline-block rounded-full border border-[#D4C4A8] bg-[#FFF9F0] px-2 py-0.5 text-[10px] font-semibold uppercase text-[#8B7355]">AI-genereret</span>
+      <p class="mt-1 text-sm text-[#7a7a7a]">Uge 20, 2026 · BUDR Demo Botilbud</p>
+      <span class="mt-3 inline-block rounded-full border border-[#D4C4A8] bg-[#e1f5ee] px-2 py-0.5 text-[10px] font-semibold uppercase text-[#5f5e5a]">AI-genereret</span>
     </div>
   </header>
 
@@ -57,7 +89,7 @@
     </article>
 
     <!-- C. Mønstre -->
-    <h2 class="text-sm font-semibold uppercase tracking-wide text-[#6B7280]">Mønstre &amp; indsigter</h2>
+    <h2 class="text-sm font-semibold uppercase tracking-wide text-[#7a7a7a]">Mønstre &amp; indsigter</h2>
 
     <article class="card p-5">
       <h3 class="font-semibold">Mor-besøg-mønstret</h3>
@@ -71,7 +103,7 @@
         <div class="text-center"><div class="week-cell bg-[#DC2626] text-white">Fre</div><p class="mt-1 text-[9px]">rød</p></div>
         <div class="text-center"><div class="week-cell bg-purple-100 text-purple-800">Lør</div><p class="mt-1 text-[9px]">Mor</p></div>
       </div>
-      <p class="mt-4 text-sm leading-relaxed text-[#6B7280]">
+      <p class="mt-4 text-sm leading-relaxed text-[#7a7a7a]">
         På 3 ud af 3 dage efter mor-besøg har Sara haft gul/rød trafiklys. Bemærket først af Lars DEMO Nielsen i journal d. 14. maj. Anbefal samtale med Sara om relationen og evt. forberedende samtale før næste besøg.
       </p>
     </article>
@@ -79,29 +111,29 @@
     <article class="card p-5">
       <h3 class="font-semibold">Mestring der virker</h3>
       <ol class="mt-3 space-y-2 text-sm">
-        <li class="flex justify-between rounded-lg bg-[#E8F3ED] px-3 py-2"><span>1. Gåtur med Lars</span><span class="font-semibold text-[#2D6A4F]">5/5 positive (100%)</span></li>
-        <li class="flex justify-between rounded-lg bg-[#FAF8F3] px-3 py-2"><span>2. Tegne-tid</span><span>3/4 positive</span></li>
-        <li class="flex justify-between rounded-lg bg-[#FAF8F3] px-3 py-2"><span>3. Telefon med søster Anna</span><span>2/2 positive</span></li>
+        <li class="flex justify-between rounded-lg bg-[#e1f5ee] px-3 py-2"><span>1. Gåtur med Lars</span><span class="font-semibold text-[#1d9e75]">5/5 positive (100%)</span></li>
+        <li class="flex justify-between rounded-lg bg-[#f5f2ec] px-3 py-2"><span>2. Tegne-tid</span><span>3/4 positive</span></li>
+        <li class="flex justify-between rounded-lg bg-[#f5f2ec] px-3 py-2"><span>3. Telefon med søster Anna</span><span>2/2 positive</span></li>
       </ol>
-      <p class="mt-3 text-sm text-[#6B7280]">Gåtur med Lars: 5 brug, 5 positive udfald. Tegne-tid: 4 brug, 3 positive. Telefonopkald med søster: 2 brug, 2 positive.</p>
+      <p class="mt-3 text-sm text-[#7a7a7a]">Gåtur med Lars: 5 brug, 5 positive udfald. Tegne-tid: 4 brug, 3 positive. Telefonopkald med søster: 2 brug, 2 positive.</p>
     </article>
 
     <article class="card p-5">
       <h3 class="font-semibold">Søvn-mønster</h3>
       <canvas id="sleepChart" class="mt-4 max-h-48"></canvas>
-      <p class="mt-3 text-sm text-[#6B7280]">Gennemsnit 5,8 timer. Mandag og tirsdag under 5 timer (efter mor-besøg lørdag). Anbefal opfølgning på sove-rutine.</p>
+      <p class="mt-3 text-sm text-[#7a7a7a]">Gennemsnit 5,8 timer. Mandag og tirsdag under 5 timer (efter mor-besøg lørdag). Anbefal opfølgning på sove-rutine.</p>
     </article>
 
     <article class="card p-5">
       <h3 class="font-semibold">Recovery-progression (CHIME)</h3>
       <div class="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-5">
-        <div class="rounded-lg bg-[#E8F3ED] p-2 text-center"><p class="text-xs text-[#6B7280]">Forbundethed</p><p class="font-bold text-[#2D6A4F]">+1</p></div>
-        <div class="rounded-lg bg-red-50 p-2 text-center"><p class="text-xs text-[#6B7280]">Håb</p><p class="font-bold text-red-700">−1</p></div>
-        <div class="rounded-lg bg-[#FAF8F3] p-2 text-center"><p class="text-xs text-[#6B7280]">Identitet</p><p class="font-bold">0</p></div>
-        <div class="rounded-lg bg-[#E8F3ED] p-2 text-center"><p class="text-xs text-[#6B7280]">Mening</p><p class="font-bold text-[#2D6A4F]">+1</p></div>
-        <div class="rounded-lg bg-[#FAF8F3] p-2 text-center"><p class="text-xs text-[#6B7280]">Bemyndigelse</p><p class="font-bold">0</p></div>
+        <div class="rounded-lg bg-[#e1f5ee] p-2 text-center"><p class="text-xs text-[#7a7a7a]">Forbundethed</p><p class="font-bold text-[#1d9e75]">+1</p></div>
+        <div class="rounded-lg bg-red-50 p-2 text-center"><p class="text-xs text-[#7a7a7a]">Håb</p><p class="font-bold text-red-700">−1</p></div>
+        <div class="rounded-lg bg-[#f5f2ec] p-2 text-center"><p class="text-xs text-[#7a7a7a]">Identitet</p><p class="font-bold">0</p></div>
+        <div class="rounded-lg bg-[#e1f5ee] p-2 text-center"><p class="text-xs text-[#7a7a7a]">Mening</p><p class="font-bold text-[#1d9e75]">+1</p></div>
+        <div class="rounded-lg bg-[#f5f2ec] p-2 text-center"><p class="text-xs text-[#7a7a7a]">Bemyndigelse</p><p class="font-bold">0</p></div>
       </div>
-      <p class="mt-3 text-xs text-[#6B7280]">Denne uge vs. sidste uge (ugentlige refleksioner).</p>
+      <p class="mt-3 text-xs text-[#7a7a7a]">Denne uge vs. sidste uge (ugentlige refleksioner).</p>
     </article>
 
     <!-- D. Anbefalinger -->
@@ -115,9 +147,10 @@
     </article>
 
     <!-- E. Footer -->
-    <footer class="rounded-xl border border-dashed border-[#E8E4DC] bg-white p-4 text-center text-sm text-[#6B7280]">
+    <footer class="rounded-xl border border-dashed border-[#d9d2c5] bg-white p-4 text-center text-sm text-[#7a7a7a]">
       Næste mønster-rapport: <strong>søndag 24. maj kl. 20:00</strong><br/>
-      Sendes til <strong>Lars DEMO Nielsen</strong> som notifikation
+      Sendes til <strong>Lars DEMO Nielsen</strong> som notifikation<br/>
+      <span class="mt-2 inline-block text-[11px]">BUDR Design System v1.0 · <span class="font-serif text-[#1a1a1a]">Varm præcision</span></span>
     </footer>
   </main>
 
@@ -129,7 +162,7 @@
         datasets: [{
           label: 'Søvntimer',
           data: [4.2, 4.8, 6.1, 6.5, 5.2, 7.0, 5.9],
-          backgroundColor: ['#DC2626','#DC2626','#2D6A4F','#2D6A4F','#EAB308','#2D6A4F','#2D6A4F'],
+          backgroundColor: ['#DC2626','#DC2626','#1d9e75','#1d9e75','#EAB308','#1d9e75','#1d9e75'],
           borderRadius: 6
         }]
       },
