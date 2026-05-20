@@ -482,9 +482,7 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
         </div>
 
         {/* Tab content */}
-        {activeTab === 'i-dag' && (
-          <ResidentTodayTab residentId={residentId} residentName={resident.name} />
-        )}
+        {activeTab === 'i-dag' && <ResidentTodayTab residentName="Sara DEMO Kristensen" />}
 
         {activeTab === 'overblik' && (
           <>
