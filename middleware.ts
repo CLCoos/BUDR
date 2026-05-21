@@ -10,9 +10,6 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
 
-/** Tillader alle standard UUID-former (fx fra gen_random_uuid / crypto.randomUUID). */
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 /** Mislykkede park-/beboer-valideringer pr. IP (kun in-memory; single-instance). */
 const PARK_FAIL_TIMESTAMPS = new Map<string, number[]>();
 const PARK_FAIL_WINDOW_MS = 60_000;
@@ -111,10 +108,6 @@ function clearResidentCookies(res: NextResponse): void {
   };
   clear(RESIDENT_ID_COOKIE);
   clear(RESIDENT_SESSION_COOKIE);
-}
-
-function isUuid(value: string): boolean {
-  return UUID_RE.test(value.trim());
 }
 
 function getServiceClient() {
@@ -334,7 +327,7 @@ export async function middleware(req: NextRequest) {
       return redirectHomeClear(blocked);
     };
 
-    // HttpOnly session (preferred) — rollout: legacy cookie still accepted below
+    // Real resident access must come from the server-issued HttpOnly session.
     if (sessionToken) {
       const validation = await validateSessionToken(sessionToken);
       if (validation.valid) {
@@ -345,13 +338,7 @@ export async function middleware(req: NextRequest) {
       }
     }
 
-    const residentId = legacyResidentId;
-
-    // Under rollout: accept session OR legacy; after rollout remove legacy-only path
-    if (!sessionToken && !legacyResidentId) {
-      if (!allowParkDemoCookie()) {
-        return redirectHomeClear(false);
-      }
+    if (legacyResidentId === DEMO_RESIDENT_ID && allowParkDemoCookie()) {
       const res = NextResponse.next({ request: req });
       res.cookies.set(RESIDENT_ID_COOKIE, DEMO_RESIDENT_ID, {
         httpOnly: false,
@@ -363,30 +350,11 @@ export async function middleware(req: NextRequest) {
       return res;
     }
 
-    if (!residentId) {
-      return failAndMaybeBlock();
+    if (!sessionToken && !legacyResidentId) {
+      return redirectHomeClear(false);
     }
 
-    if (residentId === DEMO_RESIDENT_ID) {
-      if (allowParkDemoCookie()) {
-        return NextResponse.next();
-      }
-      return failAndMaybeBlock();
-    }
-
-    if (!isUuid(residentId)) {
-      return failAndMaybeBlock();
-    }
-
-    const exists = await residentExistsInDb(residentId);
-    if (exists === null) {
-      return failAndMaybeBlock();
-    }
-    if (!exists) {
-      return failAndMaybeBlock();
-    }
-
-    return NextResponse.next();
+    return failAndMaybeBlock();
   }
 
   return NextResponse.next();

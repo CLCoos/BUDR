@@ -1,8 +1,14 @@
 'use server';
 
 import { cookies } from 'next/headers';
+import {
+  LEGACY_COOKIE_NAME,
+  SESSION_COOKIE_NAME,
+  validateSessionToken,
+} from '@/lib/residentSessions';
 
-const COOKIE_NAME = 'budr_resident_id';
+const COOKIE_NAME = LEGACY_COOKIE_NAME;
+const DEMO_RESIDENT_ID = 'demo-resident-001';
 // 1 year — device security (Face ID / PIN / biometrics) handles access control
 const MAX_AGE = 60 * 60 * 24 * 365;
 
@@ -26,8 +32,26 @@ export async function clearResidentId(): Promise<void> {
 
 export async function getResidentId(): Promise<string | null> {
   const cookieStore = await cookies();
-  return cookieStore.get(COOKIE_NAME)?.value ?? null;
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value?.trim();
+  if (sessionToken) {
+    const validation = await validateSessionToken(sessionToken);
+    if (validation.valid) {
+      return validation.residentUserId;
+    }
+  }
+
+  const legacyResidentId = cookieStore.get(COOKIE_NAME)?.value?.trim();
+  if (legacyResidentId === DEMO_RESIDENT_ID && allowParkDemoCookie()) {
+    return legacyResidentId;
+  }
+
+  return null;
 }
 
 // Alias kept for call-site compatibility
 export const getResidentIdFromSession = getResidentId;
+
+function allowParkDemoCookie(): boolean {
+  if (process.env.NODE_ENV !== 'production') return true;
+  return process.env.BUDR_ALLOW_PARK_DEMO_COOKIE === 'true';
+}
