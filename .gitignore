@@ -1,6 +1,5 @@
 # Node modules
 node_modules/
-package-lock.json
 
 # Legacy / experimental app shell (not part of Next.js deploy)
 expo/
