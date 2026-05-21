@@ -18,18 +18,18 @@ Vær varsom: tvivl trækker OPAD i risikoniveau, ikke nedad. Hvis du er i tvivl 
 
 Returnér intet andet end JSON. Ingen forklaring uden for JSON. Ingen markdown.`;
 
-const FALLBACK_CLASSIFICATION: SafetyClassification = {
+export const FALLBACK_CLASSIFICATION: SafetyClassification = {
   risk_level: 'elevated',
   category: 'other',
   reasoning: 'klassifikator-fejl, eskaleret som forholdsregel',
 };
 
-function normalizeRiskLevel(value: unknown): SafetyClassification['risk_level'] {
+export function normalizeRiskLevel(value: unknown): SafetyClassification['risk_level'] {
   if (value === 'none' || value === 'elevated' || value === 'acute') return value;
   return 'elevated';
 }
 
-function normalizeCategory(value: unknown): string {
+export function normalizeCategory(value: unknown): string {
   const allowed = new Set([
     'suicidalitet',
     'selvskade',
@@ -45,13 +45,13 @@ function normalizeCategory(value: unknown): string {
   return allowed.has(category) ? category : 'other';
 }
 
-function normalizeReasoning(value: unknown): string {
+export function normalizeReasoning(value: unknown): string {
   const reasoning = typeof value === 'string' ? value.trim() : '';
   if (!reasoning) return FALLBACK_CLASSIFICATION.reasoning;
   return reasoning.slice(0, 300);
 }
 
-function parseModelJson(rawText: string): SafetyClassification {
+export function parseModelJson(rawText: string): SafetyClassification {
   try {
     const parsed = JSON.parse(rawText) as {
       risk_level?: unknown;

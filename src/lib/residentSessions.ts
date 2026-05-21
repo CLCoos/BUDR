@@ -12,11 +12,11 @@ function getServiceClient() {
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
-function hashToken(token: string): string {
+export function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
 
-function generateToken(): string {
+export function generateToken(): string {
   return randomBytes(32).toString('base64url');
 }
 
