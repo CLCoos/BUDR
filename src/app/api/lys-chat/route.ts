@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { checkApiRateLimit, getClientIp } from '@/lib/apiRateLimit';
 import { getResidentId } from '@/lib/residentAuth';
 import { classifyUtterance, type SafetyClassification } from '@/lib/lys/safetyClassifier';
+import { isValidUuid } from '@/lib/uuid';
 
 const LYS_SYSTEM = `Du er Lys. Følg disse regler i prioriteret rækkefølge — sikkerhed før alt andet.
 
@@ -94,10 +95,6 @@ function getServiceClient() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return null;
   return createClient(url, key, { auth: { persistSession: false } });
-}
-
-function isUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
 const SAFETY_TIMEOUT_MS = 5000;
@@ -205,7 +202,8 @@ ${ctx ? `\nTidligere små glimt fra samtaler:\n${ctx}` : ''}`;
   const lastUserUtterance = getLastUserUtterance(msgs);
   const conversationIdRaw =
     typeof body.conversation_id === 'string' ? body.conversation_id.trim() : '';
-  const conversationId = conversationIdRaw && isUuid(conversationIdRaw) ? conversationIdRaw : null;
+  const conversationId =
+    conversationIdRaw && isValidUuid(conversationIdRaw) ? conversationIdRaw : null;
 
   const safetyController = new AbortController();
   const safetyTimeoutId = setTimeout(() => safetyController.abort(), SAFETY_TIMEOUT_MS);

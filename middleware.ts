@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import { validateSessionToken } from '@/lib/residentSessions';
+import { isValidUuid } from '@/lib/uuid';
 
 const RESIDENT_ID_COOKIE = 'budr_resident_id';
 const RESIDENT_SESSION_COOKIE = 'budr_resident_session';
@@ -9,9 +10,6 @@ const DEMO_RESIDENT_ID = 'demo-resident-001';
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
-
-/** Tillader alle standard UUID-former (fx fra gen_random_uuid / crypto.randomUUID). */
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Mislykkede park-/beboer-valideringer pr. IP (kun in-memory; single-instance). */
 const PARK_FAIL_TIMESTAMPS = new Map<string, number[]>();
@@ -111,10 +109,6 @@ function clearResidentCookies(res: NextResponse): void {
   };
   clear(RESIDENT_ID_COOKIE);
   clear(RESIDENT_SESSION_COOKIE);
-}
-
-function isUuid(value: string): boolean {
-  return UUID_RE.test(value.trim());
 }
 
 function getServiceClient() {
@@ -374,7 +368,7 @@ export async function middleware(req: NextRequest) {
       return failAndMaybeBlock();
     }
 
-    if (!isUuid(residentId)) {
+    if (!isValidUuid(residentId)) {
       return failAndMaybeBlock();
     }
 
