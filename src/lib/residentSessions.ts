@@ -21,7 +21,7 @@ function generateToken(): string {
 }
 
 export type SessionValidation =
-  | { valid: true; residentUserId: string; orgId: string; sessionId: string }
+  | { valid: true; residentUserId: string; orgId: string; sessionId: string; expiresAt: string }
   | { valid: false; reason: 'no_cookie' | 'not_found' | 'expired' | 'revoked' };
 
 export async function validateSessionToken(token: string): Promise<SessionValidation> {
@@ -50,6 +50,7 @@ export async function validateSessionToken(token: string): Promise<SessionValida
     residentUserId: data.resident_user_id,
     orgId: data.org_id,
     sessionId: data.id,
+    expiresAt: data.expires_at,
   };
 }
 

@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  LEGACY_COOKIE_NAME,
+  SESSION_COOKIE_NAME,
+  validateSessionToken,
+} from '@/lib/residentSessions';
 
-const COOKIE_NAME = 'budr_resident_session';
-/** 1 år — matcher øvrige beboer-cookie varighed; PIN/WebAuthn styrer reelt adgang. */
-const MAX_AGE = 31536000;
+const COOKIE_MAX_AGE_FALLBACK = 30 * 24 * 60 * 60;
+
+function maxAgeFromExpiresAt(expiresAt: string): number {
+  const expiresMs = new Date(expiresAt).getTime();
+  if (!Number.isFinite(expiresMs)) return COOKIE_MAX_AGE_FALLBACK;
+  const seconds = Math.floor((expiresMs - Date.now()) / 1000);
+  return Math.max(0, Math.min(seconds, COOKIE_MAX_AGE_FALLBACK));
+}
 
 /**
  * POST /api/resident-session
@@ -17,12 +27,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Manglende token' }, { status: 400 });
     }
 
+    const validation = await validateSessionToken(token);
+    if (!validation.valid) {
+      return NextResponse.json({ error: 'Ugyldig session' }, { status: 401 });
+    }
+
+    const maxAge = maxAgeFromExpiresAt(validation.expiresAt);
     const res = NextResponse.json({ ok: true });
-    res.cookies.set(COOKIE_NAME, token, {
+    res.cookies.set(SESSION_COOKIE_NAME, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: MAX_AGE,
+      maxAge,
+      path: '/',
+    });
+    // Compatibility hint for client-only Lys code. Authorization never trusts this cookie.
+    res.cookies.set(LEGACY_COOKIE_NAME, validation.residentUserId, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge,
       path: '/',
     });
     return res;
@@ -37,6 +61,7 @@ export async function POST(req: NextRequest) {
  */
 export async function DELETE() {
   const res = NextResponse.json({ ok: true });
-  res.cookies.set(COOKIE_NAME, '', { maxAge: 0, path: '/' });
+  res.cookies.set(SESSION_COOKIE_NAME, '', { maxAge: 0, path: '/' });
+  res.cookies.set(LEGACY_COOKIE_NAME, '', { maxAge: 0, path: '/' });
   return res;
 }

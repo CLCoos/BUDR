@@ -6,6 +6,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+async function sha256Hex(value: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -37,12 +44,13 @@ serve(async (req) => {
     // Validate session token
     const { data: session, error: sessionErr } = await supabase
       .from('resident_sessions')
-      .select('resident_id')
-      .eq('token', session_token)
+      .select('resident_user_id')
+      .eq('session_token_hash', await sha256Hex(session_token))
       .gt('expires_at', new Date().toISOString())
+      .is('revoked_at', null)
       .single();
 
-    if (sessionErr || !session || session.resident_id !== resident_id) {
+    if (sessionErr || !session || session.resident_user_id !== resident_id) {
       return new Response(
         JSON.stringify({ error: 'Ugyldig eller udløbet session' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },

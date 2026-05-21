@@ -51,6 +51,10 @@ nextjs/
 
 You can start editing the page by modifying `src/app/page.tsx`. The page auto-updates as you edit the file.
 
+## 🔐 Resident auth
+
+Resident links (`/app/<resident_user_id>` and `/login/<resident_user_id>`) must go through PIN/WebAuthn before server APIs trust the resident session. The readable `budr_resident_id` cookie is only a client compatibility/demo hint; server access is based on the HttpOnly `budr_resident_session` token validated against `resident_sessions.session_token_hash`.
+
 ## 🎨 Styling
 
 This project uses Tailwind CSS for styling with the following features:

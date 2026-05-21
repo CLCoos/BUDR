@@ -6,6 +6,23 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+function generateSessionToken(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  let binary = '';
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+async function sha256Hex(value: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -66,18 +83,33 @@ serve(async (req) => {
       );
     }
 
+    const { data: resident, error: residentErr } = await supabase
+      .from('care_residents')
+      .select('org_id')
+      .eq('user_id', resident_id)
+      .maybeSingle();
+
+    if (residentErr || !resident?.org_id) {
+      return new Response(
+        JSON.stringify({ error: 'Kunne ikke oprette session' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
     // Create session (12 hours)
-    const { data: session, error: sessionErr } = await supabase
+    const sessionToken = generateSessionToken();
+    const { error: sessionErr } = await supabase
       .from('resident_sessions')
       .insert({
-        resident_id,
-        token: crypto.randomUUID(),
+        resident_user_id: resident_id,
+        org_id: resident.org_id,
+        session_token_hash: await sha256Hex(sessionToken),
         expires_at: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
       })
-      .select('token')
+      .select('id')
       .single();
 
-    if (sessionErr || !session) {
+    if (sessionErr) {
       return new Response(
         JSON.stringify({ error: 'Kunne ikke oprette session' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
@@ -85,7 +117,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ data: { session_token: session.token } }),
+      JSON.stringify({ data: { session_token: sessionToken } }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (err) {

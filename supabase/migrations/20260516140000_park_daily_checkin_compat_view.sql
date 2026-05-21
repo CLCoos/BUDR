@@ -5,6 +5,9 @@
 
 BEGIN;
 
+ALTER TABLE public.lys_checkin
+  ADD COLUMN IF NOT EXISTS checkin_type text NOT NULL DEFAULT 'daily';
+
 DROP VIEW IF EXISTS public.park_daily_checkin CASCADE;
 
 CREATE VIEW public.park_daily_checkin AS
