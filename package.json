@@ -51,6 +51,7 @@
     "lighthouse:institutioner": "npx --yes lighthouse@11 http://localhost:4028/institutioner --only-categories=performance --preset=desktop --chrome-flags=\"--headless --no-sandbox --disable-gpu\" --output=html --output-path=./lighthouse-institutioner.html",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
+    "test:e2e:demo": "playwright test e2e/care-portal-demo-console.spec.ts",
     "eval:safety": "node scripts/eval-safety-classifier.mjs"
   },
   "dependencies": {
@@ -76,6 +77,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@netlify/plugin-nextjs": "^5.11.1",
+    "@playwright/test": "^1.52.0",
     "@types/node": "^20",
     "@types/react": "19.0.3",
     "@types/react-dom": "19.0.3",

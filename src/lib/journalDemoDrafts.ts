@@ -10,99 +10,51 @@ export type JournalDemoDraft = {
 };
 
 export const JOURNAL_DEMO_DRAFTS: Record<string, JournalDemoDraft> = {
-  'res-001': {
+  'res-sara': {
     lysSummary:
-      'Lys i dag: check-in 07:45 · humør roligt · energi god · intet særligt tema — deltog i fælles morgenmad.',
+      'Lys i nat: samtale 02:10 · humør tungt · tema: uro og søvnbesvær — men borgeren opsøgte selv hjælp.',
     handling:
-      'Deltog i morgenmad i fællesrum sammen med to andre beboere. Var samtalevillig og spiste det meste. Efterfølgende gik borgeren frivilligt med til oprydning i køkkenet (15 min.). Ingen konflikter eller afvisning af kontakt.',
+      'Sara var vågen og urolig i nat. Hun talte med Lys ved 02-tiden og gav udtryk for begyndende uro, der minder om tidligere optakt. Vigtigt: hun genkendte selv tegnene og bad om kontakt. Nattevagt fulgte tryghedsplanen, og Sara faldt til ro ca. 03:00. Ingen yderligere tiltag nødvendige.',
     reflection:
-      'Stemningen harmonerer med grønt trafiklys i Lys. Borgeren virker stabil og med overskud til fællesskab. Fortsæt opmuntring til små, meningsfulde aktiviteter. Vedvarende god søvn bør holdes øje med i kommende check-ins.',
+      'Markant forskel fra episoden for seks uger siden: Sara griber nu ind tidligt og bruger sin tryghedsplan. Det understøtter recoverymålet om at genkende egne tidlige tegn. Følg op med daglig kontakt og hold øje med søvn de næste dage.',
   },
-  'res-002': {
+  'res-mikkel': {
+    lysSummary: 'Lys i dag: check-in 08:15 · humør OK · energi middel · tema: lidt anspændt før fælles frokost.',
+    handling:
+      'Mikkel spiste morgenmad på værelset og deltog senere i frokost i fællesrum i ca. 20 minutter. Kort samtale med personale — ingen uro observeret. Medicin taget som planlagt.',
+    reflection:
+      'Gult trafiklys passer til svingende men stabil form. Hold øje med søvn og social belastning. Ingen PN siden i går — notér ved næste vagtskifte.',
+  },
+  'res-anders': {
+    lysSummary: 'Lys i dag: check-in 08:20 · humør roligt · energi stabil · tema: læser i fællesrum.',
+    handling:
+      'Anders deltog i morgenmad og sad roligt med avis i dagligstuen. Ingen bekymringer ved morgenrunden. Planlagt gåtur i gården gennemføres efter eget ønske.',
+    reflection:
+      'Rolig fase med bipolar lidelse — bevar rutiner og undgå sent stimuli. Lægevideo om to uger: forbered korte spørgsmål sammen med Anders.',
+  },
+  'res-mette': {
     lysSummary:
-      'Lys i dag: check-in 08:12 · humør tungt · energi meget lav · tema: stress og ønske om samtale med personalet.',
+      'Lys i dag: check-in 07:55 · humør godt · energi god · tema: yoga og lyst til fællesskab.',
     handling:
-      'Borgeren blev observeret siddende alene i dagligstuen efter morgenmad. Ved henvendelse gav borgeren udtryk for indre uro og søvnproblemer natten over. Kort samtale (ca. 10 min.) med pædagog — borgeren accepterede tilbud om rolig aktivitet senere og kort gåtur efter eget ønske.',
+      'Mette deltog i morgenyoga og hjalp frivilligt med at dække bord til morgenmad. Positiv stemning i fællesrum. Ingen særlige hændelser.',
     reflection:
-      'Signalet fra Lys understøtter behov for nær kontakt. Anbefaler opfølgning ift. kriseplan og evt. justering af dagsprogram. Notér i team: borgeren har eksplicit bedt om samtale — prioriter det, hvis kapacitet tillader det.',
+      'Grønt trafiklys og velfungerende holdepunkt. Understøt hendes egne mål om fællesspisning og daglige gåture — peer-støtte kan bruges bevidst i gruppen.',
   },
-  'res-003': {
-    lysSummary: 'Lys i dag: check-in 07:50 · humør trist · energi lav · tema: krop og uro i maven.',
-    handling:
-      'Borgeren klagede over maveubehag og lav energi ved morgenrunden. Tilbudt let morgenmad og væske. Kontakt til sundhedsfagligt personale aftalt ift. vedvarende symptomer. Deltog ikke i fælles aktivitet formiddag, ophold på værelse efter eget valg med dør på klem.',
-    reflection:
-      'Kobling mellem somatiske klager og stemning bør holdes i mente. Følg op på lægefaglig kontakt. I Lys fremgår tristhed — vær opmærksom på om fysisk ubehag forstærker psykisk belastning.',
-  },
-  'res-004': {
+  'res-camilla': {
     lysSummary:
-      'Lys i dag: check-in 09:05 · humør blandet · energi svingende · tema: lyst til at snakke, men også træthed.',
+      'Lys i går: check-in 21:10 · humør svingende · energi lav · tema: ønsker rolig opfølgning i morgen.',
     handling:
-      'Borgeren deltog i kreativ workshop (eftermiddag) i ca. 40 minutter og viste engagement i farvelægning. Midlertidigt træk undervejs — kort pause på gangen. Efter aktiviteten henvendte borgeren sig til personalet og udtrykte, at det “var rart at lave noget med hænderne”.',
+      'Camilla havde kort uro efter misforståelse i går eftermiddag — rolig samtale hjalp. I morges god kontakt med personalet; planlagt samtale med kontaktperson kl. 11. Ingen eskalering.',
     reflection:
-      'Blandet humør i Lys stemmer overens med observeret energisving. Små succeser i aktivitet kan bruges som anker i næste samtale. Overvej at tilbyde kortere, hyppigere aktiviteter frem for lange forløb.',
+      'Gult trafiklys — forudsigelighed og validering virker. Hold rolig tone ved konflikter. Dagens samtale bør bekræfte grænser og behov hun selv nævnte i går.',
   },
-  'res-005': {
+  'res-jonas': {
     lysSummary:
-      'Ingen check-in i Lys i dag endnu (seneste i går 15:30). Dagens observation: delvist tilbagetrukket adfærd.',
+      'Lys i dag: check-in 08:10 · humør OK · energi usikker · tema: husregler og måltider som nyindflyttet.',
     handling:
-      'Borgeren mødte ikke til planlagt fælles frokost. Ved opsøgende kontakt på værelse var borgeren høflig men kort i svarene. Tilbudt mad og væske — accepterede vand. Ingen tegn på akut fare; borgeren ønskede at være uforstyrret resten af formiddagen.',
+      'Jonas spurgte til PARK og fælles aktiviteter ved kort gåtur med personale. Gennemgang af praktisk info gentaget ved frokost — virker lettet over tydelige rammer. Ingen uro.',
     reflection:
-      'Manglende Lys-check-in gør det ekstra vigtigt med konkret opfølgning. Drøft på teammøde om proaktiv kontakt senere på dagen. Vurder om borgeren oplever overstimulation eller behov for ekstra struktur.',
-  },
-  'res-006': {
-    lysSummary:
-      'Lys i dag: check-in 08:30 · humør positivt · energi middel · tema: glæde ved haven og udendørs.',
-    handling:
-      'Borgeren deltog i planlagt ophold i haven (45 min.) sammen med gruppe. Hjalp med at vande og snakkede med en anden beboer. Ved tilbagekomst gav borgeren udtryk for tilfredshed og aftalte med pædagog at gentage aktiviteten torsdag.',
-    reflection:
-      'Lys-signalet og observation harmonerer. Haven fungerer som meningsfuld ressource — kan indgå i handleplan og ugeskema. Styrk det positive ved næste samtale.',
-  },
-  'res-007': {
-    lysSummary: 'Lys i dag: check-in 08:00 · humør godt · energi god · tema: søvn har været bedre.',
-    handling:
-      'Borgeren fortalte spontant ved morgenrunden, at natten havde været rolig. Deltog i morgengymnastik og var oplagt. Hjalp med at dække bord til frokost uden at blive bedt om det.',
-    reflection:
-      'Positiv udvikling ift. søvn som borgeren selv fremhæver i Lys. Dokumentér som støtte til evt. lægefaglig eller psykologisk opfølgning. Opmuntre til at fastholde rutiner der understøtter søvn.',
-  },
-  'res-008': {
-    lysSummary:
-      'Lys i dag: check-in 08:45 · humør irritabel · energi lav · tema: venter på besked fra læge.',
-    handling:
-      'Borgeren virkede anspændt i fællesrum og afviste først deltagelse i gruppeaktivitet. Efter kort samtale deltog i 20 min. med mulighed for at trække sig. Ingen verbale udadreagerende episoder. Mindre verbal kontakt med de andre beboere end sædvanligt.',
-    reflection:
-      'Uro knyttet til afventet svar fra læge kan påvirke dagsformen. Hold teamet orienteret. Når der foreligger svar, bør borgeren informeres struktureret for at reducere usikkerhed.',
-  },
-  'res-009': {
-    lysSummary:
-      'Lys i dag: check-in 07:30 · humør stabilt positivt · energi god · tema: lyst til gåtur og fællesskab om mad.',
-    handling:
-      'Gennemførte planlagt gåtur (ca. 25 min.) med støtte. Spiste frokost ved bord med tre andre og deltog i smalltalk. Ingen særlige hændelser.',
-    reflection:
-      'Stabil profil i Lys matcher hverdagsdeltagelse. Vedligehold sociale tilbud — borgeren trives tydeligvis med forudsigelig struktur og fællesskab om måltider.',
-  },
-  'res-010': {
-    lysSummary:
-      'Lys i dag: check-in 07:15 · humør meget positivt · energi høj · tema: glæde ved familiebesøg i weekenden.',
-    handling:
-      'Borgeren delte frivilligt oplevelser fra weekendbesøg med personalet ved morgenkaffe. Deltog aktivt i planlægning af ugeaktiviteter på opslagstavlen. Hjalp en anden beboer med at finde program for ugen.',
-    reflection:
-      'Stærkt ressourcefokus — familiekontakt og meningsfuld hjælp til anden beboer. Kan bruges i supervision som eksempel på mestring. Vær opmærksom på eventuel “nedtur” efter positive højdepunkter.',
-  },
-  'res-011': {
-    lysSummary:
-      'Lys i dag: check-in 08:20 · humør roligt · energi middel · tema: lyst til kreativ aktivitet senere på dagen.',
-    handling:
-      'Formiddag roligt ophold på værelse med læsning. Borgeren bekræftede ved frokost, at vedkommende ønsker at deltage i eftermiddagens maleaktivitet. Ingen konflikter.',
-    reflection:
-      'Lys viser klar intention om deltagelse — sørg for at aktiviteten bliver synlig i plan og at borgeren får påmindelse, så forventningen holder.',
-  },
-  'res-012': {
-    lysSummary:
-      'Lys i dag: check-in 09:10 · humør træt · energi lav · tema: dårlig søvn pga. støj om natten.',
-    handling:
-      'Borgeren gav udtryk for træthed og irritation over natlig støj fra gangen. Personale noterede tidspunkt og tilbyder ørepropper og mulighed for hvil før middag. Borgeren accepterede kort lur (ca. 30 min.).',
-    reflection:
-      'Miljøfaktor (støj) bør adresseres på teammøde — evt. natrutiner eller fysiske tiltag. Følg op i Lys i morgen om søvnkvalitet efter tiltag.',
+      'Nyindflyttet for tre uger — gradvis sociale tilbud og korte kontakter. Ugentlig evaluering af tilpasning som i indflytningsplanen.',
   },
 };
 

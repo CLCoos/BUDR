@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Palmtree, PiggyBank, Clock } from 'lucide-react';
 import type { DemoShift, DemoVacationDay } from '@/lib/demoShiftPlan';
 import {
+  DEMO_SHIFTS_UPDATED_EVENT,
   loadShifts,
   loadVacation,
   currentPayPeriod,
@@ -25,14 +26,15 @@ export default function LoenDemoClient({
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setShifts(loadShifts());
-    setVacation(loadVacation());
-    setMounted(true);
-    const t = window.setInterval(() => {
+    const refresh = () => {
       setShifts(loadShifts());
       setVacation(loadVacation());
-    }, 800);
-    return () => window.clearInterval(t);
+    };
+    refresh();
+    setMounted(true);
+    const onShiftsUpdated = () => refresh();
+    window.addEventListener(DEMO_SHIFTS_UPDATED_EVENT, onShiftsUpdated);
+    return () => window.removeEventListener(DEMO_SHIFTS_UPDATED_EVENT, onShiftsUpdated);
   }, []);
 
   const period = useMemo(() => currentPayPeriod(), []);
@@ -66,7 +68,7 @@ export default function LoenDemoClient({
         Løn &amp; timer
       </h1>
       <p className="mt-1 text-sm" style={{ color: 'var(--cp-muted)' }}>
-        Overblik for <strong style={{ color: 'var(--cp-text)' }}>Sara K.</strong> · {period.label}
+        Overblik for <strong style={{ color: 'var(--cp-text)' }}>Lars N.</strong> · {period.label}
       </p>
 
       <div

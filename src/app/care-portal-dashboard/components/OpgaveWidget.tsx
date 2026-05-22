@@ -27,6 +27,15 @@ const RESIDENTS = [
   { id: 'res-006', name: 'Lena P.', initials: 'LP' },
 ];
 
+const DEMO_RESIDENTS = [
+  { id: 'res-sara', name: 'Sara K.', initials: 'SK' },
+  { id: 'res-mikkel', name: 'Mikkel T.', initials: 'MT' },
+  { id: 'res-anders', name: 'Anders P.', initials: 'AP' },
+  { id: 'res-mette', name: 'Mette P.', initials: 'MP' },
+  { id: 'res-camilla', name: 'Camilla B.', initials: 'CB' },
+  { id: 'res-jonas', name: 'Jonas F.', initials: 'JF' },
+];
+
 function startOfDay(d: Date): Date {
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);
@@ -121,6 +130,73 @@ function createMockTasks(ref: Date): CareTask[] {
   ];
 }
 
+function createDemoTasks(ref: Date): CareTask[] {
+  const y = new Date(ref);
+  y.setDate(y.getDate() - 1);
+  const t0 = startOfDay(ref);
+  const t1 = new Date(t0);
+  t1.setHours(14, 0, 0, 0);
+  const fut = new Date(ref);
+  fut.setDate(fut.getDate() + 2);
+  return [
+    {
+      id: 'tsk-d1',
+      residentId: 'res-sara',
+      residentName: 'Sara K.',
+      initials: 'SK',
+      title: 'Daglig kontakt og søvnscreening — rød status',
+      deadline: t0,
+      assignedTo: 'LN',
+      status: 'åben',
+      priority: 'høj',
+    },
+    {
+      id: 'tsk-d2',
+      residentId: 'res-sara',
+      residentName: 'Sara K.',
+      initials: 'SK',
+      title: 'Repetér tryghedsplan med Sara efter natlig uro',
+      deadline: t1,
+      assignedTo: 'LN',
+      status: 'åben',
+      priority: 'høj',
+    },
+    {
+      id: 'tsk-d3',
+      residentId: 'res-camilla',
+      residentName: 'Camilla B.',
+      initials: 'CB',
+      title: 'Rolig opfølgning i morgen formiddag',
+      deadline: t0,
+      assignedTo: 'LN',
+      status: 'igangsat',
+      priority: 'mellem',
+    },
+    {
+      id: 'tsk-d4',
+      residentId: 'res-mikkel',
+      residentName: 'Mikkel T.',
+      initials: 'MT',
+      title: 'Ugentlig opfølgning med behandler',
+      deadline: y,
+      assignedTo: 'LN',
+      status: 'åben',
+      priority: 'mellem',
+    },
+    {
+      id: 'tsk-d5',
+      residentId: 'res-jonas',
+      residentName: 'Jonas F.',
+      initials: 'JF',
+      title: 'Ugentlig evaluering af tilpasning (nyindflyttet)',
+      deadline: fut,
+      assignedTo: 'LN',
+      status: 'åben',
+      priority: 'lav',
+    },
+  ];
+}
+
 const INPUT_STYLE: React.CSSProperties = {
   backgroundColor: 'var(--cp-bg3)',
   border: '1px solid var(--cp-border2)',
@@ -133,9 +209,16 @@ const INPUT_STYLE: React.CSSProperties = {
   colorScheme: 'dark',
 };
 
-type OpgaveWidgetProps = { residentIdFilter?: string | null };
+type OpgaveWidgetProps = {
+  residentIdFilter?: string | null;
+  /** Salgsdemo: Sara-universets opgaver. Default false = uændret produktionsmock. */
+  demoMode?: boolean;
+};
 
-export default function OpgaveWidget({ residentIdFilter = null }: OpgaveWidgetProps) {
+export default function OpgaveWidget({
+  residentIdFilter = null,
+  demoMode = false,
+}: OpgaveWidgetProps) {
   const [hydrated, setHydrated] = useState(false);
   const [today, setToday] = useState(() => new Date());
   const [tasks, setTasks] = useState<CareTask[]>([]);
@@ -146,13 +229,29 @@ export default function OpgaveWidget({ residentIdFilter = null }: OpgaveWidgetPr
   const [formPriority, setFormPriority] = useState<TaskPriority>('mellem');
   const [formAssignee, setFormAssignee] = useState('SK');
 
+  const residentOptions = demoMode ? DEMO_RESIDENTS : RESIDENTS;
+
+  const demoTasksSeed = useMemo(() => {
+    const now = new Date();
+    return { today: now, tasks: createDemoTasks(now), deadline: toDateInputValue(now) };
+  }, []);
+
   useEffect(() => {
+    if (!demoMode) return;
+    setToday((prev) => (prev === demoTasksSeed.today ? prev : demoTasksSeed.today));
+    setTasks((prev) => (prev === demoTasksSeed.tasks ? prev : demoTasksSeed.tasks));
+    setFormDeadline((prev) => (prev === demoTasksSeed.deadline ? prev : demoTasksSeed.deadline));
+    setHydrated((h) => (h ? h : true));
+  }, [demoMode, demoTasksSeed]);
+
+  useEffect(() => {
+    if (demoMode) return;
     const now = new Date();
     setToday(now);
     setTasks(createMockTasks(now));
     setFormDeadline(toDateInputValue(now));
     setHydrated(true);
-  }, []);
+  }, [demoMode]);
 
   useEffect(() => {
     if (residentIdFilter) setFormResidentId(residentIdFilter);
@@ -187,7 +286,7 @@ export default function OpgaveWidget({ residentIdFilter = null }: OpgaveWidgetPr
       e.preventDefault();
       const rid = residentIdFilter ?? formResidentId;
       if (!rid || !formTitle.trim() || !formDeadline || !formAssignee.trim()) return;
-      const res = RESIDENTS.find((r) => r.id === rid);
+      const res = residentOptions.find((r) => r.id === rid);
       if (!res) return;
       const [y, m, d] = formDeadline.split('-').map(Number);
       setTasks((prev) => [
@@ -211,7 +310,16 @@ export default function OpgaveWidget({ residentIdFilter = null }: OpgaveWidgetPr
       if (!residentIdFilter) setFormResidentId('');
       setShowForm(false);
     },
-    [residentIdFilter, formResidentId, formTitle, formDeadline, formAssignee, formPriority, today]
+    [
+      residentIdFilter,
+      formResidentId,
+      formTitle,
+      formDeadline,
+      formAssignee,
+      formPriority,
+      today,
+      residentOptions,
+    ]
   );
 
   if (!hydrated) {
@@ -295,7 +403,7 @@ export default function OpgaveWidget({ residentIdFilter = null }: OpgaveWidgetPr
                     }}
                   >
                     <option value="">Vælg beboer</option>
-                    {RESIDENTS.map((r) => (
+                    {residentOptions.map((r) => (
                       <option key={r.id} value={r.id}>
                         {r.name}
                       </option>

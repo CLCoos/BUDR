@@ -52,7 +52,7 @@ Efter dit almindelige svar skal du tilføje PRÆCIST ét ekstra afsnit med følg
 Regler for JSON inde i blokken:
 - Et array med 1–4 objekter. Hvert objekt skal mindst have "key" (string) og "reason" (kort streng på dansk).
 - Tilladte key-værdier: indsatsdok, dataimport, beboere, journal, handover, tilsyn, settings.
-- Valgfrie felter: "searchQuery", "resident360Id" (demo-id som res-002), "residentTab" (demo: overblik, medicin, dagsplan, plan, haven, notes, goals, medication, aftaler).
+- Valgfrie felter: "searchQuery", "resident360Id" (demo-id som res-sara), "residentTab" (demo: overblik, medicin, dagsplan, plan, haven, notes, goals, medication, aftaler).
 - Brødteksten før blokken må ikke nævne XML, JSON eller "budr_followups".`;
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {

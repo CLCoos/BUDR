@@ -16,18 +16,12 @@ export type CareDemoResidentProfile = {
 };
 
 export const CARE_DEMO_RESIDENT_PROFILES: CareDemoResidentProfile[] = [
-  { id: 'res-001', displayName: 'Anders Mikkelsen', initials: 'AM', house: 'A', room: '104' },
-  { id: 'res-002', displayName: 'Finn Larsen', initials: 'FL', house: 'A', room: '103' },
-  { id: 'res-003', displayName: 'Kirsten Rasmussen', initials: 'KR', house: 'A', room: '109' },
-  { id: 'res-004', displayName: 'Maja Thomsen', initials: 'MT', house: 'B', room: '211' },
-  { id: 'res-005', displayName: 'Thomas Berg', initials: 'TB', house: 'D', room: '407' },
-  { id: 'res-006', displayName: 'Lena Poulsen', initials: 'LP', house: 'A', room: '102' },
-  { id: 'res-007', displayName: 'Henrik Sørensen', initials: 'HS', house: 'C', room: '312' },
-  { id: 'res-008', displayName: 'Birgit Nielsen', initials: 'BN', house: 'B', room: '205' },
-  { id: 'res-009', displayName: 'Rasmus Vestergaard', initials: 'RV', house: 'D', room: '401' },
-  { id: 'res-010', displayName: 'Dorthe Andersen', initials: 'DA', house: 'C', room: '301' },
-  { id: 'res-011', displayName: 'Signe Holm', initials: 'SH', house: 'B', room: '208' },
-  { id: 'res-012', displayName: 'Ole Christiansen', initials: 'OC', house: 'C', room: '315' },
+  { id: 'res-sara', displayName: 'Sara Kristensen', initials: 'SK', house: 'A', room: '104' },
+  { id: 'res-mikkel', displayName: 'Mikkel Thomsen', initials: 'MT', house: 'A', room: '103' },
+  { id: 'res-anders', displayName: 'Anders Pedersen', initials: 'AP', house: 'A', room: '109' },
+  { id: 'res-mette', displayName: 'Mette Poulsen', initials: 'MP', house: 'B', room: '205' },
+  { id: 'res-camilla', displayName: 'Camilla Birk', initials: 'CB', house: 'B', room: '211' },
+  { id: 'res-jonas', displayName: 'Jonas Friis', initials: 'JF', house: 'C', room: '312' },
 ];
 
 export function careDemoProfileById(id: string): CareDemoResidentProfile | undefined {

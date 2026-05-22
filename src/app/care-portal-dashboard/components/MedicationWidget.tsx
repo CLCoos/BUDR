@@ -572,6 +572,116 @@ function createMockEntries(nowMs: number): MedicationTask[] {
   }));
 }
 
+/** Salgsdemo: medicin for de 6 demo-borgere (Sara i fokus). */
+function createDemoMedicationEntries(nowMs: number): MedicationTask[] {
+  const now = new Date(nowMs);
+  const slots = enumerateCivilMedicationSlotDates(now);
+  const past = slots.filter((t) => t.getTime() < now.getTime());
+  const future = slots.filter((t) => t.getTime() > now.getTime());
+  const scheduledTimes = [
+    past[past.length - 1],
+    past[past.length - 2],
+    future[0],
+    future[1],
+    future[2],
+    future[3],
+    future[4],
+    future[5],
+    future[6],
+  ].filter((t): t is Date => t != null);
+
+  const templates: Omit<MedicationTask, 'scheduledAt' | 'givenAt'>[] = [
+    taskForResident({
+      id: 'mw-d1',
+      residentId: 'res-sara',
+      medicationName: 'Olanzapin',
+      strengthLabel: '5 mg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-d2',
+      residentId: 'res-sara',
+      medicationName: 'Olanzapin',
+      strengthLabel: '10 mg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-d3',
+      residentId: 'res-sara',
+      medicationName: 'Melatonin',
+      strengthLabel: '2 mg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-d4',
+      residentId: 'res-sara',
+      medicationName: 'Oxazepam',
+      strengthLabel: '15 mg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'PN uro',
+    }),
+    taskForResident({
+      id: 'mw-d5',
+      residentId: 'res-mikkel',
+      medicationName: 'Abilify',
+      strengthLabel: '10 mg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-d6',
+      residentId: 'res-anders',
+      medicationName: 'Lithium',
+      strengthLabel: '600 mg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-d7',
+      residentId: 'res-mette',
+      medicationName: 'Sertralin',
+      strengthLabel: '50 mg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-d8',
+      residentId: 'res-camilla',
+      medicationName: 'Lamictal',
+      strengthLabel: '100 mg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+    taskForResident({
+      id: 'mw-d9',
+      residentId: 'res-jonas',
+      medicationName: 'Risperidon',
+      strengthLabel: '2 mg',
+      quantity: 1,
+      unit: 'tabletter',
+      routeLabel: 'Oralt',
+    }),
+  ];
+
+  const n = Math.min(templates.length, scheduledTimes.length);
+  return templates.slice(0, n).map((t, i) => ({
+    ...t,
+    scheduledAt: scheduledTimes[i]!,
+    givenAt: t.id === 'mw-d1' ? new Date(nowMs - 60 * 60 * 1000) : null,
+  }));
+}
+
 type MedicationViewModel = {
   pastDue: MedicationTask[];
   upcoming: MedicationTask[];
@@ -703,7 +813,12 @@ function ResidentAbbr({
 
 type TaskFilter = 'alle' | 'ventende' | 'forsinkede';
 
-export default function MedicationWidget() {
+type MedicationWidgetProps = {
+  /** Salgsdemo: Sara-universets medicin. Default false = uændret produktionslogik. */
+  demoMode?: boolean;
+};
+
+export default function MedicationWidget({ demoMode = false }: MedicationWidgetProps) {
   const { formatName, getInitials } = useNameDisplay();
   const { department: houseFilter } = useCarePortalDepartment();
   const simulatedMedicin = carePortalPilotSimulatedData();
@@ -717,7 +832,17 @@ export default function MedicationWidget() {
   const [taskFilter, setTaskFilter] = useState<TaskFilter>('alle');
   const [viewMode, setViewMode] = useState<'koe' | 'liste'>('koe');
 
+  const demoEntries = useMemo(() => createDemoMedicationEntries(Date.now()), []);
+
   useEffect(() => {
+    if (!demoMode) return;
+    setEntries((prev) => (prev === demoEntries ? prev : demoEntries));
+    setHydrated((h) => (h ? h : true));
+  }, [demoMode, demoEntries]);
+
+  useEffect(() => {
+    if (demoMode) return;
+
     let cancelled = false;
     const run = async () => {
       if (simulatedMedicin && !bingbongReady) {
@@ -740,10 +865,15 @@ export default function MedicationWidget() {
     return () => {
       cancelled = true;
     };
-  }, [simulatedMedicin, bingbongReady, pilotMedicinMock, formatName, getInitials]);
+  }, [demoMode, simulatedMedicin, bingbongReady, pilotMedicinMock, formatName, getInitials]);
 
   useEffect(() => {
-    const t = window.setInterval(() => setNowTick(Date.now()), 60_000);
+    const t = window.setInterval(() => {
+      setNowTick((prev) => {
+        const next = Date.now();
+        return prev === next ? prev : next;
+      });
+    }, 60_000);
     return () => window.clearInterval(t);
   }, []);
 
