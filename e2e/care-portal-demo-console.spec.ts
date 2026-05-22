@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
-import { DEMO_GUIDED_TOUR_STEPS } from '../src/lib/carePortalDemoGuidedTour';
+import {
+  DEMO_GUIDED_TOUR_STEPS,
+  DEMO_GUIDED_TOUR_STORAGE_COMPLETED,
+} from '../src/lib/carePortalDemoGuidedTour';
 
 const DEMO_PAGES = [
   { name: 'dashboard', path: '/care-portal-demo' },
@@ -69,5 +72,54 @@ test.describe('Care Portal demo — guided tour navigation', () => {
         { timeout: 12_000 }
       );
     }
+  });
+
+  test('Afslut lukker tour uden Lys- eller Care Portal-velkomst', async ({ page }) => {
+    await page.goto('/care-portal-demo', { waitUntil: 'networkidle' });
+    await page.evaluate((key) => localStorage.removeItem(key), DEMO_GUIDED_TOUR_STORAGE_COMPLETED);
+    await page.reload({ waitUntil: 'networkidle' });
+
+    await page.getByRole('button', { name: /start guidet tour/i }).click();
+
+    const tourDialog = page.locator('[aria-labelledby="demo-guided-tour-title"]');
+    await expect(tourDialog).toBeVisible({ timeout: 10_000 });
+    const nextBtn = tourDialog.getByRole('button', { name: /næste|afslut/i });
+
+    for (let i = 0; i < DEMO_GUIDED_TOUR_STEPS.length - 1; i++) {
+      const nextStep = DEMO_GUIDED_TOUR_STEPS[i + 1]!;
+      const [expectedPath, expectedQuery] = nextStep.path.split('?');
+      await nextBtn.click();
+      await page.waitForURL(
+        (url) => {
+          if (!url.pathname.startsWith(expectedPath)) return false;
+          if (!expectedQuery) return true;
+          const want = new URLSearchParams(expectedQuery);
+          for (const [k, v] of want.entries()) {
+            if (url.searchParams.get(k) !== v) return false;
+          }
+          return true;
+        },
+        { timeout: 12_000 }
+      );
+    }
+
+    await expect(nextBtn).toHaveText(/afslut/i);
+    await nextBtn.click();
+    await expect(tourDialog).not.toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText('Velkommen til Lys')).not.toBeVisible();
+    await expect(page.getByText(/Du er Anders M\./i)).not.toBeVisible();
+    await expect(
+      page.locator('button.fixed.bottom-5').filter({ hasText: /genstart tour/i })
+    ).toBeVisible();
+
+    const completed = await page.evaluate(
+      (key) => localStorage.getItem(key),
+      DEMO_GUIDED_TOUR_STORAGE_COMPLETED
+    );
+    expect(completed).toBe('1');
+
+    await page.reload({ waitUntil: 'networkidle' });
+    await expect(page.getByText('Velkommen til Lys')).not.toBeVisible();
+    await expect(page.getByRole('heading', { name: /velkommen til demo/i })).not.toBeVisible();
   });
 });

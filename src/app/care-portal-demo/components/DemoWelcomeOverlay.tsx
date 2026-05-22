@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowRight, X } from 'lucide-react';
@@ -55,9 +55,13 @@ type Props = {
 };
 
 export default function DemoWelcomeOverlay({ onOpenOverrapport }: Props) {
-  const [open, setOpen] = useState(true);
   const router = useRouter();
-  const { startGuidedTour } = useDemoGuidedTour();
+  const { startGuidedTour, suppressWelcomeOverlays, isTourOpen } = useDemoGuidedTour();
+  const [open, setOpen] = useState(() => !suppressWelcomeOverlays && !isTourOpen);
+
+  useEffect(() => {
+    if (suppressWelcomeOverlays || isTourOpen) setOpen(false);
+  }, [suppressWelcomeOverlays, isTourOpen]);
 
   function dismiss() {
     setOpen(false);

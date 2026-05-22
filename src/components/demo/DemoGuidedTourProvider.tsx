@@ -15,11 +15,14 @@ import { Map, X, ChevronRight, RotateCcw } from 'lucide-react';
 import {
   DEMO_GUIDED_TOUR_STEPS,
   DEMO_GUIDED_TOUR_STORAGE_COMPLETED,
+  readDemoGuidedTourCompleted,
 } from '@/lib/carePortalDemoGuidedTour';
 
 type DemoGuidedTourContextValue = {
   startGuidedTour: () => void;
   isTourOpen: boolean;
+  /** Skjul Care Portal- og Lys-velkomst mens tour kører eller efter gennemført tour */
+  suppressWelcomeOverlays: boolean;
 };
 
 const DemoGuidedTourContext = createContext<DemoGuidedTourContextValue | null>(null);
@@ -30,6 +33,7 @@ export function useDemoGuidedTour(): DemoGuidedTourContextValue {
     return {
       startGuidedTour: () => {},
       isTourOpen: false,
+      suppressWelcomeOverlays: false,
     };
   }
   return ctx;
@@ -46,16 +50,13 @@ function DemoGuidedTourInner({ children }: { children: React.ReactNode }) {
 
   const [tourOpen, setTourOpen] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
-  const [tourEverCompleted, setTourEverCompleted] = useState(false);
+  const [tourEverCompleted, setTourEverCompleted] = useState(readDemoGuidedTourCompleted);
 
   const demoPath = isDemoExperiencePath(pathname);
+  const suppressWelcomeOverlays = tourOpen || tourEverCompleted;
 
   useEffect(() => {
-    try {
-      setTourEverCompleted(localStorage.getItem(DEMO_GUIDED_TOUR_STORAGE_COMPLETED) === '1');
-    } catch {
-      setTourEverCompleted(false);
-    }
+    setTourEverCompleted(readDemoGuidedTourCompleted());
   }, [tourOpen]);
 
   const currentStep = DEMO_GUIDED_TOUR_STEPS[stepIndex] ?? DEMO_GUIDED_TOUR_STEPS[0]!;
@@ -80,15 +81,15 @@ function DemoGuidedTourInner({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   const closeTour = useCallback((markDone: boolean) => {
-    setTourOpen(false);
     if (markDone) {
       try {
         window.localStorage.setItem(DEMO_GUIDED_TOUR_STORAGE_COMPLETED, '1');
-        setTourEverCompleted(true);
       } catch {
         /* ignore */
       }
+      setTourEverCompleted(true);
     }
+    setTourOpen(false);
   }, []);
 
   const goNext = useCallback(() => {
@@ -117,8 +118,9 @@ function DemoGuidedTourInner({ children }: { children: React.ReactNode }) {
     () => ({
       startGuidedTour,
       isTourOpen: tourOpen,
+      suppressWelcomeOverlays,
     }),
-    [startGuidedTour, tourOpen]
+    [startGuidedTour, tourOpen, suppressWelcomeOverlays]
   );
 
   return (

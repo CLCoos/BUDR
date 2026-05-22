@@ -15,6 +15,16 @@ export type DemoGuidedTourStep = {
 
 export const DEMO_GUIDED_TOUR_STORAGE_COMPLETED = 'budr_care_portal_demo_guided_tour_done';
 
+/** Læs om guidet tour er gennemført (kun browser; til welcome-overlays). */
+export function readDemoGuidedTourCompleted(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return window.localStorage.getItem(DEMO_GUIDED_TOUR_STORAGE_COMPLETED) === '1';
+  } catch {
+    return false;
+  }
+}
+
 export const DEMO_GUIDED_TOUR_STEPS: DemoGuidedTourStep[] = [
   {
     id: 'overblik',

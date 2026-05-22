@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, X } from 'lucide-react';
+import { useDemoGuidedTour } from '@/components/demo/DemoGuidedTourProvider';
 
 type Step = {
   num: number;
@@ -36,8 +37,13 @@ const STEPS: Step[] = [
 ];
 
 export default function ResidentDemoWelcomeOverlay() {
-  const [open, setOpen] = useState(true);
   const router = useRouter();
+  const { suppressWelcomeOverlays, isTourOpen } = useDemoGuidedTour();
+  const [open, setOpen] = useState(() => !suppressWelcomeOverlays && !isTourOpen);
+
+  useEffect(() => {
+    if (suppressWelcomeOverlays || isTourOpen) setOpen(false);
+  }, [suppressWelcomeOverlays, isTourOpen]);
 
   function dismiss() {
     setOpen(false);
