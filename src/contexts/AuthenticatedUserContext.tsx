@@ -50,7 +50,10 @@ function authStateUnchanged(prev: AuthState, next: AuthState): boolean {
   return false;
 }
 
-function commitAuthState(setState: React.Dispatch<React.SetStateAction<AuthState>>, next: AuthState) {
+function commitAuthState(
+  setState: React.Dispatch<React.SetStateAction<AuthState>>,
+  next: AuthState
+) {
   setState((prev) => (authStateUnchanged(prev, next) ? prev : next));
 }
 

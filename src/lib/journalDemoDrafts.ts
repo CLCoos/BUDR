@@ -19,14 +19,16 @@ export const JOURNAL_DEMO_DRAFTS: Record<string, JournalDemoDraft> = {
       'Markant forskel fra episoden for seks uger siden: Sara griber nu ind tidligt og bruger sin tryghedsplan. Det understøtter recoverymålet om at genkende egne tidlige tegn. Følg op med daglig kontakt og hold øje med søvn de næste dage.',
   },
   'res-mikkel': {
-    lysSummary: 'Lys i dag: check-in 08:15 · humør OK · energi middel · tema: lidt anspændt før fælles frokost.',
+    lysSummary:
+      'Lys i dag: check-in 08:15 · humør OK · energi middel · tema: lidt anspændt før fælles frokost.',
     handling:
       'Mikkel spiste morgenmad på værelset og deltog senere i frokost i fællesrum i ca. 20 minutter. Kort samtale med personale — ingen uro observeret. Medicin taget som planlagt.',
     reflection:
       'Gult trafiklys passer til svingende men stabil form. Hold øje med søvn og social belastning. Ingen PN siden i går — notér ved næste vagtskifte.',
   },
   'res-anders': {
-    lysSummary: 'Lys i dag: check-in 08:20 · humør roligt · energi stabil · tema: læser i fællesrum.',
+    lysSummary:
+      'Lys i dag: check-in 08:20 · humør roligt · energi stabil · tema: læser i fællesrum.',
     handling:
       'Anders deltog i morgenmad og sad roligt med avis i dagligstuen. Ingen bekymringer ved morgenrunden. Planlagt gåtur i gården gennemføres efter eget ønske.',
     reflection:

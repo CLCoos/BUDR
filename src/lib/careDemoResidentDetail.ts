@@ -435,7 +435,13 @@ const RICH: Record<string, Omit<ResidentDemoDetailSeed, 'profile'>> = {
       { name: 'Olanzapin', dose: '10 mg', schedule: '1× aften', nextDue: 'I aften kl. 21:00' },
       { name: 'Olanzapin', dose: '5 mg', schedule: '1× morgen', nextDue: 'Givet kl. 08:30' },
       { name: 'Melatonin', dose: '2 mg', schedule: 'Ved sengetid', nextDue: 'I aften' },
-      { name: 'Oxazepam', dose: '15 mg', schedule: 'PN uro', pn: true, nextDue: 'Max 2× / 24 t — log' },
+      {
+        name: 'Oxazepam',
+        dose: '15 mg',
+        schedule: 'PN uro',
+        pn: true,
+        nextDue: 'Max 2× / 24 t — log',
+      },
     ],
     plans: [
       {
@@ -488,8 +494,17 @@ const RICH: Record<string, Omit<ResidentDemoDetailSeed, 'profile'>> = {
         status: 'godkendt',
       },
     ],
-    agreements: [{ title: 'Samtykke til kontakt med pårørende', updated: 'For 1 måned siden', status: 'aktiv' }],
-    extras: [{ label: 'Kontaktpædagog', value: 'Lars N.' }, { label: 'Indflyttet', value: 'Januar 2026' }],
+    agreements: [
+      {
+        title: 'Samtykke til kontakt med pårørende',
+        updated: 'For 1 måned siden',
+        status: 'aktiv',
+      },
+    ],
+    extras: [
+      { label: 'Kontaktpædagog', value: 'Lars N.' },
+      { label: 'Indflyttet', value: 'Januar 2026' },
+    ],
     dagsplan: [
       { time: '08:00', label: 'Morgenmad i fællesrummet' },
       { time: '08:30', label: 'Medicin morgen', done: true },
@@ -498,7 +513,9 @@ const RICH: Record<string, Omit<ResidentDemoDetailSeed, 'profile'>> = {
       { time: '15:00', label: 'Eftermiddagskaffe' },
       { time: '21:00', label: 'Medicin aften' },
     ],
-    appointments: [{ when: 'Om to uger', what: 'Statusmøde med kontaktpædagog', place: 'Mødelokale' }],
+    appointments: [
+      { when: 'Om to uger', what: 'Statusmøde med kontaktpædagog', place: 'Mødelokale' },
+    ],
   },
   'res-mikkel': {
     traffic: 'gul',
@@ -559,7 +576,10 @@ const RICH: Record<string, Omit<ResidentDemoDetailSeed, 'profile'>> = {
       },
     ],
     agreements: [{ title: 'Samtykke behandling', updated: 'Feb. 2026', status: 'aktiv' }],
-    extras: [{ label: 'Alder', value: '28 år' }, { label: 'Diagnose (demo)', value: 'Skizoaffektiv' }],
+    extras: [
+      { label: 'Alder', value: '28 år' },
+      { label: 'Diagnose (demo)', value: 'Skizoaffektiv' },
+    ],
   },
   'res-anders': {
     traffic: 'gul',
@@ -615,7 +635,10 @@ const RICH: Record<string, Omit<ResidentDemoDetailSeed, 'profile'>> = {
       },
     ],
     agreements: [{ title: 'Forløbsplan', updated: 'Mar. 2026', status: 'aktiv' }],
-    extras: [{ label: 'Alder', value: '52 år' }, { label: 'Diagnose (demo)', value: 'Bipolar' }],
+    extras: [
+      { label: 'Alder', value: '52 år' },
+      { label: 'Diagnose (demo)', value: 'Bipolar' },
+    ],
   },
   'res-mette': {
     traffic: 'groen',
@@ -643,7 +666,9 @@ const RICH: Record<string, Omit<ResidentDemoDetailSeed, 'profile'>> = {
       { time: '16:00', label: 'Kage i køkkenet' },
     ],
     appointments: [{ when: 'Næste uge', what: 'Pårørendebesøg', place: 'Besøgsstue' }],
-    medications: [{ name: 'Sertralin', dose: '50 mg', schedule: '1× morgen', nextDue: 'I morgen 08:00' }],
+    medications: [
+      { name: 'Sertralin', dose: '50 mg', schedule: '1× morgen', nextDue: 'I morgen 08:00' },
+    ],
     plans: [
       {
         title: 'Recovery og aktivitet',
@@ -667,7 +692,10 @@ const RICH: Record<string, Omit<ResidentDemoDetailSeed, 'profile'>> = {
       },
     ],
     agreements: [{ title: 'Foto samtykke aktiviteter', updated: 'Mar. 2026', status: 'aktiv' }],
-    extras: [{ label: 'Alder', value: '54 år' }, { label: 'Diagnose (demo)', value: 'Depression' }],
+    extras: [
+      { label: 'Alder', value: '54 år' },
+      { label: 'Diagnose (demo)', value: 'Depression' },
+    ],
   },
   'res-camilla': {
     traffic: 'gul',
@@ -710,7 +738,8 @@ const RICH: Record<string, Omit<ResidentDemoDetailSeed, 'profile'>> = {
       {
         when: 'I går 15:00',
         author: 'Dagvagt',
-        excerpt: 'Camilla blev ked af det efter misforståelse — rolig samtale hjalp. Ingen eskalering.',
+        excerpt:
+          'Camilla blev ked af det efter misforståelse — rolig samtale hjalp. Ingen eskalering.',
         type: 'vagt',
         status: 'godkendt',
       },
@@ -723,7 +752,10 @@ const RICH: Record<string, Omit<ResidentDemoDetailSeed, 'profile'>> = {
       },
     ],
     agreements: [{ title: 'Samtykke terapi', updated: 'Jan. 2026', status: 'aktiv' }],
-    extras: [{ label: 'Alder', value: '27 år' }, { label: 'Diagnose (demo)', value: 'Emotionelt ustabil' }],
+    extras: [
+      { label: 'Alder', value: '27 år' },
+      { label: 'Diagnose (demo)', value: 'Emotionelt ustabil' },
+    ],
   },
   'res-jonas': {
     traffic: 'gul',
@@ -766,20 +798,25 @@ const RICH: Record<string, Omit<ResidentDemoDetailSeed, 'profile'>> = {
       {
         when: 'I går 11:00',
         author: 'Dagvagt',
-        excerpt: 'Jonas deltog i kort gåtur. Spurgte til PARK og fælles aktiviteter — positiv nysgerrighed.',
+        excerpt:
+          'Jonas deltog i kort gåtur. Spurgte til PARK og fælles aktiviteter — positiv nysgerrighed.',
         type: 'vagt',
         status: 'godkendt',
       },
       {
         when: 'For 1 uge siden',
         author: 'Kontaktperson',
-        excerpt: 'Gennemgang af samtykker og praktisk info. Jonas virker lettet over tydelige rammer.',
+        excerpt:
+          'Gennemgang af samtykker og praktisk info. Jonas virker lettet over tydelige rammer.',
         type: 'vagt',
         status: 'godkendt',
       },
     ],
     agreements: [{ title: 'Indflytningsaftale', updated: 'For 3 uger siden', status: 'aktiv' }],
-    extras: [{ label: 'Alder', value: '31 år' }, { label: 'Status', value: 'Nyindflyttet' }],
+    extras: [
+      { label: 'Alder', value: '31 år' },
+      { label: 'Status', value: 'Nyindflyttet' },
+    ],
   },
 };
 

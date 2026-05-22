@@ -142,8 +142,9 @@ export default function DemoWelcomeOverlay({ onOpenOverrapport }: Props) {
         </p>
 
         <p className="mb-5 text-sm leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
-          Du er <strong style={{ color: 'var(--cp-text)' }}>Lars N., kontaktpædagog på dagvagt</strong>{' '}
-          på {CARE_PORTAL_DEMO_FACILITY_NAME} — mandag morgen. Sara er i rød efter en svær nat, og to
+          Du er{' '}
+          <strong style={{ color: 'var(--cp-text)' }}>Lars N., kontaktpædagog på dagvagt</strong> på{' '}
+          {CARE_PORTAL_DEMO_FACILITY_NAME} — mandag morgen. Sara er i rød efter en svær nat, og to
           andre kræver et kig. Prøv trinene herunder, eller udforsk selv. Læs mere under{' '}
           <Link
             href="/care-portal-demo/om-demo"
