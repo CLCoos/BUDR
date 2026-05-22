@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createHash } from 'crypto';
 import {
-  createSession,
   validateSessionToken,
   SESSION_COOKIE_NAME,
   LEGACY_COOKIE_NAME,
@@ -52,51 +50,24 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const userAgent = request.headers.get('user-agent') ?? undefined;
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '';
-  const ipHash = ip ? createHash('sha256').update(ip).digest('hex').slice(0, 16) : undefined;
-
-  const session = await createSession({ residentUserId: rid, userAgent, ipHash });
-  if (!session) {
-    return htmlPage(
-      'Kunne ikke starte session',
-      'Kunne ikke starte session. Kontakt personalet, hvis problemet fortsætter.'
-    );
-  }
-
-  const res = NextResponse.redirect(new URL(next, request.url));
-  setSessionCookies(res, session.token, rid);
-  return res;
+  const loginUrl = new URL(`/app/${rid}`, request.url);
+  loginUrl.searchParams.set('next', next);
+  return NextResponse.redirect(loginUrl);
 }
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
-  const residentUserId = body?.residentUserId;
-
-  if (!residentUserId || typeof residentUserId !== 'string') {
-    return NextResponse.json({ error: 'missing_resident_id' }, { status: 400 });
+  const token = typeof body?.token === 'string' ? body.token : '';
+  if (!token) {
+    return NextResponse.json({ error: 'missing_token' }, { status: 400 });
   }
 
-  if (!isValidUuid(residentUserId)) {
-    return NextResponse.json({ error: 'invalid_resident_id' }, { status: 400 });
-  }
-
-  const userAgent = req.headers.get('user-agent') ?? undefined;
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '';
-  const ipHash = ip ? createHash('sha256').update(ip).digest('hex').slice(0, 16) : undefined;
-
-  const session = await createSession({ residentUserId, userAgent, ipHash });
-  if (!session) {
-    return NextResponse.json({ error: 'session_creation_failed' }, { status: 500 });
+  const validation = await validateSessionToken(token);
+  if (!validation.valid) {
+    return NextResponse.json({ error: 'invalid_session' }, { status: 401 });
   }
 
   const res = NextResponse.json({ success: true });
-  res.cookies.set(SESSION_COOKIE_NAME, session.token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: COOKIE_MAX_AGE,
-  });
+  setSessionCookies(res, token, validation.residentUserId);
   return res;
 }

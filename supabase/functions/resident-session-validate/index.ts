@@ -42,6 +42,14 @@ function isRateLimited(ip: string): boolean {
 // format before touching the database — cuts out probing with arbitrary strings.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+async function sha256Hex(value: string): Promise<string> {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -99,9 +107,10 @@ serve(async (req) => {
     // partial-match path, so this is not vulnerable to timing attacks.
     const { data: session, error } = await supabase
       .from('resident_sessions')
-      .select('resident_id, expires_at')
-      .eq('token', sessionToken)
+      .select('resident_user_id, expires_at')
+      .eq('session_token_hash', await sha256Hex(sessionToken))
       .gt('expires_at', new Date().toISOString())
+      .is('revoked_at', null)
       .single();
 
     if (error || !session) {
@@ -122,7 +131,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ data: { resident_id: session.resident_id } }),
+      JSON.stringify({ data: { resident_id: session.resident_user_id } }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch {
