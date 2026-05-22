@@ -1,17 +1,15 @@
 /**
- * Guidet 5-minutters demo-rute for Care Portal + Lys (salgsflow).
- * Bruges af `DemoGuidedTourProvider` — hold tekster korte og handlingsorienterede.
+ * Guidet demo-rute for Care Portal + Lys (salgsflow).
+ * Bygget om Saras storyline: stabil → krise → AI ser mønsteret → recovery.
+ * Tone: saglig ramme, menneskelig kerne. Bruges af `DemoGuidedTourProvider`.
  */
 
 export type DemoGuidedTourStep = {
   id: string;
-  /** Path + valgfri query, fx `/care-portal-demo?tab=alerts` */
   path: string;
   title: string;
   body: string;
-  /** Valgfrit element-id at scrolle til efter navigation */
   scrollToId?: string;
-  /** Sidste trin: vis CTA i panelet */
   isFinal?: boolean;
 };
 
@@ -21,47 +19,55 @@ export const DEMO_GUIDED_TOUR_STEPS: DemoGuidedTourStep[] = [
   {
     id: 'overblik',
     path: '/care-portal-demo',
-    title: '1 · Dagsoverblik',
-    body: 'Her samles medicin, opgaver, advarsler og beboerliste — samme logik som efter login. Alt du ser er simuleret (DEMO).',
+    title: '1 · Morgenoverblik',
+    body: 'Du møder ind som dagvagt og kontaktpædagog. Her er hele bostedet samlet på ét blik — hvem har det godt, hvem kræver opmærksomhed i dag. Alt du ser er demo med fiktive borgere.',
     scrollToId: 'demo-tour-dashboard',
   },
   {
-    id: 'advarsler',
+    id: 'krise',
     path: '/care-portal-demo?tab=alerts',
-    title: '2 · Advarsler og opmærksomhed',
-    body: 'Portalen samler signaler, så vagten kan prioritere. I produktion kommer data fra rigtige flows — her er det mock, så du trygt kan klikke rundt.',
+    title: '2 · Sara er i rød',
+    body: 'Sara Kristensen lyser rød i morges. Hun sov dårligt, og humøret er faldet tre dage i træk. Personalet behøver ikke lede efter det — portalen løftede det selv frem.',
     scrollToId: 'budr-advarsler',
   },
   {
-    id: 'beboere',
-    path: '/care-portal-demo/residents',
-    title: '3 · Beboeroversigt',
-    body: 'Liste med trafiklys og hurtige handlinger. Vælg en beboer for at åbne 360°-visningen med journal, plan og aktivitet fra Lys.',
+    id: 'moenster',
+    path: '/care-portal-demo/residents/res-sara?tab=overblik',
+    title: '3 · Mønsteret ingen så',
+    body: 'Åbn Saras forløb. AI har set noget over de sidste uger, som er svært at fange i en travl hverdag: hendes dårlige dage kommer typisk et par dage efter mors besøg. Ikke under besøget — bagefter. Den slags indsigt er kernen i BUDR.',
+    scrollToId: 'section-oversigt',
   },
   {
-    id: 'beboer360',
-    path: '/care-portal-demo/residents/res-002',
-    title: '4 · Beboer 360°',
-    body: 'Én flade for status, journal (kladde → godkendt), medicin og kobling til borgerens app. Det er kernen i BUDR for det daglige arbejde.',
-    scrollToId: 'section-oversigt',
+    id: 'samtale',
+    path: '/care-portal-demo/residents/res-sara',
+    title: '4 · Lys fangede det først',
+    body: 'Da det spidsede til, talte Sara med Lys om natten. Samtalen viste tidlige tegn, og sikkerhedslaget gav personalet besked — stille, uden alarm. Her ser du hvad borgeren delte, og hvad systemet reagerede på.',
+    scrollToId: 'section-borgerapp',
   },
   {
     id: 'handover',
     path: '/care-portal-demo/handover',
-    title: '5 · Vagtoverlevering',
-    body: 'AI kan udkaste overdragelse — personalet retter og godkender. BUDR erstatter ikke faglig dømmekraft; det fremskynder dokumentationen.',
+    title: '5 · Vagtoverlevering på minutter',
+    body: 'Ved vagtskifte udkaster AI overdragelsen ud fra dagens hændelser. Personalet læser, retter og godkender. BUDR erstatter ikke faglig dømmekraft — det fjerner tasterarbejdet, så tiden går til borgeren.',
+  },
+  {
+    id: 'recovery',
+    path: '/care-portal-demo/residents/res-sara',
+    title: '6 · Da mestringen virkede',
+    body: 'Uger senere kommer de samme tidlige tegn igen. Men denne gang griber Sara selv ind — hun bruger sin tryghedsplan, og uroen vendes uden indlæggelse. Forløbet viser fremgangen sort på hvidt, og det er den historie en handleplan skal kunne fortælle.',
+    scrollToId: 'section-indtjek',
   },
   {
     id: 'lys',
     path: '/resident-demo',
-    title: '6 · Borger-appen Lys',
-    body: 'Sådan oplever borgeren dagen, mål og støtte. Skærmen er demo med lokalt indhold — ikke en rigtig borgerkonto.',
+    title: '7 · Set fra Saras side',
+    body: 'Det her er borgerens egen app. Samme dag, samme forløb — men fra Saras stol: hendes mål, hendes dagsplan, hendes samtaler med Lys. To sider af samme system, der taler sammen.',
   },
   {
     id: 'afslut',
     path: '/care-portal-demo',
-    title: '7 · Næste skridt',
-    body: 'Det var den korte rundtur. Vil du se produktet med jeres egne data og pilotforløb?',
+    title: '8 · Næste skridt',
+    body: 'Det var Saras forløb gennem BUDR. I en pilot kører det på jeres egne borgere og jeres egne data. Skal vi tage en snak om, hvordan det ville se ud hos jer?',
     scrollToId: 'demo-tour-cta',
     isFinal: true,
   },

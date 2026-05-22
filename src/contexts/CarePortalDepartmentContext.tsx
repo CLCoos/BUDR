@@ -72,14 +72,19 @@ export function CarePortalDepartmentProvider({ children }: { children: React.Rea
   const applyAutoDepartment = useCallback(async () => {
     const fromAuth = await fetchStaffDepartmentFromAuth();
     if (fromAuth != null) {
-      setDepartmentState(fromAuth);
+      setDepartmentState((prev) => (prev === fromAuth ? prev : fromAuth));
       return;
     }
     if (shouldInferFromDemoShifts(pathname, pilot)) {
       const inferred = inferDepartmentFromDemoShifts(loadShifts(), new Date());
-      if (inferred != null) setDepartmentState(inferred);
+      if (inferred != null) {
+        setDepartmentState((prev) => (prev === inferred ? prev : inferred));
+      }
     }
   }, [pathname, pilot]);
+
+  const applyAutoDepartmentRef = useRef(applyAutoDepartment);
+  applyAutoDepartmentRef.current = applyAutoDepartment;
 
   useEffect(() => {
     try {
@@ -106,7 +111,7 @@ export function CarePortalDepartmentProvider({ children }: { children: React.Rea
     if (typeof window === 'undefined') return;
     const refresh = () => {
       if (fixedModeRef.current) return;
-      void applyAutoDepartment();
+      void applyAutoDepartmentRef.current();
     };
     const onStorage = (e: StorageEvent) => {
       if (e.key !== DEMO_SHIFTS_KEY) return;
@@ -118,13 +123,13 @@ export function CarePortalDepartmentProvider({ children }: { children: React.Rea
       window.removeEventListener('storage', onStorage);
       window.removeEventListener(DEMO_SHIFTS_UPDATED_EVENT, refresh);
     };
-  }, [applyAutoDepartment]);
+  }, []);
 
   useEffect(() => {
     if (fixedModeRef.current) return;
-    const t = window.setInterval(() => void applyAutoDepartment(), 60_000);
+    const t = window.setInterval(() => void applyAutoDepartmentRef.current(), 60_000);
     return () => window.clearInterval(t);
-  }, [applyAutoDepartment]);
+  }, []);
 
   const setDepartment = useCallback((v: CarePortalDepartment) => {
     setDepartmentState(v);

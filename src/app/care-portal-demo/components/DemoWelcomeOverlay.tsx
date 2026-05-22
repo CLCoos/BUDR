@@ -27,8 +27,8 @@ const STEPS: Step[] = [
   {
     num: 2,
     label: 'En beboer i rød',
-    sub: 'Klik på Finn Larsen → 360°-visning med journal, medicin og AI-brief.',
-    href: '/care-portal-demo/residents/res-002',
+    sub: 'Klik på Sara Kristensen → 360°-visning med journal, medicin og AI-brief.',
+    href: '/care-portal-demo/residents/res-sara',
   },
   {
     num: 3,
@@ -142,9 +142,9 @@ export default function DemoWelcomeOverlay({ onOpenOverrapport }: Props) {
         </p>
 
         <p className="mb-5 text-sm leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
-          Du er <strong style={{ color: 'var(--cp-text)' }}>Sara K., dagvagt</strong> på{' '}
-          {CARE_PORTAL_DEMO_FACILITY_NAME} — mandag morgen. En beboer er i rød, en er ikke mødt til
-          morgenmad. Prøv trinene herunder, eller udforsk selv. Læs mere under{' '}
+          Du er <strong style={{ color: 'var(--cp-text)' }}>Lars N., kontaktpædagog på dagvagt</strong>{' '}
+          på {CARE_PORTAL_DEMO_FACILITY_NAME} — mandag morgen. Sara er i rød efter en svær nat, og to
+          andre kræver et kig. Prøv trinene herunder, eller udforsk selv. Læs mere under{' '}
           <Link
             href="/care-portal-demo/om-demo"
             className="font-semibold underline underline-offset-2"

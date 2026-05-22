@@ -39,16 +39,12 @@ export interface Bekymringsnotat {
 }
 
 const DEMO_RESIDENTS: { id: string; name: string }[] = [
-  { id: 'res-001', name: 'Anders M.' },
-  { id: 'res-002', name: 'Finn L.' },
-  { id: 'res-003', name: 'Kirsten R.' },
-  { id: 'res-004', name: 'Maja T.' },
-  { id: 'res-005', name: 'Thomas B.' },
-  { id: 'res-006', name: 'Lena P.' },
-  { id: 'res-007', name: 'Henrik S.' },
-  { id: 'res-008', name: 'Birgit N.' },
-  { id: 'res-009', name: 'Rasmus V.' },
-  { id: 'res-010', name: 'Dorthe A.' },
+  { id: 'res-sara', name: 'Sara K.' },
+  { id: 'res-mikkel', name: 'Mikkel T.' },
+  { id: 'res-anders', name: 'Anders P.' },
+  { id: 'res-mette', name: 'Mette P.' },
+  { id: 'res-camilla', name: 'Camilla B.' },
+  { id: 'res-jonas', name: 'Jonas F.' },
 ];
 
 function severityTone(score: number): 'green' | 'amber' | 'red' {
@@ -78,33 +74,33 @@ function createInitialMockNotes(): Bekymringsnotat[] {
   return [
     {
       id: 'bn-001',
-      residentId: 'res-002',
-      residentName: 'Finn L.',
-      note: 'Virker isoleret siden besøg fra pårørende blev aflyst i sidste uge.',
-      category: 'Relationer',
-      severity: 6,
-      createdAt: new Date(now - 2 * 24 * 60 * 60 * 1000),
-      staffInitials: 'SK',
+      residentId: 'res-sara',
+      residentName: 'Sara K.',
+      note: 'Natlig uro i nat — Sara greb selv ind via Lys og bad om kontakt. Faldt til ro ca. 03:00 efter tryghedsplan.',
+      category: 'Helbred',
+      severity: 7,
+      createdAt: new Date(now - 6 * 60 * 60 * 1000),
+      staffInitials: 'LN',
     },
     {
       id: 'bn-002',
-      residentId: 'res-005',
-      residentName: 'Thomas B.',
-      note: 'Mangler kontant til småting — skal afklares med socialrådgiver.',
-      category: 'Økonomi',
-      severity: 4,
-      createdAt: new Date(now - 4 * 24 * 60 * 60 * 1000),
-      staffInitials: 'SK',
+      residentId: 'res-camilla',
+      residentName: 'Camilla B.',
+      note: 'Kort uro efter misforståelse i går — rolig samtale hjalp. Ønsker rolig opfølgning i morgen.',
+      category: 'Relationer',
+      severity: 5,
+      createdAt: new Date(now - 18 * 60 * 60 * 1000),
+      staffInitials: 'LN',
     },
     {
       id: 'bn-003',
-      residentId: 'res-003',
-      residentName: 'Kirsten R.',
-      note: 'Søvn og appetit stadig lav; læge er underrettet.',
-      category: 'Helbred',
-      severity: 8,
-      createdAt: new Date(now - 6 * 60 * 60 * 1000),
-      staffInitials: 'SK',
+      residentId: 'res-sara',
+      residentName: 'Sara K.',
+      note: 'Mønster efter mors besøg noteret i team — lavpunkter typisk 1-2 dage bagefter.',
+      category: 'Relationer',
+      severity: 6,
+      createdAt: new Date(now - 3 * 24 * 60 * 60 * 1000),
+      staffInitials: 'LN',
     },
   ];
 }
@@ -145,16 +141,14 @@ type Props = {
   demoMode?: boolean;
 };
 
+const DEMO_NOTES_SEED = createInitialMockNotes();
+
 export default function BekymringsnotatWidget({ demoMode = false }: Props) {
-  const [notes, setNotes] = useState<Bekymringsnotat[]>(() =>
-    demoMode ? createInitialMockNotes() : []
-  );
+  const [notes, setNotes] = useState<Bekymringsnotat[]>([]);
   const [loading, setLoading] = useState(!demoMode);
   const [refreshing, setRefreshing] = useState(false);
   const [scopeError, setScopeError] = useState<string | null>(null);
-  const [residents, setResidents] = useState<{ id: string; name: string }[]>(() =>
-    demoMode ? DEMO_RESIDENTS : []
-  );
+  const [residents, setResidents] = useState<{ id: string; name: string }[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [residentId, setResidentId] = useState('');
   const [noteText, setNoteText] = useState('');
@@ -260,7 +254,16 @@ export default function BekymringsnotatWidget({ demoMode = false }: Props) {
   }, []);
 
   useEffect(() => {
-    if (!demoMode) void loadLive();
+    if (!demoMode) return;
+    setNotes((prev) => (prev === DEMO_NOTES_SEED ? prev : DEMO_NOTES_SEED));
+    setResidents((prev) => (prev === DEMO_RESIDENTS ? prev : DEMO_RESIDENTS));
+    setLoading((l) => (l ? false : l));
+    setScopeError((e) => (e === null ? e : null));
+  }, [demoMode]);
+
+  useEffect(() => {
+    if (demoMode) return;
+    void loadLive();
   }, [demoMode, loadLive]);
 
   const refresh = useCallback(() => {

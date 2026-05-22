@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import ResidentHandoverCard from './ResidentHandoverCard';
 import { Download } from 'lucide-react';
@@ -7,7 +7,14 @@ import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { parseStaffOrgId, resolveStaffOrgResidents } from '@/lib/staffOrgScope';
 import { loadShifts } from '@/lib/demoShiftPlan';
-import { useNameDisplay } from '@/lib/residents/useNameDisplay';
+import { CARE_DEMO_RESIDENT_PROFILES } from '@/lib/careDemoResidents';
+import { getResidentDemoDetail } from '@/lib/careDemoResidentDetail';
+import { useCurrentOrg } from '@/lib/org/useCurrentOrg';
+import {
+  formatResidentName,
+  getInitials,
+  type ResidentNameFields,
+} from '@/lib/residents/formatName';
 
 function formatHandoverFileDate(d: Date): string {
   const y = d.getFullYear();
@@ -38,70 +45,55 @@ export interface HandoverEntry {
   previousShift?: string;
 }
 
-const initialEntries: HandoverEntry[] = [
-  {
-    residentId: 'res-001',
-    residentName: 'Anders M.',
-    initials: 'AM',
-    flagColor: 'groen',
-    note: '',
-    shiftLabel: 'dag',
+/** Kort visningsnavn til handover-kort (fx "Sara K."). */
+function demoHandoverShortName(displayName: string): string {
+  const parts = displayName.trim().split(/\s+/);
+  if (parts.length < 2) return displayName;
+  return `${parts[0]} ${parts[parts.length - 1]!.charAt(0)}.`;
+}
+
+function demoTrafficToFlag(traffic: 'groen' | 'gul' | 'roed' | null | undefined): FlagColor {
+  if (traffic === 'groen') return 'groen';
+  if (traffic === 'gul') return 'gul';
+  if (traffic === 'roed') return 'roed';
+  return null;
+}
+
+const DEMO_HANDOVER_PREVIOUS: Partial<
+  Record<string, Pick<HandoverEntry, 'previousNote' | 'previousShift'>>
+> = {
+  'res-sara': {
     previousNote:
-      'God aften. Spiste aftensmad med de andre. Tog medicin til rette tid. Sov hurtigt.',
-    previousShift: 'Aftenvagt · Morten L.',
-  },
-  {
-    residentId: 'res-002',
-    residentName: 'Finn L.',
-    initials: 'FL',
-    flagColor: 'roed',
-    note: '',
-    shiftLabel: 'dag',
-    previousNote:
-      'Meget urolig. Aktiverede kriseplan kl. 02:30. Ringede til vagttelefonen. Sov ikke.',
+      'Sara vågen og urolig i nat. Talte med Lys kl. 02:10. Faldt til ro ca. 03:00. Ingen yderligere tiltag.',
     previousShift: 'Nattevagt · Hanne B.',
   },
-  {
-    residentId: 'res-003',
-    residentName: 'Kirsten R.',
-    initials: 'KR',
-    flagColor: 'roed',
-    note: '',
-    shiftLabel: 'dag',
-    previousNote: 'Græd ved aftensmad. Ville ikke tale. Gik i seng tidligt. Sov uroligt.',
-    previousShift: 'Aftenvagt · Morten L.',
+  'res-camilla': {
+    previousNote: 'Kort uro efter misforståelse — rolig samtale hjalp. Ingen eskalering.',
+    previousShift: 'Aftenvagt · Dagvagt',
   },
-  {
-    residentId: 'res-004',
-    residentName: 'Maja T.',
-    initials: 'MT',
-    flagColor: 'gul',
-    note: '',
-    shiftLabel: 'dag',
-    previousNote: 'Let angst. Lavede vejrtrækningsøvelser med personalet. Roligere til sidst.',
-    previousShift: 'Aftenvagt · Morten L.',
+  'res-mikkel': {
+    previousNote: 'Rolig aften på værelset. Spiste aftensmad. Ingen uro observeret.',
+    previousShift: 'Aftenvagt · Line',
   },
-  {
-    residentId: 'res-005',
-    residentName: 'Thomas B.',
-    initials: 'TB',
-    flagColor: null,
-    note: '',
-    shiftLabel: 'dag',
-    previousNote: 'Ingen observationer. Var på besøg hos familie.',
-    previousShift: 'Aftenvagt · Morten L.',
-  },
-  {
-    residentId: 'res-006',
-    residentName: 'Lena P.',
-    initials: 'LP',
-    flagColor: 'groen',
-    note: '',
-    shiftLabel: 'dag',
-    previousNote: 'God aften. Deltog i fællesaktivitet. God stemning.',
-    previousShift: 'Aftenvagt · Morten L.',
-  },
-];
+};
+
+function buildDemoHandoverEntries(shiftLabel: ShiftLabel): HandoverEntry[] {
+  return CARE_DEMO_RESIDENT_PROFILES.map((profile) => {
+    const detail = getResidentDemoDetail(profile.id);
+    const prev = DEMO_HANDOVER_PREVIOUS[profile.id];
+    const lastJournal = detail?.journal.find((j) => j.status !== 'kladde');
+    return {
+      residentId: profile.id,
+      residentName: demoHandoverShortName(profile.displayName),
+      initials: profile.initials,
+      flagColor: demoTrafficToFlag(detail?.traffic),
+      note: '',
+      shiftLabel,
+      previousNote: prev?.previousNote ?? lastJournal?.excerpt,
+      previousShift: prev?.previousShift ?? 'Forrige vagt',
+    };
+  });
+}
 
 type HandoverClientProps = {
   /** Mørk Care Portal-flade (fx demo med --cp-* tokens) */
@@ -147,10 +139,9 @@ export default function HandoverClient({
   carePortalDark = true,
   useDemoData = false,
 }: HandoverClientProps) {
-  const { formatName, getInitials } = useNameDisplay();
-  const [entries, setEntries] = useState<HandoverEntry[]>(() =>
-    useDemoData ? initialEntries : []
-  );
+  const org = useCurrentOrg();
+  const nameDisplayMode = org?.resident_name_display_mode ?? 'first_name_initial';
+  const [entries, setEntries] = useState<HandoverEntry[]>([]);
   const [liveListLoading, setLiveListLoading] = useState(!useDemoData);
   const [currentShift, setCurrentShift] = useState<ShiftLabel>('doegnnotat');
   const [saving, setSaving] = useState(false);
@@ -240,16 +231,19 @@ export default function HandoverClient({
     setCurrentShift(detected);
   }, []);
 
-  useEffect(() => {
-    setEntries((prev) => prev.map((e) => ({ ...e, shiftLabel: currentShift })));
-  }, [currentShift]);
+  const demoEntries = useMemo(
+    () => (useDemoData ? buildDemoHandoverEntries(currentShift) : null),
+    [useDemoData, currentShift]
+  );
 
   useEffect(() => {
-    if (useDemoData) {
-      setEntries(initialEntries.map((e) => ({ ...e, shiftLabel: currentShift })));
-      setLiveListLoading(false);
-      return;
-    }
+    if (!useDemoData || !demoEntries) return;
+    setEntries((prev) => (prev === demoEntries ? prev : demoEntries));
+    setLiveListLoading((l) => (l ? false : l));
+  }, [useDemoData, demoEntries]);
+
+  useEffect(() => {
+    if (useDemoData) return;
 
     let cancelled = false;
     setLiveListLoading(true);
@@ -314,14 +308,14 @@ export default function HandoverClient({
           last_name: (r.last_name as string | null) ?? null,
           display_name: (r.display_name as string | null) ?? null,
         };
-        const name = formatName(resident);
+        const name = formatResidentName(resident, nameDisplayMode);
         return {
           residentId: r.user_id as string,
           residentName: name,
           initials:
             typeof od.avatar_initials === 'string' && od.avatar_initials.trim()
               ? od.avatar_initials.toUpperCase()
-              : getInitials(resident),
+              : getInitials(resident as ResidentNameFields),
           flagColor: mapCheckinTraffic(tlByRes.get(r.user_id as string) ?? null),
           note: '',
           shiftLabel: currentShift,
@@ -335,7 +329,7 @@ export default function HandoverClient({
     return () => {
       cancelled = true;
     };
-  }, [useDemoData, currentShift, formatName, getInitials]);
+  }, [useDemoData, currentShift, nameDisplayMode]);
 
   const updateEntry = (residentId: string, updates: Partial<HandoverEntry>) => {
     setEntries((prev) => prev.map((e) => (e.residentId === residentId ? { ...e, ...updates } : e)));

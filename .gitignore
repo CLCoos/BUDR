@@ -30,6 +30,9 @@ Thumbs.db
 # Optional: if using testing tools
 coverage/
 jest-test-results.json
+.playwright-browsers/
+test-results/
+playwright-report/
 
 # Lighthouse (npm run lighthouse:institutioner m.m.)
 lighthouse-institutioner.html

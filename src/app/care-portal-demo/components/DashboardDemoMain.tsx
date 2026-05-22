@@ -42,6 +42,18 @@ const JournalAiDemoModal = dynamic(
 
 const DEMO_INDSATS_KEY = 'budr_indsats_records_v1';
 
+function formatDemoLastUpdated(): string {
+  return new Date()
+    .toLocaleString('da-DK', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+    .replace(',', ' ·');
+}
+
 function seedDemoIndsatsIfEmpty() {
   try {
     const existing = localStorage.getItem(DEMO_INDSATS_KEY);
@@ -60,8 +72,8 @@ function seedDemoIndsatsIfEmpty() {
         paragraph: '§136',
         tidspunkt: d(5),
         varighed: '4 min',
-        involverede_borgere: 'Finn L.',
-        involverede_personale: 'Sara K., Mikkel H.',
+        involverede_borgere: 'Sara K.',
+        involverede_personale: 'Lars N., Peter N.',
         beskrivelse:
           'Borger forsøgte at forlade bostedet uden afklaring af destination. Fastholdelse var nødvendig af sikkerhedsmæssige årsager.',
         forudgaaende:
@@ -70,7 +82,7 @@ function seedDemoIndsatsIfEmpty() {
           'Kortvarig fastholdelse ved udgangsdøren. Borger beroliget og fulgt tilbage til stuen.',
         borgerens_reaktion: 'Borger rolignet sig hurtigt og accepterede aftalen om tur næste dag.',
         opfoelgning: 'Primærperson taler med borger næste dag. Hændelsen indberettes til ledelsen.',
-        underskrift: 'Sara K.',
+        underskrift: 'Lars N.',
       },
       {
         id: 'demo-indsats-2',
@@ -79,7 +91,7 @@ function seedDemoIndsatsIfEmpty() {
         paragraph: '§141',
         tidspunkt: d(12),
         varighed: '10 min',
-        involverede_borgere: 'Kirsten R.',
+        involverede_borgere: 'Camilla B.',
         involverede_personale: 'Hanne B.',
         beskrivelse:
           'Borger afslog gentagne gange at vaske sig. Sundhedsmæssig nødvendighed vurderet.',
@@ -100,7 +112,7 @@ function seedDemoIndsatsIfEmpty() {
         tidspunkt: d(2),
         varighed: '2 timer',
         involverede_borgere: 'Thomas B.',
-        involverede_personale: 'Mikkel H.',
+        involverede_personale: 'Lars N.',
         beskrivelse:
           'Borger viste tegn på forøget uro og selvskade-adfærd. Forhøjet observation iværksat.',
         forudgaaende:
@@ -108,7 +120,7 @@ function seedDemoIndsatsIfEmpty() {
         handling: 'Nærværende observation hvert 15. min. Samtale tilbudt og accepteret.',
         borgerens_reaktion: 'Borger åbnede sig gradvist. Kriseplanen gennemgået i fællesskab.',
         opfoelgning: 'Forhøjet opmærksomhed næste 48 timer. Læge kontaktes ved forværring.',
-        underskrift: 'Mikkel H.',
+        underskrift: 'Lars N.',
       },
     ];
     localStorage.setItem(DEMO_INDSATS_KEY, JSON.stringify(records));
@@ -166,18 +178,9 @@ export default function DashboardDemoMain() {
   const router = useRouter();
   const { startGuidedTour } = useDemoGuidedTour();
   const tab = searchParams.get('tab');
+  const openOverrapport = searchParams.get('openOverrapport');
 
-  const [lastUpdated, setLastUpdated] = useState(() =>
-    new Date()
-      .toLocaleString('da-DK', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-      .replace(',', ' ·')
-  );
+  const [lastUpdated, setLastUpdated] = useState(() => formatDemoLastUpdated());
   const [overrapportOpen, setOverrapportOpen] = useState(false);
   const [overrapportPanelOpen, setOverrapportPanelOpen] = useState(false);
   const [indsatsOpen, setIndsatsOpen] = useState(false);
@@ -186,26 +189,21 @@ export default function DashboardDemoMain() {
 
   useEffect(() => {
     seedDemoIndsatsIfEmpty();
+  }, []);
+
+  useEffect(() => {
     const t = window.setInterval(() => {
-      setLastUpdated(
-        new Date()
-          .toLocaleString('da-DK', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          })
-          .replace(',', ' ·')
-      );
+      setLastUpdated((prev) => {
+        const next = formatDemoLastUpdated();
+        return prev === next ? prev : next;
+      });
     }, 60_000);
     return () => window.clearInterval(t);
   }, []);
 
   useEffect(() => {
-    if (tab === 'journal') {
-      setJournalOpen(true);
-    }
+    if (tab !== 'journal') return;
+    setJournalOpen((open) => (open ? open : true));
   }, [tab]);
 
   useEffect(() => {
@@ -218,10 +216,10 @@ export default function DashboardDemoMain() {
   }, [tab]);
 
   useEffect(() => {
-    if (searchParams.get('openOverrapport') !== '1') return;
-    setOverrapportPanelOpen(true);
+    if (openOverrapport !== '1') return;
+    setOverrapportPanelOpen((open) => (open ? open : true));
     router.replace('/care-portal-demo', { scroll: false });
-  }, [searchParams, router]);
+  }, [openOverrapport, router]);
 
   const closeJournal = () => {
     setJournalOpen(false);
@@ -253,7 +251,7 @@ export default function DashboardDemoMain() {
             Dagsoverblik
           </h1>
           <p className="mt-2 text-sm leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
-            Dagvagt · Sara K. — samme overblik som efter login, med simuleret data.{' '}
+            Dagvagt · Lars N. — samme overblik som efter login, med simuleret data.{' '}
             <span className="font-medium" style={{ color: 'var(--cp-amber)' }}>
               {CARE_PORTAL_DEMO_DISCLAIMER_SHORT}
             </span>
@@ -335,10 +333,10 @@ export default function DashboardDemoMain() {
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
-        <MedicationWidget />
+        <MedicationWidget demoMode />
         <BekymringsnotatWidget demoMode />
         <KalenderWidget variant="demo" />
-        <OpgaveWidget />
+        <OpgaveWidget demoMode />
       </div>
 
       <div className="mb-6">

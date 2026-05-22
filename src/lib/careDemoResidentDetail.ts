@@ -256,16 +256,16 @@ function isoDaysAgo(n: number): string {
   return d.toISOString();
 }
 
-/** Deterministisk have pr. demo-beboer — rig udgave for res-001 (Anders). */
+/** Deterministisk have pr. demo-beboer — rig udgave for res-sara (Sara). */
 export function synthesizeGardenPlots(residentId: string): HavenDemoPlot[] {
-  if (residentId === 'res-001') {
+  if (residentId === 'res-sara') {
     return [
       {
         id: `${residentId}-g1`,
         slot_index: 0,
         plant_type: 'flower',
-        plant_name: 'Solsikke',
-        goal_text: 'Gå en tur udenfor hver dag',
+        plant_name: 'Kornblomst',
+        goal_text: 'Tegne 15 minutter hver dag',
         growth_stage: 4,
         total_water: 210,
         last_watered_at: isoDaysAgo(0),
@@ -274,8 +274,8 @@ export function synthesizeGardenPlots(residentId: string): HavenDemoPlot[] {
         id: `${residentId}-g2`,
         slot_index: 1,
         plant_type: 'tree',
-        plant_name: 'Egetræ',
-        goal_text: 'Tage bussen alene til butikken',
+        plant_name: 'Lind',
+        goal_text: 'Én struktureret samtale om ugen',
         growth_stage: 2,
         total_water: 45,
         last_watered_at: isoDaysAgo(1),
@@ -284,8 +284,8 @@ export function synthesizeGardenPlots(residentId: string): HavenDemoPlot[] {
         id: `${residentId}-g3`,
         slot_index: 2,
         plant_type: 'herb',
-        plant_name: 'Mynte',
-        goal_text: 'Sove igennem natten 5 gange på rad',
+        plant_name: 'Kamille',
+        goal_text: 'Sove mindst seks timer fem nætter i træk',
         growth_stage: 3,
         total_water: 72,
         last_watered_at: isoDaysAgo(0),
@@ -295,7 +295,7 @@ export function synthesizeGardenPlots(residentId: string): HavenDemoPlot[] {
         slot_index: 3,
         plant_type: 'vegetable',
         plant_name: 'Tomat',
-        goal_text: 'Ringe til min søster én gang om ugen',
+        goal_text: 'Ringe til søster Anna én gang om ugen',
         growth_stage: 1,
         total_water: 18,
         last_watered_at: isoDaysAgo(3),
@@ -410,563 +410,376 @@ function fallbackDetail(profile: CareDemoResidentProfile): ResidentDemoDetailSee
 }
 
 const RICH: Record<string, Omit<ResidentDemoDetailSeed, 'profile'>> = {
-  'res-001': {
-    traffic: 'groen',
-    checkIn: {
-      checkedIn: true,
-      time: '08:12',
-      mood: 'God (7/10)',
-      note: 'Vil gerne ud efter frokost.',
-    },
-    aiBrief: {
-      lead: 'Anders er i god form — perfekt dag til at understøtte hans egne mål om udeaktivitet.',
-      bullets: [
-        'To PN-doser Panodil sidste 7 dage — kort vurdering om eftermiddagen.',
-        'Gruppe gåtur 14:00 matcher hans app-mål; tilbyd plads.',
-        'Ingen kommende lægeaftaler denne uge.',
-      ],
-      actions: [
-        { label: 'Åbn dagsplan', sectionId: 'dagsplan' },
-        { label: 'Borgermål (app)', sectionId: 'maal' },
-        { label: 'Medicin', sectionId: 'medicin' },
-      ],
-    },
-    dagsplan: [
-      { time: '08:00', label: 'Morgenmad, Metformin', done: true },
-      { time: '10:30', label: 'Rengøring værelse (tilbudt)', done: true },
-      { time: '12:00', label: 'Frokost fællesskab' },
-      { time: '14:00', label: 'Gåtur — gruppe (anbefalet af assistent)' },
-      { time: '17:30', label: 'Aftensmad' },
-      { time: '20:00', label: 'Afrunding / medicin aften' },
-    ],
-    appointments: [
-      { when: '8. apr. kl. 11:00', what: 'Tandlæge', place: 'Kommunal klinik' },
-      { when: '22. apr. kl. 09:30', what: 'Årlig lægesamtale', place: 'Video' },
-    ],
-    medications: [
-      {
-        name: 'Metformin',
-        dose: '500 mg',
-        schedule: '2× dagligt',
-        nextDue: 'I dag 20:00',
-      },
-      { name: 'Panodil', dose: '500 mg', schedule: 'PN', pn: true, nextDue: 'Max 4 g / 24 t' },
-    ],
-    plans: [
-      {
-        title: 'Handleplan Q2 — diabetes og aktivitet',
-        focus: 'Stabilisering af blodsukker + daglig bevægelse',
-        owner: 'Sanne L. / læge',
-        nextReview: '10. apr. 2026',
-      },
-      {
-        title: 'Individuel støtteplan',
-        focus: 'Sociale tilbud og energistyring',
-        owner: 'Sara K.',
-        nextReview: '3. maj 2026',
-      },
-    ],
-    goalsResident: [
-      {
-        title: 'Gå tur udenfor 4× om ugen',
-        progress: 75,
-        fromApp: true,
-        note: 'Registreret i Lys',
-      },
-      { title: 'Mindre sukker i kaffen', progress: 50, fromApp: true },
-    ],
-    goalsStaff: [
-      {
-        title: 'Logge måltider 5/7 dage',
-        progress: 60,
-        note: 'Fælles mål med køkken',
-      },
-      {
-        title: 'Tjek fodstatus ved bad (1× uge)',
-        progress: 100,
-        note: 'Udført mandag',
-      },
-    ],
-    journal: [
-      {
-        id: 'res-001-j-0',
-        when: 'I dag 06:50',
-        author: 'Morgenvagt · Line',
-        excerpt:
-          'Vågnede selv, humør let opstemt. Tog morgenmedicin uden problemer. Spurgte til gåtur efter frokost.',
-        type: 'vagt',
-        status: 'godkendt',
-      },
-      {
-        id: 'res-001-j-kladde',
-        when: 'I dag 10:15',
-        author: 'Dagvagt · kladde',
-        excerpt:
-          'Udkast: Anders nævnte let smerter i foden efter gåturen. Vil spørge til Panodil ved behov. Afventer godkendelse.',
-        type: 'bekymring',
-        status: 'kladde',
-      },
-      {
-        id: 'res-001-j-1',
-        when: 'I går 22:10',
-        author: 'Aftenvagt · Maria',
-        excerpt:
-          'Så film med andre beboere. Gik tidligt i seng. God aftenstemning, deltog aktivt i samtalen.',
-        type: 'vagt',
-        status: 'godkendt',
-      },
-      {
-        id: 'res-001-j-2',
-        when: 'I går 14:20',
-        author: 'Dagvagt · Sara',
-        excerpt:
-          'Gruppe gåtur gennemført. Anders gik hele ruten — 45 min. God samtalepartner for Lena. Ingen smerter rapporteret.',
-        type: 'vagt',
-        status: 'godkendt',
-      },
-      {
-        id: 'res-001-j-3',
-        when: '2 dage siden 09:30',
-        author: 'Læge · videoopkald',
-        excerpt:
-          'Telefonisk opfølgning med praktiserende læge. Metformin fortsættes uændret. HbA1c næste gang 22. april. Ingen nye ordinationer.',
-        type: 'læge',
-        status: 'godkendt',
-      },
-      {
-        id: 'res-001-j-4',
-        when: '4 dage siden 20:00',
-        author: 'Aftenvagt · Hanne',
-        excerpt:
-          'Aftensmedicin taget korrekt. Anders i godt humør, snakkede om sin niece der kommer på besøg næste uge.',
-        type: 'vagt',
-        status: 'godkendt',
-      },
-      {
-        id: 'res-001-j-5',
-        when: '6 dage siden 07:10',
-        author: 'Morgenvagt',
-        excerpt:
-          'Svær opvågning. Energi lav, spiste kun lidt. Tog medicin efter påmindelse. Fulgt til morgenmaden.',
-        type: 'vagt',
-        status: 'godkendt',
-      },
-    ],
-    agreements: [
-      { title: 'Samtykke behandling + medicin', updated: '2. jan. 2026', status: 'aktiv' },
-      { title: 'Forløbsplan kommune', updated: '15. mar. 2026', status: 'aktiv' },
-    ],
-    extras: [
-      { label: 'Kontaktperson', value: 'Sara K. — intern 4529' },
-      { label: 'CPR (demo)', value: 'XXXXXX-XXXX' },
-    ],
-  },
-  'res-002': {
+  'res-sara': {
     traffic: 'roed',
     checkIn: {
-      checkedIn: false,
-      note: 'Ikke set til morgenrunde endnu — prioriter kontakt.',
+      checkedIn: true,
+      time: '07:30',
+      mood: 'Tung',
+      note: 'Sov dårligt tredje nat i træk. Mere tilbagetrukket.',
     },
     aiBrief: {
-      lead: 'Finn er i en sårbar periode. Assistenten foreslår ro, forudsigelighed og tæt journal.',
+      lead: 'Sara er i en sårbar periode. Et mønster træder frem over de sidste uger: hendes svære dage kommer typisk et par dage efter besøg af moren — ikke under selve besøget.',
       bullets: [
-        'Kriseplan aktiv — kend placering af nøgler og vagttelefon.',
-        'Undgå store gruppepres; tilbyd 1:1 eller kort samtale.',
-        'Medicin i går nat givet under observation — følg op.',
+        'Humøret er faldet tre dage i træk; søvn forstyrret.',
+        'Mønster: lavpunkter 1-2 dage efter mors besøg (4 besøg, samme mønster).',
+        'Tidligere indlæggelse for seks uger siden — vær opmærksom på lignende optakt.',
       ],
       actions: [
-        { label: 'Se medicin', sectionId: 'medicin' },
-        { label: 'Journal (nat)', sectionId: 'journal' },
-        { label: 'Dagsplan (minimal)', sectionId: 'dagsplan' },
+        { label: 'Se humørforløb', sectionId: 'indtjek' },
+        { label: 'Lys-samtale (nat)', sectionId: 'borgerapp' },
+        { label: 'Journal', sectionId: 'journal' },
       ],
     },
-    dagsplan: [
-      { time: '09:00', label: 'Forsigtig opvågning — tilbud te' },
-      { time: '11:00', label: 'Kort samtale kontaktperson' },
-      { time: '13:00', label: 'Rolig frokost (evt. værelse)' },
-      { time: '16:00', label: 'Gåtur hvis overskud — ellers hvile' },
-      { time: '19:30', label: 'Aftensmad lav stimulus' },
-    ],
-    appointments: [{ when: '4. apr. kl. 14:00', what: 'Behandler — telefon', place: 'Privat rum' }],
     medications: [
-      {
-        name: 'Sertralin',
-        dose: '100 mg',
-        schedule: '1× morgen',
-        nextDue: 'I dag ved opvågning',
-      },
-      {
-        name: 'Oxazepam',
-        dose: '10 mg',
-        schedule: 'PN angst',
-        pn: true,
-        nextDue: 'Max 3× / 24 t — log',
-      },
+      { name: 'Olanzapin', dose: '10 mg', schedule: '1× aften', nextDue: 'I aften kl. 21:00' },
+      { name: 'Olanzapin', dose: '5 mg', schedule: '1× morgen', nextDue: 'Givet kl. 08:30' },
+      { name: 'Melatonin', dose: '2 mg', schedule: 'Ved sengetid', nextDue: 'I aften' },
+      { name: 'Oxazepam', dose: '15 mg', schedule: 'PN uro', pn: true, nextDue: 'Max 2× / 24 t — log' },
     ],
     plans: [
       {
-        title: 'Krise- og nedtrapningsplan',
-        focus: 'Observation, søvn, kontakt til behandler',
-        owner: 'Tværfagligt',
-        nextReview: 'Løbende',
+        title: 'Recovery- og tryghedsplan',
+        focus: 'Tidlige tegn, søvn, kontakt til kontaktpædagog',
+        owner: 'Lars N. (kontaktpædagog)',
+        nextReview: 'Om to uger',
       },
     ],
-    goalsResident: [{ title: 'Finde én tryg person at tale med', progress: 30, fromApp: true }],
+    goalsResident: [{ title: 'Genkende egne tidlige tegn', progress: 60, fromApp: true }],
     goalsStaff: [
-      {
-        title: 'Screening søvn og væske hver vagt',
-        progress: 45,
-        note: 'Rød status',
-      },
-      { title: 'Invitere til kriseplan-repetition', progress: 0 },
+      { title: 'Daglig kontakt + søvnscreening', progress: 70, note: 'Rød status' },
+      { title: 'Repetér tryghedsplan med Sara', progress: 40 },
     ],
     journal: [
       {
-        id: 'res-002-j-kladde',
+        id: 'res-sara-j-kladde',
         when: 'I dag 07:40',
         author: 'Morgenvagt · kladde',
         excerpt:
-          'Udkast: Finn ikke mødt til morgenmad. Banket på dør — svarede kort. Virker trukket tilbage. Afventer faglig vurdering.',
+          'Udkast: Sara sov dårligt i nat. Mere tilbagetrukket, men i kontakt. Følger tryghedsplanen — opmærksom på optakt som tidligere.',
         type: 'bekymring',
         status: 'kladde',
       },
       {
-        id: 'res-002-j-0',
-        when: 'I nat 02:40',
+        id: 'res-sara-j-0',
+        when: 'I nat 02:10',
         author: 'Nat · Hanne',
         excerpt:
-          'Meget urolig. Kriseplan aktiveret kl. 02:15. Vagtlæge orienteret telefonisk — ingen indlæggelse på nuværende tidspunkt. Finn faldt til ro ca. 03:30 med støtte.',
-        type: 'bekymring',
-        status: 'godkendt',
-      },
-      {
-        id: 'res-002-j-1',
-        when: 'I går 20:15',
-        author: 'Aftenvagt · Mikkel',
-        excerpt:
-          'Finn afviste fælles aftensmad. Spiste lidt alene på værelset. Kort kontakt — svarede, men ville ikke tale. Urolig adfærd observeret.',
+          'Sara vågen, urolig. Talte med Lys. Faldt til ro ca. 03:00. Ingen yderligere tiltag nødvendige.',
         type: 'vagt',
         status: 'godkendt',
       },
       {
-        id: 'res-002-j-2',
-        when: 'I går 11:00',
-        author: 'Dagvagt · Sara',
+        id: 'res-sara-j-1',
+        when: 'I går 14:00',
+        author: 'Lars N.',
         excerpt:
-          'Kort samtale med Finn. Han fortæller om svære tanker. Behandler kontaktet — telefontid booket til fredag. Finn modtog beskeden roligt.',
+          'Begyndende uro som minder om tidligere optakt. MEN Sara genkender selv tegnene og opsøger personale aktivt. Vi laver tryghedsplan sammen. Ingen indlæggelse nødvendig.',
         type: 'vagt',
         status: 'godkendt',
       },
       {
-        id: 'res-002-j-3',
-        when: '2 dage siden 14:00',
-        author: 'Behandler · telefon',
+        id: 'res-sara-j-2',
+        when: 'For 3 uger siden',
+        author: 'Lars N.',
         excerpt:
-          'Samtale med behandler ved Region. Medicin (Sertralin) fortsættes. Ingen dosisændring. Opfølgning fredag. Finn deltog aktivt i samtalen.',
+          'Sara udskrevet efter seks dages indlæggelse. Genoptager ophold. Plan: rolig opstart, kendte rutiner, daglig kontakt.',
         type: 'læge',
         status: 'godkendt',
       },
-      {
-        id: 'res-002-j-4',
-        when: '3 dage siden 09:00',
-        author: 'Morgenvagt · Line',
-        excerpt:
-          'Finn i bedre form end forventet. Spiste morgenmad og deltog kort i fællesskabet. God kontakt. Tog medicin selv.',
-        type: 'vagt',
-        status: 'godkendt',
-      },
-      {
-        id: 'res-002-j-5',
-        when: '5 dage siden 22:00',
-        author: 'Aftenvagt · Hanne',
-        excerpt:
-          'Rolig aften. Finn sov inden kl. 22. Ingen bemærkninger. Medicin givet og registreret.',
-        type: 'vagt',
-        status: 'godkendt',
-      },
     ],
-    agreements: [
-      {
-        title: 'Tvangsrisiko — proceduresamtale',
-        updated: '20. mar. 2026',
-        status: 'til gennemgang',
-      },
-    ],
-    extras: [
-      { label: 'Behandler', value: 'Region — psykiatri (demo)' },
-      { label: 'Pårørende', value: 'Kontakt kun efter aftale' },
-    ],
-  },
-  'res-003': {
-    traffic: 'roed',
-    checkIn: {
-      checkedIn: true,
-      time: '07:55',
-      mood: 'Lav (3/10)',
-      note: 'Spiste lidt morgenmad.',
-    },
-    aiBrief: {
-      lead: 'Kirsten har brug for nærvær og små, konkrete valg — undgå at presse samtaler.',
-      bullets: [
-        'Seneste nat — urolig; hold øje med energi og væske.',
-        'Medicin efter læge — ingen ændring uden ordination.',
-        'Eftermiddagsro med musik kan hjælpe (tidligere effekt).',
-      ],
-      actions: [
-        { label: 'Journal fra nat', sectionId: 'journal' },
-        { label: 'Blid dagsplan', sectionId: 'dagsplan' },
-      ],
-    },
+    agreements: [{ title: 'Samtykke til kontakt med pårørende', updated: 'For 1 måned siden', status: 'aktiv' }],
+    extras: [{ label: 'Kontaktpædagog', value: 'Lars N.' }, { label: 'Indflyttet', value: 'Januar 2026' }],
     dagsplan: [
-      { time: '09:30', label: 'Stille morgen — kaffe på værelse' },
-      { time: '11:30', label: 'Tilbud: kort gåtur i gården' },
-      { time: '14:00', label: 'Håndarbejdegruppe (valgfrit)' },
-      { time: '18:00', label: 'Aftensmad — sidde nær personale' },
+      { time: '08:00', label: 'Morgenmad i fællesrummet' },
+      { time: '08:30', label: 'Medicin morgen', done: true },
+      { time: '10:30', label: 'Gåtur med kontaktpædagog' },
+      { time: '12:00', label: 'Frokost' },
+      { time: '15:00', label: 'Eftermiddagskaffe' },
+      { time: '21:00', label: 'Medicin aften' },
     ],
-    appointments: [
-      { when: '10. apr. kl. 13:20', what: 'Sygehus — ambulant', place: 'Bus bestilt' },
-    ],
-    medications: [
-      {
-        name: 'Risperidon',
-        dose: '1 mg',
-        schedule: 'Aften',
-        nextDue: 'I dag 20:00',
-      },
-    ],
-    plans: [
-      {
-        title: 'Ernæring og appetit',
-        focus: 'Små måltider, kalorieindtag',
-        owner: 'Kost + sygepleje',
-        nextReview: '5. apr. 2026',
-      },
-    ],
-    goalsResident: [{ title: 'Spise mindst ét måltid med andre', progress: 25, fromApp: true }],
-    goalsStaff: [{ title: 'Dokumentere måltider i journal', progress: 55 }],
-    journal: [
-      {
-        id: 'res-003-j-kladde',
-        when: 'I dag 08:20',
-        author: 'Morgenvagt · kladde',
-        excerpt:
-          'Udkast: Kirsten spiste kun halvt. Lav energi. Svarede kort på spørgsmål. Bør følges tæt i dag — afventer godkendelse.',
-        type: 'bekymring',
-        status: 'kladde',
-      },
-      {
-        id: 'res-003-j-0',
-        when: 'I dag 07:55',
-        author: 'Morgenvagt · Line',
-        excerpt:
-          'Check-in gennemført kl. 07:55. Kirsten virkede træt men stabil. Spiste lidt havregrød. Stemning 3/10 i Lys. Tæt nærvær anbefalet.',
-        type: 'vagt',
-        status: 'godkendt',
-      },
-      {
-        id: 'res-003-j-1',
-        when: 'I går 18:00',
-        author: 'Aftenvagt · Maria',
-        excerpt:
-          'Kirsten græd ved aftensmad. Ville ikke tale om det. Tilbudt samtale — afvist pænt. Spiste lidt brød. Gik tidligt i seng.',
-        type: 'vagt',
-        status: 'godkendt',
-      },
-      {
-        id: 'res-003-j-2',
-        when: 'I går 10:30',
-        author: 'Dagvagt · Sara',
-        excerpt:
-          'Kort gåtur i gården — 15 min. Kirsten sagde det hjalp lidt. Lyttede til musik bagefter. Bedre stemning midt på formiddagen.',
-        type: 'vagt',
-        status: 'godkendt',
-      },
-      {
-        id: 'res-003-j-3',
-        when: '2 dage siden 13:20',
-        author: 'Sygehus · ambulant',
-        excerpt:
-          'Ambulant besøg gennemført. Risperidon fortsættes uændret. Ernæringsplan justeret — tilbud om næringsdrik 2× dagligt. Næste opfølgning 10. april.',
-        type: 'læge',
-        status: 'godkendt',
-      },
-      {
-        id: 'res-003-j-4',
-        when: '4 dage siden 19:00',
-        author: 'Aftenvagt · Hanne',
-        excerpt:
-          'Kirsten deltog i håndarbejdegruppen i 30 min. Smilede et par gange. Det er fremgang. Medicin taget kl. 20:30.',
-        type: 'vagt',
-        status: 'godkendt',
-      },
-      {
-        id: 'res-003-j-5',
-        when: '6 dage siden 08:00',
-        author: 'Morgenvagt',
-        excerpt:
-          'Sov dårligt natten over. Ville ikke stå op. Personale sad hos hende 20 min — kom op og drak kaffe på værelset. Ingen måltid.',
-        type: 'vagt',
-        status: 'godkendt',
-      },
-    ],
-    agreements: [{ title: 'Indlæggelsesaftale', updated: '1. feb. 2026', status: 'aktiv' }],
-    extras: [{ label: 'Særlige hensyn', value: 'Lydfølsom — undgå høj musik i fællesrum' }],
+    appointments: [{ when: 'Om to uger', what: 'Statusmøde med kontaktpædagog', place: 'Mødelokale' }],
   },
-  'res-004': {
+  'res-mikkel': {
     traffic: 'gul',
     checkIn: {
       checkedIn: true,
-      time: '08:40',
-      mood: 'Spændt men OK',
-      note: 'Gruppe kl. 15 — forberedelse hjælper.',
+      time: '08:15',
+      mood: 'OK',
+      note: 'Sov rimeligt. Lidt anspændt før frokost i fællesrum.',
     },
     aiBrief: {
-      lead: 'Maja har angst — forudsigelighed og forberedelse før aktiviteter reducerer stress.',
+      lead: 'Mikkel er stabil men svingende. Skizoaffektiv lidelse — hold øje med søvn og social belastning.',
       bullets: [
-        'Husk at bekræfte tidspunkt og varighed for gruppe i dag.',
-        'Åndedrætsøvelser virkede i går — tilbyd igen ved behov.',
+        'Check-in i Lys i morges; humør neutralt.',
+        'Medicin taget som planlagt — ingen PN siden i går.',
       ],
       actions: [
-        { label: 'Se aftaler', sectionId: 'aftaler' },
+        { label: 'Medicin', sectionId: 'medicin' },
+        { label: 'Journal', sectionId: 'journal' },
+      ],
+    },
+    dagsplan: [
+      { time: '08:00', label: 'Morgenmad', done: true },
+      { time: '10:00', label: 'Stille aktivitet på værelset' },
+      { time: '12:30', label: 'Frokost fælles' },
+      { time: '19:00', label: 'Aftensmad' },
+    ],
+    appointments: [{ when: 'Fredag kl. 11:00', what: 'Behandler — telefon', place: 'Privat rum' }],
+    medications: [
+      { name: 'Abilify', dose: '10 mg', schedule: '1× morgen', nextDue: 'I morgen 08:00' },
+      { name: 'Oxazepam', dose: '10 mg', schedule: 'PN uro', pn: true, nextDue: 'Log ved behov' },
+    ],
+    plans: [
+      {
+        title: 'Stabiliseringsplan',
+        focus: 'Søvn, struktur, tidlig varsling ved forværring',
+        owner: 'Tværfagligt',
+        nextReview: '18. maj 2026',
+      },
+    ],
+    goalsResident: [{ title: 'Gå en kort tur 3× om ugen', progress: 45, fromApp: true }],
+    goalsStaff: [{ title: 'Ugentlig opfølgning med behandler', progress: 60 }],
+    journal: [
+      {
+        id: 'res-mikkel-j-0',
+        when: 'I går 20:00',
+        author: 'Aftenvagt',
+        excerpt: 'Rolig aften på værelset. Spiste aftensmad. Ingen uro observeret.',
+        type: 'vagt',
+        status: 'godkendt',
+      },
+      {
+        id: 'res-mikkel-j-1',
+        when: 'For 4 dage siden',
+        author: 'Dagvagt · Line',
+        excerpt: 'Kort samtale — Mikkel oplever mere energi efter rolig weekend. Medicin uændret.',
+        type: 'vagt',
+        status: 'godkendt',
+      },
+    ],
+    agreements: [{ title: 'Samtykke behandling', updated: 'Feb. 2026', status: 'aktiv' }],
+    extras: [{ label: 'Alder', value: '28 år' }, { label: 'Diagnose (demo)', value: 'Skizoaffektiv' }],
+  },
+  'res-anders': {
+    traffic: 'gul',
+    checkIn: {
+      checkedIn: true,
+      time: '08:20',
+      mood: 'Rolig',
+      note: 'God morgen. Læser i fællesrummet.',
+    },
+    aiBrief: {
+      lead: 'Anders er i en rolig fase med bipolar lidelse. Bevar rutiner og skær ned for sent stimuli.',
+      bullets: [
+        'Stabil indtjek de seneste dage.',
+        'Næste lægevideo om to uger — forbered spørgsmål sammen med Anders.',
+      ],
+      actions: [
+        { label: 'Dagsplan', sectionId: 'dagsplan' },
+        { label: 'Planer', sectionId: 'planer' },
+      ],
+    },
+    dagsplan: [
+      { time: '08:30', label: 'Morgenmad og medicin', done: true },
+      { time: '11:00', label: 'Gåtur i gården' },
+      { time: '14:00', label: 'Hvile på værelset' },
+      { time: '18:30', label: 'Aftensmad' },
+    ],
+    appointments: [{ when: 'Om 2 uger', what: 'Læge — video', place: 'Værelse' }],
+    medications: [{ name: 'Lithium', dose: '600 mg', schedule: '1× aften', nextDue: 'I aften' }],
+    plans: [
+      {
+        title: 'Vedligeholdelsesplan',
+        focus: 'Søvn, aktivitet, tidlige tegn på mani eller depression',
+        owner: 'Læge + kontaktperson',
+        nextReview: '1. juni 2026',
+      },
+    ],
+    goalsResident: [{ title: 'Holde døgnrytme stabil', progress: 70, fromApp: true }],
+    goalsStaff: [{ title: 'Månedlig humørskala i journal', progress: 80 }],
+    journal: [
+      {
+        when: 'I går 09:00',
+        author: 'Morgenvagt',
+        excerpt: 'Anders i roligt humør. Deltog i morgenmad. Ingen bekymringer.',
+        type: 'vagt',
+        status: 'godkendt',
+      },
+      {
+        when: 'For 1 uge siden',
+        author: 'Læge',
+        excerpt: 'Opfølgning: lithium niveau OK. Fortsætter uændret. Anders forstår planen.',
+        type: 'læge',
+        status: 'godkendt',
+      },
+    ],
+    agreements: [{ title: 'Forløbsplan', updated: 'Mar. 2026', status: 'aktiv' }],
+    extras: [{ label: 'Alder', value: '52 år' }, { label: 'Diagnose (demo)', value: 'Bipolar' }],
+  },
+  'res-mette': {
+    traffic: 'groen',
+    checkIn: {
+      checkedIn: true,
+      time: '07:55',
+      mood: 'God',
+      note: 'Deltog i morgenyoga. Positiv stemning.',
+    },
+    aiBrief: {
+      lead: 'Mette er et velfungerende holdepunkt på afdelingen. Depression i stabil bedring — understøt hendes egne mål.',
+      bullets: [
+        'Grønt trafiklys og stabil check-in rutine.',
+        'Hun tilbyder ofte at hjælpe i køkkenet — god peer-støtte.',
+      ],
+      actions: [
         { label: 'Borgermål', sectionId: 'maal' },
+        { label: 'Aftaler', sectionId: 'aftaler' },
+      ],
+    },
+    dagsplan: [
+      { time: '08:00', label: 'Yoga', done: true },
+      { time: '10:00', label: 'Fælles quiz' },
+      { time: '13:00', label: 'Gåtur' },
+      { time: '16:00', label: 'Kage i køkkenet' },
+    ],
+    appointments: [{ when: 'Næste uge', what: 'Pårørendebesøg', place: 'Besøgsstue' }],
+    medications: [{ name: 'Sertralin', dose: '50 mg', schedule: '1× morgen', nextDue: 'I morgen 08:00' }],
+    plans: [
+      {
+        title: 'Recovery og aktivitet',
+        focus: 'Sociale skridt og meningsfuld hverdag',
+        owner: 'Aktivitetskoordinator',
+        nextReview: '15. juni 2026',
+      },
+    ],
+    goalsResident: [
+      { title: 'Deltage i fællesspisning 2× om ugen', progress: 85, fromApp: true },
+      { title: 'Gå tur dagligt', progress: 90, fromApp: true },
+    ],
+    goalsStaff: [{ title: 'Evaluere fællesaktivitet', progress: 75 }],
+    journal: [
+      {
+        when: 'I går 19:00',
+        author: 'Aftenvagt',
+        excerpt: 'Mette hjalp med oprydning efter quiz. God stemning i fællesrum.',
+        type: 'vagt',
+        status: 'godkendt',
+      },
+    ],
+    agreements: [{ title: 'Foto samtykke aktiviteter', updated: 'Mar. 2026', status: 'aktiv' }],
+    extras: [{ label: 'Alder', value: '54 år' }, { label: 'Diagnose (demo)', value: 'Depression' }],
+  },
+  'res-camilla': {
+    traffic: 'gul',
+    checkIn: {
+      checkedIn: true,
+      time: '08:35',
+      mood: 'Spændt men OK',
+      note: 'God kontakt med personalet i morges.',
+    },
+    aiBrief: {
+      lead: 'Camilla har emotionelt ustabil personlighedsstruktur og god kontakt til personalet. Forudsigelighed og tydelige rammer hjælper.',
+      bullets: [
+        'Humør svinger — hold rolig tone ved konflikter.',
+        'Én kort samtale med kontaktperson planlagt i dag.',
+      ],
+      actions: [
+        { label: 'Journal', sectionId: 'journal' },
+        { label: 'Dagsplan', sectionId: 'dagsplan' },
       ],
     },
     dagsplan: [
       { time: '09:00', label: 'Morgenrutine' },
       { time: '11:00', label: 'Samtale kontaktperson (30 min)' },
-      { time: '15:00', label: 'Gruppeaktivitet — kreativ' },
-      { time: '19:00', label: 'Aftenkaffe + afslapning' },
+      { time: '14:00', label: 'Tegne på værelset' },
+      { time: '19:00', label: 'Aftensmad' },
     ],
-    appointments: [
-      { when: 'I dag 15:00', what: 'Gruppe — kreativ workshop', place: 'Aktivitetsrum B' },
-      { when: '18. apr. kl. 10:00', what: 'Psykolog', place: 'Online' },
-    ],
-    medications: [
-      { name: 'Lisinopril', dose: '5 mg', schedule: '1× daglig', nextDue: 'I morgen 08:00' },
-    ],
+    appointments: [{ when: 'Onsdag', what: 'Psykolog', place: 'Online' }],
+    medications: [{ name: 'Lamictal', dose: '100 mg', schedule: '1× morgen', nextDue: 'I morgen' }],
     plans: [
       {
-        title: 'Angst og deltagelse',
-        focus: 'Gradvis eksponering i tryg ramme',
-        owner: 'Psykolog + Sara',
-        nextReview: '12. apr. 2026',
+        title: 'Relations- og tryghedsplan',
+        focus: 'Deeskalering, validering, struktureret dag',
+        owner: 'Kontaktperson + psykolog',
+        nextReview: '8. maj 2026',
       },
     ],
-    goalsResident: [
-      { title: 'Deltage i én gruppe om ugen', progress: 40, fromApp: true },
-      { title: 'Daglig 3-min åndedræt', progress: 80, fromApp: true },
-    ],
-    goalsStaff: [{ title: 'Forberedelsestekst sendt i Lys dagen før', progress: 100 }],
+    goalsResident: [{ title: 'Bruge pause før reaktion', progress: 55, fromApp: true }],
+    goalsStaff: [{ title: 'Fælles forståelse i teamet', progress: 50 }],
     journal: [
       {
-        when: 'I går 16:20',
-        author: 'Dag',
-        excerpt: 'Let uro før gruppe — vejrtrækning. Deltog 40 min.',
+        when: 'I går 15:00',
+        author: 'Dagvagt',
+        excerpt: 'Camilla blev ked af det efter misforståelse — rolig samtale hjalp. Ingen eskalering.',
         type: 'vagt',
+        status: 'godkendt',
+      },
+      {
+        when: 'For 3 dage siden',
+        author: 'Kontaktperson',
+        excerpt: 'God samtale om grænser og behov. Camilla takkede bagefter.',
+        type: 'vagt',
+        status: 'godkendt',
       },
     ],
-    agreements: [{ title: 'Samtykke terapi', updated: '8. mar. 2026', status: 'aktiv' }],
-    extras: [],
+    agreements: [{ title: 'Samtykke terapi', updated: 'Jan. 2026', status: 'aktiv' }],
+    extras: [{ label: 'Alder', value: '27 år' }, { label: 'Diagnose (demo)', value: 'Emotionelt ustabil' }],
   },
-  'res-005': {
-    traffic: null,
+  'res-jonas': {
+    traffic: 'gul',
     checkIn: {
-      checkedIn: false,
-      note: 'Besøg hos familie i går — forventet retur i eftermiddag.',
+      checkedIn: true,
+      time: '08:10',
+      mood: 'OK',
+      note: 'Nyindflyttet — spørger til husregler og måltider.',
     },
     aiBrief: {
-      lead: 'Thomas er ude af huset — ved hjemkomst: kort status og tilbyd måltid.',
+      lead: 'Jonas er nyindflyttet og finder sig til rette. Skizofreni — fokus på tryghed, struktur og korte kontakter.',
       bullets: [
-        'Ingen medicin i dag endnu — afstem ved ankomst.',
-        'Tjek om jobcenter-brev er kommet (post).',
+        'Indflyttet for tre uger siden — stadig orientering i huset.',
+        'God kontakt når personalet tager initiativ med små skridt.',
       ],
       actions: [
-        { label: 'Medicin', sectionId: 'medicin' },
+        { label: 'Skabeloner', sectionId: 'skabeloner' },
         { label: 'Planer', sectionId: 'planer' },
       ],
     },
     dagsplan: [
-      { time: '—', label: 'Forsinket start — familiebesøg' },
-      { time: '17:00', label: 'Forventet tilbage — velkomst + te' },
-      { time: '18:30', label: 'Aftensmad' },
+      { time: '08:30', label: 'Introduktion til fællesrum' },
+      { time: '10:00', label: 'Kort gåtur med personale' },
+      { time: '12:00', label: 'Frokost' },
+      { time: '15:00', label: 'Egentid på værelset' },
     ],
-    appointments: [
-      { when: '12. apr. kl. 13:00', what: 'Jobcenter — samtale', place: 'Digitalt link' },
-    ],
-    medications: [{ name: 'Ingen fast ordineret', dose: '—', schedule: '—', nextDue: '—' }],
+    appointments: [{ when: 'Om 1 uge', what: 'Opfølgning kontaktperson', place: 'Mødelokale' }],
+    medications: [{ name: 'Risperidon', dose: '2 mg', schedule: '1× aften', nextDue: 'I aften' }],
     plans: [
       {
-        title: 'Økonomi og beskæftigelse',
-        focus: 'Støtte til møder med myndigheder',
-        owner: 'Socialrådgiver (demo)',
-        nextReview: '20. apr. 2026',
+        title: 'Indflytningsplan',
+        focus: 'Praktisk info, rutiner, gradvis sociale tilbud',
+        owner: 'Kontaktperson',
+        nextReview: 'Løbende første måned',
       },
     ],
-    goalsResident: [{ title: 'Holde styr på aftaler i kalender', progress: 35, fromApp: true }],
-    goalsStaff: [{ title: 'Opfølgning efter jobcentermøde', progress: 0 }],
+    goalsResident: [{ title: 'Lære huset og navne på personale', progress: 40, fromApp: true }],
+    goalsStaff: [{ title: 'Ugentlig evaluering af tilpasning', progress: 30 }],
     journal: [
       {
-        when: 'I går 14:00',
-        author: 'Dag',
-        excerpt: 'Ude med familie. Ingen observationer.',
+        when: 'I går 11:00',
+        author: 'Dagvagt',
+        excerpt: 'Jonas deltog i kort gåtur. Spurgte til PARK og fælles aktiviteter — positiv nysgerrighed.',
         type: 'vagt',
+        status: 'godkendt',
       },
-    ],
-    agreements: [{ title: 'Fuldmagt post', updated: 'Jan. 2026', status: 'aktiv' }],
-    extras: [],
-  },
-  'res-006': {
-    traffic: 'groen',
-    checkIn: {
-      checkedIn: true,
-      time: '08:05',
-      mood: 'Rigtig god',
-      note: 'Deltog i morgenyoga.',
-    },
-    aiBrief: {
-      lead: 'Lena trives — brug energien til at støtte andre i fællesskab (valgfrit).',
-      bullets: [
-        'Hun har overskud: tilbyd mentorrolle i lille gruppe hvis hun vil.',
-        'Pårørendebesøg søndag — bekræft tid i kalender.',
-      ],
-      actions: [
-        { label: 'Fremtidige aftaler', sectionId: 'aftaler' },
-        { label: 'Mål fra app', sectionId: 'maal' },
-      ],
-    },
-    dagsplan: [
-      { time: '08:30', label: 'Yoga / stræk', done: true },
-      { time: '10:00', label: 'Fælles quiz' },
-      { time: '13:00', label: 'Gåtur' },
-      { time: '16:00', label: 'Kage i køkkenet' },
-    ],
-    appointments: [{ when: 'Søn. 6. apr. kl. 14:00', what: 'Pårørende', place: 'Besøgsstue' }],
-    medications: [
-      { name: 'Panodil', dose: '500 mg', schedule: 'PN', pn: true, nextDue: 'Sjelden' },
-    ],
-    plans: [
       {
-        title: 'Social recovery',
-        focus: 'Bevare netværk og meningsfulde aktiviteter',
-        owner: 'Aktivitet',
-        nextReview: '1. maj 2026',
-      },
-    ],
-    goalsResident: [
-      { title: 'Hjælpe med at dække bord 1× om ugen', progress: 90, fromApp: true },
-      { title: 'Ringe til veninde hver torsdag', progress: 100, fromApp: true },
-    ],
-    goalsStaff: [{ title: 'Evaluere fællesaktivitet (tilfredshed)', progress: 70 }],
-    journal: [
-      {
-        when: 'I går 20:00',
-        author: 'Aften',
-        excerpt: 'Høj stemning ved spil. Hjalp med oprydning.',
+        when: 'For 1 uge siden',
+        author: 'Kontaktperson',
+        excerpt: 'Gennemgang af samtykker og praktisk info. Jonas virker lettet over tydelige rammer.',
         type: 'vagt',
+        status: 'godkendt',
       },
     ],
-    agreements: [{ title: 'Foto samtykke aktiviteter', updated: 'Mar. 2026', status: 'aktiv' }],
-    extras: [{ label: 'Styrke', value: 'God peer-støtte i gruppen' }],
+    agreements: [{ title: 'Indflytningsaftale', updated: 'For 3 uger siden', status: 'aktiv' }],
+    extras: [{ label: 'Alder', value: '31 år' }, { label: 'Status', value: 'Nyindflyttet' }],
   },
 };
 

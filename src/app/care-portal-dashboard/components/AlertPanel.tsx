@@ -97,38 +97,37 @@ function formatTimestamp(iso: string): string {
 const DEMO_ALERT_SEED: AlertRow[] = [
   {
     id: 'demo-alert-1',
-    residentId: 'res-002',
-    residentName: 'Finn L.',
-    initials: 'FL',
-    type: 'crisis_alert',
-    detail: 'Krisehjælp aktiveret (trin 2)',
+    residentId: 'res-sara',
+    residentName: 'Sara K.',
+    initials: 'SK',
+    type: 'lav_stemning',
+    detail: 'Dårlig nat — opsøgte selv Lys. Humør faldet tre dage i træk.',
     severity: 'roed',
-    timestamp: '08:14',
-    source: 'crisis',
-    crisisStatus: 'active',
+    timestamp: '07:30',
+    source: 'notification',
   },
   {
     id: 'demo-alert-2',
-    residentId: 'res-003',
-    residentName: 'Kirsten R.',
-    initials: 'KR',
+    residentId: 'res-camilla',
+    residentName: 'Camilla B.',
+    initials: 'CB',
     type: 'lav_stemning',
-    detail: 'Stemning under 4/10 ved morgencheck-in.',
-    severity: 'roed',
-    timestamp: '07:52',
+    detail: 'Beder om rolig opfølgning i morgen formiddag.',
+    severity: 'gul',
+    timestamp: '08:05',
     source: 'notification',
   },
   {
     id: 'demo-alert-3',
-    residentId: 'res-005',
-    residentName: 'Thomas B.',
-    initials: 'TB',
-    type: 'inaktivitet',
-    detail: 'Ingen check-in i over 48 timer',
-    severity: 'gul',
-    timestamp: '48h+',
-    source: 'inactivity',
-    isComputed: true,
+    residentId: 'res-sara',
+    residentName: 'Sara K.',
+    initials: 'SK',
+    type: 'crisis_alert',
+    detail: 'Natlig uro — tryghedsplan fulgt, faldt til ro ca. 03:00',
+    severity: 'roed',
+    timestamp: '02:10',
+    source: 'crisis',
+    crisisStatus: 'acknowledged',
   },
 ];
 
@@ -410,10 +409,12 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
   }, [department, formatName, getInitials]);
 
   useEffect(() => {
-    if (variant === 'demo') {
-      setLoading(false);
-      return;
-    }
+    if (variant !== 'demo') return;
+    setLoading((l) => (l ? false : l));
+  }, [variant]);
+
+  useEffect(() => {
+    if (variant === 'demo') return;
 
     void fetchDbAlerts();
     void fetchCrisisAlerts();

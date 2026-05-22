@@ -70,123 +70,99 @@ function createMockAppointments(day: Date): CareAppointment[] {
   return [
     {
       id: 'cal-001',
-      title: 'Kontrol hos psykiater',
-      scheduledAt: todayAt(day, 8, 0),
-      type: 'laege',
-      residentId: 'res-002',
-      residentName: p('res-002')?.displayName ?? null,
-      residentInitials: p('res-002')?.initials ?? null,
-      house: p('res-002')?.house ?? 'A',
-      location: 'Regionshospitalet',
-      responsible: 'Sara K.',
+      title: 'Statusmøde med kontaktpædagog',
+      scheduledAt: todayAt(day, 10, 30),
+      type: 'intern',
+      residentId: 'res-sara',
+      residentName: p('res-sara')?.displayName ?? null,
+      residentInitials: p('res-sara')?.initials ?? null,
+      house: p('res-sara')?.house ?? 'A',
+      location: 'Mødelokale',
+      responsible: 'Lars N.',
     },
     {
       id: 'cal-002',
-      title: 'Morgengymnastik fælles',
-      scheduledAt: todayAt(day, 9, 30),
+      title: 'Gåtur med kontaktpædagog',
+      scheduledAt: todayAt(day, 10, 30),
       type: 'aktivitet',
-      residentId: null,
-      residentName: null,
-      residentInitials: null,
-      house: 'B',
-      location: 'Træningsrummet',
-      responsible: 'PT Madsen',
+      residentId: 'res-sara',
+      residentName: p('res-sara')?.displayName ?? null,
+      residentInitials: p('res-sara')?.initials ?? null,
+      house: p('res-sara')?.house ?? 'A',
+      location: 'Gården',
+      responsible: 'Lars N.',
     },
     {
       id: 'cal-003',
-      title: 'Tandlæge',
-      scheduledAt: todayAt(day, 10, 15),
-      type: 'laege',
-      residentId: 'res-003',
-      residentName: p('res-003')?.displayName ?? null,
-      residentInitials: p('res-003')?.initials ?? null,
-      house: p('res-003')?.house ?? 'A',
-      location: 'Tandklinikken, st.',
-      responsible: 'Lena P.',
+      title: 'Samtale kontaktperson',
+      scheduledAt: todayAt(day, 11, 0),
+      type: 'intern',
+      residentId: 'res-camilla',
+      residentName: p('res-camilla')?.displayName ?? null,
+      residentInitials: p('res-camilla')?.initials ?? null,
+      house: p('res-camilla')?.house ?? 'B',
+      location: 'Stue 211',
+      responsible: 'Lars N.',
     },
     {
       id: 'cal-004',
-      title: 'Vagtoverdragelse + trivsel',
-      scheduledAt: todayAt(day, 12, 0),
-      type: 'intern',
-      residentId: null,
-      residentName: null,
-      residentInitials: null,
-      house: 'C',
-      location: 'Kontor Hus C',
-      responsible: 'Alle team',
+      title: 'Behandler — telefon',
+      scheduledAt: todayAt(day, 11, 0),
+      type: 'laege',
+      residentId: 'res-mikkel',
+      residentName: p('res-mikkel')?.displayName ?? null,
+      residentInitials: p('res-mikkel')?.initials ?? null,
+      house: p('res-mikkel')?.house ?? 'A',
+      location: 'Privat rum',
+      responsible: 'Region psykiatri',
     },
     {
       id: 'cal-005',
-      title: 'Transport til indkøb',
-      scheduledAt: todayAt(day, 14, 0),
-      type: 'transport',
-      residentId: 'res-005',
-      residentName: p('res-005')?.displayName ?? null,
-      residentInitials: p('res-005')?.initials ?? null,
-      house: p('res-005')?.house ?? 'D',
-      location: 'Rema 1000',
-      responsible: 'Henrik S.',
+      title: 'Gåtur i gården',
+      scheduledAt: todayAt(day, 11, 0),
+      type: 'aktivitet',
+      residentId: 'res-anders',
+      residentName: p('res-anders')?.displayName ?? null,
+      residentInitials: p('res-anders')?.initials ?? null,
+      house: p('res-anders')?.house ?? 'A',
+      location: 'Udendørs',
+      responsible: 'Dagvagt',
     },
     {
       id: 'cal-006',
-      title: 'Kreativ workshop',
-      scheduledAt: todayAt(day, 15, 30),
+      title: 'Fælles quiz',
+      scheduledAt: todayAt(day, 10, 0),
       type: 'aktivitet',
-      residentId: 'res-004',
-      residentName: p('res-004')?.displayName ?? null,
-      residentInitials: p('res-004')?.initials ?? null,
-      house: p('res-004')?.house ?? 'B',
-      location: 'Aktivitetsrummet',
-      responsible: 'Birgit N.',
+      residentId: 'res-mette',
+      residentName: p('res-mette')?.displayName ?? null,
+      residentInitials: p('res-mette')?.initials ?? null,
+      house: p('res-mette')?.house ?? 'B',
+      location: 'Fællesstue Hus B',
+      responsible: 'Aktivitet',
     },
     {
       id: 'cal-007',
-      title: 'Samtale pårørende',
-      scheduledAt: todayAt(day, 18, 45),
-      type: 'andet',
-      residentId: 'res-001',
-      residentName: p('res-001')?.displayName ?? null,
-      residentInitials: p('res-001')?.initials ?? null,
-      house: p('res-001')?.house ?? 'A',
-      location: 'Telefon / stue 104',
-      responsible: 'Sara K.',
+      title: 'Introduktion til fællesrum',
+      scheduledAt: todayAt(day, 8, 30),
+      type: 'aktivitet',
+      residentId: 'res-jonas',
+      residentName: p('res-jonas')?.displayName ?? null,
+      residentInitials: p('res-jonas')?.initials ?? null,
+      house: p('res-jonas')?.house ?? 'C',
+      location: 'Fællesrum Hus C',
+      responsible: 'Kontaktperson',
     },
     {
       id: 'cal-008',
-      title: 'Blodprøve — LAB',
-      scheduledAt: todayAt(day, 11, 0),
-      type: 'laege',
-      residentId: 'res-008',
-      residentName: p('res-008')?.displayName ?? null,
-      residentInitials: p('res-008')?.initials ?? null,
-      house: p('res-008')?.house ?? 'B',
-      location: 'Sygeplejerske / stue',
-      responsible: 'Regionssygeplejerske',
-    },
-    {
-      id: 'cal-009',
-      title: 'Gåtur i parken',
-      scheduledAt: todayAt(day, 13, 15),
-      type: 'aktivitet',
-      residentId: 'res-011',
-      residentName: p('res-011')?.displayName ?? null,
-      residentInitials: p('res-011')?.initials ?? null,
-      house: p('res-011')?.house ?? 'B',
-      location: 'Mødeplads Hus B',
-      responsible: 'Mikkel H.',
-    },
-    {
-      id: 'cal-010',
-      title: 'Netværksmøde — pårørende',
-      scheduledAt: todayAt(day, 16, 0),
+      title: 'Vagtoverdragelse',
+      scheduledAt: todayAt(day, 14, 0),
       type: 'intern',
       residentId: null,
       residentName: null,
       residentInitials: null,
       house: 'A',
-      location: 'Fællesstuen',
-      responsible: 'Leder + team',
+      location: 'Kontor',
+      responsible: 'Alle team',
     },
   ];
 }
@@ -223,16 +199,32 @@ export default function KalenderWidget({ variant = 'live' }: KalenderWidgetProps
   const [formResponsible, setFormResponsible] = useState('');
   const [formLocation, setFormLocation] = useState('');
 
+  const demoCalendarSeed = useMemo(() => {
+    const d = new Date();
+    return {
+      today: d,
+      appointments: createMockAppointments(d),
+      residents: DEMO_RESIDENT_OPTIONS,
+    };
+  }, []);
+
   useEffect(() => {
+    if (variant !== 'demo') return;
+    setToday((prev) => (prev === demoCalendarSeed.today ? prev : demoCalendarSeed.today));
+    setAppointments((prev) =>
+      prev === demoCalendarSeed.appointments ? prev : demoCalendarSeed.appointments
+    );
+    setResidentOptions((prev) =>
+      prev === demoCalendarSeed.residents ? prev : demoCalendarSeed.residents
+    );
+    setHydrated((h) => (h ? h : true));
+  }, [variant, demoCalendarSeed]);
+
+  useEffect(() => {
+    if (variant === 'demo') return;
+
     const d = new Date();
     setToday(d);
-
-    if (variant === 'demo') {
-      setAppointments(createMockAppointments(d));
-      setResidentOptions(DEMO_RESIDENT_OPTIONS);
-      setHydrated(true);
-      return;
-    }
 
     let cancelled = false;
     void (async () => {
