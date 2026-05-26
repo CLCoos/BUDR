@@ -2,7 +2,7 @@
 
 **Til AI/assistenter:** Læs denne fil først. Kort indgang: [`AGENTS.md`](./AGENTS.md).
 
-**Sidst opdateret (manuelt):** 2026-05-25 — **Resident-session hardening:** `/app/[resident_id]` og legacy `/api/resident-auth/session` opretter ikke længere sessioner ud fra UUID alene; login går via PIN/WebAuthn. `getResidentId()` bruger kun valideret `budr_resident_session` (hash i `resident_sessions`) og ignorerer den client-læsbare `budr_resident_id`; middleware accepterer ikke længere legacy UUID-cookie til live Lys/Park-ruter. `/api/resident-session` validerer token før HttpOnly-cookie sættes. Supabase Edge Functions for PIN/WebAuthn/session-validering bruger nu `resident_user_id` + `session_token_hash`.
+**Sidst opdateret (manuelt):** 2026-05-26 — **Resident-session hardening:** `/app/[resident_id]` og legacy `/api/resident-auth/session` opretter ikke længere sessioner ud fra UUID alene; login går via PIN/WebAuthn. `getResidentId()` bruger kun valideret `budr_resident_session` (hash i `resident_sessions`) og ignorerer den client-læsbare `budr_resident_id`; middleware accepterer ikke længere legacy UUID-cookie til live Lys/Park-ruter. `/api/resident-session` validerer token før HttpOnly-cookie sættes. Supabase Edge Functions for PIN/WebAuthn/session-validering bruger nu `resident_user_id` + `session_token_hash`.
 
 **Forrige:** 2026-05-22 — **Care Portal-demo (render-løkker + e2e):** Playwright `npm run test:e2e:demo` verificerer alle demo-ruter uden «Maximum update depth» og guidet tour-navigation (`e2e/care-portal-demo-console.spec.ts`). Kræver `npx playwright install chromium` (evt. `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers`).
 
