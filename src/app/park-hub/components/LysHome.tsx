@@ -16,6 +16,7 @@ import LysKrisePlanCard from './LysKrisePlanCard';
 import MedicinReminder from './MedicinReminder';
 import FlowerPlant from '@/components/haven/plants/FlowerPlant';
 import TreePlant from '@/components/haven/plants/TreePlant';
+import { HAVEN_ENABLED } from '@/lib/featureFlags';
 
 const COMPANION_MESSAGES = [
   'Hvad bærer du på i dag?',
@@ -628,12 +629,13 @@ export default function LysHome({
           </button>
         )}
 
-        {/* Haven widget */}
-        <HavenWidget
-          residentId={residentId}
-          storageMode={session.storageMode}
-          onNavigate={() => router.push(residentId ? `/haven?r=${residentId}` : '/haven')}
-        />
+        {HAVEN_ENABLED ? (
+          <HavenWidget
+            residentId={residentId}
+            storageMode={session.storageMode}
+            onNavigate={() => router.push(residentId ? `/haven?r=${residentId}` : '/haven')}
+          />
+        ) : null}
 
         {/* Kriseplan card */}
         <LysKrisePlanCard onOpen={() => onOpenFlow('crisis')} />

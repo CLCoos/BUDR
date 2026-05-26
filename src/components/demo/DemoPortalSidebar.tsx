@@ -116,7 +116,7 @@ function DemoPortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl
         top-[calc(var(--cp-demo-stack-top)+9.5rem)] sm:top-[calc(var(--cp-demo-stack-top)+3.5rem)] md:top-[var(--cp-demo-stack-top)]
         md:static md:top-auto md:bottom-auto md:z-auto md:translate-x-0 md:pointer-events-auto
         ${collapsed ? 'w-16' : 'w-56'}
-        ${mobileClosed ? '-translate-x-full md:translate-x-0' : 'translate-x-0'}
+        ${mobileClosed ? '-translate-x-full invisible md:visible md:translate-x-0' : 'translate-x-0 visible'}
         ${mobileClosed ? 'pointer-events-none md:pointer-events-auto' : 'pointer-events-auto'}
       `}
       style={{ backgroundColor: 'var(--cp-bg2)', borderRight: '1px solid var(--cp-border)' }}

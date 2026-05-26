@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import LysShell from '../park-hub/components/LysShell';
 import ResidentDemoWelcomeOverlay from './ResidentDemoWelcomeOverlay';
+import { HAVEN_ENABLED } from '@/lib/featureFlags';
 import DemoWhyBox from '@/components/demo/DemoWhyBox';
 
 // ── Demo data seeder ──────────────────────────────────────────────────────────
@@ -204,7 +205,7 @@ function seedLocalStorage() {
         {
           role: 'assistant',
           content:
-            'Det er virkelig dejligt at høre, Anders! God søvn gør en stor forskel for, hvordan vi har det i løbet af dagen. Har du nogen planer for i dag?',
+            'Det er virkelig dejligt at høre, Sara! God søvn gør en stor forskel for, hvordan vi har det i løbet af dagen. Har du nogen planer for i dag?',
         },
         { role: 'user', content: 'Ja, jeg tænkte på at male lidt og måske gå en tur.' },
         {
@@ -234,7 +235,7 @@ function seedLocalStorage() {
         {
           role: 'assistant',
           content:
-            'Det lyder hårdt, Anders. Det er okay at være ked af det. Vil du fortælle mig lidt mere om, hvad hun sagde?',
+            'Det lyder hårdt, Sara. Det er okay at være ked af det. Vil du fortælle mig lidt mere om, hvad hun sagde?',
         },
         { role: 'user', content: 'Hun sagde at jeg aldrig ringer. Men det er svært for mig.' },
         {
@@ -264,7 +265,7 @@ function seedLocalStorage() {
   // ── Profile ───────────────────────────────────────────────────
   localStorage.setItem(
     'budr_profile',
-    JSON.stringify({ nickname: 'Anders', theme: 'purple', avatar: null })
+    JSON.stringify({ nickname: 'Sara', theme: 'purple', avatar: null })
   );
 
   // ── Plan items ────────────────────────────────────────────────
@@ -399,7 +400,7 @@ function seedLocalStorage() {
   const selfLetters = [
     {
       id: 'demo-sl-1',
-      text: 'Kære Anders. Når du læser dette, er der gået en måned. Jeg håber du stadig husker, hvordan det føltes at male solsikken — den frihed i armene. Hold fast i dét. Du er stærkere end du tror.',
+      text: 'Kære Sara. Når du læser dette, er der gået en måned. Jeg håber du stadig husker, hvordan det føltes at male solsikken — den frihed i armene. Hold fast i dét. Du er stærkere end du tror.',
       written_at: daysAgo(7),
       deliver_at: deliverDate.toISOString().slice(0, 10),
       delivered: false,
@@ -458,7 +459,9 @@ export default function ResidentDemoPage() {
       >
         <div className="flex items-center justify-between px-4 py-1.5">
           <span className="text-xs font-medium text-[#6B6459]">
-            Demo · Anders M. · Prøv: check ind → dag-opgaver → haven
+            {HAVEN_ENABLED
+              ? 'Demo · Sara K. · Prøv: check ind → dag-opgaver → haven'
+              : 'Demo · Sara K. · Prøv: check ind → dag-opgaver → journal'}
           </span>
           <div className="flex items-center gap-3">
             <Link
@@ -495,8 +498,8 @@ export default function ResidentDemoPage() {
           </DemoWhyBox>
         </div>
         <LysShell
-          firstName="Anders"
-          initials="AM"
+          firstName="Sara"
+          initials="SK"
           residentId={RESIDENT_ID}
           facilityId={null}
           isDemoMode

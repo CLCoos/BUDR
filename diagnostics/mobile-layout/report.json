@@ -1,0 +1,1175 @@
+{
+  "generatedAt": "2026-05-26T19:45:02.603Z",
+  "viewports": [
+    {
+      "label": "360",
+      "width": 360,
+      "height": 780,
+      "isMobile": true,
+      "hasTouch": true,
+      "dpr": 3
+    },
+    {
+      "label": "390",
+      "width": 390,
+      "height": 844,
+      "isMobile": true,
+      "hasTouch": true,
+      "dpr": 3
+    },
+    {
+      "label": "768",
+      "width": 768,
+      "height": 1024,
+      "isMobile": false,
+      "hasTouch": true,
+      "dpr": 2
+    },
+    {
+      "label": "1024",
+      "width": 1024,
+      "height": 900,
+      "isMobile": false,
+      "hasTouch": false,
+      "dpr": 2
+    },
+    {
+      "label": "1440",
+      "width": 1440,
+      "height": 1024,
+      "isMobile": false,
+      "hasTouch": false,
+      "dpr": 2
+    }
+  ],
+  "pages": [
+    {
+      "viewportLabel": "360",
+      "path": "/care-portal-demo",
+      "slug": "care-portal-demo",
+      "viewportWidth": 360,
+      "scrollWidth": 360,
+      "hasHorizontalOverflow": false,
+      "overflowPx": 0,
+      "severity": "none",
+      "offenders": [
+        {
+          "selector": "button.shrink-0.rounded-full.px-3.py-1.5",
+          "tag": "button",
+          "width": 60,
+          "left": 591,
+          "right": 652,
+          "overflowRightPx": 291.7,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.rounded-full.px-3.py-1.5",
+          "tag": "button",
+          "width": 53,
+          "left": 530,
+          "right": 583,
+          "overflowRightPx": 223.3,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.rounded-full.px-3.py-1.5",
+          "tag": "button",
+          "width": 69,
+          "left": 454,
+          "right": 522,
+          "overflowRightPx": 162,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.rounded-full.px-3.py-1.5",
+          "tag": "button",
+          "width": 72,
+          "left": 374,
+          "right": 446,
+          "overflowRightPx": 85.5,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.rounded-full.px-3.py-1.5",
+          "tag": "button",
+          "width": 71,
+          "left": 295,
+          "right": 366,
+          "overflowRightPx": 6,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        }
+      ],
+      "pageBreakers": [],
+      "screenshot": "/Users/christiancloos/Desktop/budr-luksus/diagnostics/mobile-layout/360px-care-portal-demo-viewport.png",
+      "notes": []
+    },
+    {
+      "viewportLabel": "360",
+      "path": "/care-portal-demo/residents/res-sara",
+      "slug": "care-portal-demo-res-sara",
+      "viewportWidth": 360,
+      "scrollWidth": 360,
+      "hasHorizontalOverflow": false,
+      "overflowPx": 0,
+      "severity": "none",
+      "offenders": [
+        {
+          "selector": "button.shrink-0.snap-start.rounded-lg.px-3",
+          "tag": "button",
+          "width": 94,
+          "left": 1035,
+          "right": 1129,
+          "overflowRightPx": 768.7,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.snap-start.rounded-lg.px-3",
+          "tag": "button",
+          "width": 66,
+          "left": 963,
+          "right": 1029,
+          "overflowRightPx": 668.7,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.snap-start.rounded-lg.px-3",
+          "tag": "button",
+          "width": 44,
+          "left": 913,
+          "right": 957,
+          "overflowRightPx": 597.1,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.snap-start.rounded-lg.px-3",
+          "tag": "button",
+          "width": 59,
+          "left": 848,
+          "right": 907,
+          "overflowRightPx": 547.3,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.snap-start.rounded-lg.px-3",
+          "tag": "button",
+          "width": 69,
+          "left": 773,
+          "right": 842,
+          "overflowRightPx": 482.1,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.snap-start.rounded-lg.px-3",
+          "tag": "button",
+          "width": 62,
+          "left": 705,
+          "right": 767,
+          "overflowRightPx": 407.2,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.snap-start.rounded-lg.px-3",
+          "tag": "button",
+          "width": 87,
+          "left": 612,
+          "right": 699,
+          "overflowRightPx": 339.1,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.snap-start.rounded-lg.px-3",
+          "tag": "button",
+          "width": 86,
+          "left": 520,
+          "right": 606,
+          "overflowRightPx": 246,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.snap-start.rounded-lg.px-3",
+          "tag": "button",
+          "width": 76,
+          "left": 438,
+          "right": 514,
+          "overflowRightPx": 154.5,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.snap-start.rounded-lg.px-3",
+          "tag": "button",
+          "width": 63,
+          "left": 369,
+          "right": 432,
+          "overflowRightPx": 72.3,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "div.pointer-events-none.absolute.-right-16.-top-16",
+          "tag": "div",
+          "width": 192,
+          "left": 219,
+          "right": 411,
+          "overflowRightPx": 51,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.snap-start.rounded-lg.px-3",
+          "tag": "button",
+          "width": 77,
+          "left": 287,
+          "right": 363,
+          "overflowRightPx": 3.5,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        }
+      ],
+      "pageBreakers": [],
+      "screenshot": "/Users/christiancloos/Desktop/budr-luksus/diagnostics/mobile-layout/360px-care-portal-demo-res-sara-viewport.png",
+      "notes": []
+    },
+    {
+      "viewportLabel": "360",
+      "path": "/care-portal-demo/handover",
+      "slug": "care-portal-demo-handover",
+      "viewportWidth": 360,
+      "scrollWidth": 360,
+      "hasHorizontalOverflow": false,
+      "overflowPx": 0,
+      "severity": "none",
+      "offenders": [],
+      "pageBreakers": [],
+      "screenshot": "/Users/christiancloos/Desktop/budr-luksus/diagnostics/mobile-layout/360px-care-portal-demo-handover-viewport.png",
+      "notes": []
+    },
+    {
+      "viewportLabel": "360",
+      "path": "/resident-demo",
+      "slug": "resident-demo",
+      "viewportWidth": 360,
+      "scrollWidth": 360,
+      "hasHorizontalOverflow": false,
+      "overflowPx": 0,
+      "severity": "none",
+      "offenders": [],
+      "pageBreakers": [],
+      "screenshot": "/Users/christiancloos/Desktop/budr-luksus/diagnostics/mobile-layout/360px-resident-demo-viewport.png",
+      "notes": []
+    },
+    {
+      "viewportLabel": "390",
+      "path": "/care-portal-demo",
+      "slug": "care-portal-demo",
+      "viewportWidth": 390,
+      "scrollWidth": 390,
+      "hasHorizontalOverflow": false,
+      "overflowPx": 0,
+      "severity": "none",
+      "offenders": [
+        {
+          "selector": "button.shrink-0.rounded-full.px-3.py-1.5",
+          "tag": "button",
+          "width": 60,
+          "left": 591,
+          "right": 652,
+          "overflowRightPx": 261.7,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.rounded-full.px-3.py-1.5",
+          "tag": "button",
+          "width": 53,
+          "left": 530,
+          "right": 583,
+          "overflowRightPx": 193.3,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.rounded-full.px-3.py-1.5",
+          "tag": "button",
+          "width": 69,
+          "left": 454,
+          "right": 522,
+          "overflowRightPx": 132,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.rounded-full.px-3.py-1.5",
+          "tag": "button",
+          "width": 72,
+          "left": 374,
+          "right": 446,
+          "overflowRightPx": 55.5,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        }
+      ],
+      "pageBreakers": [],
+      "screenshot": "/Users/christiancloos/Desktop/budr-luksus/diagnostics/mobile-layout/390px-care-portal-demo-viewport.png",
+      "notes": []
+    },
+    {
+      "viewportLabel": "390",
+      "path": "/care-portal-demo/residents/res-sara",
+      "slug": "care-portal-demo-res-sara",
+      "viewportWidth": 390,
+      "scrollWidth": 390,
+      "hasHorizontalOverflow": false,
+      "overflowPx": 0,
+      "severity": "none",
+      "offenders": [
+        {
+          "selector": "button.shrink-0.snap-start.rounded-lg.px-3",
+          "tag": "button",
+          "width": 94,
+          "left": 1035,
+          "right": 1129,
+          "overflowRightPx": 738.7,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.snap-start.rounded-lg.px-3",
+          "tag": "button",
+          "width": 66,
+          "left": 963,
+          "right": 1029,
+          "overflowRightPx": 638.7,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.snap-start.rounded-lg.px-3",
+          "tag": "button",
+          "width": 44,
+          "left": 913,
+          "right": 957,
+          "overflowRightPx": 567.1,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.snap-start.rounded-lg.px-3",
+          "tag": "button",
+          "width": 59,
+          "left": 848,
+          "right": 907,
+          "overflowRightPx": 517.3,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.snap-start.rounded-lg.px-3",
+          "tag": "button",
+          "width": 69,
+          "left": 773,
+          "right": 842,
+          "overflowRightPx": 452.1,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.snap-start.rounded-lg.px-3",
+          "tag": "button",
+          "width": 62,
+          "left": 705,
+          "right": 767,
+          "overflowRightPx": 377.2,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.snap-start.rounded-lg.px-3",
+          "tag": "button",
+          "width": 87,
+          "left": 612,
+          "right": 699,
+          "overflowRightPx": 309.1,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.snap-start.rounded-lg.px-3",
+          "tag": "button",
+          "width": 86,
+          "left": 520,
+          "right": 606,
+          "overflowRightPx": 216,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.snap-start.rounded-lg.px-3",
+          "tag": "button",
+          "width": 76,
+          "left": 438,
+          "right": 514,
+          "overflowRightPx": 124.5,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "div.pointer-events-none.absolute.-right-16.-top-16",
+          "tag": "div",
+          "width": 192,
+          "left": 249,
+          "right": 441,
+          "overflowRightPx": 51,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "button.shrink-0.snap-start.rounded-lg.px-3",
+          "tag": "button",
+          "width": 63,
+          "left": 369,
+          "right": 432,
+          "overflowRightPx": 42.3,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        }
+      ],
+      "pageBreakers": [],
+      "screenshot": "/Users/christiancloos/Desktop/budr-luksus/diagnostics/mobile-layout/390px-care-portal-demo-res-sara-viewport.png",
+      "notes": []
+    },
+    {
+      "viewportLabel": "390",
+      "path": "/care-portal-demo/handover",
+      "slug": "care-portal-demo-handover",
+      "viewportWidth": 390,
+      "scrollWidth": 390,
+      "hasHorizontalOverflow": false,
+      "overflowPx": 0,
+      "severity": "none",
+      "offenders": [],
+      "pageBreakers": [],
+      "screenshot": "/Users/christiancloos/Desktop/budr-luksus/diagnostics/mobile-layout/390px-care-portal-demo-handover-viewport.png",
+      "notes": []
+    },
+    {
+      "viewportLabel": "390",
+      "path": "/resident-demo",
+      "slug": "resident-demo",
+      "viewportWidth": 390,
+      "scrollWidth": 390,
+      "hasHorizontalOverflow": false,
+      "overflowPx": 0,
+      "severity": "none",
+      "offenders": [],
+      "pageBreakers": [],
+      "screenshot": "/Users/christiancloos/Desktop/budr-luksus/diagnostics/mobile-layout/390px-resident-demo-viewport.png",
+      "notes": []
+    },
+    {
+      "viewportLabel": "768",
+      "path": "/care-portal-demo",
+      "slug": "care-portal-demo",
+      "viewportWidth": 768,
+      "scrollWidth": 768,
+      "hasHorizontalOverflow": false,
+      "overflowPx": 0,
+      "severity": "none",
+      "offenders": [
+        {
+          "selector": "table.w-full.min-w-[720px]",
+          "tag": "table",
+          "width": 729,
+          "left": 249,
+          "right": 978,
+          "overflowRightPx": 210,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "thead",
+          "tag": "thead",
+          "width": 729,
+          "left": 249,
+          "right": 978,
+          "overflowRightPx": 210,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "tr.sticky.top-0.z-[1]",
+          "tag": "tr",
+          "width": 729,
+          "left": 249,
+          "right": 978,
+          "overflowRightPx": 210,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "th.px-3.py-2.5.text-left.text-[11px]",
+          "tag": "th",
+          "width": 52,
+          "left": 926,
+          "right": 978,
+          "overflowRightPx": 210,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "tbody",
+          "tag": "tbody",
+          "width": 729,
+          "left": 249,
+          "right": 978,
+          "overflowRightPx": 210,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "tr.group.cursor-pointer.transition-colors",
+          "tag": "tr",
+          "width": 729,
+          "left": 249,
+          "right": 978,
+          "overflowRightPx": 210,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "td.px-3.py-3",
+          "tag": "td",
+          "width": 52,
+          "left": 926,
+          "right": 978,
+          "overflowRightPx": 210,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "tr.group.cursor-pointer.transition-colors",
+          "tag": "tr",
+          "width": 729,
+          "left": 249,
+          "right": 978,
+          "overflowRightPx": 210,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "td.px-3.py-3",
+          "tag": "td",
+          "width": 52,
+          "left": 926,
+          "right": 978,
+          "overflowRightPx": 210,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "svg.lucide.lucide-chevron-right",
+          "tag": "svg",
+          "width": 14,
+          "left": 945,
+          "right": 959,
+          "overflowRightPx": 191,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "svg.lucide.lucide-chevron-right",
+          "tag": "svg",
+          "width": 14,
+          "left": 945,
+          "right": 959,
+          "overflowRightPx": 191,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "path",
+          "tag": "path",
+          "width": 4,
+          "left": 950,
+          "right": 954,
+          "overflowRightPx": 185.8,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "path",
+          "tag": "path",
+          "width": 4,
+          "left": 950,
+          "right": 954,
+          "overflowRightPx": 185.8,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "th.px-3.py-2.5.text-left.text-[11px]",
+          "tag": "th",
+          "width": 220,
+          "left": 706,
+          "right": 926,
+          "overflowRightPx": 158,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "td.max-w-[220px].px-3.py-3",
+          "tag": "td",
+          "width": 220,
+          "left": 706,
+          "right": 926,
+          "overflowRightPx": 158,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        }
+      ],
+      "pageBreakers": [],
+      "screenshot": "/Users/christiancloos/Desktop/budr-luksus/diagnostics/mobile-layout/768px-care-portal-demo-viewport.png",
+      "notes": []
+    },
+    {
+      "viewportLabel": "768",
+      "path": "/care-portal-demo/residents/res-sara",
+      "slug": "care-portal-demo-res-sara",
+      "viewportWidth": 768,
+      "scrollWidth": 768,
+      "hasHorizontalOverflow": false,
+      "overflowPx": 0,
+      "severity": "none",
+      "offenders": [
+        {
+          "selector": "div.pointer-events-none.absolute.-right-16.-top-16",
+          "tag": "div",
+          "width": 192,
+          "left": 615,
+          "right": 807,
+          "overflowRightPx": 39,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        }
+      ],
+      "pageBreakers": [],
+      "screenshot": "/Users/christiancloos/Desktop/budr-luksus/diagnostics/mobile-layout/768px-care-portal-demo-res-sara-viewport.png",
+      "notes": []
+    },
+    {
+      "viewportLabel": "768",
+      "path": "/care-portal-demo/handover",
+      "slug": "care-portal-demo-handover",
+      "viewportWidth": 768,
+      "scrollWidth": 768,
+      "hasHorizontalOverflow": false,
+      "overflowPx": 0,
+      "severity": "none",
+      "offenders": [],
+      "pageBreakers": [],
+      "screenshot": "/Users/christiancloos/Desktop/budr-luksus/diagnostics/mobile-layout/768px-care-portal-demo-handover-viewport.png",
+      "notes": []
+    },
+    {
+      "viewportLabel": "768",
+      "path": "/resident-demo",
+      "slug": "resident-demo",
+      "viewportWidth": 768,
+      "scrollWidth": 768,
+      "hasHorizontalOverflow": false,
+      "overflowPx": 0,
+      "severity": "none",
+      "offenders": [],
+      "pageBreakers": [],
+      "screenshot": "/Users/christiancloos/Desktop/budr-luksus/diagnostics/mobile-layout/768px-resident-demo-viewport.png",
+      "notes": []
+    },
+    {
+      "viewportLabel": "1024",
+      "path": "/care-portal-demo",
+      "slug": "care-portal-demo",
+      "viewportWidth": 1024,
+      "scrollWidth": 1024,
+      "hasHorizontalOverflow": false,
+      "overflowPx": 0,
+      "severity": "none",
+      "offenders": [],
+      "pageBreakers": [],
+      "screenshot": "/Users/christiancloos/Desktop/budr-luksus/diagnostics/mobile-layout/1024px-care-portal-demo-viewport.png",
+      "notes": []
+    },
+    {
+      "viewportLabel": "1024",
+      "path": "/care-portal-demo/residents/res-sara",
+      "slug": "care-portal-demo-res-sara",
+      "viewportWidth": 1024,
+      "scrollWidth": 1024,
+      "hasHorizontalOverflow": false,
+      "overflowPx": 0,
+      "severity": "none",
+      "offenders": [
+        {
+          "selector": "div.pointer-events-none.absolute.-right-16.-top-16",
+          "tag": "div",
+          "width": 192,
+          "left": 871,
+          "right": 1063,
+          "overflowRightPx": 39,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        }
+      ],
+      "pageBreakers": [],
+      "screenshot": "/Users/christiancloos/Desktop/budr-luksus/diagnostics/mobile-layout/1024px-care-portal-demo-res-sara-viewport.png",
+      "notes": []
+    },
+    {
+      "viewportLabel": "1024",
+      "path": "/care-portal-demo/handover",
+      "slug": "care-portal-demo-handover",
+      "viewportWidth": 1024,
+      "scrollWidth": 1024,
+      "hasHorizontalOverflow": false,
+      "overflowPx": 0,
+      "severity": "none",
+      "offenders": [],
+      "pageBreakers": [],
+      "screenshot": "/Users/christiancloos/Desktop/budr-luksus/diagnostics/mobile-layout/1024px-care-portal-demo-handover-viewport.png",
+      "notes": []
+    },
+    {
+      "viewportLabel": "1024",
+      "path": "/resident-demo",
+      "slug": "resident-demo",
+      "viewportWidth": 1024,
+      "scrollWidth": 1024,
+      "hasHorizontalOverflow": false,
+      "overflowPx": 0,
+      "severity": "none",
+      "offenders": [],
+      "pageBreakers": [],
+      "screenshot": "/Users/christiancloos/Desktop/budr-luksus/diagnostics/mobile-layout/1024px-resident-demo-viewport.png",
+      "notes": []
+    },
+    {
+      "viewportLabel": "1440",
+      "path": "/care-portal-demo",
+      "slug": "care-portal-demo",
+      "viewportWidth": 1440,
+      "scrollWidth": 1440,
+      "hasHorizontalOverflow": false,
+      "overflowPx": 0,
+      "severity": "none",
+      "offenders": [
+        {
+          "selector": "button.shrink-0.rounded-full.px-3.py-1.5",
+          "tag": "button",
+          "width": 60,
+          "left": 1417,
+          "right": 1478,
+          "overflowRightPx": 37.7,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "table.w-full.min-w-[720px]",
+          "tag": "table",
+          "width": 729,
+          "left": 748,
+          "right": 1477,
+          "overflowRightPx": 36.6,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "thead",
+          "tag": "thead",
+          "width": 729,
+          "left": 748,
+          "right": 1477,
+          "overflowRightPx": 36.6,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "tr.sticky.top-0.z-[1]",
+          "tag": "tr",
+          "width": 729,
+          "left": 748,
+          "right": 1477,
+          "overflowRightPx": 36.6,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "th.px-3.py-2.5.text-left.text-[11px]",
+          "tag": "th",
+          "width": 52,
+          "left": 1425,
+          "right": 1477,
+          "overflowRightPx": 36.6,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "tbody",
+          "tag": "tbody",
+          "width": 729,
+          "left": 748,
+          "right": 1477,
+          "overflowRightPx": 36.6,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "tr.group.cursor-pointer.transition-colors",
+          "tag": "tr",
+          "width": 729,
+          "left": 748,
+          "right": 1477,
+          "overflowRightPx": 36.6,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "td.px-3.py-3",
+          "tag": "td",
+          "width": 52,
+          "left": 1425,
+          "right": 1477,
+          "overflowRightPx": 36.6,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "tr.group.cursor-pointer.transition-colors",
+          "tag": "tr",
+          "width": 729,
+          "left": 748,
+          "right": 1477,
+          "overflowRightPx": 36.6,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "td.px-3.py-3",
+          "tag": "td",
+          "width": 52,
+          "left": 1425,
+          "right": 1477,
+          "overflowRightPx": 36.6,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "svg.lucide.lucide-chevron-right",
+          "tag": "svg",
+          "width": 14,
+          "left": 1444,
+          "right": 1458,
+          "overflowRightPx": 17.6,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "svg.lucide.lucide-chevron-right",
+          "tag": "svg",
+          "width": 14,
+          "left": 1444,
+          "right": 1458,
+          "overflowRightPx": 17.6,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "path",
+          "tag": "path",
+          "width": 4,
+          "left": 1449,
+          "right": 1452,
+          "overflowRightPx": 12.4,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        },
+        {
+          "selector": "path",
+          "tag": "path",
+          "width": 4,
+          "left": 1449,
+          "right": 1452,
+          "overflowRightPx": 12.4,
+          "overflowLeftPx": 0,
+          "widerThanViewportPx": 0,
+          "causesPageOverflow": false
+        }
+      ],
+      "pageBreakers": [],
+      "screenshot": "/Users/christiancloos/Desktop/budr-luksus/diagnostics/mobile-layout/1440px-care-portal-demo-viewport.png",
+      "notes": []
+    },
+    {
+      "viewportLabel": "1440",
+      "path": "/care-portal-demo/residents/res-sara",
+      "slug": "care-portal-demo-res-sara",
+      "viewportWidth": 1440,
+      "scrollWidth": 1440,
+      "hasHorizontalOverflow": false,
+      "overflowPx": 0,
+      "severity": "none",
+      "offenders": [],
+      "pageBreakers": [],
+      "screenshot": "/Users/christiancloos/Desktop/budr-luksus/diagnostics/mobile-layout/1440px-care-portal-demo-res-sara-viewport.png",
+      "notes": []
+    },
+    {
+      "viewportLabel": "1440",
+      "path": "/care-portal-demo/handover",
+      "slug": "care-portal-demo-handover",
+      "viewportWidth": 1440,
+      "scrollWidth": 1440,
+      "hasHorizontalOverflow": false,
+      "overflowPx": 0,
+      "severity": "none",
+      "offenders": [],
+      "pageBreakers": [],
+      "screenshot": "/Users/christiancloos/Desktop/budr-luksus/diagnostics/mobile-layout/1440px-care-portal-demo-handover-viewport.png",
+      "notes": []
+    },
+    {
+      "viewportLabel": "1440",
+      "path": "/resident-demo",
+      "slug": "resident-demo",
+      "viewportWidth": 1440,
+      "scrollWidth": 1440,
+      "hasHorizontalOverflow": false,
+      "overflowPx": 0,
+      "severity": "none",
+      "offenders": [],
+      "pageBreakers": [],
+      "screenshot": "/Users/christiancloos/Desktop/budr-luksus/diagnostics/mobile-layout/1440px-resident-demo-viewport.png",
+      "notes": []
+    }
+  ],
+  "matrix": [
+    {
+      "viewport": "360",
+      "results": [
+        {
+          "path": "/care-portal-demo",
+          "hasHorizontalOverflow": false,
+          "overflowPx": 0,
+          "severity": "none"
+        },
+        {
+          "path": "/care-portal-demo/residents/res-sara",
+          "hasHorizontalOverflow": false,
+          "overflowPx": 0,
+          "severity": "none"
+        },
+        {
+          "path": "/care-portal-demo/handover",
+          "hasHorizontalOverflow": false,
+          "overflowPx": 0,
+          "severity": "none"
+        },
+        {
+          "path": "/resident-demo",
+          "hasHorizontalOverflow": false,
+          "overflowPx": 0,
+          "severity": "none"
+        }
+      ]
+    },
+    {
+      "viewport": "390",
+      "results": [
+        {
+          "path": "/care-portal-demo",
+          "hasHorizontalOverflow": false,
+          "overflowPx": 0,
+          "severity": "none"
+        },
+        {
+          "path": "/care-portal-demo/residents/res-sara",
+          "hasHorizontalOverflow": false,
+          "overflowPx": 0,
+          "severity": "none"
+        },
+        {
+          "path": "/care-portal-demo/handover",
+          "hasHorizontalOverflow": false,
+          "overflowPx": 0,
+          "severity": "none"
+        },
+        {
+          "path": "/resident-demo",
+          "hasHorizontalOverflow": false,
+          "overflowPx": 0,
+          "severity": "none"
+        }
+      ]
+    },
+    {
+      "viewport": "768",
+      "results": [
+        {
+          "path": "/care-portal-demo",
+          "hasHorizontalOverflow": false,
+          "overflowPx": 0,
+          "severity": "none"
+        },
+        {
+          "path": "/care-portal-demo/residents/res-sara",
+          "hasHorizontalOverflow": false,
+          "overflowPx": 0,
+          "severity": "none"
+        },
+        {
+          "path": "/care-portal-demo/handover",
+          "hasHorizontalOverflow": false,
+          "overflowPx": 0,
+          "severity": "none"
+        },
+        {
+          "path": "/resident-demo",
+          "hasHorizontalOverflow": false,
+          "overflowPx": 0,
+          "severity": "none"
+        }
+      ]
+    },
+    {
+      "viewport": "1024",
+      "results": [
+        {
+          "path": "/care-portal-demo",
+          "hasHorizontalOverflow": false,
+          "overflowPx": 0,
+          "severity": "none"
+        },
+        {
+          "path": "/care-portal-demo/residents/res-sara",
+          "hasHorizontalOverflow": false,
+          "overflowPx": 0,
+          "severity": "none"
+        },
+        {
+          "path": "/care-portal-demo/handover",
+          "hasHorizontalOverflow": false,
+          "overflowPx": 0,
+          "severity": "none"
+        },
+        {
+          "path": "/resident-demo",
+          "hasHorizontalOverflow": false,
+          "overflowPx": 0,
+          "severity": "none"
+        }
+      ]
+    },
+    {
+      "viewport": "1440",
+      "results": [
+        {
+          "path": "/care-portal-demo",
+          "hasHorizontalOverflow": false,
+          "overflowPx": 0,
+          "severity": "none"
+        },
+        {
+          "path": "/care-portal-demo/residents/res-sara",
+          "hasHorizontalOverflow": false,
+          "overflowPx": 0,
+          "severity": "none"
+        },
+        {
+          "path": "/care-portal-demo/handover",
+          "hasHorizontalOverflow": false,
+          "overflowPx": 0,
+          "severity": "none"
+        },
+        {
+          "path": "/resident-demo",
+          "hasHorizontalOverflow": false,
+          "overflowPx": 0,
+          "severity": "none"
+        }
+      ]
+    }
+  ]
+}

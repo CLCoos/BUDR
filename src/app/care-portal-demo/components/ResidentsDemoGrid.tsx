@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronRight, FileText, Search, X } from 'lucide-react';
 import { CARE_DEMO_RESIDENT_PROFILES, careDemoProfileById } from '@/lib/careDemoResidents';
+import { HAVEN_ENABLED } from '@/lib/featureFlags';
 
 type TrafficUi = 'groen' | 'gul' | 'roed';
 
@@ -99,7 +100,8 @@ export default function ResidentsDemoGrid({
   const router = useRouter();
   const searchParams = useSearchParams();
   const focusResident = searchParams.get('resident');
-  const focusTab = searchParams.get('tab') ?? 'overview';
+  const rawFocusTab = searchParams.get('tab') ?? 'overview';
+  const focusTab = rawFocusTab === 'haven' && !HAVEN_ENABLED ? 'overview' : rawFocusTab;
 
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'alle' | TrafficUi | 'ingen'>('alle');

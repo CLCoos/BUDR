@@ -36,6 +36,7 @@ import {
 import DemoWhyBox from '@/components/demo/DemoWhyBox';
 import { HavenGardenScene } from '@/components/haven/HavenGardenScene';
 import { getHavenAmbientPeriod } from '@/components/haven/havenConstants';
+import { HAVEN_ENABLED } from '@/lib/featureFlags';
 import type {
   BorgerAppActivityKind,
   JournalDemo,
@@ -75,7 +76,7 @@ const TAB_TO_SECTION: Record<string, string> = {
   plan: 'planer',
 };
 
-const NAV = [
+const NAV_ITEMS = [
   { id: 'status', label: 'Samlet status' },
   { id: 'borgerapp', label: 'Lys / app' },
   { id: 'oversigt', label: 'Overblik' },
@@ -92,6 +93,8 @@ const NAV = [
   { id: 'journal', label: 'Journal' },
   { id: 'dokumenter', label: 'Dokumenter' },
 ] as const;
+
+const NAV = NAV_ITEMS.filter((item) => HAVEN_ENABLED || item.id !== 'haven');
 
 function trafficStyle(t: TrafficDemo): { bg: string; label: string; border: string } {
   if (t === 'roed')
@@ -219,7 +222,8 @@ export default function ResidentDemo360Client({
 
   useEffect(() => {
     const tab = searchParams.get('tab');
-    const section = tab ? TAB_TO_SECTION[tab] : null;
+    let section = tab ? TAB_TO_SECTION[tab] : null;
+    if (section === 'haven' && !HAVEN_ENABLED) section = null;
     if (section) {
       const t = window.setTimeout(() => scrollTo(section), 120);
       return () => clearTimeout(t);
@@ -636,20 +640,20 @@ export default function ResidentDemo360Client({
 
         {/* Sticky section nav */}
         <nav
-          className="sticky top-0 z-20 -mx-3 mb-6 border-b px-3 py-2 backdrop-blur-md sm:-mx-0 sm:rounded-xl sm:border sm:px-2 sm:py-2"
+          className="sticky top-0 z-20 mb-6 rounded-xl border px-2 py-2 backdrop-blur-md"
           style={{
             backgroundColor: 'rgba(15,23,42,0.75)',
             borderColor: 'var(--cp-border)',
           }}
           aria-label="Sektioner"
         >
-          <div className="flex gap-1.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex snap-x snap-mandatory gap-1.5 overflow-x-auto px-0.5 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:flex-wrap md:overflow-visible">
             {NAV.map(({ id, label }) => (
               <button
                 key={id}
                 type="button"
                 onClick={() => scrollTo(id)}
-                className="shrink-0 rounded-lg px-3 py-2 text-xs font-medium transition-all sm:text-[13px]"
+                className="shrink-0 snap-start rounded-lg px-3 py-2 text-xs font-medium transition-all sm:text-[13px]"
                 style={
                   activeNav === id
                     ? {
@@ -1161,31 +1165,33 @@ export default function ResidentDemo360Client({
             </SectionCard>
           </div>
 
-          <SectionCard id="haven" title="Haven (Lys)" icon={Sprout}>
-            <p className="mb-4 text-sm" style={{ color: 'var(--cp-muted)' }}>
-              Samme visuelle have som borgeren ser i Lys — her i demo med animationer, så I kan vise
-              stolt frem overfor team og borgere.
-            </p>
-            {gardenPlots.length === 0 ? (
-              <p
-                className="rounded-xl border border-dashed p-8 text-center text-sm"
-                style={{ color: 'var(--cp-muted)' }}
-              >
-                Ingen planter i demo for denne profil — i app’en vises haven, når borgeren opretter
-                mål/planter.
+          {HAVEN_ENABLED ? (
+            <SectionCard id="haven" title="Haven (Lys)" icon={Sprout}>
+              <p className="mb-4 text-sm" style={{ color: 'var(--cp-muted)' }}>
+                Samme visuelle have som borgeren ser i Lys — her i demo med animationer, så I kan
+                vise stolt frem overfor team og borgere.
               </p>
-            ) : (
-              <HavenGardenScene
-                plots={gardenPlots}
-                ambient={getHavenAmbientPeriod(new Date().getHours())}
-                showcase
-                reducedMotion={havenReducedMotion}
-                compact
-                title={`${profile.displayName.split(/\s+/)[0] || 'Borger'}s have`}
-                subtitle="Spejlet fra Lys (demo)"
-              />
-            )}
-          </SectionCard>
+              {gardenPlots.length === 0 ? (
+                <p
+                  className="rounded-xl border border-dashed p-8 text-center text-sm"
+                  style={{ color: 'var(--cp-muted)' }}
+                >
+                  Ingen planter i demo for denne profil — i app’en vises haven, når borgeren
+                  opretter mål/planter.
+                </p>
+              ) : (
+                <HavenGardenScene
+                  plots={gardenPlots}
+                  ambient={getHavenAmbientPeriod(new Date().getHours())}
+                  showcase
+                  reducedMotion={havenReducedMotion}
+                  compact
+                  title={`${profile.displayName.split(/\s+/)[0] || 'Borger'}s have`}
+                  subtitle="Spejlet fra Lys (demo)"
+                />
+              )}
+            </SectionCard>
+          ) : null}
 
           <SectionCard id="maal" title="Mål — borger & personale" icon={Target}>
             <div className="grid gap-5 md:grid-cols-2">

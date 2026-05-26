@@ -236,7 +236,181 @@ export default function ResidentListDemo({ onNewJournal }: ResidentListDemoProps
         </div>
       </div>
 
-      <div className="cp-scroll max-h-[min(520px,55vh)] overflow-x-auto overflow-y-auto">
+      <div className="cp-scroll max-h-[min(520px,55vh)] overflow-y-auto md:hidden">
+        <div className="space-y-3 p-3">
+          {filtered.map((r) => {
+            const tc = r.trafficLight ? trafficConfig[r.trafficLight] : null;
+            return (
+              <div
+                key={r.id}
+                onClick={() =>
+                  toast.info(`Demo: ${r.initials} — fuld profil i live-portalen efter login`)
+                }
+                className="cursor-pointer rounded-2xl border p-4 transition-colors"
+                style={{
+                  borderColor: 'var(--cp-border)',
+                  backgroundColor: 'var(--cp-bg2)',
+                }}
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+                    title={r.name}
+                    style={{
+                      backgroundColor: tc?.color ?? 'var(--cp-muted2)',
+                      boxShadow: tc ? '0 0 0 2px var(--cp-bg2)' : undefined,
+                    }}
+                  >
+                    {r.initials}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+                          {r.name}
+                        </div>
+                        <div className="text-xs" style={{ color: 'var(--cp-muted)' }}>
+                          Hus {r.house} · Værelse {r.room}
+                        </div>
+                      </div>
+                      {r.pendingProposals > 0 && (
+                        <span
+                          className="inline-flex items-center gap-1 whitespace-nowrap rounded-full px-1.5 py-0.5 text-[11px] font-medium"
+                          style={{
+                            backgroundColor: 'var(--cp-amber-dim)',
+                            color: 'var(--cp-amber)',
+                            border: '1px solid rgba(246,173,85,0.25)',
+                          }}
+                        >
+                          <span
+                            className="inline-block h-1.5 w-1.5 animate-pulse rounded-full"
+                            style={{ backgroundColor: 'var(--cp-amber)' }}
+                          />
+                          {r.pendingProposals} forslag
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                      <div
+                        className="rounded-xl border px-3 py-2"
+                        style={{
+                          borderColor: 'var(--cp-border)',
+                          backgroundColor: 'var(--cp-bg3)',
+                        }}
+                      >
+                        <div
+                          className="mb-1 text-[10px] font-semibold uppercase tracking-wide"
+                          style={{ color: 'var(--cp-muted2)' }}
+                        >
+                          Trafiklys
+                        </div>
+                        {tc ? (
+                          <span
+                            className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium"
+                            style={{ backgroundColor: tc.bg, color: tc.textColor }}
+                          >
+                            <span
+                              className="h-1.5 w-1.5 rounded-full"
+                              style={{ backgroundColor: tc.color }}
+                            />
+                            {tc.label}
+                          </span>
+                        ) : (
+                          <span
+                            className="inline-flex items-center gap-1 text-xs"
+                            style={{ color: 'var(--cp-muted2)' }}
+                          >
+                            <Clock size={10} /> Mangler
+                          </span>
+                        )}
+                      </div>
+
+                      <div
+                        className="rounded-xl border px-3 py-2"
+                        style={{
+                          borderColor: 'var(--cp-border)',
+                          backgroundColor: 'var(--cp-bg3)',
+                        }}
+                      >
+                        <div
+                          className="mb-1 text-[10px] font-semibold uppercase tracking-wide"
+                          style={{ color: 'var(--cp-muted2)' }}
+                        >
+                          Stemning
+                        </div>
+                        {r.moodScore !== null ? (
+                          <span
+                            className="text-sm font-bold tabular-nums"
+                            style={{ color: 'var(--cp-text)' }}
+                          >
+                            {r.moodScore}
+                            <span
+                              className="text-xs font-normal"
+                              style={{ color: 'var(--cp-muted)' }}
+                            >
+                              /10
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="text-xs" style={{ color: 'var(--cp-muted2)' }}>
+                            —
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div
+                      className="mt-3 rounded-xl border px-3 py-2"
+                      style={{
+                        borderColor: 'var(--cp-border)',
+                        backgroundColor: 'var(--cp-bg3)',
+                      }}
+                    >
+                      <div
+                        className="mb-1 flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide"
+                        style={{ color: 'var(--cp-muted2)' }}
+                      >
+                        <span>Sidst set</span>
+                        <span className="tabular-nums">{r.lastCheckin}</span>
+                      </div>
+                      <p className="text-xs leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
+                        {r.notePreview}
+                      </p>
+                    </div>
+
+                    {onNewJournal ? (
+                      <div className="mt-3" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          onClick={() => onNewJournal(r.id)}
+                          className="inline-flex min-h-9 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium"
+                          style={{
+                            borderColor: 'var(--cp-border2)',
+                            color: 'var(--cp-green)',
+                            backgroundColor: 'var(--cp-bg3)',
+                          }}
+                          aria-label={`Ny journal for ${r.name}`}
+                        >
+                          <Plus className="h-4 w-4" strokeWidth={2.5} aria-hidden />
+                          Ny journal
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          {filtered.length === 0 && (
+            <div className="py-12 text-center text-sm" style={{ color: 'var(--cp-muted)' }}>
+              Ingen beboere matcher filtrene
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="cp-scroll hidden max-h-[min(520px,55vh)] overflow-x-auto overflow-y-auto md:block">
         <table className="w-full min-w-[720px]">
           <thead>
             <tr className="sticky top-0 z-[1]" style={{ backgroundColor: 'var(--cp-bg2)' }}>

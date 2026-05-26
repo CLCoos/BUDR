@@ -3,6 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Home, Building2, Plus, Sparkles } from 'lucide-react';
+import { HAVEN_ENABLED } from '@/lib/featureFlags';
 
 type Props = {
   onOpenOverrapport: () => void;
@@ -176,7 +177,9 @@ export default function DemoActionCards({ onOpenOverrapport }: Props) {
           Borger-app (Lys)
         </div>
         <div className="mt-0.5 text-xs" style={{ color: 'var(--cp-muted)' }}>
-          Samme demo som “Prøv borger-app” — journal, haven, badges
+          {HAVEN_ENABLED
+            ? 'Samme demo som “Prøv borger-app” — journal, haven, badges'
+            : 'Samme demo som “Prøv borger-app” — journal, dagsplan og badges'}
         </div>
       </button>
     </div>

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, X } from 'lucide-react';
 import { useDemoGuidedTour } from '@/components/demo/DemoGuidedTourProvider';
+import { HAVEN_ENABLED } from '@/lib/featureFlags';
 
 type Step = {
   num: number;
@@ -15,7 +16,7 @@ type Step = {
 const STEPS: Step[] = [
   {
     num: 1,
-    label: 'Du er Anders M. i demo',
+    label: 'Du er Sara K. i demo',
     sub: 'Data gemmes kun i denne browser — intet sendes til server som i produktion.',
   },
   {
@@ -25,8 +26,10 @@ const STEPS: Step[] = [
   },
   {
     num: 3,
-    label: 'Journal, have og mål',
-    sub: 'Udforsk fanerne nederst — journal, haven og planer er fyldt med demo-indhold.',
+    label: HAVEN_ENABLED ? 'Journal, have og mål' : 'Journal og mål',
+    sub: HAVEN_ENABLED
+      ? 'Udforsk fanerne nederst — journal, haven og planer er fyldt med demo-indhold.'
+      : 'Udforsk fanerne nederst — journal, dagsplan og mål er fyldt med demo-indhold.',
   },
   {
     num: 4,
@@ -98,7 +101,7 @@ export default function ResidentDemoWelcomeOverlay() {
         </h2>
 
         <p className="mb-5 text-sm leading-relaxed" style={{ color: '#6B6459' }}>
-          Du prøver borgeroplevelsen som <strong style={{ color: '#1A1814' }}>Anders M.</strong> —{' '}
+          Du prøver borgeroplevelsen som <strong style={{ color: '#1A1814' }}>Sara K.</strong> —{' '}
           samme flow som i rigtig drift, men med simulerede data.
         </p>
 

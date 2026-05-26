@@ -332,10 +332,11 @@ export default function OverrapportPanel({ open, onClose }: Props) {
 
       {/* Panel */}
       <div
-        className={`fixed top-0 right-0 z-[10062] flex h-full flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
-          open ? 'translate-x-0' : 'translate-x-full'
+        className={`fixed inset-y-0 right-0 z-[10062] flex w-full max-w-[520px] flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
+          open
+            ? 'translate-x-0 visible pointer-events-auto'
+            : 'translate-x-full invisible pointer-events-none'
         }`}
-        style={{ width: 520, maxWidth: '100vw' }}
         role="dialog"
         aria-modal={open}
         aria-hidden={!open}
