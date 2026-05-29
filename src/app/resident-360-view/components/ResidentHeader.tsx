@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   ChevronLeft,
   Phone,
@@ -9,6 +10,7 @@ import {
   BrainCircuit,
   ClipboardList,
   FilePenLine,
+  Sparkles,
 } from 'lucide-react';
 
 type TrafficUi = 'groen' | 'gul' | 'roed' | null;
@@ -70,6 +72,13 @@ interface Props {
   primaryContact: string | null;
   primaryContactPhone: string | null;
   primaryContactRelation: string | null;
+  aiBrief?: {
+    lead: string;
+    bullets: string[];
+    actions: { label: string; sectionId: string }[];
+    brief_type: string;
+    created_at: string;
+  } | null;
 }
 
 export default function ResidentHeader({
@@ -85,8 +94,48 @@ export default function ResidentHeader({
   primaryContact,
   primaryContactPhone,
   primaryContactRelation,
+  aiBrief,
 }: Props) {
+  const router = useRouter();
   const ts = trafficStyle(trafficLight);
+  const [briefLoading, setBriefLoading] = useState(false);
+  const [briefError, setBriefError] = useState<string | null>(null);
+
+  const briefBullets = Array.isArray(aiBrief?.bullets)
+    ? aiBrief.bullets.filter((b): b is string => typeof b === 'string')
+    : [];
+  const briefActions = Array.isArray(aiBrief?.actions)
+    ? aiBrief.actions.filter(
+        (a): a is { label: string; sectionId: string } =>
+          !!a &&
+          typeof a === 'object' &&
+          typeof (a as { label?: unknown }).label === 'string' &&
+          typeof (a as { sectionId?: unknown }).sectionId === 'string'
+      )
+    : [];
+
+  const runGenerateBrief = useCallback(async () => {
+    setBriefLoading(true);
+    setBriefError(null);
+    try {
+      const res = await fetch('/api/portal/generate-brief', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ resident_id: residentId, brief_type: 'daily' }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        setBriefError(data?.error ?? `HTTP ${res.status}`);
+        return;
+      }
+      router.refresh();
+    } catch (e) {
+      setBriefError(e instanceof Error ? e.message : 'Netværksfejl');
+    } finally {
+      setBriefLoading(false);
+    }
+  }, [residentId, router]);
 
   return (
     <div>
@@ -98,6 +147,101 @@ export default function ResidentHeader({
         <ChevronLeft size={16} aria-hidden />
         Alle beboere
       </Link>
+
+      <section
+        className="mb-4 overflow-hidden rounded-2xl border"
+        style={{
+          borderColor: 'rgba(45,212,160,0.28)',
+          background:
+            'linear-gradient(135deg, rgba(45,212,160,0.08) 0%, var(--cp-bg2) 40%, var(--cp-bg2) 100%)',
+          boxShadow: '0 0 0 1px rgba(45,212,160,0.06)',
+        }}
+      >
+        <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:gap-5 sm:p-5">
+          <div
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl"
+            style={{
+              background:
+                'linear-gradient(135deg, rgba(110,231,183,0.25), rgba(5,150,105,0.2))',
+              boxShadow: '0 4px 20px rgba(45,212,160,0.15)',
+            }}
+          >
+            <BrainCircuit
+              className="h-6 w-6"
+              style={{ color: 'var(--cp-green)' }}
+              aria-hidden
+            />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2
+                className="text-base font-semibold sm:text-lg"
+                style={{ color: 'var(--cp-text)' }}
+              >
+                BUDR Assistent
+              </h2>
+              {aiBrief ? (
+                <span
+                  className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                  style={{
+                    backgroundColor: 'rgba(45,212,160,0.12)',
+                    color: 'var(--cp-green)',
+                  }}
+                >
+                  {aiBrief.brief_type === 'weekly' ? 'Ugentligt overblik' : 'Dit overblik i dag'}
+                </span>
+              ) : null}
+            </div>
+            <p
+              className="mt-2 text-sm leading-relaxed sm:text-[15px]"
+              style={{ color: 'var(--cp-text)' }}
+            >
+              {aiBrief?.lead ?? 'Intet AI-brief endnu'}
+            </p>
+            {briefBullets.length > 0 ? (
+              <ul className="mt-3 space-y-2">
+                {briefBullets.map((b, i) => (
+                  <li key={i} className="flex gap-2 text-sm" style={{ color: 'var(--cp-muted)' }}>
+                    <Sparkles
+                      className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--cp-green)] opacity-80"
+                      aria-hidden
+                    />
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            <div className="mt-4 flex flex-wrap gap-2">
+              {briefActions.map((a) => (
+                <button
+                  key={a.label}
+                  type="button"
+                  className="rounded-lg border px-3 py-2 text-xs font-medium transition-colors hover:bg-[rgba(255,255,255,0.04)] sm:text-sm"
+                  style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-green)' }}
+                >
+                  {a.label}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => void runGenerateBrief()}
+                disabled={briefLoading}
+                className="rounded-lg border px-3 py-2 text-xs font-medium transition-colors hover:bg-[rgba(255,255,255,0.04)] disabled:opacity-50 sm:text-sm"
+                style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-text)' }}
+              >
+                {briefLoading
+                  ? 'Genererer...'
+                  : aiBrief
+                    ? 'Forny brief'
+                    : 'Generér brief'}
+              </button>
+            </div>
+            {briefError ? (
+              <p className="mt-2 text-sm text-red-400">Fejl: {briefError}</p>
+            ) : null}
+          </div>
+        </div>
+      </section>
 
       <div
         className="relative overflow-hidden rounded-2xl border p-5 sm:p-7"

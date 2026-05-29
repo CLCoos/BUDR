@@ -79,6 +79,7 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
     journalExportRes,
     medsRes,
     concernRes,
+    aiBriefRes,
   ] = await Promise.all([
     supabase
       .from('care_residents')
@@ -130,6 +131,13 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
       .eq('resident_id', residentId)
       .order('created_at', { ascending: false })
       .limit(25),
+    supabase
+      .from('ai_briefs')
+      .select('lead, bullets, actions, brief_type, created_at')
+      .eq('resident_id', residentId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   type JournalRow = {
@@ -293,6 +301,7 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
     activeNextSteps,
     recentReflections,
     recentWeeklyCheckins,
+    aiBrief: aiBriefRes.data ?? null,
   };
 }
 
@@ -361,6 +370,7 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
     activeNextSteps,
     recentReflections,
     recentWeeklyCheckins,
+    aiBrief,
   } = data;
 
   const exportInput: ResidentExportInput = {
@@ -423,6 +433,7 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
           primaryContact={resident.primaryContact}
           primaryContactPhone={resident.primaryContactPhone}
           primaryContactRelation={resident.primaryContactRelation}
+          aiBrief={aiBrief}
         />
 
         {/* Action bar */}
