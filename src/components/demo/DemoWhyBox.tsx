@@ -9,9 +9,17 @@ type Props = {
   /** Unik nøgle til localStorage (kollapset tilstand) */
   storageKey: string;
   className?: string;
+  /** Overskrift på toggle-knap (standard: Care Portal --cp-text) */
+  headingColor?: string;
 };
 
-export default function DemoWhyBox({ title, children, storageKey, className = '' }: Props) {
+export default function DemoWhyBox({
+  title,
+  children,
+  storageKey,
+  className = '',
+  headingColor,
+}: Props) {
   const panelId = useId();
   const [open, setOpen] = useState(() => {
     if (typeof window === 'undefined') return true;
@@ -49,7 +57,7 @@ export default function DemoWhyBox({ title, children, storageKey, className = ''
         aria-controls={panelId}
         onClick={toggle}
         className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors"
-        style={{ color: 'var(--cp-text)' }}
+        style={{ color: headingColor ?? 'var(--cp-text)' }}
       >
         <span className="flex min-w-0 items-center gap-2">
           <Lightbulb className="h-4 w-4 shrink-0 text-[#c4bffc]" aria-hidden />

@@ -451,7 +451,27 @@ export default function ResidentDemoPage() {
 
   return (
     <div className="relative">
+      <style>{`
+        @media (min-width: 1024px) {
+          .resident-demo-phone-shell > div {
+            min-height: 100% !important;
+            height: 100% !important;
+          }
+
+          /* Lyn-knap: aria-label matcher altid; overskriver inline viewport-calc på right */
+          .resident-demo-phone-shell button[aria-label='Åbn krisehjælp'] {
+            position: absolute !important;
+            inset: auto 16px 96px auto !important;
+            top: auto !important;
+            left: auto !important;
+            right: 16px !important;
+            bottom: 96px !important;
+          }
+        }
+      `}</style>
+
       <ResidentDemoWelcomeOverlay />
+
       {/* Demo banner */}
       <div
         className="fixed top-0 left-0 right-0 z-[200] border-b bg-[rgba(247,245,241,0.96)]"
@@ -484,8 +504,8 @@ export default function ResidentDemoPage() {
         </div>
       </div>
 
-      {/* Offset for banner */}
-      <div className="pt-8">
+      {/* Mobil/tablet: appen direkte som før */}
+      <div className="pt-8 lg:hidden">
         <div className="mx-auto mb-6 max-w-2xl px-4">
           <DemoWhyBox
             title="Hvorfor Lys i samme produkt som portalen?"
@@ -504,6 +524,97 @@ export default function ResidentDemoPage() {
           facilityId={null}
           isDemoMode
         />
+      </div>
+
+      {/* Desktop: showroom-layout med tekstpanel + telefon-ramme */}
+      <div
+        className="hidden lg:block"
+        style={{
+          background: 'linear-gradient(135deg, #F7F5F1 0%, #F4EFE7 48%, #EFE7DA 100%)',
+        }}
+      >
+        <div className="mx-auto flex min-h-screen max-w-[1100px] items-center gap-12 px-8 pb-12 pt-24 xl:gap-16">
+          <div className="min-w-0 flex-1">
+            <div className="max-w-xl">
+              <p
+                className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em]"
+                style={{ color: '#6B6459' }}
+              >
+                Demo · Lys
+              </p>
+              <h1
+                className="text-4xl leading-tight xl:text-[2.85rem]"
+                style={{
+                  color: '#1A1814',
+                  fontFamily: "'DM Serif Display', serif",
+                }}
+              >
+                Lys — borgerens app
+              </h1>
+              <p className="mt-5 max-w-lg text-base leading-relaxed" style={{ color: '#6B6459' }}>
+                Sådan ser appen ud i borgerens hånd. Dagsplan, check-in, mål og støtte — altid
+                forbundet med personalets portal.
+              </p>
+              <ul className="mt-6 space-y-3">
+                {['Check ind', 'Dagsplan', 'Journal'].map((item) => (
+                  <li
+                    key={item}
+                    className="flex items-center gap-3 text-sm font-medium"
+                    style={{ color: '#1A1814' }}
+                  >
+                    <span
+                      className="inline-block h-2 w-2 rounded-full"
+                      style={{ backgroundColor: '#2D5BE3' }}
+                      aria-hidden
+                    />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="mt-8 max-w-2xl">
+              <DemoWhyBox
+                title="Hvorfor Lys i samme produkt som portalen?"
+                storageKey="budr_demo_why_lys"
+                headingColor="#1A1814"
+              >
+                Lys er beboerens app — dagsplan, mål, check-in og støtte. Når I er live, deler
+                portal og app den{' '}
+                <strong style={{ color: 'var(--cp-text)' }}>samme plan og status</strong>, så
+                personalet og borgeren ikke arbejder i to parallelle virkeligheder. Her er alt
+                demo-data i browseren.
+              </DemoWhyBox>
+            </div>
+          </div>
+
+          <div className="flex w-[390px] shrink-0 justify-center">
+            <div
+              className="w-[390px] rounded-[48px] p-3 shadow-2xl"
+              style={{
+                height: 'min(800px, 85vh)',
+                backgroundColor: '#1A1814',
+                boxShadow: '0 30px 80px rgba(26,24,20,0.28), 0 10px 24px rgba(26,24,20,0.18)',
+              }}
+            >
+              <div
+                className="resident-demo-phone-shell relative h-full overflow-hidden rounded-[36px]"
+                style={{
+                  backgroundColor: '#F7F5F1',
+                  transform: 'translateZ(0)',
+                }}
+              >
+                <LysShell
+                  firstName="Sara"
+                  initials="SK"
+                  residentId={RESIDENT_ID}
+                  facilityId={null}
+                  isDemoMode
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
