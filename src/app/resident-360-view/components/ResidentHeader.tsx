@@ -161,16 +161,11 @@ export default function ResidentHeader({
           <div
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl"
             style={{
-              background:
-                'linear-gradient(135deg, rgba(110,231,183,0.25), rgba(5,150,105,0.2))',
+              background: 'linear-gradient(135deg, rgba(110,231,183,0.25), rgba(5,150,105,0.2))',
               boxShadow: '0 4px 20px rgba(45,212,160,0.15)',
             }}
           >
-            <BrainCircuit
-              className="h-6 w-6"
-              style={{ color: 'var(--cp-green)' }}
-              aria-hidden
-            />
+            <BrainCircuit className="h-6 w-6" style={{ color: 'var(--cp-green)' }} aria-hidden />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
@@ -229,16 +224,10 @@ export default function ResidentHeader({
                 className="rounded-lg border px-3 py-2 text-xs font-medium transition-colors hover:bg-[rgba(255,255,255,0.04)] disabled:opacity-50 sm:text-sm"
                 style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-text)' }}
               >
-                {briefLoading
-                  ? 'Genererer...'
-                  : aiBrief
-                    ? 'Forny brief'
-                    : 'Generér brief'}
+                {briefLoading ? 'Genererer...' : aiBrief ? 'Forny brief' : 'Generér brief'}
               </button>
             </div>
-            {briefError ? (
-              <p className="mt-2 text-sm text-red-400">Fejl: {briefError}</p>
-            ) : null}
+            {briefError ? <p className="mt-2 text-sm text-red-400">Fejl: {briefError}</p> : null}
           </div>
         </div>
       </section>
