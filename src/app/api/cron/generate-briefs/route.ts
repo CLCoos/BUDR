@@ -35,6 +35,11 @@ export async function POST(req: NextRequest) {
   }
 
   const list = (residents ?? []) as ResidentRow[];
+
+  if (url.searchParams.get('mode') === 'list') {
+    return NextResponse.json({ residents: list.map((r) => r.user_id) }, { status: 200 });
+  }
+
   const summary = { brief_type: briefType, total: list.length, ok: 0, no_data: 0, errors: 0 };
 
   for (const r of list) {

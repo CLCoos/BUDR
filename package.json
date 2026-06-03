@@ -76,6 +76,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@netlify/functions": "^5.3.0",
     "@netlify/plugin-nextjs": "^5.11.1",
     "@playwright/test": "^1.52.0",
     "@types/node": "^20",
