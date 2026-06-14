@@ -48,7 +48,14 @@ turbo/linear-import.mjs
 linear-import_1.mjs
 linear-import.mjs
 linear-import_1.mjs
+
+# Environment files — NEVER commit real secrets
+.env
 .env.local
+.env*.local
+.env.development.local
+.env.production.local
+!.env.example
 
 # Local Netlify folder
 .netlify
