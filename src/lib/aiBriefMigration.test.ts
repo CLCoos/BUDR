@@ -10,7 +10,9 @@ const migrationSql = readFileSync(
 describe('ai_briefs migration', () => {
   it('creates the table used by AI brief reads and writes', () => {
     expect(migrationSql).toContain('CREATE TABLE IF NOT EXISTS public.ai_briefs');
-    expect(migrationSql).toContain('resident_id uuid NOT NULL REFERENCES public.care_residents(user_id)');
+    expect(migrationSql).toContain(
+      'resident_id uuid NOT NULL REFERENCES public.care_residents(user_id)'
+    );
     expect(migrationSql).toContain('brief_type text NOT NULL CHECK');
     expect(migrationSql).toContain('source_window_start date NOT NULL');
     expect(migrationSql).toContain('source_window_end date NOT NULL');
