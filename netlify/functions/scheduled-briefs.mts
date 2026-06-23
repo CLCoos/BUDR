@@ -1,4 +1,8 @@
 import type { Config } from '@netlify/functions';
+import {
+  SCHEDULED_BRIEF_CONCURRENCY,
+  runWithConcurrency,
+} from '../../src/lib/ai/briefScheduling';
 
 export default async function handler() {
   const base = process.env.URL;
@@ -22,14 +26,19 @@ export default async function handler() {
   const types: ('daily' | 'weekly')[] = isMonday ? ['daily', 'weekly'] : ['daily'];
 
   for (const type of types) {
-    await Promise.all(
-      residents.map((id) =>
-        fetch(`${base}/api/cron/generate-briefs?type=${type}&resident_id=${id}`, {
+    await runWithConcurrency(residents, SCHEDULED_BRIEF_CONCURRENCY, async (id) => {
+      try {
+        const res = await fetch(`${base}/api/cron/generate-briefs?type=${type}&resident_id=${id}`, {
           method: 'POST',
           headers: { 'x-cron-secret': secret },
-        }).catch((e) => console.error('[scheduled-briefs]', type, id, e)),
-      ),
-    );
+        });
+        if (!res.ok) {
+          console.error('[scheduled-briefs]', type, id, 'status', res.status);
+        }
+      } catch (e) {
+        console.error('[scheduled-briefs]', type, id, e);
+      }
+    });
   }
   console.log(
     `[scheduled-briefs] kørte for ${residents.length} borgere, typer: ${types.join(', ')}`,

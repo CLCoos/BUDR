@@ -159,6 +159,16 @@ export async function generateBriefForResident(args: {
     return { status: 'no_data' };
   }
 
+  const { error: briefStoreErr } = await supabase
+    .from('ai_briefs')
+    .select('id')
+    .eq('resident_id', residentId)
+    .limit(1);
+
+  if (briefStoreErr) {
+    return { status: 'db_error', message: briefStoreErr.message };
+  }
+
   const checkinBlock =
     checkinList.length > 0
       ? checkinList.map(formatCheckinLine).join('\n')
@@ -198,17 +208,21 @@ ${journalBlock}`;
 
   const { data: saved, error: insertErr } = await supabase
     .from('ai_briefs')
-    .insert({
-      resident_id: residentId,
-      org_id: orgId,
-      brief_type: briefType,
-      lead: parsed.lead,
-      bullets: parsed.bullets,
-      actions: parsed.actions,
-      source_window_start: windowStartYmd,
-      source_window_end: windowEndYmd,
-      model: 'claude-haiku-4-5-20251001',
-    })
+    .upsert(
+      {
+        resident_id: residentId,
+        org_id: orgId,
+        brief_type: briefType,
+        lead: parsed.lead,
+        bullets: parsed.bullets,
+        actions: parsed.actions,
+        source_window_start: windowStartYmd,
+        source_window_end: windowEndYmd,
+        model: 'claude-haiku-4-5-20251001',
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'resident_id,brief_type,source_window_end' }
+    )
     .select()
     .single();
 

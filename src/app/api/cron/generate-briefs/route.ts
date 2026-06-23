@@ -23,7 +23,13 @@ export async function POST(req: NextRequest) {
     url.searchParams.get('type') === 'weekly' ? 'weekly' : 'daily';
   const onlyResidentId = url.searchParams.get('resident_id')?.trim() || null;
 
-  const supabase = createAdminSupabaseClient();
+  let supabase: ReturnType<typeof createAdminSupabaseClient>;
+  try {
+    supabase = createAdminSupabaseClient();
+  } catch (e) {
+    console.error('[cron generate-briefs] admin client:', e);
+    return NextResponse.json({ error: 'Server ikke konfigureret' }, { status: 503 });
+  }
 
   let query = supabase.from('care_residents').select('user_id, org_id, display_name, first_name');
   if (onlyResidentId) query = query.eq('user_id', onlyResidentId);

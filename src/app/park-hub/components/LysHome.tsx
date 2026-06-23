@@ -49,6 +49,7 @@ type Props = {
   moodLabel: string | null;
   moodTraffic: 'groen' | 'gul' | 'roed' | null;
   moodTick: number;
+  isDemoMode?: boolean;
 };
 
 // ── Haven widget ─────────────────────────────────────────────────────────────
@@ -224,6 +225,7 @@ export default function LysHome({
   onSwitchTab,
   moodLabel,
   moodTick,
+  isDemoMode = false,
 }: Props) {
   const router = useRouter();
   const session = useResidentSession();
@@ -319,6 +321,10 @@ export default function LysHome({
   }, [moodTick]);
 
   const handleLogout = () => {
+    if (isDemoMode) {
+      router.replace('/care-portal-demo');
+      return;
+    }
     document.cookie = 'budr_resident_id=; path=/; max-age=0';
     router.replace('/');
   };

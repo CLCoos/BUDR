@@ -7,11 +7,11 @@ import LysShell from '../park-hub/components/LysShell';
 import ResidentDemoWelcomeOverlay from './ResidentDemoWelcomeOverlay';
 import { HAVEN_ENABLED } from '@/lib/featureFlags';
 import DemoWhyBox from '@/components/demo/DemoWhyBox';
+import { RESIDENT_DEMO_ID } from '@/hooks/useResidentSession';
 
 // ── Demo data seeder ──────────────────────────────────────────────────────────
 
-const RESIDENT_ID = 'demo-resident-001';
-const COOKIE_NAME = 'budr_resident_id';
+const RESIDENT_ID = RESIDENT_DEMO_ID;
 
 function daysAgo(n: number, hour = 9, minute = 0): string {
   const d = new Date();
@@ -412,11 +412,6 @@ function seedLocalStorage() {
   localStorage.setItem('budr_demo_seeded_v1', RESIDENT_ID);
 }
 
-function setCookie(name: string, value: string) {
-  const maxAge = 60 * 60 * 24 * 365;
-  document.cookie = `${name}=${encodeURIComponent(value)}; max-age=${maxAge}; path=/; samesite=lax`;
-}
-
 // ── Page component ────────────────────────────────────────────────────────────
 
 export default function ResidentDemoPage() {
@@ -424,7 +419,6 @@ export default function ResidentDemoPage() {
 
   useEffect(() => {
     seedLocalStorage();
-    setCookie(COOKIE_NAME, RESIDENT_ID);
     // Small delay so the seed is fully written before rendering LysShell
     const t = setTimeout(() => setReady(true), 50);
     return () => clearTimeout(t);
