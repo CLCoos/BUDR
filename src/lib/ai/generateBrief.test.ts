@@ -120,8 +120,7 @@ describe('generateBriefForResident', () => {
       journal_entries: [
         (query) => {
           const hasApprovedFilter = query.ops.some(
-            (op) =>
-              op.name === 'eq' && op.args[0] === 'journal_status' && op.args[1] === 'godkendt'
+            (op) => op.name === 'eq' && op.args[0] === 'journal_status' && op.args[1] === 'godkendt'
           );
           return {
             data: hasApprovedFilter ? [approvedJournal] : [approvedJournal, draftJournal],
