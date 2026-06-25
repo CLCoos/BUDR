@@ -10,8 +10,12 @@ const migration = readFileSync(
 describe('ai_briefs migration', () => {
   it('creates the table used by AI brief generation', () => {
     expect(migration).toMatch(/CREATE TABLE IF NOT EXISTS public\.ai_briefs/i);
-    expect(migration).toMatch(/resident_id uuid NOT NULL REFERENCES public\.care_residents\(user_id\)/i);
-    expect(migration).toMatch(/brief_type text NOT NULL CHECK \(brief_type IN \('daily', 'weekly'\)\)/i);
+    expect(migration).toMatch(
+      /resident_id uuid NOT NULL REFERENCES public\.care_residents\(user_id\)/i
+    );
+    expect(migration).toMatch(
+      /brief_type text NOT NULL CHECK \(brief_type IN \('daily', 'weekly'\)\)/i
+    );
     expect(migration).toMatch(/source_window_start date NOT NULL/i);
     expect(migration).toMatch(/source_window_end date NOT NULL/i);
   });
