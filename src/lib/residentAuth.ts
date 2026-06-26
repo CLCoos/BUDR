@@ -1,7 +1,11 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { validateSessionToken, LEGACY_COOKIE_NAME, SESSION_COOKIE_NAME } from '@/lib/residentSessions';
+import {
+  validateSessionToken,
+  LEGACY_COOKIE_NAME,
+  SESSION_COOKIE_NAME,
+} from '@/lib/residentSessions';
 
 const DEMO_RESIDENT_ID = 'demo-resident-001';
 // 1 year — device security (Face ID / PIN / biometrics) handles access control

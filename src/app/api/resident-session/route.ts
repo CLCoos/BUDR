@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validateSessionToken, LEGACY_COOKIE_NAME, SESSION_COOKIE_NAME } from '@/lib/residentSessions';
+import {
+  validateSessionToken,
+  LEGACY_COOKIE_NAME,
+  SESSION_COOKIE_NAME,
+} from '@/lib/residentSessions';
 
 /** 1 år — matcher øvrige beboer-cookie varighed; PIN/WebAuthn styrer reelt adgang. */
 const MAX_AGE = 31536000;

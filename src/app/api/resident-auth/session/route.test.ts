@@ -22,11 +22,15 @@ describe('/api/resident-auth/session', () => {
 
   it('redirects UUID-only GET requests to PIN login instead of issuing a session', async () => {
     const res = await GET(
-      new NextRequest(`http://localhost/api/resident-auth/session?rid=${RESIDENT_ID}&next=/park-hub`)
+      new NextRequest(
+        `http://localhost/api/resident-auth/session?rid=${RESIDENT_ID}&next=/park-hub`
+      )
     );
 
     expect(res.status).toBe(307);
-    expect(res.headers.get('location')).toBe(`http://localhost/login/${RESIDENT_ID}?next=%2Fpark-hub`);
+    expect(res.headers.get('location')).toBe(
+      `http://localhost/login/${RESIDENT_ID}?next=%2Fpark-hub`
+    );
     expect(res.cookies.get('budr_resident_session')).toBeUndefined();
     expect(mocks.validateSessionToken).not.toHaveBeenCalled();
   });
@@ -40,9 +44,12 @@ describe('/api/resident-auth/session', () => {
     });
 
     const res = await GET(
-      new NextRequest(`http://localhost/api/resident-auth/session?rid=${RESIDENT_ID}&next=/park-hub`, {
-        headers: { Cookie: 'budr_resident_session=existing-token' },
-      })
+      new NextRequest(
+        `http://localhost/api/resident-auth/session?rid=${RESIDENT_ID}&next=/park-hub`,
+        {
+          headers: { Cookie: 'budr_resident_session=existing-token' },
+        }
+      )
     );
 
     expect(res.status).toBe(307);

@@ -11,7 +11,7 @@ describe('critical security regressions', () => {
     const route = source('src/app/api/resident-auth/session/route.ts');
 
     expect(route).not.toContain('createSession');
-    expect(route).toContain("body?.token");
+    expect(route).toContain('body?.token');
     expect(route).toContain('validateSessionToken(token)');
   });
 
