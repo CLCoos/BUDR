@@ -28,7 +28,6 @@ describe('getResidentId', () => {
   beforeEach(() => {
     mocks.cookieValues.clear();
     mocks.validateSessionToken.mockReset();
-    process.env.NODE_ENV = 'test';
   });
 
   it('returns the resident from a valid HttpOnly session token', async () => {
