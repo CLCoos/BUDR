@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createHash } from 'crypto';
-import {
-  createSession,
-  validateSessionToken,
-  SESSION_COOKIE_NAME,
-  LEGACY_COOKIE_NAME,
-} from '@/lib/residentSessions';
+import { validateSessionToken, SESSION_COOKIE_NAME, LEGACY_COOKIE_NAME } from '@/lib/residentSessions';
 import { sanitizeNext } from '@/lib/redirectSafety';
 import { isValidUuid } from '@/lib/uuid';
 
@@ -16,23 +10,6 @@ function htmlPage(title: string, body: string, status = 200): NextResponse {
   return new NextResponse(html, {
     status,
     headers: { 'Content-Type': 'text/html; charset=utf-8' },
-  });
-}
-
-function setSessionCookies(res: NextResponse, token: string, residentId: string): void {
-  res.cookies.set(SESSION_COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: COOKIE_MAX_AGE,
-  });
-  res.cookies.set(LEGACY_COOKIE_NAME, residentId, {
-    httpOnly: false,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: COOKIE_MAX_AGE,
   });
 }
 
@@ -48,25 +25,19 @@ export async function GET(request: NextRequest) {
   if (existingToken) {
     const validation = await validateSessionToken(existingToken);
     if (validation.valid && validation.residentUserId === rid) {
-      return NextResponse.redirect(new URL(next, request.url));
+      const res = NextResponse.redirect(new URL(next, request.url));
+      res.cookies.set(LEGACY_COOKIE_NAME, rid, {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: COOKIE_MAX_AGE,
+      });
+      return res;
     }
   }
 
-  const userAgent = request.headers.get('user-agent') ?? undefined;
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '';
-  const ipHash = ip ? createHash('sha256').update(ip).digest('hex').slice(0, 16) : undefined;
-
-  const session = await createSession({ residentUserId: rid, userAgent, ipHash });
-  if (!session) {
-    return htmlPage(
-      'Kunne ikke starte session',
-      'Kunne ikke starte session. Kontakt personalet, hvis problemet fortsætter.'
-    );
-  }
-
-  const res = NextResponse.redirect(new URL(next, request.url));
-  setSessionCookies(res, session.token, rid);
-  return res;
+  return NextResponse.redirect(new URL(`/login/${rid}?next=${encodeURIComponent(next)}`, request.url));
 }
 
 export async function POST(req: NextRequest) {
@@ -81,22 +52,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'invalid_resident_id' }, { status: 400 });
   }
 
-  const userAgent = req.headers.get('user-agent') ?? undefined;
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '';
-  const ipHash = ip ? createHash('sha256').update(ip).digest('hex').slice(0, 16) : undefined;
-
-  const session = await createSession({ residentUserId, userAgent, ipHash });
-  if (!session) {
-    return NextResponse.json({ error: 'session_creation_failed' }, { status: 500 });
-  }
-
-  const res = NextResponse.json({ success: true });
-  res.cookies.set(SESSION_COOKIE_NAME, session.token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: COOKIE_MAX_AGE,
-  });
-  return res;
+  return NextResponse.json({ error: 'pin_or_biometric_required' }, { status: 403 });
 }
