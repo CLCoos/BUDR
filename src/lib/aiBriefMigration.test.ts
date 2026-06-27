@@ -20,6 +20,8 @@ describe('ai_briefs migration', () => {
     expect(sql).toMatch(/cs\.org_id FROM public\.care_staff/i);
     expect(sql).toMatch(/cr\.user_id = ai_briefs\.resident_id/i);
     expect(sql).toMatch(/cr\.org_id = ai_briefs\.org_id/i);
-    expect(sql).not.toMatch(/FOR (?:SELECT|INSERT|UPDATE|DELETE|ALL) TO authenticated[\s\S]{0,120}true/i);
+    expect(sql).not.toMatch(
+      /FOR (?:SELECT|INSERT|UPDATE|DELETE|ALL) TO authenticated[\s\S]{0,120}true/i
+    );
   });
 });
