@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validateSessionToken, SESSION_COOKIE_NAME, LEGACY_COOKIE_NAME } from '@/lib/residentSessions';
+import {
+  validateSessionToken,
+  SESSION_COOKIE_NAME,
+  LEGACY_COOKIE_NAME,
+} from '@/lib/residentSessions';
 import { sanitizeNext } from '@/lib/redirectSafety';
 import { isValidUuid } from '@/lib/uuid';
 
@@ -37,7 +41,9 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.redirect(new URL(`/login/${rid}?next=${encodeURIComponent(next)}`, request.url));
+  return NextResponse.redirect(
+    new URL(`/login/${rid}?next=${encodeURIComponent(next)}`, request.url)
+  );
 }
 
 export async function POST(req: NextRequest) {

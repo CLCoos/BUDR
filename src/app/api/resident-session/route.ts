@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { LEGACY_COOKIE_NAME, SESSION_COOKIE_NAME, validateSessionToken } from '@/lib/residentSessions';
+import {
+  LEGACY_COOKIE_NAME,
+  SESSION_COOKIE_NAME,
+  validateSessionToken,
+} from '@/lib/residentSessions';
 
 const MAX_AGE = 30 * 24 * 60 * 60;
 
