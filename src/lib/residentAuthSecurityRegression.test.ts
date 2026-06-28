@@ -99,6 +99,29 @@ describe('resident auth security regressions', () => {
     expect(res.headers.get('set-cookie')).toBeNull();
   });
 
+  it('scopes staff-assistant service-role context to the authenticated staff org', () => {
+    const route = readFileSync(
+      path.join(process.cwd(), 'src/app/api/portal/staff-assistant/route.ts'),
+      'utf8'
+    );
+
+    expect(route).toContain(".from('care_staff')");
+    expect(route).toContain(".eq('id', user.id)");
+    expect(route).toContain(".eq('org_id', orgId)");
+    expect(route).toContain(".in('resident_id', residentIds)");
+  });
+
+  it('blocks mood alerts for residents outside the caller staff org', () => {
+    const route = readFileSync(
+      path.join(process.cwd(), 'src/app/api/portal/mood-alert/route.ts'),
+      'utf8'
+    );
+
+    expect(route).toContain('residentOrgId !== staffOrgId');
+    expect(route).toContain("return NextResponse.json({ error: 'forbidden' }, { status: 403 })");
+    expect(route).toContain('org_id: residentOrgId');
+  });
+
   it('resolves server-side resident identity only from a valid session token', async () => {
     const validateSessionToken = vi.fn().mockResolvedValue({
       valid: true,
