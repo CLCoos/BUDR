@@ -35,6 +35,23 @@ describe('resident auth security invariants', () => {
     expect(route).toContain('LEGACY_COOKIE_NAME');
   });
 
+  it('scopes staff-assistant service-role context to the authenticated staff org', () => {
+    const route = read('src/app/api/portal/staff-assistant/route.ts');
+
+    expect(route).toContain(".from('care_staff')");
+    expect(route).toContain(".eq('id', user.id)");
+    expect(route).toContain(".eq('org_id', orgId)");
+    expect(route).toContain(".in('resident_id', residentIds)");
+  });
+
+  it('blocks mood alerts for residents outside the caller staff org', () => {
+    const route = read('src/app/api/portal/mood-alert/route.ts');
+
+    expect(route).toContain('residentOrgId !== staffOrgId');
+    expect(route).toContain("return NextResponse.json({ error: 'forbidden' }, { status: 403 })");
+    expect(route).toContain('org_id: residentOrgId');
+  });
+
   it('keeps Supabase Edge session functions on the hashed session schema', () => {
     const pinVerify = read('supabase/functions/resident-pin-verify/index.ts');
     const sessionValidate = read('supabase/functions/resident-session-validate/index.ts');
