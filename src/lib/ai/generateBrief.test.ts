@@ -75,37 +75,43 @@ class FakeSupabase {
 }
 
 class FakeQueryBuilder {
-  private operations: QueryOperation[];
+  private operations: QueryOperation[] = [];
+  private allTableOperations: QueryOperation[];
 
   constructor(
     private supabase: FakeSupabase,
     private table: string
   ) {
-    this.operations = supabase.operations[table];
+    this.allTableOperations = supabase.operations[table];
+  }
+
+  private record(operation: QueryOperation) {
+    this.operations.push(operation);
+    this.allTableOperations.push(operation);
   }
 
   select() {
-    this.operations.push({ op: 'select' });
+    this.record({ op: 'select' });
     return this;
   }
 
   eq(column: string, value: unknown) {
-    this.operations.push({ op: 'eq', column, value });
+    this.record({ op: 'eq', column, value });
     return this;
   }
 
   gte(column: string, value: unknown) {
-    this.operations.push({ op: 'gte', column, value });
+    this.record({ op: 'gte', column, value });
     return this;
   }
 
   order(column: string, value: unknown) {
-    this.operations.push({ op: 'order', column, value });
+    this.record({ op: 'order', column, value });
     return this;
   }
 
   insert(payload: Record<string, unknown>) {
-    this.operations.push({ op: 'insert', value: payload });
+    this.record({ op: 'insert', value: payload });
     this.supabase.insertPayload = payload;
     return this;
   }
