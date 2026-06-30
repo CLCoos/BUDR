@@ -154,7 +154,7 @@ export async function generateBriefForResident(args: {
     .gte('created_at', sinceIso)
     .order('created_at', { ascending: true });
 
-  let journalRows = journalQuery.data;
+  let journalRows = (journalQuery.data ?? null) as JournalRow[] | null;
   let journalErr = journalQuery.error;
   if (journalErr && isMissingJournalStatusColumn(journalErr.message)) {
     const legacyQuery = await supabase
@@ -164,7 +164,7 @@ export async function generateBriefForResident(args: {
       .eq('org_id', orgId)
       .gte('created_at', sinceIso)
       .order('created_at', { ascending: true });
-    journalRows = legacyQuery.data;
+    journalRows = (legacyQuery.data ?? null) as JournalRow[] | null;
     journalErr = legacyQuery.error;
   }
 
