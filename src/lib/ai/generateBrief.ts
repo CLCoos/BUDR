@@ -91,6 +91,11 @@ type JournalRow = {
   category: string;
 };
 
+function isMissingJournalStatusColumn(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return normalized.includes('journal_status') && normalized.includes('does not exist');
+}
+
 function formatCheckinLine(r: LysCheckinRow): string {
   const d = copenhagenYmd(new Date(r.created_at));
   const parts = [`${d}`, `humør ${r.mood_score}`];
@@ -140,13 +145,28 @@ export async function generateBriefForResident(args: {
     return { status: 'db_error', message: checkinErr.message };
   }
 
-  const { data: journalRows, error: journalErr } = await supabase
+  const journalQuery = await supabase
     .from('journal_entries')
-    .select('created_at, entry_text, category')
+    .select('created_at, entry_text, category, journal_status')
     .eq('resident_id', residentId)
     .eq('org_id', orgId)
+    .eq('journal_status', 'godkendt')
     .gte('created_at', sinceIso)
     .order('created_at', { ascending: true });
+
+  let journalRows = journalQuery.data;
+  let journalErr = journalQuery.error;
+  if (journalErr && isMissingJournalStatusColumn(journalErr.message)) {
+    const legacyQuery = await supabase
+      .from('journal_entries')
+      .select('created_at, entry_text, category')
+      .eq('resident_id', residentId)
+      .eq('org_id', orgId)
+      .gte('created_at', sinceIso)
+      .order('created_at', { ascending: true });
+    journalRows = legacyQuery.data;
+    journalErr = legacyQuery.error;
+  }
 
   if (journalErr) {
     return { status: 'db_error', message: journalErr.message };
