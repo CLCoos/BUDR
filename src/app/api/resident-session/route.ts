@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { validateSessionToken } from '@/lib/residentSessions';
 
 const COOKIE_NAME = 'budr_resident_session';
 /** 1 år — matcher øvrige beboer-cookie varighed; PIN/WebAuthn styrer reelt adgang. */
@@ -15,6 +16,11 @@ export async function POST(req: NextRequest) {
 
     if (!token || typeof token !== 'string') {
       return NextResponse.json({ error: 'Manglende token' }, { status: 400 });
+    }
+
+    const validation = await validateSessionToken(token);
+    if (!validation.valid) {
+      return NextResponse.json({ error: 'Ugyldig session' }, { status: 401 });
     }
 
     const res = NextResponse.json({ ok: true });
