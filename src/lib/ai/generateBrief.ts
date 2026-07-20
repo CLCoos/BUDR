@@ -1,4 +1,5 @@
 import { callAnthropicJournalPolish } from '@/lib/ai/anthropicJournalPolish';
+import { journalQueryMissingColumn } from '@/lib/journalEntriesQueryCompat';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 const SYSTEM = `Du er en erfaren kontaktpædagog der skriver et kort overblik til en 
@@ -140,13 +141,28 @@ export async function generateBriefForResident(args: {
     return { status: 'db_error', message: checkinErr.message };
   }
 
-  const { data: journalRows, error: journalErr } = await supabase
+  let { data: journalRows, error: journalErr } = await supabase
     .from('journal_entries')
     .select('created_at, entry_text, category')
     .eq('resident_id', residentId)
     .eq('org_id', orgId)
+    .eq('journal_status', 'godkendt')
     .gte('created_at', sinceIso)
     .order('created_at', { ascending: true });
+
+  // Older installations may predate journal_status. In those schemas every row
+  // is legacy-approved because the draft workflow did not exist yet.
+  if (journalErr && journalQueryMissingColumn(journalErr.message, 'journal_status')) {
+    const legacyResult = await supabase
+      .from('journal_entries')
+      .select('created_at, entry_text, category')
+      .eq('resident_id', residentId)
+      .eq('org_id', orgId)
+      .gte('created_at', sinceIso)
+      .order('created_at', { ascending: true });
+    journalRows = legacyResult.data;
+    journalErr = legacyResult.error;
+  }
 
   if (journalErr) {
     return { status: 'db_error', message: journalErr.message };
