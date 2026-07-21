@@ -2,7 +2,7 @@
 
 **Til AI/assistenter:** Læs denne fil først. Kort indgang: [`AGENTS.md`](./AGENTS.md).
 
-**Sidst opdateret (automatisk):** 2026-06-24 — **AI-briefs schema/RLS + journal-godkendelse:** Tilføjet migration `20260624110500_ai_briefs_schema_rls.sql` for `ai_briefs` (RLS, staff org-scope, service-role cron), så 360°-visning og `/api/portal/generate-brief` ikke fejler på manglende tabel. `generateBriefForResident` sender nu kun `journal_status = 'godkendt'` journalnotater til Anthropic/brief-output; ældre miljøer uden `journal_status` bruger legacy fallback. Regressionstest: `src/lib/aiBriefMigration.test.ts` og `src/lib/ai/generateBrief.test.ts`.
+**Sidst opdateret (automatisk):** 2026-07-21 — **AI-briefs schema/RLS + journal-godkendelse:** Tilføjet migration `20260624110500_ai_briefs_schema_rls.sql` for `ai_briefs` (RLS, staff org-scope, service-role cron), så 360°-visning og `/api/portal/generate-brief` ikke fejler på manglende tabel. `generateBriefForResident` sender nu kun `journal_status = 'godkendt'` journalnotater til Anthropic/brief-output; ældre miljøer uden `journal_status` bruger legacy fallback. Regressionstest: `src/lib/aiBriefMigration.test.ts` og `src/lib/ai/generateBrief.test.ts`.
 
 **Forrige:** 2026-05-22 — **Care Portal-demo (render-løkker + e2e):** Playwright `npm run test:e2e:demo` verificerer alle demo-ruter uden «Maximum update depth» og guidet tour-navigation (`e2e/care-portal-demo-console.spec.ts`). Kræver `npx playwright install chromium` (evt. `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers`).
 
