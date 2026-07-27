@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 const migrationPath = path.join(
   process.cwd(),
-  'supabase/migrations/20260725110500_ai_briefs_schema_rls.sql'
+  'supabase/migrations/20260727110500_ai_briefs_schema_rls.sql'
 );
 
 describe('ai_briefs migration', () => {
