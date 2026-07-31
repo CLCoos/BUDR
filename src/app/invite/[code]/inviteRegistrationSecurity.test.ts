@@ -28,6 +28,6 @@ describe('invite registration security', () => {
     expect(actions).toContain("role: 'medarbejder'");
     expect(actions).not.toContain("formData.get('role')");
     expect(form).not.toContain('name="role"');
-    expect(form).not.toContain("value={r}");
+    expect(form).not.toContain('value={r}');
   });
 });
