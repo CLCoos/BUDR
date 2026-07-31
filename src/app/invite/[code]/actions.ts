@@ -2,29 +2,50 @@
 
 import { redirect } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
+import { isValidUuid } from '@/lib/uuid';
 
 export type RegisterResult = { error: string } | null;
 
+/**
+ * Public invite registration. Org membership is resolved ONLY from a valid
+ * invite_code (never from a client-supplied orgId). Self-serve role is always
+ * `medarbejder` — leder must be granted by an existing privileged staff member.
+ */
 export async function registerInvitedStaff(
-  orgId: string,
+  inviteCode: string,
   formData: FormData
 ): Promise<RegisterResult> {
+  const code = typeof inviteCode === 'string' ? inviteCode.trim() : '';
+  if (!code || code.length < 6 || code.length > 64) {
+    return { error: 'Ugyldig invitationskode' };
+  }
+
   const fullName = (formData.get('full_name') as string | null)?.trim() ?? '';
   const email = (formData.get('email') as string | null)?.trim().toLowerCase() ?? '';
   const password = (formData.get('password') as string | null) ?? '';
-  const role = formData.get('role') as string | null;
 
   if (!fullName) return { error: 'Navn er påkrævet' };
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     return { error: 'Ugyldig e-mailadresse' };
   if (password.length < 8) return { error: 'Adgangskoden skal være mindst 8 tegn' };
-  if (role !== 'leder' && role !== 'medarbejder') return { error: 'Vælg en gyldig rolle' };
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceKey) return { error: 'Server ikke konfigureret' };
 
   const admin = createClient(url, serviceKey);
+
+  const { data: org, error: orgErr } = await admin
+    .from('organisations')
+    .select('id')
+    .eq('invite_code', code)
+    .maybeSingle();
+
+  if (orgErr) return { error: 'Kunne ikke validere invitation — prøv igen' };
+  const orgId = typeof org?.id === 'string' ? org.id : null;
+  if (!orgId || !isValidUuid(orgId)) {
+    return { error: 'Ugyldig eller udløbet invitation' };
+  }
 
   const { data: createData, error: createErr } = await admin.auth.admin.createUser({
     email,
@@ -50,7 +71,7 @@ export async function registerInvitedStaff(
     id: userId,
     org_id: orgId,
     full_name: fullName,
-    role,
+    role: 'medarbejder',
   });
 
   if (staffErr) {

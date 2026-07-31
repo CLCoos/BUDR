@@ -85,7 +85,7 @@ export default async function InvitePage({ params }: Props) {
               </p>
             </div>
 
-            <InviteForm orgId={org.id} inviteCode={code} />
+            <InviteForm inviteCode={code} />
           </div>
         </section>
       </div>
