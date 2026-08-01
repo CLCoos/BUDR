@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import {
+  lysJournalPrivacyPersistFields,
+  normalizeLysJournalPrivacy,
+} from '@/lib/journalResidentPrivacy';
 import { getResidentId } from '@/lib/residentAuth';
 import { isResidentUuidForCloud } from '@/lib/residentUuid';
 import type { JournalEntry } from '@/types/local';
@@ -121,7 +125,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Teksten er for lang' }, { status: 400 });
   }
 
-  const privacy = body.privacy === 'shared' ? 'shared' : 'private';
+  const privacy = normalizeLysJournalPrivacy(body.privacy);
   const mode = body.mode === 'voice' ? 'voice' : 'write';
   const meta: MetaV1 = {
     v: 1,
@@ -145,7 +149,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     : 'Beboer (Lys)';
 
   const nowIso = new Date().toISOString();
-  const journal_status = privacy === 'shared' ? 'godkendt' : 'kladde';
+  const privacyFields = lysJournalPrivacyPersistFields(privacy, nowIso);
 
   const entry_text = encodeEntryText(text, meta);
 
@@ -155,8 +159,9 @@ export async function POST(req: Request): Promise<NextResponse> {
     staff_name: staffName,
     entry_text,
     category: CATEGORY,
-    journal_status,
-    approved_at: privacy === 'shared' ? nowIso : null,
+    journal_status: privacyFields.journal_status,
+    is_resident_private: privacyFields.is_resident_private,
+    approved_at: privacyFields.approved_at,
     approved_by: null,
     org_id: (resident as { org_id?: string } | null)?.org_id ?? null,
   });

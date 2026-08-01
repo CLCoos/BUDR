@@ -33,7 +33,7 @@ function trafficDa(tl: ResidentExportInput['resident']['trafficLight']): string 
 }
 
 function isApproved(j: { journal_status: string }): boolean {
-  return j.journal_status !== 'kladde';
+  return j.journal_status === 'godkendt';
 }
 
 /** Journal linjer relevante for lægen: medicin + helbred + observation (ofte somatisk kontekst). */
