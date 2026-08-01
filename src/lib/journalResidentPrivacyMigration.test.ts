@@ -10,9 +10,11 @@ const migrationPath = path.join(
 describe('journal resident-private migration', () => {
   it('adds is_resident_private and resident_private status', () => {
     const sql = readFileSync(migrationPath, 'utf8');
-    expect(sql).toContain('ADD COLUMN IF NOT EXISTS is_resident_private boolean NOT NULL DEFAULT false');
+    expect(sql).toContain(
+      'ADD COLUMN IF NOT EXISTS is_resident_private boolean NOT NULL DEFAULT false'
+    );
     expect(sql).toContain("CHECK (journal_status IN ('kladde', 'godkendt', 'resident_private'))");
-    expect(sql).toContain('journal_status = \'resident_private\'');
+    expect(sql).toContain("journal_status = 'resident_private'");
   });
 
   it('excludes private rows from staff SELECT/UPDATE and drops journal DELETE', () => {
