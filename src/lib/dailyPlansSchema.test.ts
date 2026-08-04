@@ -9,9 +9,7 @@ function read(rel: string): string {
 }
 
 describe('daily_plans / plan_proposals schema alignment', () => {
-  const migration = read(
-    'supabase/migrations/20260804110500_daily_plans_schema_and_rls.sql'
-  );
+  const migration = read('supabase/migrations/20260804110500_daily_plans_schema_and_rls.sql');
 
   it('renames baseline date columns to plan_date when needed', () => {
     expect(migration).toMatch(/RENAME COLUMN date TO plan_date/);
