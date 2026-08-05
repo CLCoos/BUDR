@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { completion } from '@rocketnew/llm-sdk';
 import { createClient } from '@supabase/supabase-js';
+import { assertAiApiCaller } from '@/lib/ai/aiApiAuth';
 import { ANTHROPIC_CHAT_MODEL } from '@/lib/ai/anthropicModel';
 import { checkApiRateLimit, getClientIp } from '@/lib/apiRateLimit';
 
@@ -32,7 +33,8 @@ async function consumeDailyAiCall(request: NextRequest) {
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
 
   if (!token) {
-    // Allow non-authenticated sessions; only enforce per-user quota when a valid user token exists.
+    // Endpoint auth is enforced by assertAiApiCaller (cookie/session).
+    // Freemium quota only applies when a Bearer token is supplied.
     return { ok: true, remaining: null as number | null };
   }
 
@@ -45,8 +47,7 @@ async function consumeDailyAiCall(request: NextRequest) {
   } = await authClient.auth.getUser(token);
 
   if (userError || !user) {
-    // Fail open for usage gating to avoid blocking AI features due to auth/session edge-cases.
-    return { ok: true, remaining: null as number | null };
+    return { ok: false, status: 401, error: 'Invalid authentication for AI usage gating' };
   }
 
   const serviceClient = createClient(supabaseUrl, supabaseServiceKey, {
@@ -149,6 +150,14 @@ export async function POST(request: NextRequest) {
         status: 429,
         headers: { 'Retry-After': String(ipRl.retryAfterSec) },
       }
+    );
+  }
+
+  const caller = await assertAiApiCaller();
+  if (!caller.ok) {
+    return NextResponse.json(
+      { error: 'unauthorized', details: caller.message },
+      { status: caller.status }
     );
   }
 
