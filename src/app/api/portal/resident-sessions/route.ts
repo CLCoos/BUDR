@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getStaffPermissions } from '@/lib/auth/getStaffPermissions';
+import { hasPermission } from '@/lib/auth/hasPermission';
+import { PERMISSIONS } from '@/lib/permissions';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export async function GET(req: NextRequest) {
@@ -16,6 +19,11 @@ export async function GET(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+
+  const permissions = await getStaffPermissions(supabase);
+  if (!hasPermission(permissions, PERMISSIONS.VIEW_360)) {
+    return NextResponse.json({ error: 'Ingen adgang' }, { status: 403 });
+  }
 
   const { data, error } = await supabase
     .from('resident_sessions')
@@ -47,6 +55,12 @@ export async function DELETE(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+
+  const permissions = await getStaffPermissions(supabase);
+  // Same bar as listing: gæst/view-only staff must not revoke Lys sessions.
+  if (!hasPermission(permissions, PERMISSIONS.VIEW_360)) {
+    return NextResponse.json({ error: 'Ingen adgang' }, { status: 403 });
+  }
 
   const { data, error } = await supabase
     .from('resident_sessions')
