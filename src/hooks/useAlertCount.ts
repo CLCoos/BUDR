@@ -5,6 +5,7 @@ import {
   resolveStaffOrgResidentsForDepartment,
   type StaffOrgDepartmentScope,
 } from '@/lib/staffOrgScope';
+import { LYS_CHECKIN_REALTIME_TABLE } from '@/lib/lysCheckinRealtime';
 
 // Each hook instance gets a unique channel name to avoid Supabase
 // removing a shared channel when one of several consumers unmounts.
@@ -73,7 +74,12 @@ export function useAlertCount(
       )
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'park_daily_checkin' },
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: LYS_CHECKIN_REALTIME_TABLE,
+          filter: 'checkin_type=eq.daily',
+        },
         () => void refresh()
       )
       .subscribe();

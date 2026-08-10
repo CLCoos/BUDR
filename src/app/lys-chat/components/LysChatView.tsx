@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { trackEvent } from '@/lib/analytics';
 import { tryEarnFirstChatBadge } from '@/lib/residentBadgeSync';
+import { requestAwardXp } from '@/lib/awardXpClient';
 import { CHRIS_VOICE_ID, LYS_VOICE_CHOICES, STINE_VOICE_ID } from '@/lib/voice/voices';
 import { getLysPhase, lysTheme, phaseDaLabel } from '@/app/park-hub/lib/lysTheme';
 import {
@@ -540,12 +541,7 @@ export default function LysChatView() {
         }
 
         if (residentId && final.filter((m) => m.role === 'user').length >= 3) {
-          const supabase = createClient();
-          void supabase?.rpc('award_xp', {
-            p_resident_id: residentId,
-            p_activity: 'lys_chat',
-            p_xp: 10,
-          });
+          void requestAwardXp('lys_chat', 10);
         }
 
         const newId = await saveConversation(final, convId);

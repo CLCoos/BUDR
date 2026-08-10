@@ -12,6 +12,10 @@ import {
 } from '@/lib/staffOrgScope';
 import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
 import { useNameDisplay } from '@/lib/residents/useNameDisplay';
+import {
+  LYS_CHECKIN_REALTIME_TABLE,
+  mapLysCheckinRealtimePayload,
+} from '@/lib/lysCheckinRealtime';
 
 async function loadResidentNamesByUserId(
   supabase: SupabaseClient,
@@ -446,14 +450,20 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
       .channel('alert_panel_checkins')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'park_daily_checkin' },
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: LYS_CHECKIN_REALTIME_TABLE,
+          filter: 'checkin_type=eq.daily',
+        },
         (payload) => {
-          const row = payload.new as { resident_id: string; mood_score: number | null };
-          const rid = row.resident_id;
+          const mapped = mapLysCheckinRealtimePayload(payload.new as Record<string, unknown>);
+          if (!mapped) return;
+          const rid = mapped.resident_id;
           // Always remove inaktivitet for this resident immediately
           setInactiveAlerts((prev) => prev.filter((a) => a.residentId !== rid));
           // If mood score recovers (>= 5), also drop mood alerts from notifications
-          if ((row.mood_score ?? 0) >= 5) {
+          if ((mapped.mood_score ?? 0) >= 5) {
             setDbAlerts((prev) =>
               prev.filter(
                 (a) =>

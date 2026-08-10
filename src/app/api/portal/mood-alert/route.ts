@@ -5,7 +5,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 /**
  * POST /api/portal/mood-alert
  *
- * Called from the client when a real-time park_daily_checkin INSERT arrives
+ * Called from the client when a real-time lys_checkin INSERT arrives
  * with a red traffic light (mood 1–2). Inserts a care_portal_notifications row
  * using the service role so that RLS (which blocks INSERT for authenticated
  * staff) is bypassed.
