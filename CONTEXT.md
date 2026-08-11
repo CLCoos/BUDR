@@ -2,7 +2,9 @@
 
 **Til AI/assistenter:** Læs denne fil først. Kort indgang: [`AGENTS.md`](./AGENTS.md).
 
-**Sidst opdateret (manuelt):** 2026-05-22 — **Care Portal-demo (render-løkker + e2e):** Playwright `npm run test:e2e:demo` verificerer alle demo-ruter uden «Maximum update depth» og guidet tour-navigation (`e2e/care-portal-demo-console.spec.ts`). Kræver `npx playwright install chromium` (evt. `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers`).
+**Sidst opdateret (manuelt):** 2026-08-11 — **Critical: notifikationstyper + session/safety UPDATE:** Migration `20260811110500_notification_types_session_safety_ack.sql` udvider `care_portal_notifications` type-CHECK med `mood_alert` + `medication_missed` (ellers fejlede inserts lydløst), fjerner staff UPDATE på `resident_sessions` (forhindrer `session_token_hash`-forfalskning; revoke via service-role API), og tilføjer ack-only trigger på `lys_safety_events`. Ny `GET`/`POST` `/api/lys/medication-reminders` (cookie + service role) erstatter client-RLS i `MedicinReminder` for Lys-beboere uden `auth.uid()`.
+
+**Forrige:** 2026-05-22 — **Care Portal-demo (render-løkker + e2e):** Playwright `npm run test:e2e:demo` verificerer alle demo-ruter uden «Maximum update depth» og guidet tour-navigation (`e2e/care-portal-demo-console.spec.ts`). Kræver `npx playwright install chromium` (evt. `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers`).
 
 **Forrige:** 2026-05-22 — **Care Portal-demo (render-løkker):** Systematisk stabilisering af `useEffect`/`setInterval` på demo-fladen — `useMemo`-seeds, split demo/live effects, `setState`-guards (`prev === next`), interval kun med `[]`. Berørte bl.a. `DashboardDemoMain`, `MedicationWidget` (`demoMode`), `OpgaveWidget`, `KalenderWidget`, `BekymringsnotatWidget`, `AlertPanel` (`variant=demo`), `HandoverClient` (`useDemoData`), `AuthenticatedUserContext`, `CarePortalDepartmentContext`, `LoenDemoClient` (`DEMO_SHIFTS_UPDATED_EVENT`). Produktionsgrene (`demoMode===false`, `variant=live`) uændret.
 
