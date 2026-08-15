@@ -521,11 +521,7 @@ export default function LysShell({
 
         {overlay === 'crisis' && (
           <LysPhoneOverlayShell backgroundColor="#0F1B2D">
-            <LysKrisekort
-              firstName={firstName}
-              facilityId={facilityId}
-              onClose={() => setOverlay(null)}
-            />
+            <LysKrisekort firstName={firstName} onClose={() => setOverlay(null)} />
           </LysPhoneOverlayShell>
         )}
 
