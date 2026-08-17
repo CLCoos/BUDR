@@ -2,7 +2,6 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 import { useResident } from '../context/ResidentContext';
 import { useResidentSession } from '@/hooks/useResidentSession';
 import * as dataService from '@/lib/dataService';
@@ -10,6 +9,14 @@ import { syncPlannerBadgeProgress } from '@/lib/residentBadgeSync';
 import { HAVEN_ENABLED } from '@/lib/featureFlags';
 import { grantWaterCredit, revokeWaterCredit } from '@/lib/havenWaterCredits';
 import { isLysDemoResidentId } from '@/lib/lysDemoResident';
+import {
+  createLysPlanItem,
+  fetchLysPlanBundle,
+  isPlanItemActiveOnDate,
+  patchLysPlanItem,
+  type PlanItemCategory,
+  type PlanItemRecurrence,
+} from '@/lib/lys/planItems';
 import type { LysThemeTokens } from '../lib/lysTheme';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -64,43 +71,7 @@ function addDays(base: Date, n: number): Date {
 }
 
 function toDateStr(d: Date) {
-  return d.toISOString().slice(0, 10);
-}
-
-function isoWeekNumber(d: Date): number {
-  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
-  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-  return Math.ceil(((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-}
-
-// Determine if a resident_plan_item is active on a given date
-function isItemActiveOnDate(
-  item: {
-    time_of_day: string;
-    recurrence: string;
-    recurrence_days: number[] | null;
-    recurrence_week_parity: string | null;
-    active_from: string;
-    active_until: string | null;
-  },
-  date: Date
-): boolean {
-  const dateStr = toDateStr(date);
-  if (item.active_from > dateStr) return false;
-  if (item.active_until && item.active_until < dateStr) return false;
-  if (item.recurrence === 'none') return item.active_from === dateStr;
-  if (item.recurrence === 'daily') return true;
-  const dow = date.getDay() === 0 ? 6 : date.getDay() - 1; // 0=Mon..6=Sun
-  const days = item.recurrence_days ?? [];
-  if (!days.includes(dow)) return false;
-  if (item.recurrence === 'weekly' || item.recurrence === 'custom') return true;
-  // biweekly
-  const parity = item.recurrence_week_parity ?? 'all';
-  if (parity === 'all') return true;
-  const week = isoWeekNumber(date);
-  if (parity === 'odd') return week % 2 === 1;
-  return week % 2 === 0;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 // ── Props ────────────────────────────────────────────────────────────────────
@@ -187,30 +158,8 @@ export default function LysDagTab({ tokens, accent }: Props) {
       return;
     }
 
-    const supabase = createClient();
-    if (!supabase) {
-      setItems([]);
-      return;
-    }
-
     setItems(null);
-
-    const [planRes, residentItemsRes] = await Promise.all([
-      // From daily_plans (staff-approved plans)
-      supabase
-        .from('daily_plans')
-        .select('plan_items')
-        .eq('resident_id', residentId)
-        .eq('plan_date', dateStr)
-        .maybeSingle(),
-      // From resident_plan_items (recurring personal plan)
-      supabase
-        .from('resident_plan_items')
-        .select(
-          'id, title, category, emoji, time_of_day, recurrence, recurrence_days, recurrence_week_parity, active_from, active_until, staff_suggestion, approved_by_resident'
-        )
-        .eq('resident_id', residentId),
-    ]);
+    const bundle = await fetchLysPlanBundle(dateStr);
 
     type RawPlanItem = {
       id?: string;
@@ -219,36 +168,20 @@ export default function LysDagTab({ tokens, accent }: Props) {
       description?: string;
       category?: string;
     };
-    const fromPlan: PlanItem[] = ((planRes.data?.plan_items ?? []) as RawPlanItem[]).map(
-      (r, i) => ({
-        id: r.id ?? `plan-${i}`,
-        time: r.time,
-        title: r.title,
-        description: r.description,
-        category: r.category ?? 'struktur',
-        source: 'daily_plan',
-      })
-    );
+    const fromPlan: PlanItem[] = (bundle.dailyPlanItems as RawPlanItem[]).map((r, i) => ({
+      id: r.id ?? `plan-${i}`,
+      time: r.time,
+      title: r.title,
+      description: r.description,
+      category: r.category ?? 'struktur',
+      source: 'daily_plan',
+    }));
 
-    type ResidentItemRow = {
-      id: string;
-      title: string;
-      category: string;
-      emoji: string | null;
-      time_of_day: string;
-      recurrence: string;
-      recurrence_days: number[] | null;
-      recurrence_week_parity: string | null;
-      active_from: string;
-      active_until: string | null;
-      staff_suggestion: boolean;
-      approved_by_resident: boolean;
-    };
-    const fromResident: PlanItem[] = ((residentItemsRes.data ?? []) as ResidentItemRow[])
-      .filter((r) => isItemActiveOnDate(r, selectedDate))
+    const fromResident: PlanItem[] = bundle.items
+      .filter((r) => isPlanItemActiveOnDate(r, selectedDate))
       .map((r) => ({
         id: r.id,
-        time: r.time_of_day.slice(0, 5),
+        time: String(r.time_of_day).slice(0, 5),
         title: r.title,
         category: r.category,
         emoji: r.emoji ?? undefined,
@@ -261,14 +194,24 @@ export default function LysDagTab({ tokens, accent }: Props) {
       (a, b) => timeToMin(a.time) - timeToMin(b.time)
     );
     setItems(all);
+
+    let localCompleted: string[] = [];
+    try {
+      const raw = localStorage.getItem(`budr_dag_completed_${dateStr}`);
+      localCompleted = raw ? (JSON.parse(raw) as string[]) : [];
+    } catch {
+      localCompleted = [];
+    }
+    setCompleted(new Set([...bundle.completions, ...localCompleted]));
   }, [residentId, dateStr, selectedDate, storageMode]);
 
   useEffect(() => {
     void loadItems();
   }, [loadItems]);
 
-  // Restore completed from localStorage
+  // Restore completed from localStorage (demo/guest). Live loads completions in loadItems.
   useEffect(() => {
+    if (storageMode !== 'local') return;
     try {
       const raw = localStorage.getItem(`budr_dag_completed_${dateStr}`);
       if (raw) setCompleted(new Set(JSON.parse(raw) as string[]));
@@ -276,7 +219,7 @@ export default function LysDagTab({ tokens, accent }: Props) {
     } catch {
       /* ignore */
     }
-  }, [dateStr]);
+  }, [dateStr, storageMode]);
 
   // ── Complete item ─────────────────────────────────────────────────────────
   const handleComplete = useCallback(
@@ -286,23 +229,15 @@ export default function LysDagTab({ tokens, accent }: Props) {
         if (next.has(id)) {
           next.delete(id);
           if (HAVEN_ENABLED && residentId) revokeWaterCredit(residentId);
+          if (storageMode === 'supabase') {
+            void patchLysPlanItem({ action: 'uncomplete', id, date: dateStr });
+          }
         } else {
           next.add(id);
           if (HAVEN_ENABLED && residentId) grantWaterCredit(residentId);
           setXpEarned((xp) => xp + 5);
-          const supabase = createClient();
-          if (supabase && residentId) {
-            void supabase
-              .from('resident_plan_completions')
-              .upsert(
-                { resident_id: residentId, plan_item_id: id, completion_date: dateStr },
-                { onConflict: 'resident_id,plan_item_id,completion_date' }
-              );
-            void supabase.rpc('award_xp', {
-              p_resident_id: residentId,
-              p_activity: 'plan_completion',
-              p_xp: 5,
-            });
+          if (storageMode === 'supabase') {
+            void patchLysPlanItem({ action: 'complete', id, date: dateStr });
           }
           try {
             const raw = localStorage.getItem('budr_xp_v1');
@@ -320,22 +255,14 @@ export default function LysDagTab({ tokens, accent }: Props) {
         return next;
       });
     },
-    [residentId, dateStr]
+    [residentId, dateStr, storageMode]
   );
 
   // ── Approve staff suggestion ──────────────────────────────────────────────
   const handleApprove = async (itemId: string, approve: boolean) => {
     setApproving(itemId);
-    const supabase = createClient();
-    if (supabase) {
-      if (approve) {
-        await supabase
-          .from('resident_plan_items')
-          .update({ approved_by_resident: true })
-          .eq('id', itemId);
-      } else {
-        await supabase.from('resident_plan_items').delete().eq('id', itemId);
-      }
+    if (storageMode === 'supabase') {
+      await patchLysPlanItem({ action: approve ? 'approve' : 'reject', id: itemId });
     }
     setApproving(null);
     void loadItems();
@@ -363,28 +290,17 @@ export default function LysDagTab({ tokens, accent }: Props) {
         active_from: dateStr,
       });
     } else {
-      const supabase = createClient();
-      if (supabase) {
-        const { data: crRow } = await supabase
-          .from('care_residents')
-          .select('org_id')
-          .eq('user_id', residentId)
-          .maybeSingle();
-        await supabase.from('resident_plan_items').insert({
-          resident_id: residentId,
-          title: form.title.trim(),
-          category: form.category,
-          emoji: CATEGORY_EMOJI[form.category] ?? '📌',
-          time_of_day: form.time,
-          recurrence: form.recurrence,
-          recurrence_days: form.recurrence === 'daily' ? [0, 1, 2, 3, 4, 5, 6] : [],
-          notify: form.notify,
-          notify_minutes_before: form.notify_minutes_before,
-          created_by: 'resident',
-          active_from: dateStr,
-          org_id: (crRow as { org_id?: string } | null)?.org_id ?? null,
-        });
-      }
+      await createLysPlanItem({
+        title: form.title.trim(),
+        time: form.time,
+        category: form.category as PlanItemCategory,
+        recurrence: form.recurrence as PlanItemRecurrence,
+        recurrence_days: form.recurrence === 'daily' ? [0, 1, 2, 3, 4, 5, 6] : [],
+        notify: form.notify,
+        notify_minutes_before: form.notify_minutes_before,
+        active_from: dateStr,
+        emoji: CATEGORY_EMOJI[form.category] ?? '📌',
+      });
     }
 
     setSaving(false);
