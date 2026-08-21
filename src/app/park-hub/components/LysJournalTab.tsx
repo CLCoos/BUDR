@@ -344,10 +344,15 @@ export default function LysJournalTab({ tokens, accent }: Props) {
         credentials: 'include',
       });
       if (!res.ok) throw new Error('server_error');
-      const data = (await res.json()) as { entry_id: string; content: string };
+      const data = (await res.json()) as {
+        entry_id?: string;
+        content?: string;
+        journal_note?: string;
+      };
+      const draftText = (data.journal_note ?? data.content ?? '').trim();
       if (mountedRef.current) {
-        setParkDraftContent(data.content);
-        setParkDraftState('done');
+        setParkDraftContent(draftText || null);
+        setParkDraftState(draftText ? 'done' : 'error');
       }
     } catch {
       if (mountedRef.current) setParkDraftState('error');
