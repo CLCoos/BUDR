@@ -205,18 +205,13 @@ export default function LysShell({
   }) => {
     setMoodLabel(payload.label);
     setMoodTraffic(payload.traffic);
-    setMoodRegisteredToday(true);
 
     trackEvent('lys_mood_registered', { traffic: payload.traffic });
 
-    toast.success(`📋 Sendt til portalen: Stemning registreret for ${firstName}`);
-
-    if (payload.label === 'Meget svært' || payload.traffic === 'roed') {
-      toast.success('📋 Sendt til portalen: Personalet ser, at du har haft det svært');
-    }
     try {
-      await fetch('/api/lys/daily-checkin', {
+      const res = await fetch('/api/lys/daily-checkin', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mood_score: payload.moodScore,
@@ -226,8 +221,20 @@ export default function LysShell({
           ai_summary: payload.aiSummary,
         }),
       });
+      if (!res.ok) {
+        toast.error('Kunne ikke sende stemning til personalet — prøv igen');
+        return;
+      }
     } catch {
-      // Best effort: UI flow should continue even if network is unstable.
+      toast.error('Ingen forbindelse — stemning blev ikke sendt');
+      return;
+    }
+
+    setMoodRegisteredToday(true);
+    toast.success(`📋 Sendt til portalen: Stemning registreret for ${firstName}`);
+
+    if (payload.label === 'Meget svært' || payload.traffic === 'roed') {
+      toast.success('📋 Sendt til portalen: Personalet ser, at du har haft det svært');
     }
     setOverlay(null);
     const note = payload.note ? ` Jeg skrev også: ${payload.note}` : '';
