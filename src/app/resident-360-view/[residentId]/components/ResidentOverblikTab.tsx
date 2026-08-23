@@ -14,7 +14,8 @@ import {
   Mic,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { copenhagenStartOfTodayUtcIso } from '@/lib/copenhagenDay';
+import { copenhagenStartOfTodayUtcIso, copenhagenYmd } from '@/lib/copenhagenDay';
+import { fetchMedicationAdministrationsForDate } from '@/lib/medicationAdministration';
 import type { MedDefinition } from './types';
 import WriteJournalEntry from './WriteJournalEntry';
 import type { LysRecoveryStory } from '@/types/lys';
@@ -235,23 +236,25 @@ export default function ResidentOverblikTab({
     router.refresh();
   }
 
-  // Read given count from localStorage (same key as ResidentMedicinTab)
   const [givenCount, setGivenCount] = useState(0);
   const activeMeds = medications.filter((m) => m.status === 'aktiv');
+  const activeMedIdsKey = activeMeds.map((m) => m.id).join(',');
 
   useEffect(() => {
-    try {
-      const today = new Date().toISOString().slice(0, 10);
-      const raw = localStorage.getItem(`budr_med_v1_${residentId}_${today}`);
-      if (raw) {
-        const parsed = JSON.parse(raw) as Record<string, { given: boolean }>;
-        const count = activeMeds.filter((m) => parsed[m.id]?.given).length;
-        setGivenCount(count);
-      }
-    } catch {
-      // ignore
-    }
-  }, [residentId, activeMeds]);
+    const ids = activeMedIdsKey ? activeMedIdsKey.split(',') : [];
+    let cancelled = false;
+    void (async () => {
+      const supabase = createClient();
+      if (!supabase) return;
+      const { rows } = await fetchMedicationAdministrationsForDate(supabase, ids, copenhagenYmd());
+      if (cancelled) return;
+      const givenIds = new Set(rows.map((r) => r.medication_id));
+      setGivenCount(ids.filter((id) => givenIds.has(id)).length);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [residentId, activeMedIdsKey]);
 
   const medicationGivenCount = givenCount;
   const medicationTotalCount = activeMeds.length;

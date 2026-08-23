@@ -5,6 +5,13 @@ import { Pill, CheckCircle2, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { logPortalAudit } from '@/lib/auditClient';
+import { copenhagenYmd } from '@/lib/copenhagenDay';
+import {
+  fetchMedicationAdministrationsForDate,
+  givenAtByMedicationId,
+  markMedicationGiven,
+  unmarkMedicationGiven,
+} from '@/lib/medicationAdministration';
 import {
   MEDICATION_TIME_SLOTS,
   formatSlotLabelDa,
@@ -37,28 +44,14 @@ const GROUP_LABELS: Record<MedDefinition['time_group'], string> = {
 
 const GROUPS: MedDefinition['time_group'][] = ['morgen', 'middag', 'aften', 'behoev'];
 
-// ── Storage helpers ───────────────────────────────────────────
-
-function storageKey(residentId: string): string {
-  const today = new Date().toISOString().slice(0, 10);
-  return `budr_med_v1_${residentId}_${today}`;
-}
-
-function loadGiven(residentId: string): Record<string, GivenRecord> {
-  try {
-    const raw = localStorage.getItem(storageKey(residentId));
-    return raw ? (JSON.parse(raw) as Record<string, GivenRecord>) : {};
-  } catch {
-    return {};
+function recordsFromAdministrations(
+  rows: { medication_id: string; given_at: string }[]
+): Record<string, GivenRecord> {
+  const next: Record<string, GivenRecord> = {};
+  for (const [medicationId, givenAt] of givenAtByMedicationId(rows)) {
+    next[medicationId] = { given: true, givenAt: givenAt.toISOString() };
   }
-}
-
-function saveGiven(residentId: string, data: Record<string, GivenRecord>) {
-  try {
-    localStorage.setItem(storageKey(residentId), JSON.stringify(data));
-  } catch {
-    // storage unavailable
-  }
+  return next;
 }
 
 // ── Component ────────────────────────────────────────────────
@@ -76,9 +69,24 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
   const [newTime, setNewTime] = useState(MEDICATION_TIME_SLOTS[0]!.time);
   const [savingReminder, setSavingReminder] = useState(false);
 
+  const medicationIdsKey = medications.map((m) => m.id).join(',');
+
   useEffect(() => {
-    setGiven(loadGiven(residentId));
-  }, [residentId]);
+    const ids = medicationIdsKey ? medicationIdsKey.split(',') : [];
+    let cancelled = false;
+    void (async () => {
+      const supabase = createClient();
+      if (!supabase) {
+        if (!cancelled) setGiven({});
+        return;
+      }
+      const { rows } = await fetchMedicationAdministrationsForDate(supabase, ids, copenhagenYmd());
+      if (!cancelled) setGiven(recordsFromAdministrations(rows));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [residentId, medicationIdsKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -197,15 +205,28 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
     await refetchReminders();
   }
 
-  function toggle(medId: string) {
+  async function toggle(medId: string) {
+    const supabase = createClient();
+    if (!supabase) {
+      toast.error('Kunne ikke gemme medicinstatus');
+      return;
+    }
+    const currentlyGiven = Boolean(given[medId]?.given);
+    const result = currentlyGiven
+      ? await unmarkMedicationGiven({ supabase, medicationId: medId })
+      : await markMedicationGiven({ supabase, residentId, medicationId: medId });
+    if (!result.ok) {
+      toast.error('Kunne ikke gemme medicinstatus');
+      return;
+    }
+    const nowIso = new Date().toISOString();
     setGiven((prev) => {
       const next = { ...prev };
-      if (next[medId]?.given) {
+      if (currentlyGiven) {
         delete next[medId];
       } else {
-        next[medId] = { given: true, givenAt: new Date().toISOString() };
+        next[medId] = { given: true, givenAt: nowIso };
       }
-      saveGiven(residentId, next);
       return next;
     });
   }
@@ -477,7 +498,9 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
                     <button
                       type="button"
                       disabled={isPaused}
-                      onClick={() => !isPaused && toggle(med.id)}
+                      onClick={() => {
+                        if (!isPaused) void toggle(med.id);
+                      }}
                       className={`flex flex-shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
                         isPaused ? 'cursor-not-allowed' : isGiven ? 'border' : ''
                       }`}
