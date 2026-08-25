@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useResidentSession } from '@/hooks/useResidentSession';
 import * as dataService from '@/lib/dataService';
 import { isLysDemoResidentId } from '@/lib/lysDemoResident';
+import { RESIDENT_LOGOUT_API, residentLogoutFetchInit } from '@/lib/residentAuthCookieNames';
 import type { LysChatMessage } from '@/app/api/lys-chat/route';
 import type { LysFlowOverlay } from '../lib/lysOverlay';
 import type { LysPhase, LysThemeTokens } from '../lib/lysTheme';
@@ -319,8 +320,17 @@ export default function LysHome({
   }, [moodTick]);
 
   const handleLogout = () => {
-    document.cookie = 'budr_resident_id=; path=/; max-age=0';
-    router.replace('/');
+    void (async () => {
+      try {
+        await fetch(RESIDENT_LOGOUT_API, residentLogoutFetchInit());
+      } catch {
+        // Still leave the app; server cookie clear is best-effort.
+      }
+      const secure =
+        typeof location !== 'undefined' && location.protocol === 'https:' ? '; Secure' : '';
+      document.cookie = `budr_resident_id=; path=/; max-age=0${secure}`;
+      router.replace('/');
+    })();
   };
 
   const todayStr = now.toLocaleDateString('da-DK', {

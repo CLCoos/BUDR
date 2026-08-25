@@ -1,8 +1,6 @@
 import { createHash, randomBytes } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 
-const SESSION_COOKIE = 'budr_resident_session';
-const LEGACY_COOKIE = 'budr_resident_id';
 const SESSION_TTL_DAYS = 30;
 
 function getServiceClient() {
@@ -106,5 +104,28 @@ export async function revokeSession(opts: {
   return !error;
 }
 
-export const SESSION_COOKIE_NAME = SESSION_COOKIE;
-export const LEGACY_COOKIE_NAME = LEGACY_COOKIE;
+/**
+ * Resident self-logout. `revoked_by` stays null — it FKs to care_staff,
+ * so a beboer-id must not be written there.
+ */
+export async function revokeSessionByToken(
+  token: string,
+  reason = 'resident_logout'
+): Promise<boolean> {
+  if (!token) return false;
+  const supabase = getServiceClient();
+  if (!supabase) return false;
+
+  const { error } = await supabase
+    .from('resident_sessions')
+    .update({
+      revoked_at: new Date().toISOString(),
+      revoke_reason: reason,
+    })
+    .eq('session_token_hash', hashToken(token))
+    .is('revoked_at', null);
+
+  return !error;
+}
+
+export { SESSION_COOKIE_NAME, LEGACY_COOKIE_NAME } from '@/lib/residentAuthCookieNames';

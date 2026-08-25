@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revokeSessionByToken, SESSION_COOKIE_NAME } from '@/lib/residentSessions';
+import { clearResidentAuthCookies, setResidentAuthCookies } from '@/lib/residentSessionCookies';
 
-const COOKIE_NAME = 'budr_resident_session';
+const COOKIE_NAME = SESSION_COOKIE_NAME;
 /** 1 år — matcher øvrige beboer-cookie varighed; PIN/WebAuthn styrer reelt adgang. */
 const MAX_AGE = 31536000;
 
@@ -18,13 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     const res = NextResponse.json({ ok: true });
-    res.cookies.set(COOKIE_NAME, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: MAX_AGE,
-      path: '/',
-    });
+    setResidentAuthCookies(res, { sessionToken: token, maxAge: MAX_AGE });
     return res;
   } catch {
     return NextResponse.json({ error: 'Intern fejl' }, { status: 500 });
@@ -33,10 +29,15 @@ export async function POST(req: NextRequest) {
 
 /**
  * DELETE /api/resident-session
- * Logout — clears the session cookie.
+ * Logout — revokes the hashed session row and clears both auth cookies.
+ * Client JS cannot clear the HttpOnly session cookie.
  */
-export async function DELETE() {
+export async function DELETE(req: NextRequest) {
+  const token = req.cookies.get(COOKIE_NAME)?.value?.trim();
+  if (token) {
+    await revokeSessionByToken(token);
+  }
   const res = NextResponse.json({ ok: true });
-  res.cookies.set(COOKIE_NAME, '', { maxAge: 0, path: '/' });
+  clearResidentAuthCookies(res);
   return res;
 }
