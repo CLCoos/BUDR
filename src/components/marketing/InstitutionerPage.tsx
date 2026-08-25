@@ -27,7 +27,7 @@ const INSTITUTIONER_FAQ = [
   {
     q: 'Hvad med GDPR?',
     paragraphs: [
-      "Vi indgår databehandleraftale før pilotstart. Data hostes i Tyskland (Hetzner FSN1) under EU's databeskyttelseslovgivning. Borgerdata krypteres i hvile (AES-256) og under transport (TLS 1.3).",
+      "Vi indgår databehandleraftale før pilotstart. Borgerdata lagres i EU/EØS (Supabase på AWS-region Stockholm, Sverige) under EU's databeskyttelseslovgivning, og krypteres i hvile (AES-256) og under transport (TLS 1.3). Fuld liste over underdatabehandlere udleveres til jeres IT/DPO.",
     ],
   },
   {
@@ -398,7 +398,7 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
             </div>
             <ul className="pilot-trust-signals">
               <li>Ingen binding ud over pilotperioden</li>
-              <li>Dansk hosting (Hetzner FSN1)</li>
+              <li>EU-hosting (Sverige)</li>
               <li>GDPR-databehandleraftale</li>
               <li>Fuld dataeksport ved opsigelse</li>
             </ul>
@@ -436,8 +436,11 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
 
             <h3 className="institutioner-sub-h">Datalokation</h3>
             <p className="section-p">
-              Hetzner Falkenstein (FSN1), Tyskland (EU). AES-256 i hvile, TLS 1.3 under transport.
-              Ingen data forlader EU.
+              Database og borgerdata i EU/EØS: Supabase på AWS-region Stockholm (eu-north-1),
+              Sverige. AES-256 i hvile, TLS 1.3 under transport. Applikationshosting via Netlify.
+              AI-behandling sker hos modelleverandører (Anthropic/OpenAI/ElevenLabs) — se
+              underdatabehandlerlisten. Datalokation og -overførsler er beskrevet i
+              databehandleraftalen.
             </p>
 
             <h3 className="institutioner-sub-h">Roadmap-transparens</h3>

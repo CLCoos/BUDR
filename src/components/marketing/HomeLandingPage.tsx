@@ -43,7 +43,7 @@ const HOME_FAQ = [
   {
     q: 'Hvad med GDPR?',
     paragraphs: [
-      "Vi indgår databehandleraftale før pilotstart. Data hostes i Tyskland (Hetzner FSN1) under EU's databeskyttelseslovgivning. Borgerdata krypteres i hvile (AES-256) og under transport (TLS 1.3).",
+      "Vi indgår databehandleraftale før pilotstart. Borgerdata lagres i EU/EØS (Supabase på AWS-region Stockholm, Sverige) under EU's databeskyttelseslovgivning, og krypteres i hvile (AES-256) og under transport (TLS 1.3). Fuld liste over underdatabehandlere udleveres til jeres IT/DPO.",
     ],
   },
   {
@@ -135,7 +135,7 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
                 </a>
               </div>
               <ul className="home-trust-strip" aria-label="Tillid og compliance">
-                <li>Dansk hosting</li>
+                <li>EU-hosting (Sverige)</li>
                 <li>GDPR</li>
                 <li>Evidensbaseret (CHIME)</li>
                 <li>Bygget af fagperson fra branchen</li>
@@ -304,7 +304,7 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
               </div>
               <ul className="pilot-trust-signals">
                 <li>Ingen binding ud over pilotperioden</li>
-                <li>Dansk hosting (Hetzner FSN1)</li>
+                <li>EU-hosting (Sverige)</li>
                 <li>GDPR-databehandleraftale</li>
                 <li>Fuld dataeksport ved opsigelse</li>
               </ul>
