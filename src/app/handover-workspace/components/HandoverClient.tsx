@@ -10,6 +10,14 @@ import { loadShifts } from '@/lib/demoShiftPlan';
 import { CARE_DEMO_RESIDENT_PROFILES } from '@/lib/careDemoResidents';
 import { getResidentDemoDetail } from '@/lib/careDemoResidentDetail';
 import { useCurrentOrg } from '@/lib/org/useCurrentOrg';
+import { copenhagenStartOfTodayUtcIso } from '@/lib/copenhagenDay';
+import {
+  applyStoredNotes,
+  buildHandoverUpsertRows,
+  handoverShiftDate,
+  isHandoverShiftLabel,
+  type StoredHandoverNote,
+} from '@/lib/handoverNotes';
 import {
   formatResidentName,
   getInitials,
@@ -143,6 +151,7 @@ export default function HandoverClient({
   const nameDisplayMode = org?.resident_name_display_mode ?? 'first_name_initial';
   const [entries, setEntries] = useState<HandoverEntry[]>([]);
   const [liveListLoading, setLiveListLoading] = useState(!useDemoData);
+  const [liveOrgId, setLiveOrgId] = useState<string | null>(null);
   const [currentShift, setCurrentShift] = useState<ShiftLabel>('doegnnotat');
   const [saving, setSaving] = useState(false);
   const [exportMeta, setExportMeta] = useState<HandoverExportMeta>(() => {
@@ -252,6 +261,7 @@ export default function HandoverClient({
       const supabase = createClient();
       if (!supabase) {
         if (!cancelled) {
+          setLiveOrgId(null);
           setEntries([]);
           setLiveListLoading(false);
         }
@@ -262,10 +272,13 @@ export default function HandoverClient({
       if (cancelled) return;
 
       if (error !== null || !orgId || residentIds.length === 0) {
+        setLiveOrgId(null);
         setEntries([]);
         setLiveListLoading(false);
         return;
       }
+
+      setLiveOrgId(orgId);
 
       const { data: rows, error: rowsErr } = await supabase
         .from('care_residents')
@@ -280,14 +293,20 @@ export default function HandoverClient({
       }
 
       const ids = rows.map((r) => r.user_id as string);
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
+      const todayStartIso = copenhagenStartOfTodayUtcIso();
+      const shiftDate = handoverShiftDate();
 
       const { data: checkins } = await supabase
         .from('park_daily_checkin')
         .select('resident_id, traffic_light, created_at')
         .in('resident_id', ids)
-        .gte('created_at', todayStart.toISOString())
+        .gte('created_at', todayStartIso)
+        .order('created_at', { ascending: false });
+
+      const { data: noteRows } = await supabase
+        .from('care_handover_notes')
+        .select('resident_id, shift_label, shift_date, body, flag_color, created_at')
+        .in('resident_id', ids)
         .order('created_at', { ascending: false });
 
       if (cancelled) return;
@@ -322,7 +341,13 @@ export default function HandoverClient({
         };
       });
 
-      setEntries(next);
+      const stored = (noteRows ?? []) as StoredHandoverNote[];
+      setEntries(
+        applyStoredNotes(next, stored, {
+          shiftDate,
+          shiftLabel: currentShift,
+        })
+      );
       setLiveListLoading(false);
     })();
 
@@ -336,11 +361,68 @@ export default function HandoverClient({
   };
 
   const handleSaveAll = async () => {
+    if (useDemoData) {
+      toast.success(
+        `Demo: vagtnotat ville være gemt for ${shiftLabelText(currentShift).toLowerCase()}`
+      );
+      return;
+    }
+
+    const persistable = buildHandoverUpsertRows({
+      entries,
+      orgId: liveOrgId ?? '',
+      staffId: null,
+      shiftLabel: isHandoverShiftLabel(currentShift) ? currentShift : 'doegnnotat',
+      shiftDate: handoverShiftDate(),
+    });
+    if (persistable.length === 0) {
+      toast.error('Skriv mindst ét vagtnotat (eller sæt et flag) før du gemmer');
+      return;
+    }
+
     setSaving(true);
-    // Backend: INSERT INTO care_handover_notes (resident_id, staff_id, flag_color, shift_label, body, created_at) for each entry
-    await new Promise((r) => setTimeout(r, 1200));
-    setSaving(false);
-    toast.success(`Vagtnotat gemt for ${shiftLabelText(currentShift).toLowerCase()}`);
+    try {
+      const supabase = createClient();
+      if (!supabase) {
+        toast.error('Kunne ikke gemme — ingen databaseforbindelse');
+        return;
+      }
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Du skal være logget ind for at gemme vagtnotater');
+        return;
+      }
+      const { data: staffRow } = await supabase
+        .from('care_staff')
+        .select('org_id')
+        .eq('id', user.id)
+        .maybeSingle();
+      const orgId = parseStaffOrgId(staffRow?.org_id ?? liveOrgId);
+      if (!orgId) {
+        toast.error('Organisation mangler — kunne ikke gemme');
+        return;
+      }
+
+      const rows = persistable.map((row) => ({
+        ...row,
+        org_id: orgId,
+        staff_id: user.id,
+      }));
+
+      const { error } = await supabase.from('care_handover_notes').upsert(rows, {
+        onConflict: 'resident_id,shift_date,shift_label',
+      });
+      if (error) {
+        console.error('[handover] upsert', error);
+        toast.error('Kunne ikke gemme vagtnotat. Tjek at migrationen er kørt.');
+        return;
+      }
+      toast.success(`Vagtnotat gemt for ${shiftLabelText(currentShift).toLowerCase()}`);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDownload = () => {
