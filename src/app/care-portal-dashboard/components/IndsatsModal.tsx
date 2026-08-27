@@ -1,80 +1,32 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { X, Save, Printer, AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
+import { createClient } from '@/lib/supabase/client';
+import { parseStaffOrgId } from '@/lib/staffOrgScope';
 import { safeRandomUUID } from '@/lib/uuid';
+import {
+  INDSATS_TYPE_OPTIONS,
+  type IndsatsFormFields,
+  type IndsatsRecord,
+  buildIndsatsInsertRow,
+  canSaveIndsatsForm,
+  loadDemoIndsatsRecords,
+  paragraphForIndsatsType,
+  parseIndsatsRecord,
+  saveDemoIndsatsRecords,
+} from '@/lib/indsatsRecords';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-type IndsatsType =
-  | '§136_fastholdelse'
-  | '§136_tilbageholdelse'
-  | '§141_personlig_hygiejne'
-  | '§141_ernæring'
-  | '§141_beskyttelse'
-  | 'observation'
-  | 'hændelse';
-
-type IndsatsRecord = {
-  id: string;
-  created_at: string;
-  type: IndsatsType;
-  paragraph: string;
-  tidspunkt: string;
-  varighed: string;
-  involverede_borgere: string;
-  involverede_personale: string;
-  beskrivelse: string;
-  forudgaaende: string;
-  handling: string;
-  borgerens_reaktion: string;
-  opfoelgning: string;
-  underskrift: string;
+type Props = {
+  open: boolean;
+  onClose: () => void;
+  /** Demo-ruter beholder localStorage. Live portal skriver til `care_indsats_records`. */
+  useDemoData?: boolean;
 };
 
-const TYPE_OPTIONS: { value: IndsatsType; label: string; paragraph: string; color: string }[] = [
-  { value: '§136_fastholdelse', label: 'Fastholdelse', paragraph: '§136', color: '#dc2626' },
-  { value: '§136_tilbageholdelse', label: 'Tilbageholdelse', paragraph: '§136', color: '#dc2626' },
-  {
-    value: '§141_personlig_hygiejne',
-    label: 'Personlig hygiejne',
-    paragraph: '§141',
-    color: '#d97706',
-  },
-  { value: '§141_ernæring', label: 'Ernæring', paragraph: '§141', color: '#d97706' },
-  {
-    value: '§141_beskyttelse',
-    label: 'Beskyttelse mod skade',
-    paragraph: '§141',
-    color: '#d97706',
-  },
-  { value: 'observation', label: 'Observationsnotat', paragraph: '', color: '#6366f1' },
-  { value: 'hændelse', label: 'Hændelsesrapport', paragraph: '', color: '#64748b' },
-];
-
-const STORAGE_KEY = 'budr_indsats_records_v1';
-
-function loadRecords(): IndsatsRecord[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as IndsatsRecord[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveRecords(records: IndsatsRecord[]) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-  } catch {
-    /* ignore */
-  }
-}
-
-type Props = { open: boolean; onClose: () => void };
-
-const EMPTY_FORM = {
-  type: '§136_fastholdelse' as IndsatsType,
+const EMPTY_FORM: IndsatsFormFields = {
+  type: '§136_fastholdelse',
   tidspunkt: new Date().toISOString().slice(0, 16),
   varighed: '',
   involverede_borgere: '',
@@ -87,43 +39,159 @@ const EMPTY_FORM = {
   underskrift: '',
 };
 
-export default function IndsatsModal({ open, onClose }: Props) {
+export default function IndsatsModal({ open, onClose, useDemoData = false }: Props) {
   const [view, setView] = useState<'new' | 'list'>('new');
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [form, setForm] = useState<IndsatsFormFields>(EMPTY_FORM);
   const [records, setRecords] = useState<IndsatsRecord[]>([]);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [loadingList, setLoadingList] = useState(false);
+
+  const loadRecords = useCallback(async () => {
+    if (useDemoData) {
+      setRecords(loadDemoIndsatsRecords());
+      return;
+    }
+    setLoadingList(true);
+    const supabase = createClient();
+    if (!supabase) {
+      toast.error('Forbindelsesfejl — kunne ikke hente indsatsdokumentation');
+      setRecords([]);
+      setLoadingList(false);
+      return;
+    }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user?.id) {
+      toast.error('Du skal være logget ind');
+      setRecords([]);
+      setLoadingList(false);
+      return;
+    }
+    const { data: staffRow } = await supabase
+      .from('care_staff')
+      .select('org_id')
+      .eq('id', user.id)
+      .maybeSingle();
+    const orgId = parseStaffOrgId(staffRow?.org_id ?? null);
+    if (!orgId) {
+      toast.error('Organisation mangler på din bruger — kontakt administrator');
+      setRecords([]);
+      setLoadingList(false);
+      return;
+    }
+    const { data, error } = await supabase
+      .from('care_indsats_records')
+      .select(
+        'id, created_at, type, paragraph, tidspunkt, varighed, involverede_borgere, involverede_personale, beskrivelse, forudgaaende, handling, borgerens_reaktion, opfoelgning, underskrift'
+      )
+      .eq('org_id', orgId)
+      .order('created_at', { ascending: false });
+    if (error) {
+      toast.error('Kunne ikke hente gemte registreringer. Er migrationen kørt?');
+      setRecords([]);
+      setLoadingList(false);
+      return;
+    }
+    setRecords(
+      (data ?? [])
+        .map((row) => parseIndsatsRecord(row as Record<string, unknown>))
+        .filter((row): row is IndsatsRecord => row !== null)
+    );
+    setLoadingList(false);
+  }, [useDemoData]);
 
   useEffect(() => {
-    if (open) setRecords(loadRecords());
-  }, [open]);
+    if (!open) return;
+    void loadRecords();
+  }, [open, loadRecords]);
 
   if (!open) return null;
 
-  const typeOpt = TYPE_OPTIONS.find((t) => t.value === form.type)!;
   const isParagraph = form.type.startsWith('§');
 
-  const update = (key: keyof typeof EMPTY_FORM, value: string) =>
-    setForm((f) => ({ ...f, [key]: value }));
+  const update = (key: keyof IndsatsFormFields, value: string) =>
+    setForm((f) => ({ ...f, [key]: value }) as IndsatsFormFields);
 
-  const handleSave = () => {
-    const record: IndsatsRecord = {
-      id: safeRandomUUID(),
-      created_at: new Date().toISOString(),
-      paragraph: typeOpt.paragraph,
-      ...form,
-    };
-    const updated = [record, ...records];
-    saveRecords(updated);
-    setRecords(updated);
+  const handleSave = async () => {
+    if (!canSaveIndsatsForm(form) || saving || saved) return;
+
+    if (useDemoData) {
+      const record: IndsatsRecord = {
+        id: safeRandomUUID(),
+        created_at: new Date().toISOString(),
+        paragraph: paragraphForIndsatsType(form.type),
+        ...form,
+      };
+      const updated = [record, ...records];
+      saveDemoIndsatsRecords(updated);
+      setRecords(updated);
+      setSaved(true);
+      toast.success('Demo: registrering gemt lokalt i denne browser');
+      window.setTimeout(() => {
+        setSaved(false);
+        setForm({ ...EMPTY_FORM, tidspunkt: new Date().toISOString().slice(0, 16) });
+      }, 2000);
+      return;
+    }
+
+    setSaving(true);
+    const supabase = createClient();
+    if (!supabase) {
+      toast.error('Forbindelsesfejl');
+      setSaving(false);
+      return;
+    }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user?.id) {
+      toast.error('Du skal være logget ind');
+      setSaving(false);
+      return;
+    }
+    const { data: staffRow } = await supabase
+      .from('care_staff')
+      .select('org_id')
+      .eq('id', user.id)
+      .maybeSingle();
+    const orgId = parseStaffOrgId(staffRow?.org_id ?? null);
+    if (!orgId) {
+      toast.error('Organisation mangler på din bruger — kontakt administrator');
+      setSaving(false);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('care_indsats_records')
+      .insert(buildIndsatsInsertRow(form, { orgId, createdBy: user.id }))
+      .select(
+        'id, created_at, type, paragraph, tidspunkt, varighed, involverede_borgere, involverede_personale, beskrivelse, forudgaaende, handling, borgerens_reaktion, opfoelgning, underskrift'
+      )
+      .maybeSingle();
+
+    setSaving(false);
+    if (error || !data) {
+      toast.error(
+        error?.message?.includes('care_indsats_records')
+          ? 'Databasen mangler tabellen — kør migration care_indsats_records'
+          : 'Kunne ikke gemme registreringen'
+      );
+      return;
+    }
+    const parsed = parseIndsatsRecord(data as Record<string, unknown>);
+    if (parsed) setRecords((prev) => [parsed, ...prev]);
     setSaved(true);
-    setTimeout(() => {
+    toast.success('Indsatsdokumentation gemt');
+    window.setTimeout(() => {
       setSaved(false);
       setForm({ ...EMPTY_FORM, tidspunkt: new Date().toISOString().slice(0, 16) });
     }, 2000);
   };
 
   const handlePrint = (rec: IndsatsRecord) => {
-    const typeLabel = TYPE_OPTIONS.find((t) => t.value === rec.type)?.label ?? rec.type;
+    const typeLabel = INDSATS_TYPE_OPTIONS.find((t) => t.value === rec.type)?.label ?? rec.type;
     const html = `<!DOCTYPE html><html lang="da"><head><meta charset="UTF-8">
 <title>Indsatsdokumentation ${rec.created_at.slice(0, 10)}</title>
 <style>
@@ -176,7 +244,7 @@ ${rec.underskrift ? `<div class="field" style="margin-top:32px;border-top:1px so
     required = false,
   }: {
     label: string;
-    field: keyof typeof EMPTY_FORM;
+    field: keyof IndsatsFormFields;
     rows?: number;
     required?: boolean;
   }) => (
@@ -217,6 +285,7 @@ ${rec.underskrift ? `<div class="field" style="margin-top:32px;border-top:1px so
               <h2 className="font-bold text-gray-900">Indsatsdokumentation</h2>
               <p className="text-xs text-gray-500">
                 Serviceloven — faglig og juridisk kvalitetssikring hos jer
+                {useDemoData ? ' (demo — gemmes kun i denne browser)' : ''}
               </p>
             </div>
           </div>
@@ -241,12 +310,14 @@ ${rec.underskrift ? `<div class="field" style="margin-top:32px;border-top:1px so
         {/* Archive view */}
         {view === 'list' && (
           <div className="flex-1 overflow-y-auto px-6 py-5">
-            {records.length === 0 ? (
+            {loadingList ? (
+              <p className="text-sm text-gray-400 text-center py-12">Henter registreringer…</p>
+            ) : records.length === 0 ? (
               <p className="text-sm text-gray-400 text-center py-12">Ingen registreringer endnu</p>
             ) : (
               <div className="space-y-3">
                 {records.map((rec) => {
-                  const opt = TYPE_OPTIONS.find((t) => t.value === rec.type);
+                  const opt = INDSATS_TYPE_OPTIONS.find((t) => t.value === rec.type);
                   return (
                     <div key={rec.id} className="rounded-2xl border border-gray-200 px-4 py-3.5">
                       <div className="flex items-start justify-between gap-3">
@@ -302,7 +373,7 @@ ${rec.underskrift ? `<div class="field" style="margin-top:32px;border-top:1px so
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-2">Type *</label>
               <div className="grid grid-cols-2 gap-2">
-                {TYPE_OPTIONS.map((opt) => (
+                {INDSATS_TYPE_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
                     type="button"
@@ -377,18 +448,13 @@ ${rec.underskrift ? `<div class="field" style="margin-top:32px;border-top:1px so
             </button>
             <button
               type="button"
-              onClick={handleSave}
-              disabled={
-                !form.beskrivelse.trim() ||
-                !form.involverede_borgere.trim() ||
-                !form.underskrift.trim() ||
-                saved
-              }
+              onClick={() => void handleSave()}
+              disabled={!canSaveIndsatsForm(form) || saved || saving}
               className="ml-auto flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-colors disabled:opacity-40"
               style={{ backgroundColor: saved ? '#16a34a' : '#dc2626' }}
             >
               <Save className="h-4 w-4" />
-              {saved ? 'Gemt ✓' : 'Gem registrering'}
+              {saved ? 'Gemt ✓' : saving ? 'Gemmer…' : 'Gem registrering'}
             </button>
           </div>
         )}

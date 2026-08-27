@@ -42,7 +42,7 @@ Alle `src/app/**/page.tsx` (61 sider). Status: **live** = Supabase/auth; **demod
 | `/care-portal-resident-preview/[id]` | Demo-360 bag login eller redirect til live 360 | demodata / live (afhænger af `NEXT_PUBLIC_CARE_PORTAL_SIMULATED_DATA`) |
 | `/care-portal-vagtplan` | Vagtplan | **demodata** (genbruger `VagtplanDemoClient` + localStorage) |
 | `/care-portal-vagtplan/loen` | Løn/timer | **demodata** (`LoenDemoClient`) |
-| `/care-portal-indsatsdok` | Indsatsdokumentation | **halvfærdig** (kun `localStorage` via `IndsatsModal`) |
+| `/care-portal-indsatsdok` | Indsatsdokumentation | live (`care_indsats_records`; demo-rute stadig localStorage) |
 | `/care-portal-tilsynsrapport` | Tilsynsrapport | live (kan falde tilbage til demodata via modal-flag) |
 | `/handover-workspace` | Vagtoverlevering | live |
 | `/resident-360-view` | Beboerliste | live |
@@ -239,7 +239,7 @@ Ingen `FIXME`-hits i `src/`.
 - `src/lib/marketing/saraTimeline.ts`, `src/lib/tilsynsrapport/demoResidents.ts`, `src/lib/overrapport/*`
 - Demo-seeds i `AlertPanel`, `HurtigJournalModal`, `HandoverClient`, `DashboardDemoMain`, `DemoSeeder`, `/resident-demo`
 - Live vagtplan/løn genbruger demo-klienter + localStorage
-- Indsatsdok: kun localStorage
+- Indsatsdok live: `care_indsats_records` (migration `20260827110500`); demo: localStorage
 
 ### Udkommenteret kode
 Ingen tydelige blokke med udkommenterede `import`/`export`/`function`/`return <` fundet via søgning. Enkeltstående forklarende kommentarer findes (fx i `BiometricPrompt`).
