@@ -239,7 +239,9 @@ Ingen `FIXME`-hits i `src/`.
 - `src/lib/marketing/saraTimeline.ts`, `src/lib/tilsynsrapport/demoResidents.ts`, `src/lib/overrapport/*`
 - Demo-seeds i `AlertPanel`, `HurtigJournalModal`, `HandoverClient`, `DashboardDemoMain`, `DemoSeeder`, `/resident-demo`
 - Live vagtplan/løn genbruger demo-klienter + localStorage
-- Indsatsdok: kun localStorage
+- Indsatsdok: kun localStorage (åben PR #68 persist)
+- Live `KalenderWidget` persist i `care_planner_entries` (2026-08-28); demo-variant forbliver mock
+- Live `OpgaveWidget` er stadig React-state / mock-beboere
 
 ### Udkommenteret kode
 Ingen tydelige blokke med udkommenterede `import`/`export`/`function`/`return <` fundet via søgning. Enkeltstående forklarende kommentarer findes (fx i `BiometricPrompt`).
