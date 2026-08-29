@@ -455,7 +455,7 @@ function DashboardClientInner({
             contentClassName="p-4 pt-3 space-y-5"
           >
             <KalenderWidget variant="demo" />
-            <OpgaveWidget />
+            <OpgaveWidget demoMode />
           </DashboardModule>
         </div>
 

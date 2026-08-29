@@ -239,7 +239,8 @@ Ingen `FIXME`-hits i `src/`.
 - `src/lib/marketing/saraTimeline.ts`, `src/lib/tilsynsrapport/demoResidents.ts`, `src/lib/overrapport/*`
 - Demo-seeds i `AlertPanel`, `HurtigJournalModal`, `HandoverClient`, `DashboardDemoMain`, `DemoSeeder`, `/resident-demo`
 - Live vagtplan/løn genbruger demo-klienter + localStorage
-- Indsatsdok: kun localStorage
+- Indsatsdok: kun localStorage (persist-PR #68 åben)
+- Live dashboard-opgaver: `care_staff_tasks` (migration `20260829110500_care_staff_tasks.sql`) — kræver `supabase db push` efter merge
 
 ### Udkommenteret kode
 Ingen tydelige blokke med udkommenterede `import`/`export`/`function`/`return <` fundet via søgning. Enkeltstående forklarende kommentarer findes (fx i `BiometricPrompt`).
