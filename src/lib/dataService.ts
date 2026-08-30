@@ -6,6 +6,15 @@ import * as ls from '@/lib/localStore';
 import { LOCAL_KEYS } from '@/types/local';
 import { isResidentUuidForCloud } from '@/lib/residentUuid';
 import { safeRandomUUID } from '@/lib/uuid';
+import { copenhagenYmd } from '@/lib/copenhagenDay';
+import {
+  createLysPlanItem,
+  defaultEmojiForCategory,
+  fetchLysPlanBundle,
+  patchLysPlanItem,
+  type PlanItemCategory,
+  type PlanItemRecurrence,
+} from '@/lib/lys/planItems';
 import type {
   StorageMode,
   CheckIn,
@@ -487,14 +496,24 @@ export async function saveProfile(
 
 export async function getPlanItems(mode: StorageMode, activeId: string): Promise<PlanItem[]> {
   if (mode === 'supabase') {
-    const supabase = createClient();
-    if (!supabase) return [];
-    const { data } = await supabase
-      .from('resident_plan_items')
-      .select('*')
-      .eq('resident_id', activeId)
-      .order('time_of_day');
-    return (data ?? []) as PlanItem[];
+    const bundle = await fetchLysPlanBundle(copenhagenYmd());
+    return bundle.items.map((row) => ({
+      id: row.id,
+      resident_id: row.resident_id,
+      title: row.title,
+      category: row.category,
+      emoji: row.emoji,
+      time_of_day: String(row.time_of_day).slice(0, 5),
+      recurrence: row.recurrence,
+      recurrence_days: row.recurrence_days,
+      notify: row.notify,
+      notify_minutes_before: row.notify_minutes_before,
+      created_by: row.created_by,
+      staff_suggestion: row.staff_suggestion,
+      approved_by_resident: row.approved_by_resident,
+      active_from: String(row.active_from).slice(0, 10),
+      created_at: row.created_at,
+    }));
   }
   const items = ls.getItem<PlanItem[]>(LOCAL_KEYS.planItems) ?? [];
   return items.filter((p) => p.resident_id === activeId);
@@ -506,17 +525,26 @@ export async function savePlanItem(
   data: Omit<PlanItem, 'id' | 'resident_id' | 'created_at'>
 ): Promise<void> {
   if (mode === 'supabase') {
-    const supabase = createClient();
-    if (!supabase) return;
-    const { data: crRow } = await supabase
-      .from('care_residents')
-      .select('org_id')
-      .eq('user_id', activeId)
-      .maybeSingle();
-    await supabase.from('resident_plan_items').insert({
-      ...data,
-      resident_id: activeId,
-      org_id: (crRow as { org_id?: string } | null)?.org_id ?? null,
+    const category = (
+      ['mad', 'medicin', 'aktivitet', 'hvile', 'social'].includes(data.category)
+        ? data.category
+        : 'aktivitet'
+    ) as PlanItemCategory;
+    const recurrence = (
+      ['none', 'daily', 'weekly', 'biweekly', 'custom'].includes(data.recurrence)
+        ? data.recurrence
+        : 'none'
+    ) as PlanItemRecurrence;
+    await createLysPlanItem({
+      title: data.title,
+      time: String(data.time_of_day).slice(0, 5),
+      category,
+      recurrence,
+      recurrence_days: data.recurrence_days ?? [],
+      notify: data.notify,
+      notify_minutes_before: data.notify_minutes_before,
+      active_from: data.active_from,
+      emoji: data.emoji ?? defaultEmojiForCategory(category),
     });
     return;
   }
@@ -537,13 +565,7 @@ export async function completePlanItem(
   date: string
 ): Promise<void> {
   if (mode === 'supabase') {
-    const supabase = createClient();
-    if (!supabase) return;
-    await supabase.from('resident_plan_completions').upsert({
-      resident_id: activeId,
-      plan_item_id: planItemId,
-      completion_date: date,
-    });
+    await patchLysPlanItem({ action: 'complete', id: planItemId, date });
     return;
   }
   const completions = ls.getItem<PlanCompletion[]>(LOCAL_KEYS.planCompletions) ?? [];

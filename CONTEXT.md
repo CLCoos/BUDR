@@ -2,7 +2,9 @@
 
 **Til AI/assistenter:** Læs denne fil først. Kort indgang: [`AGENTS.md`](./AGENTS.md).
 
-**Sidst opdateret (manuelt):** 2026-05-22 — **Care Portal-demo (render-løkker + e2e):** Playwright `npm run test:e2e:demo` verificerer alle demo-ruter uden «Maximum update depth» og guidet tour-navigation (`e2e/care-portal-demo-console.spec.ts`). Kræver `npx playwright install chromium` (evt. `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers`).
+**Sidst opdateret (manuelt):** 2026-08-17 — **Lys Dag-plan for cookie-beboere:** `LysDagTab` / `LysHome` skrev og læste `resident_plan_items`, `resident_plan_completions` og `daily_plans` via browser-anon-klienten. RLS kræver `auth.uid() = resident_id` (og `daily_plans` har slet ingen beboer-SELECT). Live Lys bruger `budr_resident_id`-cookie, ikke JWT → tom kalender, stille tabte gennemførsler og nye opgaver. Ny `GET`/`POST`/`PATCH` `/api/lys/plan-items` (cookie + service role). `daily_plans` falder tilbage fra `plan_date` til `date` hvis kolonnen mangler.
+
+**Forrige:** 2026-05-22 — **Care Portal-demo (render-løkker + e2e):** Playwright `npm run test:e2e:demo` verificerer alle demo-ruter uden «Maximum update depth» og guidet tour-navigation (`e2e/care-portal-demo-console.spec.ts`). Kræver `npx playwright install chromium` (evt. `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers`).
 
 **Forrige:** 2026-05-22 — **Care Portal-demo (render-løkker):** Systematisk stabilisering af `useEffect`/`setInterval` på demo-fladen — `useMemo`-seeds, split demo/live effects, `setState`-guards (`prev === next`), interval kun med `[]`. Berørte bl.a. `DashboardDemoMain`, `MedicationWidget` (`demoMode`), `OpgaveWidget`, `KalenderWidget`, `BekymringsnotatWidget`, `AlertPanel` (`variant=demo`), `HandoverClient` (`useDemoData`), `AuthenticatedUserContext`, `CarePortalDepartmentContext`, `LoenDemoClient` (`DEMO_SHIFTS_UPDATED_EVENT`). Produktionsgrene (`demoMode===false`, `variant=live`) uændret.
 
@@ -155,10 +157,10 @@ Do **not** commit real project URLs or secrets; use environment variables only.
 
 ## Care Portal: demo vs live
 
-| Route | Behaviour |
-|--------|-----------|
-| `/care-portal-demo` | **Simulated** data, dark portal shell (sidebar + top bar + mobile menu). Same navigation pattern as live; no staff session required. |
-| `/care-portal-dashboard` (after login) | **Live** data from Supabase, scoped by staff `org_id`. |
+| Route                                  | Behaviour                                                                                                                            |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `/care-portal-demo`                    | **Simulated** data, dark portal shell (sidebar + top bar + mobile menu). Same navigation pattern as live; no staff session required. |
+| `/care-portal-dashboard` (after login) | **Live** data from Supabase, scoped by staff `org_id`.                                                                               |
 
 **Demo routes** (all under `/care-portal-demo/…`): dashboard (tabs `journal` / `planner` / `alerts`), handover, residents, import, assistant, settings, indsatsdokumentation, tilsynsrapport, **vagtplan** (+ `/vagtplan/loen` for hours, vacation, estimated gross pay; shifts stored in `localStorage`), **beskeder** (internal + Lys-style mock threads). Shared clients (`HandoverClient`, `AssistantClient`, indsats/tilsyn) accept `carePortalDark` and demo `returnHref` where relevant.
 
@@ -200,14 +202,14 @@ ANTHROPIC_API_KEY=
 
 In **Site configuration → Environment variables**, set at least the following for **Production** (and **Preview** if previews should talk to the real Supabase project):
 
-| Variable | Notes |
-|----------|--------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Must match production project, e.g. `https://olszwyeikwbtjcoopfid.supabase.co`. |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Anon key from the same Supabase project (Settings → API). |
-| `SUPABASE_SERVICE_ROLE_KEY` | **Service role** secret (same screen). **Server-only** — never prefix with `NEXT_PUBLIC_`. Required so cookie-based residents (`budr_resident_id`) can use **`/api/park/garden-plot`**, **`/api/park/daily-checkin`**, **`/api/park/resident-me`**, **`/api/park/resident-journal`**, **`/api/park/lys-plan-proposal`**, **`/api/park/message-staff`**, park-hub SSR, proposal approve/reject, and staff audit paths. If this is missing, the app falls back to the anon key and those routes often fail with RLS or empty writes. |
-| `ANTHROPIC_API_KEY` | Påkrævet for **`/api/portal/staff-assistant`** (Faglig støtte i portalen) og for **`/api/portal/journal-polish`** (journal AI). |
+| Variable                         | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`       | Must match production project, e.g. `https://olszwyeikwbtjcoopfid.supabase.co`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`  | Anon key from the same Supabase project (Settings → API).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `SUPABASE_SERVICE_ROLE_KEY`      | **Service role** secret (same screen). **Server-only** — never prefix with `NEXT_PUBLIC_`. Required so cookie-based residents (`budr_resident_id`) can use **`/api/park/garden-plot`**, **`/api/park/daily-checkin`**, **`/api/park/resident-me`**, **`/api/park/resident-journal`**, **`/api/park/lys-plan-proposal`**, **`/api/park/message-staff`**, park-hub SSR, proposal approve/reject, and staff audit paths. If this is missing, the app falls back to the anon key and those routes often fail with RLS or empty writes.                                                                                                                         |
+| `ANTHROPIC_API_KEY`              | Påkrævet for **`/api/portal/staff-assistant`** (Faglig støtte i portalen) og for **`/api/portal/journal-polish`** (journal AI).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `ANTHROPIC_JOURNAL_POLISH_MODEL` | **Valgfrit.** Styrer **kun** hvilken Claude-model der bruges til **Fagliggør med AI** på journal (360° + hurtig journal). Sættes i Netlify → Environment variables (Production) eller i `.env.local` lokalt. Brug et model-id din Anthropic-konto understøtter (se [Anthropic docs](https://docs.anthropic.com/en/docs/about-claude/models)); fx stærkere sprog: `claude-sonnet-4-5-20250929` eller alias som dokumenteret hos Anthropic. Uden variabel: først `ANTHROPIC_CHAT_MODEL` (`src/lib/ai/anthropicModel.ts`), derefter intern fallback i `anthropicJournalPolish.ts`. Efter ændring: **ny deploy** (prod) eller genstart `npm run dev` (lokalt). |
-| `NEXT_PUBLIC_SITE_URL` | Public site origin (canonical URLs, links). |
+| `NEXT_PUBLIC_SITE_URL`           | Public site origin (canonical URLs, links).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 
 Ud over **Haven** (kun Supabase-trio på serveren) kan **GA4** og **Anthropic** tilføjes — se miljølisten ovenfor.
 
@@ -238,7 +240,6 @@ After changing variables, trigger a **new deploy** so Next.js picks them up.
 ## Current product focus (short)
 
 Leveringsmønster: **små vertikale skiver** (ét gennemført flow ad gangen). Seneste spor: **marketing** (troværdig copy + rolig hero-indgang), **portal-navigation** (dokumentsøgning med `q`, dybe links fra Faglig støtte), **Lys journal i skyen** for rigtige beboere, **badges/haven** for engagement og demo/kvalitet.
-
 
 Mål på mellemlang sigt: **én sandhed pr. beboer**, tydelig **borger ↔ portal**-synlighed, **kladde → godkendt journal** på tværs af demo og live, og skærpede **RLS**-grænser på flere tabeller.
 
