@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createHash } from 'crypto';
-import {
-  createSession,
-  validateSessionToken,
-  SESSION_COOKIE_NAME,
-  LEGACY_COOKIE_NAME,
-} from '@/lib/residentSessions';
+import { createSession, SESSION_COOKIE_NAME, validateSessionToken } from '@/lib/residentSessions';
+import { setResidentAuthCookies } from '@/lib/residentSessionCookies';
 import { sanitizeNext } from '@/lib/redirectSafety';
 import { isValidUuid } from '@/lib/uuid';
 
@@ -20,20 +16,7 @@ function htmlPage(title: string, body: string, status = 200): NextResponse {
 }
 
 function setSessionCookies(res: NextResponse, token: string, residentId: string): void {
-  res.cookies.set(SESSION_COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: COOKIE_MAX_AGE,
-  });
-  res.cookies.set(LEGACY_COOKIE_NAME, residentId, {
-    httpOnly: false,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: COOKIE_MAX_AGE,
-  });
+  setResidentAuthCookies(res, { sessionToken: token, residentId, maxAge: COOKIE_MAX_AGE });
 }
 
 export async function GET(request: NextRequest) {
@@ -91,12 +74,6 @@ export async function POST(req: NextRequest) {
   }
 
   const res = NextResponse.json({ success: true });
-  res.cookies.set(SESSION_COOKIE_NAME, session.token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: COOKIE_MAX_AGE,
-  });
+  setResidentAuthCookies(res, { sessionToken: session.token, maxAge: COOKIE_MAX_AGE });
   return res;
 }

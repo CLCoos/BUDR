@@ -1,11 +1,16 @@
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
-import { validateSessionToken } from '@/lib/residentSessions';
+import {
+  LEGACY_COOKIE_NAME,
+  SESSION_COOKIE_NAME,
+  validateSessionToken,
+} from '@/lib/residentSessions';
+import { clearResidentAuthCookies } from '@/lib/residentSessionCookies';
 import { isValidUuid } from '@/lib/uuid';
 
-const RESIDENT_ID_COOKIE = 'budr_resident_id';
-const RESIDENT_SESSION_COOKIE = 'budr_resident_session';
+const RESIDENT_ID_COOKIE = LEGACY_COOKIE_NAME;
+const RESIDENT_SESSION_COOKIE = SESSION_COOKIE_NAME;
 const DEMO_RESIDENT_ID = 'demo-resident-001';
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
@@ -104,11 +109,7 @@ function isValidBudrAdminBasicAuth(req: NextRequest): boolean {
 }
 
 function clearResidentCookies(res: NextResponse): void {
-  const clear = (name: string) => {
-    res.cookies.set(name, '', { maxAge: 0, path: '/' });
-  };
-  clear(RESIDENT_ID_COOKIE);
-  clear(RESIDENT_SESSION_COOKIE);
+  clearResidentAuthCookies(res);
 }
 
 function getServiceClient() {
