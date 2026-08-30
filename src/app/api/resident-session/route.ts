@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { validateSessionToken } from '@/lib/residentSessions';
 
 const COOKIE_NAME = 'budr_resident_session';
-/** 1 år — matcher øvrige beboer-cookie varighed; PIN/WebAuthn styrer reelt adgang. */
-const MAX_AGE = 31536000;
+const LEGACY_COOKIE_NAME = 'budr_resident_id';
+const MAX_AGE = 30 * 24 * 60 * 60;
 
 /**
  * POST /api/resident-session
@@ -17,7 +18,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Manglende token' }, { status: 400 });
     }
 
-    const res = NextResponse.json({ ok: true });
+    const validation = await validateSessionToken(token);
+    if (!validation.valid) {
+      return NextResponse.json({ error: 'Ugyldig session' }, { status: 401 });
+    }
+
+    const res = NextResponse.json({ ok: true, residentId: validation.residentUserId });
     res.cookies.set(COOKIE_NAME, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -25,6 +31,7 @@ export async function POST(req: NextRequest) {
       maxAge: MAX_AGE,
       path: '/',
     });
+    res.cookies.set(LEGACY_COOKIE_NAME, '', { maxAge: 0, path: '/' });
     return res;
   } catch {
     return NextResponse.json({ error: 'Intern fejl' }, { status: 500 });
@@ -38,5 +45,6 @@ export async function POST(req: NextRequest) {
 export async function DELETE() {
   const res = NextResponse.json({ ok: true });
   res.cookies.set(COOKIE_NAME, '', { maxAge: 0, path: '/' });
+  res.cookies.set(LEGACY_COOKIE_NAME, '', { maxAge: 0, path: '/' });
   return res;
 }

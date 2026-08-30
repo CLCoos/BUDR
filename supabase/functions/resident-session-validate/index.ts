@@ -37,10 +37,13 @@ function isRateLimited(ip: string): boolean {
   return false;
 }
 
-// ── UUID format guard ─────────────────────────────────────────────────────────
-// Session tokens are random UUIDs. Reject anything that doesn't match the
-// format before touching the database — cuts out probing with arbitrary strings.
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+async function sha256Hex(value: string): Promise<string> {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -57,7 +60,7 @@ serve(async (req) => {
   }
 
   // ── 2. Input validation ────────────────────────────────────────────────────
-  // Validate type, presence, and UUID format before any DB call.
+  // Validate type and presence before hashing the opaque session token.
   let sessionToken: string;
 
   try {
@@ -69,16 +72,6 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
-
-    // Reject non-UUID strings immediately — avoids a DB round-trip and prevents
-    // probing with arbitrary byte sequences.
-    if (!UUID_RE.test(body.session_token)) {
-      return new Response(
-        JSON.stringify({ error: 'invalid_input' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
-    }
-
     sessionToken = body.session_token;
   } catch {
     return new Response(
@@ -94,14 +87,15 @@ serve(async (req) => {
 
   try {
     // ── 3. Session lookup ──────────────────────────────────────────────────
-    // Token comparison is an indexed equality lookup on a random UUID.
+    // Token comparison is an indexed equality lookup on a SHA-256 hash.
     // Timing differences reflect DB I/O, not secret state — there is no
     // partial-match path, so this is not vulnerable to timing attacks.
     const { data: session, error } = await supabase
       .from('resident_sessions')
-      .select('resident_id, expires_at')
-      .eq('token', sessionToken)
+      .select('resident_user_id, expires_at')
+      .eq('session_token_hash', await sha256Hex(sessionToken))
       .gt('expires_at', new Date().toISOString())
+      .is('revoked_at', null)
       .single();
 
     if (error || !session) {
@@ -122,7 +116,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ data: { resident_id: session.resident_id } }),
+      JSON.stringify({ data: { resident_id: session.resident_user_id } }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch {

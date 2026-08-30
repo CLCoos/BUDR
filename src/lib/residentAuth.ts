@@ -1,6 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
+import { SESSION_COOKIE_NAME, validateSessionToken } from '@/lib/residentSessions';
 
 const COOKIE_NAME = 'budr_resident_id';
 // 1 year — device security (Face ID / PIN / biometrics) handles access control
@@ -26,7 +27,11 @@ export async function clearResidentId(): Promise<void> {
 
 export async function getResidentId(): Promise<string | null> {
   const cookieStore = await cookies();
-  return cookieStore.get(COOKIE_NAME)?.value ?? null;
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value?.trim();
+  if (!sessionToken) return null;
+
+  const validation = await validateSessionToken(sessionToken);
+  return validation.valid ? validation.residentUserId : null;
 }
 
 // Alias kept for call-site compatibility
