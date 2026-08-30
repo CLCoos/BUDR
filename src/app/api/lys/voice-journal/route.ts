@@ -5,6 +5,12 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getResidentId } from '@/lib/residentAuth';
+import {
+  lysVoiceJournalInsertFields,
+  missingJournalColumn,
+  parseVoiceJournalAiJson,
+  voiceJournalClientPayload,
+} from '@/lib/voiceJournalDraft';
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -16,8 +22,6 @@ function getServiceClient() {
 function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
-
-const CATEGORY = 'Lys journal';
 
 const VOICE_JOURNAL_SYSTEM = `Du er en faglig assistent på et socialpsykiatrisk bosted i Danmark.
 
@@ -110,26 +114,14 @@ export async function POST(req: Request): Promise<NextResponse> {
     content?: Array<{ type?: string; text?: string }>;
   };
   const aiText = aiData.content?.find((c) => c.type === 'text')?.text?.trim() ?? '';
-  const cleaned = aiText.replace(/^```json\s*|\s*```$/g, '').trim();
-
-  let parsed: { journal_note: string; recovery_story: string };
-  try {
-    parsed = JSON.parse(cleaned);
-  } catch {
+  const parsed = parseVoiceJournalAiJson(aiText);
+  if (!parsed) {
     return NextResponse.json({ error: 'AI returnerede ugyldigt format' }, { status: 502 });
-  }
-
-  if (!parsed.journal_note || !parsed.recovery_story) {
-    return NextResponse.json({ error: 'AI returnerede ufuldstændigt svar' }, { status: 502 });
   }
 
   // Demo-session: returner AI-svaret men gem ikke i DB
   if (!isUuid(residentId)) {
-    return NextResponse.json({
-      journal_note: parsed.journal_note,
-      recovery_story: parsed.recovery_story,
-      demo: true,
-    });
+    return NextResponse.json(voiceJournalClientPayload(parsed, { demo: true }));
   }
 
   const supabase = getServiceClient();
@@ -149,23 +141,39 @@ export async function POST(req: Request): Promise<NextResponse> {
   const orgId = (resident as { org_id?: string | null }).org_id ?? null;
   const staffName = `Beboer (Lys AI): ${(resident.display_name as string | null) ?? residentId}`;
 
-  // 1) Indsæt journal entry (faglig version, synlig for staff)
-  const { data: journalEntry, error: journalErr } = await supabase
+  // PARK-udkast: gem som kladde så det ikke lander i godkendt journal uden faglig gennemgang.
+  const insertRow = lysVoiceJournalInsertFields({
+    residentId,
+    staffName,
+    entryText: parsed.journal_note,
+    orgId,
+  });
+  let { data: journalEntry, error: journalErr } = await supabase
     .from('journal_entries')
-    .insert({
-      resident_id: residentId,
-      staff_id: null,
-      staff_name: staffName,
-      entry_text: parsed.journal_note,
-      category: CATEGORY,
-      org_id: orgId,
-    })
+    .insert(insertRow)
     .select('id')
     .single();
 
   if (journalErr) {
-    console.error('[voice-journal] journal insert error:', journalErr.message);
-    return NextResponse.json({ error: journalErr.message }, { status: 500 });
+    const fallback = { ...insertRow };
+    for (const column of ['journal_status', 'approved_at', 'approved_by'] as const) {
+      if (journalErr && missingJournalColumn(journalErr.message, column)) {
+        delete fallback[column];
+        ({ data: journalEntry, error: journalErr } = await supabase
+          .from('journal_entries')
+          .insert(fallback)
+          .select('id')
+          .single());
+      }
+    }
+  }
+
+  if (journalErr || !journalEntry) {
+    console.error('[voice-journal] journal insert error:', journalErr?.message ?? 'empty insert');
+    return NextResponse.json(
+      { error: journalErr?.message ?? 'Kunne ikke gemme udkast' },
+      { status: 500 }
+    );
   }
 
   const journalId = (journalEntry as { id: string }).id;
@@ -208,10 +216,10 @@ export async function POST(req: Request): Promise<NextResponse> {
     // best-effort
   }
 
-  return NextResponse.json({
-    entry_id: journalId,
-    story_id: (story as { id: string } | null)?.id ?? null,
-    journal_note: parsed.journal_note,
-    recovery_story: parsed.recovery_story,
-  });
+  return NextResponse.json(
+    voiceJournalClientPayload(parsed, {
+      entry_id: journalId,
+      story_id: (story as { id: string } | null)?.id ?? null,
+    })
+  );
 }

@@ -2,7 +2,9 @@
 
 **Til AI/assistenter:** Læs denne fil først. Kort indgang: [`AGENTS.md`](./AGENTS.md).
 
-**Sidst opdateret (manuelt):** 2026-05-22 — **Care Portal-demo (render-løkker + e2e):** Playwright `npm run test:e2e:demo` verificerer alle demo-ruter uden «Maximum update depth» og guidet tour-navigation (`e2e/care-portal-demo-console.spec.ts`). Kræver `npx playwright install chromium` (evt. `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers`).
+**Sidst opdateret (manuelt):** 2026-08-21 — **Lys PARK-udkast (voice-journal):** `POST /api/lys/voice-journal` gemmer nu journal som **kladde** (ikke default `godkendt`) og returnerer `content` som alias af `journal_note`, så «Lav PARK-udkast med AI» viser udkastet i stedet for et tomt felt. `LysJournalTab` læser `journal_note ?? content`. Hjælpere + tests: `voiceJournalDraft.ts`.
+
+**Forrige:** 2026-05-22 — **Care Portal-demo (render-løkker + e2e):** Playwright `npm run test:e2e:demo` verificerer alle demo-ruter uden «Maximum update depth» og guidet tour-navigation (`e2e/care-portal-demo-console.spec.ts`). Kræver `npx playwright install chromium` (evt. `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers`).
 
 **Forrige:** 2026-05-22 — **Care Portal-demo (render-løkker):** Systematisk stabilisering af `useEffect`/`setInterval` på demo-fladen — `useMemo`-seeds, split demo/live effects, `setState`-guards (`prev === next`), interval kun med `[]`. Berørte bl.a. `DashboardDemoMain`, `MedicationWidget` (`demoMode`), `OpgaveWidget`, `KalenderWidget`, `BekymringsnotatWidget`, `AlertPanel` (`variant=demo`), `HandoverClient` (`useDemoData`), `AuthenticatedUserContext`, `CarePortalDepartmentContext`, `LoenDemoClient` (`DEMO_SHIFTS_UPDATED_EVENT`). Produktionsgrene (`demoMode===false`, `variant=live`) uændret.
 
