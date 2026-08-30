@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createHash } from 'crypto';
 import {
-  createSession,
   validateSessionToken,
   SESSION_COOKIE_NAME,
   LEGACY_COOKIE_NAME,
@@ -48,25 +46,15 @@ export async function GET(request: NextRequest) {
   if (existingToken) {
     const validation = await validateSessionToken(existingToken);
     if (validation.valid && validation.residentUserId === rid) {
-      return NextResponse.redirect(new URL(next, request.url));
+      const res = NextResponse.redirect(new URL(next, request.url));
+      setSessionCookies(res, existingToken, rid);
+      return res;
     }
   }
 
-  const userAgent = request.headers.get('user-agent') ?? undefined;
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '';
-  const ipHash = ip ? createHash('sha256').update(ip).digest('hex').slice(0, 16) : undefined;
-
-  const session = await createSession({ residentUserId: rid, userAgent, ipHash });
-  if (!session) {
-    return htmlPage(
-      'Kunne ikke starte session',
-      'Kunne ikke starte session. Kontakt personalet, hvis problemet fortsætter.'
-    );
-  }
-
-  const res = NextResponse.redirect(new URL(next, request.url));
-  setSessionCookies(res, session.token, rid);
-  return res;
+  const loginUrl = new URL(`/login/${rid}`, request.url);
+  loginUrl.searchParams.set('next', next);
+  return NextResponse.redirect(loginUrl);
 }
 
 export async function POST(req: NextRequest) {
@@ -81,22 +69,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'invalid_resident_id' }, { status: 400 });
   }
 
-  const userAgent = req.headers.get('user-agent') ?? undefined;
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '';
-  const ipHash = ip ? createHash('sha256').update(ip).digest('hex').slice(0, 16) : undefined;
-
-  const session = await createSession({ residentUserId, userAgent, ipHash });
-  if (!session) {
-    return NextResponse.json({ error: 'session_creation_failed' }, { status: 500 });
-  }
-
-  const res = NextResponse.json({ success: true });
-  res.cookies.set(SESSION_COOKIE_NAME, session.token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: COOKIE_MAX_AGE,
-  });
-  return res;
+  return NextResponse.json({ error: 'pin_or_webauthn_required' }, { status: 403 });
 }

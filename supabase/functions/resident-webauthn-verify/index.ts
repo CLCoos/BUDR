@@ -6,6 +6,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+async function sha256Hex(value: string): Promise<string> {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -66,15 +74,31 @@ serve(async (req) => {
       );
     }
 
-    // Create session (12 hours)
+    const { data: resident, error: residentErr } = await supabase
+      .from('care_residents')
+      .select('org_id')
+      .eq('user_id', resident_id)
+      .maybeSingle();
+
+    if (residentErr || !resident?.org_id) {
+      return new Response(
+        JSON.stringify({ error: 'Ukendt beboer' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    // Create session (30 days; return token once, store only hash)
+    const sessionToken = crypto.randomUUID();
     const { data: session, error: sessionErr } = await supabase
       .from('resident_sessions')
       .insert({
-        resident_id,
-        token: crypto.randomUUID(),
-        expires_at: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
+        resident_user_id: resident_id,
+        org_id: resident.org_id,
+        session_token_hash: await sha256Hex(sessionToken),
+        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        user_agent: req.headers.get('user-agent'),
       })
-      .select('token')
+      .select('id')
       .single();
 
     if (sessionErr || !session) {
@@ -85,7 +109,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ data: { session_token: session.token } }),
+      JSON.stringify({ data: { session_token: sessionToken } }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (err) {

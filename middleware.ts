@@ -2,7 +2,6 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import { validateSessionToken } from '@/lib/residentSessions';
-import { isValidUuid } from '@/lib/uuid';
 
 const RESIDENT_ID_COOKIE = 'budr_resident_id';
 const RESIDENT_SESSION_COOKIE = 'budr_resident_session';
@@ -328,20 +327,28 @@ export async function middleware(req: NextRequest) {
       return redirectHomeClear(blocked);
     };
 
-    // HttpOnly session (preferred) — rollout: legacy cookie still accepted below
+    // HttpOnly session is the only live resident credential. The legacy UUID cookie
+    // is kept only as a client compatibility hint after the session is validated.
     if (sessionToken) {
       const validation = await validateSessionToken(sessionToken);
       if (validation.valid) {
         const exists = await residentExistsInDb(validation.residentUserId);
-        if (exists === true) return NextResponse.next();
+        if (exists === true) {
+          const res = NextResponse.next();
+          res.cookies.set(RESIDENT_ID_COOKIE, validation.residentUserId, {
+            httpOnly: false,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 60 * 60 * 24 * 30,
+            path: '/',
+          });
+          return res;
+        }
         if (exists === false) return failAndMaybeBlock();
         return failAndMaybeBlock();
       }
     }
 
-    const residentId = legacyResidentId;
-
-    // Under rollout: accept session OR legacy; after rollout remove legacy-only path
     if (!sessionToken && !legacyResidentId) {
       if (!allowParkDemoCookie()) {
         return redirectHomeClear(false);
@@ -357,30 +364,14 @@ export async function middleware(req: NextRequest) {
       return res;
     }
 
-    if (!residentId) {
-      return failAndMaybeBlock();
-    }
-
-    if (residentId === DEMO_RESIDENT_ID) {
+    if (!sessionToken && legacyResidentId === DEMO_RESIDENT_ID) {
       if (allowParkDemoCookie()) {
         return NextResponse.next();
       }
       return failAndMaybeBlock();
     }
 
-    if (!isValidUuid(residentId)) {
-      return failAndMaybeBlock();
-    }
-
-    const exists = await residentExistsInDb(residentId);
-    if (exists === null) {
-      return failAndMaybeBlock();
-    }
-    if (!exists) {
-      return failAndMaybeBlock();
-    }
-
-    return NextResponse.next();
+    return failAndMaybeBlock();
   }
 
   return NextResponse.next();
