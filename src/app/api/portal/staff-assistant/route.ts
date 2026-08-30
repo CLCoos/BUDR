@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { parseBudrFollowUpsBlock } from '@/lib/portalStaffAssistantFollowUps';
+import { parseStaffOrgId } from '@/lib/staffOrgScope';
 
 function getServiceClient() {
   return createClient(
@@ -36,23 +37,39 @@ export async function POST(req: NextRequest) {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return NextResponse.json({ error: 'AI ikke konfigureret' }, { status: 503 });
 
+  const { data: staffRow } = await supabase
+    .from('care_staff')
+    .select('org_id')
+    .eq('id', user.id)
+    .single();
+  const orgId = parseStaffOrgId(staffRow?.org_id ?? null);
+  if (!orgId) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+
   const service = getServiceClient();
 
   // Fetch resident context
   const { data: residents } = await service
     .from('care_residents')
     .select('user_id, display_name, onboarding_data')
+    .eq('org_id', orgId)
     .order('display_name');
 
   // Fetch recent journal entries for context (last 7 days, capped at 15)
   const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
-  const { data: journal } = await service
-    .from('journal_entries')
-    .select('entry_text, category, created_at, care_residents(display_name)')
-    .eq('journal_status', 'godkendt')
-    .gte('created_at', since)
-    .order('created_at', { ascending: false })
-    .limit(15);
+  const residentIds = (residents ?? [])
+    .map((r) => (typeof r.user_id === 'string' ? r.user_id : null))
+    .filter((id): id is string => !!id);
+  const { data: journal } =
+    residentIds.length > 0
+      ? await service
+          .from('journal_entries')
+          .select('entry_text, category, created_at, care_residents(display_name)')
+          .in('resident_id', residentIds)
+          .eq('journal_status', 'godkendt')
+          .gte('created_at', since)
+          .order('created_at', { ascending: false })
+          .limit(15)
+      : { data: [] };
 
   // Build resident list
   const residentLines = (residents ?? []).map((r) => {

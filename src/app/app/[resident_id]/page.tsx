@@ -16,5 +16,5 @@ export default async function ResidentEntryPage({ params }: Props) {
       </main>
     );
   }
-  redirect(`/api/resident-auth/session?rid=${resident_id}&next=/park-hub`);
+  redirect(`/login/${resident_id}?next=/park-hub`);
 }

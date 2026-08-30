@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { parseStaffOrgId } from '@/lib/staffOrgScope';
 
 /**
  * POST /api/portal/mood-alert
@@ -24,6 +25,16 @@ export async function POST(request: Request) {
   } = await staffClient.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  }
+
+  const { data: staffRow } = await staffClient
+    .from('care_staff')
+    .select('org_id')
+    .eq('id', user.id)
+    .single();
+  const staffOrgId = parseStaffOrgId(staffRow?.org_id ?? null);
+  if (!staffOrgId) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 403 });
   }
 
   // Parse + validate body.
@@ -53,6 +64,24 @@ export async function POST(request: Request) {
 
   const admin = createClient(url, serviceKey);
 
+  const { data: residentRow, error: residentErr } = await admin
+    .from('care_residents')
+    .select('org_id')
+    .eq('user_id', residentId)
+    .maybeSingle();
+
+  if (residentErr) {
+    return NextResponse.json({ error: residentErr.message }, { status: 500 });
+  }
+
+  const residentOrgId = parseStaffOrgId((residentRow as { org_id?: string } | null)?.org_id);
+  if (!residentOrgId) {
+    return NextResponse.json({ error: 'resident_not_found' }, { status: 404 });
+  }
+  if (residentOrgId !== staffOrgId) {
+    return NextResponse.json({ error: 'forbidden' }, { status: 403 });
+  }
+
   // Deduplication: skip if an unacknowledged mood_alert already exists.
   const { data: existing, error: checkErr } = await admin
     .from('care_portal_notifications')
@@ -69,19 +98,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, deduplicated: true });
   }
 
-  const { data: residentRow } = await admin
-    .from('care_residents')
-    .select('org_id')
-    .eq('user_id', residentId)
-    .maybeSingle();
-
   const { error: insertErr } = await admin.from('care_portal_notifications').insert({
     resident_id: residentId,
     type: 'mood_alert',
     detail: 'Lav stemning registreret — følg op',
     severity: 'roed',
     source_table: 'park_daily_checkin',
-    org_id: (residentRow as { org_id?: string } | null)?.org_id ?? null,
+    org_id: residentOrgId,
   });
 
   if (insertErr) {
