@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { ArrowLeft, Send } from 'lucide-react';
+import { postLysStaffMessage } from '@/lib/lysStaffMessage';
 import type { LysThemeTokens } from '../lib/lysTheme';
 
 // ── Symbol grid ───────────────────────────────────────────────────────────────
@@ -156,7 +157,7 @@ const CATEGORIES: { key: Symbol['category']; label: string; color: string }[] = 
   { key: 'sted', label: 'Sted', color: '#f59e0b' },
 ];
 
-type UIState = 'board' | 'confirm' | 'sent';
+type UIState = 'board' | 'confirm' | 'sent' | 'error';
 
 type Props = {
   tokens: LysThemeTokens;
@@ -183,23 +184,17 @@ export default function LysAACBoard({ tokens, accent, residentId, onClose }: Pro
     if (!selected || sending) return;
     setSending(true);
     try {
-      if (residentId) {
-        await fetch('/api/lys/lys-plan-proposal', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            user_message: selected.message,
-            proposed_items: [{ title: selected.message, preset_type: `aac_${selected.id}` }],
-          }),
-        });
+      if (!residentId) {
+        setUiState('error');
+        return;
       }
+      const result = await postLysStaffMessage(selected.message);
+      setUiState(result.ok ? 'sent' : 'error');
     } catch {
-      /* ignore */
+      setUiState('error');
     } finally {
       setSending(false);
     }
-    setUiState('sent');
   };
 
   const reset = () => {
@@ -263,6 +258,29 @@ export default function LysAACBoard({ tokens, accent, residentId, onClose }: Pro
               Vælg noget andet
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Send failed */}
+      {uiState === 'error' && selected && (
+        <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6 text-center">
+          <span className="text-7xl">⚠️</span>
+          <div>
+            <p className="text-xl font-black mb-2" style={{ color: tokens.text }}>
+              Ikke sendt
+            </p>
+            <p className="text-sm leading-relaxed" style={{ color: tokens.textMuted }}>
+              Personalet har ikke modtaget beskeden endnu. Prøv igen, eller find en medarbejder.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setUiState('confirm')}
+            className="rounded-2xl px-8 py-3.5 text-sm font-bold text-white"
+            style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)` }}
+          >
+            Prøv igen
+          </button>
         </div>
       )}
 
