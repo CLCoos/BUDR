@@ -1,8 +1,13 @@
 'use server';
 
 import { cookies } from 'next/headers';
+import {
+  validateSessionToken,
+  LEGACY_COOKIE_NAME,
+  SESSION_COOKIE_NAME,
+} from '@/lib/residentSessions';
 
-const COOKIE_NAME = 'budr_resident_id';
+const DEMO_RESIDENT_ID = 'demo-resident-001';
 // 1 year — device security (Face ID / PIN / biometrics) handles access control
 const MAX_AGE = 60 * 60 * 24 * 365;
 
@@ -16,17 +21,29 @@ const COOKIE_OPTS = {
 
 export async function setResidentId(residentId: string): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.set(COOKIE_NAME, residentId, COOKIE_OPTS);
+  cookieStore.set(LEGACY_COOKIE_NAME, residentId, COOKIE_OPTS);
 }
 
 export async function clearResidentId(): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.delete(COOKIE_NAME);
+  cookieStore.delete(LEGACY_COOKIE_NAME);
+  cookieStore.delete(SESSION_COOKIE_NAME);
 }
 
 export async function getResidentId(): Promise<string | null> {
   const cookieStore = await cookies();
-  return cookieStore.get(COOKIE_NAME)?.value ?? null;
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value?.trim();
+  if (sessionToken) {
+    const validation = await validateSessionToken(sessionToken);
+    if (validation.valid) return validation.residentUserId;
+  }
+
+  const legacyResidentId = cookieStore.get(LEGACY_COOKIE_NAME)?.value?.trim();
+  if (legacyResidentId === DEMO_RESIDENT_ID && process.env.NODE_ENV !== 'production') {
+    return legacyResidentId;
+  }
+
+  return null;
 }
 
 // Alias kept for call-site compatibility
