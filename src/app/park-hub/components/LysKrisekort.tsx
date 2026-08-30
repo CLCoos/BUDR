@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Phone, PhoneCall, BellRing, ChevronRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { copenhagenOnCallShift, onCallShiftDate } from '@/lib/onCallStaff';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -338,11 +339,8 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
       setOnCall(null);
       return;
     }
-    const now = new Date();
-    const hour = now.getHours();
-    const shift: 'day' | 'evening' | 'night' =
-      hour >= 6 && hour < 14 ? 'day' : hour >= 14 && hour < 22 ? 'evening' : 'night';
-    const today = now.toISOString().slice(0, 10);
+    const shift = copenhagenOnCallShift();
+    const today = onCallShiftDate();
     supabase
       .from('on_call_staff')
       .select('id, phone, shift')
