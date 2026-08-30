@@ -91,6 +91,53 @@ type JournalRow = {
   category: string;
 };
 
+function journalStatusColumnMissing(message: string | undefined): boolean {
+  const m = (message ?? '').toLowerCase();
+  return (
+    m.includes('journal_status') && (m.includes('does not exist') || m.includes('schema cache'))
+  );
+}
+
+async function loadApprovedJournalRows(args: {
+  supabase: SupabaseClient;
+  residentId: string;
+  orgId: string;
+  sinceIso: string;
+}): Promise<{ data: JournalRow[]; error: null } | { data: null; error: { message: string } }> {
+  const { supabase, residentId, orgId, sinceIso } = args;
+
+  const approvedOnly = await supabase
+    .from('journal_entries')
+    .select('created_at, entry_text, category')
+    .eq('resident_id', residentId)
+    .eq('org_id', orgId)
+    .eq('journal_status', 'godkendt')
+    .gte('created_at', sinceIso)
+    .order('created_at', { ascending: true });
+
+  if (!approvedOnly.error) {
+    return { data: (approvedOnly.data ?? []) as JournalRow[], error: null };
+  }
+
+  if (!journalStatusColumnMissing(approvedOnly.error.message)) {
+    return { data: null, error: { message: approvedOnly.error.message } };
+  }
+
+  const legacy = await supabase
+    .from('journal_entries')
+    .select('created_at, entry_text, category')
+    .eq('resident_id', residentId)
+    .eq('org_id', orgId)
+    .gte('created_at', sinceIso)
+    .order('created_at', { ascending: true });
+
+  if (legacy.error) {
+    return { data: null, error: { message: legacy.error.message } };
+  }
+
+  return { data: (legacy.data ?? []) as JournalRow[], error: null };
+}
+
 function formatCheckinLine(r: LysCheckinRow): string {
   const d = copenhagenYmd(new Date(r.created_at));
   const parts = [`${d}`, `humør ${r.mood_score}`];
@@ -140,13 +187,12 @@ export async function generateBriefForResident(args: {
     return { status: 'db_error', message: checkinErr.message };
   }
 
-  const { data: journalRows, error: journalErr } = await supabase
-    .from('journal_entries')
-    .select('created_at, entry_text, category')
-    .eq('resident_id', residentId)
-    .eq('org_id', orgId)
-    .gte('created_at', sinceIso)
-    .order('created_at', { ascending: true });
+  const { data: journalRows, error: journalErr } = await loadApprovedJournalRows({
+    supabase,
+    residentId,
+    orgId,
+    sinceIso,
+  });
 
   if (journalErr) {
     return { status: 'db_error', message: journalErr.message };
