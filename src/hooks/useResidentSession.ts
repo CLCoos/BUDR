@@ -17,6 +17,23 @@ export type ResidentSession = {
   activeId: string;
 };
 
+export const RESIDENT_DEMO_ID = 'demo-resident-001';
+export const RESIDENT_DEMO_PATH = '/resident-demo';
+
+export function isResidentDemoPath(pathname: string): boolean {
+  return pathname === RESIDENT_DEMO_PATH;
+}
+
+export function residentDemoSession(): ResidentSession {
+  return {
+    isLoggedIn: false,
+    residentId: null,
+    guestId: RESIDENT_DEMO_ID,
+    storageMode: 'local',
+    activeId: RESIDENT_DEMO_ID,
+  };
+}
+
 function readCookieResidentId(): string | null {
   if (typeof document === 'undefined') return null;
   return document.cookie.match(/budr_resident_id=([^;]+)/)?.[1] ?? null;
@@ -46,6 +63,8 @@ const SSR_INITIAL: ResidentSession = {
  */
 function computeSession(): ResidentSession {
   if (typeof window === 'undefined') return SSR_INITIAL;
+  if (isResidentDemoPath(window.location.pathname)) return residentDemoSession();
+
   const residentId = readCookieResidentId();
   const guestId = getOrCreateGuestId();
   return residentId

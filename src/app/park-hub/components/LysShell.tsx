@@ -351,6 +351,7 @@ export default function LysShell({
                   moodLabel={moodLabel}
                   moodTraffic={moodTraffic}
                   moodTick={moodTick}
+                  isDemoMode={isDemoMode}
                 />
               </>
             )}

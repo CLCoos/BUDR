@@ -8,6 +8,10 @@ import { CARE_PORTAL_DEMO_FACILITY_NAME } from '@/lib/carePortalDemoBranding';
  * staff-assistant, but with static demo beboer-kontekst (ingen login).
  */
 export async function POST(req: NextRequest) {
+  if (process.env.NEXT_PUBLIC_CARE_PORTAL_SIMULATED_DATA !== 'true') {
+    return NextResponse.json({ error: 'Demo ikke tilgængelig' }, { status: 404 });
+  }
+
   let body: { messages?: Array<{ role: 'user' | 'assistant'; content: string }> };
   try {
     body = await req.json();
