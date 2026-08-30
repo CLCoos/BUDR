@@ -6,6 +6,7 @@ import * as ls from '@/lib/localStore';
 import { LOCAL_KEYS } from '@/types/local';
 import { isResidentUuidForCloud } from '@/lib/residentUuid';
 import { safeRandomUUID } from '@/lib/uuid';
+import { requestAwardXp } from '@/lib/awardXpClient';
 import type {
   StorageMode,
   CheckIn,
@@ -134,13 +135,8 @@ export async function addXp(
   amount: number
 ): Promise<void> {
   if (mode === 'supabase') {
-    const supabase = createClient();
-    if (!supabase) return;
-    void supabase.rpc('award_xp', {
-      p_resident_id: activeId,
-      p_activity: activity,
-      p_xp: amount,
-    });
+    void activeId;
+    await requestAwardXp(activity, amount);
     return;
   }
   // Local cooldown guard

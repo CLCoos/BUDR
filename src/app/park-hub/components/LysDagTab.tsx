@@ -298,11 +298,7 @@ export default function LysDagTab({ tokens, accent }: Props) {
                 { resident_id: residentId, plan_item_id: id, completion_date: dateStr },
                 { onConflict: 'resident_id,plan_item_id,completion_date' }
               );
-            void supabase.rpc('award_xp', {
-              p_resident_id: residentId,
-              p_activity: 'plan_completion',
-              p_xp: 5,
-            });
+            void dataService.addXp('supabase', residentId, 'plan_completion', 5);
           }
           try {
             const raw = localStorage.getItem('budr_xp_v1');

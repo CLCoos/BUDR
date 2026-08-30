@@ -14,6 +14,10 @@ import { onboardingHouseToCareHouse } from '@/lib/carePortalHouse';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
 import { useNameDisplay } from '@/lib/residents/useNameDisplay';
 import {
+  LYS_CHECKIN_REALTIME_TABLE,
+  mapLysCheckinRealtimePayload,
+} from '@/lib/lysCheckinRealtime';
+import {
   TrafficLightFilter,
   type TrafficFilterValue,
 } from '@/components/patterns/TrafficLightFilter';
@@ -168,6 +172,21 @@ export default function ResidentList({
     }
   }, []);
 
+  const handleLysCheckinRealtime = useCallback(
+    (payload: { new: Record<string, unknown> }) => {
+      const mapped = mapLysCheckinRealtimePayload(payload.new);
+      if (!mapped) return;
+      handleRealtimeInsert({
+        resident_id: mapped.resident_id,
+        mood_score: mapped.mood_score ?? 0,
+        traffic_light: mapped.traffic_light ?? '',
+        note: mapped.note,
+        created_at: mapped.created_at,
+      });
+    },
+    [handleRealtimeInsert]
+  );
+
   useEffect(() => {
     const supabase = createClient();
     if (!supabase) {
@@ -293,9 +312,14 @@ export default function ResidentList({
       .channel('dashboard-resident-checkins')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'park_daily_checkin' },
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: LYS_CHECKIN_REALTIME_TABLE,
+          filter: 'checkin_type=eq.daily',
+        },
         (payload) => {
-          handleRealtimeInsert(payload.new as CheckinRow);
+          handleLysCheckinRealtime({ new: payload.new as Record<string, unknown> });
         }
       )
       .subscribe();
@@ -303,7 +327,7 @@ export default function ResidentList({
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [handleRealtimeInsert, formatName, getInitials]);
+  }, [handleLysCheckinRealtime, formatName, getInitials]);
 
   // ── Filter + search ────────────────────────────────────────
 
