@@ -1,8 +1,11 @@
 'use server';
 
 import { cookies } from 'next/headers';
+import { validateSessionToken } from './residentSessions';
 
 const COOKIE_NAME = 'budr_resident_id';
+const SESSION_COOKIE_NAME = 'budr_resident_session';
+const DEMO_RESIDENT_ID = 'demo-resident-001';
 // 1 year — device security (Face ID / PIN / biometrics) handles access control
 const MAX_AGE = 60 * 60 * 24 * 365;
 
@@ -26,7 +29,18 @@ export async function clearResidentId(): Promise<void> {
 
 export async function getResidentId(): Promise<string | null> {
   const cookieStore = await cookies();
-  return cookieStore.get(COOKIE_NAME)?.value ?? null;
+  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value?.trim();
+  if (token) {
+    const validation = await validateSessionToken(token);
+    if (validation.valid) return validation.residentUserId;
+  }
+
+  const legacyResidentId = cookieStore.get(COOKIE_NAME)?.value ?? null;
+  if (process.env.NODE_ENV !== 'production' && legacyResidentId === DEMO_RESIDENT_ID) {
+    return DEMO_RESIDENT_ID;
+  }
+
+  return null;
 }
 
 // Alias kept for call-site compatibility
