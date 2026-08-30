@@ -1,4 +1,5 @@
 import { callAnthropicJournalPolish } from '@/lib/ai/anthropicJournalPolish';
+import { journalQueryMissingColumn } from '@/lib/journalEntriesQueryCompat';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 const SYSTEM = `Du er en erfaren kontaktpædagog der skriver et kort overblik til en 
@@ -91,6 +92,46 @@ type JournalRow = {
   category: string;
 };
 
+export async function fetchApprovedJournalRowsForBrief(
+  supabase: SupabaseClient,
+  residentId: string,
+  orgId: string,
+  sinceIso: string
+): Promise<{ rows: JournalRow[]; error: Error | null }> {
+  const approved = await supabase
+    .from('journal_entries')
+    .select('created_at, entry_text, category, journal_status')
+    .eq('resident_id', residentId)
+    .eq('org_id', orgId)
+    .eq('journal_status', 'godkendt')
+    .gte('created_at', sinceIso)
+    .order('created_at', { ascending: true });
+
+  if (!approved.error) {
+    return { rows: (approved.data ?? []) as JournalRow[], error: null };
+  }
+
+  if (!journalQueryMissingColumn(approved.error.message, 'journal_status')) {
+    return { rows: [], error: new Error(approved.error.message) };
+  }
+
+  // Legacy databases without journal_status predate the draft workflow, so rows
+  // in that schema are treated as approved for backwards-compatible deploys.
+  const legacy = await supabase
+    .from('journal_entries')
+    .select('created_at, entry_text, category')
+    .eq('resident_id', residentId)
+    .eq('org_id', orgId)
+    .gte('created_at', sinceIso)
+    .order('created_at', { ascending: true });
+
+  if (legacy.error) {
+    return { rows: [], error: new Error(legacy.error.message) };
+  }
+
+  return { rows: (legacy.data ?? []) as JournalRow[], error: null };
+}
+
 function formatCheckinLine(r: LysCheckinRow): string {
   const d = copenhagenYmd(new Date(r.created_at));
   const parts = [`${d}`, `humør ${r.mood_score}`];
@@ -140,20 +181,19 @@ export async function generateBriefForResident(args: {
     return { status: 'db_error', message: checkinErr.message };
   }
 
-  const { data: journalRows, error: journalErr } = await supabase
-    .from('journal_entries')
-    .select('created_at, entry_text, category')
-    .eq('resident_id', residentId)
-    .eq('org_id', orgId)
-    .gte('created_at', sinceIso)
-    .order('created_at', { ascending: true });
+  const { rows: journalRows, error: journalErr } = await fetchApprovedJournalRowsForBrief(
+    supabase,
+    residentId,
+    orgId,
+    sinceIso
+  );
 
   if (journalErr) {
     return { status: 'db_error', message: journalErr.message };
   }
 
   const checkinList = (checkins ?? []) as LysCheckinRow[];
-  const journalList = (journalRows ?? []) as JournalRow[];
+  const journalList = journalRows;
 
   if (checkinList.length === 0 && journalList.length === 0) {
     return { status: 'no_data' };
