@@ -37,10 +37,12 @@ function isRateLimited(ip: string): boolean {
   return false;
 }
 
-// ── UUID format guard ─────────────────────────────────────────────────────────
-// Session tokens are random UUIDs. Reject anything that doesn't match the
-// format before touching the database — cuts out probing with arbitrary strings.
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+async function hashToken(token: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -70,9 +72,7 @@ serve(async (req) => {
       );
     }
 
-    // Reject non-UUID strings immediately — avoids a DB round-trip and prevents
-    // probing with arbitrary byte sequences.
-    if (!UUID_RE.test(body.session_token)) {
+    if (body.session_token.length > 256) {
       return new Response(
         JSON.stringify({ error: 'invalid_input' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
@@ -94,14 +94,13 @@ serve(async (req) => {
 
   try {
     // ── 3. Session lookup ──────────────────────────────────────────────────
-    // Token comparison is an indexed equality lookup on a random UUID.
-    // Timing differences reflect DB I/O, not secret state — there is no
-    // partial-match path, so this is not vulnerable to timing attacks.
+    // Only the SHA-256 hash is persisted; raw bearer tokens never live in the DB.
     const { data: session, error } = await supabase
       .from('resident_sessions')
-      .select('resident_id, expires_at')
-      .eq('token', sessionToken)
+      .select('resident_user_id, expires_at, revoked_at')
+      .eq('session_token_hash', await hashToken(sessionToken))
       .gt('expires_at', new Date().toISOString())
+      .is('revoked_at', null)
       .single();
 
     if (error || !session) {
@@ -122,7 +121,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ data: { resident_id: session.resident_id } }),
+      JSON.stringify({ data: { resident_id: session.resident_user_id } }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch {
