@@ -47,6 +47,10 @@ function isDraft(row: JournalRow) {
   return row.journal_status === 'kladde';
 }
 
+function isApproved(row: JournalRow) {
+  return row.journal_status === 'godkendt';
+}
+
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
   if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
@@ -205,7 +209,7 @@ export default function JournalOverblikWidget() {
   }, [load]);
 
   const drafts = rows.filter(isDraft);
-  const godkendt = rows.filter((r) => !isDraft(r));
+  const godkendt = rows.filter(isApproved);
 
   const approveDraft = useCallback(
     async (id: string, residentId: string) => {

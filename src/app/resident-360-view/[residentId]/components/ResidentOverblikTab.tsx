@@ -195,7 +195,7 @@ export default function ResidentOverblikTab({
   }, [residentId]);
 
   const journalDrafts = journalList.filter((e) => e.journal_status === 'kladde');
-  const journalGodkendt = journalList.filter((e) => e.journal_status !== 'kladde');
+  const journalGodkendt = journalList.filter((e) => e.journal_status === 'godkendt');
   const maxJournalLines = 4;
   const shownDrafts = journalDrafts.slice(0, maxJournalLines);
   const shownGodkendt = journalGodkendt.slice(0, maxJournalLines - shownDrafts.length);

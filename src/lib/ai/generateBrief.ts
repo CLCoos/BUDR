@@ -140,11 +140,14 @@ export async function generateBriefForResident(args: {
     return { status: 'db_error', message: checkinErr.message };
   }
 
+  // Approved, non-private staff-visible notes only — never Lys «Kun for dig» or kladder.
   const { data: journalRows, error: journalErr } = await supabase
     .from('journal_entries')
     .select('created_at, entry_text, category')
     .eq('resident_id', residentId)
     .eq('org_id', orgId)
+    .eq('journal_status', 'godkendt')
+    .eq('is_resident_private', false)
     .gte('created_at', sinceIso)
     .order('created_at', { ascending: true });
 
