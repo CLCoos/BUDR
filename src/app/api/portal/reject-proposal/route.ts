@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getStaffPermissions } from '@/lib/auth/getStaffPermissions';
+import { hasPermission } from '@/lib/auth/hasPermission';
+import { PERMISSIONS } from '@/lib/permissions';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 /**
  * Afviser planforslag som **indlogget portal-personale** (Supabase JWT + RLS).
+ * Kræver `edit_park_plans`.
  */
 export async function POST(req: NextRequest) {
   const supabase = await createServerSupabaseClient();
@@ -15,6 +19,11 @@ export async function POST(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const permissions = await getStaffPermissions(supabase);
+  if (!hasPermission(permissions, PERMISSIONS.EDIT_PARK_PLANS)) {
+    return NextResponse.json({ error: 'Ingen adgang' }, { status: 403 });
   }
 
   let body: { proposalId?: string };
@@ -47,7 +56,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { error } = await supabase
+  const { data: rejected, error } = await supabase
     .from('plan_proposals')
     .update({
       status: 'rejected',
@@ -55,11 +64,19 @@ export async function POST(req: NextRequest) {
       reviewed_at: new Date().toISOString(),
     })
     .eq('id', proposalId)
-    .eq('status', 'pending');
+    .eq('status', 'pending')
+    .select('id')
+    .maybeSingle();
 
   if (error) {
     console.error('reject-proposal error', error);
     return NextResponse.json({ error: 'Kunne ikke afvise forslaget' }, { status: 500 });
+  }
+  if (!rejected) {
+    return NextResponse.json(
+      { error: 'Forslag ikke fundet eller allerede behandlet' },
+      { status: 404 }
+    );
   }
 
   return NextResponse.json({ success: true });
