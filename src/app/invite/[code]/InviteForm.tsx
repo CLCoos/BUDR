@@ -4,13 +4,13 @@ import React, { useActionState, useState } from 'react';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { registerInvitedStaff, type RegisterResult } from './actions';
 
-type Props = { orgId: string; inviteCode: string };
+type Props = { inviteCode: string };
 
-export default function InviteForm({ orgId }: Props) {
+export default function InviteForm({ inviteCode }: Props) {
   const [showPassword, setShowPassword] = useState(false);
 
   const action = async (_prev: RegisterResult, formData: FormData): Promise<RegisterResult> => {
-    return registerInvitedStaff(orgId, formData);
+    return registerInvitedStaff(inviteCode, formData);
   };
 
   const [state, formAction, pending] = useActionState<RegisterResult, FormData>(action, null);
@@ -100,29 +100,9 @@ export default function InviteForm({ orgId }: Props) {
         </div>
       </div>
 
-      <div>
-        <p className="mb-1.5 text-xs font-medium" style={{ color: 'var(--cp-bg)' }}>
-          Rolle
-        </p>
-        <div className="flex gap-3">
-          {(['medarbejder', 'leder'] as const).map((r) => (
-            <label
-              key={r}
-              className="flex flex-1 cursor-pointer items-center justify-center rounded-xl border py-3 text-[14px] font-medium transition-colors has-[:checked]:border-[var(--cp-green)] has-[:checked]:bg-[var(--cp-green)] has-[:checked]:text-white"
-              style={{ borderColor: 'var(--cp-border2)', color: 'var(--cp-muted)' }}
-            >
-              <input
-                type="radio"
-                name="role"
-                value={r}
-                className="sr-only"
-                defaultChecked={r === 'medarbejder'}
-              />
-              {r.charAt(0).toUpperCase() + r.slice(1)}
-            </label>
-          ))}
-        </div>
-      </div>
+      <p className="text-[12px] font-light text-[var(--cp-muted)]">
+        Din konto oprettes som medarbejder. En leder kan senere tildele flere rettigheder.
+      </p>
 
       {state?.error && (
         <p
