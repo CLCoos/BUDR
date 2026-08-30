@@ -55,13 +55,11 @@ export default function LysRecoveryProfile({
     let cancelled = false;
     async function loadProfile() {
       try {
-        const res = await fetch('/api/lys/recovery-profile', { method: 'GET' });
+        const res = await fetch('/api/lys/recovery-profile', {
+          method: 'GET',
+          credentials: 'include',
+        });
         if (!res.ok) {
-          // Hvis route mangler endnu (404), starter vi med tom profil
-          if (res.status === 404) {
-            if (!cancelled) setLoading(false);
-            return;
-          }
           throw new Error('load failed');
         }
         const data = (await res.json()) as { profile: ProfileState | null };
@@ -94,15 +92,11 @@ export default function LysRecoveryProfile({
     try {
       const res = await fetch('/api/lys/recovery-profile', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(nextProfile),
       });
       if (!res.ok) {
-        if (res.status === 404) {
-          // Route findes ikke endnu — vis "gemt lokalt" og fortsæt
-          setSaveStatus('saved');
-          return;
-        }
         throw new Error('save failed');
       }
       setSaveStatus('saved');

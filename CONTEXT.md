@@ -2,7 +2,9 @@
 
 **Til AI/assistenter:** Læs denne fil først. Kort indgang: [`AGENTS.md`](./AGENTS.md).
 
-**Sidst opdateret (manuelt):** 2026-05-22 — **Care Portal-demo (render-løkker + e2e):** Playwright `npm run test:e2e:demo` verificerer alle demo-ruter uden «Maximum update depth» og guidet tour-navigation (`e2e/care-portal-demo-console.spec.ts`). Kræver `npx playwright install chromium` (evt. `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers`).
+**Sidst opdateret (manuelt):** 2026-08-20 — **Lys recovery-profil persist:** `GET`/`POST` `/api/lys/recovery-profile` (cookie `budr_resident_id` + service role). `LysRecoveryProfile` («Min profil») kaldte tidligere en manglende route og behandlede 404 som «gemt», så CHIME-svar gik tabt og 360° Recovery-fanen forblev tom. Demo/ikke-UUID returnerer tom profil uden DB-write.
+
+**Forrige:** 2026-05-22 — **Care Portal-demo (render-løkker + e2e):** Playwright `npm run test:e2e:demo` verificerer alle demo-ruter uden «Maximum update depth» og guidet tour-navigation (`e2e/care-portal-demo-console.spec.ts`). Kræver `npx playwright install chromium` (evt. `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers`).
 
 **Forrige:** 2026-05-22 — **Care Portal-demo (render-løkker):** Systematisk stabilisering af `useEffect`/`setInterval` på demo-fladen — `useMemo`-seeds, split demo/live effects, `setState`-guards (`prev === next`), interval kun med `[]`. Berørte bl.a. `DashboardDemoMain`, `MedicationWidget` (`demoMode`), `OpgaveWidget`, `KalenderWidget`, `BekymringsnotatWidget`, `AlertPanel` (`variant=demo`), `HandoverClient` (`useDemoData`), `AuthenticatedUserContext`, `CarePortalDepartmentContext`, `LoenDemoClient` (`DEMO_SHIFTS_UPDATED_EVENT`). Produktionsgrene (`demoMode===false`, `variant=live`) uændret.
 
