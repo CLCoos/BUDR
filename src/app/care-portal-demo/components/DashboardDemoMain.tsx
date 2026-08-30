@@ -10,6 +10,7 @@ import StatCards from '@/app/care-portal-dashboard/components/StatCards';
 import MedicationWidget from '@/app/care-portal-dashboard/components/MedicationWidget';
 import BekymringsnotatWidget from '@/app/care-portal-dashboard/components/BekymringsnotatWidget';
 import KalenderWidget from '@/app/care-portal-dashboard/components/KalenderWidget';
+import OnCallStaffWidget from '@/app/care-portal-dashboard/components/OnCallStaffWidget';
 import OpgaveWidget from '@/app/care-portal-dashboard/components/OpgaveWidget';
 import ResidentListDemo from '@/app/care-portal-dashboard/components/ResidentListDemo';
 import DemoActionCards from './DemoActionCards';
@@ -336,6 +337,7 @@ export default function DashboardDemoMain() {
         <MedicationWidget demoMode />
         <BekymringsnotatWidget demoMode />
         <KalenderWidget variant="demo" />
+        <OnCallStaffWidget demoMode />
         <OpgaveWidget demoMode />
       </div>
 
