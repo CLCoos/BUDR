@@ -6,6 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -21,6 +23,13 @@ serve(async (req) => {
     if (!resident_id || !pin || !staff_token) {
       return new Response(
         JSON.stringify({ error: 'Manglende felter' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    if (!UUID_RE.test(resident_id)) {
+      return new Response(
+        JSON.stringify({ error: 'Ugyldigt resident_id' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
@@ -46,7 +55,42 @@ serve(async (req) => {
       );
     }
 
-    // Hash and store via pgcrypto SQL function
+    // Require care_staff row — any Auth user must not be able to reset PINs.
+    const { data: staff, error: staffErr } = await supabase
+      .from('care_staff')
+      .select('id, org_id')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (staffErr || !staff?.org_id) {
+      return new Response(
+        JSON.stringify({ error: 'Ikke autoriseret – kun personale kan sætte PIN' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    const { data: resident, error: residentErr } = await supabase
+      .from('care_residents')
+      .select('user_id, org_id')
+      .eq('user_id', resident_id)
+      .maybeSingle();
+
+    if (residentErr || !resident?.org_id) {
+      return new Response(
+        JSON.stringify({ error: 'Beboer ikke fundet' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    // Same-org only — mirrors src/lib/residentPinAuth.ts staffMaySetResidentPin.
+    if (resident.org_id !== staff.org_id) {
+      return new Response(
+        JSON.stringify({ error: 'Ingen adgang til beboer' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    // Hash and store via pgcrypto SQL function (service_role only after migration revoke).
     const { error: rpcErr } = await supabase
       .rpc('set_resident_pin', { p_resident_id: resident_id, p_pin: pin });
 
@@ -61,7 +105,7 @@ serve(async (req) => {
       JSON.stringify({ data: { success: true } }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
-  } catch (err) {
+  } catch (_err) {
     return new Response(
       JSON.stringify({ error: 'Intern fejl' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
