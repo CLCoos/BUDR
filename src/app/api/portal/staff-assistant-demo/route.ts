@@ -2,12 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { parseBudrFollowUpsBlock } from '@/lib/portalStaffAssistantFollowUps';
 import { CARE_DEMO_RESIDENT_PROFILES } from '@/lib/careDemoResidents';
 import { CARE_PORTAL_DEMO_FACILITY_NAME } from '@/lib/carePortalDemoBranding';
+import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 
 /**
- * Public demo endpoint for /care-portal-demo/assistant — same Anthropic integration as
+ * Demo endpoint for /care-portal-demo/assistant — same Anthropic integration as
  * staff-assistant, but with static demo beboer-kontekst (ingen login).
+ * Only available when demo/pilot simulation is enabled.
  */
 export async function POST(req: NextRequest) {
+  if (!carePortalPilotSimulatedData()) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
   let body: { messages?: Array<{ role: 'user' | 'assistant'; content: string }> };
   try {
     body = await req.json();

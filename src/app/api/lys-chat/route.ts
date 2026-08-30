@@ -199,6 +199,9 @@ ${ctx ? `\nTidligere små glimt fra samtaler:\n${ctx}` : ''}`;
 
   const msgs: LysChatMessage[] = Array.isArray(body.messages) ? body.messages : [];
   const residentId = await getResidentId();
+  if (!residentId && process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   const lastUserUtterance = getLastUserUtterance(msgs);
   const conversationIdRaw =
     typeof body.conversation_id === 'string' ? body.conversation_id.trim() : '';

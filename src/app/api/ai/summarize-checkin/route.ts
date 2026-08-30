@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { assertAiApiCaller } from '@/lib/ai/aiApiAuth';
 
 const SYSTEM_PROMPT = `Du er en varm og empatisk støtte til mennesker i socialpsykiatri.
 Din opgave er at opsummere en borgers dagbogsindtastning i 1-2 sætninger på dansk.
@@ -14,6 +15,11 @@ Regler:
 type Body = { transcript?: unknown };
 
 export async function POST(req: Request): Promise<NextResponse> {
+  const auth = await assertAiApiCaller();
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.message }, { status: auth.status });
+  }
+
   let body: Body;
   try {
     body = (await req.json()) as Body;
