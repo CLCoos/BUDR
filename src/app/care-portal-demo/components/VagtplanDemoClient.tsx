@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   AlertTriangle,
@@ -12,81 +12,37 @@ import {
   Users,
   Wallet,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import type { DemoShift, DemoShiftType } from '@/lib/demoShiftPlan';
+import { estimateGrossPay, formatKr, loadShifts, saveShifts } from '@/lib/demoShiftPlan';
+import { copenhagenYmd } from '@/lib/copenhagenDay';
+import { createClient } from '@/lib/supabase/client';
+import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
 import {
-  currentPayPeriod,
-  estimateGrossPay,
-  formatKr,
-  loadShifts,
-  shiftsInPeriod,
-} from '@/lib/demoShiftPlan';
-import { VAGTPLAN_CORE_SHIFT_LOCATIONS } from '@/lib/vagtplanInferDepartment';
+  SHIFT_META,
+  addDaysYmd,
+  buildRosterSlots,
+  buildStaffShiftInsertRow,
+  canClaimRosterSlot,
+  currentPayPeriodBounds,
+  hoursInYmdRange,
+  mondayOfCopenhagenWeek,
+  myUpcomingShifts,
+  openSlotsOnRoster,
+  parseStaffShiftRow,
+  shiftsInYmdRange,
+  type RosterSlot,
+  type ShiftType,
+  type StaffShiftRow,
+} from '@/lib/staffShifts';
 
-type VagtplanDemoClientProps = { basePath?: string };
-type CoreShift = 'dag' | 'aften' | 'nat';
-
-type ShiftSlot = {
-  id: string;
-  date: string;
-  type: CoreShift;
-  start: string;
-  end: string;
-  hours: number;
-  location: string;
-  assigned: string[];
-  required: number;
-  mine: boolean;
+type VagtplanDemoClientProps = {
+  basePath?: string;
+  /** Demo-ruter: localStorage + hashed kolleger. Live skal sende false. */
+  demoMode?: boolean;
 };
 
-const TEAM = ['Christian C.', 'Mette R.', 'Anders K.', 'Louise N.', 'Helle T.', 'Nicolai S.'];
-
-const SHIFT_META: Record<
-  CoreShift,
-  { start: string; end: string; hours: number; location: string; weekday: number; weekend: number }
-> = {
-  dag: {
-    start: '07:30',
-    end: '15:30',
-    hours: 8,
-    location: VAGTPLAN_CORE_SHIFT_LOCATIONS.dag,
-    weekday: 4,
-    weekend: 3,
-  },
-  aften: {
-    start: '15:00',
-    end: '23:00',
-    hours: 8,
-    location: VAGTPLAN_CORE_SHIFT_LOCATIONS.aften,
-    weekday: 3,
-    weekend: 3,
-  },
-  nat: {
-    start: '23:00',
-    end: '07:00',
-    hours: 8,
-    location: VAGTPLAN_CORE_SHIFT_LOCATIONS.nat,
-    weekday: 2,
-    weekend: 2,
-  },
-};
-
-function ymd(d: Date): string {
-  return d.toISOString().slice(0, 10);
-}
-
-function plusDays(dateIso: string, delta: number): string {
-  const d = new Date(`${dateIso}T12:00:00`);
-  d.setDate(d.getDate() + delta);
-  return ymd(d);
-}
-
-function hash(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i += 1) h = (h * 33 + s.charCodeAt(i)) | 0;
-  return Math.abs(h);
-}
-
-function labelType(t: DemoShiftType): string {
+function labelType(t: DemoShiftType | ShiftType): string {
   if (t === 'dag') return 'Dag';
   if (t === 'aften') return 'Aften';
   if (t === 'nat') return 'Nat';
@@ -94,7 +50,7 @@ function labelType(t: DemoShiftType): string {
   return 'Vagt';
 }
 
-function vagtAccent(type: CoreShift): string {
+function vagtAccent(type: ShiftType): string {
   if (type === 'nat') return 'var(--cp-blue)';
   if (type === 'aften') return 'var(--cp-amber)';
   return 'var(--cp-green)';
@@ -104,6 +60,38 @@ function bemandingStatus(open: number): { color: string; bg: string } {
   if (open === 0) return { color: 'var(--cp-green)', bg: 'var(--cp-green-dim)' };
   if (open <= 2) return { color: 'var(--cp-amber)', bg: 'var(--cp-amber-dim)' };
   return { color: 'var(--cp-red)', bg: 'var(--cp-red-dim)' };
+}
+
+function demoShiftsToRows(shifts: DemoShift[]): StaffShiftRow[] {
+  return shifts
+    .filter(
+      (s): s is DemoShift & { type: ShiftType } =>
+        s.type === 'dag' || s.type === 'aften' || s.type === 'nat'
+    )
+    .map((s) => ({
+      id: s.id,
+      org_id: '00000000-0000-4000-8000-000000000000',
+      staff_id: 'demo-self',
+      shift_date: s.date,
+      shift_type: s.type,
+      start_time: s.start,
+      end_time: s.end,
+      hours: s.hours,
+      location: SHIFT_META[s.type].location,
+    }));
+}
+
+function liveRowsToDemoShifts(rows: StaffShiftRow[], myStaffId: string): DemoShift[] {
+  return rows
+    .filter((r) => r.staff_id === myStaffId)
+    .map((r) => ({
+      id: r.id,
+      date: r.shift_date,
+      type: r.shift_type,
+      start: r.start_time,
+      end: r.end_time,
+      hours: Number(r.hours),
+    }));
 }
 
 const miniStatCard: React.CSSProperties = {
@@ -126,131 +114,280 @@ const statLabel: React.CSSProperties = {
 
 export default function VagtplanDemoClient({
   basePath = '/care-portal-demo/vagtplan',
+  demoMode = true,
 }: VagtplanDemoClientProps) {
+  const today = copenhagenYmd();
   const [shifts, setShifts] = useState<DemoShift[]>([]);
+  const [liveRows, setLiveRows] = useState<StaffShiftRow[]>([]);
+  const [staffNameById, setStaffNameById] = useState<Map<string, string>>(new Map());
+  const [staffId, setStaffId] = useState<string | null>(demoMode ? 'demo-self' : null);
+  const [orgId, setOrgId] = useState<string | null>(null);
+  const [allowedStaffIds, setAllowedStaffIds] = useState<string[]>([]);
   const [mounted, setMounted] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(() => ymd(new Date()));
-  const [selectedSlot, setSelectedSlot] = useState<ShiftSlot | null>(null);
+  const [loading, setLoading] = useState(!demoMode);
+  const [scopeError, setScopeError] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [selectedSlot, setSelectedSlot] = useState<RosterSlot | null>(null);
   const [requesting, setRequesting] = useState<string | null>(null);
 
-  useEffect(() => {
-    setShifts(loadShifts());
-    setMounted(true);
-  }, []);
+  const loadLive = useCallback(async () => {
+    const supabase = createClient();
+    if (!supabase) {
+      setScopeError('Kunne ikke oprette forbindelse');
+      setLiveRows([]);
+      setShifts([]);
+      setOrgId(null);
+      setStaffId(null);
+      setLoading(false);
+      return;
+    }
 
-  const period = useMemo(() => currentPayPeriod(), []);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const { orgId: resolvedOrg, error: orgErr } = await resolveStaffOrgResidents(supabase);
+    if (!user || orgErr || !resolvedOrg) {
+      setScopeError(
+        orgErr === 'no_session' || !user
+          ? 'Log ind for at se vagtplanen'
+          : 'Ingen organisation tilknyttet din bruger'
+      );
+      setLiveRows([]);
+      setShifts([]);
+      setOrgId(null);
+      setStaffId(null);
+      setLoading(false);
+      return;
+    }
+
+    const from = addDaysYmd(today, -14);
+    const to = addDaysYmd(today, 28);
+    const [{ data: staffRows, error: staffErr }, { data: shiftRows, error: shiftErr }] =
+      await Promise.all([
+        supabase
+          .from('care_staff')
+          .select('id, full_name')
+          .eq('org_id', resolvedOrg)
+          .order('full_name'),
+        supabase
+          .from('care_staff_shifts')
+          .select(
+            'id, org_id, staff_id, shift_date, shift_type, start_time, end_time, hours, location'
+          )
+          .eq('org_id', resolvedOrg)
+          .gte('shift_date', from)
+          .lte('shift_date', to),
+      ]);
+
+    if (staffErr || shiftErr) {
+      setScopeError(staffErr?.message ?? shiftErr?.message ?? 'Kunne ikke hente vagtplan');
+      setLiveRows([]);
+      setShifts([]);
+      setOrgId(resolvedOrg);
+      setStaffId(user.id);
+      setLoading(false);
+      return;
+    }
+
+    const names = new Map<string, string>();
+    const ids: string[] = [];
+    for (const row of staffRows ?? []) {
+      const r = row as { id: string; full_name: string | null };
+      if (!r.id) continue;
+      ids.push(r.id);
+      names.set(r.id, (r.full_name ?? '').trim() || 'Medarbejder');
+    }
+    const parsed = (shiftRows ?? [])
+      .map((r) => parseStaffShiftRow(r as Record<string, unknown>))
+      .filter((r): r is StaffShiftRow => r !== null);
+
+    setOrgId(resolvedOrg);
+    setStaffId(user.id);
+    setAllowedStaffIds(ids);
+    setStaffNameById(names);
+    setLiveRows(parsed);
+    setShifts(liveRowsToDemoShifts(parsed, user.id));
+    setScopeError(null);
+    setLoading(false);
+  }, [today]);
+
+  useEffect(() => {
+    if (demoMode) {
+      setShifts(loadShifts());
+      setStaffId('demo-self');
+      setMounted(true);
+      setLoading(false);
+      return;
+    }
+    setMounted(true);
+    void loadLive();
+  }, [demoMode, loadLive]);
+
+  const period = useMemo(() => currentPayPeriodBounds(), []);
   const inPeriod = useMemo(
-    () => shiftsInPeriod(shifts, period.start, period.end),
+    () => shiftsInYmdRange(shifts, period.startYmd, period.endYmd),
     [period, shifts]
   );
   const pay = useMemo(() => estimateGrossPay(inPeriod), [inPeriod]);
 
-  const myShiftMap = useMemo(() => {
-    const m = new Map<string, DemoShift>();
-    for (const s of shifts) {
-      if (s.type === 'dag' || s.type === 'aften' || s.type === 'nat')
-        m.set(`${s.date}:${s.type}`, s);
-    }
-    return m;
-  }, [shifts]);
-
   const days = useMemo(
-    () => Array.from({ length: 14 }, (_, i) => plusDays(selectedDate, i - 6)),
+    () => Array.from({ length: 14 }, (_, i) => addDaysYmd(selectedDate, i - 6)),
     [selectedDate]
   );
 
-  const slotsByDate = useMemo(() => {
-    const m = new Map<string, ShiftSlot[]>();
-    for (const d of days) {
-      const weekend = [0, 6].includes(new Date(`${d}T12:00:00`).getDay());
-      const slots: ShiftSlot[] = (['dag', 'aften', 'nat'] as CoreShift[]).map((type) => {
-        const meta = SHIFT_META[type];
-        const mine = myShiftMap.has(`${d}:${type}`);
-        const mineShift = myShiftMap.get(`${d}:${type}`);
-        const required = weekend ? meta.weekend : meta.weekday;
-        const seed = hash(`${d}:${type}`);
-        const assignedCount = mine ? required : Math.max(0, required - (seed % 2));
-        const assigned: string[] = mine ? ['Dig'] : [];
-        let i = 0;
-        while (assigned.length < assignedCount) {
-          const name = TEAM[(seed + i) % TEAM.length]!;
-          if (!assigned.includes(name)) assigned.push(name);
-          i += 1;
-        }
-        return {
-          id: `${d}-${type}`,
-          date: d,
-          type,
-          start: mineShift?.start ?? meta.start,
-          end: mineShift?.end ?? meta.end,
-          hours: mineShift?.hours ?? meta.hours,
-          location: meta.location,
-          assigned,
-          required,
-          mine,
-        };
-      });
-      m.set(d, slots);
-    }
-    return m;
-  }, [days, myShiftMap]);
+  const rosterRows = useMemo(
+    () => (demoMode ? demoShiftsToRows(shifts) : liveRows),
+    [demoMode, shifts, liveRows]
+  );
+
+  const slotsByDate = useMemo(
+    () =>
+      buildRosterSlots({
+        dates: days,
+        rows: rosterRows,
+        staffNameById,
+        myStaffId: staffId,
+        fillSimulatedTeam: demoMode,
+      }),
+    [days, rosterRows, staffNameById, staffId, demoMode]
+  );
 
   const myUpcoming = useMemo(() => {
-    const now = ymd(new Date());
-    return shifts
-      .filter((s) => s.type === 'dag' || s.type === 'aften' || s.type === 'nat')
-      .filter((s) => s.date >= now)
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .slice(0, 6);
-  }, [shifts]);
+    if (demoMode) {
+      return shifts
+        .filter((s) => s.type === 'dag' || s.type === 'aften' || s.type === 'nat')
+        .filter((s) => s.date >= today)
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .slice(0, 6);
+    }
+    if (!staffId) return [];
+    return myUpcomingShifts(liveRows, staffId, today)
+      .slice(0, 6)
+      .map((r) => ({
+        id: r.id,
+        date: r.shift_date,
+        type: r.shift_type,
+        start: r.start_time,
+        end: r.end_time,
+        hours: Number(r.hours),
+      }));
+  }, [demoMode, shifts, liveRows, staffId, today]);
 
-  // Stat-bar beregninger
   const weekHours = useMemo(() => {
-    const now = new Date();
-    const dow = now.getDay();
-    const weekStart = new Date(now);
-    weekStart.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
-    const ws = ymd(weekStart);
-    const we = ymd(weekEnd);
-    return shifts
-      .filter((s) => s.date >= ws && s.date <= we)
-      .reduce((acc, s) => acc + (s.hours ?? 0), 0);
-  }, [shifts]);
+    const weekStart = mondayOfCopenhagenWeek();
+    const weekEnd = addDaysYmd(weekStart, 6);
+    if (demoMode) {
+      return shifts
+        .filter((s) => s.date >= weekStart && s.date <= weekEnd)
+        .reduce((acc, s) => acc + (s.hours ?? 0), 0);
+    }
+    if (!staffId) return 0;
+    return hoursInYmdRange(liveRows, staffId, weekStart, weekEnd);
+  }, [demoMode, shifts, liveRows, staffId]);
 
   const todayOpenSlots = useMemo(() => {
-    const todaySlots = slotsByDate.get(ymd(new Date())) ?? [];
-    return todaySlots.reduce((acc, s) => acc + Math.max(0, s.required - s.assigned.length), 0);
-  }, [slotsByDate]);
+    const todaySlots = slotsByDate.get(today) ?? [];
+    return todaySlots.reduce((acc, s) => acc + openSlotsOnRoster(s), 0);
+  }, [slotsByDate, today]);
 
   const selectedSlots = slotsByDate.get(selectedDate) ?? [];
-  const appointments = useMemo(
-    () => [
-      {
-        date: plusDays(selectedDate, 1),
-        title: 'Teammøde',
-        time: '10:30',
-        owner: 'Afdelingsleder',
-      },
-      {
-        date: plusDays(selectedDate, 2),
-        title: 'Borgerplan: NOP',
-        time: '13:00',
-        owner: 'Kollega: Mette',
-      },
-      { date: plusDays(selectedDate, 5), title: 'Supervision', time: '09:00', owner: 'Psykolog' },
-    ],
-    [selectedDate]
-  );
 
-  const requestShift = async (slotId: string) => {
-    setRequesting(slotId);
-    await new Promise((r) => setTimeout(r, 700));
+  const claimShift = async (slot: RosterSlot) => {
+    if (demoMode) {
+      setRequesting(slot.id);
+      const next: DemoShift = {
+        id: `s-${slot.date}-${slot.type}`,
+        date: slot.date,
+        type: slot.type,
+        start: slot.start,
+        end: slot.end,
+        hours: slot.hours,
+        supplement:
+          slot.type === 'aften' ? 'Aftentillæg' : slot.type === 'nat' ? 'Nattillæg' : undefined,
+      };
+      const merged = [
+        ...shifts.filter((s) => !(s.date === slot.date && s.type === slot.type)),
+        next,
+      ];
+      saveShifts(merged);
+      setShifts(merged);
+      await new Promise((r) => setTimeout(r, 400));
+      setRequesting(null);
+      setSelectedSlot(null);
+      toast.success('Gemt i demo (kun denne browser)');
+      return;
+    }
+
+    if (!canClaimRosterSlot(slot)) {
+      toast.error(slot.mine ? 'Du er allerede på denne vagt' : 'Vagten er fuld');
+      return;
+    }
+    if (!orgId || !staffId) {
+      toast.error('Ingen organisation');
+      return;
+    }
+    const built = buildStaffShiftInsertRow({
+      orgId,
+      staffId,
+      shiftDateYmd: slot.date,
+      shiftType: slot.type,
+      allowedStaffIds,
+    });
+    if ('error' in built) {
+      toast.error(built.error);
+      return;
+    }
+    const supabase = createClient();
+    if (!supabase) {
+      toast.error('Kunne ikke oprette forbindelse');
+      return;
+    }
+    setRequesting(slot.id);
+    const { error } = await supabase.from('care_staff_shifts').insert(built);
     setRequesting(null);
+    if (error) {
+      toast.error(error.message || 'Kunne ikke tilmelde vagt');
+      return;
+    }
+    toast.success('Vagt gemt — synlig for kolleger i Care Portal');
+    setSelectedSlot(null);
+    await loadLive();
   };
 
-  if (!mounted) {
+  const dropShift = async (slot: RosterSlot) => {
+    if (demoMode) {
+      const next = shifts.filter((s) => !(s.date === slot.date && s.type === slot.type));
+      saveShifts(next);
+      setShifts(next);
+      setSelectedSlot(null);
+      toast.success('Frameldt i demo');
+      return;
+    }
+    if (!slot.myAssignmentId) {
+      toast.error('Ingen vagt at framelde');
+      return;
+    }
+    const supabase = createClient();
+    if (!supabase) {
+      toast.error('Kunne ikke oprette forbindelse');
+      return;
+    }
+    setRequesting(slot.id);
+    const { error } = await supabase
+      .from('care_staff_shifts')
+      .delete()
+      .eq('id', slot.myAssignmentId);
+    setRequesting(null);
+    if (error) {
+      toast.error(error.message || 'Kunne ikke framelde vagt');
+      return;
+    }
+    toast.success('Vagt frameldt');
+    setSelectedSlot(null);
+    await loadLive();
+  };
+
+  if (!mounted || loading) {
     return (
       <div className="p-6 text-sm" style={{ color: 'var(--cp-muted)' }}>
         Indlæser vagtplan…
@@ -260,7 +397,6 @@ export default function VagtplanDemoClient({
 
   return (
     <div className="mx-auto max-w-6xl p-6">
-      {/* ── Side-header ─────────────────────────────────────── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p
@@ -277,7 +413,9 @@ export default function VagtplanDemoClient({
             Vagtplan
           </h1>
           <p className="mt-1 text-sm" style={{ color: 'var(--cp-muted)' }}>
-            Realistisk oversigt over egne vagter, bemanding og ledige vagter. Lønoverblik findes på{' '}
+            {demoMode
+              ? 'Simuleret oversigt over egne vagter, bemanding og ledige vagter (kun denne browser). Lønoverblik findes på '
+              : 'Org-vagtplan. Anmod om vagt gemmes i Care Portal og vises for kolleger. Lønoverblik på '}
             <Link
               href={`${basePath}/loen`}
               className="font-medium underline-offset-2 hover:underline"
@@ -287,6 +425,11 @@ export default function VagtplanDemoClient({
             </Link>
             .
           </p>
+          {scopeError && !demoMode ? (
+            <p className="mt-2 text-sm" style={{ color: 'var(--cp-red)' }}>
+              {scopeError}
+            </p>
+          ) : null}
         </div>
         <Link
           href={`${basePath}/loen`}
@@ -302,7 +445,6 @@ export default function VagtplanDemoClient({
         </Link>
       </div>
 
-      {/* ── Stat-bar ─────────────────────────────────────────── */}
       <div style={{ display: 'flex', gap: '12px', margin: '24px 0', flexWrap: 'wrap' }}>
         <div style={miniStatCard}>
           <Clock size={20} strokeWidth={1.5} style={{ color: 'var(--cp-muted)' }} />
@@ -354,7 +496,6 @@ export default function VagtplanDemoClient({
         </div>
       </div>
 
-      {/* ── Mine vagter + Dagens bemanding ────────────────────── */}
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.2fr_1fr]">
         <section
           className="rounded-xl border p-4"
@@ -363,42 +504,50 @@ export default function VagtplanDemoClient({
           <h2 className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
             Mine vagter (kommende)
           </h2>
-          <ul className="mt-3 space-y-2">
-            {myUpcoming.map((s) => {
-              const accent = vagtAccent(s.type as CoreShift);
-              return (
-                <li
-                  key={s.id}
-                  className="rounded-lg"
-                  style={{
-                    backgroundColor: 'var(--cp-bg3)',
-                    border: '1px solid var(--cp-border)',
-                    borderLeftWidth: '3px',
-                    borderLeftColor: accent,
-                    borderRadius: '8px',
-                    padding: '12px 16px',
-                  }}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
-                      {new Date(`${s.date}T12:00:00`).toLocaleDateString('da-DK', {
-                        weekday: 'short',
-                        day: 'numeric',
-                        month: 'short',
-                      })}{' '}
-                      · {labelType(s.type)}
+          {myUpcoming.length === 0 ? (
+            <p className="mt-3 text-sm" style={{ color: 'var(--cp-muted)' }}>
+              {demoMode
+                ? 'Ingen kommende vagter i demo.'
+                : 'Ingen kommende vagter. Åbn en ledig vagt og vælg Anmod om vagt.'}
+            </p>
+          ) : (
+            <ul className="mt-3 space-y-2">
+              {myUpcoming.map((s) => {
+                const accent = vagtAccent(s.type as ShiftType);
+                return (
+                  <li
+                    key={s.id}
+                    className="rounded-lg"
+                    style={{
+                      backgroundColor: 'var(--cp-bg3)',
+                      border: '1px solid var(--cp-border)',
+                      borderLeftWidth: '3px',
+                      borderLeftColor: accent,
+                      borderRadius: '8px',
+                      padding: '12px 16px',
+                    }}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
+                        {new Date(`${s.date}T12:00:00`).toLocaleDateString('da-DK', {
+                          weekday: 'short',
+                          day: 'numeric',
+                          month: 'short',
+                        })}{' '}
+                        · {labelType(s.type)}
+                      </p>
+                      <span className="text-xs" style={{ color: 'var(--cp-muted)' }}>
+                        {s.hours} t
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-xs" style={{ color: 'var(--cp-muted)' }}>
+                      {s.start}–{s.end} · {SHIFT_META[s.type as ShiftType]?.location ?? 'Bosted'}
                     </p>
-                    <span className="text-xs" style={{ color: 'var(--cp-muted)' }}>
-                      {s.hours} t
-                    </span>
-                  </div>
-                  <p className="mt-0.5 text-xs" style={{ color: 'var(--cp-muted)' }}>
-                    {s.start}–{s.end} · {SHIFT_META[s.type as CoreShift]?.location ?? 'Bosted'}
-                  </p>
-                </li>
-              );
-            })}
-          </ul>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </section>
 
         <section
@@ -409,8 +558,8 @@ export default function VagtplanDemoClient({
             Dagens bemanding
           </h2>
           <div className="mt-3 space-y-2">
-            {(slotsByDate.get(ymd(new Date())) ?? []).map((slot) => {
-              const open = Math.max(0, slot.required - slot.assigned.length);
+            {(slotsByDate.get(today) ?? []).map((slot) => {
+              const open = openSlotsOnRoster(slot);
               const status = bemandingStatus(open);
               const statusTekst = open ? `${open} ledig(e) vagt(er)` : 'Fuld bemanding';
               const accent = vagtAccent(slot.type);
@@ -452,21 +601,17 @@ export default function VagtplanDemoClient({
         </section>
       </div>
 
-      {/* ── Kalender-grid ────────────────────────────────────── */}
       <div className="mt-8">
         <h2 className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
-          Kalender (forrige/fremtidige vagter og aftaler)
+          Kalender (forrige/fremtidige vagter)
         </h2>
         <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-7">
           {days.map((d) => {
             const slots = slotsByDate.get(d) ?? [];
-            const open = slots.reduce(
-              (acc, s) => acc + Math.max(0, s.required - s.assigned.length),
-              0
-            );
+            const open = slots.reduce((acc, s) => acc + openSlotsOnRoster(s), 0);
             const mine = slots.some((s) => s.mine);
             const active = d === selectedDate;
-            const isToday = d === ymd(new Date());
+            const isToday = d === today;
             return (
               <button
                 key={d}
@@ -524,7 +669,6 @@ export default function VagtplanDemoClient({
         </div>
       </div>
 
-      {/* ── Aktuel lønperiode ────────────────────────────────── */}
       <div
         className="mt-6 rounded-xl border p-4"
         style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
@@ -542,10 +686,10 @@ export default function VagtplanDemoClient({
           <strong style={{ color: 'var(--cp-text)' }}>{pay.totalHours.toFixed(1)} t</strong> ·
           Brutto ca.{' '}
           <strong style={{ color: 'var(--cp-green)' }}>{formatKr(pay.estimatedGross)}</strong>
+          {demoMode ? ' (demo-satser)' : ' (skøn ud fra registrerede vagter)'}
         </p>
       </div>
 
-      {/* ── Valgt dato · vagter i tidsrum ────────────────────── */}
       <div
         className="mt-8 rounded-xl border p-4"
         style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
@@ -563,7 +707,7 @@ export default function VagtplanDemoClient({
         </p>
         <ul className="mt-3 space-y-2">
           {selectedSlots.map((slot) => {
-            const open = Math.max(0, slot.required - slot.assigned.length);
+            const open = openSlotsOnRoster(slot);
             const accent = vagtAccent(slot.type);
             return (
               <li
@@ -590,6 +734,7 @@ export default function VagtplanDemoClient({
                       </div>
                       <div className="text-xs" style={{ color: 'var(--cp-muted)' }}>
                         {slot.location} · {slot.hours} timer
+                        {slot.mine ? ' · din vagt' : ''}
                       </div>
                     </div>
                     <div
@@ -606,38 +751,6 @@ export default function VagtplanDemoClient({
         </ul>
       </div>
 
-      {/* ── Mine allokerede aftaler ──────────────────────────── */}
-      <div
-        className="mt-6 rounded-xl border p-4"
-        style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
-      >
-        <h2 className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
-          Mine allokerede aftaler
-        </h2>
-        <ul className="mt-3 space-y-2">
-          {appointments.map((a) => (
-            <li
-              key={`${a.date}-${a.title}`}
-              className="rounded-lg border px-3 py-2.5 text-sm"
-              style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg3)' }}
-            >
-              <p className="font-medium" style={{ color: 'var(--cp-text)' }}>
-                {a.title}
-              </p>
-              <p className="mt-0.5 text-xs" style={{ color: 'var(--cp-muted)' }}>
-                {new Date(`${a.date}T12:00:00`).toLocaleDateString('da-DK', {
-                  weekday: 'short',
-                  day: 'numeric',
-                  month: 'short',
-                })}{' '}
-                · {a.time} · {a.owner}
-              </p>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* ── Vagt-detalje modal ───────────────────────────────── */}
       {selectedSlot && (
         <div
           className="fixed inset-0 z-[120] flex items-center justify-center p-4"
@@ -677,18 +790,24 @@ export default function VagtplanDemoClient({
               >
                 Personale på vagt i tidsrummet
               </p>
-              <ul className="mt-2 space-y-1">
-                {selectedSlot.assigned.map((name) => (
-                  <li
-                    key={name}
-                    className="flex items-center gap-2 text-sm"
-                    style={{ color: 'var(--cp-text)' }}
-                  >
-                    <CheckCircle2 size={14} style={{ color: 'var(--cp-green)' }} />
-                    {name}
-                  </li>
-                ))}
-              </ul>
+              {selectedSlot.assigned.length === 0 ? (
+                <p className="mt-2 text-sm" style={{ color: 'var(--cp-muted)' }}>
+                  {demoMode ? 'Ingen i demo på denne vagt.' : 'Ingen tilmeldt endnu.'}
+                </p>
+              ) : (
+                <ul className="mt-2 space-y-1">
+                  {selectedSlot.assigned.map((person) => (
+                    <li
+                      key={`${person.staffId}-${person.staffName}`}
+                      className="flex items-center gap-2 text-sm"
+                      style={{ color: 'var(--cp-text)' }}
+                    >
+                      <CheckCircle2 size={14} style={{ color: 'var(--cp-green)' }} />
+                      {person.staffName}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
             <div className="mt-4 flex items-center justify-between gap-2">
               <button
@@ -699,17 +818,27 @@ export default function VagtplanDemoClient({
               >
                 Luk
               </button>
-              {!selectedSlot.mine && selectedSlot.assigned.length < selectedSlot.required && (
+              {selectedSlot.mine ? (
                 <button
                   type="button"
-                  onClick={() => void requestShift(selectedSlot.id)}
+                  onClick={() => void dropShift(selectedSlot)}
+                  disabled={requesting === selectedSlot.id}
+                  className="rounded-lg border px-3 py-2 text-sm font-semibold disabled:opacity-60"
+                  style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-text)' }}
+                >
+                  {requesting === selectedSlot.id ? 'Framelder…' : 'Frameld vagt'}
+                </button>
+              ) : canClaimRosterSlot(selectedSlot) ? (
+                <button
+                  type="button"
+                  onClick={() => void claimShift(selectedSlot)}
                   disabled={requesting === selectedSlot.id}
                   className="rounded-lg px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
                   style={{ backgroundColor: 'var(--cp-green)' }}
                 >
-                  {requesting === selectedSlot.id ? 'Sender anmodning…' : 'Anmod om vagt'}
+                  {requesting === selectedSlot.id ? 'Gemmer…' : 'Anmod om vagt'}
                 </button>
-              )}
+              ) : null}
             </div>
           </div>
         </div>

@@ -40,8 +40,8 @@ Alle `src/app/**/page.tsx` (61 sider). Status: **live** = Supabase/auth; **demod
 | `/care-portal-settings` | Krisekontakter | live |
 | `/care-portal-residents` | Leder beboer-ops | live |
 | `/care-portal-resident-preview/[id]` | Demo-360 bag login eller redirect til live 360 | demodata / live (afhænger af `NEXT_PUBLIC_CARE_PORTAL_SIMULATED_DATA`) |
-| `/care-portal-vagtplan` | Vagtplan | **demodata** (genbruger `VagtplanDemoClient` + localStorage) |
-| `/care-portal-vagtplan/loen` | Løn/timer | **demodata** (`LoenDemoClient`) |
+| `/care-portal-vagtplan` | Vagtplan | live (`care_staff_shifts`; demo-klient med `demoMode={false}`) |
+| `/care-portal-vagtplan/loen` | Løn/timer | live (egne rækker i `care_staff_shifts`; demo-klient med `demoMode={false}`) |
 | `/care-portal-indsatsdok` | Indsatsdokumentation | **halvfærdig** (kun `localStorage` via `IndsatsModal`) |
 | `/care-portal-tilsynsrapport` | Tilsynsrapport | live (kan falde tilbage til demodata via modal-flag) |
 | `/handover-workspace` | Vagtoverlevering | live |
