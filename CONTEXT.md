@@ -2,7 +2,9 @@
 
 **Til AI/assistenter:** Læs denne fil først. Kort indgang: [`AGENTS.md`](./AGENTS.md).
 
-**Sidst opdateret (manuelt):** 2026-05-22 — **Care Portal-demo (render-løkker + e2e):** Playwright `npm run test:e2e:demo` verificerer alle demo-ruter uden «Maximum update depth» og guidet tour-navigation (`e2e/care-portal-demo-console.spec.ts`). Kræver `npx playwright install chromium` (evt. `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers`).
+**Sidst opdateret (manuelt):** 2026-09-01 — **Lys stemning (score-skala):** `LysStemningskort` skrev `selected+1` (Fantastisk=1) ind i `lys_checkin.mood_score` (1=værst, 10=bedst). Det udløste `lav_stemning` ved gode dage og viste 1/10 i portalen. Mapping er nu 10/8/6/4/2/1 (`src/lib/lysDailyMood.ts`); toast «Sendt til portalen» kun efter OK-svar.
+
+**Forrige:** 2026-05-22 — **Care Portal-demo (render-løkker + e2e):** Playwright `npm run test:e2e:demo` verificerer alle demo-ruter uden «Maximum update depth» og guidet tour-navigation (`e2e/care-portal-demo-console.spec.ts`). Kræver `npx playwright install chromium` (evt. `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers`).
 
 **Forrige:** 2026-05-22 — **Care Portal-demo (render-løkker):** Systematisk stabilisering af `useEffect`/`setInterval` på demo-fladen — `useMemo`-seeds, split demo/live effects, `setState`-guards (`prev === next`), interval kun med `[]`. Berørte bl.a. `DashboardDemoMain`, `MedicationWidget` (`demoMode`), `OpgaveWidget`, `KalenderWidget`, `BekymringsnotatWidget`, `AlertPanel` (`variant=demo`), `HandoverClient` (`useDemoData`), `AuthenticatedUserContext`, `CarePortalDepartmentContext`, `LoenDemoClient` (`DEMO_SHIFTS_UPDATED_EVENT`). Produktionsgrene (`demoMode===false`, `variant=live`) uændret.
 
