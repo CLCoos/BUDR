@@ -205,29 +205,34 @@ export default function LysShell({
   }) => {
     setMoodLabel(payload.label);
     setMoodTraffic(payload.traffic);
-    setMoodRegisteredToday(true);
 
     trackEvent('lys_mood_registered', { traffic: payload.traffic });
 
-    toast.success(`📋 Sendt til portalen: Stemning registreret for ${firstName}`);
-
-    if (payload.label === 'Meget svært' || payload.traffic === 'roed') {
-      toast.success('📋 Sendt til portalen: Personalet ser, at du har haft det svært');
-    }
     try {
-      await fetch('/api/lys/daily-checkin', {
+      const res = await fetch('/api/lys/daily-checkin', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mood_score: payload.moodScore,
           traffic_light: payload.traffic,
+          mood_label: payload.label,
           note: payload.note || undefined,
           voice_transcript: payload.voiceTranscript,
           ai_summary: payload.aiSummary,
         }),
       });
+      if (res.ok) {
+        setMoodRegisteredToday(true);
+        toast.success(`📋 Sendt til portalen: Stemning registreret for ${firstName}`);
+        if (payload.label === 'Meget svært' || payload.traffic === 'roed') {
+          toast.success('📋 Sendt til portalen: Personalet ser, at du har haft det svært');
+        }
+      } else {
+        toast.error('Kunne ikke gemme stemningen — prøv igen om lidt');
+      }
     } catch {
-      // Best effort: UI flow should continue even if network is unstable.
+      toast.error('Ingen forbindelse — stemningen blev ikke gemt');
     }
     setOverlay(null);
     const note = payload.note ? ` Jeg skrev også: ${payload.note}` : '';

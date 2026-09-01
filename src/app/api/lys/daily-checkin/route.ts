@@ -5,6 +5,11 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getResidentId } from '@/lib/residentAuth';
+import {
+  LYS_UI_TO_DB_TRAFFIC,
+  shouldCreateLowMoodAlert,
+  type LysTrafficUi,
+} from '@/lib/lysDailyMood';
 
 function getServiceClient() {
   return createClient(
@@ -18,12 +23,12 @@ function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
-// UI sender ASCII-koder; DB bruger dansk æøå
-const UI_TO_DB: Record<string, string> = {
-  groen: 'grøn',
-  gul: 'gul',
-  roed: 'rød',
-};
+function dbTrafficFromUi(raw: string): string | undefined {
+  if (raw === 'groen' || raw === 'gul' || raw === 'roed') {
+    return LYS_UI_TO_DB_TRAFFIC[raw as LysTrafficUi];
+  }
+  return undefined;
+}
 
 interface CheckinBody {
   mood_score: number;
@@ -64,7 +69,7 @@ export async function POST(req: Request): Promise<NextResponse> {
   if (typeof mood_score !== 'number' || mood_score < 1 || mood_score > 10) {
     return NextResponse.json({ error: 'mood_score must be 1–10' }, { status: 422 });
   }
-  const dbTraffic = UI_TO_DB[traffic_light];
+  const dbTraffic = dbTrafficFromUi(traffic_light);
   if (!dbTraffic) {
     return NextResponse.json({ error: 'Invalid traffic_light value' }, { status: 422 });
   }
@@ -133,8 +138,8 @@ export async function POST(req: Request): Promise<NextResponse> {
     // best-effort
   }
 
-  // Notification trigger ved rød traffic light eller mood ≤ 3
-  if (mood_score <= 3 || dbTraffic === 'rød') {
+  // Notification trigger ved rød traffic light eller mood ≤ 3 (1 = værst, 10 = bedst)
+  if (shouldCreateLowMoodAlert(mood_score, dbTraffic)) {
     // Kun opret hvis ingen unacknowledged lav_stemning-notification eksisterer
     const { data: existing } = await supabase
       .from('care_portal_notifications')
@@ -145,9 +150,14 @@ export async function POST(req: Request): Promise<NextResponse> {
       .maybeSingle();
 
     if (!existing) {
-      const trafficLabel = dbTraffic === 'rød' ? 'Rød trafiklys' : 'Gul trafiklys';
+      const trafficLabel =
+        dbTraffic === 'rød'
+          ? 'Rød trafiklys'
+          : dbTraffic === 'gul'
+            ? 'Gul trafiklys'
+            : 'Grøn trafiklys';
       const detail = `Stemningsscore ${mood_score}/10 · ${trafficLabel}`;
-      const severity = mood_score <= 3 || dbTraffic === 'rød' ? 'roed' : 'gul';
+      const severity = dbTraffic === 'rød' || mood_score <= 3 ? 'roed' : 'gul';
 
       await supabase.from('care_portal_notifications').insert({
         resident_id: residentId,
