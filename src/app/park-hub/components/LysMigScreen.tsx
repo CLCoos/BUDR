@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/client';
 import { useResident } from '../context/ResidentContext';
 import { useResidentSession } from '@/hooks/useResidentSession';
 import * as dataService from '@/lib/dataService';
+import { moodBarsFromLocalCheckins } from '@/lib/lysCheckinHistory';
+import { isResidentUuidForCloud } from '@/lib/residentUuid';
 import {
   RESIDENT_BADGE_DEFS,
   normalizeBadgeKeyForDisplay,
@@ -68,6 +70,13 @@ export default function LysMigScreen({
   const session = useResidentSession();
   const mode = session.storageMode;
   const activeId = session.activeId || residentId;
+  /** Live UUID cookie → API. Demo/gæst → LysShell residentId (DemoSeeder), not guest UUID. */
+  const checkinId =
+    mode === 'supabase' && isResidentUuidForCloud(session.activeId)
+      ? session.activeId
+      : residentId || session.activeId;
+  const checkinMode =
+    mode === 'supabase' && isResidentUuidForCloud(checkinId) ? 'supabase' : 'local';
 
   const [xpData, setXpData] = useState<XPData>({ total_xp: 0, level: 1 });
   const [badges, setBadges] = useState<BadgeRow[]>([]);
@@ -126,57 +135,18 @@ export default function LysMigScreen({
     });
   }, [activeId, mode]);
 
-  // Load 14-day mood history
+  // Load 14-day mood history (live: cookie API; demo: localStorage)
   useEffect(() => {
-    if (!activeId) return;
-    const today = new Date();
-    const buildHistory = (checkins: Array<{ check_in_date: string; energy_level: number }>) => {
-      const map = new Map<string, number>();
-      for (const row of checkins) map.set(row.check_in_date, row.energy_level);
-      const result: MoodPoint[] = [];
-      for (let i = 13; i >= 0; i--) {
-        const d = new Date(today);
-        d.setDate(today.getDate() - i);
-        const key = d.toISOString().slice(0, 10);
-        const val = map.get(key) ?? null;
-        result.push({
-          date: key,
-          label: d.toLocaleDateString('da-DK', { day: 'numeric', month: 'short' }),
-          dayName: d.toLocaleDateString('da-DK', {
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long',
-          }),
-          value: val,
-        });
-      }
-      setMoodHistory(result);
+    if (!checkinId) return;
+    let cancelled = false;
+    void dataService.getCheckins(checkinMode, checkinId).then((checkins) => {
+      if (cancelled) return;
+      setMoodHistory(moodBarsFromLocalCheckins(checkins, { days: 14 }));
+    });
+    return () => {
+      cancelled = true;
     };
-
-    if (mode === 'supabase') {
-      const supabase = createClient();
-      if (!supabase) return;
-      const from = new Date(today);
-      from.setDate(today.getDate() - 13);
-      supabase
-        .from('park_daily_checkin')
-        .select('check_in_date, energy_level')
-        .eq('resident_id', activeId)
-        .gte('check_in_date', from.toISOString().slice(0, 10))
-        .order('check_in_date')
-        .then(({ data }) =>
-          buildHistory((data ?? []) as Array<{ check_in_date: string; energy_level: number }>)
-        );
-    } else {
-      void dataService
-        .getCheckins(mode, activeId)
-        .then((checkins) =>
-          buildHistory(
-            checkins.map((c) => ({ check_in_date: c.check_in_date, energy_level: c.energy_level }))
-          )
-        );
-    }
-  }, [activeId, mode]);
+  }, [checkinId, checkinMode]);
 
   // Avatar upload
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
