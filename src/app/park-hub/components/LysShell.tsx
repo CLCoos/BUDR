@@ -221,6 +221,7 @@ export default function LysShell({
         body: JSON.stringify({
           mood_score: payload.moodScore,
           traffic_light: payload.traffic,
+          mood_label: payload.label,
           note: payload.note || undefined,
           voice_transcript: payload.voiceTranscript,
           ai_summary: payload.aiSummary,

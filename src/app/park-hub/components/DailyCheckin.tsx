@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Check, Smile, Frown } from 'lucide-react';
 import { toast } from 'sonner';
+import { moodLabelFromTenPointScore } from '@/lib/checkinMoodLabel';
 import VoiceJournal from './VoiceJournal';
 
 const moodEmojis = ['😔', '😟', '😕', '😐', '🙂', '😊', '😄', '😃', '🤩', '🥳'];
@@ -36,6 +37,7 @@ export default function DailyCheckin() {
         body: JSON.stringify({
           mood_score: mood,
           traffic_light: traffic,
+          mood_label: moodLabelFromTenPointScore(mood),
           note: note.trim() || undefined,
           voice_transcript: voiceTranscript ?? undefined,
           ai_summary: voiceSummary ?? undefined,
