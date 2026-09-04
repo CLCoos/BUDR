@@ -1,3 +1,5 @@
+import { moodLabelNeedsAttention } from '@/lib/checkinMoodLabel';
+
 /**
  * Deterministic “auto-overrapport” when AI is unavailable or returns no text.
  * Mirrors the sections we ask the LLM for, so the demo and live portal stay useful.
@@ -33,7 +35,7 @@ export function needsOverrapportAttention(r: OverrapportResidentInput): boolean 
   const tl = normalizeTraffic(r.trafficLight);
   if (tl === 'rød' || tl === 'gul') return true;
   if (r.pendingMessages > 0) return true;
-  if (r.moodLabel === 'Svært' || r.moodLabel === 'Dårligt') return true;
+  if (moodLabelNeedsAttention(r.moodLabel)) return true;
   return false;
 }
 

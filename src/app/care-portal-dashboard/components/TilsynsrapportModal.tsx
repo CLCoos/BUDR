@@ -12,6 +12,7 @@ import {
 } from '@/lib/tilsynsrapport/composeStructuredTilsynsrapport';
 import { getDemoTilsynsResidents } from '@/lib/tilsynsrapport/demoResidents';
 import { parseOverrapportDocument } from '@/lib/overrapport/parseOverrapportSections';
+import { moodLabelFromCheckin } from '@/lib/checkinMoodLabel';
 import FormattedNumberedReportBody from '@/app/care-portal-dashboard/components/FormattedNumberedReportBody';
 
 const INDSATS_STORAGE_KEY = 'budr_indsats_records_v1';
@@ -149,25 +150,17 @@ export default function TilsynsrapportModal({
           const residentIds = careResidents.map((r) => r.user_id);
           const { data: checkins } = await supabase
             .from('park_daily_checkin')
-            .select('resident_id, mood_score, traffic_light, note, created_at')
+            .select('resident_id, mood_score, mood_label, traffic_light, note, created_at')
             .in('resident_id', residentIds)
             .gte('created_at', `${today}T00:00:00`)
             .order('created_at', { ascending: false });
-
-          const MOOD_LABELS: Record<number, string> = {
-            1: 'Svært',
-            2: 'Dårligt',
-            3: 'OK',
-            4: 'Godt',
-            5: 'Fantastisk',
-          };
 
           for (const r of careResidents) {
             const checkin = checkins?.find((c) => c.resident_id === r.user_id);
             residents.push({
               name: r.display_name,
               trafficLight: checkin?.traffic_light ?? null,
-              moodLabel: checkin?.mood_score ? (MOOD_LABELS[checkin.mood_score] ?? null) : null,
+              moodLabel: moodLabelFromCheckin(checkin),
               note: checkin?.note ?? null,
             });
           }
