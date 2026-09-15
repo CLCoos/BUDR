@@ -12,6 +12,7 @@ import {
   LYS_VOICE_CHOICES,
 } from '@/lib/voice/voices';
 import { getVoiceTelemetrySnapshot, resetVoiceTelemetry } from '@/lib/voice/voiceObservability';
+import { preferredInviteRoleId } from '@/lib/careStaffRole';
 
 /** Danske titler til tekniske permission-id’er (vises i rolle-redigering). */
 const PERMISSION_LABEL_DA: Record<Permission, string> = {
@@ -120,7 +121,7 @@ export default function SettingsClient({
     canManageRoles && process.env.NEXT_PUBLIC_LYS_VOICE_OBSERVABILITY === 'true';
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
-  const [selectedRoleId, setSelectedRoleId] = useState<string>(initialRoles[0]?.id ?? '');
+  const [selectedRoleId, setSelectedRoleId] = useState<string>(preferredInviteRoleId(initialRoles));
   const [inviteState, setInviteState] = useState<InviteState>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
@@ -172,7 +173,10 @@ export default function SettingsClient({
       const json = (await res.json()) as { roles?: OrgRole[] };
       if (!res.ok || !json.roles) return;
       setRoles(json.roles);
-      if (!selectedRoleId && json.roles[0]?.id) setSelectedRoleId(json.roles[0].id);
+      if (!selectedRoleId) {
+        const preferred = preferredInviteRoleId(json.roles);
+        if (preferred) setSelectedRoleId(preferred);
+      }
     })();
   }, [selectedRoleId]);
 
