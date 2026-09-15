@@ -2,7 +2,9 @@
 
 **Til AI/assistenter:** Læs denne fil først. Kort indgang: [`AGENTS.md`](./AGENTS.md).
 
-**Sidst opdateret (manuelt):** 2026-05-22 — **Care Portal-demo (render-løkker + e2e):** Playwright `npm run test:e2e:demo` verificerer alle demo-ruter uden «Maximum update depth» og guidet tour-navigation (`e2e/care-portal-demo-console.spec.ts`). Kræver `npx playwright install chromium` (evt. `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers`).
+**Sidst opdateret (manuelt):** 2026-09-15 — **Staff-invite (gæst/custom rolle):** `POST /api/portal/invite-staff` kopierede `org_roles.name` direkte til `care_staff.role`. Settings-dropdown er sorteret alfabetisk, så **gæst** er default. Tabellens CHECK tillod kun `leder|medarbejder`, insert fejlede silently, UI viste success, og den inviterede fik ingen `care_staff`-række. Fix: map til CHECK-sikre værdier (`gæst` beholdes), rollback auth-user ved insert-fejl, default dropdown til **medarbejder**. Migration `20260915120000_care_staff_role_guest_check.sql`.
+
+**Forrige:** 2026-05-22 — **Care Portal-demo (render-løkker + e2e):** Playwright `npm run test:e2e:demo` verificerer alle demo-ruter uden «Maximum update depth» og guidet tour-navigation (`e2e/care-portal-demo-console.spec.ts`). Kræver `npx playwright install chromium` (evt. `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers`).
 
 **Forrige:** 2026-05-22 — **Care Portal-demo (render-løkker):** Systematisk stabilisering af `useEffect`/`setInterval` på demo-fladen — `useMemo`-seeds, split demo/live effects, `setState`-guards (`prev === next`), interval kun med `[]`. Berørte bl.a. `DashboardDemoMain`, `MedicationWidget` (`demoMode`), `OpgaveWidget`, `KalenderWidget`, `BekymringsnotatWidget`, `AlertPanel` (`variant=demo`), `HandoverClient` (`useDemoData`), `AuthenticatedUserContext`, `CarePortalDepartmentContext`, `LoenDemoClient` (`DEMO_SHIFTS_UPDATED_EVENT`). Produktionsgrene (`demoMode===false`, `variant=live`) uændret.
 

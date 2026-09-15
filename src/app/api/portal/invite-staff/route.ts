@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { headers } from 'next/headers';
 import { getStaffPermissions } from '@/lib/auth/getStaffPermissions';
 import { hasPermission } from '@/lib/auth/hasPermission';
+import { careStaffRoleFromOrgRoleName, type CareStaffRole } from '@/lib/careStaffRole';
 import { requirePortalAuth } from '@/lib/portalAuth';
 import { PERMISSIONS } from '@/lib/permissions';
 import { parseStaffOrgId } from '@/lib/staffOrgScope';
@@ -51,7 +52,9 @@ export async function POST(req: Request): Promise<NextResponse> {
   const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
   const name = typeof body.name === 'string' ? body.name.trim() : '';
   const roleId = typeof body.roleId === 'string' ? body.roleId : null;
-  let role = body.role === 'leder' || body.role === 'medarbejder' ? body.role : 'medarbejder';
+  let role: CareStaffRole = careStaffRoleFromOrgRoleName(
+    typeof body.role === 'string' ? body.role : 'medarbejder'
+  );
 
   if (!email) {
     return NextResponse.json({ error: 'Email er påkrævet' }, { status: 400 });
@@ -78,7 +81,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     if (!roleRow) {
       return NextResponse.json({ error: 'Ugyldig rolle valgt' }, { status: 400 });
     }
-    role = roleRow.name;
+    role = careStaffRoleFromOrgRoleName(roleRow.name);
   }
 
   // Invite via Supabase Admin API — creates the user row and sends the magic link.
@@ -100,15 +103,24 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: inviteErr.message }, { status: 400 });
   }
 
-  // Insert into care_staff — best-effort (user exists, magic link pending confirmation).
-  if (inviteData?.user?.id) {
-    await admin.from('care_staff').insert({
-      id: inviteData.user.id,
-      org_id: orgId,
-      full_name: name || email.split('@')[0],
-      role,
-      ...(roleId ? { role_id: roleId } : {}),
-    });
+  const invitedUserId = inviteData?.user?.id;
+  if (!invitedUserId) {
+    return NextResponse.json({ error: 'Bruger blev ikke oprettet — prøv igen' }, { status: 500 });
+  }
+
+  const { error: staffErr } = await admin.from('care_staff').insert({
+    id: invitedUserId,
+    org_id: orgId,
+    full_name: name || email.split('@')[0],
+    role,
+    ...(roleId ? { role_id: roleId } : {}),
+  });
+  if (staffErr) {
+    await admin.auth.admin.deleteUser(invitedUserId);
+    return NextResponse.json(
+      { error: 'Kunne ikke oprette medarbejderprofil — prøv igen' },
+      { status: 500 }
+    );
   }
 
   // Audit log — best-effort, same pattern as staffAuditLog.ts.
