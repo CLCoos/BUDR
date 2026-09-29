@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRef } from 'react';
 import { BudrLogo } from '@/components/brand/BudrLogo';
+import { BudrVideo } from '@/components/marketing/BudrVideo';
 import { BOOKING_URL, CONTACT_EMAIL, CONTACT_URL } from '@/components/marketing/constants';
 import { IconDocMemory, IconMoodSignal, IconShiftGap } from '@/components/marketing/LandingIcons';
 import MarketingFooter from '@/components/marketing/MarketingFooter';
@@ -140,6 +141,16 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
                 <li>Evidensbaseret (CHIME)</li>
                 <li>Bygget af fagperson fra branchen</li>
               </ul>
+            </div>
+          </section>
+
+          <section className="budr-video-section fi" id="se-video">
+            <div className="shell home-copy-shell">
+              <h2 className="section-h">Se BUDR på 90 sekunder</h2>
+              <p className="section-p">
+                Lys til borgeren, Care Portal til personalet, og hvordan de hænger sammen.
+              </p>
+              <BudrVideo />
             </div>
           </section>
 
