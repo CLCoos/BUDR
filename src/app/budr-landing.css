@@ -42,6 +42,10 @@ html {
   --budr-blue-on-light: #378add;
   --budr-brand-dark: #0a1a14;
 
+  /* Fælles sidelayout — nav og .shell deler venstrekant */
+  --page-max: 1180px;
+  --page-gutter: clamp(22px, 4vw, 52px);
+
   min-height: 100vh;
   font-family: var(--font-landing-body, 'DM Sans', system-ui, sans-serif);
   background: var(--ink);
@@ -104,13 +108,14 @@ html {
 .budr-landing .nav-inner {
   position: relative;
   width: 100%;
-  max-width: min(1520px, 100%);
+  max-width: var(--page-max);
   margin-left: auto;
   margin-right: auto;
   padding-top: calc(14px + env(safe-area-inset-top, 0px));
   padding-bottom: 14px;
-  padding-left: max(clamp(22px, 4vw, 52px), env(safe-area-inset-left, 0px));
-  padding-right: max(clamp(22px, 4vw, 52px), env(safe-area-inset-right, 0px));
+  padding-left: max(var(--page-gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--page-gutter), env(safe-area-inset-right, 0px));
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -219,9 +224,11 @@ html {
 
 .budr-landing .shell {
   width: 100%;
-  max-width: min(1180px, 100%);
+  max-width: var(--page-max);
   margin-left: auto;
   margin-right: auto;
+  padding-left: max(var(--page-gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--page-gutter), env(safe-area-inset-right, 0px));
   box-sizing: border-box;
 }
 .budr-landing .btn-primary {
@@ -362,13 +369,13 @@ html {
 }
 
 .budr-landing section {
-  padding: 110px 52px;
+  padding: 110px 0;
   position: relative;
 }
 
 .budr-landing .intro-section {
   position: relative;
-  padding: 96px 52px 100px;
+  padding: 96px 0 100px;
   background: linear-gradient(180deg, rgba(20, 30, 42, 0.5) 0%, transparent 45%), var(--ink);
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   overflow: hidden;
@@ -563,7 +570,7 @@ html {
 }
 
 .budr-landing .cta-section {
-  padding: 130px 52px;
+  padding: 130px 0;
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -610,7 +617,7 @@ html {
 }
 
 .budr-landing footer {
-  padding: 56px 52px 36px;
+  padding: 56px 0 36px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -977,21 +984,20 @@ html {
   .budr-landing .nav-inner {
     padding-top: calc(12px + env(safe-area-inset-top, 0px));
     padding-bottom: 12px;
-    padding-left: max(22px, env(safe-area-inset-left, 0px));
-    padding-right: max(22px, env(safe-area-inset-right, 0px));
+    padding-left: max(var(--page-gutter), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--page-gutter), env(safe-area-inset-right, 0px));
   }
 
   .budr-landing section,
   .budr-landing .stats-bar,
   .budr-landing .cta-section,
   .budr-landing footer {
-    padding-left: max(22px, env(safe-area-inset-left, 0px));
-    padding-right: max(22px, env(safe-area-inset-right, 0px));
+    padding-left: 0;
+    padding-right: 0;
   }
 
   .budr-landing .hero {
-    padding: 110px max(22px, env(safe-area-inset-left, 0px)) 70px
-      max(22px, env(safe-area-inset-right, 0px));
+    padding: 110px 0 70px;
   }
 
   .budr-landing .hero-inner,
@@ -1017,8 +1023,7 @@ html {
   }
 
   .budr-landing .live-demo-strip {
-    padding: 64px max(22px, env(safe-area-inset-left, 0px)) 72px
-      max(22px, env(safe-area-inset-right, 0px));
+    padding: 64px 0 72px;
   }
 
   .budr-landing .lys-flow-track {
@@ -1090,33 +1095,29 @@ html {
   }
 
   .budr-landing .social-proof-section {
-    padding-left: max(22px, env(safe-area-inset-left, 0px));
-    padding-right: max(22px, env(safe-area-inset-right, 0px));
+    padding-left: 0;
+    padding-right: 0;
   }
 
   .budr-landing .usp-section {
-    padding: 64px max(22px, env(safe-area-inset-left, 0px)) 72px
-      max(22px, env(safe-area-inset-right, 0px));
+    padding: 64px 0 72px;
   }
 
   .budr-landing .smart-hl-section {
-    padding: 56px max(22px, env(safe-area-inset-left, 0px)) 64px
-      max(22px, env(safe-area-inset-right, 0px));
+    padding: 56px 0 64px;
   }
 
   .budr-landing .comparison-section {
-    padding-left: max(22px, env(safe-area-inset-left, 0px));
-    padding-right: max(22px, env(safe-area-inset-right, 0px));
+    padding-left: 0;
+    padding-right: 0;
   }
 
   .budr-landing .hurtig-oversigt {
-    padding: 40px max(22px, env(safe-area-inset-left, 0px)) 44px
-      max(22px, env(safe-area-inset-right, 0px));
+    padding: 40px 0 44px;
   }
 
   .budr-landing .section-cta-band {
-    padding: 28px max(22px, env(safe-area-inset-left, 0px)) 28px
-      max(22px, env(safe-area-inset-right, 0px));
+    padding: 28px 0;
   }
 
   .budr-landing .section-cta-band-inner {
@@ -1144,8 +1145,8 @@ html {
   }
 
   .budr-landing .tryghed-section {
-    padding-left: max(22px, env(safe-area-inset-left, 0px));
-    padding-right: max(22px, env(safe-area-inset-right, 0px));
+    padding-left: 0;
+    padding-right: 0;
   }
 }
 
@@ -1521,7 +1522,6 @@ html {
 .budr-landing .home-hero-grid {
   display: grid;
   gap: 14px;
-  max-width: 62ch;
 }
 
 .budr-landing .home-brand-row {
@@ -1583,17 +1583,23 @@ html {
   padding-bottom: clamp(64px, 8vw, 104px);
 }
 
+.budr-landing .budr-video-section .home-copy-shell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .budr-landing .budr-video {
   margin-top: 28px;
   margin-inline: auto;
-  max-width: 960px;
+  max-width: 1080px;
   width: 100%;
 }
 
 .budr-landing .budr-video-frame {
   position: relative;
   width: 100%;
-  max-width: 960px;
+  max-width: 1080px;
   margin-inline: auto;
   aspect-ratio: 16 / 9;
   border-radius: 12px;
@@ -1612,7 +1618,10 @@ html {
 
 .budr-landing .budr-video-details {
   margin-top: 16px;
-  max-width: 56ch;
+  margin-inline: auto;
+  max-width: 1080px;
+  width: 100%;
+  text-align: left;
 }
 
 .budr-landing .budr-video-details summary {
@@ -1781,9 +1790,33 @@ html {
   padding-bottom: clamp(64px, 8vw, 104px);
 }
 
-.budr-landing .home-sara .section-h {
-  max-width: 22ch;
+/* Sara: centreret kolonne (matcher DayInLifeDemo .wrap) — nabo til video/CHIME */
+.budr-landing .home-sara .home-copy-shell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.budr-landing .home-sara .home-copy-shell .section-h {
+  max-width: none;
+  width: 100%;
+  margin-inline: auto;
   margin-bottom: 8px;
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* DayInLifeDemo-kolonne (samme midterakse som overskrift; .beat forbliver venstrestillet indeni) */
+.budr-landing .home-sara .home-copy-shell > div {
+  width: min(100%, 820px);
+  margin-inline: auto;
+}
+
+.budr-landing .home-sara .home-copy-shell > div > p:first-of-type {
+  margin-inline: auto;
+  margin-bottom: 28px;
+  max-width: 60ch;
+  text-align: center;
 }
 
 .budr-landing .home-two-entrances,
@@ -1857,6 +1890,10 @@ html {
 }
 
 .budr-landing .home-founder-shell {
+  max-width: var(--page-max);
+}
+
+.budr-landing .home-founder-shell .founder-content {
   max-width: 65ch;
 }
 
@@ -1980,7 +2017,7 @@ html {
   flex-direction: column;
   align-items: center;
   gap: 20px;
-  max-width: 52ch;
+  max-width: var(--page-max);
   margin: 0 auto;
 }
 
@@ -1992,6 +2029,7 @@ html {
 
 .budr-landing .final-cta-subtext {
   margin: 0;
+  max-width: 52ch;
   font-size: 1rem;
   line-height: 1.7;
   color: var(--white-dim);
@@ -2128,6 +2166,27 @@ html {
 
 .budr-landing .home-copy-shell .section-p {
   max-width: 56ch;
+}
+
+/* Video-sektion: centreret kolonne, ingen 20ch-begrænsning på overskrift */
+.budr-landing .budr-video-section .home-copy-shell .section-h {
+  max-width: none;
+  width: 100%;
+  margin-inline: auto;
+  text-align: center;
+  text-wrap: balance;
+}
+
+@media (min-width: 1024px) {
+  .budr-landing .budr-video-section .home-copy-shell .section-h {
+    white-space: nowrap;
+  }
+}
+
+.budr-landing .budr-video-section .home-copy-shell .section-p {
+  max-width: 60ch;
+  margin-inline: auto;
+  text-align: center;
 }
 
 .budr-landing .home-problem-grid {
@@ -2712,8 +2771,9 @@ html {
 }
 
 .budr-landing .chime-interactive {
-  max-width: 920px;
-  margin: 0 auto;
+  max-width: none;
+  width: 100%;
+  margin: 0;
   color: var(--white);
   font-family: var(--font-landing-body, 'DM Sans', system-ui, sans-serif);
 }

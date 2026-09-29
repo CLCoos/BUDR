@@ -210,7 +210,7 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
           <section className="home-sara fi" id="sara-forloeb" aria-labelledby="sara-forloeb-title">
             <div className="shell home-copy-shell">
               <h2 className="section-h" id="sara-forloeb-title">
-                Møde Sara, ikke bare hendes journal
+                Mød Sara, ikke bare hendes journal
               </h2>
               <DayInLifeDemo />
             </div>
