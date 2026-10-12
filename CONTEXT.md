@@ -2,7 +2,9 @@
 
 **Til AI/assistenter:** Læs denne fil først. Kort indgang: [`AGENTS.md`](./AGENTS.md).
 
-**Sidst opdateret (manuelt):** 2026-09-29 — **Forside video-sektion (`#se-video`):** Ny `BudrVideo`-komponent (HTML5 `<video>`, poster, ingen autoplay) + sektion i `HomeLandingPage` lige efter hero. Styles i `budr-landing.css`. Sender `video_play` via `trackEvent` første gang videoen afspilles (GA kun når gtag er indlæst efter samtykke). Medier: `public/video/budr-care-90-sek.mp4` + poster.
+**Sidst opdateret (manuelt):** 2026-10-12 — **`POST /api/ai/chat-completion`:** Klientens `parameters` må kun indeholde sampling-felter (`temperature`, `max_tokens`, `max_completion_tokens`, `top_p`, `stop`). `api_key` sættes efter spread, så `api_base` / `base_url` / `os.environ/…` ikke kan sende serverens provider-nøgle (eller andre env-værdier) til et andet host. Se `src/lib/ai/chatCompletionParams.ts`.
+
+**Forrige:** 2026-09-29 — **Forside video-sektion (`#se-video`):** Ny `BudrVideo`-komponent (HTML5 `<video>`, poster, ingen autoplay) + sektion i `HomeLandingPage` lige efter hero. Styles i `budr-landing.css`. Sender `video_play` via `trackEvent` første gang videoen afspilles (GA kun når gtag er indlæst efter samtykke). Medier: `public/video/budr-care-90-sek.mp4` + poster.
 
 **Forrige:** 2026-05-22 — **Care Portal-demo (render-løkker + e2e):** Playwright `npm run test:e2e:demo` verificerer alle demo-ruter uden «Maximum update depth» og guidet tour-navigation (`e2e/care-portal-demo-console.spec.ts`). Kræver `npx playwright install chromium` (evt. `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers`).
 

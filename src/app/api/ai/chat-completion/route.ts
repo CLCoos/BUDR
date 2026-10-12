@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { completion } from '@rocketnew/llm-sdk';
 import { createClient } from '@supabase/supabase-js';
 import { ANTHROPIC_CHAT_MODEL } from '@/lib/ai/anthropicModel';
+import { sanitizeChatCompletionParameters } from '@/lib/ai/chatCompletionParams';
 import { checkApiRateLimit, getClientIp } from '@/lib/apiRateLimit';
 
 const API_KEYS: Record<string, string | undefined> = {
@@ -160,8 +161,7 @@ export async function POST(request: NextRequest) {
     const model = body.model;
     const messages = body.messages;
     const stream = Boolean(body.stream);
-    const parameters =
-      typeof body.parameters === 'object' && body.parameters !== null ? body.parameters : {};
+    const parameters = sanitizeChatCompletionParameters(body.parameters);
 
     if (typeof provider !== 'string' || !Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json(
@@ -211,8 +211,8 @@ export async function POST(request: NextRequest) {
         model: effectiveModel,
         messages,
         stream: true,
+        ...parameters,
         api_key: apiKey,
-        ...(parameters as Record<string, unknown>),
       });
 
       const encoder = new TextEncoder();
@@ -260,8 +260,8 @@ export async function POST(request: NextRequest) {
       model: effectiveModel,
       messages,
       stream: false,
+      ...parameters,
       api_key: apiKey,
-      ...(parameters as Record<string, unknown>),
     });
 
     return NextResponse.json(response, {
