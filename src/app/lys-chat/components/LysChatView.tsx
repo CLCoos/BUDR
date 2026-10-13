@@ -380,26 +380,24 @@ export default function LysChatView() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  // ── Save conversation to Supabase ─────────────────────────────────────────
+  // Cookie-beboere har ikke JWT; persist via service-role API (ikke browser-RLS).
   const saveConversation = useCallback(
     async (msgs: LysChatMessage[], existingId: string | null) => {
       if (!residentId || msgs.length < 2) return existingId;
-      const supabase = createClient();
-      if (!supabase) return existingId;
       const title = msgs.find((m) => m.role === 'user')?.content.slice(0, 60) ?? null;
-      if (existingId) {
-        await supabase
-          .from('lys_conversations')
-          .update({ messages: msgs, title, updated_at: new Date().toISOString() })
-          .eq('id', existingId);
+      try {
+        const res = await fetch('/api/lys/conversations', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ id: existingId, messages: msgs, title }),
+        });
+        if (!res.ok) return existingId;
+        const data = (await res.json()) as { id?: string | null; demo?: boolean };
+        if (data.demo) return existingId;
+        return typeof data.id === 'string' && data.id ? data.id : existingId;
+      } catch {
         return existingId;
-      } else {
-        const { data } = await supabase
-          .from('lys_conversations')
-          .insert({ resident_id: residentId, messages: msgs, title })
-          .select('id')
-          .single();
-        return (data as { id: string } | null)?.id ?? null;
       }
     },
     [residentId]
@@ -637,17 +635,20 @@ export default function LysChatView() {
   // ── History ───────────────────────────────────────────────────────────────
   const loadHistory = async () => {
     if (!residentId) return;
-    const supabase = createClient();
-    if (!supabase) return;
     setHistoryLoading(true);
-    const { data } = await supabase
-      .from('lys_conversations')
-      .select('id, title, messages, updated_at')
-      .eq('resident_id', residentId)
-      .order('updated_at', { ascending: false })
-      .limit(20);
-    setHistory((data ?? []) as SavedConversation[]);
-    setHistoryLoading(false);
+    try {
+      const res = await fetch('/api/lys/conversations', { credentials: 'same-origin' });
+      if (!res.ok) {
+        setHistory([]);
+        return;
+      }
+      const data = (await res.json()) as { conversations?: SavedConversation[] };
+      setHistory(Array.isArray(data.conversations) ? data.conversations : []);
+    } catch {
+      setHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
   };
 
   const openHistory = () => {

@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { checkApiRateLimit, getClientIp } from '@/lib/apiRateLimit';
 import { getResidentId } from '@/lib/residentAuth';
 import { classifyUtterance, type SafetyClassification } from '@/lib/lys/safetyClassifier';
+import { ownedConversationIdForSafetyEvent } from '@/lib/lys/lysConversations';
 import { isValidUuid } from '@/lib/uuid';
 
 const LYS_SYSTEM = `Du er Lys. Følg disse regler i prioriteret rækkefølge — sikkerhed før alt andet.
@@ -130,10 +131,24 @@ async function insertSafetyEvent(input: SafetyEventInput): Promise<void> {
 
   const organisationId = (residentRow as { org_id?: string | null } | null)?.org_id ?? null;
 
+  let conversationId: string | null = null;
+  if (input.conversationId) {
+    const { data: convRow } = await supabase
+      .from('lys_conversations')
+      .select('resident_id')
+      .eq('id', input.conversationId)
+      .maybeSingle();
+    conversationId = ownedConversationIdForSafetyEvent({
+      conversationId: input.conversationId,
+      eventResidentId: input.residentId,
+      rowResidentId: (convRow as { resident_id?: string } | null)?.resident_id ?? null,
+    });
+  }
+
   const { error } = await supabase.from('lys_safety_events').insert({
     resident_id: input.residentId,
     organisation_id: organisationId,
-    conversation_id: input.conversationId,
+    conversation_id: conversationId,
     risk_level: input.classification.risk_level,
     category: input.classification.category,
     reasoning: input.classification.reasoning,
