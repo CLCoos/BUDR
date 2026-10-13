@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requirePortalAuth } from '@/lib/portalAuth';
+import { canEditMarketingCms } from '@/lib/marketing/marketingCmsAccess';
 import { parseStaffOrgId } from '@/lib/staffOrgScope';
 import {
   DEFAULT_INSTITUTIONER_SECTIONS_COPY,
@@ -20,6 +21,9 @@ function getAdminClient() {
 
 export async function GET(): Promise<NextResponse> {
   const user = await requirePortalAuth();
+  if (!canEditMarketingCms(user.email)) {
+    return NextResponse.json({ error: 'Kun BUDR kan redigere website-tekster' }, { status: 403 });
+  }
   const orgId = parseStaffOrgId(user.user_metadata?.org_id);
   if (!orgId) return NextResponse.json({ error: 'Manglende org_id' }, { status: 403 });
 
@@ -51,6 +55,9 @@ export async function GET(): Promise<NextResponse> {
 
 export async function PUT(req: Request): Promise<NextResponse> {
   const user = await requirePortalAuth();
+  if (!canEditMarketingCms(user.email)) {
+    return NextResponse.json({ error: 'Kun BUDR kan redigere website-tekster' }, { status: 403 });
+  }
   const orgId = parseStaffOrgId(user.user_metadata?.org_id);
   if (!orgId) return NextResponse.json({ error: 'Manglende org_id' }, { status: 403 });
 

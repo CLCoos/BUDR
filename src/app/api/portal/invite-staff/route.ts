@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { headers } from 'next/headers';
 import { getStaffPermissions } from '@/lib/auth/getStaffPermissions';
 import { hasPermission } from '@/lib/auth/hasPermission';
+import { coarseCareStaffRole, type CareStaffRole } from '@/lib/careStaffRole';
 import { requirePortalAuth } from '@/lib/portalAuth';
 import { PERMISSIONS } from '@/lib/permissions';
 import { parseStaffOrgId } from '@/lib/staffOrgScope';
@@ -51,7 +52,7 @@ export async function POST(req: Request): Promise<NextResponse> {
   const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
   const name = typeof body.name === 'string' ? body.name.trim() : '';
   const roleId = typeof body.roleId === 'string' ? body.roleId : null;
-  let role = body.role === 'leder' || body.role === 'medarbejder' ? body.role : 'medarbejder';
+  let role: CareStaffRole = 'medarbejder';
 
   if (!email) {
     return NextResponse.json({ error: 'Email er påkrævet' }, { status: 400 });
@@ -71,14 +72,24 @@ export async function POST(req: Request): Promise<NextResponse> {
   if (roleId) {
     const { data: roleRow } = await admin
       .from('org_roles')
-      .select('id, name')
+      .select('id, name, permissions')
       .eq('id', roleId)
       .eq('org_id', orgId)
       .single();
     if (!roleRow) {
       return NextResponse.json({ error: 'Ugyldig rolle valgt' }, { status: 400 });
     }
-    role = roleRow.name;
+    role = coarseCareStaffRole(roleRow.name);
+    // Kun den, der selv må administrere roller, kan invitere til en lederrolle.
+    const grantsManageRoles =
+      role === 'leder' ||
+      (Array.isArray(roleRow.permissions) && roleRow.permissions.includes('manage_roles'));
+    if (grantsManageRoles && !hasPermission(permissions, PERMISSIONS.MANAGE_ROLES)) {
+      return NextResponse.json(
+        { error: 'Du kan ikke invitere til en rolle med flere rettigheder end din egen' },
+        { status: 403 }
+      );
+    }
   }
 
   // Invite via Supabase Admin API — creates the user row and sends the magic link.
@@ -100,15 +111,26 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: inviteErr.message }, { status: 400 });
   }
 
-  // Insert into care_staff — best-effort (user exists, magic link pending confirmation).
-  if (inviteData?.user?.id) {
-    await admin.from('care_staff').insert({
-      id: inviteData.user.id,
-      org_id: orgId,
-      full_name: name || email.split('@')[0],
-      role,
-      ...(roleId ? { role_id: roleId } : {}),
-    });
+  // Uden care_staff-række kan den inviterede ikke komme ind i portalen, så fejl her
+  // må ikke ignoreres: ryd den halvt oprettede bruger op og meld fejlen tilbage.
+  const invitedUserId = inviteData?.user?.id;
+  if (!invitedUserId) {
+    return NextResponse.json({ error: 'Bruger blev ikke oprettet — prøv igen' }, { status: 500 });
+  }
+
+  const { error: staffErr } = await admin.from('care_staff').insert({
+    id: invitedUserId,
+    org_id: orgId,
+    full_name: name || email.split('@')[0],
+    role,
+    ...(roleId ? { role_id: roleId } : {}),
+  });
+  if (staffErr) {
+    await admin.auth.admin.deleteUser(invitedUserId);
+    return NextResponse.json(
+      { error: 'Kunne ikke oprette medarbejderprofil — prøv igen' },
+      { status: 500 }
+    );
   }
 
   // Audit log — best-effort, same pattern as staffAuditLog.ts.

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { hasPortalPermission } from '@/lib/portalPermissions';
 
 /**
  * Godkender planforslag som **indlogget portal-personale** (Supabase JWT + RLS).
@@ -17,6 +18,12 @@ export async function POST(req: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+  if (!(await hasPortalPermission('edit_park_plans'))) {
+    return NextResponse.json(
+      { error: 'Du har ikke rettighed til at godkende planer' },
+      { status: 403 }
+    );
+  }
 
   let body: { proposalId?: string };
   try {
@@ -30,15 +37,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Mangler proposalId' }, { status: 400 });
   }
 
-  const { data: proposal, error: fetchErr } = await supabase
+  const now = new Date().toISOString();
+  const staffKey = user.id;
+
+  // Gør forslaget til «approved» først, så et samtidigt afvis-kald ikke kan ende
+  // med en aktiv plan fra et afvist forslag. Kun ét kald kan vinde claim'et.
+  const { data: proposal, error: claimErr } = await supabase
     .from('plan_proposals')
-    .select('id, resident_id, plan_date, proposed_items')
+    .update({ status: 'approved', reviewed_by: staffKey, reviewed_at: now })
     .eq('id', proposalId)
     .eq('status', 'pending')
+    .select('id, resident_id, plan_date, proposed_items')
     .maybeSingle();
 
-  if (fetchErr) {
-    console.error('approve-proposal fetch', fetchErr);
+  if (claimErr) {
+    console.error('approve-proposal claim', claimErr);
     return NextResponse.json({ error: 'Kunne ikke hente forslag' }, { status: 500 });
   }
   if (!proposal) {
@@ -47,9 +60,6 @@ export async function POST(req: NextRequest) {
       { status: 404 }
     );
   }
-
-  const now = new Date().toISOString();
-  const staffKey = user.id;
 
   const { data: updatedPlan, error: upsertErr } = await supabase
     .from('daily_plans')
@@ -68,22 +78,13 @@ export async function POST(req: NextRequest) {
 
   if (upsertErr) {
     console.error('approve-proposal upsert error', upsertErr);
+    // Rul forslaget tilbage til «pending», så det kan behandles igen.
+    await supabase
+      .from('plan_proposals')
+      .update({ status: 'pending', reviewed_by: null, reviewed_at: null })
+      .eq('id', proposalId)
+      .eq('status', 'approved');
     return NextResponse.json({ error: 'Kunne ikke opdatere dagsplanen' }, { status: 500 });
-  }
-
-  const { error: updateErr } = await supabase
-    .from('plan_proposals')
-    .update({
-      status: 'approved',
-      reviewed_by: staffKey,
-      reviewed_at: now,
-    })
-    .eq('id', proposalId)
-    .eq('status', 'pending');
-
-  if (updateErr) {
-    console.error('approve-proposal update error', updateErr);
-    return NextResponse.json({ error: 'Kunne ikke opdatere forslagsstatus' }, { status: 500 });
   }
 
   return NextResponse.json({ success: true, updatedPlan });

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { hasPortalPermission } from '@/lib/portalPermissions';
 
 /**
  * Afviser planforslag som **indlogget portal-personale** (Supabase JWT + RLS).
@@ -15,6 +16,12 @@ export async function POST(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  if (!(await hasPortalPermission('edit_park_plans'))) {
+    return NextResponse.json(
+      { error: 'Du har ikke rettighed til at afvise planer' },
+      { status: 403 }
+    );
   }
 
   let body: { proposalId?: string };
