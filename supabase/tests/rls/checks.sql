@@ -55,6 +55,26 @@ DO $$ DECLARE n int; BEGIN
     EXCEPTION WHEN others THEN INSERT INTO r VALUES ('med_cancel_then_regive (should work)','BROKEN'); END;
   END IF;
 END $$;
+-- magtanvendelse / indsatsdokumentation (bølge 2): juridisk spor, kun opret og læs
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.care_indsats_records') IS NOT NULL THEN
+    BEGIN
+      INSERT INTO care_indsats_records (org_id, type, tidspunkt, involverede_borgere, beskrivelse, underskrift) VALUES ('00000000-0000-0000-0000-0000000000a1','§136_fastholdelse','2026-10-13T14:00','Sara K.','Fastholdelse','LN');
+      INSERT INTO r VALUES ('indsats_create (should work)','works');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('indsats_create (should work)','BROKEN'); END;
+    BEGIN
+      INSERT INTO care_indsats_records (org_id, type, tidspunkt, involverede_borgere, beskrivelse, underskrift, created_by) VALUES ('00000000-0000-0000-0000-0000000000a1','hændelse','2026-10-13T14:00','Sara K.','x','LN','00000000-0000-0000-0000-0000000000c1');
+      INSERT INTO r VALUES ('indsats_spoof_created_by','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('indsats_spoof_created_by','blocked'); END;
+    BEGIN
+      INSERT INTO care_indsats_records (org_id, type, tidspunkt, involverede_borgere, beskrivelse, underskrift) VALUES ('00000000-0000-0000-0000-0000000000a2','hændelse','2026-10-13T14:00','x','x','LN');
+      INSERT INTO r VALUES ('indsats_other_org_insert','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('indsats_other_org_insert','blocked'); END;
+    SELECT count(*) INTO n FROM care_indsats_records; INSERT INTO r VALUES ('indsats_read (should work)', CASE WHEN n>0 THEN 'works' ELSE 'BROKEN' END);
+    BEGIN UPDATE care_indsats_records SET beskrivelse = 'omskrevet'; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('indsats_rewrite', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('indsats_rewrite','blocked'); END;
+    BEGIN DELETE FROM care_indsats_records; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('indsats_delete', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('indsats_delete','blocked'); END;
+  END IF;
+END $$;
 -- gæst i org1 må læse, ikke skrive
 SET test.uid = '00000000-0000-0000-0000-0000000000c4';
 DO $$ DECLARE n int; BEGIN
@@ -64,6 +84,12 @@ DO $$ DECLARE n int; BEGIN
       INSERT INTO care_handover_notes (resident_id, org_id, shift_label, shift_date, body) VALUES ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000a1','nat', current_date, 'gæst');
       INSERT INTO r VALUES ('handover_guest_write','HOLE');
     EXCEPTION WHEN others THEN INSERT INTO r VALUES ('handover_guest_write','blocked'); END;
+  END IF;
+  IF to_regclass('public.care_indsats_records') IS NOT NULL THEN
+    BEGIN
+      EXECUTE $q$INSERT INTO care_indsats_records (org_id, type, tidspunkt, involverede_borgere, beskrivelse, underskrift) VALUES ('00000000-0000-0000-0000-0000000000a1','hændelse','2026-10-13T14:00','x','x','G')$q$;
+      INSERT INTO r VALUES ('indsats_guest_write','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('indsats_guest_write','blocked'); END;
   END IF;
 END $$;
 -- leder in org2 (other tenant)
@@ -78,6 +104,9 @@ DO $$ DECLARE n int; BEGIN
   END IF;
   IF to_regclass('public.medication_administrations') IS NOT NULL THEN
     EXECUTE 'SELECT count(*) FROM medication_administrations' INTO n; INSERT INTO r VALUES ('med_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
+  END IF;
+  IF to_regclass('public.care_indsats_records') IS NOT NULL THEN
+    EXECUTE 'SELECT count(*) FROM care_indsats_records' INTO n; INSERT INTO r VALUES ('indsats_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
   END IF;
 END $$;
 -- leder in org1 can still manage roles

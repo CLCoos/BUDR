@@ -425,7 +425,7 @@ export default function DashboardDemoMain() {
         open={overrapportPanelOpen}
         onClose={() => setOverrapportPanelOpen(false)}
       />
-      <IndsatsModal open={indsatsOpen} onClose={() => setIndsatsOpen(false)} />
+      <IndsatsModal open={indsatsOpen} onClose={() => setIndsatsOpen(false)} useDemoData />
       <TilsynsrapportModal
         open={tilsynsrapportOpen}
         onClose={() => setTilsynsrapportOpen(false)}

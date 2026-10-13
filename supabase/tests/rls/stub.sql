@@ -10,6 +10,7 @@ CREATE SCHEMA auth;
 CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT nullif(current_setting('test.uid', true),'')::uuid $$;
 GRANT USAGE ON SCHEMA auth, public TO anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION auth.uid() TO anon, authenticated, service_role;
+CREATE TABLE auth.users (id uuid primary key);
 CREATE TABLE organisations (id uuid primary key, name text);
 CREATE TABLE org_roles (id uuid primary key default gen_random_uuid(), org_id uuid, name text, permissions text[]);
 CREATE TABLE care_staff (id uuid primary key, org_id uuid, role text, role_id uuid);
@@ -57,6 +58,7 @@ INSERT INTO care_staff VALUES ('00000000-0000-0000-0000-0000000000c2','00000000-
 INSERT INTO care_residents VALUES ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000a1'),('00000000-0000-0000-0000-0000000000b2','00000000-0000-0000-0000-0000000000a2');
 INSERT INTO org_roles (id, org_id, name, permissions) VALUES ('00000000-0000-0000-0000-0000000000d1','00000000-0000-0000-0000-0000000000a1','medarbejder','{view_dashboard}'),
   ('00000000-0000-0000-0000-0000000000d2','00000000-0000-0000-0000-0000000000a1','gæst','{view_dashboard,view_handover}');
+INSERT INTO auth.users SELECT ('00000000-0000-0000-0000-0000000000c'||i)::uuid FROM generate_series(1,4) i;
 -- c4: gæst i org1 (kun læse-rettigheder via role_id)
 INSERT INTO care_staff VALUES ('00000000-0000-0000-0000-0000000000c4','00000000-0000-0000-0000-0000000000a1','medarbejder','00000000-0000-0000-0000-0000000000d2');
 INSERT INTO lys_safety_events (resident_id, risk_level) VALUES ('00000000-0000-0000-0000-0000000000b1','acute');
