@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createHash } from 'crypto';
-import {
-  createSession,
-  validateSessionToken,
-  SESSION_COOKIE_NAME,
-  LEGACY_COOKIE_NAME,
-} from '@/lib/residentSessions';
+import { redeemLoginToken, SESSION_COOKIE_NAME, LEGACY_COOKIE_NAME } from '@/lib/residentSessions';
 import { sanitizeNext } from '@/lib/redirectSafety';
-import { isValidUuid } from '@/lib/uuid';
 
 const COOKIE_MAX_AGE = 30 * 24 * 60 * 60;
 
@@ -36,67 +30,37 @@ function setSessionCookies(res: NextResponse, token: string, residentId: string)
   });
 }
 
+/**
+ * GET /api/resident-auth/session?token=<engangs-token>&next=/park-hub
+ * Veksler et login-link udstedt af personalet til en HttpOnly borgersession.
+ * Borgerens id alene giver ikke længere adgang.
+ */
 export async function GET(request: NextRequest) {
-  const rid = request.nextUrl.searchParams.get('rid');
+  const loginToken = request.nextUrl.searchParams.get('token')?.trim() ?? '';
   const next = sanitizeNext(request.nextUrl.searchParams.get('next'));
 
-  if (!rid || !isValidUuid(rid)) {
-    return htmlPage('Ugyldigt link', 'Ugyldigt link', 400);
-  }
-
-  const existingToken = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  if (existingToken) {
-    const validation = await validateSessionToken(existingToken);
-    if (validation.valid && validation.residentUserId === rid) {
-      return NextResponse.redirect(new URL(next, request.url));
-    }
+  if (!loginToken) {
+    return htmlPage(
+      'Ugyldigt link',
+      'Linket er ikke gyldigt. Bed personalet om et nyt login-link.',
+      400
+    );
   }
 
   const userAgent = request.headers.get('user-agent') ?? undefined;
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '';
   const ipHash = ip ? createHash('sha256').update(ip).digest('hex').slice(0, 16) : undefined;
 
-  const session = await createSession({ residentUserId: rid, userAgent, ipHash });
+  const session = await redeemLoginToken({ token: loginToken, userAgent, ipHash });
   if (!session) {
     return htmlPage(
-      'Kunne ikke starte session',
-      'Kunne ikke starte session. Kontakt personalet, hvis problemet fortsætter.'
+      'Linket virker ikke længere',
+      'Linket er udløbet eller allerede brugt. Bed personalet om et nyt login-link.',
+      410
     );
   }
 
   const res = NextResponse.redirect(new URL(next, request.url));
-  setSessionCookies(res, session.token, rid);
-  return res;
-}
-
-export async function POST(req: NextRequest) {
-  const body = await req.json().catch(() => null);
-  const residentUserId = body?.residentUserId;
-
-  if (!residentUserId || typeof residentUserId !== 'string') {
-    return NextResponse.json({ error: 'missing_resident_id' }, { status: 400 });
-  }
-
-  if (!isValidUuid(residentUserId)) {
-    return NextResponse.json({ error: 'invalid_resident_id' }, { status: 400 });
-  }
-
-  const userAgent = req.headers.get('user-agent') ?? undefined;
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '';
-  const ipHash = ip ? createHash('sha256').update(ip).digest('hex').slice(0, 16) : undefined;
-
-  const session = await createSession({ residentUserId, userAgent, ipHash });
-  if (!session) {
-    return NextResponse.json({ error: 'session_creation_failed' }, { status: 500 });
-  }
-
-  const res = NextResponse.json({ success: true });
-  res.cookies.set(SESSION_COOKIE_NAME, session.token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: COOKIE_MAX_AGE,
-  });
+  setSessionCookies(res, session.token, session.residentUserId);
   return res;
 }

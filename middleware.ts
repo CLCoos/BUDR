@@ -2,7 +2,6 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import { validateSessionToken } from '@/lib/residentSessions';
-import { isValidUuid } from '@/lib/uuid';
 
 const RESIDENT_ID_COOKIE = 'budr_resident_id';
 const RESIDENT_SESSION_COOKIE = 'budr_resident_session';
@@ -341,7 +340,6 @@ export async function middleware(req: NextRequest) {
 
     const residentId = legacyResidentId;
 
-    // Under rollout: accept session OR legacy; after rollout remove legacy-only path
     if (!sessionToken && !legacyResidentId) {
       if (!allowParkDemoCookie()) {
         return redirectHomeClear(false);
@@ -368,19 +366,9 @@ export async function middleware(req: NextRequest) {
       return failAndMaybeBlock();
     }
 
-    if (!isValidUuid(residentId)) {
-      return failAndMaybeBlock();
-    }
-
-    const exists = await residentExistsInDb(residentId);
-    if (exists === null) {
-      return failAndMaybeBlock();
-    }
-    if (!exists) {
-      return failAndMaybeBlock();
-    }
-
-    return NextResponse.next();
+    // Den klient-læsbare id-cookie alene giver ikke adgang; kun en gyldig HttpOnly
+    // session (ovenfor) eller demo-borgeren. Borgeren skal logge ind via et login-link.
+    return failAndMaybeBlock();
   }
 
   return NextResponse.next();

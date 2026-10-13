@@ -318,7 +318,12 @@ export default function LysHome({
     if (moodTick > 0) setShowLysCard(true);
   }, [moodTick]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/resident-session', { method: 'DELETE' });
+    } catch {
+      // Ryd i det mindste den lokale cookie, selvom serveren ikke svarer
+    }
     document.cookie = 'budr_resident_id=; path=/; max-age=0';
     router.replace('/');
   };
@@ -385,7 +390,7 @@ export default function LysHome({
           </div>
           <button
             type="button"
-            onClick={handleLogout}
+            onClick={() => void handleLogout()}
             className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium transition-opacity hover:opacity-70"
             style={{ color: 'var(--lys-muted)' }}
             aria-label="Log ud"

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { hasPortalPermission } from '@/lib/portalPermissions';
+import { revokeSession } from '@/lib/residentSessions';
 
 export async function GET(req: NextRequest) {
   const residentUserId = req.nextUrl.searchParams.get('resident_user_id');
@@ -16,6 +18,9 @@ export async function GET(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  if (!(await hasPortalPermission('view_360'))) {
+    return NextResponse.json({ error: 'forbidden' }, { status: 403 });
+  }
 
   const { data, error } = await supabase
     .from('resident_sessions')
@@ -47,19 +52,22 @@ export async function DELETE(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  if (!(await hasPortalPermission('view_360'))) {
+    return NextResponse.json({ error: 'forbidden' }, { status: 403 });
+  }
 
-  const { data, error } = await supabase
+  // Staff-RLS (SELECT i egen org) afgør, om sessionen må ses; selve tilbagekaldet
+  // sker via service role, da staff ikke længere har UPDATE på resident_sessions.
+  const { data: visible, error } = await supabase
     .from('resident_sessions')
-    .update({
-      revoked_at: new Date().toISOString(),
-      revoked_by: user.id,
-      revoke_reason: reason,
-    })
+    .select('id')
     .eq('id', sessionId)
     .is('revoked_at', null)
-    .select('id')
     .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: Boolean(data) });
+  if (!visible) return NextResponse.json({ success: false });
+
+  const ok = await revokeSession({ sessionId, revokedBy: user.id, reason });
+  return NextResponse.json({ success: ok });
 }

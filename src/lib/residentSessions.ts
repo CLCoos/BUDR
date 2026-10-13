@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 const SESSION_COOKIE = 'budr_resident_session';
 const LEGACY_COOKIE = 'budr_resident_id';
 const SESSION_TTL_DAYS = 30;
+const LOGIN_TOKEN_TTL_MINUTES = 30;
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -85,9 +86,71 @@ export async function createSession(opts: {
   return { token, expiresAt };
 }
 
+/**
+ * Engangs-login-link udstedt af personale. Returnerer det rå token (vises kun én gang);
+ * kun hash gemmes. Kalderen skal selv have tjekket, at medarbejderen må se borgeren.
+ */
+export async function createLoginToken(opts: {
+  residentUserId: string;
+  orgId: string;
+  createdBy: string;
+}): Promise<{ token: string; expiresAt: Date } | null> {
+  const supabase = getServiceClient();
+  if (!supabase) return null;
+
+  const token = generateToken();
+  const expiresAt = new Date(Date.now() + LOGIN_TOKEN_TTL_MINUTES * 60 * 1000);
+
+  const { error } = await supabase.from('resident_login_tokens').insert({
+    resident_user_id: opts.residentUserId,
+    org_id: opts.orgId,
+    token_hash: hashToken(token),
+    created_by: opts.createdBy,
+    expires_at: expiresAt.toISOString(),
+  });
+
+  if (error) return null;
+  return { token, expiresAt };
+}
+
+/**
+ * Indløser et login-link: markerer det brugt (atomisk — kun ét kald kan vinde)
+ * og opretter en resident_session. Udløbne, brugte eller ukendte tokens afvises.
+ */
+export async function redeemLoginToken(opts: {
+  token: string;
+  userAgent?: string;
+  ipHash?: string;
+}): Promise<{ token: string; expiresAt: Date; residentUserId: string } | null> {
+  if (!opts.token) return null;
+  const supabase = getServiceClient();
+  if (!supabase) return null;
+
+  const { data: claimed, error } = await supabase
+    .from('resident_login_tokens')
+    .update({ used_at: new Date().toISOString() })
+    .eq('token_hash', hashToken(opts.token))
+    .is('used_at', null)
+    .gt('expires_at', new Date().toISOString())
+    .select('id, resident_user_id')
+    .maybeSingle();
+
+  if (error || !claimed) return null;
+
+  const session = await createSession({
+    residentUserId: claimed.resident_user_id,
+    userAgent: opts.userAgent,
+    ipHash: opts.ipHash,
+  });
+  if (!session) return null;
+
+  return { ...session, residentUserId: claimed.resident_user_id };
+}
+
 export async function revokeSession(opts: {
   sessionId: string;
-  revokedBy: string;
+  /** care_staff.id; udelades når borgeren selv logger ud */
+  revokedBy?: string;
   reason?: string;
 }): Promise<boolean> {
   const supabase = getServiceClient();
@@ -97,7 +160,7 @@ export async function revokeSession(opts: {
     .from('resident_sessions')
     .update({
       revoked_at: new Date().toISOString(),
-      revoked_by: opts.revokedBy,
+      revoked_by: opts.revokedBy ?? null,
       revoke_reason: opts.reason ?? null,
     })
     .eq('id', opts.sessionId)

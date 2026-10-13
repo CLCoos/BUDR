@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { LEGACY_COOKIE_NAME, revokeSession, validateSessionToken } from '@/lib/residentSessions';
 
 const COOKIE_NAME = 'budr_resident_session';
 /** 1 år — matcher øvrige beboer-cookie varighed; PIN/WebAuthn styrer reelt adgang. */
@@ -33,10 +34,19 @@ export async function POST(req: NextRequest) {
 
 /**
  * DELETE /api/resident-session
- * Logout — clears the session cookie.
+ * Logout — tilbagekalder sessionen i databasen og rydder cookies, så en kopieret
+ * cookie ikke kan genbruges.
  */
-export async function DELETE() {
+export async function DELETE(req: NextRequest) {
+  const token = req.cookies.get(COOKIE_NAME)?.value?.trim();
+  if (token) {
+    const validation = await validateSessionToken(token);
+    if (validation.valid) {
+      await revokeSession({ sessionId: validation.sessionId, reason: 'resident_logout' });
+    }
+  }
   const res = NextResponse.json({ ok: true });
   res.cookies.set(COOKIE_NAME, '', { maxAge: 0, path: '/' });
+  res.cookies.set(LEGACY_COOKIE_NAME, '', { maxAge: 0, path: '/' });
   return res;
 }
