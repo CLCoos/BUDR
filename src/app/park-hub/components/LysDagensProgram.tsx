@@ -3,7 +3,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { CalendarDays, Check, Stethoscope } from 'lucide-react';
 import { toast } from 'sonner';
-import { createClient } from '@/lib/supabase/client';
 import type { LysThemeTokens } from '../lib/lysTheme';
 
 export type ProgramItemType = 'struktur' | 'aftale' | 'aktivitet' | 'andet';
@@ -116,30 +115,25 @@ export default function LysDagensProgram({
       setItems([]);
       return;
     }
-    const supabase = createClient();
-    if (!supabase) {
-      setItems([]);
-      return;
-    }
-
-    const today = new Date().toISOString().slice(0, 10);
-    supabase
-      .from('daily_plans')
-      .select('plan_items')
-      .eq('resident_id', residentId)
-      .eq('plan_date', today)
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (error) console.error('LysDagensProgram fetch error', error);
-        if (data?.plan_items && Array.isArray(data.plan_items) && data.plan_items.length > 0) {
-          const mapped = (data.plan_items as RawPlanItem[])
-            .map((raw, idx) => rawToProgramItem(raw, idx))
-            .sort((a, b) => parseTime(a.time) - parseTime(b.time));
-          setItems(mapped);
-        } else {
-          setItems([]); // empty — show friendly state
-        }
+    // Borgeren har ingen Supabase-session; serveren læser planen med borgeren fra cookien.
+    let cancelled = false;
+    void fetch('/api/lys/plan-items', { credentials: 'include' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { dailyPlanItems?: RawPlanItem[] } | null) => {
+        if (cancelled) return;
+        const raw = data?.dailyPlanItems ?? [];
+        setItems(
+          raw
+            .map((item, idx) => rawToProgramItem(item, idx))
+            .sort((a, b) => parseTime(a.time) - parseTime(b.time))
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setItems([]);
       });
+    return () => {
+      cancelled = true;
+    };
   }, [residentId]);
 
   const formatter = useMemo(

@@ -168,9 +168,9 @@ export default function OverrapportPanel({ open, onClose }: Props) {
           .order('created_at', { ascending: false }),
         supabase
           .from('daily_plans')
-          .select('resident_id, date, plan_items')
-          .lte('date', today)
-          .gte('date', new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10))
+          .select('resident_id, plan_date, plan_items')
+          .lte('plan_date', today)
+          .gte('plan_date', new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10))
           .in('resident_id', residentIds),
       ]);
 
@@ -253,7 +253,7 @@ export default function OverrapportPanel({ open, onClose }: Props) {
 
       for (const plan of (planResult.data ?? []) as {
         resident_id: string;
-        date: string;
+        plan_date: string;
         plan_items: PlanItem[] | null;
       }[]) {
         const items = Array.isArray(plan.plan_items) ? plan.plan_items : [];
@@ -263,7 +263,7 @@ export default function OverrapportPanel({ open, onClose }: Props) {
               resident_name: planNameMap[plan.resident_id] ?? 'Ukendt',
               title: item.title,
               time: item.time,
-              date: plan.date,
+              date: plan.plan_date,
             });
           }
         }
