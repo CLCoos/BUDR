@@ -31,7 +31,6 @@ CREATE INDEX IF NOT EXISTS care_handover_notes_org_date_idx
 
 ALTER TABLE public.care_handover_notes ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS chn_staff_select ON public.care_handover_notes;
 CREATE POLICY chn_staff_select ON public.care_handover_notes
   FOR SELECT TO authenticated
   USING (
@@ -39,7 +38,6 @@ CREATE POLICY chn_staff_select ON public.care_handover_notes
     AND public.care_staff_has_permission('view_handover')
   );
 
-DROP POLICY IF EXISTS chn_staff_insert ON public.care_handover_notes;
 CREATE POLICY chn_staff_insert ON public.care_handover_notes
   FOR INSERT TO authenticated
   WITH CHECK (
@@ -48,7 +46,6 @@ CREATE POLICY chn_staff_insert ON public.care_handover_notes
     AND org_id = (SELECT cr.org_id FROM public.care_residents cr WHERE cr.user_id = resident_id)
   );
 
-DROP POLICY IF EXISTS chn_staff_update ON public.care_handover_notes;
 CREATE POLICY chn_staff_update ON public.care_handover_notes
   FOR UPDATE TO authenticated
   USING (
