@@ -75,3 +75,12 @@ CREATE POLICY rm_sel ON resident_medications FOR SELECT TO authenticated USING (
 -- award_xp: SECURITY DEFINER, i prod kaldbar af anon (før 20261013180000)
 CREATE FUNCTION award_xp(p_resident_id uuid, p_activity text, p_xp integer) RETURNS integer LANGUAGE sql SECURITY DEFINER SET search_path TO 'public' AS $$ SELECT p_xp $$;
 GRANT EXECUTE ON FUNCTION award_xp(uuid, text, integer) TO anon, authenticated;
+-- Kliniske tabeller med staff-DELETE-policies som i prod (før 20261013190000)
+CREATE POLICY rm_staff_delete ON resident_medications FOR DELETE TO authenticated USING (org_id = (SELECT org_id FROM care_staff WHERE id = auth.uid()));
+CREATE TABLE crisis_alerts (id uuid primary key default gen_random_uuid(), resident_id uuid, org_id uuid);
+ALTER TABLE crisis_alerts ENABLE ROW LEVEL SECURITY;
+GRANT ALL ON crisis_alerts TO authenticated, anon;
+CREATE POLICY crisis_alerts_staff_select ON crisis_alerts FOR SELECT TO authenticated USING (care_staff_can_access_resident(resident_id::text));
+CREATE POLICY crisis_alerts_staff_delete ON crisis_alerts FOR DELETE TO authenticated USING (care_staff_can_access_resident(resident_id::text));
+CREATE POLICY staff_crisis_alerts_org ON crisis_alerts FOR ALL USING (org_id = (SELECT org_id FROM care_staff WHERE id = auth.uid()));
+INSERT INTO crisis_alerts (resident_id, org_id) VALUES ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000a1');

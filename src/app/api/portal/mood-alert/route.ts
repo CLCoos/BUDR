@@ -5,12 +5,12 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 /**
  * POST /api/portal/mood-alert
  *
- * Called from the client when a real-time park_daily_checkin INSERT arrives
+ * Called from the client when a real-time lys_checkin (daily) INSERT arrives
  * with a red traffic light (mood 1–2). Inserts a care_portal_notifications row
  * using the service role so that RLS (which blocks INSERT for authenticated
  * staff) is bypassed.
  *
- * Deduplication: if an unacknowledged mood_alert already exists for the same
+ * Deduplication: if an unacknowledged lav_stemning already exists for the same
  * resident, the insert is skipped to avoid flooding the alert panel.
  */
 export async function POST(request: Request) {
@@ -51,6 +51,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'service_role_not_configured' }, { status: 503 });
   }
 
+  // Personalet må kun udløse alarmer for beboere, de selv kan se (RLS på care_residents).
+  const { data: visibleResident } = await staffClient
+    .from('care_residents')
+    .select('org_id')
+    .eq('user_id', residentId)
+    .maybeSingle();
+  const orgId = (visibleResident as { org_id?: string | null } | null)?.org_id ?? null;
+  if (!orgId) {
+    return NextResponse.json({ error: 'resident_not_found' }, { status: 404 });
+  }
+
   const admin = createClient(url, serviceKey);
 
   // Deduplication: skip if an unacknowledged lav_stemning already exists
@@ -70,19 +81,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, deduplicated: true });
   }
 
-  const { data: residentRow } = await admin
-    .from('care_residents')
-    .select('org_id')
-    .eq('user_id', residentId)
-    .maybeSingle();
-
   const { error: insertErr } = await admin.from('care_portal_notifications').insert({
     resident_id: residentId,
     type: 'lav_stemning',
     detail: 'Lav stemning registreret — følg op',
     severity: 'roed',
     source_table: 'lys_checkin',
-    org_id: (residentRow as { org_id?: string } | null)?.org_id ?? null,
+    org_id: orgId,
   });
 
   if (insertErr) {

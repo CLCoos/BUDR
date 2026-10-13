@@ -1,15 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { parseBudrFollowUpsBlock } from '@/lib/portalStaffAssistantFollowUps';
-
-function getServiceClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false } }
-  );
-}
 
 export async function POST(req: NextRequest) {
   // Verify staff auth
@@ -36,17 +27,24 @@ export async function POST(req: NextRequest) {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return NextResponse.json({ error: 'AI ikke konfigureret' }, { status: 503 });
 
-  const service = getServiceClient();
+  // Kun portalpersonale, og kun egne beboere: konteksten hentes med den indloggedes
+  // klient, så RLS afgrænser til eget bosted (før: service role = alle bosteder).
+  const { data: staffRow } = await supabase
+    .from('care_staff')
+    .select('id')
+    .eq('id', user.id)
+    .maybeSingle();
+  if (!staffRow) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   // Fetch resident context
-  const { data: residents } = await service
+  const { data: residents } = await supabase
     .from('care_residents')
     .select('user_id, display_name, onboarding_data')
     .order('display_name');
 
   // Fetch recent journal entries for context (last 7 days, capped at 15)
   const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
-  const { data: journal } = await service
+  const { data: journal } = await supabase
     .from('journal_entries')
     .select('entry_text, category, created_at, care_residents(display_name)')
     .eq('journal_status', 'godkendt')
