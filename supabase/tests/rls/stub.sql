@@ -26,6 +26,7 @@ CREATE TABLE lys_recovery_stories (id serial primary key, resident_id uuid);
 CREATE TABLE resident_sessions (id uuid primary key default gen_random_uuid(), resident_user_id uuid references care_residents(user_id), org_id uuid, session_token_hash text unique, expires_at timestamptz, revoked_at timestamptz, revoked_by uuid);
 CREATE TABLE lys_safety_events (id serial primary key, resident_id uuid, risk_level text, acknowledged_at timestamptz, acknowledged_by uuid);
 CREATE TABLE audit_logs (id serial primary key, action text);
+CREATE TABLE care_planner_entries (id uuid primary key default gen_random_uuid(), org_id uuid, title text, starts_at timestamptz);
 CREATE TABLE resident_medications (id uuid primary key, resident_id uuid, org_id uuid, name text);
 DO $$ DECLARE t text; BEGIN FOR t IN SELECT tablename FROM pg_tables WHERE schemaname='public' LOOP
   EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);

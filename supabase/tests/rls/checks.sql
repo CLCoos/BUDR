@@ -75,6 +75,22 @@ DO $$ DECLARE n int; BEGIN
     BEGIN DELETE FROM care_indsats_records; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('indsats_delete', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('indsats_delete','blocked'); END;
   END IF;
 END $$;
+-- opgaver (bølge 2)
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.care_staff_tasks') IS NOT NULL THEN
+    BEGIN
+      INSERT INTO care_staff_tasks (org_id, resident_id, title, deadline) VALUES ('00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1','Ring til læge', current_date);
+      INSERT INTO r VALUES ('task_create (should work)','works');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('task_create (should work)','BROKEN'); END;
+    BEGIN UPDATE care_staff_tasks SET status = 'afsluttet'; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('task_complete (should work)', CASE WHEN n>0 THEN 'works' ELSE 'BROKEN' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('task_complete (should work)','BROKEN'); END;
+    BEGIN UPDATE care_staff_tasks SET created_by = '00000000-0000-0000-0000-0000000000c1'; SELECT count(*) INTO n FROM care_staff_tasks WHERE created_by = '00000000-0000-0000-0000-0000000000c1'; INSERT INTO r VALUES ('task_rewrite_author', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('task_rewrite_author','blocked'); END;
+    BEGIN
+      INSERT INTO care_staff_tasks (org_id, resident_id, title, deadline) VALUES ('00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b2','andens borger', current_date);
+      INSERT INTO r VALUES ('task_other_org_resident','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('task_other_org_resident','blocked'); END;
+    BEGIN DELETE FROM care_staff_tasks; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('task_delete', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('task_delete','blocked'); END;
+  END IF;
+END $$;
 -- gæst i org1 må læse, ikke skrive
 SET test.uid = '00000000-0000-0000-0000-0000000000c4';
 DO $$ DECLARE n int; BEGIN
@@ -104,6 +120,9 @@ DO $$ DECLARE n int; BEGIN
   END IF;
   IF to_regclass('public.medication_administrations') IS NOT NULL THEN
     EXECUTE 'SELECT count(*) FROM medication_administrations' INTO n; INSERT INTO r VALUES ('med_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
+  END IF;
+  IF to_regclass('public.care_staff_tasks') IS NOT NULL THEN
+    EXECUTE 'SELECT count(*) FROM care_staff_tasks' INTO n; INSERT INTO r VALUES ('task_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
   END IF;
   IF to_regclass('public.care_indsats_records') IS NOT NULL THEN
     EXECUTE 'SELECT count(*) FROM care_indsats_records' INTO n; INSERT INTO r VALUES ('indsats_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
