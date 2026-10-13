@@ -18,6 +18,30 @@ DO $$ DECLARE n int; BEGIN
   BEGIN PERFORM create_audit_log('care_staff','forged'); INSERT INTO r VALUES ('client_audit_rpc','HOLE'); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('client_audit_rpc','blocked'); END;
   BEGIN INSERT INTO daily_plans (resident_id, org_id) VALUES ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000a1'); INSERT INTO r VALUES ('own_org_plan_insert (should work)','works'); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('own_org_plan_insert (should work)','BROKEN'); END;
 END $$;
+-- vagtoverlevering (bølge 2): medarbejder skriver for egen borger
+DO $$ BEGIN
+  IF to_regclass('public.care_handover_notes') IS NOT NULL THEN
+    BEGIN
+      INSERT INTO care_handover_notes (resident_id, org_id, shift_label, shift_date, body) VALUES ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000a1','dag', current_date, 'Rolig dag');
+      INSERT INTO r VALUES ('handover_write_own (should work)','works');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('handover_write_own (should work)','BROKEN'); END;
+    BEGIN
+      INSERT INTO care_handover_notes (resident_id, org_id, shift_label, shift_date, body) VALUES ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000a2','aften', current_date, 'forkert org');
+      INSERT INTO r VALUES ('handover_wrong_org_id','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('handover_wrong_org_id','blocked'); END;
+  END IF;
+END $$;
+-- gæst i org1 må læse, ikke skrive
+SET test.uid = '00000000-0000-0000-0000-0000000000c4';
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.care_handover_notes') IS NOT NULL THEN
+    SELECT count(*) INTO n FROM care_handover_notes; INSERT INTO r VALUES ('handover_guest_read (should work)', CASE WHEN n>0 THEN 'works' ELSE 'BROKEN' END);
+    BEGIN
+      INSERT INTO care_handover_notes (resident_id, org_id, shift_label, shift_date, body) VALUES ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000a1','nat', current_date, 'gæst');
+      INSERT INTO r VALUES ('handover_guest_write','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('handover_guest_write','blocked'); END;
+  END IF;
+END $$;
 -- leder in org2 (other tenant)
 SET test.uid = '00000000-0000-0000-0000-0000000000c3';
 DO $$ DECLARE n int; BEGIN
@@ -25,6 +49,9 @@ DO $$ DECLARE n int; BEGIN
   SELECT count(*) INTO n FROM daily_plans; INSERT INTO r VALUES ('other_org_plan_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
   BEGIN INSERT INTO resident_plan_items (resident_id, org_id, staff_suggestion) VALUES ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000a1', true); INSERT INTO r VALUES ('other_org_plan_item_insert','HOLE'); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('other_org_plan_item_insert','blocked'); END;
   BEGIN UPDATE plan_proposals SET status='rejected'; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('other_org_review_proposal', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('other_org_review_proposal','blocked'); END;
+  IF to_regclass('public.care_handover_notes') IS NOT NULL THEN
+    EXECUTE 'SELECT count(*) FROM care_handover_notes' INTO n; INSERT INTO r VALUES ('handover_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
+  END IF;
 END $$;
 -- leder in org1 can still manage roles
 SET test.uid = '00000000-0000-0000-0000-0000000000c1';
