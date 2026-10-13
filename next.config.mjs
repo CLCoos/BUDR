@@ -7,6 +7,11 @@ const nextConfig = {
   productionBrowserSourceMaps: process.env.BUDR_PRODUCTION_SOURCE_MAPS === '1',
   distDir: process.env.DIST_DIR || '.next',
 
+  // Browseren kan ikke læse SENTRY_DSN; samme DSN indlejres ved build, så klientfejl også rapporteres.
+  env: {
+    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN || '',
+  },
+
   images: {
     remotePatterns: imageHosts,
     minimumCacheTTL: 60,

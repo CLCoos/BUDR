@@ -214,6 +214,45 @@ DO $$ DECLARE n int; BEGIN
 END $$;
 RESET ROLE;
 SET ROLE authenticated;
+-- VUM 2.0 (bølge 4)
+SET test.uid = '00000000-0000-0000-0000-0000000000c2';
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.vum_assessments') IS NOT NULL THEN
+    BEGIN
+      EXECUTE $q$INSERT INTO vum_assessments (id, org_id, resident_id) VALUES ('00000000-0000-0000-0000-0000000000f2','00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1')$q$;
+      INSERT INTO r VALUES ('vum_create_own (should work)','works');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('vum_create_own (should work)','BROKEN'); END;
+    BEGIN
+      EXECUTE $q$INSERT INTO vum_assessments (org_id, resident_id) VALUES ('00000000-0000-0000-0000-0000000000a2','00000000-0000-0000-0000-0000000000b2')$q$;
+      INSERT INTO r VALUES ('vum_create_other_org','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('vum_create_other_org','blocked'); END;
+    BEGIN
+      EXECUTE $q$INSERT INTO vum_assessments (org_id, resident_id) VALUES ('00000000-0000-0000-0000-0000000000a2','00000000-0000-0000-0000-0000000000b1')$q$;
+      INSERT INTO r VALUES ('vum_wrong_org_id','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('vum_wrong_org_id','blocked'); END;
+    BEGIN EXECUTE $q$UPDATE vum_assessments SET theme_2_mental = '{"notes":"Bedre søvn"}'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('vum_edit_theme (should work)', CASE WHEN n>0 THEN 'works' ELSE 'BROKEN' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('vum_edit_theme (should work)','BROKEN'); END;
+    BEGIN EXECUTE $q$UPDATE vum_assessments SET resident_id = '00000000-0000-0000-0000-0000000000b2'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('vum_move_resident', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('vum_move_resident','blocked'); END;
+    BEGIN EXECUTE 'DELETE FROM vum_assessments'; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('vum_delete', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('vum_delete','blocked'); END;
+    BEGIN EXECUTE $q$UPDATE vum_assessments SET status = 'archived'$q$; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN EXECUTE $q$UPDATE vum_assessments SET case_purpose = 'ændret efter arkivering'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('vum_edit_archived', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('vum_edit_archived','blocked'); END;
+  END IF;
+END $$;
+SET test.uid = '00000000-0000-0000-0000-0000000000c4';
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.vum_assessments') IS NOT NULL THEN
+    BEGIN
+      EXECUTE $q$INSERT INTO vum_assessments (org_id, resident_id) VALUES ('00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1')$q$;
+      INSERT INTO r VALUES ('vum_create_without_permission','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('vum_create_without_permission','blocked'); END;
+    EXECUTE 'SELECT count(*) FROM vum_assessments' INTO n; INSERT INTO r VALUES ('vum_read_without_view_360', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
+  END IF;
+END $$;
+SET test.uid = '00000000-0000-0000-0000-0000000000c3';
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.vum_assessments') IS NOT NULL THEN
+    EXECUTE 'SELECT count(*) FROM vum_assessments' INTO n; INSERT INTO r VALUES ('vum_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
+  END IF;
+END $$;
 -- leder in org1 can still manage roles
 SET test.uid = '00000000-0000-0000-0000-0000000000c1';
 DO $$ DECLARE n int; BEGIN
