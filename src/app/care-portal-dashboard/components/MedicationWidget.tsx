@@ -357,7 +357,7 @@ function taskForResident(
   };
 }
 
-function createMockEntries(nowMs: number): MedicationTask[] {
+export function createMockEntries(nowMs: number): MedicationTask[] {
   const now = new Date(nowMs);
   const slots = enumerateCivilMedicationSlotDates(now);
   const past = slots.filter((t) => t.getTime() < now.getTime());
@@ -372,7 +372,7 @@ function createMockEntries(nowMs: number): MedicationTask[] {
   const templates: Omit<MedicationTask, 'scheduledAt' | 'givenAt'>[] = [
     taskForResident({
       id: 'mw-001',
-      residentId: 'res-001',
+      residentId: 'res-sara',
       medicationName: 'Metformin',
       strengthLabel: '500 mg',
       quantity: 2,
@@ -381,7 +381,7 @@ function createMockEntries(nowMs: number): MedicationTask[] {
     }),
     taskForResident({
       id: 'mw-002',
-      residentId: 'res-002',
+      residentId: 'res-mikkel',
       medicationName: 'Sertralin',
       strengthLabel: '50 mg',
       quantity: 1,
@@ -390,7 +390,7 @@ function createMockEntries(nowMs: number): MedicationTask[] {
     }),
     taskForResident({
       id: 'mw-003',
-      residentId: 'res-003',
+      residentId: 'res-anders',
       medicationName: 'Risperidon',
       strengthLabel: '2 mg',
       quantity: 1,
@@ -399,7 +399,7 @@ function createMockEntries(nowMs: number): MedicationTask[] {
     }),
     taskForResident({
       id: 'mw-004',
-      residentId: 'res-004',
+      residentId: 'res-mette',
       medicationName: 'Lisinopril',
       strengthLabel: '10 mg',
       quantity: 1,
@@ -408,7 +408,7 @@ function createMockEntries(nowMs: number): MedicationTask[] {
     }),
     taskForResident({
       id: 'mw-005',
-      residentId: 'res-005',
+      residentId: 'res-camilla',
       medicationName: 'Quetiapin',
       strengthLabel: '25 mg',
       quantity: 2,
@@ -417,7 +417,7 @@ function createMockEntries(nowMs: number): MedicationTask[] {
     }),
     taskForResident({
       id: 'mw-006',
-      residentId: 'res-006',
+      residentId: 'res-jonas',
       medicationName: 'Panodil',
       strengthLabel: '1 g',
       quantity: 1,
@@ -426,7 +426,7 @@ function createMockEntries(nowMs: number): MedicationTask[] {
     }),
     taskForResident({
       id: 'mw-007',
-      residentId: 'res-007',
+      residentId: 'res-sara',
       medicationName: 'Abilify',
       strengthLabel: '10 mg',
       quantity: 1,
@@ -435,7 +435,7 @@ function createMockEntries(nowMs: number): MedicationTask[] {
     }),
     taskForResident({
       id: 'mw-008',
-      residentId: 'res-008',
+      residentId: 'res-mikkel',
       medicationName: 'Omeprazol',
       strengthLabel: '20 mg',
       quantity: 1,
@@ -444,7 +444,7 @@ function createMockEntries(nowMs: number): MedicationTask[] {
     }),
     taskForResident({
       id: 'mw-009',
-      residentId: 'res-009',
+      residentId: 'res-anders',
       medicationName: 'Metformin',
       strengthLabel: '850 mg',
       quantity: 1,
@@ -453,7 +453,7 @@ function createMockEntries(nowMs: number): MedicationTask[] {
     }),
     taskForResident({
       id: 'mw-010',
-      residentId: 'res-010',
+      residentId: 'res-mette',
       medicationName: 'Melatonin',
       strengthLabel: '3 mg',
       quantity: 1,
@@ -462,7 +462,7 @@ function createMockEntries(nowMs: number): MedicationTask[] {
     }),
     taskForResident({
       id: 'mw-011',
-      residentId: 'res-011',
+      residentId: 'res-camilla',
       medicationName: 'Warfarin',
       strengthLabel: '2,5 mg',
       quantity: 1,
@@ -471,7 +471,7 @@ function createMockEntries(nowMs: number): MedicationTask[] {
     }),
     taskForResident({
       id: 'mw-012',
-      residentId: 'res-012',
+      residentId: 'res-jonas',
       medicationName: 'Salbutamol',
       strengthLabel: '100 mcg',
       quantity: 2,
@@ -480,7 +480,7 @@ function createMockEntries(nowMs: number): MedicationTask[] {
     }),
     taskForResident({
       id: 'mw-013',
-      residentId: 'res-001',
+      residentId: 'res-sara',
       medicationName: 'Quetiapin',
       strengthLabel: '100 mg',
       quantity: 1,
@@ -489,7 +489,7 @@ function createMockEntries(nowMs: number): MedicationTask[] {
     }),
     taskForResident({
       id: 'mw-014',
-      residentId: 'res-004',
+      residentId: 'res-mette',
       medicationName: 'Sertralin',
       strengthLabel: '100 mg',
       quantity: 1,
@@ -498,7 +498,7 @@ function createMockEntries(nowMs: number): MedicationTask[] {
     }),
     taskForResident({
       id: 'mw-015',
-      residentId: 'res-002',
+      residentId: 'res-mikkel',
       medicationName: 'Lithium',
       strengthLabel: '12,2 mmol',
       quantity: 2,
@@ -507,7 +507,7 @@ function createMockEntries(nowMs: number): MedicationTask[] {
     }),
     taskForResident({
       id: 'mw-016',
-      residentId: 'res-008',
+      residentId: 'res-mikkel',
       medicationName: 'Prednisolon',
       strengthLabel: '5 mg',
       quantity: 1,
@@ -516,7 +516,7 @@ function createMockEntries(nowMs: number): MedicationTask[] {
     }),
     taskForResident({
       id: 'mw-017',
-      residentId: 'res-003',
+      residentId: 'res-anders',
       medicationName: 'Lorazepam',
       strengthLabel: '1 mg',
       quantity: 1,
@@ -525,7 +525,7 @@ function createMockEntries(nowMs: number): MedicationTask[] {
     }),
     taskForResident({
       id: 'mw-018',
-      residentId: 'res-005',
+      residentId: 'res-camilla',
       medicationName: 'Metformin',
       strengthLabel: '500 mg',
       quantity: 2,
@@ -534,7 +534,7 @@ function createMockEntries(nowMs: number): MedicationTask[] {
     }),
     taskForResident({
       id: 'mw-019',
-      residentId: 'res-006',
+      residentId: 'res-jonas',
       medicationName: 'Vitamin D',
       strengthLabel: '20 µg',
       quantity: 1,
@@ -543,7 +543,7 @@ function createMockEntries(nowMs: number): MedicationTask[] {
     }),
     taskForResident({
       id: 'mw-020',
-      residentId: 'res-007',
+      residentId: 'res-sara',
       medicationName: 'Mirtazapin',
       strengthLabel: '15 mg',
       quantity: 1,
@@ -552,7 +552,7 @@ function createMockEntries(nowMs: number): MedicationTask[] {
     }),
     taskForResident({
       id: 'mw-021',
-      residentId: 'res-009',
+      residentId: 'res-anders',
       medicationName: 'Citalopram',
       strengthLabel: '20 mg',
       quantity: 1,
@@ -561,7 +561,7 @@ function createMockEntries(nowMs: number): MedicationTask[] {
     }),
     taskForResident({
       id: 'mw-022',
-      residentId: 'res-010',
+      residentId: 'res-mette',
       medicationName: 'B12-vitamin',
       strengthLabel: '1 mg',
       quantity: 1,
@@ -570,7 +570,7 @@ function createMockEntries(nowMs: number): MedicationTask[] {
     }),
     taskForResident({
       id: 'mw-023',
-      residentId: 'res-011',
+      residentId: 'res-camilla',
       medicationName: 'Zopiclon',
       strengthLabel: '7,5 mg',
       quantity: 1,
@@ -579,7 +579,7 @@ function createMockEntries(nowMs: number): MedicationTask[] {
     }),
     taskForResident({
       id: 'mw-024',
-      residentId: 'res-012',
+      residentId: 'res-jonas',
       medicationName: 'Natriumvalproat',
       strengthLabel: '300 mg',
       quantity: 2,
