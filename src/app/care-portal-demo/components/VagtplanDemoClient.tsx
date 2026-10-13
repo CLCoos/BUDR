@@ -326,6 +326,10 @@ export default function VagtplanDemoClient({
       toast.error('Ingen organisation');
       return;
     }
+    if (slot.date < copenhagenYmd()) {
+      toast.error('Afviklede vagter kan ikke ændres');
+      return;
+    }
     const built = buildStaffShiftInsertRow({
       orgId,
       staffId,
@@ -373,13 +377,18 @@ export default function VagtplanDemoClient({
       return;
     }
     setRequesting(slot.id);
-    const { error } = await supabase
+    const { data: deleted, error } = await supabase
       .from('care_staff_shifts')
       .delete()
-      .eq('id', slot.myAssignmentId);
+      .eq('id', slot.myAssignmentId)
+      .select('id');
     setRequesting(null);
     if (error) {
       toast.error(error.message || 'Kunne ikke framelde vagt');
+      return;
+    }
+    if (!deleted?.length) {
+      toast.error('Vagten kan ikke frameldes (afviklede vagter er låst)');
       return;
     }
     toast.success('Vagt frameldt');

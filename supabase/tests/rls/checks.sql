@@ -2,8 +2,14 @@
 \pset tuples_only on
 \pset format unaligned
 CREATE TEMP TABLE IF NOT EXISTS r(k text, v text);
-GRANT ALL ON r TO authenticated;
+GRANT ALL ON r TO authenticated, anon;
 TRUNCATE r;
+-- afviklet vagt (i går) for medarbejder c2, oprettet som superuser
+DO $$ BEGIN
+  IF to_regclass('public.care_staff_shifts') IS NOT NULL THEN
+    EXECUTE $q$INSERT INTO care_staff_shifts (id, org_id, staff_id, shift_date, shift_type, start_time, end_time) VALUES ('00000000-0000-0000-0000-0000000000f1','00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000c2', current_date - 1, 'dag', '07:30', '15:30')$q$;
+  END IF;
+END $$;
 SET ROLE authenticated;
 -- medarbejder in org1 tries to give their role manage_roles
 SET test.uid = '00000000-0000-0000-0000-0000000000c2';
@@ -168,6 +174,46 @@ DO $$ DECLARE n int; BEGIN
     EXECUTE 'SELECT count(*) FROM care_indsats_records' INTO n; INSERT INTO r VALUES ('indsats_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
   END IF;
 END $$;
+-- vagtplan (bølge 4): egne vagter fra i dag og frem
+SET test.uid = '00000000-0000-0000-0000-0000000000c2';
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.care_staff_shifts') IS NOT NULL THEN
+    BEGIN
+      INSERT INTO care_staff_shifts (org_id, staff_id, shift_date, shift_type, start_time, end_time) VALUES ('00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000c2', current_date + 1, 'aften', '15:00', '23:00');
+      INSERT INTO r VALUES ('shift_claim_own (should work)','works');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('shift_claim_own (should work)','BROKEN'); END;
+    BEGIN
+      INSERT INTO care_staff_shifts (org_id, staff_id, shift_date, shift_type, start_time, end_time) VALUES ('00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000c4', current_date + 1, 'aften', '15:00', '23:00');
+      INSERT INTO r VALUES ('shift_claim_for_colleague','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('shift_claim_for_colleague','blocked'); END;
+    BEGIN
+      INSERT INTO care_staff_shifts (org_id, staff_id, shift_date, shift_type, start_time, end_time) VALUES ('00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000c2', current_date - 3, 'nat', '23:00', '07:00');
+      INSERT INTO r VALUES ('shift_backdate_claim','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('shift_backdate_claim','blocked'); END;
+    BEGIN
+      INSERT INTO care_staff_shifts (org_id, staff_id, shift_date, shift_type, start_time, end_time) VALUES ('00000000-0000-0000-0000-0000000000a2','00000000-0000-0000-0000-0000000000c2', current_date + 2, 'dag', '07:30', '15:30');
+      INSERT INTO r VALUES ('shift_wrong_org','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('shift_wrong_org','blocked'); END;
+    BEGIN EXECUTE 'UPDATE care_staff_shifts SET hours = 20'; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('shift_edit_hours', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('shift_edit_hours','blocked'); END;
+    BEGIN EXECUTE $q$DELETE FROM care_staff_shifts WHERE id = '00000000-0000-0000-0000-0000000000f1'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('shift_delete_past', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('shift_delete_past','blocked'); END;
+    BEGIN EXECUTE 'DELETE FROM care_staff_shifts WHERE shift_date > current_date'; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('shift_drop_own_future (should work)', CASE WHEN n>0 THEN 'works' ELSE 'BROKEN' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('shift_drop_own_future (should work)','BROKEN'); END;
+  END IF;
+END $$;
+SET test.uid = '00000000-0000-0000-0000-0000000000c3';
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.care_staff_shifts') IS NOT NULL THEN
+    EXECUTE 'SELECT count(*) FROM care_staff_shifts' INTO n; INSERT INTO r VALUES ('shift_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
+  END IF;
+END $$;
+RESET ROLE;
+SET ROLE anon;
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.care_staff_shifts') IS NOT NULL THEN
+    BEGIN EXECUTE 'SELECT count(*) FROM care_staff_shifts' INTO n; INSERT INTO r VALUES ('shift_anon_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('shift_anon_read','blocked'); END;
+  END IF;
+END $$;
+RESET ROLE;
+SET ROLE authenticated;
 -- leder in org1 can still manage roles
 SET test.uid = '00000000-0000-0000-0000-0000000000c1';
 DO $$ DECLARE n int; BEGIN
