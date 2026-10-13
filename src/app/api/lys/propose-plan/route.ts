@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
       resident_id: residentId,
       org_id: (residentRow as { org_id: string | null }).org_id ?? null,
       plan_date: today,
-      user_message: userMessage.trim(),
+      user_message: userMessage.trim().slice(0, 2000),
       proposed_items: parsed.proposed_items,
       ai_reasoning: parsed.ai_reasoning,
       status: 'pending',

@@ -17,7 +17,7 @@ CREATE TABLE care_staff (id uuid primary key, org_id uuid, role text, role_id uu
 CREATE TABLE care_residents (user_id uuid primary key, org_id uuid);
 CREATE TABLE resident_plan_items (id serial primary key, resident_id uuid, org_id uuid, staff_suggestion boolean);
 CREATE TABLE daily_plans (id serial primary key, resident_id uuid, org_id uuid, plan_date date);
-CREATE TABLE plan_proposals (id serial primary key, resident_id uuid, org_id uuid, status text, reviewed_by uuid, reviewed_at timestamptz);
+CREATE TABLE plan_proposals (id serial primary key, resident_id uuid, org_id uuid, date date NOT NULL DEFAULT current_date, status text, reviewed_by uuid, reviewed_at timestamptz);
 CREATE TABLE marketing_content_blocks (key text primary key, draft jsonb);
 CREATE TABLE journal_entries (id serial primary key, org_id uuid, resident_id uuid);
 CREATE TABLE crisis_plans (id serial primary key, resident_id uuid);

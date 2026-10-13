@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     .update({ status: 'approved', reviewed_by: staffKey, reviewed_at: now })
     .eq('id', proposalId)
     .eq('status', 'pending')
-    .select('id, resident_id, plan_date, proposed_items')
+    .select('id, resident_id, org_id, plan_date, proposed_items')
     .maybeSingle();
 
   if (claimErr) {
@@ -66,6 +66,8 @@ export async function POST(req: NextRequest) {
     .upsert(
       {
         resident_id: proposal.resident_id as string,
+        // Uden org_id kan planen ses af personale i alle organisationer (RLS tillader org_id IS NULL).
+        org_id: (proposal.org_id as string | null) ?? null,
         plan_date: proposal.plan_date as string,
         plan_items: proposal.proposed_items,
         created_by: staffKey,
