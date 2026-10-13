@@ -72,3 +72,6 @@ CREATE POLICY org_sel ON organisations FOR SELECT TO authenticated USING (id = (
 INSERT INTO resident_medications VALUES ('00000000-0000-0000-0000-0000000000e1','00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000a1','Quetiapin','morgen','aktiv'),
   ('00000000-0000-0000-0000-0000000000e2','00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000a1','Oxazepam','behoev','aktiv');
 CREATE POLICY rm_sel ON resident_medications FOR SELECT TO authenticated USING (care_staff_can_access_resident(resident_id::text));
+-- award_xp: SECURITY DEFINER, i prod kaldbar af anon (før 20261013180000)
+CREATE FUNCTION award_xp(p_resident_id uuid, p_activity text, p_xp integer) RETURNS integer LANGUAGE sql SECURITY DEFINER SET search_path TO 'public' AS $$ SELECT p_xp $$;
+GRANT EXECUTE ON FUNCTION award_xp(uuid, text, integer) TO anon, authenticated;
