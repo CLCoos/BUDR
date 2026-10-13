@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { requestLysXp } from '@/lib/lys/xp';
 import { ChevronDown, ChevronUp, Mic, MicOff, Pen } from 'lucide-react';
 import { toast } from 'sonner';
-import { createClient } from '@/lib/supabase/client';
 import { useResident } from '../context/ResidentContext';
 import { useResidentSession } from '@/hooks/useResidentSession';
 import * as dataService from '@/lib/dataService';
@@ -444,12 +444,7 @@ export default function LysJournalTab({ tokens, accent }: Props) {
     );
 
     if (journalMode === 'supabase') {
-      const supabase = createClient();
-      void supabase?.rpc('award_xp', {
-        p_resident_id: residentId,
-        p_activity: 'journal',
-        p_xp: 15,
-      });
+      requestLysXp('journal');
     }
 
     setSaving(false);

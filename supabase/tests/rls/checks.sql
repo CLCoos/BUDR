@@ -211,6 +211,7 @@ DO $$ DECLARE n int; BEGIN
   IF to_regclass('public.care_staff_shifts') IS NOT NULL THEN
     BEGIN EXECUTE 'SELECT count(*) FROM care_staff_shifts' INTO n; INSERT INTO r VALUES ('shift_anon_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('shift_anon_read','blocked'); END;
   END IF;
+  BEGIN PERFORM award_xp('00000000-0000-0000-0000-0000000000b1', 'journal', 9999); INSERT INTO r VALUES ('anon_award_xp','HOLE'); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('anon_award_xp','blocked'); END;
 END $$;
 RESET ROLE;
 SET ROLE authenticated;
