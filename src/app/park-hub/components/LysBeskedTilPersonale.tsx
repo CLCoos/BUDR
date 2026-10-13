@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { MessageCircle } from 'lucide-react';
+import { postLysStaffMessage } from '@/lib/lysStaffMessage';
 import type { LysThemeTokens } from '../lib/lysTheme';
 
 type Props = {
@@ -17,7 +18,7 @@ const PRESETS = [
   { key: 'praktisk', text: 'Jeg mangler noget praktisk 🏠' },
 ] as const;
 
-type UIState = 'idle' | 'confirm' | 'sent';
+type UIState = 'idle' | 'confirm' | 'sent' | 'error';
 
 export default function LysBeskedTilPersonale({
   tokens: _tokens,
@@ -27,7 +28,6 @@ export default function LysBeskedTilPersonale({
 }: Props) {
   const [custom, setCustom] = useState('');
   const [pending, setPending] = useState<string | null>(null); // message awaiting confirm
-  const [pendingKey, setPendingKey] = useState<string | null>(null);
   const [uiState, setUiState] = useState<UIState>('idle');
   const [saving, setSaving] = useState(false);
 
@@ -38,10 +38,9 @@ export default function LysBeskedTilPersonale({
     return () => window.clearTimeout(t);
   }, [uiState]);
 
-  const requestSend = (message: string, key?: string) => {
+  const requestSend = (message: string) => {
     if (!message.trim()) return;
     setPending(message.trim());
-    setPendingKey(key ?? null);
     setUiState('confirm');
   };
 
@@ -49,32 +48,29 @@ export default function LysBeskedTilPersonale({
     if (!pending || saving) return;
     setSaving(true);
     try {
-      if (residentId) {
-        await fetch('/api/lys/lys-plan-proposal', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            user_message: pending,
-            proposed_items: [{ title: pending, preset_type: pendingKey ?? null }],
-          }),
-        });
+      if (!residentId) {
+        setUiState('error');
+        return;
       }
+      const result = await postLysStaffMessage(pending);
+      if (!result.ok) {
+        setUiState('error');
+        return;
+      }
+      setCustom('');
+      setPending(null);
+      setUiState('sent');
     } catch (err) {
       console.error('LysBeskedTilPersonale save failed', err);
+      setUiState('error');
     } finally {
       setSaving(false);
     }
-    setCustom('');
-    setPending(null);
-    setPendingKey(null);
-    setUiState('sent');
     void firstName; // satisfy lint
   };
 
   const cancelSend = () => {
     setPending(null);
-    setPendingKey(null);
     setUiState('idle');
   };
 
@@ -128,6 +124,34 @@ export default function LysBeskedTilPersonale({
             {saving ? '…' : 'Ja, send'}
           </button>
         </div>
+      </section>
+    );
+  }
+
+  // ── Send failed — do not claim staff received the message ─────────────────
+  if (uiState === 'error') {
+    return (
+      <section
+        className="rounded-2xl p-5"
+        style={{
+          backgroundColor: cardBg,
+          border: `1.5px solid #c0392b55`,
+          color: 'var(--lys-text)',
+        }}
+        aria-live="assertive"
+      >
+        <p className="text-sm font-bold mb-1">Beskeden blev ikke sendt</p>
+        <p className="text-xs mb-4 leading-relaxed" style={{ color: 'var(--lys-muted)' }}>
+          Personalet har ikke modtaget den endnu. Prøv igen, eller find en medarbejder.
+        </p>
+        <button
+          type="button"
+          onClick={() => setUiState(pending ? 'confirm' : 'idle')}
+          className="w-full rounded-2xl py-3 text-sm font-bold text-white"
+          style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)` }}
+        >
+          Prøv igen
+        </button>
       </section>
     );
   }
@@ -195,7 +219,7 @@ export default function LysBeskedTilPersonale({
           <button
             key={p.key}
             type="button"
-            onClick={() => requestSend(p.text, p.key)}
+            onClick={() => requestSend(p.text)}
             className="min-h-[44px] rounded-xl px-4 py-2.5 text-left text-sm font-medium transition-all duration-150 active:scale-[0.98]"
             style={{
               border: `1px solid ${borderCol}`,
@@ -229,7 +253,7 @@ export default function LysBeskedTilPersonale({
         <button
           type="button"
           disabled={!custom.trim()}
-          onClick={() => requestSend(custom, 'custom')}
+          onClick={() => requestSend(custom)}
           className="min-h-[44px] shrink-0 rounded-full px-5 text-sm font-bold text-white transition-all duration-150 disabled:opacity-40 active:scale-95"
           style={{ backgroundColor: accent }}
         >

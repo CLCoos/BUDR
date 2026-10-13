@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   BarChart3,
@@ -27,6 +27,14 @@ import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 import { enumerateCivilMedicationSlotDates } from '@/lib/medicationScheduleSlots';
 import { createClient } from '@/lib/supabase/client';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
+import { copenhagenYmd } from '@/lib/copenhagenDay';
+import {
+  fetchMedicationAdministrationsForDate,
+  givenAtByMedicationId,
+  liveMedicationTaskId,
+  markMedicationGiven,
+  unmarkMedicationGiven,
+} from '@/lib/medicationAdministration';
 import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
 import { getWidgetStatus, widgetStatusVar } from '@/lib/widgetStatus';
 import { useNameDisplay } from '@/lib/residents/useNameDisplay';
@@ -46,6 +54,8 @@ export interface MedicationTask {
   routeLabel: string;
   scheduledAt: Date;
   givenAt: Date | null;
+  /** Set on live tasks so given/ungiven can persist. Demo/mock omit this. */
+  medicationId?: string;
 }
 
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
@@ -177,7 +187,7 @@ async function fetchLiveMedicationTasksForOrg(
   if (medErr || !medRows?.length) return [];
 
   const now = new Date();
-  const ymd = now.toISOString().slice(0, 10);
+  const ymd = copenhagenYmd(now);
   const tasks: MedicationTask[] = [];
 
   for (const raw of medRows as DbResidentMedRow[]) {
@@ -185,7 +195,7 @@ async function fetchLiveMedicationTasksForOrg(
     if (!meta) continue;
     const scheduledAt = scheduledTodayFromMed(raw.time_group, raw.time_label, now);
     tasks.push({
-      id: `live-${raw.id}-${ymd}`,
+      id: liveMedicationTaskId(raw.id, ymd),
       residentId: raw.resident_id,
       residentName: meta.name,
       initials: meta.initials,
@@ -198,7 +208,20 @@ async function fetchLiveMedicationTasksForOrg(
       routeLabel: 'Oralt',
       scheduledAt,
       givenAt: null,
+      medicationId: raw.id,
     });
+  }
+
+  const admin = await fetchMedicationAdministrationsForDate(
+    supabase,
+    tasks.map((t) => t.medicationId).filter((id): id is string => Boolean(id)),
+    ymd
+  );
+  const givenMap = givenAtByMedicationId(admin.rows);
+  for (const task of tasks) {
+    if (!task.medicationId) continue;
+    const givenAt = givenMap.get(task.medicationId);
+    if (givenAt) task.givenAt = givenAt;
   }
 
   return tasks.sort((a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime());
@@ -825,6 +848,8 @@ export default function MedicationWidget({ demoMode = false }: MedicationWidgetP
   const { isBingbong, ready: bingbongReady } = useStaffOrgIsBingbong();
   const pilotMedicinMock = simulatedMedicin && (!bingbongReady || !isBingbong);
   const [entries, setEntries] = useState<MedicationTask[]>([]);
+  const entriesRef = useRef(entries);
+  entriesRef.current = entries;
   const [hydrated, setHydrated] = useState(false);
   const [laterExpanded, setLaterExpanded] = useState(false);
   const [prepExpanded, setPrepExpanded] = useState(false);
@@ -877,37 +902,97 @@ export default function MedicationWidget({ demoMode = false }: MedicationWidgetP
     return () => window.clearInterval(t);
   }, []);
 
-  const markDelivered = useCallback((id: string) => {
-    const at = new Date();
-    setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, givenAt: at } : e)));
-    toast.success('Udlevering registreret');
-  }, []);
+  const persistGiven = useCallback(async (ids: string[], given: boolean) => {
+    const targetIds = ids.filter(Boolean);
+    if (targetIds.length === 0) return;
 
-  const unmarkDelivered = useCallback((id: string) => {
-    setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, givenAt: null } : e)));
-    toast.message('Registrering fortrudt');
-  }, []);
-
-  const markBatchDelivered = useCallback((ids: string[]) => {
-    const open = ids.filter(Boolean);
-    if (open.length === 0) return;
     const at = new Date();
+    const ymd = copenhagenYmd(at);
+    const targets = entriesRef.current.filter((e) => targetIds.includes(e.id));
+    const live = targets.filter((e) => e.medicationId);
+    const localOnlyIds = targets.filter((e) => !e.medicationId).map((e) => e.id);
+
+    const applied = new Set<string>(localOnlyIds);
+    if (live.length > 0) {
+      const supabase = createClient();
+      if (!supabase) {
+        toast.error(given ? 'Kunne ikke gemme udlevering' : 'Kunne ikke fortryde registrering');
+        return;
+      }
+      for (const task of live) {
+        const result = given
+          ? await markMedicationGiven({
+              supabase,
+              residentId: task.residentId,
+              medicationId: task.medicationId!,
+              scheduledDate: ymd,
+            })
+          : await unmarkMedicationGiven({
+              supabase,
+              medicationId: task.medicationId!,
+              scheduledDate: ymd,
+            });
+        if (result.ok) {
+          applied.add(task.id);
+        }
+      }
+      if (applied.size === localOnlyIds.length && live.length > 0) {
+        toast.error(given ? 'Kunne ikke gemme udlevering' : 'Kunne ikke fortryde registrering');
+        return;
+      }
+    }
+
+    if (applied.size === 0) return;
+
     setEntries((prev) =>
-      prev.map((e) => (open.includes(e.id) && !e.givenAt ? { ...e, givenAt: at } : e))
+      prev.map((e) => (applied.has(e.id) ? { ...e, givenAt: given ? at : null } : e))
     );
-    toast.success(
-      open.length === 1 ? 'Udlevering registreret' : `${open.length} udleveringer registreret`
-    );
+    if (applied.size < targetIds.length) {
+      toast.error(
+        given
+          ? 'Nogle udleveringer kunne ikke gemmes — tjek listen'
+          : 'Nogle fortrydelser kunne ikke gemmes — tjek listen'
+      );
+      return;
+    }
+    if (given) {
+      toast.success(
+        applied.size === 1 ? 'Udlevering registreret' : `${applied.size} udleveringer registreret`
+      );
+    } else {
+      toast.message(
+        applied.size === 1 ? 'Registrering fortrudt' : `${applied.size} registreringer fortrudt`
+      );
+    }
   }, []);
 
-  const unmarkBatchDelivered = useCallback((ids: string[]) => {
-    const xs = ids.filter(Boolean);
-    if (xs.length === 0) return;
-    setEntries((prev) => prev.map((e) => (xs.includes(e.id) ? { ...e, givenAt: null } : e)));
-    toast.message(
-      xs.length === 1 ? 'Registrering fortrudt' : `${xs.length} registreringer fortrudt`
-    );
-  }, []);
+  const markDelivered = useCallback(
+    (id: string) => {
+      void persistGiven([id], true);
+    },
+    [persistGiven]
+  );
+
+  const unmarkDelivered = useCallback(
+    (id: string) => {
+      void persistGiven([id], false);
+    },
+    [persistGiven]
+  );
+
+  const markBatchDelivered = useCallback(
+    (ids: string[]) => {
+      void persistGiven(ids, true);
+    },
+    [persistGiven]
+  );
+
+  const unmarkBatchDelivered = useCallback(
+    (ids: string[]) => {
+      void persistGiven(ids, false);
+    },
+    [persistGiven]
+  );
 
   const scopedEntries = useMemo(() => {
     if (houseFilter === 'alle') return entries;

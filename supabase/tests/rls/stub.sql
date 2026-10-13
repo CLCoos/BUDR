@@ -10,6 +10,7 @@ CREATE SCHEMA auth;
 CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT nullif(current_setting('test.uid', true),'')::uuid $$;
 GRANT USAGE ON SCHEMA auth, public TO anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION auth.uid() TO anon, authenticated, service_role;
+CREATE TABLE auth.users (id uuid primary key);
 CREATE TABLE organisations (id uuid primary key, name text);
 CREATE TABLE org_roles (id uuid primary key default gen_random_uuid(), org_id uuid, name text, permissions text[]);
 CREATE TABLE care_staff (id uuid primary key, org_id uuid, role text, role_id uuid);
@@ -25,6 +26,8 @@ CREATE TABLE lys_recovery_stories (id serial primary key, resident_id uuid);
 CREATE TABLE resident_sessions (id uuid primary key default gen_random_uuid(), resident_user_id uuid references care_residents(user_id), org_id uuid, session_token_hash text unique, expires_at timestamptz, revoked_at timestamptz, revoked_by uuid);
 CREATE TABLE lys_safety_events (id serial primary key, resident_id uuid, risk_level text, acknowledged_at timestamptz, acknowledged_by uuid);
 CREATE TABLE audit_logs (id serial primary key, action text);
+CREATE TABLE care_planner_entries (id uuid primary key default gen_random_uuid(), org_id uuid, title text, starts_at timestamptz);
+CREATE TABLE resident_medications (id uuid primary key, resident_id uuid, org_id uuid, name text);
 DO $$ DECLARE t text; BEGIN FOR t IN SELECT tablename FROM pg_tables WHERE schemaname='public' LOOP
   EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
   EXECUTE format('GRANT ALL ON public.%I TO authenticated, service_role', t); END LOOP; END $$;
@@ -54,7 +57,11 @@ INSERT INTO organisations VALUES ('00000000-0000-0000-0000-0000000000a1','Org1')
 INSERT INTO care_staff VALUES ('00000000-0000-0000-0000-0000000000c1','00000000-0000-0000-0000-0000000000a1','leder',null);
 INSERT INTO care_staff VALUES ('00000000-0000-0000-0000-0000000000c2','00000000-0000-0000-0000-0000000000a1','medarbejder',null),('00000000-0000-0000-0000-0000000000c3','00000000-0000-0000-0000-0000000000a2','leder',null);
 INSERT INTO care_residents VALUES ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000a1'),('00000000-0000-0000-0000-0000000000b2','00000000-0000-0000-0000-0000000000a2');
-INSERT INTO org_roles (id, org_id, name, permissions) VALUES ('00000000-0000-0000-0000-0000000000d1','00000000-0000-0000-0000-0000000000a1','medarbejder','{view_dashboard}');
+INSERT INTO org_roles (id, org_id, name, permissions) VALUES ('00000000-0000-0000-0000-0000000000d1','00000000-0000-0000-0000-0000000000a1','medarbejder','{view_dashboard}'),
+  ('00000000-0000-0000-0000-0000000000d2','00000000-0000-0000-0000-0000000000a1','gæst','{view_dashboard,view_handover}');
+INSERT INTO auth.users SELECT ('00000000-0000-0000-0000-0000000000c'||i)::uuid FROM generate_series(1,4) i;
+-- c4: gæst i org1 (kun læse-rettigheder via role_id)
+INSERT INTO care_staff VALUES ('00000000-0000-0000-0000-0000000000c4','00000000-0000-0000-0000-0000000000a1','medarbejder','00000000-0000-0000-0000-0000000000d2');
 INSERT INTO lys_safety_events (resident_id, risk_level) VALUES ('00000000-0000-0000-0000-0000000000b1','acute');
 INSERT INTO plan_proposals (resident_id, org_id, status) VALUES ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000a1','pending');
 INSERT INTO journal_entries (org_id, resident_id) VALUES ('00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1');
@@ -62,3 +69,5 @@ INSERT INTO resident_sessions (resident_user_id, org_id, session_token_hash, exp
 CREATE POLICY cs_sel ON care_staff FOR SELECT TO authenticated USING (true);
 CREATE POLICY cr_sel ON care_residents FOR SELECT TO authenticated USING (org_id = ANY (care_visible_facility_ids()));
 CREATE POLICY org_sel ON organisations FOR SELECT TO authenticated USING (id = (SELECT org_id FROM care_staff WHERE id = auth.uid()));
+INSERT INTO resident_medications VALUES ('00000000-0000-0000-0000-0000000000e1','00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000a1','Quetiapin');
+CREATE POLICY rm_sel ON resident_medications FOR SELECT TO authenticated USING (care_staff_can_access_resident(resident_id::text));

@@ -2,30 +2,20 @@
 
 import React, { useEffect, useState } from 'react';
 import { Phone, PhoneCall, BellRing, ChevronRight } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import type {
+  CrisisPlanPayload,
+  FacilityContactPayload,
+  OnCallPayload,
+} from '@/lib/lys/crisisSupport';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type BreathPhase = 'inhale' | 'hold-in' | 'exhale' | 'hold-out';
 
-type FacilityContact = {
-  id: string;
-  label: string;
-  phone: string;
-  available_hours: string | null;
-};
-type OnCallRow = {
-  id: string;
-  phone: string;
-  shift: 'day' | 'evening' | 'night';
-};
-type CrisisStep = { icon?: string; title?: string; description?: string };
-type CrisisPlanRow = {
-  warning_signs: string[] | null;
-  helpful_strategies: string[] | null;
-  steps: CrisisStep[] | null;
-};
+type FacilityContact = FacilityContactPayload;
+type OnCallRow = OnCallPayload;
+type CrisisPlanRow = CrisisPlanPayload;
 
 type ConfirmState = { label: string; phone: string } | null;
 type AlertUiState = 'idle' | 'confirming' | 'loading' | 'sent' | 'error';
@@ -221,11 +211,10 @@ function StepIndicator({ current }: { current: number }) {
 
 type Props = {
   firstName: string;
-  facilityId: string | null;
   onClose: () => void;
 };
 
-export default function LysKrisekort({ firstName, facilityId, onClose }: Props) {
+export default function LysKrisekort({ firstName, onClose }: Props) {
   const router = useRouter();
   const [wizardStep, setWizardStep] = useState(1);
   const [phaseIdx, setPhaseIdx] = useState(0);
@@ -267,58 +256,35 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
   }, [phaseIdx, breathingActive]);
 
   useEffect(() => {
-    if (!facilityId) {
-      setContacts([]);
-      return;
-    }
-    const supabase = createClient();
-    if (!supabase) {
-      setContacts([]);
-      return;
-    }
-    supabase
-      .from('facility_contacts')
-      .select('id, label, phone, available_hours')
-      .eq('facility_id', facilityId)
-      .order('sort_order')
-      .then(
-        ({ data }) => setContacts((data ?? []) as FacilityContact[]),
-        () => setContacts([])
-      );
-  }, [facilityId]);
-
-  useEffect(() => {
-    const supabase = createClient();
-    if (!supabase) {
-      setCrisisPlanLoading(false);
-      setCrisisPlan(null);
-      return;
-    }
     let cancelled = false;
     void (async () => {
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) {
+        const res = await fetch('/api/lys/crisis-support', { credentials: 'include' });
+        if (!res.ok) {
           if (!cancelled) {
             setCrisisPlan(null);
+            setContacts([]);
+            setOnCall(null);
             setCrisisPlanLoading(false);
           }
           return;
         }
-        const { data } = await supabase
-          .from('crisis_plans')
-          .select('warning_signs, helpful_strategies, steps')
-          .eq('resident_id', user.id)
-          .maybeSingle();
+        const data = (await res.json()) as {
+          crisisPlan?: CrisisPlanRow | null;
+          contacts?: FacilityContact[];
+          onCall?: OnCallRow | null;
+        };
         if (!cancelled) {
-          setCrisisPlan((data as CrisisPlanRow | null) ?? null);
+          setCrisisPlan(data.crisisPlan ?? null);
+          setContacts(Array.isArray(data.contacts) ? data.contacts : []);
+          setOnCall(data.onCall ?? null);
           setCrisisPlanLoading(false);
         }
       } catch {
         if (!cancelled) {
           setCrisisPlan(null);
+          setContacts([]);
+          setOnCall(null);
           setCrisisPlanLoading(false);
         }
       }
@@ -327,34 +293,6 @@ export default function LysKrisekort({ firstName, facilityId, onClose }: Props) 
       cancelled = true;
     };
   }, []);
-
-  useEffect(() => {
-    if (!facilityId) {
-      setOnCall(null);
-      return;
-    }
-    const supabase = createClient();
-    if (!supabase) {
-      setOnCall(null);
-      return;
-    }
-    const now = new Date();
-    const hour = now.getHours();
-    const shift: 'day' | 'evening' | 'night' =
-      hour >= 6 && hour < 14 ? 'day' : hour >= 14 && hour < 22 ? 'evening' : 'night';
-    const today = now.toISOString().slice(0, 10);
-    supabase
-      .from('on_call_staff')
-      .select('id, phone, shift')
-      .eq('org_id', facilityId)
-      .eq('date', today)
-      .eq('shift', shift)
-      .maybeSingle()
-      .then(
-        ({ data }) => setOnCall((data as OnCallRow | null) ?? null),
-        () => setOnCall(null)
-      );
-  }, [facilityId]);
 
   const current = PHASES[phaseIdx]!;
   const goNext = () => setWizardStep((s) => Math.min(TOTAL_STEPS, s + 1));

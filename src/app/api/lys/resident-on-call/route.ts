@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getResidentId } from '@/lib/residentAuth';
+import { onCallShiftDate } from '@/lib/onCallStaff';
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -41,7 +42,7 @@ export async function GET(): Promise<NextResponse> {
   }
 
   const orgId = resRow.org_id as string;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = onCallShiftDate();
 
   const { data: onRows, error: onErr } = await supabase
     .from('on_call_staff')

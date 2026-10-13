@@ -1,15 +1,25 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { CalendarDays, Clock, MapPin, Plus, User } from 'lucide-react';
+import { CalendarDays, Clock, Loader2, MapPin, Plus, User } from 'lucide-react';
+import { toast } from 'sonner';
 import type { CareHouse } from '@/lib/careDemoResidents';
 import { CARE_DEMO_RESIDENT_PROFILES, careDemoProfileById } from '@/lib/careDemoResidents';
-import { BINGBONG_DEMO_ORG_SLUG } from '@/lib/bingbongOrg';
 import { createClient } from '@/lib/supabase/client';
-import { parseStaffOrgId } from '@/lib/staffOrgScope';
+import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
 import { isResidentUuidForCloud } from '@/lib/residentUuid';
 import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
 import { onboardingHouseToCareHouse } from '@/lib/carePortalHouse';
+import {
+  buildPlannerInsertRow,
+  isPlannerAppointmentType,
+  isPlannerHouse,
+  parsePlannerEntry,
+  plannerDayWindow,
+  plannerInsertNeedsColumnFallback,
+  plannerInsertWithoutExtendedColumns,
+  type PlannerAppointmentType,
+} from '@/lib/plannerEntries';
 
 export type { CareHouse } from '@/lib/careDemoResidents';
 
@@ -180,9 +190,57 @@ const INPUT_STYLE: React.CSSProperties = {
 };
 
 type KalenderWidgetProps = {
-  /** `demo` = mock aftaler + demo-beboere. `live` = mock kun hvis org ikke er BingBong-seed. */
+  /** `demo` = mock aftaler + demo-beboere. `live` = org-aftaler i `care_planner_entries`. */
   variant?: 'live' | 'demo';
 };
+
+function residentOptionFromRow(row: {
+  user_id: unknown;
+  display_name: unknown;
+  onboarding_data: unknown;
+}): ResidentOption | null {
+  const id = String(row.user_id ?? '');
+  if (!isResidentUuidForCloud(id)) return null;
+  const od = (row.onboarding_data ?? {}) as Record<string, unknown>;
+  const name = String(row.display_name ?? '').trim() || '—';
+  const rawIni = od.avatar_initials;
+  const initials =
+    typeof rawIni === 'string' && rawIni.trim().length > 0
+      ? rawIni.trim().toUpperCase().slice(0, 4)
+      : name.slice(0, 2).toUpperCase();
+  return {
+    id,
+    name,
+    initials,
+    house: onboardingHouseToCareHouse(od.house),
+  };
+}
+
+function appointmentFromPlannerRow(
+  row: Record<string, unknown>,
+  residents: ResidentOption[]
+): CareAppointment | null {
+  const parsed = parsePlannerEntry(row);
+  if (!parsed) return null;
+  const scheduledAt = new Date(parsed.startsAtIso);
+  if (Number.isNaN(scheduledAt.getTime())) return null;
+  const res = parsed.residentUserId
+    ? (residents.find((r) => r.id === parsed.residentUserId) ?? null)
+    : null;
+  const house: CareHouse = parsed.house ? parsed.house : (res?.house ?? 'A');
+  return {
+    id: parsed.id,
+    title: parsed.title,
+    scheduledAt,
+    type: parsed.type,
+    residentId: res?.id ?? parsed.residentUserId,
+    residentName: res?.name ?? null,
+    residentInitials: res?.initials ?? null,
+    house,
+    location: parsed.location,
+    responsible: parsed.responsible,
+  };
+}
 
 export default function KalenderWidget({ variant = 'live' }: KalenderWidgetProps) {
   const { department: houseFilter } = useCarePortalDepartment();
@@ -190,6 +248,9 @@ export default function KalenderWidget({ variant = 'live' }: KalenderWidgetProps
   const [today, setToday] = useState<Date>(() => new Date());
   const [appointments, setAppointments] = useState<CareAppointment[]>([]);
   const [residentOptions, setResidentOptions] = useState<ResidentOption[]>(DEMO_RESIDENT_OPTIONS);
+  const [orgId, setOrgId] = useState<string | null>(null);
+  const [scopeError, setScopeError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [residentFilter, setResidentFilter] = useState<string>('alle');
   const [showForm, setShowForm] = useState(false);
   const [formTitle, setFormTitle] = useState('');
@@ -217,85 +278,124 @@ export default function KalenderWidget({ variant = 'live' }: KalenderWidgetProps
     setResidentOptions((prev) =>
       prev === demoCalendarSeed.residents ? prev : demoCalendarSeed.residents
     );
+    setOrgId(null);
+    setScopeError((e) => (e === null ? e : null));
     setHydrated((h) => (h ? h : true));
   }, [variant, demoCalendarSeed]);
 
-  useEffect(() => {
-    if (variant === 'demo') return;
-
+  const loadLive = useCallback(async () => {
     const d = new Date();
     setToday(d);
 
-    let cancelled = false;
-    void (async () => {
-      const supabase = createClient();
-      if (!supabase) {
-        if (!cancelled) {
-          setAppointments(createMockAppointments(d));
-          setResidentOptions(DEMO_RESIDENT_OPTIONS);
-          setHydrated(true);
-        }
-        return;
-      }
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const orgId = parseStaffOrgId(session?.user?.user_metadata?.org_id);
-      if (!orgId) {
-        if (!cancelled) {
-          setAppointments(createMockAppointments(d));
-          setResidentOptions(DEMO_RESIDENT_OPTIONS);
-          setHydrated(true);
-        }
-        return;
-      }
-      const { data: orgRow } = await supabase
-        .from('organisations')
-        .select('slug')
-        .eq('id', orgId)
-        .maybeSingle();
-      const slug = typeof orgRow?.slug === 'string' ? orgRow.slug.trim() : '';
-      if (slug === BINGBONG_DEMO_ORG_SLUG) {
-        if (cancelled) return;
-        setAppointments([]);
-        const { data: rows } = await supabase
-          .from('care_residents')
-          .select('user_id, display_name, onboarding_data')
-          .eq('org_id', orgId)
-          .order('display_name');
-        if (cancelled) return;
-        const opts: ResidentOption[] = [];
-        for (const row of rows ?? []) {
-          const id = String(row.user_id ?? '');
-          if (!isResidentUuidForCloud(id)) continue;
-          const od = (row.onboarding_data ?? {}) as Record<string, unknown>;
-          const name = String(row.display_name ?? '').trim() || '—';
-          const rawIni = od.avatar_initials;
-          const initials =
-            typeof rawIni === 'string' && rawIni.trim().length > 0
-              ? rawIni.trim().toUpperCase().slice(0, 4)
-              : name.slice(0, 2).toUpperCase();
-          opts.push({
-            id,
-            name,
-            initials,
-            house: onboardingHouseToCareHouse(od.house),
-          });
-        }
-        setResidentOptions(opts);
-      } else {
-        if (!cancelled) {
-          setAppointments(createMockAppointments(d));
-          setResidentOptions(DEMO_RESIDENT_OPTIONS);
-        }
-      }
-      if (!cancelled) setHydrated(true);
-    })();
+    const supabase = createClient();
+    if (!supabase) {
+      setScopeError('Kunne ikke oprette forbindelse');
+      setOrgId(null);
+      setAppointments([]);
+      setResidentOptions([]);
+      setHydrated(true);
+      return;
+    }
 
-    return () => {
-      cancelled = true;
-    };
-  }, [variant]);
+    const {
+      orgId: resolvedOrg,
+      error: orgErr,
+      queryMessage,
+    } = await resolveStaffOrgResidents(supabase);
+    if (orgErr || !resolvedOrg) {
+      setScopeError(
+        orgErr === 'no_org'
+          ? 'Organisation mangler på din bruger — kontakt administrator'
+          : orgErr === 'no_session'
+            ? 'Log ind for at se aftaler'
+            : (queryMessage ?? 'Kunne ikke hente organisation')
+      );
+      setOrgId(null);
+      setAppointments([]);
+      setResidentOptions([]);
+      setHydrated(true);
+      return;
+    }
+
+    setOrgId(resolvedOrg);
+    setScopeError(null);
+
+    const { data: rows, error: resErr } = await supabase
+      .from('care_residents')
+      .select('user_id, display_name, onboarding_data')
+      .eq('org_id', resolvedOrg)
+      .order('display_name');
+
+    if (resErr) {
+      setScopeError(resErr.message);
+      setAppointments([]);
+      setResidentOptions([]);
+      setHydrated(true);
+      return;
+    }
+
+    const opts: ResidentOption[] = [];
+    for (const row of rows ?? []) {
+      const opt = residentOptionFromRow(
+        row as {
+          user_id: unknown;
+          display_name: unknown;
+          onboarding_data: unknown;
+        }
+      );
+      if (opt) opts.push(opt);
+    }
+    setResidentOptions(opts);
+
+    const window = plannerDayWindow(d);
+    const { data: entryRows, error: entryErr } = await supabase
+      .from('care_planner_entries')
+      .select('id, title, category, starts_at, resident_user_id, location, responsible, house')
+      .eq('org_id', resolvedOrg)
+      .gte('starts_at', window.startIso)
+      .lt('starts_at', window.endIso)
+      .order('starts_at', { ascending: true });
+
+    if (entryErr) {
+      if (/column .* does not exist/i.test(entryErr.message)) {
+        const { data: fallbackRows, error: fallbackErr } = await supabase
+          .from('care_planner_entries')
+          .select('id, title, category, starts_at, resident_user_id')
+          .eq('org_id', resolvedOrg)
+          .gte('starts_at', window.startIso)
+          .lt('starts_at', window.endIso)
+          .order('starts_at', { ascending: true });
+        if (fallbackErr) {
+          setScopeError(
+            `${fallbackErr.message} — kør seneste Supabase-migration (care_planner_entries).`
+          );
+          setAppointments([]);
+        } else {
+          setAppointments(
+            (fallbackRows ?? [])
+              .map((row) => appointmentFromPlannerRow((row ?? {}) as Record<string, unknown>, opts))
+              .filter((a): a is CareAppointment => a !== null)
+          );
+        }
+      } else {
+        setScopeError(entryErr.message);
+        setAppointments([]);
+      }
+    } else {
+      setAppointments(
+        (entryRows ?? [])
+          .map((row) => appointmentFromPlannerRow((row ?? {}) as Record<string, unknown>, opts))
+          .filter((a): a is CareAppointment => a !== null)
+      );
+    }
+
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (variant === 'demo') return;
+    void loadLive();
+  }, [variant, loadLive]);
 
   const dateLabel = useMemo(() => formatDanishLongDate(today), [today]);
 
@@ -306,36 +406,92 @@ export default function KalenderWidget({ variant = 'live' }: KalenderWidgetProps
     return list;
   }, [appointments, houseFilter, residentFilter]);
 
+  const resetForm = useCallback(() => {
+    setFormTitle('');
+    setFormTime('12:00');
+    setFormType('aktivitet');
+    setFormResidentId('');
+    setFormResponsible('');
+    setFormLocation('');
+    setShowForm(false);
+  }, []);
+
   const addAppointment = useCallback(
-    (e: React.FormEvent) => {
+    async (e: React.FormEvent) => {
       e.preventDefault();
       if (!formTitle.trim() || !formResponsible.trim()) return;
       const [hh, mm] = formTime.split(':').map(Number);
       const scheduledAt = new Date(today);
       scheduledAt.setHours(hh ?? 12, mm ?? 0, 0, 0);
       const res = formResidentId ? residentOptions.find((r) => r.id === formResidentId) : null;
-      setAppointments((prev) => [
-        ...prev,
-        {
-          id: `cal-${Date.now()}`,
-          title: formTitle.trim(),
-          scheduledAt,
-          type: formType,
-          residentId: res?.id ?? null,
-          residentName: res?.name ?? null,
-          residentInitials: res?.initials ?? null,
-          house: res?.house ?? (houseFilter !== 'alle' ? houseFilter : 'A'),
-          location: formLocation.trim() || '—',
-          responsible: formResponsible.trim(),
-        },
-      ]);
-      setFormTitle('');
-      setFormTime('12:00');
-      setFormType('aktivitet');
-      setFormResidentId('');
-      setFormResponsible('');
-      setFormLocation('');
-      setShowForm(false);
+      const house = res?.house ?? (houseFilter !== 'alle' ? houseFilter : 'A');
+      const type: PlannerAppointmentType = isPlannerAppointmentType(formType) ? formType : 'andet';
+
+      if (variant === 'demo') {
+        setAppointments((prev) => [
+          ...prev,
+          {
+            id: `cal-${Date.now()}`,
+            title: formTitle.trim(),
+            scheduledAt,
+            type,
+            residentId: res?.id ?? null,
+            residentName: res?.name ?? null,
+            residentInitials: res?.initials ?? null,
+            house,
+            location: formLocation.trim() || '—',
+            responsible: formResponsible.trim(),
+          },
+        ]);
+        resetForm();
+        return;
+      }
+
+      if (!orgId) {
+        toast.error('Organisation mangler — kan ikke gemme aftale');
+        return;
+      }
+      const insertRow = buildPlannerInsertRow({
+        orgId,
+        title: formTitle,
+        type,
+        scheduledAt,
+        residentUserId: res?.id ?? null,
+        location: formLocation,
+        responsible: formResponsible,
+        house: isPlannerHouse(house) ? house : '',
+      });
+      if (!insertRow) {
+        toast.error('Udfyld titel og ansvarlig');
+        return;
+      }
+
+      const supabase = createClient();
+      if (!supabase) {
+        toast.error('Ingen forbindelse');
+        return;
+      }
+
+      setSaving(true);
+      let { error } = await supabase.from('care_planner_entries').insert(insertRow);
+      if (error && plannerInsertNeedsColumnFallback(error.message)) {
+        const retry = await supabase
+          .from('care_planner_entries')
+          .insert(plannerInsertWithoutExtendedColumns(insertRow));
+        error = retry.error;
+      }
+      setSaving(false);
+      if (error) {
+        toast.error(
+          error.message.includes('care_planner_entries')
+            ? 'Databasen mangler kalenderfelter — kør migration care_planner_entries_staff_fields'
+            : 'Kunne ikke gemme aftale'
+        );
+        return;
+      }
+      toast.success('Aftale gemt');
+      resetForm();
+      await loadLive();
     },
     [
       formTitle,
@@ -347,6 +503,10 @@ export default function KalenderWidget({ variant = 'live' }: KalenderWidgetProps
       today,
       houseFilter,
       residentOptions,
+      variant,
+      orgId,
+      resetForm,
+      loadLive,
     ]
   );
 
@@ -386,6 +546,11 @@ export default function KalenderWidget({ variant = 'live' }: KalenderWidgetProps
             <p className="text-xs" style={{ color: 'var(--cp-muted)' }}>
               {dateLabel}
             </p>
+            {scopeError && variant === 'live' && (
+              <p className="mt-1 text-xs" style={{ color: 'var(--cp-amber)' }}>
+                {scopeError}
+              </p>
+            )}
           </div>
         </div>
         <div className="flex flex-col items-stretch gap-2 sm:items-end">
@@ -561,10 +726,12 @@ export default function KalenderWidget({ variant = 'live' }: KalenderWidgetProps
             </div>
             <button
               type="submit"
-              className="w-full rounded-lg py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:opacity-90"
+              disabled={saving}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:opacity-90 disabled:opacity-60"
               style={{ backgroundColor: 'var(--cp-green)' }}
             >
-              Gem aftale
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+              {saving ? 'Gemmer…' : 'Gem aftale'}
             </button>
           </form>
         </div>

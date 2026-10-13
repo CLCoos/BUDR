@@ -1,13 +1,18 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getResidentId } from '@/lib/residentAuth';
+import {
+  buildStaffMessageJournalRow,
+  isDemoResidentId,
+  omitMissingJournalInsertColumn,
+  staffMessageNotificationRow,
+} from '@/lib/lysStaffMessage';
 
 function getServiceClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false } }
-  );
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false } });
 }
 
 export async function POST(req: Request): Promise<NextResponse> {
@@ -28,48 +33,66 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Besked må ikke være tom' }, { status: 400 });
   }
 
-  const supabase = getServiceClient();
+  // Demo-session: keep the UI flow without writing invalid UUID FKs.
+  if (isDemoResidentId(residentId)) {
+    return NextResponse.json({ ok: true, demo: true });
+  }
 
-  // Look up resident name and org_id for the journal entry
-  const { data: resident } = await supabase
+  const supabase = getServiceClient();
+  if (!supabase) {
+    return NextResponse.json({ error: 'Server ikke konfigureret' }, { status: 503 });
+  }
+
+  const { data: resident, error: residentErr } = await supabase
     .from('care_residents')
     .select('display_name, org_id')
     .eq('user_id', residentId)
     .maybeSingle();
 
-  const staffName = resident?.display_name
-    ? `Beboer: ${resident.display_name as string}`
-    : 'Beboer';
+  if (residentErr) {
+    return NextResponse.json({ error: residentErr.message }, { status: 500 });
+  }
+  if (!resident) {
+    return NextResponse.json({ error: 'Resident ikke fundet' }, { status: 401 });
+  }
 
-  const nowIso = new Date().toISOString();
+  const displayName = (resident as { display_name?: string | null }).display_name ?? null;
   const residentOrgId = (resident as { org_id?: string } | null)?.org_id ?? null;
-  const { error } = await supabase.from('journal_entries').insert({
-    resident_id: residentId,
-    staff_id: null,
-    staff_name: staffName,
-    entry_text: text,
-    category: 'Besked fra beboer',
-    journal_status: 'godkendt',
-    approved_at: nowIso,
-    approved_by: null,
-    org_id: residentOrgId,
+  const nowIso = new Date().toISOString();
+
+  let payload: Record<string, unknown> = buildStaffMessageJournalRow({
+    residentId,
+    displayName,
+    entryText: text,
+    orgId: residentOrgId,
+    nowIso,
   });
+
+  let { error } = await supabase.from('journal_entries').insert(payload);
+  while (error) {
+    const stripped = omitMissingJournalInsertColumn(payload, error.message);
+    if (!stripped.omitted) break;
+    payload = stripped.payload;
+    ({ error } = await supabase.from('journal_entries').insert(payload));
+  }
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Fire notification so staff see the message in the alerts panel
-  const residentLabel = resident?.display_name ? (resident.display_name as string) : 'En beboer';
-  const excerpt = text.length > 80 ? `${text.slice(0, 77)}…` : text;
-  await supabase.from('care_portal_notifications').insert({
-    resident_id: residentId,
-    type: 'besked',
-    detail: `${residentLabel}: «${excerpt}»`,
-    severity: 'gul',
-    source_table: 'journal_entries',
-    org_id: residentOrgId,
-  });
+  const { error: notifyErr } = await supabase.from('care_portal_notifications').insert(
+    staffMessageNotificationRow({
+      residentId,
+      displayName,
+      entryText: text,
+      orgId: residentOrgId,
+    })
+  );
+
+  if (notifyErr) {
+    // Journal row is already persisted — do not 500 (retry would duplicate the note).
+    console.error('[message-staff] notification insert failed:', notifyErr.message);
+  }
 
   return NextResponse.json({ ok: true });
 }
