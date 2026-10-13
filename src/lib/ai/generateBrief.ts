@@ -145,6 +145,8 @@ export async function generateBriefForResident(args: {
     .select('created_at, entry_text, category')
     .eq('resident_id', residentId)
     .eq('org_id', orgId)
+    // Kun godkendte notater: aldrig kladder eller borgerens private noter til AI.
+    .eq('journal_status', 'godkendt')
     .gte('created_at', sinceIso)
     .order('created_at', { ascending: true });
 

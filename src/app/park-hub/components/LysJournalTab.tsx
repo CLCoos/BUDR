@@ -344,9 +344,9 @@ export default function LysJournalTab({ tokens, accent }: Props) {
         credentials: 'include',
       });
       if (!res.ok) throw new Error('server_error');
-      const data = (await res.json()) as { entry_id: string; content: string };
+      const data = (await res.json()) as { entry_id: string; journal_note?: string };
       if (mountedRef.current) {
-        setParkDraftContent(data.content);
+        setParkDraftContent(data.journal_note ?? '');
         setParkDraftState('done');
       }
     } catch {

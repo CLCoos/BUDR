@@ -145,7 +145,9 @@ export async function POST(req: Request): Promise<NextResponse> {
     : 'Beboer (Lys)';
 
   const nowIso = new Date().toISOString();
-  const journal_status = privacy === 'shared' ? 'godkendt' : 'kladde';
+  // «Kun for dig» er borgerens egen note: skjult for personalet (RLS), ikke en kladde.
+  const isPrivate = privacy !== 'shared';
+  const journal_status = isPrivate ? 'resident_private' : 'godkendt';
 
   const entry_text = encodeEntryText(text, meta);
 
@@ -156,7 +158,8 @@ export async function POST(req: Request): Promise<NextResponse> {
     entry_text,
     category: CATEGORY,
     journal_status,
-    approved_at: privacy === 'shared' ? nowIso : null,
+    is_resident_private: isPrivate,
+    approved_at: isPrivate ? null : nowIso,
     approved_by: null,
     org_id: (resident as { org_id?: string } | null)?.org_id ?? null,
   });

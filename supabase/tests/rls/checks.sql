@@ -4,6 +4,12 @@
 CREATE TEMP TABLE IF NOT EXISTS r(k text, v text);
 GRANT ALL ON r TO authenticated, anon;
 TRUNCATE r;
+-- privat Lys-note (kun for borgeren), oprettet som superuser
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='journal_entries' AND column_name='is_resident_private') THEN
+    EXECUTE $q$INSERT INTO journal_entries (org_id, resident_id, entry_text, journal_status, is_resident_private) VALUES ('00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1','min egen note','resident_private', true)$q$;
+  END IF;
+END $$;
 -- afviklet vagt (i går) for medarbejder c2, oprettet som superuser
 DO $$ BEGIN
   IF to_regclass('public.care_staff_shifts') IS NOT NULL THEN
@@ -260,6 +266,28 @@ DO $$ DECLARE n int; BEGIN
   BEGIN DELETE FROM crisis_alerts; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('staff_delete_crisis_alert', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('staff_delete_crisis_alert','blocked'); END;
   BEGIN DELETE FROM resident_medications WHERE id = '00000000-0000-0000-0000-0000000000e1'; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('staff_delete_medication', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('staff_delete_medication','blocked'); END;
   SELECT count(*) INTO n FROM crisis_alerts; INSERT INTO r VALUES ('staff_read_crisis_alert (should work)', CASE WHEN n>0 THEN 'works' ELSE 'BROKEN' END);
+END $$;
+-- journal-status (bølge 5)
+SET test.uid = '00000000-0000-0000-0000-0000000000c2';
+DO $$ DECLARE n int; v uuid; BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='journal_entries' AND column_name='journal_status') THEN
+    EXECUTE $q$SELECT count(*) FROM journal_entries WHERE is_resident_private$q$ INTO n; INSERT INTO r VALUES ('staff_read_private_note', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
+    BEGIN
+      EXECUTE $q$INSERT INTO journal_entries (id, org_id, resident_id, entry_text, journal_status) VALUES (9001, '00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1','udkast','kladde')$q$;
+      INSERT INTO r VALUES ('journal_draft_insert (should work)','works');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('journal_draft_insert (should work)','BROKEN'); END;
+    BEGIN
+      EXECUTE $q$INSERT INTO journal_entries (org_id, resident_id, entry_text, journal_status, is_resident_private) VALUES ('00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1','falsk privat','resident_private', true)$q$;
+      INSERT INTO r VALUES ('staff_insert_private_note','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('staff_insert_private_note','blocked'); END;
+    BEGIN
+      EXECUTE $q$UPDATE journal_entries SET journal_status = 'godkendt', approved_by = '00000000-0000-0000-0000-0000000000c1' WHERE id = 9001$q$;
+      EXECUTE $q$SELECT approved_by FROM journal_entries WHERE id = 9001$q$ INTO v;
+      INSERT INTO r VALUES ('journal_approve_stamps_self (should work)', CASE WHEN v = '00000000-0000-0000-0000-0000000000c2' THEN 'works' ELSE 'BROKEN' END);
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('journal_approve_stamps_self (should work)','BROKEN'); END;
+    BEGIN EXECUTE $q$UPDATE journal_entries SET entry_text = 'omskrevet' WHERE id = 9001$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('journal_edit_approved', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('journal_edit_approved','blocked'); END;
+    BEGIN EXECUTE $q$UPDATE journal_entries SET journal_status = 'kladde' WHERE id = 9001$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('journal_unapprove', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('journal_unapprove','blocked'); END;
+  END IF;
 END $$;
 -- leder in org1 can still manage roles
 SET test.uid = '00000000-0000-0000-0000-0000000000c1';
