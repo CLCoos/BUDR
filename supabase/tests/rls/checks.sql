@@ -260,6 +260,13 @@ DO $$ DECLARE n int; BEGIN
     EXECUTE 'SELECT count(*) FROM vum_assessments' INTO n; INSERT INTO r VALUES ('vum_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
   END IF;
 END $$;
+-- bølge 5: ingen hard-delete af kliniske data
+SET test.uid = '00000000-0000-0000-0000-0000000000c1';
+DO $$ DECLARE n int; BEGIN
+  BEGIN DELETE FROM crisis_alerts; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('staff_delete_crisis_alert', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('staff_delete_crisis_alert','blocked'); END;
+  BEGIN DELETE FROM resident_medications WHERE id = '00000000-0000-0000-0000-0000000000e1'; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('staff_delete_medication', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('staff_delete_medication','blocked'); END;
+  SELECT count(*) INTO n FROM crisis_alerts; INSERT INTO r VALUES ('staff_read_crisis_alert (should work)', CASE WHEN n>0 THEN 'works' ELSE 'BROKEN' END);
+END $$;
 -- journal-status (bølge 5)
 SET test.uid = '00000000-0000-0000-0000-0000000000c2';
 DO $$ DECLARE n int; v uuid; BEGIN
