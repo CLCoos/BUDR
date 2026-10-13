@@ -10,7 +10,9 @@ export const LYS_XP_BY_ACTIVITY = {
 export type LysXpActivity = keyof typeof LYS_XP_BY_ACTIVITY;
 
 export function isLysXpActivity(value: unknown): value is LysXpActivity {
-  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(LYS_XP_BY_ACTIVITY, value);
+  return (
+    typeof value === 'string' && Object.prototype.hasOwnProperty.call(LYS_XP_BY_ACTIVITY, value)
+  );
 }
 
 /** Fire-and-forget fra browseren; borgeren afgøres af sessions-cookien på serveren. */
