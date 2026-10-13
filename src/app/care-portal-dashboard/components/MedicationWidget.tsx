@@ -193,6 +193,8 @@ async function fetchLiveMedicationTasksForOrg(
   for (const raw of medRows as DbResidentMedRow[]) {
     const meta = resMeta.get(raw.resident_id);
     if (!meta) continue;
+    // Behovsmedicin har intet fast tidspunkt; den gives og kvitteres fra borgerens 360°.
+    if (raw.time_group === 'behoev') continue;
     const scheduledAt = scheduledTodayFromMed(raw.time_group, raw.time_label, now);
     tasks.push({
       id: liveMedicationTaskId(raw.id, ymd),

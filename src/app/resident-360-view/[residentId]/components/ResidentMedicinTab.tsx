@@ -18,6 +18,8 @@ import {
   isAllowedMedicationSlotTime,
   toScheduledTimeDb,
 } from '@/lib/medicationScheduleSlots';
+import { fetchPrnForDay, isPrnMedication, type PrnAdministration } from '@/lib/medicationPrn';
+import PrnMedicationRow from './PrnMedicationRow';
 import type { MedDefinition } from './types';
 
 // ── Types ─────────────────────────────────────────────────────
@@ -63,6 +65,8 @@ interface Props {
 
 export default function ResidentMedicinTab({ residentId, medications }: Props) {
   const [given, setGiven] = useState<Record<string, GivenRecord>>({});
+  const [prnDoses, setPrnDoses] = useState<PrnAdministration[]>([]);
+  const [prnVersion, setPrnVersion] = useState(0);
   const [reminders, setReminders] = useState<ReminderRow[]>([]);
   const [loadingReminders, setLoadingReminders] = useState(true);
   const [newLabel, setNewLabel] = useState('');
@@ -87,6 +91,19 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
       cancelled = true;
     };
   }, [residentId, medicationIdsKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const supabase = createClient();
+      if (!supabase) return;
+      const { rows } = await fetchPrnForDay(supabase, residentId);
+      if (!cancelled) setPrnDoses(rows);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [residentId, prnVersion]);
 
   useEffect(() => {
     let cancelled = false;
@@ -231,7 +248,7 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
     });
   }
 
-  const activeMeds = medications.filter((m) => m.status === 'aktiv');
+  const activeMeds = medications.filter((m) => m.status === 'aktiv' && !isPrnMedication(m));
   const givenCount = activeMeds.filter((m) => given[m.id]?.given).length;
   const totalActive = activeMeds.length;
   const remindersTakenCount = reminders.filter((r) => !!r.taken_at).length;
@@ -427,6 +444,17 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
             </div>
             <div className="divide-y divide-[var(--cp-border)]">
               {meds.map((med) => {
+                if (isPrnMedication(med)) {
+                  return (
+                    <PrnMedicationRow
+                      key={med.id}
+                      residentId={residentId}
+                      med={med}
+                      doses={prnDoses.filter((d) => d.medicationId === med.id)}
+                      onChanged={() => setPrnVersion((v) => v + 1)}
+                    />
+                  );
+                }
                 const rec = given[med.id];
                 const isGiven = rec?.given ?? false;
                 const isPaused = med.status === 'pauseret';
@@ -542,7 +570,7 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
       })}
 
       <p className="pb-2 text-center text-xs" style={{ color: 'var(--cp-muted2)' }}>
-        Medicin-status gemmes lokalt for i dag. Nulstilles automatisk ved midnat.
+        Udleveringer gemmes i journalens revisionsspor. Fast medicin nulstilles ved midnat.
       </p>
     </div>
   );

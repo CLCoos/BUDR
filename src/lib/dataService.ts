@@ -8,7 +8,6 @@ import { isResidentUuidForCloud } from '@/lib/residentUuid';
 import { LYS_DEMO_RESIDENT_ID } from '@/lib/lysDemoResident';
 import { copenhagenYmd } from '@/lib/copenhagenDay';
 import { safeRandomUUID } from '@/lib/uuid';
-import { copenhagenYmd } from '@/lib/copenhagenDay';
 import {
   createLysPlanItem,
   defaultEmojiForCategory,
