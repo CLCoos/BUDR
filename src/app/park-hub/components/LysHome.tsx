@@ -3,10 +3,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { BookOpen, Volume2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import { useResidentSession } from '@/hooks/useResidentSession';
 import * as dataService from '@/lib/dataService';
 import { isLysDemoResidentId } from '@/lib/lysDemoResident';
+import { fetchLysPlanBundle, isPlanItemActiveOnDate } from '@/lib/lys/planItems';
 import type { LysChatMessage } from '@/app/api/lys-chat/route';
 import type { LysFlowOverlay } from '../lib/lysOverlay';
 import type { LysPhase, LysThemeTokens } from '../lib/lysTheme';
@@ -253,7 +253,8 @@ export default function LysHome({
       setPlanStats({ total: 0 });
       return;
     }
-    const today = new Date().toISOString().slice(0, 10);
+    const todayDate = new Date();
+    const today = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}-${String(todayDate.getDate()).padStart(2, '0')}`;
 
     if (isLysDemoResidentId(residentId)) {
       void (async () => {
@@ -272,27 +273,44 @@ export default function LysHome({
       return;
     }
 
-    const supabase = createClient();
-    if (!supabase) return;
-    supabase
-      .from('daily_plans')
-      .select('plan_items')
-      .eq('resident_id', residentId)
-      .eq('plan_date', today)
-      .maybeSingle()
-      .then(
-        ({ data }) => {
-          const cnt = Array.isArray(data?.plan_items) ? (data!.plan_items as unknown[]).length : 0;
-          setPlanStats({ total: cnt });
-        },
-        () => setPlanStats({ total: 0 })
-      );
+    void fetchLysPlanBundle(today).then((bundle) => {
+      const fromDaily = bundle.dailyPlanItems.length;
+      const fromResident = bundle.items.filter((row) =>
+        isPlanItemActiveOnDate(row, todayDate)
+      ).length;
+      setPlanStats({ total: fromDaily + fromResident });
+    });
   }, [residentId]);
 
   useEffect(() => {
     const activeId = session.activeId || residentId;
     if (!activeId) return;
-    const today = new Date().toISOString().slice(0, 10);
+    const todayDate = new Date();
+    const today = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}-${String(todayDate.getDate()).padStart(2, '0')}`;
+
+    if (session.storageMode === 'supabase' && !isLysDemoResidentId(residentId)) {
+      void fetchLysPlanBundle(today).then((bundle) => {
+        const fromDaily = bundle.dailyPlanItems.map((item, i) => ({
+          id: item.id ?? `plan-${i}`,
+          title: item.title,
+          time: item.time.slice(0, 5),
+        }));
+        const fromResident = bundle.items
+          .filter((row) => isPlanItemActiveOnDate(row, todayDate))
+          .map((row) => ({
+            id: row.id,
+            title: row.title,
+            time: String(row.time_of_day).slice(0, 5),
+          }));
+        const items = [...fromDaily, ...fromResident]
+          .sort((a, b) => a.time.localeCompare(b.time))
+          .slice(0, 5);
+        setTodayPreview(items);
+        setCompletedToday(new Set(bundle.completions));
+      });
+      return;
+    }
+
     void dataService.getPlanItems(session.storageMode, activeId).then((all) => {
       const items = all
         .filter((p) => p.active_from <= today)

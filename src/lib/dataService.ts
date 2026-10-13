@@ -5,7 +5,18 @@ import { createClient } from '@/lib/supabase/client';
 import * as ls from '@/lib/localStore';
 import { LOCAL_KEYS } from '@/types/local';
 import { isResidentUuidForCloud } from '@/lib/residentUuid';
+import { LYS_DEMO_RESIDENT_ID } from '@/lib/lysDemoResident';
+import { copenhagenYmd } from '@/lib/copenhagenDay';
 import { safeRandomUUID } from '@/lib/uuid';
+import { copenhagenYmd } from '@/lib/copenhagenDay';
+import {
+  createLysPlanItem,
+  defaultEmojiForCategory,
+  fetchLysPlanBundle,
+  patchLysPlanItem,
+  type PlanItemCategory,
+  type PlanItemRecurrence,
+} from '@/lib/lys/planItems';
 import type {
   StorageMode,
   CheckIn,
@@ -47,24 +58,47 @@ function canAwardXp(activity: string): boolean {
 /**
  * @deprecated Daglig check-in skal nu gå via POST /api/lys/daily-checkin.
  * Denne funktion er bevaret som no-op for at undgå at brække ældre importer.
- * Vil blive fjernet i en senere oprydning når alle kaldere er migreret.
  */
 export async function saveCheckin(
   _mode: StorageMode,
   _activeId: string,
   _data: { energy_level: number; label: string }
 ): Promise<void> {
-  // No-op. Tidligere skrev denne til legacy check-in-lagring (fjernet).
   return;
 }
 
 /**
- * @deprecated Læsning af daglige check-ins skal ske via /api/lys/daily-checkin eller
- * direkte query mod lys_checkin. Denne funktion er bevaret som no-op-stub for
- * importer i residentBadgeSync.ts og LysMigScreen.tsx.
+ * Live UUID-beboere: GET /api/lys/daily-checkin (cookie + service role).
+ * Demo/gæst: localStorage `budr_checkins` (DemoSeeder).
  */
-export async function getCheckins(_mode: StorageMode, _activeId: string): Promise<CheckIn[]> {
-  return [];
+export async function getCheckins(mode: StorageMode, activeId: string): Promise<CheckIn[]> {
+  if (mode === 'supabase' && isResidentUuidForCloud(activeId)) {
+    try {
+      const res = await fetch('/api/lys/daily-checkin?days=30', { credentials: 'include' });
+      if (!res.ok) return [];
+      const json = (await res.json()) as {
+        checkins?: Array<{ created_at: string; mood_score: number | null }>;
+      };
+      return (json.checkins ?? [])
+        .filter((row) => typeof row.mood_score === 'number')
+        .map((row) => ({
+          id: row.created_at,
+          resident_id: activeId,
+          check_in_date: copenhagenYmd(new Date(row.created_at)),
+          energy_level: row.mood_score as number,
+          label: '',
+          created_at: row.created_at,
+        }));
+    } catch {
+      return [];
+    }
+  }
+  const rows = ls.getItem<CheckIn[]>(LOCAL_KEYS.checkins) ?? [];
+  if (!activeId) return rows;
+  const matched = rows.filter((r) => r.resident_id === activeId);
+  if (matched.length > 0) return matched;
+  // DemoSeeder writes demo-resident-001 even when the guest session has another id.
+  return rows.filter((r) => r.resident_id === LYS_DEMO_RESIDENT_ID);
 }
 
 // ── Journal ───────────────────────────────────────────────────────────────────
@@ -487,14 +521,24 @@ export async function saveProfile(
 
 export async function getPlanItems(mode: StorageMode, activeId: string): Promise<PlanItem[]> {
   if (mode === 'supabase') {
-    const supabase = createClient();
-    if (!supabase) return [];
-    const { data } = await supabase
-      .from('resident_plan_items')
-      .select('*')
-      .eq('resident_id', activeId)
-      .order('time_of_day');
-    return (data ?? []) as PlanItem[];
+    const bundle = await fetchLysPlanBundle(copenhagenYmd());
+    return bundle.items.map((row) => ({
+      id: row.id,
+      resident_id: row.resident_id,
+      title: row.title,
+      category: row.category,
+      emoji: row.emoji,
+      time_of_day: String(row.time_of_day).slice(0, 5),
+      recurrence: row.recurrence,
+      recurrence_days: row.recurrence_days,
+      notify: row.notify,
+      notify_minutes_before: row.notify_minutes_before,
+      created_by: row.created_by,
+      staff_suggestion: row.staff_suggestion,
+      approved_by_resident: row.approved_by_resident,
+      active_from: String(row.active_from).slice(0, 10),
+      created_at: row.created_at,
+    }));
   }
   const items = ls.getItem<PlanItem[]>(LOCAL_KEYS.planItems) ?? [];
   return items.filter((p) => p.resident_id === activeId);
@@ -506,17 +550,26 @@ export async function savePlanItem(
   data: Omit<PlanItem, 'id' | 'resident_id' | 'created_at'>
 ): Promise<void> {
   if (mode === 'supabase') {
-    const supabase = createClient();
-    if (!supabase) return;
-    const { data: crRow } = await supabase
-      .from('care_residents')
-      .select('org_id')
-      .eq('user_id', activeId)
-      .maybeSingle();
-    await supabase.from('resident_plan_items').insert({
-      ...data,
-      resident_id: activeId,
-      org_id: (crRow as { org_id?: string } | null)?.org_id ?? null,
+    const category = (
+      ['mad', 'medicin', 'aktivitet', 'hvile', 'social'].includes(data.category)
+        ? data.category
+        : 'aktivitet'
+    ) as PlanItemCategory;
+    const recurrence = (
+      ['none', 'daily', 'weekly', 'biweekly', 'custom'].includes(data.recurrence)
+        ? data.recurrence
+        : 'none'
+    ) as PlanItemRecurrence;
+    await createLysPlanItem({
+      title: data.title,
+      time: String(data.time_of_day).slice(0, 5),
+      category,
+      recurrence,
+      recurrence_days: data.recurrence_days ?? [],
+      notify: data.notify,
+      notify_minutes_before: data.notify_minutes_before,
+      active_from: data.active_from,
+      emoji: data.emoji ?? defaultEmojiForCategory(category),
     });
     return;
   }
@@ -537,13 +590,7 @@ export async function completePlanItem(
   date: string
 ): Promise<void> {
   if (mode === 'supabase') {
-    const supabase = createClient();
-    if (!supabase) return;
-    await supabase.from('resident_plan_completions').upsert({
-      resident_id: activeId,
-      plan_item_id: planItemId,
-      completion_date: date,
-    });
+    await patchLysPlanItem({ action: 'complete', id: planItemId, date });
     return;
   }
   const completions = ls.getItem<PlanCompletion[]>(LOCAL_KEYS.planCompletions) ?? [];

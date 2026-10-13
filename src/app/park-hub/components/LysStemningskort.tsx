@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { lysStemningIndexToMoodScore } from '@/lib/lysDailyMood';
 import type { LysThemeTokens } from '../lib/lysTheme';
 import VoiceJournal from './VoiceJournal';
 
@@ -47,11 +48,13 @@ export default function LysStemningskort({
   const handleSubmit = () => {
     if (selected === null) return;
     const m = MOODS[selected]!;
+    const moodScore = lysStemningIndexToMoodScore(selected);
+    if (moodScore === null) return;
     onComplete({
       label: m.label,
       traffic: m.traffic,
       note: note.trim(),
-      moodScore: selected + 1,
+      moodScore,
       voiceTranscript: voiceTranscript ?? undefined,
       aiSummary: voiceSummary ?? undefined,
     });

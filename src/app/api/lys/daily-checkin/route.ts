@@ -5,25 +5,32 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getResidentId } from '@/lib/residentAuth';
+import {
+  LYS_UI_TO_DB_TRAFFIC,
+  shouldCreateLowMoodAlert,
+  type LysTrafficUi,
+} from '@/lib/lysDailyMood';
+import { copenhagenStartOfDateUtcIso, copenhagenYmd } from '@/lib/copenhagenDay';
+import { addCalendarDays } from '@/lib/lysCheckinHistory';
+import { journalQueryMissingColumn } from '@/lib/journalEntriesQueryCompat';
 
 function getServiceClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false } }
-  );
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false } });
 }
 
 function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
-// UI sender ASCII-koder; DB bruger dansk æøå
-const UI_TO_DB: Record<string, string> = {
-  groen: 'grøn',
-  gul: 'gul',
-  roed: 'rød',
-};
+function dbTrafficFromUi(raw: string): string | undefined {
+  if (raw === 'groen' || raw === 'gul' || raw === 'roed') {
+    return LYS_UI_TO_DB_TRAFFIC[raw as LysTrafficUi];
+  }
+  return undefined;
+}
 
 interface CheckinBody {
   mood_score: number;
@@ -46,6 +53,72 @@ function validateScore(score: number | undefined): number | null {
   return Math.round(score);
 }
 
+function clampHistoryDays(raw: string | null): number {
+  const n = Number(raw ?? '30');
+  if (!Number.isFinite(n)) return 30;
+  return Math.min(90, Math.max(1, Math.round(n)));
+}
+
+/**
+ * Cookie + service-role history for Lys «Mig».
+ * Browser RLS on lys_checkin is staff-only; the compat view park_daily_checkin
+ * also lacks the legacy check_in_date / energy_level columns the UI used to select.
+ */
+export async function GET(req: Request): Promise<NextResponse> {
+  const residentId = await getResidentId();
+  if (!residentId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const days = clampHistoryDays(new URL(req.url).searchParams.get('days'));
+
+  if (!isUuid(residentId)) {
+    return NextResponse.json({ checkins: [], demo: true });
+  }
+
+  const supabase = getServiceClient();
+  if (!supabase) {
+    return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
+  }
+
+  const today = copenhagenYmd();
+  const fromYmd = addCalendarDays(today, -(days - 1));
+  const sinceIso = copenhagenStartOfDateUtcIso(fromYmd);
+
+  const selectCols = 'created_at, mood_score';
+  let { data, error } = await supabase
+    .from('lys_checkin')
+    .select(selectCols)
+    .eq('resident_id', residentId)
+    .eq('checkin_type', 'daily')
+    .not('mood_score', 'is', null)
+    .gte('created_at', sinceIso)
+    .order('created_at', { ascending: true });
+
+  if (error && journalQueryMissingColumn(error.message, 'checkin_type')) {
+    const retry = await supabase
+      .from('lys_checkin')
+      .select(selectCols)
+      .eq('resident_id', residentId)
+      .not('mood_score', 'is', null)
+      .gte('created_at', sinceIso)
+      .order('created_at', { ascending: true });
+    data = retry.data;
+    error = retry.error;
+  }
+
+  if (error) {
+    console.error('[daily-checkin] history error:', error.message);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  const checkins = ((data ?? []) as Array<{ created_at: string; mood_score: number | null }>)
+    .filter((row) => typeof row.mood_score === 'number')
+    .map((row) => ({ created_at: row.created_at, mood_score: row.mood_score }));
+
+  return NextResponse.json({ checkins });
+}
+
 export async function POST(req: Request): Promise<NextResponse> {
   const residentId = await getResidentId();
   if (!residentId) {
@@ -64,7 +137,7 @@ export async function POST(req: Request): Promise<NextResponse> {
   if (typeof mood_score !== 'number' || mood_score < 1 || mood_score > 10) {
     return NextResponse.json({ error: 'mood_score must be 1–10' }, { status: 422 });
   }
-  const dbTraffic = UI_TO_DB[traffic_light];
+  const dbTraffic = dbTrafficFromUi(traffic_light);
   if (!dbTraffic) {
     return NextResponse.json({ error: 'Invalid traffic_light value' }, { status: 422 });
   }
@@ -133,8 +206,8 @@ export async function POST(req: Request): Promise<NextResponse> {
     // best-effort
   }
 
-  // Notification trigger ved rød traffic light eller mood ≤ 3
-  if (mood_score <= 3 || dbTraffic === 'rød') {
+  // Notification trigger ved rød traffic light eller mood ≤ 3 (1 = værst, 10 = bedst)
+  if (shouldCreateLowMoodAlert(mood_score, dbTraffic)) {
     // Kun opret hvis ingen unacknowledged lav_stemning-notification eksisterer
     const { data: existing } = await supabase
       .from('care_portal_notifications')
@@ -145,9 +218,14 @@ export async function POST(req: Request): Promise<NextResponse> {
       .maybeSingle();
 
     if (!existing) {
-      const trafficLabel = dbTraffic === 'rød' ? 'Rød trafiklys' : 'Gul trafiklys';
+      const trafficLabel =
+        dbTraffic === 'rød'
+          ? 'Rød trafiklys'
+          : dbTraffic === 'gul'
+            ? 'Gul trafiklys'
+            : 'Grøn trafiklys';
       const detail = `Stemningsscore ${mood_score}/10 · ${trafficLabel}`;
-      const severity = mood_score <= 3 || dbTraffic === 'rød' ? 'roed' : 'gul';
+      const severity = dbTraffic === 'rød' || mood_score <= 3 ? 'roed' : 'gul';
 
       await supabase.from('care_portal_notifications').insert({
         resident_id: residentId,
