@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { completion } from '@rocketnew/llm-sdk';
 import { createClient } from '@supabase/supabase-js';
 import { ANTHROPIC_CHAT_MODEL } from '@/lib/ai/anthropicModel';
+import { sanitizeChatCompletionParameters } from '@/lib/ai/chatCompletionParams';
 import { checkApiRateLimit, getClientIp } from '@/lib/apiRateLimit';
+import { assertVoiceApiCaller } from '@/lib/voice/voiceApiAuth';
 
+// Kun Anthropic: alle kaldere bruger den, og det er den underdatabehandler, BUDR oplyser.
 const API_KEYS: Record<string, string | undefined> = {
-  OPEN_AI: process.env.OPENAI_API_KEY,
   ANTHROPIC: process.env.ANTHROPIC_API_KEY,
-  GEMINI: process.env.GEMINI_API_KEY,
-  PERPLEXITY: process.env.PERPLEXITY_API_KEY,
 };
 
 const DAILY_AI_LIMIT = Number(process.env.AI_DAILY_LIMIT ?? 20);
@@ -152,6 +152,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Kun indlogget borger (valideret session) eller personale må bruge AI-proxyen.
+  const caller = await assertVoiceApiCaller();
+  if (!caller.ok) {
+    return NextResponse.json({ error: caller.message }, { status: caller.status });
+  }
+
   let body: Record<string, unknown> = {};
 
   try {
@@ -160,10 +166,9 @@ export async function POST(request: NextRequest) {
     const model = body.model;
     const messages = body.messages;
     const stream = Boolean(body.stream);
-    const parameters =
-      typeof body.parameters === 'object' && body.parameters !== null ? body.parameters : {};
+    const parameters = sanitizeChatCompletionParameters(body.parameters);
 
-    if (typeof provider !== 'string' || !Array.isArray(messages) || messages.length === 0) {
+    if (provider !== 'ANTHROPIC' || !Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json(
         {
           error: 'Missing required fields: provider, messages',
@@ -211,8 +216,8 @@ export async function POST(request: NextRequest) {
         model: effectiveModel,
         messages,
         stream: true,
+        ...parameters,
         api_key: apiKey,
-        ...(parameters as Record<string, unknown>),
       });
 
       const encoder = new TextEncoder();
@@ -260,8 +265,8 @@ export async function POST(request: NextRequest) {
       model: effectiveModel,
       messages,
       stream: false,
+      ...parameters,
       api_key: apiKey,
-      ...(parameters as Record<string, unknown>),
     });
 
     return NextResponse.json(response, {

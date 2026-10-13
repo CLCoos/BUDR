@@ -34,6 +34,8 @@ export default function ResidentActiveDevices({ residentUserId }: { residentUser
   const [sessions, setSessions] = useState<ResidentSessionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [revokingId, setRevokingId] = useState<string | null>(null);
+  const [issuing, setIssuing] = useState(false);
+  const [loginLink, setLoginLink] = useState<{ url: string; expiresAt: string } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -76,6 +78,36 @@ export default function ResidentActiveDevices({ residentUserId }: { residentUser
     }
   };
 
+  const issueLoginLink = async () => {
+    setIssuing(true);
+    try {
+      const res = await fetch('/api/portal/resident-login-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ residentUserId }),
+      });
+      const json = (await res.json()) as { url?: string; expiresAt?: string; error?: string };
+      if (!res.ok || !json.url || !json.expiresAt) {
+        throw new Error(json.error ?? 'Kunne ikke oprette login-link');
+      }
+      setLoginLink({ url: json.url, expiresAt: json.expiresAt });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Kunne ikke oprette login-link');
+    } finally {
+      setIssuing(false);
+    }
+  };
+
+  const copyLoginLink = async () => {
+    if (!loginLink) return;
+    try {
+      await navigator.clipboard.writeText(loginLink.url);
+      toast.success('Link kopieret');
+    } catch {
+      toast.error('Kunne ikke kopiere — markér linket og kopiér manuelt');
+    }
+  };
+
   const active = sessions.filter(isActive);
 
   return (
@@ -90,6 +122,38 @@ export default function ResidentActiveDevices({ residentUserId }: { residentUser
         Lys-sessioner på borgerens telefoner. Tilbagekald ved mistanke om delt link eller tabt
         enhed.
       </p>
+
+      <div className="mt-3">
+        <button
+          type="button"
+          disabled={issuing}
+          onClick={() => void issueLoginLink()}
+          className="rounded-lg border px-3 py-1.5 text-xs font-medium transition-opacity disabled:opacity-50"
+          style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-green)' }}
+        >
+          {issuing ? 'Opretter…' : 'Opret login-link til borgerens telefon'}
+        </button>
+        {loginLink && (
+          <div
+            className="mt-2 rounded-lg border px-3 py-2 text-xs"
+            style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-text)' }}
+          >
+            <p style={{ color: 'var(--cp-muted)' }}>
+              Åbn linket på borgerens telefon. Det kan bruges én gang og udløber{' '}
+              {formatWhen(loginLink.expiresAt)}.
+            </p>
+            <p className="mt-1 break-all font-mono">{loginLink.url}</p>
+            <button
+              type="button"
+              onClick={() => void copyLoginLink()}
+              className="mt-2 rounded-lg border px-2.5 py-1 text-xs font-medium"
+              style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-text)' }}
+            >
+              Kopiér link
+            </button>
+          </div>
+        )}
+      </div>
 
       {loading && (
         <p className="mt-3 text-sm" style={{ color: 'var(--cp-muted)' }}>
