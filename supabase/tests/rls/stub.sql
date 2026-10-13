@@ -25,6 +25,7 @@ CREATE TABLE lys_recovery_stories (id serial primary key, resident_id uuid);
 CREATE TABLE resident_sessions (id uuid primary key default gen_random_uuid(), resident_user_id uuid references care_residents(user_id), org_id uuid, session_token_hash text unique, expires_at timestamptz, revoked_at timestamptz, revoked_by uuid);
 CREATE TABLE lys_safety_events (id serial primary key, resident_id uuid, risk_level text, acknowledged_at timestamptz, acknowledged_by uuid);
 CREATE TABLE audit_logs (id serial primary key, action text);
+CREATE TABLE resident_medications (id uuid primary key, resident_id uuid, org_id uuid, name text);
 DO $$ DECLARE t text; BEGIN FOR t IN SELECT tablename FROM pg_tables WHERE schemaname='public' LOOP
   EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
   EXECUTE format('GRANT ALL ON public.%I TO authenticated, service_role', t); END LOOP; END $$;
@@ -65,3 +66,5 @@ INSERT INTO resident_sessions (resident_user_id, org_id, session_token_hash, exp
 CREATE POLICY cs_sel ON care_staff FOR SELECT TO authenticated USING (true);
 CREATE POLICY cr_sel ON care_residents FOR SELECT TO authenticated USING (org_id = ANY (care_visible_facility_ids()));
 CREATE POLICY org_sel ON organisations FOR SELECT TO authenticated USING (id = (SELECT org_id FROM care_staff WHERE id = auth.uid()));
+INSERT INTO resident_medications VALUES ('00000000-0000-0000-0000-0000000000e1','00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000a1','Quetiapin');
+CREATE POLICY rm_sel ON resident_medications FOR SELECT TO authenticated USING (care_staff_can_access_resident(resident_id::text));

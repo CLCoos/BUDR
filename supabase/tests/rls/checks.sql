@@ -31,6 +31,30 @@ DO $$ BEGIN
     EXCEPTION WHEN others THEN INSERT INTO r VALUES ('handover_wrong_org_id','blocked'); END;
   END IF;
 END $$;
+-- medicinudlevering (bølge 2)
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.medication_administrations') IS NOT NULL THEN
+    BEGIN
+      INSERT INTO medication_administrations (resident_id, medication_id, org_id, scheduled_date, given_by) VALUES ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000e1','00000000-0000-0000-0000-0000000000a1', current_date, '00000000-0000-0000-0000-0000000000c2');
+      INSERT INTO r VALUES ('med_give (should work)','works');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('med_give (should work)','BROKEN'); END;
+    BEGIN
+      INSERT INTO medication_administrations (resident_id, medication_id, org_id, scheduled_date, given_by) VALUES ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000e1','00000000-0000-0000-0000-0000000000a1', current_date, '00000000-0000-0000-0000-0000000000c2');
+      INSERT INTO r VALUES ('med_double_dose_same_day','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('med_double_dose_same_day','blocked'); END;
+    BEGIN
+      INSERT INTO medication_administrations (resident_id, medication_id, org_id, scheduled_date, given_by) VALUES ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000e1','00000000-0000-0000-0000-0000000000a1', current_date + 1, '00000000-0000-0000-0000-0000000000c1');
+      INSERT INTO r VALUES ('med_spoof_given_by','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('med_spoof_given_by','blocked'); END;
+    BEGIN UPDATE medication_administrations SET given_at = now() - interval '3 hours'; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('med_backdate', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('med_backdate','blocked'); END;
+    BEGIN DELETE FROM medication_administrations; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('med_delete', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('med_delete','blocked'); END;
+    BEGIN
+      UPDATE medication_administrations SET cancelled_at = now(), cancelled_by = '00000000-0000-0000-0000-0000000000c2' WHERE cancelled_at IS NULL; GET DIAGNOSTICS n = ROW_COUNT;
+      INSERT INTO medication_administrations (resident_id, medication_id, org_id, scheduled_date, given_by) VALUES ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000e1','00000000-0000-0000-0000-0000000000a1', current_date, '00000000-0000-0000-0000-0000000000c2');
+      INSERT INTO r VALUES ('med_cancel_then_regive (should work)', CASE WHEN n>0 THEN 'works' ELSE 'BROKEN' END);
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('med_cancel_then_regive (should work)','BROKEN'); END;
+  END IF;
+END $$;
 -- gæst i org1 må læse, ikke skrive
 SET test.uid = '00000000-0000-0000-0000-0000000000c4';
 DO $$ DECLARE n int; BEGIN
@@ -51,6 +75,9 @@ DO $$ DECLARE n int; BEGIN
   BEGIN UPDATE plan_proposals SET status='rejected'; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('other_org_review_proposal', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('other_org_review_proposal','blocked'); END;
   IF to_regclass('public.care_handover_notes') IS NOT NULL THEN
     EXECUTE 'SELECT count(*) FROM care_handover_notes' INTO n; INSERT INTO r VALUES ('handover_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
+  END IF;
+  IF to_regclass('public.medication_administrations') IS NOT NULL THEN
+    EXECUTE 'SELECT count(*) FROM medication_administrations' INTO n; INSERT INTO r VALUES ('med_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
   END IF;
 END $$;
 -- leder in org1 can still manage roles
