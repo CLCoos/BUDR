@@ -293,9 +293,16 @@ export default function ResidentList({
       .channel('dashboard-resident-checkins')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'park_daily_checkin' },
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'lys_checkin',
+          filter: 'checkin_type=eq.daily',
+        },
         (payload) => {
-          handleRealtimeInsert(payload.new as CheckinRow);
+          // Realtime leverer lys_checkin-rækken; viewet park_daily_checkin kalder free_text «note».
+          const raw = payload.new as CheckinRow & { free_text?: string | null };
+          handleRealtimeInsert({ ...raw, note: raw.note ?? raw.free_text ?? null });
         }
       )
       .subscribe();

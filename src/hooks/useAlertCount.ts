@@ -73,7 +73,12 @@ export function useAlertCount(
       )
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'park_daily_checkin' },
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'lys_checkin',
+          filter: 'checkin_type=eq.daily',
+        },
         () => void refresh()
       )
       .subscribe();

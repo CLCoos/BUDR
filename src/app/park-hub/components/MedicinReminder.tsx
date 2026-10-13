@@ -2,7 +2,6 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { createClient } from '@/lib/supabase/client';
 import type { LysThemeTokens } from '../lib/lysTheme';
 
 type ReminderRow = {
@@ -32,17 +31,10 @@ export default function MedicinReminder({ residentId, tokens, accent = '#1D9E75'
 
   const load = useCallback(async () => {
     if (!residentId) return;
-    const supabase = createClient();
-    if (!supabase) return;
-    const today = new Date().toISOString().slice(0, 10);
-    const { data } = await supabase
-      .from('medication_reminders')
-      .select('id, label, scheduled_time, taken_at, date')
-      .eq('resident_id', residentId)
-      .eq('date', today)
-      .is('taken_at', null)
-      .order('scheduled_time', { ascending: true });
-    const rows = (data ?? []) as ReminderRow[];
+    const res = await fetch('/api/lys/medication-reminders', { credentials: 'include' });
+    if (!res.ok) return;
+    const data = (await res.json()) as { reminders?: ReminderRow[] };
+    const rows = data.reminders ?? [];
     const now = new Date();
     const active = rows.find((r) => {
       const diff = minutesDiff(now, r.scheduled_time);
@@ -67,30 +59,16 @@ export default function MedicinReminder({ residentId, tokens, accent = '#1D9E75'
     : `Kl. ${reminder.scheduled_time.slice(0, 5)}`;
 
   const markTaken = async () => {
-    const supabase = createClient();
-    if (!supabase) return;
     setSaving(true);
-    if (isLate) {
-      const { data: residentRow } = await supabase
-        .from('care_residents')
-        .select('org_id')
-        .eq('user_id', residentId)
-        .maybeSingle();
-      await supabase.from('care_portal_notifications').insert({
-        resident_id: residentId,
-        type: 'medication_missed',
-        detail: `${reminder.label} ikke taget - ${Math.abs(diff)} minutter forsinket`,
-        severity: 'roed',
-        source_table: 'medication_reminders',
-        org_id: (residentRow as { org_id?: string } | null)?.org_id ?? null,
-      });
-    }
-    const { error } = await supabase
-      .from('medication_reminders')
-      .update({ taken_at: new Date().toISOString() })
-      .eq('id', reminder.id);
+    // Serveren registrerer tidspunktet og giver personalet besked, hvis det er for sent.
+    const res = await fetch('/api/lys/medication-reminders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: reminder.id }),
+      credentials: 'include',
+    });
     setSaving(false);
-    if (error) {
+    if (!res.ok) {
       toast.error('Kunne ikke gemme medicinstatus');
       return;
     }

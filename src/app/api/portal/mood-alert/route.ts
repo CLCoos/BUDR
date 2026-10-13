@@ -53,12 +53,13 @@ export async function POST(request: Request) {
 
   const admin = createClient(url, serviceKey);
 
-  // Deduplication: skip if an unacknowledged mood_alert already exists.
+  // Deduplication: skip if an unacknowledged lav_stemning already exists
+  // (daily-checkin opretter normalt den samme; 'mood_alert' er ikke en tilladt type i DB).
   const { data: existing, error: checkErr } = await admin
     .from('care_portal_notifications')
     .select('id')
     .eq('resident_id', residentId)
-    .eq('type', 'mood_alert')
+    .eq('type', 'lav_stemning')
     .is('acknowledged_at', null)
     .maybeSingle();
 
@@ -77,10 +78,10 @@ export async function POST(request: Request) {
 
   const { error: insertErr } = await admin.from('care_portal_notifications').insert({
     resident_id: residentId,
-    type: 'mood_alert',
+    type: 'lav_stemning',
     detail: 'Lav stemning registreret — følg op',
     severity: 'roed',
-    source_table: 'park_daily_checkin',
+    source_table: 'lys_checkin',
     org_id: (residentRow as { org_id?: string } | null)?.org_id ?? null,
   });
 
