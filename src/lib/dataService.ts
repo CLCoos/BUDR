@@ -2,6 +2,7 @@
 // Routes calls to Supabase (logged-in) or localStorage (guest) transparently.
 
 import { createClient } from '@/lib/supabase/client';
+import { isLysXpActivity, requestLysXp } from '@/lib/lys/xp';
 import * as ls from '@/lib/localStore';
 import { LOCAL_KEYS } from '@/types/local';
 import { isResidentUuidForCloud } from '@/lib/residentUuid';
@@ -167,13 +168,8 @@ export async function addXp(
   amount: number
 ): Promise<void> {
   if (mode === 'supabase') {
-    const supabase = createClient();
-    if (!supabase) return;
-    void supabase.rpc('award_xp', {
-      p_resident_id: activeId,
-      p_activity: activity,
-      p_xp: amount,
-    });
+    // Beløb og borger afgøres på serveren; ukendte aktiviteter giver ikke XP i skyen.
+    if (isLysXpActivity(activity)) requestLysXp(activity);
     return;
   }
   // Local cooldown guard

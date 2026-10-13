@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { requestLysXp } from '@/lib/lys/xp';
 import { ArrowLeft, Mic, MicOff, Send, Settings, WifiOff } from 'lucide-react';
 import { VoiceMessageButton } from '@/components/lys/VoiceMessageButton';
 import { VoiceInputWhisper } from '@/components/lys/VoiceInputWhisper';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { trackEvent } from '@/lib/analytics';
 import { tryEarnFirstChatBadge } from '@/lib/residentBadgeSync';
@@ -538,12 +538,7 @@ export default function LysChatView() {
         }
 
         if (residentId && final.filter((m) => m.role === 'user').length >= 3) {
-          const supabase = createClient();
-          void supabase?.rpc('award_xp', {
-            p_resident_id: residentId,
-            p_activity: 'lys_chat',
-            p_xp: 10,
-          });
+          requestLysXp('lys_chat');
         }
 
         const newId = await saveConversation(final, convId);
