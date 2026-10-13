@@ -446,7 +446,12 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
       .channel('alert_panel_checkins')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'park_daily_checkin' },
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'lys_checkin',
+          filter: 'checkin_type=eq.daily',
+        },
         (payload) => {
           const row = payload.new as { resident_id: string; mood_score: number | null };
           const rid = row.resident_id;

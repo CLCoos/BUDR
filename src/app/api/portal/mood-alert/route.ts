@@ -5,12 +5,12 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 /**
  * POST /api/portal/mood-alert
  *
- * Called from the client when a real-time park_daily_checkin INSERT arrives
+ * Called from the client when a real-time lys_checkin (daily) INSERT arrives
  * with a red traffic light (mood 1–2). Inserts a care_portal_notifications row
  * using the service role so that RLS (which blocks INSERT for authenticated
  * staff) is bypassed.
  *
- * Deduplication: if an unacknowledged mood_alert already exists for the same
+ * Deduplication: if an unacknowledged lav_stemning already exists for the same
  * resident, the insert is skipped to avoid flooding the alert panel.
  */
 export async function POST(request: Request) {
@@ -64,12 +64,13 @@ export async function POST(request: Request) {
 
   const admin = createClient(url, serviceKey);
 
-  // Deduplication: skip if an unacknowledged mood_alert already exists.
+  // Deduplication: skip if an unacknowledged lav_stemning already exists
+  // (daily-checkin opretter normalt den samme; 'mood_alert' er ikke en tilladt type i DB).
   const { data: existing, error: checkErr } = await admin
     .from('care_portal_notifications')
     .select('id')
     .eq('resident_id', residentId)
-    .eq('type', 'mood_alert')
+    .eq('type', 'lav_stemning')
     .is('acknowledged_at', null)
     .maybeSingle();
 
@@ -82,10 +83,10 @@ export async function POST(request: Request) {
 
   const { error: insertErr } = await admin.from('care_portal_notifications').insert({
     resident_id: residentId,
-    type: 'mood_alert',
+    type: 'lav_stemning',
     detail: 'Lav stemning registreret — følg op',
     severity: 'roed',
-    source_table: 'park_daily_checkin',
+    source_table: 'lys_checkin',
     org_id: orgId,
   });
 
