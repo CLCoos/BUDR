@@ -149,7 +149,7 @@ export async function POST(req: Request): Promise<NextResponse> {
   const orgId = (resident as { org_id?: string | null }).org_id ?? null;
   const staffName = `Beboer (Lys AI): ${(resident.display_name as string | null) ?? residentId}`;
 
-  // 1) Indsæt journal entry (faglig version, synlig for staff)
+  // 1) Indsæt journal-udkast (faglig version; staff godkender)
   const { data: journalEntry, error: journalErr } = await supabase
     .from('journal_entries')
     .insert({
@@ -158,6 +158,8 @@ export async function POST(req: Request): Promise<NextResponse> {
       staff_name: staffName,
       entry_text: parsed.journal_note,
       category: CATEGORY,
+      // AI-omskrevet udkast: personalet skal godkende det, før det er journal.
+      journal_status: 'kladde',
       org_id: orgId,
     })
     .select('id')

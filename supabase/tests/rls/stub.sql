@@ -19,7 +19,7 @@ CREATE TABLE resident_plan_items (id serial primary key, resident_id uuid, org_i
 CREATE TABLE daily_plans (id serial primary key, resident_id uuid, org_id uuid, plan_date date);
 CREATE TABLE plan_proposals (id serial primary key, resident_id uuid, org_id uuid, status text, reviewed_by uuid, reviewed_at timestamptz);
 CREATE TABLE marketing_content_blocks (key text primary key, draft jsonb);
-CREATE TABLE journal_entries (id serial primary key, org_id uuid, resident_id uuid);
+CREATE TABLE journal_entries (id serial primary key, org_id uuid, resident_id uuid, staff_id uuid, staff_name text, entry_text text, category text, created_at timestamptz not null default now(), show_in_diary boolean);
 CREATE TABLE crisis_plans (id serial primary key, resident_id uuid);
 CREATE TABLE lys_conversations (id serial primary key, resident_id uuid);
 CREATE TABLE lys_recovery_stories (id serial primary key, resident_id uuid);
@@ -47,7 +47,9 @@ CREATE POLICY "Staff see org plans" ON daily_plans FOR SELECT TO authenticated U
 CREATE POLICY "Staff review proposals" ON plan_proposals FOR UPDATE TO authenticated USING (care_is_portal_staff()) WITH CHECK (care_is_portal_staff());
 CREATE POLICY "Staff see org proposals" ON plan_proposals FOR SELECT TO authenticated USING (care_is_portal_staff() AND org_id = ANY (care_visible_facility_ids()));
 CREATE POLICY journal_entries_staff_delete_own_org ON journal_entries FOR DELETE TO authenticated USING (org_id = (SELECT org_id FROM care_staff WHERE id = auth.uid()));
-CREATE POLICY journal_entries_staff_select ON journal_entries FOR SELECT TO authenticated USING (org_id = (SELECT org_id FROM care_staff WHERE id = auth.uid()));
+CREATE POLICY journal_entries_staff_select_own_org ON journal_entries FOR SELECT TO authenticated USING (org_id = (SELECT org_id FROM care_staff WHERE id = auth.uid()));
+CREATE POLICY journal_entries_staff_insert_own_org ON journal_entries FOR INSERT TO authenticated WITH CHECK (org_id = (SELECT org_id FROM care_staff WHERE id = auth.uid()));
+CREATE POLICY journal_entries_staff_update_own_org ON journal_entries FOR UPDATE TO authenticated USING (org_id = (SELECT org_id FROM care_staff WHERE id = auth.uid())) WITH CHECK (org_id = (SELECT org_id FROM care_staff WHERE id = auth.uid()));
 CREATE POLICY resident_sessions_staff_revoke_own_org ON resident_sessions FOR UPDATE TO authenticated USING (org_id = (SELECT org_id FROM care_staff WHERE id = auth.uid())) WITH CHECK (true);
 CREATE POLICY resident_sessions_staff_select ON resident_sessions FOR SELECT TO authenticated USING (org_id = (SELECT org_id FROM care_staff WHERE id = auth.uid()));
 CREATE POLICY lys_safety_events_staff_select ON lys_safety_events FOR SELECT TO authenticated USING (care_staff_can_access_resident(resident_id::text));
