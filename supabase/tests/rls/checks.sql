@@ -91,6 +91,43 @@ DO $$ DECLARE n int; BEGIN
     BEGIN DELETE FROM care_staff_tasks; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('task_delete', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('task_delete','blocked'); END;
   END IF;
 END $$;
+-- behovsmedicin (bølge 3): flere doser pr. dag med begrundelse
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.medication_prn_administrations') IS NOT NULL THEN
+    BEGIN
+      INSERT INTO medication_prn_administrations (resident_id, medication_id, org_id, reason) VALUES ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000e2','00000000-0000-0000-0000-0000000000a1','Uro');
+      INSERT INTO medication_prn_administrations (resident_id, medication_id, org_id, reason) VALUES ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000e2','00000000-0000-0000-0000-0000000000a1','Uro igen');
+      INSERT INTO r VALUES ('prn_give_twice (should work)','works');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('prn_give_twice (should work)','BROKEN'); END;
+    BEGIN
+      INSERT INTO medication_prn_administrations (resident_id, medication_id, org_id, reason) VALUES ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000e2','00000000-0000-0000-0000-0000000000a1','  ');
+      INSERT INTO r VALUES ('prn_without_reason','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('prn_without_reason','blocked'); END;
+    BEGIN
+      INSERT INTO medication_prn_administrations (resident_id, medication_id, org_id, reason) VALUES ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000e1','00000000-0000-0000-0000-0000000000a1','x');
+      INSERT INTO r VALUES ('prn_on_fixed_med','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('prn_on_fixed_med','blocked'); END;
+    BEGIN
+      INSERT INTO medication_prn_administrations (resident_id, medication_id, org_id, reason, given_at) VALUES ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000e2','00000000-0000-0000-0000-0000000000a1','x', now() - interval '3 hours');
+      INSERT INTO r VALUES ('prn_backdate','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('prn_backdate','blocked'); END;
+    BEGIN
+      INSERT INTO medication_administrations (resident_id, medication_id, org_id, scheduled_date, given_by) VALUES ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000e2','00000000-0000-0000-0000-0000000000a1', current_date, '00000000-0000-0000-0000-0000000000c2');
+      INSERT INTO r VALUES ('fixed_receipt_on_prn_med','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('fixed_receipt_on_prn_med','blocked'); END;
+    BEGIN UPDATE medication_prn_administrations SET effect = 'Faldt til ro' WHERE reason = 'Uro'; GET DIAGNOSTICS n = ROW_COUNT;
+      SELECT count(*) INTO n FROM medication_prn_administrations WHERE effect_noted_by = '00000000-0000-0000-0000-0000000000c2';
+      INSERT INTO r VALUES ('prn_note_effect (should work)', CASE WHEN n>0 THEN 'works' ELSE 'BROKEN' END);
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('prn_note_effect (should work)','BROKEN'); END;
+    BEGIN UPDATE medication_prn_administrations SET effect = 'omskrevet' WHERE reason = 'Uro'; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('prn_rewrite_effect', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('prn_rewrite_effect','blocked'); END;
+    BEGIN UPDATE medication_prn_administrations SET reason = 'andet'; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('prn_rewrite_reason', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('prn_rewrite_reason','blocked'); END;
+    BEGIN UPDATE medication_prn_administrations SET cancelled_at = now(), cancelled_by = '00000000-0000-0000-0000-0000000000c1' WHERE reason = 'Uro igen';
+      SELECT count(*) INTO n FROM medication_prn_administrations WHERE cancelled_by = '00000000-0000-0000-0000-0000000000c2';
+      INSERT INTO r VALUES ('prn_cancel_as_self (should work)', CASE WHEN n>0 THEN 'works' ELSE 'BROKEN' END);
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('prn_cancel_as_self (should work)','BROKEN'); END;
+    BEGIN DELETE FROM medication_prn_administrations; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('prn_delete', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('prn_delete','blocked'); END;
+  END IF;
+END $$;
 -- gæst i org1 må læse, ikke skrive
 SET test.uid = '00000000-0000-0000-0000-0000000000c4';
 DO $$ DECLARE n int; BEGIN
@@ -120,6 +157,9 @@ DO $$ DECLARE n int; BEGIN
   END IF;
   IF to_regclass('public.medication_administrations') IS NOT NULL THEN
     EXECUTE 'SELECT count(*) FROM medication_administrations' INTO n; INSERT INTO r VALUES ('med_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
+  END IF;
+  IF to_regclass('public.medication_prn_administrations') IS NOT NULL THEN
+    EXECUTE 'SELECT count(*) FROM medication_prn_administrations' INTO n; INSERT INTO r VALUES ('prn_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
   END IF;
   IF to_regclass('public.care_staff_tasks') IS NOT NULL THEN
     EXECUTE 'SELECT count(*) FROM care_staff_tasks' INTO n; INSERT INTO r VALUES ('task_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);

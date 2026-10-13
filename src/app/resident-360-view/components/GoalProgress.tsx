@@ -2,21 +2,10 @@
 import React, { useEffect, useState } from 'react';
 import { CheckCircle2, Circle, Target, Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-
-interface GoalStep {
-  id: string;
-  text: string;
-  completed: boolean;
-  completedAt?: string;
-}
-
-interface Goal {
-  id: string;
-  title: string;
-  createdBy: string;
-  createdAt: string;
-  steps: GoalStep[];
-}
+import {
+  mapLysNextStepsToGoals,
+  type GoalProgressItem as Goal,
+} from '@/lib/goalProgressFromNextSteps';
 
 const mockGoals: Goal[] = [
   {
@@ -76,14 +65,6 @@ const mockGoals: Goal[] = [
   },
 ];
 
-function formatDaDate(iso: string) {
-  return new Date(iso).toLocaleDateString('da-DK', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-}
-
 interface Props {
   compact?: boolean;
   variant?: 'mock' | 'live';
@@ -134,58 +115,27 @@ export default function GoalProgress({
         return;
       }
 
-      const { data: goalRows, error: gErr } = await supabase
-        .from('park_goals')
-        .select('id, title, created_at, status')
+      // Recovery migration dropped park_goals / park_goal_steps; live goals are lys_next_steps.
+      const { data: stepRows, error: stepErr } = await supabase
+        .from('lys_next_steps')
+        .select(
+          'id, title, description, created_at, created_by_type, status, completed_at, resident_note'
+        )
         .eq('resident_id', residentId.trim())
-        .eq('status', 'active')
+        .eq('status', 'aktiv')
         .order('created_at', { ascending: false })
         .limit(8);
 
       if (cancelled) return;
 
-      if (gErr || !goalRows?.length) {
+      if (stepErr || !stepRows?.length) {
         setGoals([]);
         setLoading(false);
         setExpanded('');
         return;
       }
 
-      const goalIds = goalRows.map((g) => g.id as string);
-      const { data: stepRows, error: sErr } = await supabase
-        .from('park_goal_steps')
-        .select('id, goal_id, step_number, title, completed, completed_at')
-        .in('goal_id', goalIds)
-        .order('step_number');
-
-      if (cancelled) return;
-
-      const stepsByGoal = new Map<string, NonNullable<typeof stepRows>>();
-      if (!sErr && stepRows) {
-        for (const s of stepRows) {
-          const gid = s.goal_id as string;
-          const arr = stepsByGoal.get(gid) ?? [];
-          arr.push(s);
-          stepsByGoal.set(gid, arr);
-        }
-      }
-
-      const mapped: Goal[] = goalRows.map((g) => {
-        const steps = stepsByGoal.get(g.id as string) ?? [];
-        const sorted = [...steps].sort((a, b) => (a.step_number ?? 0) - (b.step_number ?? 0));
-        return {
-          id: g.id as string,
-          title: (g.title as string) ?? '—',
-          createdBy: '—',
-          createdAt: formatDaDate(g.created_at as string),
-          steps: sorted.map((s) => ({
-            id: s.id as string,
-            text: (s.title as string) ?? '',
-            completed: !!s.completed,
-            completedAt: s.completed_at ? formatDaDate(s.completed_at as string) : undefined,
-          })),
-        };
-      });
+      const mapped = mapLysNextStepsToGoals(stepRows);
 
       if (!cancelled) {
         setGoals(mapped);
