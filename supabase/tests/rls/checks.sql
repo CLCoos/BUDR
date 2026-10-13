@@ -2,8 +2,14 @@
 \pset tuples_only on
 \pset format unaligned
 CREATE TEMP TABLE IF NOT EXISTS r(k text, v text);
-GRANT ALL ON r TO authenticated;
+GRANT ALL ON r TO authenticated, anon;
 TRUNCATE r;
+-- afviklet vagt (i går) for medarbejder c2, oprettet som superuser
+DO $$ BEGIN
+  IF to_regclass('public.care_staff_shifts') IS NOT NULL THEN
+    EXECUTE $q$INSERT INTO care_staff_shifts (id, org_id, staff_id, shift_date, shift_type, start_time, end_time) VALUES ('00000000-0000-0000-0000-0000000000f1','00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000c2', current_date - 1, 'dag', '07:30', '15:30')$q$;
+  END IF;
+END $$;
 SET ROLE authenticated;
 -- medarbejder in org1 tries to give their role manage_roles
 SET test.uid = '00000000-0000-0000-0000-0000000000c2';
@@ -166,6 +172,85 @@ DO $$ DECLARE n int; BEGIN
   END IF;
   IF to_regclass('public.care_indsats_records') IS NOT NULL THEN
     EXECUTE 'SELECT count(*) FROM care_indsats_records' INTO n; INSERT INTO r VALUES ('indsats_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
+  END IF;
+END $$;
+-- vagtplan (bølge 4): egne vagter fra i dag og frem
+SET test.uid = '00000000-0000-0000-0000-0000000000c2';
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.care_staff_shifts') IS NOT NULL THEN
+    BEGIN
+      INSERT INTO care_staff_shifts (org_id, staff_id, shift_date, shift_type, start_time, end_time) VALUES ('00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000c2', current_date + 1, 'aften', '15:00', '23:00');
+      INSERT INTO r VALUES ('shift_claim_own (should work)','works');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('shift_claim_own (should work)','BROKEN'); END;
+    BEGIN
+      INSERT INTO care_staff_shifts (org_id, staff_id, shift_date, shift_type, start_time, end_time) VALUES ('00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000c4', current_date + 1, 'aften', '15:00', '23:00');
+      INSERT INTO r VALUES ('shift_claim_for_colleague','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('shift_claim_for_colleague','blocked'); END;
+    BEGIN
+      INSERT INTO care_staff_shifts (org_id, staff_id, shift_date, shift_type, start_time, end_time) VALUES ('00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000c2', current_date - 3, 'nat', '23:00', '07:00');
+      INSERT INTO r VALUES ('shift_backdate_claim','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('shift_backdate_claim','blocked'); END;
+    BEGIN
+      INSERT INTO care_staff_shifts (org_id, staff_id, shift_date, shift_type, start_time, end_time) VALUES ('00000000-0000-0000-0000-0000000000a2','00000000-0000-0000-0000-0000000000c2', current_date + 2, 'dag', '07:30', '15:30');
+      INSERT INTO r VALUES ('shift_wrong_org','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('shift_wrong_org','blocked'); END;
+    BEGIN EXECUTE 'UPDATE care_staff_shifts SET hours = 20'; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('shift_edit_hours', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('shift_edit_hours','blocked'); END;
+    BEGIN EXECUTE $q$DELETE FROM care_staff_shifts WHERE id = '00000000-0000-0000-0000-0000000000f1'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('shift_delete_past', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('shift_delete_past','blocked'); END;
+    BEGIN EXECUTE 'DELETE FROM care_staff_shifts WHERE shift_date > current_date'; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('shift_drop_own_future (should work)', CASE WHEN n>0 THEN 'works' ELSE 'BROKEN' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('shift_drop_own_future (should work)','BROKEN'); END;
+  END IF;
+END $$;
+SET test.uid = '00000000-0000-0000-0000-0000000000c3';
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.care_staff_shifts') IS NOT NULL THEN
+    EXECUTE 'SELECT count(*) FROM care_staff_shifts' INTO n; INSERT INTO r VALUES ('shift_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
+  END IF;
+END $$;
+RESET ROLE;
+SET ROLE anon;
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.care_staff_shifts') IS NOT NULL THEN
+    BEGIN EXECUTE 'SELECT count(*) FROM care_staff_shifts' INTO n; INSERT INTO r VALUES ('shift_anon_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('shift_anon_read','blocked'); END;
+  END IF;
+END $$;
+RESET ROLE;
+SET ROLE authenticated;
+-- VUM 2.0 (bølge 4)
+SET test.uid = '00000000-0000-0000-0000-0000000000c2';
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.vum_assessments') IS NOT NULL THEN
+    BEGIN
+      EXECUTE $q$INSERT INTO vum_assessments (id, org_id, resident_id) VALUES ('00000000-0000-0000-0000-0000000000f2','00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1')$q$;
+      INSERT INTO r VALUES ('vum_create_own (should work)','works');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('vum_create_own (should work)','BROKEN'); END;
+    BEGIN
+      EXECUTE $q$INSERT INTO vum_assessments (org_id, resident_id) VALUES ('00000000-0000-0000-0000-0000000000a2','00000000-0000-0000-0000-0000000000b2')$q$;
+      INSERT INTO r VALUES ('vum_create_other_org','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('vum_create_other_org','blocked'); END;
+    BEGIN
+      EXECUTE $q$INSERT INTO vum_assessments (org_id, resident_id) VALUES ('00000000-0000-0000-0000-0000000000a2','00000000-0000-0000-0000-0000000000b1')$q$;
+      INSERT INTO r VALUES ('vum_wrong_org_id','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('vum_wrong_org_id','blocked'); END;
+    BEGIN EXECUTE $q$UPDATE vum_assessments SET theme_2_mental = '{"notes":"Bedre søvn"}'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('vum_edit_theme (should work)', CASE WHEN n>0 THEN 'works' ELSE 'BROKEN' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('vum_edit_theme (should work)','BROKEN'); END;
+    BEGIN EXECUTE $q$UPDATE vum_assessments SET resident_id = '00000000-0000-0000-0000-0000000000b2'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('vum_move_resident', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('vum_move_resident','blocked'); END;
+    BEGIN EXECUTE 'DELETE FROM vum_assessments'; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('vum_delete', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('vum_delete','blocked'); END;
+    BEGIN EXECUTE $q$UPDATE vum_assessments SET status = 'archived'$q$; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN EXECUTE $q$UPDATE vum_assessments SET case_purpose = 'ændret efter arkivering'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('vum_edit_archived', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('vum_edit_archived','blocked'); END;
+  END IF;
+END $$;
+SET test.uid = '00000000-0000-0000-0000-0000000000c4';
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.vum_assessments') IS NOT NULL THEN
+    BEGIN
+      EXECUTE $q$INSERT INTO vum_assessments (org_id, resident_id) VALUES ('00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1')$q$;
+      INSERT INTO r VALUES ('vum_create_without_permission','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('vum_create_without_permission','blocked'); END;
+    EXECUTE 'SELECT count(*) FROM vum_assessments' INTO n; INSERT INTO r VALUES ('vum_read_without_view_360', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
+  END IF;
+END $$;
+SET test.uid = '00000000-0000-0000-0000-0000000000c3';
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.vum_assessments') IS NOT NULL THEN
+    EXECUTE 'SELECT count(*) FROM vum_assessments' INTO n; INSERT INTO r VALUES ('vum_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
   END IF;
 END $$;
 -- leder in org1 can still manage roles

@@ -8,7 +8,7 @@ export default async function CarePortalVagtplanPage() {
 
   return (
     <PortalShell>
-      <VagtplanDemoClient basePath="/care-portal-vagtplan" />
+      <VagtplanDemoClient basePath="/care-portal-vagtplan" demoMode={false} />
     </PortalShell>
   );
 }

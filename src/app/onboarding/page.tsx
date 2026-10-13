@@ -1,6 +1,7 @@
-import React from 'react';
-import OnboardingFlow from './components/OnboardingFlow';
+import { redirect } from 'next/navigation';
 
+// Den gamle «BUDR2.0»-onboarding gemte intet og er afløst af Lys-introduktionen
+// (park-hub → LysOnboarding). Gamle links sendes videre dertil.
 export default function OnboardingPage() {
-  return <OnboardingFlow />;
+  redirect('/park-hub');
 }

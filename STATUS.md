@@ -22,7 +22,7 @@ Alle `src/app/**/page.tsx` (61 sider). Status: **live** = Supabase/auth; **demod
 | `/app` | Ældre Lys-story landing | uklart (ingen Supabase; markedsføring/story) |
 | `/app/[resident_id]` | Borger-entry → session | live |
 | `/login/[resident_id]` | Legacy redirect til `/app/...` | live |
-| `/onboarding` | Borger-onboarding UI | **halvfærdig** (TODO: gemmer ikke profil til Supabase) |
+| `/onboarding` | Gammel borger-onboarding | omdirigerer til `/park-hub` (Lys-introduktion) |
 | `/invite/[code]` | Staff-invitation | live |
 | `/care-portal-login` | Staff-login | live |
 | `/care-portal-reset-password` | Nulstil password | live |
@@ -40,8 +40,8 @@ Alle `src/app/**/page.tsx` (61 sider). Status: **live** = Supabase/auth; **demod
 | `/care-portal-settings` | Krisekontakter | live |
 | `/care-portal-residents` | Leder beboer-ops | live |
 | `/care-portal-resident-preview/[id]` | Demo-360 bag login eller redirect til live 360 | demodata / live (afhænger af `NEXT_PUBLIC_CARE_PORTAL_SIMULATED_DATA`) |
-| `/care-portal-vagtplan` | Vagtplan | **demodata** (genbruger `VagtplanDemoClient` + localStorage) |
-| `/care-portal-vagtplan/loen` | Løn/timer | **demodata** (`LoenDemoClient`) |
+| `/care-portal-vagtplan` | Vagtplan | live (`care_staff_shifts`; demo-klient med `demoMode={false}`) |
+| `/care-portal-vagtplan/loen` | Løn/timer | live (egne rækker i `care_staff_shifts`; demo-klient med `demoMode={false}`) |
 | `/care-portal-indsatsdok` | Indsatsdokumentation | **halvfærdig** (kun `localStorage` via `IndsatsModal`) |
 | `/care-portal-tilsynsrapport` | Tilsynsrapport | live (kan falde tilbage til demodata via modal-flag) |
 | `/handover-workspace` | Vagtoverlevering | live |
@@ -229,7 +229,6 @@ Fra baseline + senere aktive migrationer:
 
 ### TODO / FIXME (kode)
 - `src/lib/marketing/saraTimeline.ts` — `TODO: replace hardcoded data with /api/demo/sara when ready`
-- `src/app/onboarding/components/StepCelebration.tsx` — `TODO: Backend — save profile to Supabase...`
 - `TODO.md` — Cal.com-booking markeret åben, men `BOOKING_URL` i `constants.ts` er allerede `https://cal.com/budr-care/introduktion` (TODO.md forældet)
 
 Ingen `FIXME`-hits i `src/`.
