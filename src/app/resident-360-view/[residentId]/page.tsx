@@ -17,6 +17,7 @@ import ResidentOverflowMenu from './components/ResidentOverflowMenu';
 import ResidentLysSamtalerTab from '@/app/care-portal-dashboard/components/ResidentLysSamtalerTab';
 import ResidentVumTab from './components/ResidentVumTab';
 import ResidentTabs from './components/ResidentTabs';
+import ResidentDocumentsTab from './components/ResidentDocumentsTab';
 import type { DailyPlan, PendingProposal } from './components/DagsPlanPortal';
 import type { MedDefinition } from './components/types';
 import type { ResidentExportInput } from '@/lib/residentExport/types';
@@ -320,6 +321,7 @@ const ALL_TABS = [
   'overblik',
   'recovery',
   'vum',
+  'dokumenter',
   'medicin',
   'dagsplan',
   'plan',
@@ -332,6 +334,7 @@ const TAB_LABELS: Record<TabId, string> = {
   overblik: 'Overblik',
   recovery: 'Recovery',
   vum: 'VUM 2.0',
+  dokumenter: 'Dokumenter',
   medicin: 'Medicin',
   dagsplan: 'Dagsplan',
   plan: 'Plan',
@@ -493,6 +496,9 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
               />
             ),
             vum: <ResidentVumTab residentId={residentId} residentName={resident.name} />,
+            dokumenter: (
+              <ResidentDocumentsTab residentId={residentId} residentName={resident.name} />
+            ),
             medicin: <ResidentMedicinTab residentId={residentId} medications={medications} />,
             dagsplan: (
               <DagsPlanPortal
