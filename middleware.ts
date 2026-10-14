@@ -187,20 +187,22 @@ async function checkStaffAuth(req: NextRequest): Promise<StaffAuthResult> {
     return { kind: 'incomplete', response: supabaseResponse };
   }
 
-  const { data: orgFromMetadata } = await supabase
-    .from('organisations')
-    .select('id,deactivated_at')
-    .eq('id', orgIdFromMetadata)
-    .maybeSingle();
+  // Org og staff-række (inkl. rollens rettigheder) hentes samtidig — før kørte 4 opslag efter hinanden.
+  const [{ data: orgFromMetadata }, { data: staffRow, error }] = await Promise.all([
+    supabase
+      .from('organisations')
+      .select('id,deactivated_at')
+      .eq('id', orgIdFromMetadata)
+      .maybeSingle(),
+    supabase
+      .from('care_staff')
+      .select('id, role, role_id, org_id, org_roles(permissions)')
+      .eq('id', user.id)
+      .maybeSingle(),
+  ]);
   if (!orgFromMetadata || orgFromMetadata.deactivated_at) {
     return { kind: 'incomplete', response: supabaseResponse };
   }
-
-  const { data: staffRow, error } = await supabase
-    .from('care_staff')
-    .select('id, role, role_id, org_id')
-    .eq('id', user.id)
-    .maybeSingle();
 
   if (error || !staffRow) {
     return { kind: 'incomplete', response: supabaseResponse };
@@ -208,25 +210,15 @@ async function checkStaffAuth(req: NextRequest): Promise<StaffAuthResult> {
   if (staffRow.org_id !== orgIdFromMetadata) {
     return { kind: 'incomplete', response: supabaseResponse };
   }
-
-  if (staffRow.org_id) {
-    const { data: orgRow } = await supabase
-      .from('organisations')
-      .select('deactivated_at')
-      .eq('id', staffRow.org_id)
-      .maybeSingle();
-    if (orgRow?.deactivated_at) {
-      return { kind: 'deactivated', response: supabaseResponse };
-    }
-  }
+  // staffRow.org_id === orgIdFromMetadata, så org-rækken ovenfor er også staff-org'en.
 
   let permissions: string[] = [];
-  if (staffRow?.role_id) {
-    const { data: roleRow } = await supabase
-      .from('org_roles')
-      .select('permissions')
-      .eq('id', staffRow.role_id)
-      .maybeSingle();
+  if (staffRow.role_id) {
+    const roleRel = staffRow.org_roles as
+      | { permissions?: unknown }
+      | { permissions?: unknown }[]
+      | null;
+    const roleRow = Array.isArray(roleRel) ? roleRel[0] : roleRel;
     permissions = Array.isArray(roleRow?.permissions)
       ? roleRow.permissions.filter((p): p is string => typeof p === 'string')
       : [];

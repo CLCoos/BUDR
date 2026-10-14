@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient, getCurrentStaffRow } from '@/lib/supabase/server';
 import { DEFAULT_ROLE_PERMISSIONS, type Permission } from '@/lib/permissions';
 
 export type OrgRole = {
@@ -14,30 +14,14 @@ function uniquePermissions(perms: string[]): Permission[] {
 }
 
 export async function getPortalStaffPermissions(): Promise<Permission[]> {
-  const supabase = await createServerSupabaseClient();
-  if (!supabase) return [];
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return [];
-
-  const { data: staff } = await supabase
-    .from('care_staff')
-    .select('role, role_id')
-    .eq('id', user.id)
-    .single();
+  // Request-cachet: deler bruger- og staff-opslag med PortalShell.
+  const staff = await getCurrentStaffRow();
   if (!staff) return [];
 
   const fallback = DEFAULT_ROLE_PERMISSIONS[staff.role ?? 'medarbejder'] ?? [];
   if (!staff.role_id) return fallback;
 
-  const { data: assigned } = await supabase
-    .from('org_roles')
-    .select('permissions')
-    .eq('id', staff.role_id)
-    .single();
-  const assignedPermissions = ((assigned?.permissions ?? []) as unknown[]).filter(
+  const assignedPermissions = (staff.role_permissions ?? []).filter(
     (v): v is string => typeof v === 'string' && v.length > 0
   );
   if (assignedPermissions.length === 0) return fallback;

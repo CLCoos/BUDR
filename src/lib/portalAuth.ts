@@ -1,7 +1,21 @@
 import { redirect } from 'next/navigation';
 import type { Session, User } from '@supabase/supabase-js';
-import { createServerSupabaseClient } from './supabase/server';
+import {
+  createServerSupabaseClient,
+  getCurrentStaffRow,
+  getServerAuthUser,
+} from './supabase/server';
 import { parseStaffOrgId } from './staffOrgScope';
+import { getOrganisationForStaff } from './supabase/organisation';
+
+/**
+ * Start PortalShells opslag (bruger, org, staff-række) med det samme, så de kører parallelt
+ * med sidens egne forespørgsler i stedet for efter dem. Resultaterne er request-cachede.
+ */
+export function preloadPortalShell(): void {
+  getOrganisationForStaff().catch(() => {});
+  getCurrentStaffRow().catch(() => {});
+}
 
 /**
  * Returns the current Supabase session from server-side cookies.
@@ -25,26 +39,14 @@ export async function getPortalSession(): Promise<Session | null> {
  * Returns null if not authenticated or no care_staff row exists.
  */
 export async function getPortalStaffOrgId(): Promise<string | null> {
-  const supabase = await createServerSupabaseClient();
-  if (!supabase) return null;
-  const {
-    data: { user },
-  } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
-  if (!user) return null;
-  const { data } = await supabase.from('care_staff').select('org_id').eq('id', user.id).single();
-  return parseStaffOrgId(data?.org_id ?? null);
+  const staff = await getCurrentStaffRow();
+  return parseStaffOrgId(staff?.org_id ?? null);
 }
 
 /** `care_staff.role` for the logged-in user (fx `leder`), or null. */
 export async function getPortalStaffRole(): Promise<string | null> {
-  const supabase = await createServerSupabaseClient();
-  if (!supabase) return null;
-  const {
-    data: { user },
-  } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
-  if (!user) return null;
-  const { data } = await supabase.from('care_staff').select('role').eq('id', user.id).single();
-  const role = (data as { role?: string } | null)?.role;
+  const staff = await getCurrentStaffRow();
+  const role = staff?.role;
   return typeof role === 'string' && role.trim() ? role.trim() : null;
 }
 
@@ -54,13 +56,12 @@ export async function getPortalStaffRole(): Promise<string | null> {
  * Returns the authenticated User when the check passes.
  */
 export async function requirePortalAuth(): Promise<User> {
+  preloadPortalShell();
   const supabase = await createServerSupabaseClient();
   if (!supabase) {
     redirect('/care-portal-login?err=config');
   }
-  const {
-    data: { user },
-  } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
+  const user = await getServerAuthUser();
   if (!user) {
     redirect('/care-portal-login');
   }

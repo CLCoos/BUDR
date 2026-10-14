@@ -2,7 +2,8 @@ import React from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import PortalShell from '@/components/PortalShell';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient, getServerAuthUser } from '@/lib/supabase/server';
+import { preloadPortalShell } from '@/lib/portalAuth';
 import { parseStaffOrgId } from '@/lib/staffOrgScope';
 import DagbogEveningTools, { type SynthesisTarget } from './components/DagbogEveningTools';
 import { journalQueryMissingColumn } from '@/lib/journalEntriesQueryCompat';
@@ -28,11 +29,10 @@ type JournalRow = {
 };
 
 export default async function DagensDagbogPage() {
+  preloadPortalShell();
   const supabase = await createServerSupabaseClient();
   if (!supabase) redirect('/care-portal-login?err=config');
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getServerAuthUser();
   if (!user) redirect('/care-portal-login');
 
   if (!parseStaffOrgId(user.user_metadata?.org_id)) redirect('/care-portal-dashboard/settings');

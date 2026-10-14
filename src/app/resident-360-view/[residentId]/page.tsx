@@ -4,7 +4,8 @@ import Link from 'next/link';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { Mic } from 'lucide-react';
 import PortalShell from '@/components/PortalShell';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient, getServerAuthUser } from '@/lib/supabase/server';
+import { preloadPortalShell } from '@/lib/portalAuth';
 import ResidentHeader from '../components/ResidentHeader';
 import DagsPlanPortal from './components/DagsPlanPortal';
 import ResidentPlanTab from './components/ResidentPlanTab';
@@ -17,6 +18,7 @@ import WriteJournalEntry from './components/WriteJournalEntry';
 import ResidentOverflowMenu from './components/ResidentOverflowMenu';
 import ResidentLysSamtalerTab from '@/app/care-portal-dashboard/components/ResidentLysSamtalerTab';
 import ResidentVumTab from './components/ResidentVumTab';
+import TabPendingIndicator from './components/TabPendingIndicator';
 import type { DailyPlan, PendingProposal } from './components/DagsPlanPortal';
 import type { MedDefinition } from './components/types';
 import type { ResidentExportInput } from '@/lib/residentExport/types';
@@ -65,7 +67,23 @@ function journalSelectMissingStatus(message: string | undefined): boolean {
   );
 }
 
-async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
+async function fetchResidentData(supabase: SupabaseClient, residentId: string, activeTab: TabId) {
+  // Recovery-data bruges kun på recovery-fanen; hent den parallelt med resten — ikke bagefter.
+  const recoveryPromise =
+    activeTab === 'recovery'
+      ? Promise.all([
+          getRecoveryProfile(residentId, supabase).catch(() => null),
+          getActiveNextSteps(residentId, supabase).catch(() => []),
+          getReflectionHistory(residentId, 20, supabase).catch(() => []),
+          getCheckinHistory(residentId, 30, supabase).catch(() => []),
+        ])
+      : Promise.resolve([null, [], [], []] as [
+          Awaited<ReturnType<typeof getRecoveryProfile>> | null,
+          Awaited<ReturnType<typeof getActiveNextSteps>>,
+          Awaited<ReturnType<typeof getReflectionHistory>>,
+          Awaited<ReturnType<typeof getCheckinHistory>>,
+        ]);
+
   const today = new Date().toISOString().slice(0, 10);
   const todayStart = copenhagenStartOfTodayUtcIso();
 
@@ -204,7 +222,8 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
     .map((j) => j.id);
 
   const recoveryStoriesByJournalId: Record<string, LysRecoveryStory> = {};
-  if (lysJournalIds.length > 0) {
+  // Recovery-historier vises kun på overblik-fanen.
+  if (activeTab === 'overblik' && lysJournalIds.length > 0) {
     const { data: stories } = await supabase
       .from('lys_recovery_stories')
       .select('*')
@@ -240,12 +259,7 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
     time: item.time,
   }));
 
-  const [recoveryProfile, activeNextSteps, recentReflections, allCheckins] = await Promise.all([
-    getRecoveryProfile(residentId, supabase).catch(() => null),
-    getActiveNextSteps(residentId, supabase).catch(() => []),
-    getReflectionHistory(residentId, 20, supabase).catch(() => []),
-    getCheckinHistory(residentId, 30, supabase).catch(() => []),
-  ]);
+  const [recoveryProfile, activeNextSteps, recentReflections, allCheckins] = await recoveryPromise;
 
   const recentWeeklyCheckins = allCheckins.filter((c) => c.checkin_type === 'weekly').slice(0, 8);
 
@@ -344,15 +358,16 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
   };
   const activeTab = (ALL_TABS as readonly string[]).includes(tab) ? (tab as TabId) : 'overblik';
 
+  preloadPortalShell();
   const supabase = await createServerSupabaseClient();
   if (!supabase) redirect('/care-portal-login?err=config');
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Login-tjek og data hentes samtidig; RLS sikrer, at intet returneres uden gyldig session.
+  const [user, data] = await Promise.all([
+    getServerAuthUser(),
+    fetchResidentData(supabase, residentId, activeTab),
+  ]);
   if (!user) redirect('/care-portal-login');
-
-  const data = await fetchResidentData(supabase, residentId);
   if (!data) notFound();
 
   const {
@@ -478,6 +493,7 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
                 }
               >
                 {TAB_LABELS[t]}
+                <TabPendingIndicator />
                 {t === 'lys-samtaler' && <Mic size={13} className="ml-1 inline" aria-hidden />}
                 {t === 'dagsplan' && proposals.length > 0 && (
                   <span

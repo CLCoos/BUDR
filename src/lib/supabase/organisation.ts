@@ -1,4 +1,5 @@
-import { createServerSupabaseClient } from './server';
+import { cache } from 'react';
+import { createServerSupabaseClient, getServerAuthUser } from './server';
 import type { NameDisplayMode } from '@/lib/residents/formatName';
 
 export interface OrgBranding {
@@ -15,16 +16,14 @@ export interface OrgBranding {
  * JWT user_metadata, then fetches the matching organisations row.
  * Returns null if no user is authenticated or no org is linked.
  */
-export async function getOrganisationForStaff(): Promise<OrgBranding | null> {
+export const getOrganisationForStaff = cache(async (): Promise<OrgBranding | null> => {
   const supabase = await createServerSupabaseClient();
   if (!supabase) {
     console.log('[BUDR-DIAGNOSE] no_server_client');
     return null;
   }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getServerAuthUser();
   if (!user) {
     console.log('[BUDR-DIAGNOSE] no_user_in_session');
     return null;
@@ -94,4 +93,4 @@ export async function getOrganisationForStaff(): Promise<OrgBranding | null> {
         ? data.resident_name_display_mode
         : 'first_name_initial',
   };
-}
+});

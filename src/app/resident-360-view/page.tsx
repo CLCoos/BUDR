@@ -3,7 +3,8 @@ import { redirect } from 'next/navigation';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import PortalShell from '@/components/PortalShell';
 import ResidentOverviewGrid from './components/ResidentOverviewGrid';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient, getServerAuthUser } from '@/lib/supabase/server';
+import { preloadPortalShell } from '@/lib/portalAuth';
 import { parseStaffOrgId } from '@/lib/staffOrgScope';
 import { formatResidentName, getInitials, type NameDisplayMode } from '@/lib/residents/formatName';
 import { copenhagenStartOfTodayUtcIso, copenhagenYmd } from '@/lib/copenhagenDay';
@@ -92,11 +93,10 @@ async function fetchResidentsOverview(
 }
 
 export default async function Resident360ViewPage() {
+  preloadPortalShell();
   const supabase = await createServerSupabaseClient();
   if (!supabase) redirect('/care-portal-login?err=config');
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getServerAuthUser();
   if (!user) redirect('/care-portal-login');
 
   const orgId = parseStaffOrgId(user.user_metadata?.org_id);
