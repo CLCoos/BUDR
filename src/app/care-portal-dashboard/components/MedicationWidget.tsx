@@ -39,6 +39,7 @@ import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext'
 import { getWidgetStatus, widgetStatusVar } from '@/lib/widgetStatus';
 import { useNameDisplay } from '@/lib/residents/useNameDisplay';
 import type { ResidentNameFields } from '@/lib/residents/formatName';
+import { scheduledHhMm } from '@/lib/medicationSchedule';
 
 export interface MedicationTask {
   id: string;
@@ -85,22 +86,6 @@ function qtyLabel(q: number, unit: MedicationTask['unit']): string {
   return q === 1 ? '1 inhalation' : `${q} inhalationer`;
 }
 
-const TIME_GROUP_DEFAULT_HHMM: Record<string, string> = {
-  morgen: '08:00',
-  middag: '12:30',
-  aften: '20:00',
-  behoev: '12:30',
-};
-
-function parseHhMmFromTimeLabel(label: string): string | null {
-  const compact = label.replace(/\s/g, '');
-  const m = /(\d{1,2})[.:](\d{2})/.exec(compact);
-  if (!m) return null;
-  const h = Math.min(23, Math.max(0, parseInt(m[1]!, 10)));
-  const min = Math.min(59, Math.max(0, parseInt(m[2]!, 10)));
-  return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
-}
-
 function careHouseFromOnboarding(od: Record<string, unknown>): CareHouse {
   const h = String(od.house ?? '').trim();
   const husLetter = /^Hus\s+([ABCD])\b/i.exec(h);
@@ -112,14 +97,11 @@ function careHouseFromOnboarding(od: Record<string, unknown>): CareHouse {
 }
 
 function scheduledTodayFromMed(timeGroup: string, timeLabel: string, anchor: Date): Date {
-  const fromLabel = parseHhMmFromTimeLabel(timeLabel);
-  const key = String(timeGroup ?? '').toLowerCase();
-  const hhmm = fromLabel ?? TIME_GROUP_DEFAULT_HHMM[key] ?? '12:30';
-  const parts = hhmm.split(':');
-  const hs = parseInt(parts[0] ?? '12', 10);
-  const ms = parseInt(parts[1] ?? '0', 10);
+  const [hs, ms] = scheduledHhMm(timeGroup, timeLabel)
+    .split(':')
+    .map((n) => parseInt(n, 10));
   const d = new Date(anchor);
-  d.setHours(hs, ms, 0, 0);
+  d.setHours(hs ?? 12, ms ?? 0, 0, 0);
   return d;
 }
 
