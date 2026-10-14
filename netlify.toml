@@ -3,8 +3,7 @@
 
 [build.environment]
   NODE_VERSION = "20"
-  # Set actual value in Netlify UI/site env vars.
-  SENTRY_DSN = ""
+  # SENTRY_DSN sættes KUN i Netlify UI. Sæt den ikke her: en tom værdi her overskriver UI-værdien under build.
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"

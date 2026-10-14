@@ -23,6 +23,7 @@ export async function GET(): Promise<NextResponse> {
 
   const serverDsnSet = Boolean(process.env.SENTRY_DSN);
   const clientDsnSet = Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN);
+  const hasClient = Boolean(Sentry.getClient());
   const sdkEnabled = Boolean(Sentry.getClient()?.getOptions().enabled);
 
   const eventId = Sentry.captureException(
@@ -31,5 +32,13 @@ export async function GET(): Promise<NextResponse> {
   // Serverless-funktionen kan lukke før afsendelse, så vent kort på at fejlen er sendt.
   const flushed = await Sentry.flush(3000);
 
-  return NextResponse.json({ serverDsnSet, clientDsnSet, sdkEnabled, eventId, flushed });
+  return NextResponse.json({
+    serverDsnSet,
+    clientDsnSet,
+    hasClient,
+    sdkEnabled,
+    nodeEnv: process.env.NODE_ENV,
+    eventId,
+    flushed,
+  });
 }
