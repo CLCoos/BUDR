@@ -1,8 +1,6 @@
 import React, { Suspense } from 'react';
 import { notFound, redirect } from 'next/navigation';
-import Link from 'next/link';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { Mic } from 'lucide-react';
 import PortalShell from '@/components/PortalShell';
 import { createServerSupabaseClient, getServerAuthUser } from '@/lib/supabase/server';
 import { preloadPortalShell } from '@/lib/portalAuth';
@@ -18,7 +16,7 @@ import WriteJournalEntry from './components/WriteJournalEntry';
 import ResidentOverflowMenu from './components/ResidentOverflowMenu';
 import ResidentLysSamtalerTab from '@/app/care-portal-dashboard/components/ResidentLysSamtalerTab';
 import ResidentVumTab from './components/ResidentVumTab';
-import TabPendingIndicator from './components/TabPendingIndicator';
+import ResidentTabs from './components/ResidentTabs';
 import type { DailyPlan, PendingProposal } from './components/DagsPlanPortal';
 import type { MedDefinition } from './components/types';
 import type { ResidentExportInput } from '@/lib/residentExport/types';
@@ -67,22 +65,14 @@ function journalSelectMissingStatus(message: string | undefined): boolean {
   );
 }
 
-async function fetchResidentData(supabase: SupabaseClient, residentId: string, activeTab: TabId) {
-  // Recovery-data bruges kun på recovery-fanen; hent den parallelt med resten — ikke bagefter.
-  const recoveryPromise =
-    activeTab === 'recovery'
-      ? Promise.all([
-          getRecoveryProfile(residentId, supabase).catch(() => null),
-          getActiveNextSteps(residentId, supabase).catch(() => []),
-          getReflectionHistory(residentId, 20, supabase).catch(() => []),
-          getCheckinHistory(residentId, 30, supabase).catch(() => []),
-        ])
-      : Promise.resolve([null, [], [], []] as [
-          Awaited<ReturnType<typeof getRecoveryProfile>> | null,
-          Awaited<ReturnType<typeof getActiveNextSteps>>,
-          Awaited<ReturnType<typeof getReflectionHistory>>,
-          Awaited<ReturnType<typeof getCheckinHistory>>,
-        ]);
+async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
+  // Data til alle faner hentes parallelt i samme runde, så faneskift sker uden serverkald.
+  const recoveryPromise = Promise.all([
+    getRecoveryProfile(residentId, supabase).catch(() => null),
+    getActiveNextSteps(residentId, supabase).catch(() => []),
+    getReflectionHistory(residentId, 20, supabase).catch(() => []),
+    getCheckinHistory(residentId, 30, supabase).catch(() => []),
+  ]);
 
   const today = new Date().toISOString().slice(0, 10);
   const todayStart = copenhagenStartOfTodayUtcIso();
@@ -222,8 +212,7 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string, a
     .map((j) => j.id);
 
   const recoveryStoriesByJournalId: Record<string, LysRecoveryStory> = {};
-  // Recovery-historier vises kun på overblik-fanen.
-  if (activeTab === 'overblik' && lysJournalIds.length > 0) {
+  if (lysJournalIds.length > 0) {
     const { data: stories } = await supabase
       .from('lys_recovery_stories')
       .select('*')
@@ -365,7 +354,7 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
   // Login-tjek og data hentes samtidig; RLS sikrer, at intet returneres uden gyldig session.
   const [user, data] = await Promise.all([
     getServerAuthUser(),
-    fetchResidentData(supabase, residentId, activeTab),
+    fetchResidentData(supabase, residentId),
   ]);
   if (!user) redirect('/care-portal-login');
   if (!data) notFound();
@@ -467,105 +456,57 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
           <ResidentOverflowMenu exportInput={exportInput} />
         </div>
 
-        {/* Tabs — matcher mørk portal / demo */}
-        <div
-          className="mb-6 mt-4 flex gap-1 overflow-x-auto rounded-xl border p-1"
-          style={{
-            borderColor: 'var(--cp-border)',
-            backgroundColor: 'var(--cp-bg3)',
+        {/* Faner — skifter i browseren uden ny serveranmodning */}
+        <ResidentTabs
+          tabs={ALL_TABS}
+          labels={TAB_LABELS}
+          defaultTab={activeTab}
+          pendingProposals={proposals.length}
+          panels={{
+            overblik: (
+              <>
+                <ResidentActiveDevices residentUserId={residentId} />
+                <ResidentOverblikTab
+                  residentId={residentId}
+                  residentName={resident.name}
+                  trafficLight={resident.trafficLight}
+                  moodScore={resident.moodScore}
+                  checkinNote={checkinNote}
+                  checkinAiSummary={checkinAiSummary}
+                  checkinVoiceTranscript={checkinVoiceTranscript}
+                  medications={medications}
+                  journalEntries={journalEntries}
+                  recoveryStoriesByJournalId={recoveryStoriesByJournalId}
+                  todayPlanItems={todayPlanItems}
+                  pendingProposals={proposals.length}
+                />
+              </>
+            ),
+            recovery: (
+              <ResidentRecoveryTab
+                residentId={residentId}
+                recoveryProfile={recoveryProfile}
+                profileCompletionPercent={profileCompletionPercent}
+                activeNextSteps={activeNextSteps}
+                recentReflections={recentReflections}
+                recentWeeklyCheckins={recentWeeklyCheckins}
+              />
+            ),
+            vum: <ResidentVumTab residentId={residentId} residentName={resident.name} />,
+            medicin: <ResidentMedicinTab residentId={residentId} medications={medications} />,
+            dagsplan: (
+              <DagsPlanPortal
+                residentId={residentId}
+                residentName={resident.name}
+                initialPlan={plan}
+                initialProposals={proposals}
+              />
+            ),
+            plan: <ResidentPlanTab residentId={residentId} residentName={resident.name} />,
+            haven: <ResidentHavenTab residentId={residentId} residentName={resident.name} />,
+            'lys-samtaler': <ResidentLysSamtalerTab residentId={residentId} />,
           }}
-        >
-          {ALL_TABS.map((t) => {
-            const on = activeTab === t;
-            return (
-              <Link
-                key={t}
-                href={`/resident-360-view/${residentId}?tab=${t}`}
-                className="whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium transition-all sm:px-4"
-                style={
-                  on
-                    ? {
-                        backgroundColor: 'var(--cp-green-dim)',
-                        color: 'var(--cp-green)',
-                        boxShadow: '0 0 0 1px rgba(45,212,160,0.2)',
-                      }
-                    : { color: 'var(--cp-muted)' }
-                }
-              >
-                {TAB_LABELS[t]}
-                <TabPendingIndicator />
-                {t === 'lys-samtaler' && <Mic size={13} className="ml-1 inline" aria-hidden />}
-                {t === 'dagsplan' && proposals.length > 0 && (
-                  <span
-                    className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
-                    style={{ backgroundColor: 'var(--cp-amber)' }}
-                  >
-                    {proposals.length}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </div>
-
-        {/* Tab content */}
-        {activeTab === 'overblik' && (
-          <>
-            <ResidentActiveDevices residentUserId={residentId} />
-            <ResidentOverblikTab
-              residentId={residentId}
-              residentName={resident.name}
-              trafficLight={resident.trafficLight}
-              moodScore={resident.moodScore}
-              checkinNote={checkinNote}
-              checkinAiSummary={checkinAiSummary}
-              checkinVoiceTranscript={checkinVoiceTranscript}
-              medications={medications}
-              journalEntries={journalEntries}
-              recoveryStoriesByJournalId={recoveryStoriesByJournalId}
-              todayPlanItems={todayPlanItems}
-              pendingProposals={proposals.length}
-            />
-          </>
-        )}
-
-        {activeTab === 'recovery' && (
-          <ResidentRecoveryTab
-            residentId={residentId}
-            recoveryProfile={recoveryProfile}
-            profileCompletionPercent={profileCompletionPercent}
-            activeNextSteps={activeNextSteps}
-            recentReflections={recentReflections}
-            recentWeeklyCheckins={recentWeeklyCheckins}
-          />
-        )}
-
-        {activeTab === 'vum' && (
-          <ResidentVumTab residentId={residentId} residentName={resident.name} />
-        )}
-
-        {activeTab === 'medicin' && (
-          <ResidentMedicinTab residentId={residentId} medications={medications} />
-        )}
-
-        {activeTab === 'dagsplan' && (
-          <DagsPlanPortal
-            residentId={residentId}
-            residentName={resident.name}
-            initialPlan={plan}
-            initialProposals={proposals}
-          />
-        )}
-
-        {activeTab === 'plan' && (
-          <ResidentPlanTab residentId={residentId} residentName={resident.name} />
-        )}
-
-        {activeTab === 'haven' && (
-          <ResidentHavenTab residentId={residentId} residentName={resident.name} />
-        )}
-
-        {activeTab === 'lys-samtaler' && <ResidentLysSamtalerTab residentId={residentId} />}
+        />
       </div>
     </PortalShell>
   );
