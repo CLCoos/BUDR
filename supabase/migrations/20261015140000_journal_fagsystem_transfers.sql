@@ -58,6 +58,9 @@ REVOKE ALL ON public.journal_fagsystem_transfers FROM PUBLIC, anon, authenticate
 GRANT SELECT, INSERT, DELETE ON public.journal_fagsystem_transfers TO authenticated;
 
 
-ALTER TABLE public.assistant_suggestions DROP CONSTRAINT IF EXISTS assistant_suggestions_kind_check;
-ALTER TABLE public.assistant_suggestions ADD CONSTRAINT assistant_suggestions_kind_check
-  CHECK (kind IN ('aftale_opfoelgning', 'dokument_frist', 'trafiklys', 'svar', 'fagsystem'));
+DO $$
+BEGIN
+  ALTER TABLE public.assistant_suggestions DROP CONSTRAINT IF EXISTS assistant_suggestions_kind_check;
+  ALTER TABLE public.assistant_suggestions ADD CONSTRAINT assistant_suggestions_kind_check
+    CHECK (kind IN ('aftale_opfoelgning', 'dokument_frist', 'trafiklys', 'svar', 'fagsystem'));
+END $$;

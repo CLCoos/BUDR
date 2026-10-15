@@ -1,7 +1,8 @@
 -- Lokal test af 20261015140000_journal_fagsystem_transfers.sql:
 --   createdb fag && psql -d fag -f supabase/tests/fagsystem/test.sql
 \set ON_ERROR_STOP 1
-CREATE ROLE authenticated; CREATE ROLE anon;
+DO $$ BEGIN CREATE ROLE authenticated; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE ROLE anon; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 CREATE SCHEMA auth;
 CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT nullif(current_setting('request.uid', true), '')::uuid $$;
 GRANT USAGE ON SCHEMA auth TO authenticated;
