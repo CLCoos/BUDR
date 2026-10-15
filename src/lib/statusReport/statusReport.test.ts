@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildSourceText, cleanSectionText, pseudonymize, thinEvenly } from './prompt';
-import { renderStatusReportHtml, textToHtml } from './render';
-import { sanitizeSections } from './sections';
+import { buildSourceMaterial, cleanSectionText, pseudonymize, thinEvenly } from './prompt';
 import type { StatusReportSources } from './types';
 
 const baseSources: StatusReportSources = {
@@ -50,8 +48,8 @@ describe('pseudonymize', () => {
   });
 });
 
-describe('buildSourceText', () => {
-  const text = buildSourceText(baseSources);
+describe('buildSourceMaterial', () => {
+  const { text, refs } = buildSourceMaterial(baseSources);
   it('indeholder ikke borgerens navn', () => {
     expect(text).not.toMatch(/Anna|Jensen/);
   });
@@ -61,6 +59,13 @@ describe('buildSourceText', () => {
     expect(text).toContain('Lave mad selv to gange om ugen');
     expect(text).toContain('2026-04: gennemsnit 5 (2 check-ins)');
     expect(text).toContain('2026-05: gennemsnit 8 (1 check-ins)');
+  });
+  it('giver hvert notat og check-in en kode, som kan slås op', () => {
+    expect(text).toContain('[J1] 2026-05-02');
+    expect(text).toContain('[C1] 2026-04-03');
+    expect(refs.get('J1')).toMatchObject({ kind: 'journal', date: '2026-05-02' });
+    expect(refs.get('C2')).toMatchObject({ kind: 'checkin', date: '2026-05-10' });
+    expect(refs.has('C3')).toBe(false);
   });
 });
 
@@ -80,38 +85,5 @@ describe('cleanSectionText', () => {
     expect(cleanSectionText('## Indsatsformål\n\n**Mål:** x\n* punkt', 'Indsatsformål')).toBe(
       'Mål: x\n- punkt'
     );
-  });
-});
-
-describe('sanitizeSections', () => {
-  it('beholder kun kendte afsnit med tekst', () => {
-    expect(sanitizeSections({ maal: 'a', hack: 'b', anbefalinger: 3 })).toEqual({ maal: 'a' });
-    expect(sanitizeSections(null)).toEqual({});
-    expect(sanitizeSections(['x'])).toEqual({});
-  });
-});
-
-describe('render', () => {
-  it('escaper HTML og fremhæver markeringer', () => {
-    expect(textToHtml('<b>hej</b> [Udfyldes]')).toBe(
-      '<p>&lt;b&gt;hej&lt;/b&gt; <mark>[Udfyldes]</mark></p>'
-    );
-    expect(textToHtml('- a\n- b')).toBe('<ul><li>a</li><li>b</li></ul>');
-  });
-  it('viser kladde-mærkat indtil udtalelsen er færdig', () => {
-    const h = {
-      residentName: 'Anna <J>',
-      orgName: 'Bostedet',
-      periodStart: '2026-04-01',
-      periodEnd: '2026-09-30',
-      meetingDate: null,
-      paragraph: '§108',
-      contactPerson: null,
-      finished: false,
-    };
-    const html = renderStatusReportHtml(h, { maal: 'x' });
-    expect(html).toContain('Kladde');
-    expect(html).toContain('Anna &lt;J&gt;');
-    expect(renderStatusReportHtml({ ...h, finished: true }, {})).not.toContain('Kladde —');
   });
 });

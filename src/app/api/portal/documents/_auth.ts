@@ -7,11 +7,15 @@ import { parseStaffOrgId } from '@/lib/staffOrgScope';
 import { createServerSupabaseClient, getServerAuthUser } from '@/lib/supabase/server';
 
 export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-export const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-export type StaffContext = { supabase: SupabaseClient; user: User; orgId: string };
+export type StaffContext = {
+  supabase: SupabaseClient;
+  user: User;
+  orgId: string;
+  permissions: string[];
+};
 
-/** Login, organisation og rettighed for statusudtalelser. Returnerer et fejlsvar ved afvisning. */
+/** Login, organisation og rettighed for borgerdokumenter. Returnerer et fejlsvar ved afvisning. */
 export async function requireStaff(
   permission: Permission
 ): Promise<StaffContext | { error: NextResponse }> {
@@ -27,13 +31,7 @@ export async function requireStaff(
   if (!hasPermission(permissions, permission)) {
     return { error: NextResponse.json({ error: 'Ingen adgang' }, { status: 403 }) };
   }
-  return { supabase, user, orgId };
-}
-
-export function isValidDate(value: unknown): value is string {
-  if (typeof value !== 'string' || !DATE_RE.test(value)) return false;
-  const d = new Date(`${value}T00:00:00Z`);
-  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value;
+  return { supabase, user, orgId, permissions: permissions ?? [] };
 }
 
 export function optionalText(value: unknown, max: number): string | null | undefined {
@@ -42,4 +40,15 @@ export function optionalText(value: unknown, max: number): string | null | undef
   if (typeof value !== 'string') return undefined;
   const t = value.trim();
   return t ? t.slice(0, max) : null;
+}
+
+export async function readJson(req: Request): Promise<Record<string, unknown> | null> {
+  try {
+    const body = (await req.json()) as unknown;
+    return typeof body === 'object' && body !== null && !Array.isArray(body)
+      ? (body as Record<string, unknown>)
+      : null;
+  } catch {
+    return null;
+  }
 }

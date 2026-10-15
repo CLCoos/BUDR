@@ -6,6 +6,7 @@ import AlertPanel from './AlertPanel';
 import BekymringsnotatWidget from './BekymringsnotatWidget';
 import KalenderWidget from './KalenderWidget';
 import OpgaveWidget from './OpgaveWidget';
+import DocumentInboxWidget from './DocumentInboxWidget';
 import OnCallStaffWidget from './OnCallStaffWidget';
 import ResidentList from './ResidentList';
 import StatCards from './StatCards';
@@ -605,6 +606,8 @@ function DashboardClientInner({
           <div className="overflow-hidden rounded-xl">{medicationWidget}</div>
         </div>
       </div>
+
+      <DocumentInboxWidget />
 
       {/* ── Zone 3: Mid grid (2 cols → 1) ────────────────────── */}
       <div className="mb-5 grid grid-cols-1 gap-5 md:grid-cols-2">

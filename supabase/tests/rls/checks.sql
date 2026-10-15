@@ -298,6 +298,79 @@ DO $$ DECLARE n int; BEGIN
     EXECUTE 'SELECT count(*) FROM resident_status_reports' INTO n; INSERT INTO r VALUES ('status_report_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
   END IF;
 END $$;
+-- fælles dokumentmotor (2026-10-15)
+SET test.uid = '00000000-0000-0000-0000-0000000000c2';
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.resident_documents') IS NOT NULL THEN
+    BEGIN
+      EXECUTE $q$INSERT INTO resident_documents (id, org_id, resident_id, doc_type) VALUES ('00000000-0000-0000-0000-0000000000e1','00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1','statusrapport')$q$;
+      INSERT INTO r VALUES ('doc_create_own (should work)','works');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_create_own (should work)','BROKEN'); END;
+    EXECUTE $q$SELECT count(*) FROM resident_document_events WHERE document_id = '00000000-0000-0000-0000-0000000000e1' AND action = 'oprettet'$q$ INTO n;
+    INSERT INTO r VALUES ('doc_created_event_logged (should work)', CASE WHEN n=1 THEN 'works' ELSE 'BROKEN' END);
+    BEGIN
+      EXECUTE $q$INSERT INTO resident_documents (org_id, resident_id, doc_type) VALUES ('00000000-0000-0000-0000-0000000000a2','00000000-0000-0000-0000-0000000000b2','statusrapport')$q$;
+      INSERT INTO r VALUES ('doc_create_other_org','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_create_other_org','blocked'); END;
+    BEGIN
+      EXECUTE $q$INSERT INTO resident_documents (org_id, resident_id, doc_type, status) VALUES ('00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1','statusrapport','godkendt')$q$;
+      INSERT INTO r VALUES ('doc_create_approved','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_create_approved','blocked'); END;
+    BEGIN EXECUTE $q$UPDATE resident_documents SET sections = '{"maal":"Mål: lave mad"}'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('doc_edit (should work)', CASE WHEN n>0 THEN 'works' ELSE 'BROKEN' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_edit (should work)','BROKEN'); END;
+    BEGIN EXECUTE $q$UPDATE resident_documents SET resident_id = '00000000-0000-0000-0000-0000000000b2'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('doc_move_resident', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_move_resident','blocked'); END;
+    BEGIN EXECUTE $q$UPDATE resident_documents SET approved_by = '00000000-0000-0000-0000-0000000000c2'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('doc_fake_approver', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_fake_approver','blocked'); END;
+    BEGIN EXECUTE $q$UPDATE resident_documents SET status = 'godkendt'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('doc_approve_without_permission', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_approve_without_permission','blocked'); END;
+    BEGIN EXECUTE $q$UPDATE resident_documents SET status = 'til_godkendelse'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('doc_submit (should work)', CASE WHEN n>0 THEN 'works' ELSE 'BROKEN' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_submit (should work)','BROKEN'); END;
+    BEGIN EXECUTE 'DELETE FROM resident_documents'; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('doc_delete', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_delete','blocked'); END;
+    BEGIN
+      EXECUTE $q$INSERT INTO resident_document_events (document_id, org_id, resident_id, action) VALUES ('00000000-0000-0000-0000-0000000000e1','00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1','godkendt')$q$;
+      INSERT INTO r VALUES ('doc_fake_approval_event','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_fake_approval_event','blocked'); END;
+    BEGIN
+      EXECUTE $q$INSERT INTO resident_document_events (document_id, org_id, resident_id, action) VALUES ('00000000-0000-0000-0000-0000000000e1','00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1','ai_udkast')$q$;
+      INSERT INTO r VALUES ('doc_ai_event (should work)','works');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_ai_event (should work)','BROKEN'); END;
+    BEGIN EXECUTE 'DELETE FROM resident_document_events'; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('doc_event_delete', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_event_delete','blocked'); END;
+  END IF;
+END $$;
+SET test.uid = '00000000-0000-0000-0000-0000000000c1';
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.resident_documents') IS NOT NULL THEN
+    BEGIN EXECUTE $q$UPDATE resident_documents SET status = 'godkendt' WHERE id = '00000000-0000-0000-0000-0000000000e1'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('doc_approve_as_leader (should work)', CASE WHEN n>0 THEN 'works' ELSE 'BROKEN' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_approve_as_leader (should work)','BROKEN'); END;
+    EXECUTE $q$SELECT count(*) FROM resident_document_events WHERE document_id = '00000000-0000-0000-0000-0000000000e1' AND action = 'godkendt' AND detail ? 'sections'$q$ INTO n;
+    INSERT INTO r VALUES ('doc_approval_snapshot (should work)', CASE WHEN n=1 THEN 'works' ELSE 'BROKEN' END);
+    BEGIN EXECUTE $q$UPDATE resident_documents SET sections = '{"maal":"ændret efter godkendelse"}'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('doc_edit_approved', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_edit_approved','blocked'); END;
+    BEGIN
+      EXECUTE $q$INSERT INTO resident_documents (id, org_id, resident_id, doc_type, previous_id) VALUES ('00000000-0000-0000-0000-0000000000e2','00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1','statusrapport','00000000-0000-0000-0000-0000000000e1')$q$;
+      EXECUTE $q$SELECT count(*) FROM resident_documents WHERE (id = '00000000-0000-0000-0000-0000000000e2' AND version = 2) OR (id = '00000000-0000-0000-0000-0000000000e1' AND status = 'erstattet')$q$ INTO n;
+      INSERT INTO r VALUES ('doc_new_version (should work)', CASE WHEN n=2 THEN 'works' ELSE 'BROKEN' END);
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_new_version (should work)','BROKEN'); END;
+    BEGIN
+      EXECUTE $q$INSERT INTO resident_documents (org_id, resident_id, doc_type, previous_id) VALUES ('00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1','statusrapport','00000000-0000-0000-0000-0000000000e1')$q$;
+      INSERT INTO r VALUES ('doc_second_version_of_same','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_second_version_of_same','blocked'); END;
+    BEGIN
+      EXECUTE $q$INSERT INTO resident_documents (org_id, resident_id, doc_type, previous_id) VALUES ('00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1','statusrapport','00000000-0000-0000-0000-0000000000e2')$q$;
+      INSERT INTO r VALUES ('doc_version_of_draft','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_version_of_draft','blocked'); END;
+  END IF;
+END $$;
+SET test.uid = '00000000-0000-0000-0000-0000000000c4';
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.resident_documents') IS NOT NULL THEN
+    BEGIN
+      EXECUTE $q$INSERT INTO resident_documents (org_id, resident_id, doc_type) VALUES ('00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1','statusrapport')$q$;
+      INSERT INTO r VALUES ('doc_create_without_permission','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_create_without_permission','blocked'); END;
+  END IF;
+END $$;
+SET test.uid = '00000000-0000-0000-0000-0000000000c3';
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.resident_documents') IS NOT NULL THEN
+    EXECUTE 'SELECT count(*) FROM resident_documents' INTO n; INSERT INTO r VALUES ('doc_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
+    EXECUTE 'SELECT count(*) FROM resident_document_events' INTO n; INSERT INTO r VALUES ('doc_event_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
+  END IF;
+END $$;
 -- bølge 5: ingen hard-delete af kliniske data
 SET test.uid = '00000000-0000-0000-0000-0000000000c1';
 DO $$ DECLARE n int; BEGIN

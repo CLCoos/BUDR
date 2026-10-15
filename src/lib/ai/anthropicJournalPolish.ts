@@ -44,7 +44,8 @@ export async function callAnthropicJournalPolish(params: {
   /** Modeller der prøves først (fx en stærkere model til længere dokumenter). */
   preferredModels?: string[];
 }): Promise<
-  { ok: true; text: string } | { ok: false; status: number; body: string; lastModel: string }
+  | { ok: true; text: string; model: string }
+  | { ok: false; status: number; body: string; lastModel: string }
 > {
   const models = polishModelCandidates(params.preferredModels);
   let lastStatus = 502;
@@ -99,7 +100,7 @@ export async function callAnthropicJournalPolish(params: {
 
     const text = extractAllText(data);
     if (text) {
-      return { ok: true, text };
+      return { ok: true, text, model };
     }
     lastBody = 'empty content';
     continue;

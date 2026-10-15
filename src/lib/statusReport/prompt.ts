@@ -1,5 +1,7 @@
 import { VUM_FUNCTION_LEVEL_LABELS } from '@/lib/vum/vumThemes';
-import type { StatusReportSectionDefinition } from './sections';
+import { CITATION_INSTRUCTION } from '@/lib/documents/citations';
+import type { DocumentSectionDefinition } from '@/lib/documents/registry';
+import type { SourceRef } from '@/lib/documents/types';
 import type { StatusReportSources } from './types';
 
 export const STATUS_REPORT_SYSTEM = `Du skriver ét afsnit af en statusudtalelse fra et socialpsykiatrisk botilbud (servicelovens §107/§108) til borgerens kommune (sagsbehandleren) før et opfølgningsmøde.
@@ -10,7 +12,9 @@ Regler:
 - Mangler der oplysninger, så skriv en markering i firkantede parenteser, fx "[Udfyldes af personalet: …]".
 - Skriv kun afsnittets brødtekst uden overskrift. Ingen markdown ud over punktopstillinger med "- ".
 - Nævn ikke personalets navne og henvis ikke til "kildematerialet" eller "journalen" som sådan; skriv fx "personalet har observeret".
-- Hold afsnittet kort og læsevenligt: typisk 80–250 ord.`;
+- Hold afsnittet kort og læsevenligt: typisk 80–250 ord.
+
+${CITATION_INSTRUCTION}`;
 
 const MAX_JOURNAL_CHARS = 30000;
 const MAX_ENTRY_CHARS = 700;
@@ -60,8 +64,28 @@ function monthKey(date: string): string {
   return date.slice(0, 7);
 }
 
-export function buildSourceText(src: StatusReportSources): string {
+export type SourceMaterial = { text: string; refs: Map<string, SourceRef> };
+
+/**
+ * Bygger kildeteksten til modellen. Hvert enkelt element (notat, check-in, bekymring, krise,
+ * næste skridt) får en kode, så modellen kan henvise til det, og vi kan vise kilden ved afsnittet.
+ */
+export function buildSourceMaterial(src: StatusReportSources): SourceMaterial {
   const parts: string[] = [];
+  const refs = new Map<string, SourceRef>();
+  const counters: Record<string, number> = {};
+  const addRef = (
+    prefix: string,
+    kind: SourceRef['kind'],
+    date: string | null,
+    label: string,
+    excerpt: string
+  ): string => {
+    counters[prefix] = (counters[prefix] ?? 0) + 1;
+    const ref = `${prefix}${counters[prefix]}`;
+    refs.set(ref, { ref, kind, date, label, excerpt: clip(excerpt, 240) });
+    return `[${ref}]`;
+  };
   parts.push(`Periode: ${src.periodStart} til ${src.periodEnd}`);
 
   if (src.vum) {
@@ -91,6 +115,13 @@ export function buildSourceText(src: StatusReportSources): string {
   parts.push('## Aftalte næste skridt (fra Lys)');
   if (src.nextSteps.length === 0) parts.push('(ingen)');
   for (const s of src.nextSteps) {
+    const code = addRef(
+      'S',
+      'naeste_skridt',
+      s.completedAt ? s.completedAt.slice(0, 10) : s.targetDate,
+      'Næste skridt',
+      `${s.title}${s.residentNote ? ` – "${s.residentNote}"` : ''}`
+    );
     const notes = [
       s.residentNote ? `borgerens note: "${clip(s.residentNote, 400)}"` : null,
       s.staffNote ? `personalets note: ${clip(s.staffNote, 400)}` : null,
@@ -98,7 +129,7 @@ export function buildSourceText(src: StatusReportSources): string {
       .filter(Boolean)
       .join('; ');
     parts.push(
-      `- ${s.title} (status: ${s.status}${s.completedAt ? `, fuldført ${s.completedAt.slice(0, 10)}` : ''})${
+      `- ${code} ${s.title} (status: ${s.status}${s.completedAt ? `, fuldført ${s.completedAt.slice(0, 10)}` : ''})${
         s.description ? `: ${clip(s.description, 400)}` : ''
       }${notes ? ` [${notes}]` : ''}`
     );
@@ -120,7 +151,10 @@ export function buildSourceText(src: StatusReportSources): string {
     const sample = thinEvenly(texts, () => 1, MAX_CHECKIN_TEXTS);
     if (sample.length > 0) {
       parts.push('### Borgerens egne ord i check-ins');
-      for (const c of sample) parts.push(`- ${c.date}: "${clip(c.text ?? '', 300)}"`);
+      for (const c of sample) {
+        const code = addRef('C', 'checkin', c.date, `Check-in (humør ${c.mood})`, c.text ?? '');
+        parts.push(`- ${code} ${c.date}: "${clip(c.text ?? '', 300)}"`);
+      }
     }
   }
 
@@ -131,19 +165,24 @@ export function buildSourceText(src: StatusReportSources): string {
     (j) => j.text.length + 30,
     MAX_JOURNAL_CHARS
   );
-  for (const j of journal) parts.push(`- ${j.date} (${j.category}): ${j.text}`);
+  for (const j of journal) {
+    const code = addRef('J', 'journal', j.date, j.category, j.text);
+    parts.push(`- ${code} ${j.date} (${j.category}): ${j.text}`);
+  }
 
   parts.push('## Bekymringsnotater');
   if (src.concerns.length === 0) parts.push('(ingen)');
   for (const c of src.concerns) {
-    parts.push(`- ${c.date} (${c.category}, alvor ${c.severity}/10): ${clip(c.note, 500)}`);
+    const code = addRef('B', 'bekymring', c.date, `Bekymring: ${c.category}`, c.note);
+    parts.push(`- ${code} ${c.date} (${c.category}, alvor ${c.severity}/10): ${clip(c.note, 500)}`);
   }
 
   parts.push('## Kriseforløb');
   if (src.crises.length === 0) parts.push('(ingen)');
   for (const c of src.crises) {
+    const code = addRef('K', 'krise', c.date, `Krise, trin ${c.trin}`, c.notes ?? c.status);
     parts.push(
-      `- ${c.date}: krisetrin ${c.trin}, ${c.status}${c.notes ? `: ${clip(c.notes, 400)}` : ''}`
+      `- ${code} ${c.date}: krisetrin ${c.trin}, ${c.status}${c.notes ? `: ${clip(c.notes, 400)}` : ''}`
     );
   }
 
@@ -155,11 +194,11 @@ export function buildSourceText(src: StatusReportSources): string {
     );
   }
 
-  return pseudonymize(parts.join('\n'), src.residentNames);
+  return { text: pseudonymize(parts.join('\n'), src.residentNames), refs };
 }
 
 export function buildSectionUserMessage(
-  section: StatusReportSectionDefinition,
+  section: DocumentSectionDefinition,
   sourceText: string
 ): string {
   return `Afsnit: ${section.title}
