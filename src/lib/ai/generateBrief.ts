@@ -1,5 +1,6 @@
 import { callAnthropicJournalPolish } from '@/lib/ai/anthropicJournalPolish';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { claudeApiKey } from '@/lib/ai/claudeTransport';
 
 const SYSTEM = `Du er en erfaren kontaktpædagog der skriver et kort overblik til en 
 travl kollega på et dansk socialpsykiatrisk bosted. Kollegaen skal kunne skanne det 
@@ -179,7 +180,7 @@ ${checkinBlock}
 Journalnotater:
 ${journalBlock}`;
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = claudeApiKey();
   if (!apiKey) return { status: 'not_configured' };
 
   const ai = await callAnthropicJournalPolish({

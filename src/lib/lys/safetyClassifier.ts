@@ -1,3 +1,5 @@
+import { claudeApiKey, claudeMessagesFetch } from '@/lib/ai/claudeTransport';
+
 export type SafetyClassification = {
   risk_level: 'none' | 'elevated' | 'acute';
   category: string;
@@ -91,25 +93,19 @@ export async function classifyUtterance(
   utterance: string,
   signal?: AbortSignal
 ): Promise<SafetyClassification> {
-  const key = process.env.ANTHROPIC_API_KEY?.trim();
+  const key = claudeApiKey();
   if (!key || !utterance.trim()) return FALLBACK_CLASSIFICATION;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-      },
-      signal,
-      body: JSON.stringify({
+    const res = await claudeMessagesFetch(
+      {
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 150,
         system: SAFETY_SYSTEM_PROMPT,
         messages: [{ role: 'user', content: utterance }],
-      }),
-    });
+      },
+      { apiKey: key, signal }
+    );
 
     if (!res.ok) {
       const err = await res.text().catch(() => '');

@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getResidentId } from '@/lib/residentAuth';
 import type { ChimeDomain } from '@/types/lys';
+import { claudeApiKey, claudeMessagesFetch } from '@/lib/ai/claudeTransport';
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -86,7 +87,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       ? body.feeling_score
       : null;
 
-  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  const anthropicKey = claudeApiKey();
   if (!anthropicKey) {
     return NextResponse.json({ error: 'AI ikke konfigureret' }, { status: 503 });
   }
@@ -107,20 +108,15 @@ Svar i præcis dette JSON-format:
 
 Returner KUN JSON, ingen anden tekst.`;
 
-  const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': anthropicKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
+  const aiRes = await claudeMessagesFetch(
+    {
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 400,
       system: REFLECTION_SYSTEM,
       messages: [{ role: 'user', content: userPrompt }],
-    }),
-  });
+    },
+    { apiKey: anthropicKey }
+  );
 
   if (!aiRes.ok) {
     const errText = await aiRes.text();

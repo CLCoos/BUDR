@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { parseBudrFollowUpsBlock } from '@/lib/portalStaffAssistantFollowUps';
+import { claudeApiKey, claudeMessagesFetch } from '@/lib/ai/claudeTransport';
 
 export async function POST(req: NextRequest) {
   // Verify staff auth
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No messages' }, { status: 400 });
   }
 
-  const key = process.env.ANTHROPIC_API_KEY;
+  const key = claudeApiKey();
   if (!key) return NextResponse.json({ error: 'AI ikke konfigureret' }, { status: 503 });
 
   // Kun portalpersonale, og kun egne beboere: konteksten hentes med den indloggedes
@@ -136,20 +137,15 @@ Regler for JSON inde i blokken:
 Brødteksten før blokken må ikke nævne XML, JSON eller "budr_followups".`;
 
   // Call Anthropic API directly (same pattern as lys-chat which works on Netlify)
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
+  const res = await claudeMessagesFetch(
+    {
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 900,
       system,
       messages,
-    }),
-  });
+    },
+    { apiKey: key }
+  );
 
   if (!res.ok) {
     const err = await res.text();

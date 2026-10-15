@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { completion } from '@rocketnew/llm-sdk';
 import { createClient } from '@supabase/supabase-js';
 import { ANTHROPIC_CHAT_MODEL } from '@/lib/ai/anthropicModel';
 import { sanitizeChatCompletionParameters } from '@/lib/ai/chatCompletionParams';
+import { claudeApiKey, claudeMessagesFetch } from '@/lib/ai/claudeTransport';
+import {
+  claudeStreamToOpenAiChunks,
+  toClaudeRequest,
+  toOpenAiCompletion,
+} from '@/lib/ai/openaiCompat';
 import { checkApiRateLimit, getClientIp } from '@/lib/apiRateLimit';
 import { assertVoiceApiCaller } from '@/lib/voice/voiceApiAuth';
 
 // Kun Anthropic: alle kaldere bruger den, og det er den underdatabehandler, BUDR oplyser.
-const API_KEYS: Record<string, string | undefined> = {
-  ANTHROPIC: process.env.ANTHROPIC_API_KEY,
+const API_KEYS: Record<string, () => string | undefined> = {
+  ANTHROPIC: claudeApiKey,
 };
 
 const DAILY_AI_LIMIT = Number(process.env.AI_DAILY_LIMIT ?? 20);
@@ -200,7 +205,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const apiKey = API_KEYS[provider];
+    const apiKey = API_KEYS[provider]?.();
     if (!apiKey) {
       return NextResponse.json(
         {
@@ -211,14 +216,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const claudeBody = toClaudeRequest(effectiveModel, messages, parameters);
+
     if (stream) {
-      const response = await completion({
-        model: effectiveModel,
-        messages,
-        stream: true,
-        ...parameters,
-        api_key: apiKey,
-      });
+      const upstream = await claudeMessagesFetch({ ...claudeBody, stream: true });
+      if (!upstream.ok || !upstream.body) {
+        throw { status: upstream.status, body: await upstream.json().catch(() => ({})) };
+      }
+      const response = claudeStreamToOpenAiChunks(upstream.body);
 
       const encoder = new TextEncoder();
       const readable = new ReadableStream({
@@ -226,7 +231,7 @@ export async function POST(request: NextRequest) {
           try {
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'start' })}\n\n`));
 
-            for await (const chunk of response as unknown as AsyncIterable<unknown>) {
+            for await (const chunk of response) {
               controller.enqueue(
                 encoder.encode(`data: ${JSON.stringify({ type: 'chunk', chunk })}\n\n`)
               );
@@ -261,13 +266,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const response = await completion({
-      model: effectiveModel,
-      messages,
-      stream: false,
-      ...parameters,
-      api_key: apiKey,
-    });
+    const upstream = await claudeMessagesFetch(claudeBody);
+    const data = await upstream.json().catch(() => ({}));
+    if (!upstream.ok) throw { status: upstream.status, body: data };
+    const response = toOpenAiCompletion(data);
 
     return NextResponse.json(response, {
       headers:

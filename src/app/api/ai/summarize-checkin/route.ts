@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { claudeApiKey, claudeMessagesFetch } from '@/lib/ai/claudeTransport';
 
 const SYSTEM_PROMPT = `Du er en varm og empatisk støtte til mennesker i socialpsykiatri.
 Din opgave er at opsummere en borgers dagbogsindtastning i 1-2 sætninger på dansk.
@@ -26,25 +27,20 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Mangler transcript' }, { status: 422 });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = claudeApiKey();
   if (!apiKey) {
     return NextResponse.json({ error: 'AI ikke konfigureret' }, { status: 503 });
   }
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
+  const res = await claudeMessagesFetch(
+    {
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 200,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: transcript }],
-    }),
-  });
+    },
+    { apiKey: apiKey }
+  );
 
   if (!res.ok) {
     return NextResponse.json({ error: 'AI svarer ikke lige nu' }, { status: 502 });

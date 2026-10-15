@@ -4,6 +4,7 @@ import { hasPermission } from '@/lib/auth/hasPermission';
 import { callAnthropicJournalPolish } from '@/lib/ai/anthropicJournalPolish';
 import { PERMISSIONS } from '@/lib/permissions';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { claudeApiKey } from '@/lib/ai/claudeTransport';
 
 export const maxDuration = 60;
 
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
   const draft = (body.draft ?? body.text ?? '').trim();
   if (!draft) return NextResponse.json({ error: 'Tomt udkast' }, { status: 400 });
 
-  const key = process.env.ANTHROPIC_API_KEY;
+  const key = claudeApiKey();
   if (!key) return NextResponse.json({ error: 'AI ikke konfigureret' }, { status: 503 });
 
   const extra = [

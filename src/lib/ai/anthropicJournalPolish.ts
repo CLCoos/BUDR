@@ -1,4 +1,5 @@
 import { ANTHROPIC_CHAT_MODEL } from '@/lib/ai/anthropicModel';
+import { claudeMessagesFetch } from '@/lib/ai/claudeTransport';
 
 type AnthropicMessageResponse = {
   content?: Array<{ type?: string; text?: string }>;
@@ -56,20 +57,15 @@ export async function callAnthropicJournalPolish(params: {
     lastModel = model;
     let res: Response;
     try {
-      res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          'x-api-key': params.apiKey,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
+      res = await claudeMessagesFetch(
+        {
           model,
           max_tokens: params.maxTokens,
           system: params.system,
           messages: [{ role: 'user', content: params.userMessage }],
-        }),
-      });
+        },
+        { apiKey: params.apiKey }
+      );
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       return { ok: false, status: 502, body: msg, lastModel: model };

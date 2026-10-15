@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getResidentId } from '@/lib/residentAuth';
+import { claudeApiKey, claudeMessagesFetch } from '@/lib/ai/claudeTransport';
 
 export type PlanItem = {
   id: string;
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = claudeApiKey();
   if (!apiKey) {
     return NextResponse.json({ error: 'AI ikke konfigureret' }, { status: 503 });
   }
@@ -54,20 +55,15 @@ export async function POST(req: NextRequest) {
     `Nuværende dagsplan:\n${JSON.stringify(currentPlan ?? [], null, 2)}\n\n` +
     `Borgerens ønske: ${userMessage.trim()}`;
 
-  const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
+  const aiRes = await claudeMessagesFetch(
+    {
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 1500,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: userContent }],
-    }),
-  });
+    },
+    { apiKey: apiKey }
+  );
 
   if (!aiRes.ok) {
     const errText = await aiRes.text();

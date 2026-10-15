@@ -5,6 +5,7 @@ import { getResidentId } from '@/lib/residentAuth';
 import { classifyUtterance, type SafetyClassification } from '@/lib/lys/safetyClassifier';
 import { ownedConversationIdForSafetyEvent } from '@/lib/lys/lysConversations';
 import { isValidUuid } from '@/lib/uuid';
+import { claudeApiKey, claudeMessagesFetch } from '@/lib/ai/claudeTransport';
 
 const LYS_SYSTEM = `Du er Lys. Følg disse regler i prioriteret rækkefølge — sikkerhed før alt andet.
 
@@ -173,7 +174,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const key = process.env.ANTHROPIC_API_KEY;
+  const key = claudeApiKey();
   if (!key) {
     return NextResponse.json(
       { error: 'Lys er ikke konfigureret endnu', fallback: true },
@@ -299,22 +300,16 @@ async function streamAnthropicToSse(
   system: string,
   messages: Array<{ role: 'user' | 'assistant'; content: string }>
 ): Promise<NextResponse> {
-  const upstream = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-      accept: 'text/event-stream',
-    },
-    body: JSON.stringify({
+  const upstream = await claudeMessagesFetch(
+    {
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 200,
       system,
       messages,
       stream: true,
-    }),
-  });
+    },
+    { apiKey: key }
+  );
 
   if (!upstream.ok || !upstream.body) {
     const err = await upstream.text().catch(() => '');
@@ -457,20 +452,15 @@ async function callAnthropic(
   system: string,
   messages: Array<{ role: 'user' | 'assistant'; content: string }>
 ): Promise<string> {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
+  const res = await claudeMessagesFetch(
+    {
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 200,
       system,
       messages,
-    }),
-  });
+    },
+    { apiKey: key }
+  );
 
   if (!res.ok) {
     const err = await res.text();
