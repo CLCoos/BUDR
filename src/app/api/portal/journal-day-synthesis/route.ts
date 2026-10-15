@@ -6,6 +6,7 @@ import { fetchDiaryDraftRowsForSynthesis } from '@/lib/journalEntriesQueryCompat
 import { PERMISSIONS } from '@/lib/permissions';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { parseStaffOrgId } from '@/lib/staffOrgScope';
+import { claudeApiKey } from '@/lib/ai/claudeTransport';
 
 export const maxDuration = 60;
 
@@ -105,7 +106,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const key = process.env.ANTHROPIC_API_KEY;
+  const key = claudeApiKey();
   if (!key) return NextResponse.json({ error: 'AI ikke konfigureret' }, { status: 503 });
 
   const lines = rows.map((r, i) => {

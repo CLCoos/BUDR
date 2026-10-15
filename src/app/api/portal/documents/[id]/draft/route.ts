@@ -8,6 +8,7 @@ import { getDocumentType, getSection } from '@/lib/documents/registry';
 import type { DocumentMeta } from '@/lib/documents/types';
 import { buildSectionUserMessage, cleanSectionText } from '@/lib/statusReport/prompt';
 import { UUID_RE, readJson, requireStaff } from '../../_auth';
+import { claudeApiKey } from '@/lib/ai/claudeTransport';
 
 export const maxDuration = 60;
 
@@ -55,7 +56,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'Ukendt afsnit' }, { status: 400 });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = claudeApiKey();
   if (!apiKey) return NextResponse.json({ error: 'AI er ikke sat op' }, { status: 503 });
 
   const material = await drafter.collect({

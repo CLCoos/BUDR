@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { parseBudrFollowUpsBlock } from '@/lib/portalStaffAssistantFollowUps';
 import { CARE_DEMO_RESIDENT_PROFILES } from '@/lib/careDemoResidents';
 import { CARE_PORTAL_DEMO_FACILITY_NAME } from '@/lib/carePortalDemoBranding';
+import { claudeApiKey, claudeMessagesFetch } from '@/lib/ai/claudeTransport';
 
 /**
  * Public demo endpoint for /care-portal-demo/assistant — same Anthropic integration as
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No messages' }, { status: 400 });
   }
 
-  const key = process.env.ANTHROPIC_API_KEY;
+  const key = claudeApiKey();
   if (!key) return NextResponse.json({ error: 'AI ikke konfigureret' }, { status: 503 });
 
   const residentLines = CARE_DEMO_RESIDENT_PROFILES.map((r) => {
@@ -55,20 +56,15 @@ Regler for JSON inde i blokken:
 - Valgfrie felter: "searchQuery", "resident360Id" (demo-id som res-sara), "residentTab" (demo: overblik, medicin, dagsplan, plan, haven, notes, goals, medication, aftaler).
 - Brødteksten før blokken må ikke nævne XML, JSON eller "budr_followups".`;
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
+  const res = await claudeMessagesFetch(
+    {
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 900,
       system,
       messages,
-    }),
-  });
+    },
+    { apiKey: key }
+  );
 
   if (!res.ok) {
     const err = await res.text();
