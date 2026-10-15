@@ -7,6 +7,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   ChevronRight,
+  ClipboardCopy,
   FileClock,
   Loader2,
   MessageSquareText,
@@ -52,6 +53,7 @@ const KIND_ICON: Record<SuggestionRow['kind'], typeof Sparkles> = {
   dokument_frist: FileClock,
   trafiklys: AlertTriangle,
   svar: MessageSquareText,
+  fagsystem: ClipboardCopy,
 };
 
 const textareaClass = 'w-full rounded-xl border px-3 py-3 text-base leading-relaxed';
@@ -270,7 +272,11 @@ export default function AssistantWidget() {
                           className={primaryButton}
                           style={{ backgroundColor: 'var(--cp-green)' }}
                         >
-                          {s.kind === 'dokument_frist' ? 'Åbn dokumentet' : 'Se borgeren'}
+                          {s.kind === 'dokument_frist'
+                            ? 'Åbn dokumentet'
+                            : s.kind === 'fagsystem'
+                              ? 'Åbn listen'
+                              : 'Se borgeren'}
                           <ChevronRight size={15} aria-hidden />
                         </Link>
                       )}
@@ -295,7 +301,9 @@ export default function AssistantWidget() {
                         style={{ borderColor: 'transparent', color: 'var(--cp-muted)' }}
                         onClick={() => void dismiss(s)}
                       >
-                        {s.kind === 'dokument_frist' ? 'Skjul' : 'Nej tak'}
+                        {s.kind === 'dokument_frist' || s.kind === 'fagsystem'
+                          ? 'Skjul'
+                          : 'Nej tak'}
                       </button>
                     </div>
                   </div>

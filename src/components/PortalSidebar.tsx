@@ -19,6 +19,7 @@ import {
   CalendarClock,
   MessageSquare,
   Sparkles,
+  ClipboardCopy,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import DepartmentSelect, { type DepartmentOption } from '@/components/DepartmentSelect';
@@ -206,6 +207,16 @@ function PortalSidebarInner({
             badge: 0,
             activeMatch: 'journal',
           },
+          ...(pilot
+            ? []
+            : [
+                {
+                  icon: ClipboardCopy,
+                  label: 'Til fagsystem',
+                  href: '/care-portal-fagsystem',
+                  badge: 0,
+                },
+              ]),
         ],
       },
       {

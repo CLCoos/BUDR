@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   appointmentFollowUps,
   documentDeadlines,
+  fagsystemReminders,
   trafficLightStreaks,
   type CheckinRow,
   type ContactRow,
@@ -10,6 +11,7 @@ import {
   type JournalRow,
   type PlannerRow,
   type SuggestionInsert,
+  type TransferNoteRow,
 } from '@/lib/assistant/generators';
 import { copenhagenStartOfDateUtcIso, copenhagenYmd } from '@/lib/copenhagenDay';
 import { shiftYmd } from '@/lib/assistant/actions';
@@ -20,7 +22,7 @@ import { createAdminSupabaseClient } from '@/lib/supabase/admin';
  * netlify/functions/assistant-suggestions.mts.
  *
  * Laver assistentens forslag: opfølgning efter lægeaftaler, dokumentfrister og trafiklys flere
- * dage i træk. Hvert forslag har en dedupe-nøgle, så det samme aldrig foreslås to gange. Gamle
+ * dage i træk, og en påmindelse om notater der ikke er overført til fagsystemet. Hvert forslag har en dedupe-nøgle, så det samme aldrig foreslås to gange. Gamle
  * åbne forslag udløber. Intet i borgerens data ændres her; det sker først, når nogen godkender.
  */
 export async function POST(req: NextRequest) {
@@ -103,6 +105,8 @@ export async function POST(req: NextRequest) {
     }),
   ];
 
+  candidates.push(...(await fagsystemCandidates(supabase, now)));
+
   let created = 0;
   if (candidates.length > 0) {
     const keys = [...new Set(candidates.map((c) => c.dedupe_key))];
@@ -130,4 +134,56 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ created, expired: expired.data?.length ?? 0 });
+}
+
+/**
+ * Notater fra de seneste 7 dage, der ikke er overført til fagsystemet. Mangler tabellen (før
+ * migrationen er kørt), springes påmindelsen bare over.
+ */
+async function fagsystemCandidates(
+  supabase: ReturnType<typeof createAdminSupabaseClient>,
+  now: Date
+): Promise<SuggestionInsert[]> {
+  const missing = (code?: string) => code === 'PGRST205' || code === '42P01';
+  const orgsRes = await supabase.from('journal_fagsystem_transfers').select('org_id').limit(1000);
+  if (orgsRes.error) {
+    if (!missing(orgsRes.error.code)) {
+      console.error('[cron assistant-suggestions] fagsystem:', orgsRes.error.message);
+    }
+    return [];
+  }
+  const activeOrgs = new Set((orgsRes.data ?? []).map((r) => r.org_id as string));
+  if (activeOrgs.size === 0) return [];
+
+  const since = copenhagenStartOfDateUtcIso(shiftYmd(copenhagenYmd(now), -7));
+  const notesRes = await supabase
+    .from('journal_entries')
+    .select('id, org_id, staff_id, created_at')
+    .in('org_id', [...activeOrgs])
+    .eq('is_resident_private', false)
+    .neq('journal_status', 'kladde')
+    .not('staff_id', 'is', null)
+    .gte('created_at', since)
+    .limit(5000);
+  if (notesRes.error) {
+    console.error('[cron assistant-suggestions] fagsystem-notater:', notesRes.error.message);
+    return [];
+  }
+  const notes = (notesRes.data ?? []) as TransferNoteRow[];
+  if (notes.length === 0) return [];
+
+  const transferredIds = new Set<string>();
+  const ids = notes.map((n) => n.id);
+  for (let i = 0; i < ids.length; i += 300) {
+    const { data, error } = await supabase
+      .from('journal_fagsystem_transfers')
+      .select('journal_entry_id')
+      .in('journal_entry_id', ids.slice(i, i + 300));
+    if (error) {
+      console.error('[cron assistant-suggestions] fagsystem-overførsler:', error.message);
+      return [];
+    }
+    for (const r of data ?? []) transferredIds.add(r.journal_entry_id as string);
+  }
+  return fagsystemReminders({ now, notes, transferredIds, activeOrgs });
 }
