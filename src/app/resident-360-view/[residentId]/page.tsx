@@ -9,6 +9,7 @@ import DagsPlanPortal from './components/DagsPlanPortal';
 import ResidentPlanTab from './components/ResidentPlanTab';
 import ResidentHavenTab from './components/ResidentHavenTab';
 import ResidentOverblikTab from './components/ResidentOverblikTab';
+import ContactPersons from '@/components/assistant/ContactPersons';
 import ResidentActiveDevices from './components/ResidentActiveDevices';
 import ResidentRecoveryTab from './components/ResidentRecoveryTab';
 import ResidentMedicinTab from './components/ResidentMedicinTab';
@@ -448,6 +449,7 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
 
         {/* Action bar */}
         <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
+          <ContactPersons residentId={residentId} />
           <Suspense fallback={null}>
             <WriteJournalEntry
               residentId={residentId}
