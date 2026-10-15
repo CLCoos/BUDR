@@ -20,9 +20,10 @@ function isRetryableModelError(status: number, body: string): boolean {
   return false;
 }
 
-function polishModelCandidates(): string[] {
+function polishModelCandidates(preferred: string[] = []): string[] {
   const fromEnv = process.env.ANTHROPIC_JOURNAL_POLISH_MODEL?.trim();
   const fallbacks = [
+    ...preferred,
     fromEnv,
     ANTHROPIC_CHAT_MODEL,
     'claude-haiku-4-5-20251001',
@@ -40,10 +41,12 @@ export async function callAnthropicJournalPolish(params: {
   system: string;
   userMessage: string;
   maxTokens: number;
+  /** Modeller der prøves først (fx en stærkere model til længere dokumenter). */
+  preferredModels?: string[];
 }): Promise<
   { ok: true; text: string } | { ok: false; status: number; body: string; lastModel: string }
 > {
-  const models = polishModelCandidates();
+  const models = polishModelCandidates(params.preferredModels);
   let lastStatus = 502;
   let lastBody = '';
   let lastModel = '';

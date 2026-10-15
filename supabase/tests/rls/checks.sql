@@ -260,6 +260,44 @@ DO $$ DECLARE n int; BEGIN
     EXECUTE 'SELECT count(*) FROM vum_assessments' INTO n; INSERT INTO r VALUES ('vum_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
   END IF;
 END $$;
+-- statusudtalelser (2026-10-14)
+SET test.uid = '00000000-0000-0000-0000-0000000000c2';
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.resident_status_reports') IS NOT NULL THEN
+    BEGIN
+      EXECUTE $q$INSERT INTO resident_status_reports (id, org_id, resident_id, period_start, period_end) VALUES ('00000000-0000-0000-0000-0000000000f3','00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1','2026-04-01','2026-09-30')$q$;
+      INSERT INTO r VALUES ('status_report_create_own (should work)','works');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('status_report_create_own (should work)','BROKEN'); END;
+    BEGIN
+      EXECUTE $q$INSERT INTO resident_status_reports (org_id, resident_id, period_start, period_end) VALUES ('00000000-0000-0000-0000-0000000000a2','00000000-0000-0000-0000-0000000000b2','2026-04-01','2026-09-30')$q$;
+      INSERT INTO r VALUES ('status_report_create_other_org','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('status_report_create_other_org','blocked'); END;
+    BEGIN
+      EXECUTE $q$INSERT INTO resident_status_reports (org_id, resident_id, period_start, period_end, status) VALUES ('00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1','2026-04-01','2026-09-30','faerdig')$q$;
+      INSERT INTO r VALUES ('status_report_create_finished','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('status_report_create_finished','blocked'); END;
+    BEGIN EXECUTE $q$UPDATE resident_status_reports SET sections = '{"maal":"Mål: lave mad"}'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('status_report_edit (should work)', CASE WHEN n>0 THEN 'works' ELSE 'BROKEN' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('status_report_edit (should work)','BROKEN'); END;
+    BEGIN EXECUTE $q$UPDATE resident_status_reports SET resident_id = '00000000-0000-0000-0000-0000000000b2'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('status_report_move_resident', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('status_report_move_resident','blocked'); END;
+    BEGIN EXECUTE 'DELETE FROM resident_status_reports'; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('status_report_delete', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('status_report_delete','blocked'); END;
+    BEGIN EXECUTE $q$UPDATE resident_status_reports SET status = 'faerdig'$q$; EXCEPTION WHEN others THEN NULL; END;
+    BEGIN EXECUTE $q$UPDATE resident_status_reports SET sections = '{"maal":"ændret efter færdig"}'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('status_report_edit_finished', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('status_report_edit_finished','blocked'); END;
+  END IF;
+END $$;
+SET test.uid = '00000000-0000-0000-0000-0000000000c4';
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.resident_status_reports') IS NOT NULL THEN
+    BEGIN
+      EXECUTE $q$INSERT INTO resident_status_reports (org_id, resident_id, period_start, period_end) VALUES ('00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1','2026-04-01','2026-09-30')$q$;
+      INSERT INTO r VALUES ('status_report_create_without_permission','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('status_report_create_without_permission','blocked'); END;
+  END IF;
+END $$;
+SET test.uid = '00000000-0000-0000-0000-0000000000c3';
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.resident_status_reports') IS NOT NULL THEN
+    EXECUTE 'SELECT count(*) FROM resident_status_reports' INTO n; INSERT INTO r VALUES ('status_report_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
+  END IF;
+END $$;
 -- bølge 5: ingen hard-delete af kliniske data
 SET test.uid = '00000000-0000-0000-0000-0000000000c1';
 DO $$ DECLARE n int; BEGIN
