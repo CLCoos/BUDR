@@ -1,25 +1,4 @@
 import type { VumFunctionLevel, VumGoal } from '@/lib/vum/vumTypes';
-import type { StatusReportSections } from './sections';
-
-export type StatusReportStatus = 'kladde' | 'faerdig';
-
-export type StatusReportRow = {
-  id: string;
-  org_id: string;
-  resident_id: string;
-  status: StatusReportStatus;
-  period_start: string;
-  period_end: string;
-  meeting_date: string | null;
-  paragraph: string | null;
-  contact_person: string | null;
-  sections: StatusReportSections;
-  created_by: string | null;
-  updated_by: string | null;
-  finished_at: string | null;
-  created_at: string;
-  updated_at: string;
-};
 
 export type StatusReportVumTheme = {
   number: number;

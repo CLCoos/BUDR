@@ -4,31 +4,9 @@
  * suppleret med borgerens egen vurdering, leverandørens faglige vurdering og anbefalinger.
  */
 
-export const STATUS_REPORT_SECTION_KEYS = [
-  'indsatsformaal',
-  'maal',
-  'funktionsevne',
-  'aendringer',
-  'borgerens_vurdering',
-  'faglig_vurdering',
-  'anbefalinger',
-] as const;
+import type { DocumentSectionDefinition } from '@/lib/documents/registry';
 
-export type StatusReportSectionKey = (typeof STATUS_REPORT_SECTION_KEYS)[number];
-
-export type StatusReportSections = Partial<Record<StatusReportSectionKey, string>>;
-
-export type StatusReportSectionDefinition = {
-  key: StatusReportSectionKey;
-  title: string;
-  help: string;
-  /** Kan BUDR skrive et udkast ud fra data? */
-  aiDraft: boolean;
-  /** Afsnitsspecifik instruks til modellen. */
-  instruction?: string;
-};
-
-export const STATUS_REPORT_SECTIONS: readonly StatusReportSectionDefinition[] = [
+export const STATUS_REPORT_SECTIONS: readonly DocumentSectionDefinition[] = [
   {
     key: 'indsatsformaal',
     title: 'Indsatsformål',
@@ -85,23 +63,3 @@ Slut altid med linjen "[Gennemgås med borgeren før afsendelse]".`,
 Anbefal ikke ændring af paragraf eller ophør, medmindre kildematerialet tydeligt peger på det; skriv i så fald forbeholdet "[Personalet tager stilling]".`,
   },
 ];
-
-export function getStatusReportSection(key: string): StatusReportSectionDefinition | undefined {
-  return STATUS_REPORT_SECTIONS.find((s) => s.key === key);
-}
-
-export function isStatusReportSectionKey(key: unknown): key is StatusReportSectionKey {
-  return typeof key === 'string' && (STATUS_REPORT_SECTION_KEYS as readonly string[]).includes(key);
-}
-
-/** Fjerner ukendte nøgler og ikke-tekst; begrænser længde pr. afsnit. */
-export function sanitizeSections(raw: unknown, maxLen = 12000): StatusReportSections {
-  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return {};
-  const out: StatusReportSections = {};
-  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
-    if (isStatusReportSectionKey(k) && typeof v === 'string') {
-      out[k] = v.slice(0, maxLen);
-    }
-  }
-  return out;
-}
