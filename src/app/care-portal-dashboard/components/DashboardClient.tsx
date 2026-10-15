@@ -7,6 +7,7 @@ import BekymringsnotatWidget from './BekymringsnotatWidget';
 import KalenderWidget from './KalenderWidget';
 import OpgaveWidget from './OpgaveWidget';
 import DocumentInboxWidget from './DocumentInboxWidget';
+import AssistantWidget from '@/components/assistant/AssistantWidget';
 import OnCallStaffWidget from './OnCallStaffWidget';
 import ResidentList from './ResidentList';
 import StatCards from './StatCards';
@@ -575,6 +576,8 @@ function DashboardClientInner({
       </div>
 
       <ActionCards onOpenOverrapport={() => setOverrapportOpen(true)} />
+
+      <AssistantWidget />
 
       {/* ── Zone 1: Status bar (full width) ─────────────────── */}
       <OnboardingChecklist />

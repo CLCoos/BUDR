@@ -371,6 +371,61 @@ DO $$ DECLARE n int; BEGIN
     EXECUTE 'SELECT count(*) FROM resident_document_events' INTO n; INSERT INTO r VALUES ('doc_event_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
   END IF;
 END $$;
+-- assistentens forslag og kontaktpersoner (2026-10-15)
+RESET ROLE;
+INSERT INTO assistant_suggestions (id, org_id, resident_id, recipient_id, audience, kind, title) VALUES
+  ('00000000-0000-0000-0000-0000000000f1','00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000c2','personlig','trafiklys','Til medarbejder'),
+  ('00000000-0000-0000-0000-0000000000f2','00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1',null,'ledere','dokument_frist','Til ledere'),
+  ('00000000-0000-0000-0000-0000000000f3','00000000-0000-0000-0000-0000000000a2','00000000-0000-0000-0000-0000000000b2',null,'alle','trafiklys','Anden org');
+SET ROLE authenticated;
+SET test.uid = '00000000-0000-0000-0000-0000000000c2';
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.assistant_suggestions') IS NOT NULL THEN
+    EXECUTE 'SELECT count(*) FROM assistant_suggestions' INTO n;
+    INSERT INTO r VALUES ('suggestion_sees_only_own (should work)', CASE WHEN n=1 THEN 'works' ELSE 'BROKEN' END);
+    BEGIN EXECUTE $q$UPDATE assistant_suggestions SET title = 'hacket'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('suggestion_edit_text', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('suggestion_edit_text','blocked'); END;
+    BEGIN EXECUTE $q$UPDATE assistant_suggestions SET status = 'afvist' WHERE id = '00000000-0000-0000-0000-0000000000f2'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('suggestion_decide_leader_item_as_staff', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('suggestion_decide_leader_item_as_staff','blocked'); END;
+    BEGIN EXECUTE $q$UPDATE assistant_suggestions SET status = 'udfoert' WHERE id = '00000000-0000-0000-0000-0000000000f1'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('suggestion_decide_own (should work)', CASE WHEN n>0 THEN 'works' ELSE 'BROKEN' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('suggestion_decide_own (should work)','BROKEN'); END;
+    BEGIN EXECUTE $q$UPDATE assistant_suggestions SET status = 'aaben' WHERE id = '00000000-0000-0000-0000-0000000000f1'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('suggestion_reopen_decided', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('suggestion_reopen_decided','blocked'); END;
+    BEGIN
+      EXECUTE $q$INSERT INTO assistant_suggestions (org_id, resident_id, recipient_id, audience, kind, title, created_by) VALUES ('00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000c2','personlig','svar','Mit svar','00000000-0000-0000-0000-0000000000c2')$q$;
+      INSERT INTO r VALUES ('suggestion_own_reply (should work)','works');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('suggestion_own_reply (should work)','BROKEN'); END;
+    BEGIN
+      EXECUTE $q$INSERT INTO assistant_suggestions (org_id, resident_id, recipient_id, audience, kind, title, created_by) VALUES ('00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000c1','personlig','trafiklys','Falsk til leder','00000000-0000-0000-0000-0000000000c2')$q$;
+      INSERT INTO r VALUES ('suggestion_fake_to_other','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('suggestion_fake_to_other','blocked'); END;
+    BEGIN EXECUTE 'DELETE FROM assistant_suggestions'; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('suggestion_delete', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('suggestion_delete','blocked'); END;
+    BEGIN
+      EXECUTE $q$INSERT INTO resident_contacts (resident_id, staff_id, org_id) VALUES ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000c2','00000000-0000-0000-0000-0000000000a1')$q$;
+      INSERT INTO r VALUES ('contact_set_as_staff','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('contact_set_as_staff','blocked'); END;
+  END IF;
+END $$;
+SET test.uid = '00000000-0000-0000-0000-0000000000c1';
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.assistant_suggestions') IS NOT NULL THEN
+    EXECUTE 'SELECT count(*) FROM assistant_suggestions WHERE audience = $1' INTO n USING 'ledere';
+    INSERT INTO r VALUES ('suggestion_leader_sees_leader_items (should work)', CASE WHEN n=1 THEN 'works' ELSE 'BROKEN' END);
+    BEGIN
+      EXECUTE $q$INSERT INTO resident_contacts (resident_id, staff_id, org_id) VALUES ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000c2','00000000-0000-0000-0000-0000000000a1')$q$;
+      INSERT INTO r VALUES ('contact_set_as_leader (should work)','works');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('contact_set_as_leader (should work)','BROKEN'); END;
+    BEGIN
+      EXECUTE $q$INSERT INTO resident_contacts (resident_id, staff_id, org_id) VALUES ('00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000c3','00000000-0000-0000-0000-0000000000a1')$q$;
+      INSERT INTO r VALUES ('contact_staff_other_org','HOLE');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('contact_staff_other_org','blocked'); END;
+  END IF;
+END $$;
+SET test.uid = '00000000-0000-0000-0000-0000000000c3';
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.assistant_suggestions') IS NOT NULL THEN
+    EXECUTE 'SELECT count(*) FROM assistant_suggestions WHERE org_id = $1' INTO n USING '00000000-0000-0000-0000-0000000000a1'::uuid;
+    INSERT INTO r VALUES ('suggestion_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
+    EXECUTE 'SELECT count(*) FROM resident_contacts' INTO n;
+    INSERT INTO r VALUES ('contact_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
+  END IF;
+END $$;
 -- bølge 5: ingen hard-delete af kliniske data
 SET test.uid = '00000000-0000-0000-0000-0000000000c1';
 DO $$ DECLARE n int; BEGIN
