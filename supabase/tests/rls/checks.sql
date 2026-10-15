@@ -439,7 +439,7 @@ DO $$ DECLARE n int; v uuid; BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='journal_entries' AND column_name='journal_status') THEN
     EXECUTE $q$SELECT count(*) FROM journal_entries WHERE is_resident_private$q$ INTO n; INSERT INTO r VALUES ('staff_read_private_note', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
     BEGIN
-      EXECUTE $q$INSERT INTO journal_entries (id, org_id, resident_id, entry_text, journal_status) VALUES (9001, '00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1','udkast','kladde')$q$;
+      EXECUTE $q$INSERT INTO journal_entries (id, org_id, resident_id, entry_text, journal_status) VALUES ('00000000-0000-0000-0000-000000009001', '00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1','udkast','kladde')$q$;
       INSERT INTO r VALUES ('journal_draft_insert (should work)','works');
     EXCEPTION WHEN others THEN INSERT INTO r VALUES ('journal_draft_insert (should work)','BROKEN'); END;
     BEGIN
@@ -447,12 +447,31 @@ DO $$ DECLARE n int; v uuid; BEGIN
       INSERT INTO r VALUES ('staff_insert_private_note','HOLE');
     EXCEPTION WHEN others THEN INSERT INTO r VALUES ('staff_insert_private_note','blocked'); END;
     BEGIN
-      EXECUTE $q$UPDATE journal_entries SET journal_status = 'godkendt', approved_by = '00000000-0000-0000-0000-0000000000c1' WHERE id = 9001$q$;
-      EXECUTE $q$SELECT approved_by FROM journal_entries WHERE id = 9001$q$ INTO v;
+      EXECUTE $q$UPDATE journal_entries SET journal_status = 'godkendt', approved_by = '00000000-0000-0000-0000-0000000000c1' WHERE id = '00000000-0000-0000-0000-000000009001'$q$;
+      EXECUTE $q$SELECT approved_by FROM journal_entries WHERE id = '00000000-0000-0000-0000-000000009001'$q$ INTO v;
       INSERT INTO r VALUES ('journal_approve_stamps_self (should work)', CASE WHEN v = '00000000-0000-0000-0000-0000000000c2' THEN 'works' ELSE 'BROKEN' END);
     EXCEPTION WHEN others THEN INSERT INTO r VALUES ('journal_approve_stamps_self (should work)','BROKEN'); END;
-    BEGIN EXECUTE $q$UPDATE journal_entries SET entry_text = 'omskrevet' WHERE id = 9001$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('journal_edit_approved', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('journal_edit_approved','blocked'); END;
-    BEGIN EXECUTE $q$UPDATE journal_entries SET journal_status = 'kladde' WHERE id = 9001$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('journal_unapprove', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('journal_unapprove','blocked'); END;
+    BEGIN EXECUTE $q$UPDATE journal_entries SET entry_text = 'omskrevet' WHERE id = '00000000-0000-0000-0000-000000009001'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('journal_edit_approved', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('journal_edit_approved','blocked'); END;
+    BEGIN EXECUTE $q$UPDATE journal_entries SET journal_status = 'kladde' WHERE id = '00000000-0000-0000-0000-000000009001'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('journal_unapprove', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('journal_unapprove','blocked'); END;
+  END IF;
+END $$;
+-- kopiér til fagsystem: markering af overførte notater
+SET test.uid = '00000000-0000-0000-0000-0000000000c2';
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.journal_fagsystem_transfers') IS NOT NULL THEN
+    BEGIN
+      EXECUTE $q$INSERT INTO journal_fagsystem_transfers (journal_entry_id, org_id, resident_id, transferred_by) VALUES ('00000000-0000-0000-0000-000000009001','00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000c2')$q$;
+      INSERT INTO r VALUES ('fagsystem_mark_own (should work)','works');
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('fagsystem_mark_own (should work)','BROKEN'); END;
+    BEGIN EXECUTE $q$UPDATE journal_fagsystem_transfers SET transferred_by_name = 'x'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('fagsystem_update', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('fagsystem_update','blocked'); END;
+  END IF;
+END $$;
+SET test.uid = '00000000-0000-0000-0000-0000000000c3';
+DO $$ DECLARE n int; BEGIN
+  IF to_regclass('public.journal_fagsystem_transfers') IS NOT NULL THEN
+    EXECUTE 'SELECT count(*) FROM journal_fagsystem_transfers' INTO n;
+    INSERT INTO r VALUES ('fagsystem_other_org_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END);
+    BEGIN EXECUTE 'DELETE FROM journal_fagsystem_transfers'; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('fagsystem_other_org_delete', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('fagsystem_other_org_delete','blocked'); END;
   END IF;
 END $$;
 -- leder in org1 can still manage roles
