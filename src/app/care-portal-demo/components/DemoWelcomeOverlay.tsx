@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { readDemoGuidedTourCompleted } from '@/lib/carePortalDemoGuidedTour';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowRight, X } from 'lucide-react';
@@ -57,7 +58,12 @@ type Props = {
 export default function DemoWelcomeOverlay({ onOpenOverrapport }: Props) {
   const router = useRouter();
   const { startGuidedTour, suppressWelcomeOverlays, isTourOpen } = useDemoGuidedTour();
-  const [open, setOpen] = useState(() => !suppressWelcomeOverlays && !isTourOpen);
+  // Starter lukket, så server og browser tegner det samme; åbnes efter mount.
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!readDemoGuidedTourCompleted()) setOpen(true);
+  }, []);
 
   useEffect(() => {
     if (suppressWelcomeOverlays || isTourOpen) setOpen(false);

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { BookOpen, Sparkles } from 'lucide-react';
+import { BookOpen, ChevronDown, MoreHorizontal } from 'lucide-react';
 import AlertPanel from '@/app/care-portal-dashboard/components/AlertPanel';
 import StatCards from '@/app/care-portal-dashboard/components/StatCards';
 import MedicationWidget from '@/app/care-portal-dashboard/components/MedicationWidget';
@@ -13,9 +13,10 @@ import KalenderWidget from '@/app/care-portal-dashboard/components/KalenderWidge
 import OnCallStaffWidget from '@/app/care-portal-dashboard/components/OnCallStaffWidget';
 import OpgaveWidget from '@/app/care-portal-dashboard/components/OpgaveWidget';
 import ResidentListDemo from '@/app/care-portal-dashboard/components/ResidentListDemo';
-import DemoActionCards from './DemoActionCards';
 import DemoAssistant from './DemoAssistant';
 import DemoSidePanels from './DemoSidePanels';
+import { DemoNextTask, DemoRoleSwitch, DemoShiftChecklist } from './DemoShiftPlan';
+import { demoRole, readDemoRole, saveDemoRole, type DemoRole } from './demoRoles';
 import DemoWhyBox from '@/components/demo/DemoWhyBox';
 import { CARE_PORTAL_DEMO_FACILITY_NAME } from '@/lib/carePortalDemoBranding';
 import { useDemoGuidedTour } from '@/components/demo/DemoGuidedTourProvider';
@@ -155,28 +156,77 @@ function seedDemoIndsatsIfEmpty() {
   }
 }
 
-function ToolbarButton({
-  children,
-  onClick,
-  variant = 'default',
-}: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  variant?: 'default' | 'danger';
-}) {
+function NewJournalButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-[40px] items-center gap-1.5 rounded-[10px] px-4 text-[13px] font-medium transition-colors hover:bg-[var(--cp-bg3)]"
-      style={{
-        border: '1px solid var(--cp-border2)',
-        color: variant === 'danger' ? 'var(--cp-red)' : 'var(--cp-text)',
-        backgroundColor: 'var(--cp-bg2)',
-      }}
+      className="hidden min-h-[44px] items-center gap-2 whitespace-nowrap rounded-xl px-5 text-sm font-semibold transition-opacity hover:opacity-90 sm:inline-flex"
+      style={{ backgroundColor: 'var(--cp-green)', color: 'var(--cp-on-green)' }}
     >
-      {children}
+      <BookOpen size={16} aria-hidden />
+      Ny journal
     </button>
+  );
+}
+
+function DemoMoreMenu({ items }: { items: { label: string; onSelect: () => void }[] }) {
+  const [open, setOpen] = useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    document.addEventListener('mousedown', close);
+    document.addEventListener('keydown', esc);
+    return () => {
+      document.removeEventListener('mousedown', close);
+      document.removeEventListener('keydown', esc);
+    };
+  }, [open]);
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className="inline-flex min-h-[44px] items-center gap-2 whitespace-nowrap rounded-xl border px-4 text-sm font-medium transition-colors hover:bg-[var(--cp-bg3)]"
+        style={{
+          borderColor: 'var(--cp-border2)',
+          backgroundColor: 'var(--cp-bg2)',
+          color: 'var(--cp-text)',
+        }}
+      >
+        <MoreHorizontal size={16} aria-hidden />
+        Rapporter
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 top-[calc(100%+6px)] z-50 w-[240px] overflow-hidden rounded-xl border py-1 shadow-xl max-sm:left-0 max-sm:right-auto"
+          style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
+        >
+          {items.map((it) => (
+            <button
+              key={it.label}
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                it.onSelect();
+              }}
+              className="flex min-h-[44px] w-full items-center px-4 text-left text-sm transition-colors hover:bg-[var(--cp-bg3)]"
+              style={{ color: 'var(--cp-text)' }}
+            >
+              {it.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -195,6 +245,14 @@ export default function DashboardDemoMain() {
   const [indsatsOpen, setIndsatsOpen] = useState(false);
   const [tilsynsrapportOpen, setTilsynsrapportOpen] = useState(false);
   const [journalOpen, setJournalOpen] = useState(false);
+  const [role, setRole] = useState<DemoRole>('medarbejder');
+  useEffect(() => setRole(readDemoRole()), []);
+  const profile = demoRole(role);
+  const changeRole = (r: DemoRole) => {
+    setRole(r);
+    saveDemoRole(r);
+  };
+  const [moreOpen, setMoreOpen] = useState(false);
 
   useEffect(() => {
     seedDemoIndsatsIfEmpty();
@@ -216,8 +274,14 @@ export default function DashboardDemoMain() {
   }, [tab]);
 
   useEffect(() => {
-    if (tab !== 'planner' && tab !== 'alerts') return;
-    const id = tab === 'planner' ? 'budr-planlaegger' : 'budr-advarsler';
+    if (tab !== 'planner' && tab !== 'alerts' && tab !== 'medicin') return;
+    setMoreOpen(true);
+    const id =
+      tab === 'planner'
+        ? 'budr-planlaegger'
+        : tab === 'medicin'
+          ? 'demo-medicin'
+          : 'budr-advarsler';
     const frame = requestAnimationFrame(() => {
       document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
@@ -240,111 +304,162 @@ export default function DashboardDemoMain() {
   return (
     <div
       id="demo-tour-dashboard"
-      className="mx-auto max-w-[1600px] px-4 pb-28 pt-8 sm:px-6 lg:px-10"
+      className="mx-auto max-w-[1320px] px-4 pb-28 pt-6 sm:px-6 sm:pt-8 lg:px-8"
     >
-      <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div className="flex min-w-0 flex-col gap-1.5">
+      <header className="mb-5 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex min-w-0 flex-col gap-1">
           <p className="text-[13px]" style={{ color: 'var(--cp-muted)' }}>
-            {now ? `${demoTodayLabel(now)} · ` : ''}Dagvagt · {CARE_PORTAL_DEMO_FACILITY_NAME}
+            {now ? `${demoTodayLabel(now)} · ` : ''}
+            {CARE_PORTAL_DEMO_FACILITY_NAME}
+            <span className="hidden sm:inline">
+              {' '}
+              · Opdateret {lastUpdated.split('·')[1]?.trim() ?? lastUpdated}
+            </span>
           </p>
           <h1
             className="m-0"
             style={{
-              fontSize: 'clamp(24px, 3.2vw, 32px)',
+              fontSize: 'clamp(26px, 3.2vw, 34px)',
               fontWeight: 600,
               letterSpacing: '-0.02em',
-              lineHeight: 1.2,
+              lineHeight: 1.15,
               color: 'var(--cp-text)',
             }}
           >
-            {now ? demoGreeting(now) : 'Velkommen'}, Lars.
+            {now ? demoGreeting(now) : 'Velkommen'}, {profile.person}.
           </h1>
-          <p className="text-sm" style={{ color: 'var(--cp-muted)' }}>
-            Samme overblik som efter login, med fiktive borgere.
+          <p className="max-w-[56ch] text-[15px]" style={{ color: 'var(--cp-muted)' }}>
+            {profile.intro}
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <span
-            className="inline-flex h-[30px] items-center gap-2 rounded-full px-3 text-xs font-medium"
-            style={{ backgroundColor: 'var(--cp-green-dim)', color: 'var(--cp-green)' }}
-          >
-            <span
-              className="h-1.5 w-1.5 rounded-full"
-              style={{ backgroundColor: 'var(--cp-green)' }}
-              aria-hidden
-            />
-            Opdateret {lastUpdated.split('·')[1]?.trim() ?? lastUpdated}
-          </span>
-          <ToolbarButton onClick={startGuidedTour}>
-            <Sparkles size={14} aria-hidden />
-            Guidet tour
-          </ToolbarButton>
-          <ToolbarButton onClick={() => setOverrapportOpen(true)}>Overrapport</ToolbarButton>
-          <ToolbarButton onClick={() => setIndsatsOpen(true)} variant="danger">
-            Indsatsdok.
-          </ToolbarButton>
-          <ToolbarButton onClick={() => setTilsynsrapportOpen(true)}>Tilsynsrapport</ToolbarButton>
-          <button
-            type="button"
-            onClick={() => setJournalOpen(true)}
-            className="inline-flex min-h-[40px] items-center gap-1.5 rounded-[10px] px-4 text-[13px] font-semibold transition-opacity hover:opacity-90"
-            style={{ backgroundColor: 'var(--cp-green)', color: 'var(--cp-on-green)' }}
-          >
-            <BookOpen size={15} aria-hidden />
-            Ny journal
-          </button>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <DemoRoleSwitch role={role} onChange={changeRole} />
+          <div className="flex items-center gap-2">
+            {role !== 'vikar' && (
+              <DemoMoreMenu
+                items={[
+                  { label: 'Overrapport', onSelect: () => setOverrapportOpen(true) },
+                  { label: 'Indsatsdokumentation', onSelect: () => setIndsatsOpen(true) },
+                  { label: 'Tilsynsrapport', onSelect: () => setTilsynsrapportOpen(true) },
+                  { label: 'Guidet tour (5 min)', onSelect: startGuidedTour },
+                ]}
+              />
+            )}
+            <NewJournalButton onClick={() => setJournalOpen(true)} />
+          </div>
         </div>
       </header>
 
-      <div className="mb-6">
-        <StatCards variant="demo" />
-      </div>
+      <div className="mb-6 flex flex-col gap-6">
+        <DemoNextTask profile={profile} />
 
-      <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-        <div className="min-w-0 [&>section]:mb-0">
-          <DemoAssistant />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
+          <DemoShiftChecklist profile={profile} />
+          <div className="min-w-0 [&>section]:mb-0">
+            <DemoAssistant role={role} />
+          </div>
         </div>
-        <DemoSidePanels />
       </div>
 
-      <div id="demo-tour-handlinger" className="mb-6 space-y-4">
-        <DemoActionCards onOpenOverrapport={() => setOverrapportPanelOpen(true)} />
+      {role !== 'vikar' && (
+        <>
+          <h2
+            className="mb-3 mt-10 text-[13px] font-semibold uppercase tracking-[0.08em]"
+            style={{ color: 'var(--cp-muted)' }}
+          >
+            Bostedet lige nu
+          </h2>
+          <div className="mb-6">
+            <StatCards variant="demo" />
+          </div>
+          <div className="mb-6">
+            <DemoSidePanels />
+          </div>
+        </>
+      )}
+
+      <details
+        className="group mb-6 rounded-2xl border"
+        style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-card-bg)' }}
+        open={moreOpen}
+        onToggle={(e) => setMoreOpen((e.currentTarget as HTMLDetailsElement).open)}
+      >
+        <summary
+          className="flex min-h-[56px] cursor-pointer list-none items-center justify-between gap-3 px-5 text-[15px] font-semibold [&::-webkit-details-marker]:hidden"
+          style={{ color: 'var(--cp-text)' }}
+        >
+          <span>
+            Alt overblik
+            <span className="ml-2 text-xs font-normal" style={{ color: 'var(--cp-muted)' }}>
+              Medicin, kalender, opgaver, advarsler og beboere
+            </span>
+          </span>
+          <ChevronDown
+            size={18}
+            className="shrink-0 transition-transform group-open:rotate-180"
+            style={{ color: 'var(--cp-muted)' }}
+            aria-hidden
+          />
+        </summary>
+        <div className="border-t p-4 sm:p-5" style={{ borderColor: 'var(--cp-border)' }}>
+          <div className="mb-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
+            <div id="demo-medicin" className="min-w-0">
+              <MedicationWidget demoMode />
+            </div>
+            <BekymringsnotatWidget demoMode />
+            <KalenderWidget variant="demo" />
+            <OnCallStaffWidget demoMode />
+            <OpgaveWidget demoMode />
+          </div>
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.45fr)] xl:gap-8">
+            <AlertPanel variant="demo" />
+            <div id="demo-tour-beboerliste">
+              <ResidentListDemo />
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <DemoWhyBox
           title="Hvorfor AI-udkast og godkendelse?"
           storageKey="budr_demo_why_ai_godkendelse"
         >
           Andre systemer kan lade AI skrive direkte ind i journalen. I BUDR er AI et{' '}
-          <strong style={{ color: 'var(--cp-text)' }}>hjælpeværktøj</strong>: udkast og forslag —
-          intet går ud til teamet som endelig journal før personalet godkender. Fagligt ansvar
+          <strong style={{ color: 'var(--cp-text)' }}>hjælpeværktøj</strong>: udkast og forslag.
+          Intet går ud til teamet som endelig journal, før personalet godkender. Fagligt ansvar
           ligger hos jer, ikke i modellen.
         </DemoWhyBox>
-      </div>
-
-      <div className="mb-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
-        <MedicationWidget demoMode />
-        <BekymringsnotatWidget demoMode />
-        <KalenderWidget variant="demo" />
-        <OnCallStaffWidget demoMode />
-        <OpgaveWidget demoMode />
-      </div>
-
-      <div className="mb-4">
         <DemoWhyBox
           title="Hvorfor advarsler og krisehåndtering?"
           storageKey="budr_demo_why_advarsler"
         >
           Varsler samler signaler (humør, beskeder, mønstre), så vagten kan prioritere. Kriseflow
           understøtter <strong style={{ color: 'var(--cp-text)' }}>strukturerede trin</strong> og
-          dokumentation — det erstatter ikke 112, lægevurdering eller jeres egne procedurer.
+          dokumentation. Det erstatter ikke 112, lægevurdering eller jeres egne procedurer.
         </DemoWhyBox>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.45fr)] xl:gap-8">
-        <AlertPanel variant="demo" />
-        <div id="demo-tour-beboerliste">
-          <ResidentListDemo />
-        </div>
+      {/* Mobil: én stor knap til journal, altid inden for rækkevidde */}
+      <div
+        className="fixed inset-x-0 bottom-[64px] z-[10040] flex justify-end px-4 pb-3 sm:hidden"
+        style={{ pointerEvents: 'none' }}
+      >
+        <button
+          type="button"
+          onClick={() => setJournalOpen(true)}
+          className="inline-flex min-h-[52px] items-center gap-2 rounded-full px-5 text-[15px] font-semibold shadow-lg"
+          style={{
+            backgroundColor: 'var(--cp-green)',
+            color: 'var(--cp-on-green)',
+            pointerEvents: 'auto',
+            boxShadow: '0 8px 24px color-mix(in srgb, var(--cp-ink) 25%, transparent)',
+          }}
+        >
+          <BookOpen size={18} aria-hidden />
+          Ny journal
+        </button>
       </div>
 
       <section

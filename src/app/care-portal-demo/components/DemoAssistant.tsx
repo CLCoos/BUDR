@@ -1,15 +1,23 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Check, ChevronRight, Sparkles } from 'lucide-react';
+import { Check, ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
+import type { DemoRole } from './demoRoles';
 
 /**
  * Demo af «Assistentens forslag»: samme udseende som i portalen, men med faste eksempler.
  * Knapperne virker lokalt (Godkend / Nej tak), intet gemmes.
  */
 
-type Tone = 'frist' | 'medicin' | 'trafiklys' | 'opfoelgning' | 'fagsystem';
+type Tone =
+  | 'frist'
+  | 'medicin'
+  | 'trafiklys'
+  | 'opfoelgning'
+  | 'fagsystem'
+  | 'vagtplan'
+  | 'godtatvide';
 
 type DemoSuggestion = {
   id: string;
@@ -20,6 +28,7 @@ type DemoSuggestion = {
   primary: { label: string; href?: string };
   secondary?: string;
   checklist?: string[];
+  roles: DemoRole[];
 };
 
 const TONE: Record<Tone, { label: string; bg: string; fg: string }> = {
@@ -28,24 +37,19 @@ const TONE: Record<Tone, { label: string; bg: string; fg: string }> = {
   trafiklys: { label: 'Trafiklys', bg: 'var(--cp-red-dim)', fg: 'var(--cp-red)' },
   opfoelgning: { label: 'Opfølgning', bg: 'var(--cp-blue-dim)', fg: 'var(--cp-blue)' },
   fagsystem: { label: 'Fagsystem', bg: 'var(--cp-bg3)', fg: 'var(--cp-muted)' },
+  vagtplan: { label: 'Vagtplan', bg: 'var(--cp-blue-dim)', fg: 'var(--cp-blue)' },
+  godtatvide: { label: 'Godt at vide', bg: 'var(--cp-green-dim)', fg: 'var(--cp-green)' },
 };
 
 const SUGGESTIONS: DemoSuggestion[] = [
-  {
-    id: 'frist',
-    tone: 'frist',
-    context: 'Statusudtalelse · Sara Kristensen',
-    title: 'Kommunen skal have statusudtalelsen for Sara senest om 6 dage.',
-    body: 'Jeg har lavet et udkast ud fra 41 godkendte notater, handleplanen og de seneste trafiklys. Læs det igennem, og send det til godkendelse.',
-    primary: { label: 'Åbn udkastet', href: '/care-portal-demo/dokumenter' },
-  },
   {
     id: 'medicin',
     tone: 'medicin',
     context: 'Mikkel Thomsen · Quetiapin 08.00',
     title: 'Morgendosis er ikke registreret.',
     body: 'Alarmen gik til vagten kl. 08.15. Ring til den ansvarlige, hvis dosis ikke er givet inden kl. 09.00. Medicin ændres aldrig automatisk.',
-    primary: { label: 'Se medicin i dag', href: '/care-portal-demo#demo-tour-dashboard' },
+    primary: { label: 'Se medicin i dag', href: '/care-portal-demo?tab=medicin' },
+    roles: ['leder'],
   },
   {
     id: 'trafiklys',
@@ -59,6 +63,7 @@ const SUGGESTIONS: DemoSuggestion[] = [
       'Kalenderaftale i morgen kl. 10 med kontaktperson',
       'Kladde til journalnotat om søvn',
     ],
+    roles: ['medarbejder', 'kontaktperson'],
   },
   {
     id: 'opfoelgning',
@@ -69,6 +74,7 @@ const SUGGESTIONS: DemoSuggestion[] = [
     primary: { label: 'Godkend forslaget' },
     secondary: 'Nej tak',
     checklist: ['Sundhedsnotat: ny creme til såret, kontrol om 14 dage', 'Opgave: bestil tid'],
+    roles: ['kontaktperson'],
   },
   {
     id: 'fagsystem',
@@ -78,16 +84,51 @@ const SUGGESTIONS: DemoSuggestion[] = [
     body: 'Kopiér dem med ét tryk, og sæt dem ind i jeres officielle journal.',
     primary: { label: 'Åbn listen', href: '/care-portal-demo/fagsystem' },
     secondary: 'Skjul',
+    roles: ['medarbejder', 'kontaktperson'],
+  },
+  {
+    id: 'vagtplan',
+    tone: 'vagtplan',
+    context: 'Næste uge · tirsdag aften og lørdag nat',
+    title: 'Skal jeg spørge de 3 vikarer, der plejer at sige ja?',
+    body: 'To vagter er stadig åbne. Jeg sender en besked til Mette, Jonas og Aisha, og den første, der svarer ja, får vagten.',
+    primary: { label: 'Ja, spørg dem' },
+    secondary: 'Nej tak',
+    roles: ['leder'],
+  },
+  {
+    id: 'vikar-camilla',
+    tone: 'godtatvide',
+    context: 'Camilla Birk',
+    title: 'Camilla har sovet dårligt de sidste tre nætter.',
+    body: 'Hun har det bedst med ro og en kop te. Spørg gerne, hvordan hun har sovet, hvis I får en snak.',
+    primary: { label: 'Forstået' },
+    roles: ['vikar'],
+  },
+  {
+    id: 'vikar-medicin',
+    tone: 'godtatvide',
+    context: 'Middagsmedicin kl. 12.00',
+    title: 'Du giver medicin sammen med Lars, ikke alene.',
+    body: 'Lars er fast personale på vagten i dag. Han kvitterer, og du er med som anden person.',
+    primary: { label: 'Forstået' },
+    roles: ['vikar'],
   },
 ];
+
+const SHOW_FIRST = 3;
 
 const btnBase =
   'inline-flex min-h-[40px] items-center gap-1.5 rounded-[10px] px-4 text-[13px] font-semibold transition-opacity hover:opacity-90';
 
-export default function DemoAssistant() {
+export default function DemoAssistant({ role }: { role: DemoRole }) {
   const [done, setDone] = useState<Record<string, boolean>>({});
   const [hidden, setHidden] = useState<Record<string, boolean>>({});
-  const visible = SUGGESTIONS.filter((s) => !hidden[s.id]);
+  const [showAll, setShowAll] = useState(false);
+  useEffect(() => setShowAll(false), [role]);
+  const visible = SUGGESTIONS.filter((s) => s.roles.includes(role) && !hidden[s.id]);
+  const shown = showAll ? visible : visible.slice(0, SHOW_FIRST);
+  const more = visible.length - shown.length;
 
   return (
     <section
@@ -124,7 +165,7 @@ export default function DemoAssistant() {
       </div>
 
       <ul>
-        {visible.map((s) => {
+        {shown.map((s) => {
           const tone = TONE[s.tone];
           const isDone = done[s.id];
           return (
@@ -188,7 +229,7 @@ export default function DemoAssistant() {
                     role="status"
                   >
                     <Check size={15} aria-hidden />
-                    Gemt (i demoen gemmes intet)
+                    {s.primary.label === 'Forstået' ? 'Noteret' : 'Gemt (i demoen gemmes intet)'}
                   </span>
                 ) : (
                   <button
@@ -214,6 +255,19 @@ export default function DemoAssistant() {
             </li>
           );
         })}
+        {more > 0 && (
+          <li>
+            <button
+              type="button"
+              onClick={() => setShowAll(true)}
+              className="flex min-h-[48px] w-full items-center justify-center gap-1.5 text-[13px] font-medium transition-colors hover:bg-[var(--cp-bg3)]"
+              style={{ color: 'var(--cp-text)' }}
+            >
+              Vis {more} forslag mere
+              <ChevronDown size={15} aria-hidden />
+            </button>
+          </li>
+        )}
         {visible.length === 0 && (
           <li className="px-5 py-6 text-sm" style={{ color: 'var(--cp-muted)' }}>
             Ingen forslag lige nu. Assistenten melder sig, når der er noget.

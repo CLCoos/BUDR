@@ -50,7 +50,7 @@ function DemoGuidedTourInner({ children }: { children: React.ReactNode }) {
 
   const [tourOpen, setTourOpen] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
-  const [tourEverCompleted, setTourEverCompleted] = useState(readDemoGuidedTourCompleted);
+  const [tourEverCompleted, setTourEverCompleted] = useState(false);
 
   const demoPath = isDemoExperiencePath(pathname);
   const suppressWelcomeOverlays = tourOpen || tourEverCompleted;
@@ -136,15 +136,15 @@ function DemoGuidedTourInner({ children }: { children: React.ReactNode }) {
                 setTourOpen(true);
                 router.push(DEMO_GUIDED_TOUR_STEPS[0]!.path);
               }}
-              className="fixed bottom-5 left-4 z-[10065] flex max-w-[min(100vw-2rem,14rem)] items-center gap-2 rounded-full border px-3 py-2 text-left text-xs font-semibold shadow-lg transition-opacity hover:opacity-95 sm:bottom-6 sm:left-6"
+              className="fixed bottom-6 right-6 z-[10065] hidden max-w-[14rem] items-center gap-2 rounded-full border px-3 py-2 text-left text-xs font-semibold shadow-lg transition-opacity hover:opacity-95 md:flex"
               style={{
-                borderColor: 'rgba(139, 132, 232, 0.45)',
+                borderColor: 'var(--cp-border2)',
                 backgroundColor: 'var(--cp-bg2)',
                 color: 'var(--cp-text)',
-                boxShadow: '0 8px 28px rgba(0,0,0,0.35)',
+                boxShadow: '0 8px 24px rgba(11,27,43,0.14)',
               }}
             >
-              <Map className="h-4 w-4 shrink-0 text-[#a5a0e8]" aria-hidden />
+              <Map className="h-4 w-4 shrink-0" style={{ color: 'var(--cp-green)' }} aria-hidden />
               <span className="min-w-0">
                 {tourEverCompleted ? 'Genstart tour' : 'Guidet tour'}
                 <span className="block text-[10px] font-normal opacity-80">ca. 5 min · DEMO</span>
@@ -154,7 +154,7 @@ function DemoGuidedTourInner({ children }: { children: React.ReactNode }) {
 
           {tourOpen ? (
             <div
-              className="fixed bottom-4 right-4 z-[10065] w-[min(100vw-2rem,22rem)] rounded-2xl border p-4 shadow-2xl sm:bottom-6 sm:right-6"
+              className="fixed bottom-[80px] right-4 z-[10065] w-[min(100vw-2rem,22rem)] rounded-2xl border p-4 shadow-2xl md:bottom-6 md:right-6"
               style={{
                 borderColor: 'var(--cp-border2)',
                 backgroundColor: 'var(--cp-bg2)',
