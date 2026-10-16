@@ -416,7 +416,7 @@ export default function VagtplanDemoClient({
           </p>
           <h1
             className="mt-1 flex items-center gap-2 text-xl font-semibold"
-            style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--cp-text)' }}
+            style={{ fontFamily: 'var(--cp-font)', color: 'var(--cp-text)' }}
           >
             <CalendarClock size={22} style={{ color: 'var(--cp-green)' }} aria-hidden />
             Vagtplan

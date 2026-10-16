@@ -8,7 +8,7 @@ export default function SettingsDemoPage() {
     <div className="mx-auto max-w-lg p-6">
       <h1
         className="text-xl font-semibold"
-        style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--cp-text)' }}
+        style={{ fontFamily: 'var(--cp-font)', color: 'var(--cp-text)' }}
       >
         Indstillinger
       </h1>

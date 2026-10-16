@@ -61,10 +61,11 @@ export default function DemoPortalMobileNav({ children }: Props) {
         </div>
         <Link
           href="/resident-demo"
-          className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-white transition-opacity active:opacity-90"
+          className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[10px] border px-3 py-2.5 text-sm font-semibold transition-opacity active:opacity-90"
           style={{
-            background: 'linear-gradient(135deg, #8b84e8 0%, #5E56C0 55%, #4c3d91 100%)',
-            boxShadow: '0 4px 18px rgba(94, 86, 192, 0.35)',
+            borderColor: 'var(--cp-border2)',
+            backgroundColor: 'var(--cp-bg2)',
+            color: 'var(--cp-text)',
           }}
         >
           <Sparkles className="h-4 w-4 shrink-0 opacity-95" aria-hidden />

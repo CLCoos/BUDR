@@ -203,8 +203,9 @@ function DemoGuidedTourInner({ children }: { children: React.ReactNode }) {
                       href="/institutioner#kontakt"
                       className="inline-flex items-center justify-center rounded-xl py-2.5 text-center text-sm font-semibold text-white transition-opacity hover:opacity-95"
                       style={{
-                        background: 'linear-gradient(135deg, #2dd4a0 0%, #0d9488 100%)',
-                        boxShadow: '0 2px 12px rgba(45,212,160,0.35)',
+                        background: 'var(--cp-green)',
+                        boxShadow:
+                          '0 2px 12px color-mix(in srgb, var(--cp-green) 35%, transparent)',
                       }}
                     >
                       Kontakt BUDR
@@ -226,8 +227,7 @@ function DemoGuidedTourInner({ children }: { children: React.ReactNode }) {
                   onClick={goNext}
                   className="inline-flex min-[360px]:flex-none min-[360px]:px-4 flex-1 items-center justify-center gap-1 rounded-xl py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-95"
                   style={{
-                    background: 'linear-gradient(135deg, #8b84e8 0%, #5E56C0 100%)',
-                    boxShadow: '0 4px 16px rgba(94, 86, 192, 0.35)',
+                    background: 'var(--cp-green)',
                   }}
                 >
                   {isLast ? 'Afslut' : 'Næste'}

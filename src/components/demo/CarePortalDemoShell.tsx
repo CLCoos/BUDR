@@ -12,7 +12,10 @@ export default function CarePortalDemoShell({ children }: { children: React.Reac
   return (
     <CarePortalDepartmentProvider>
       <div
-        className="cp-demo-ambient flex h-screen flex-col overflow-hidden text-[15px] antialiased"
+        id="care-portal-shell"
+        data-theme="light"
+        suppressHydrationWarning
+        className="flex h-screen flex-col overflow-hidden text-[15px] antialiased"
         style={{
           backgroundColor: 'var(--cp-bg)',
           ['--cp-demo-stack-top' as string]: `${CARE_PORTAL_DEMO_STACK_TOP_PX}px`,

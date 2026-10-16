@@ -10,7 +10,7 @@ export default function ImportWizardDemo() {
     <div className="mx-auto max-w-2xl p-6">
       <h1
         className="text-xl font-semibold"
-        style={{ color: 'var(--cp-text)', fontFamily: "'DM Serif Display', serif" }}
+        style={{ color: 'var(--cp-text)', fontFamily: 'var(--cp-font)' }}
       >
         Dataimport
       </h1>
@@ -24,7 +24,10 @@ export default function ImportWizardDemo() {
             key={s}
             className="flex flex-1 items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium"
             style={{
-              borderColor: step >= s ? 'rgba(45,212,160,0.35)' : 'var(--cp-border)',
+              borderColor:
+                step >= s
+                  ? 'color-mix(in srgb, var(--cp-green) 35%, transparent)'
+                  : 'var(--cp-border)',
               backgroundColor: step >= s ? 'var(--cp-green-dim)' : 'var(--cp-bg2)',
               color: step >= s ? 'var(--cp-green)' : 'var(--cp-muted)',
             }}
@@ -50,7 +53,7 @@ export default function ImportWizardDemo() {
             type="button"
             onClick={() => setStep(2)}
             className="mt-6 inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white"
-            style={{ background: 'linear-gradient(135deg, #2dd4a0, #0d9488)' }}
+            style={{ background: 'var(--cp-green)' }}
           >
             Simulér valgt fil <ChevronRight size={16} />
           </button>
@@ -77,7 +80,7 @@ export default function ImportWizardDemo() {
             type="button"
             onClick={() => setStep(3)}
             className="w-full rounded-lg py-3 text-sm font-semibold text-white"
-            style={{ background: 'linear-gradient(135deg, #2dd4a0, #0d9488)' }}
+            style={{ background: 'var(--cp-green)' }}
           >
             Gennemse og fortsæt
           </button>

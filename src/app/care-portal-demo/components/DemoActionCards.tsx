@@ -25,7 +25,6 @@ export default function DemoActionCards({ onOpenOverrapport }: Props) {
           backgroundColor: 'var(--cp-bg2)',
           border: '1px solid var(--cp-border)',
           borderRadius: 12,
-          borderTop: '2px solid var(--cp-green)',
         }}
         onMouseEnter={(e) => {
           (e.currentTarget as HTMLElement).style.borderColor = 'var(--cp-border2)';
@@ -66,7 +65,6 @@ export default function DemoActionCards({ onOpenOverrapport }: Props) {
           backgroundColor: 'var(--cp-bg2)',
           border: '1px solid var(--cp-border)',
           borderRadius: 12,
-          borderTop: '2px solid var(--cp-amber)',
         }}
         onMouseEnter={(e) => {
           (e.currentTarget as HTMLElement).style.borderColor = 'var(--cp-border2)';
@@ -107,7 +105,6 @@ export default function DemoActionCards({ onOpenOverrapport }: Props) {
           backgroundColor: 'var(--cp-bg2)',
           border: '1px solid var(--cp-border)',
           borderRadius: 12,
-          borderTop: '2px solid var(--cp-blue)',
         }}
         onMouseEnter={(e) => {
           (e.currentTarget as HTMLElement).style.borderColor = 'var(--cp-border2)';
@@ -148,7 +145,6 @@ export default function DemoActionCards({ onOpenOverrapport }: Props) {
           backgroundColor: 'var(--cp-bg2)',
           border: '1px solid var(--cp-border)',
           borderRadius: 12,
-          borderTop: '2px solid #8b84e8',
         }}
         onMouseEnter={(e) => {
           (e.currentTarget as HTMLElement).style.borderColor = 'var(--cp-border2)';
