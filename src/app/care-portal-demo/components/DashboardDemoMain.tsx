@@ -4,7 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { BookOpen, ChevronDown, MoreHorizontal } from 'lucide-react';
+import { ChevronDown, Mic, MoreHorizontal } from 'lucide-react';
+import { useDemoFortael } from '@/components/demo/DemoFortael';
 import AlertPanel from '@/app/care-portal-dashboard/components/AlertPanel';
 import StatCards from '@/app/care-portal-dashboard/components/StatCards';
 import MedicationWidget from '@/app/care-portal-dashboard/components/MedicationWidget';
@@ -15,7 +16,15 @@ import OpgaveWidget from '@/app/care-portal-dashboard/components/OpgaveWidget';
 import ResidentListDemo from '@/app/care-portal-dashboard/components/ResidentListDemo';
 import DemoAssistant from './DemoAssistant';
 import DemoSidePanels from './DemoSidePanels';
-import { DemoNextTask, DemoRoleSwitch, DemoShiftChecklist } from './DemoShiftPlan';
+import {
+  DemoGaaHjem,
+  DemoMoedInd,
+  DemoMomentSwitch,
+  DemoNextTask,
+  DemoRoleSwitch,
+  DemoShiftChecklist,
+  type ShiftMoment,
+} from './DemoShiftPlan';
 import { demoRole, readDemoRole, saveDemoRole, type DemoRole } from './demoRoles';
 import DemoWhyBox from '@/components/demo/DemoWhyBox';
 import { CARE_PORTAL_DEMO_FACILITY_NAME } from '@/lib/carePortalDemoBranding';
@@ -156,16 +165,17 @@ function seedDemoIndsatsIfEmpty() {
   }
 }
 
-function NewJournalButton({ onClick }: { onClick: () => void }) {
+function FortaelButton() {
+  const { openFortael } = useDemoFortael();
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={openFortael}
       className="hidden min-h-[44px] items-center gap-2 whitespace-nowrap rounded-xl px-5 text-sm font-semibold transition-opacity hover:opacity-90 sm:inline-flex"
       style={{ backgroundColor: 'var(--cp-green)', color: 'var(--cp-on-green)' }}
     >
-      <BookOpen size={16} aria-hidden />
-      Ny journal
+      <Mic size={16} aria-hidden />
+      Fortæl
     </button>
   );
 }
@@ -253,6 +263,8 @@ export default function DashboardDemoMain() {
     saveDemoRole(r);
   };
   const [moreOpen, setMoreOpen] = useState(false);
+  const [moment, setMoment] = useState<ShiftMoment>('nu');
+  const { openFortael } = useDemoFortael();
 
   useEffect(() => {
     seedDemoIndsatsIfEmpty();
@@ -337,32 +349,43 @@ export default function DashboardDemoMain() {
           <DemoRoleSwitch role={role} onChange={changeRole} />
           <div className="flex items-center gap-2">
             {role !== 'vikar' && (
-              <DemoMoreMenu
-                items={[
-                  { label: 'Overrapport', onSelect: () => setOverrapportOpen(true) },
-                  { label: 'Indsatsdokumentation', onSelect: () => setIndsatsOpen(true) },
-                  { label: 'Tilsynsrapport', onSelect: () => setTilsynsrapportOpen(true) },
-                  { label: 'Guidet tour (5 min)', onSelect: startGuidedTour },
-                ]}
-              />
+              <div className="hidden sm:block">
+                <DemoMoreMenu
+                  items={[
+                    { label: 'Overrapport', onSelect: () => setOverrapportOpen(true) },
+                    { label: 'Indsatsdokumentation', onSelect: () => setIndsatsOpen(true) },
+                    { label: 'Tilsynsrapport', onSelect: () => setTilsynsrapportOpen(true) },
+                    { label: 'Guidet tour (5 min)', onSelect: startGuidedTour },
+                  ]}
+                />
+              </div>
             )}
-            <NewJournalButton onClick={() => setJournalOpen(true)} />
+            <FortaelButton />
           </div>
         </div>
       </header>
 
       <div className="mb-6 flex flex-col gap-6">
-        <DemoNextTask profile={profile} />
+        <DemoMomentSwitch moment={moment} onChange={setMoment} />
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
-          <DemoShiftChecklist profile={profile} />
-          <div className="min-w-0 [&>section]:mb-0">
-            <DemoAssistant role={role} />
-          </div>
-        </div>
+        {moment === 'moed' && <DemoMoedInd onReady={() => setMoment('nu')} />}
+
+        {moment === 'nu' && (
+          <>
+            <DemoNextTask profile={profile} />
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
+              <DemoShiftChecklist profile={profile} />
+              <div className="min-w-0 [&>section]:mb-0">
+                <DemoAssistant role={role} />
+              </div>
+            </div>
+          </>
+        )}
+
+        {moment === 'hjem' && <DemoGaaHjem person={profile.person} onFortael={openFortael} />}
       </div>
 
-      {role !== 'vikar' && (
+      {role === 'leder' && (
         <>
           <h2
             className="mb-3 mt-10 text-[13px] font-semibold uppercase tracking-[0.08em]"
@@ -439,27 +462,6 @@ export default function DashboardDemoMain() {
           understøtter <strong style={{ color: 'var(--cp-text)' }}>strukturerede trin</strong> og
           dokumentation. Det erstatter ikke 112, lægevurdering eller jeres egne procedurer.
         </DemoWhyBox>
-      </div>
-
-      {/* Mobil: én stor knap til journal, altid inden for rækkevidde */}
-      <div
-        className="fixed inset-x-0 bottom-[64px] z-[10040] flex justify-end px-4 pb-3 sm:hidden"
-        style={{ pointerEvents: 'none' }}
-      >
-        <button
-          type="button"
-          onClick={() => setJournalOpen(true)}
-          className="inline-flex min-h-[52px] items-center gap-2 rounded-full px-5 text-[15px] font-semibold shadow-lg"
-          style={{
-            backgroundColor: 'var(--cp-green)',
-            color: 'var(--cp-on-green)',
-            pointerEvents: 'auto',
-            boxShadow: '0 8px 24px color-mix(in srgb, var(--cp-ink) 25%, transparent)',
-          }}
-        >
-          <BookOpen size={18} aria-hidden />
-          Ny journal
-        </button>
       </div>
 
       <section

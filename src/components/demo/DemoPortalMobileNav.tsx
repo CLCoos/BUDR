@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ClipboardList, FileText, Home, Menu, Search, Users, X } from 'lucide-react';
+import { FileText, Menu, Mic, Search, Sun, Users, X } from 'lucide-react';
+import { useDemoFortael } from '@/components/demo/DemoFortael';
 import DemoPortalSidebar from '@/components/demo/DemoPortalSidebar';
 import DokumentSøgning from '@/components/DokumentSøgning';
 import DepartmentSelect from '@/components/DepartmentSelect';
@@ -17,18 +18,35 @@ type Props = {
 };
 
 const TABS = [
-  { href: '/care-portal-demo', label: 'Forside', icon: Home, exact: true },
-  { href: '/care-portal-demo/residents', label: 'Beboere', icon: Users },
-  { href: '/care-portal-demo/handover', label: 'Overlevering', icon: ClipboardList },
-  { href: '/care-portal-demo/dokumenter', label: 'Dokumenter', icon: FileText },
+  { href: '/care-portal-demo', label: 'Vagt', icon: Sun, exact: true },
+  { href: '/care-portal-demo/residents', label: 'Borgere', icon: Users },
+  { href: '/care-portal-demo/dokumenter', label: 'Frister', icon: FileText },
 ] as const;
 
 export default function DemoPortalMobileNav({ children }: Props) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const pathname = usePathname();
+  const { openFortael } = useDemoFortael();
   const { department, setDepartment } = useCarePortalDepartment();
   const deptSelectValue = department === 'alle' ? 'alle' : department;
+
+  const renderTab = (t: (typeof TABS)[number]) => {
+    const active = 'exact' in t && t.exact ? pathname === t.href : pathname?.startsWith(t.href);
+    const Icon = t.icon;
+    return (
+      <Link
+        key={t.href}
+        href={t.href}
+        aria-current={active ? 'page' : undefined}
+        className="flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-medium"
+        style={{ color: active ? 'var(--cp-green)' : 'var(--cp-muted)' }}
+      >
+        <Icon size={22} strokeWidth={active ? 2.25 : 1.75} aria-hidden />
+        {t.label}
+      </Link>
+    );
+  };
 
   return (
     <>
@@ -103,23 +121,26 @@ export default function DemoPortalMobileNav({ children }: Props) {
           paddingBottom: 'env(safe-area-inset-bottom)',
         }}
       >
-        {TABS.map((t) => {
-          const active =
-            'exact' in t && t.exact ? pathname === t.href : pathname?.startsWith(t.href);
-          const Icon = t.icon;
-          return (
-            <Link
-              key={t.href}
-              href={t.href}
-              aria-current={active ? 'page' : undefined}
-              className="flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-medium"
-              style={{ color: active ? 'var(--cp-green)' : 'var(--cp-muted)' }}
-            >
-              <Icon size={22} strokeWidth={active ? 2.25 : 1.75} aria-hidden />
-              {t.label}
-            </Link>
-          );
-        })}
+        {TABS.slice(0, 2).map(renderTab)}
+        <button
+          type="button"
+          onClick={openFortael}
+          className="flex h-16 flex-col items-center justify-end gap-1 pb-2 text-[11px] font-semibold"
+          style={{ color: 'var(--cp-green)' }}
+        >
+          <span
+            className="-mt-6 flex h-12 w-12 items-center justify-center rounded-full"
+            style={{
+              backgroundColor: 'var(--cp-green)',
+              color: 'var(--cp-on-green)',
+              boxShadow: '0 6px 16px color-mix(in srgb, var(--cp-green) 40%, transparent)',
+            }}
+          >
+            <Mic size={22} aria-hidden />
+          </span>
+          Fortæl
+        </button>
+        {TABS.slice(2).map(renderTab)}
         <button
           type="button"
           onClick={() => setMobileNavOpen(true)}

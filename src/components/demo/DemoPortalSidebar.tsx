@@ -4,21 +4,21 @@ import React, { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { CARE_PORTAL_DEMO_FACILITY_NAME } from '@/lib/carePortalDemoBranding';
+import { useDemoFortael } from '@/components/demo/DemoFortael';
 import {
   LayoutDashboard,
   ClipboardList,
   Users,
-  Bell,
-  Calendar,
-  BookOpen,
   Settings,
   LogOut,
   ChevronLeft,
   ChevronRight,
   Upload,
   BrainCircuit,
-  CalendarClock,
   MessageSquare,
+  Sun,
+  Building2,
+  Mic,
   Sparkles,
   FileText,
   ClipboardCopy,
@@ -32,55 +32,19 @@ type NavItem = {
   cpActiveTab?: string | null;
 };
 
-const staticNavItems: NavItem[] = [
-  {
-    icon: LayoutDashboard,
-    label: 'Dashboard',
-    href: '/care-portal-demo',
-    badge: 0,
-    cpActiveTab: null,
-  },
-  { icon: ClipboardList, label: 'Vagtoverlev.', href: '/care-portal-demo/handover', badge: 0 },
-  { icon: Users, label: 'Beboere', href: '/care-portal-demo/residents', badge: 0 },
-  {
-    icon: Bell,
-    label: 'Advarsler',
-    href: '/care-portal-demo?tab=alerts',
-    badge: 3,
-    cpActiveTab: 'alerts',
-  },
-  {
-    icon: Calendar,
-    label: 'Planlægger',
-    href: '/care-portal-demo?tab=planner',
-    badge: 0,
-    cpActiveTab: 'planner',
-  },
-  {
-    icon: CalendarClock,
-    label: 'Vagtplan',
-    href: '/care-portal-demo/vagtplan',
-    badge: 0,
-    cpActiveTab: undefined,
-  },
-  {
-    icon: MessageSquare,
-    label: 'Beskeder',
-    href: '/care-portal-demo/beskeder',
-    badge: 2,
-    cpActiveTab: undefined,
-  },
-  {
-    icon: BookOpen,
-    label: 'Journal',
-    href: '/care-portal-demo?tab=journal',
-    badge: 0,
-    cpActiveTab: 'journal',
-  },
-  { icon: FileText, label: 'Dokumenter', href: '/care-portal-demo/dokumenter', badge: 1 },
+const mainNavItems: NavItem[] = [
+  { icon: Sun, label: 'Vagt', href: '/care-portal-demo', badge: 0, cpActiveTab: null },
+  { icon: Users, label: 'Borgere', href: '/care-portal-demo/residents', badge: 0 },
+  { icon: FileText, label: 'Frister', href: '/care-portal-demo/dokumenter', badge: 1 },
+  { icon: Building2, label: 'Bosted', href: '/care-portal-demo/vagtplan', badge: 0 },
+];
+
+const moreNavItems: NavItem[] = [
+  { icon: ClipboardList, label: 'Overlevering', href: '/care-portal-demo/handover', badge: 0 },
+  { icon: MessageSquare, label: 'Beskeder', href: '/care-portal-demo/beskeder', badge: 2 },
   { icon: ClipboardCopy, label: 'Til fagsystem', href: '/care-portal-demo/fagsystem', badge: 0 },
-  { icon: Upload, label: 'Dataimport', href: '/care-portal-demo/import', badge: 0 },
   { icon: BrainCircuit, label: 'Faglig støtte', href: '/care-portal-demo/assistant', badge: 0 },
+  { icon: Upload, label: 'Dataimport', href: '/care-portal-demo/import', badge: 0 },
   { icon: Sparkles, label: 'Borger-app (Lys)', href: '/resident-demo', badge: 0 },
   { icon: Settings, label: 'Indstillinger', href: '/care-portal-demo/settings', badge: 0 },
 ];
@@ -111,6 +75,77 @@ function DemoPortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl
   const [collapsed, setCollapsed] = useState(false);
 
   const mobileClosed = !mobileOpen;
+  const { openFortael } = useDemoFortael();
+
+  const renderItem = (item: NavItem) => {
+    const active = navItemActive(pathname, searchParams, item);
+    return (
+      <Link
+        key={item.label}
+        href={item.href}
+        scroll={item.cpActiveTab === undefined || item.cpActiveTab === null}
+        onClick={() => onMobileClose()}
+      >
+        <div
+          className="relative mx-2 mb-0.5 flex min-h-[40px] cursor-pointer items-center gap-3 rounded-[10px] px-3 transition-colors duration-150"
+          style={
+            active
+              ? {
+                  backgroundColor: 'var(--cp-sidebar-active-bg)',
+                  color: 'var(--cp-sidebar-text)',
+                }
+              : {
+                  color: 'var(--cp-sidebar-muted)',
+                }
+          }
+          onMouseEnter={(e) => {
+            if (!active) {
+              (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--cp-sidebar-hover-bg)';
+              (e.currentTarget as HTMLElement).style.color = 'var(--cp-sidebar-text)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!active) {
+              (e.currentTarget as HTMLElement).style.backgroundColor = '';
+              (e.currentTarget as HTMLElement).style.color = 'var(--cp-sidebar-muted)';
+            }
+          }}
+        >
+          {active && (
+            <div
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: 3,
+                height: '60%',
+                backgroundColor: 'var(--cp-ink-accent)',
+                borderRadius: '0 2px 2px 0',
+              }}
+            />
+          )}
+          <item.icon size={18} strokeWidth={1.8} className="flex-shrink-0" />
+          {!collapsed && (
+            <span
+              className="flex-1 truncate"
+              style={{ fontSize: 14, fontWeight: active ? 500 : 400 }}
+            >
+              {item.label}
+            </span>
+          )}
+          {!collapsed && item.badge > 0 && (
+            <span
+              className="cp-num flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-medium"
+              style={{ backgroundColor: '#f59e0b', color: '#1a1206' }}
+            >
+              {item.badge}
+            </span>
+          )}
+        </div>
+      </Link>
+    );
+  };
 
   return (
     <aside
@@ -184,77 +219,32 @@ function DemoPortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl
         )}
       </div>
 
+      <div className="px-2 pt-3">
+        <button
+          type="button"
+          onClick={() => {
+            onMobileClose();
+            openFortael();
+          }}
+          className={`flex min-h-[48px] w-full items-center rounded-xl text-[15px] font-semibold transition-opacity hover:opacity-90 ${collapsed ? 'justify-center' : 'gap-2.5 px-4'}`}
+          style={{ backgroundColor: 'var(--cp-ink-accent)', color: 'var(--cp-ink)' }}
+          aria-label="Fortæl"
+        >
+          <Mic size={18} aria-hidden />
+          {!collapsed && 'Fortæl'}
+        </button>
+      </div>
       <div className="flex-1 overflow-y-auto py-3 scrollbar-hide cp-scroll">
-        {staticNavItems.map((item) => {
-          const active = navItemActive(pathname, searchParams, item);
-          return (
-            <Link
-              key={item.label}
-              href={item.href}
-              scroll={item.cpActiveTab === undefined || item.cpActiveTab === null}
-              onClick={() => onMobileClose()}
-            >
-              <div
-                className="relative mx-2 mb-0.5 flex min-h-[40px] cursor-pointer items-center gap-3 rounded-[10px] px-3 transition-colors duration-150"
-                style={
-                  active
-                    ? {
-                        backgroundColor: 'var(--cp-sidebar-active-bg)',
-                        color: 'var(--cp-sidebar-text)',
-                      }
-                    : {
-                        color: 'var(--cp-sidebar-muted)',
-                      }
-                }
-                onMouseEnter={(e) => {
-                  if (!active) {
-                    (e.currentTarget as HTMLElement).style.backgroundColor =
-                      'var(--cp-sidebar-hover-bg)';
-                    (e.currentTarget as HTMLElement).style.color = 'var(--cp-sidebar-text)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!active) {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = '';
-                    (e.currentTarget as HTMLElement).style.color = 'var(--cp-sidebar-muted)';
-                  }
-                }}
-              >
-                {active && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: 0,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      width: 3,
-                      height: '60%',
-                      backgroundColor: 'var(--cp-ink-accent)',
-                      borderRadius: '0 2px 2px 0',
-                    }}
-                  />
-                )}
-                <item.icon size={18} strokeWidth={1.8} className="flex-shrink-0" />
-                {!collapsed && (
-                  <span
-                    className="flex-1 truncate"
-                    style={{ fontSize: 14, fontWeight: active ? 500 : 400 }}
-                  >
-                    {item.label}
-                  </span>
-                )}
-                {!collapsed && item.badge > 0 && (
-                  <span
-                    className="cp-num flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-medium"
-                    style={{ backgroundColor: '#f59e0b', color: '#1a1206' }}
-                  >
-                    {item.badge}
-                  </span>
-                )}
-              </div>
-            </Link>
-          );
-        })}
+        {mainNavItems.map(renderItem)}
+        {!collapsed && (
+          <div
+            className="mx-5 mb-1 mt-5 text-[10px] font-semibold uppercase tracking-[0.1em]"
+            style={{ color: 'var(--cp-sidebar-muted)' }}
+          >
+            Mere
+          </div>
+        )}
+        <div className="[&_span]:!text-[13px]">{moreNavItems.map(renderItem)}</div>
       </div>
 
       <div className="p-3" style={{ borderTop: '1px solid var(--cp-sidebar-border)' }}>
