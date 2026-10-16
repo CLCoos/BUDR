@@ -303,8 +303,8 @@ export default function MarketingSectionsCmsCard() {
                     className="rounded-md px-2 py-1 text-[11px] font-semibold disabled:opacity-50"
                     style={{
                       color: 'var(--cp-green)',
-                      border: '1px solid rgba(45,212,160,0.35)',
-                      backgroundColor: 'rgba(45,212,160,0.08)',
+                      border: '1px solid color-mix(in srgb, var(--cp-green) 35%, transparent)',
+                      backgroundColor: 'color-mix(in srgb, var(--cp-green) 8%, transparent)',
                     }}
                   >
                     Gendan

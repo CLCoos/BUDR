@@ -92,12 +92,11 @@ export default function ActionCards({ onOpenOverrapport, showPilotBorgerCard = f
         <button
           type="button"
           onClick={onOpenOverrapport}
-          className="text-left rounded-xl px-4 py-[14px] transition-all duration-150 group"
+          className="text-left rounded-2xl px-4 py-[14px] transition-all duration-150 group"
           style={{
             backgroundColor: 'var(--cp-bg2)',
             border: '1px solid var(--cp-border)',
             borderRadius: 12,
-            borderTop: '2px solid var(--cp-green)',
           }}
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLElement).style.borderColor = 'var(--cp-border2)';
@@ -137,12 +136,11 @@ export default function ActionCards({ onOpenOverrapport, showPilotBorgerCard = f
         <button
           type="button"
           onClick={() => router.push('/care-portal-indsatsdok')}
-          className="text-left rounded-xl px-4 py-[14px] transition-all duration-150 group"
+          className="text-left rounded-2xl px-4 py-[14px] transition-all duration-150 group"
           style={{
             backgroundColor: 'var(--cp-bg2)',
             border: '1px solid var(--cp-border)',
             borderRadius: 12,
-            borderTop: '2px solid var(--cp-amber)',
           }}
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLElement).style.borderColor = 'var(--cp-border2)';
@@ -182,12 +180,11 @@ export default function ActionCards({ onOpenOverrapport, showPilotBorgerCard = f
         <button
           type="button"
           onClick={() => router.push('/care-portal-tilsynsrapport')}
-          className="text-left rounded-xl px-4 py-[14px] transition-all duration-150 group"
+          className="text-left rounded-2xl px-4 py-[14px] transition-all duration-150 group"
           style={{
             backgroundColor: 'var(--cp-bg2)',
             border: '1px solid var(--cp-border)',
             borderRadius: 12,
-            borderTop: '2px solid var(--cp-blue)',
           }}
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLElement).style.borderColor = 'var(--cp-border2)';
@@ -227,12 +224,11 @@ export default function ActionCards({ onOpenOverrapport, showPilotBorgerCard = f
           <button
             type="button"
             onClick={() => router.push('/park-hub')}
-            className="group rounded-xl px-4 py-[14px] text-left transition-all duration-150"
+            className="group rounded-2xl px-4 py-[14px] text-left transition-all duration-150"
             style={{
               backgroundColor: 'var(--cp-bg2)',
               border: '1px solid var(--cp-border)',
               borderRadius: 12,
-              borderTop: '2px solid #8b84e8',
             }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLElement).style.borderColor = 'var(--cp-border2)';
@@ -272,7 +268,7 @@ export default function ActionCards({ onOpenOverrapport, showPilotBorgerCard = f
 
       <div
         id="lys-safety-events"
-        className="rounded-xl border px-4 py-3"
+        className="rounded-2xl border px-4 py-3"
         style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
       >
         <div className="mb-2 flex items-center justify-between">

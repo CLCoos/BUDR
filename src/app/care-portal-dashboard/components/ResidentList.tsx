@@ -82,7 +82,7 @@ const TRAFFIC_DOT: Record<TrafficUi, string> = {
 };
 
 const TRAFFIC_DOT_SHADOW: Record<TrafficUi, string> = {
-  groen: '0 0 5px rgba(45,212,160,0.5)',
+  groen: '0 0 5px color-mix(in srgb, var(--cp-green) 50%, transparent)',
   gul: '0 0 5px rgba(246,173,85,0.5)',
   roed: '0 0 5px rgba(245,101,101,0.5)',
 };
@@ -387,7 +387,7 @@ export default function ResidentList({
                 padding: '3px 8px',
                 borderRadius: 20,
                 backgroundColor: 'var(--cp-green-dim)',
-                border: '1px solid rgba(45,212,160,0.2)',
+                border: '1px solid color-mix(in srgb, var(--cp-green) 20%, transparent)',
               }}
             >
               <div

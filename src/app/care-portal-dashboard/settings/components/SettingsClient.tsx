@@ -334,7 +334,7 @@ export default function SettingsClient({
         <h1
           className="font-bold"
           style={{
-            fontFamily: "'DM Serif Display', serif",
+            fontFamily: 'var(--cp-font)',
             fontSize: 22,
             color: 'var(--cp-text)',
             lineHeight: 1.2,
@@ -568,7 +568,7 @@ export default function SettingsClient({
               className="flex items-start gap-3 rounded-lg px-4 py-3"
               style={{
                 backgroundColor: 'var(--cp-green-dim)',
-                border: '1px solid rgba(45,212,160,0.25)',
+                border: '1px solid color-mix(in srgb, var(--cp-green) 25%, transparent)',
               }}
             >
               <CheckCircle2

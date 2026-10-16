@@ -344,7 +344,8 @@ export default function GoalProgress({
                                       : undefined
                                     : d
                                       ? {
-                                          borderColor: 'rgba(45,212,160,0.45)',
+                                          borderColor:
+                                            'color-mix(in srgb, var(--cp-green) 45%, transparent)',
                                           backgroundColor: 'var(--cp-bg2)',
                                         }
                                       : undefined
@@ -365,7 +366,12 @@ export default function GoalProgress({
                                         : 'text-[#1D9E75]/40'
                                   }
                                   style={
-                                    !isLocked && d ? { color: 'rgba(45,212,160,0.5)' } : undefined
+                                    !isLocked && d
+                                      ? {
+                                          color:
+                                            'color-mix(in srgb, var(--cp-green) 50%, transparent)',
+                                        }
+                                      : undefined
                                   }
                                 />
                               )}

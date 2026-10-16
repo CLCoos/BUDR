@@ -3,12 +3,12 @@
 import { useEffect } from 'react';
 import { applyBudrTheme, readStoredBudrTheme } from '@/lib/budrTheme';
 
-/** Sætter `data-theme` på `<html>` (+ `#care-portal-shell` hvis den findes) fra `localStorage` `budr-theme`. */
+/** Sætter `data-theme` på `<html>` (+ `#care-portal-shell` hvis den findes) fra `localStorage` `budr-theme-v2`. */
 export default function BudrThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     applyBudrTheme(readStoredBudrTheme());
     const onStorage = (e: StorageEvent) => {
-      if (e.key !== 'budr-theme') return;
+      if (e.key !== 'budr-theme-v2') return;
       applyBudrTheme(readStoredBudrTheme());
     };
     window.addEventListener('storage', onStorage);

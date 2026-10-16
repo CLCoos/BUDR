@@ -79,8 +79,8 @@ const TL_CONFIG: Record<
   groen: {
     label: 'Grøn',
     color: 'var(--cp-green)',
-    bg: 'rgba(45,212,160,0.12)',
-    border: 'rgba(45,212,160,0.35)',
+    bg: 'color-mix(in srgb, var(--cp-green) 12%, transparent)',
+    border: 'color-mix(in srgb, var(--cp-green) 35%, transparent)',
   },
   gul: {
     label: 'Gul',
@@ -338,7 +338,7 @@ export default function ResidentOverblikTab({
             <div
               className="mt-2 rounded-lg border px-2.5 py-2"
               style={{
-                borderColor: 'rgba(45,212,160,0.35)',
+                borderColor: 'color-mix(in srgb, var(--cp-green) 35%, transparent)',
                 backgroundColor: 'var(--cp-green-dim)',
               }}
             >
@@ -422,8 +422,8 @@ export default function ResidentOverblikTab({
             style={
               medicationGivenCount === medicationTotalCount
                 ? {
-                    borderColor: 'rgba(45,212,160,0.35)',
-                    backgroundColor: 'rgba(45,212,160,0.08)',
+                    borderColor: 'color-mix(in srgb, var(--cp-green) 35%, transparent)',
+                    backgroundColor: 'color-mix(in srgb, var(--cp-green) 8%, transparent)',
                   }
                 : {
                     borderColor: 'rgba(246,173,85,0.4)',

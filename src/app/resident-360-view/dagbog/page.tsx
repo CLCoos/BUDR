@@ -139,7 +139,7 @@ export default async function DagensDagbogPage() {
           <Link
             href="/resident-360-view"
             className="text-xs font-medium hover:underline mb-2 inline-block"
-            style={{ color: 'var(--cp-green, #2dd4a0)' }}
+            style={{ color: 'var(--cp-green)' }}
           >
             ← Tilbage til beboere
           </Link>
@@ -215,7 +215,7 @@ export default async function DagensDagbogPage() {
                             <Link
                               href={`/resident-360-view/${row.resident_id}?tab=overblik`}
                               className="hover:underline"
-                              style={{ color: 'var(--cp-green, #2dd4a0)' }}
+                              style={{ color: 'var(--cp-green)' }}
                             >
                               {label}
                             </Link>

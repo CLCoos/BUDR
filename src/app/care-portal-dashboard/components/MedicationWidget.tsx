@@ -237,9 +237,9 @@ function DeliveryControls({
             onClick={onDeliver}
             className="flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-all duration-200 hover:brightness-110 active:scale-[0.98] lg:h-11 lg:px-8"
             style={{
-              background: 'linear-gradient(180deg, #2dd4a0 0%, #1D9E75 100%)',
+              background: 'var(--cp-green)',
               color: '#fff',
-              boxShadow: '0 4px 14px rgba(45,212,160,0.35)',
+              boxShadow: '0 4px 14px color-mix(in srgb, var(--cp-green) 35%, transparent)',
             }}
           >
             <Check className="h-5 w-5" strokeWidth={2.5} aria-hidden />
@@ -254,7 +254,7 @@ function DeliveryControls({
               className="flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold lg:h-11 lg:min-w-[200px] lg:px-6"
               style={{
                 backgroundColor: 'var(--cp-green-dim)',
-                border: '1px solid rgba(45,212,160,0.3)',
+                border: '1px solid color-mix(in srgb, var(--cp-green) 30%, transparent)',
                 color: 'var(--cp-green)',
               }}
             >
@@ -293,9 +293,9 @@ function DeliveryControls({
       aria-label={`Registrér udlevering`}
       className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all hover:brightness-110 active:scale-[0.97] sm:h-11 sm:w-11"
       style={{
-        background: 'linear-gradient(180deg, #2dd4a0 0%, #1D9E75 100%)',
+        background: 'var(--cp-green)',
         color: '#fff',
-        boxShadow: '0 2px 10px rgba(45,212,160,0.3)',
+        boxShadow: '0 2px 10px color-mix(in srgb, var(--cp-green) 30%, transparent)',
       }}
     >
       <Check className="h-5 w-5" strokeWidth={2.5} aria-hidden />
@@ -1162,7 +1162,7 @@ export default function MedicationWidget({ demoMode = false }: MedicationWidgetP
               className="h-full rounded-full transition-all duration-500 ease-out"
               style={{
                 width: `${stats.totalN ? Math.round((stats.doneN / stats.totalN) * 100) : 0}%`,
-                background: 'linear-gradient(90deg, var(--cp-green), #2dd4a0)',
+                background: 'var(--cp-green)',
               }}
             />
           </div>
@@ -1365,7 +1365,7 @@ export default function MedicationWidget({ demoMode = false }: MedicationWidgetP
               style={{
                 backgroundColor: 'var(--cp-green-dim)',
                 color: 'var(--cp-green)',
-                border: '1px solid rgba(45,212,160,0.2)',
+                border: '1px solid color-mix(in srgb, var(--cp-green) 20%, transparent)',
               }}
             >
               <Timer className="h-3 w-3" aria-hidden />
@@ -1436,8 +1436,9 @@ export default function MedicationWidget({ demoMode = false }: MedicationWidgetP
                       given
                         ? {
                             background:
-                              'linear-gradient(135deg, rgba(45,212,160,0.08) 0%, var(--cp-bg3) 100%)',
-                            border: '1px solid rgba(45,212,160,0.18)',
+                              'linear-gradient(135deg, color-mix(in srgb, var(--cp-green) 8%, transparent) 0%, var(--cp-bg3) 100%)',
+                            border:
+                              '1px solid color-mix(in srgb, var(--cp-green) 18%, transparent)',
                             opacity: 0.92,
                           }
                         : {
@@ -1549,11 +1550,11 @@ export default function MedicationWidget({ demoMode = false }: MedicationWidgetP
             style={{
               background:
                 listStats.overdueN > 0 || pastDue.length === 0
-                  ? 'linear-gradient(135deg, rgba(45,212,160,0.08) 0%, transparent 40%)'
+                  ? 'linear-gradient(135deg, color-mix(in srgb, var(--cp-green) 8%, transparent) 0%, transparent 40%)'
                   : 'transparent',
               border:
                 listStats.overdueN > 0 || pastDue.length === 0
-                  ? '1px solid rgba(45,212,160,0.15)'
+                  ? '1px solid color-mix(in srgb, var(--cp-green) 15%, transparent)'
                   : '1px solid var(--cp-border)',
             }}
           >
@@ -1776,9 +1777,10 @@ export default function MedicationWidget({ demoMode = false }: MedicationWidgetP
                             onClick={() => markBatchDelivered(pendingIds)}
                             className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all hover:brightness-110 active:scale-[0.98]"
                             style={{
-                              background: 'linear-gradient(180deg, #2dd4a0 0%, #1D9E75 100%)',
+                              background: 'var(--cp-green)',
                               color: '#fff',
-                              boxShadow: '0 2px 10px rgba(45,212,160,0.25)',
+                              boxShadow:
+                                '0 2px 10px color-mix(in srgb, var(--cp-green) 25%, transparent)',
                             }}
                           >
                             <Check className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden />
@@ -1895,8 +1897,9 @@ export default function MedicationWidget({ demoMode = false }: MedicationWidgetP
           <div
             className="relative overflow-hidden rounded-2xl p-6 sm:p-8"
             style={{
-              background: 'linear-gradient(145deg, rgba(45,212,160,0.12) 0%, var(--cp-bg3) 100%)',
-              border: '1px solid rgba(45,212,160,0.2)',
+              background:
+                'linear-gradient(145deg, color-mix(in srgb, var(--cp-green) 12%, transparent) 0%, var(--cp-bg3) 100%)',
+              border: '1px solid color-mix(in srgb, var(--cp-green) 20%, transparent)',
             }}
           >
             <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
@@ -1904,7 +1907,7 @@ export default function MedicationWidget({ demoMode = false }: MedicationWidgetP
                 className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl"
                 style={{
                   backgroundColor: 'var(--cp-green-dim)',
-                  border: '1px solid rgba(45,212,160,0.25)',
+                  border: '1px solid color-mix(in srgb, var(--cp-green) 25%, transparent)',
                 }}
               >
                 <CheckCircle2

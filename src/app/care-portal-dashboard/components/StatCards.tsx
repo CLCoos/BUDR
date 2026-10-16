@@ -267,44 +267,38 @@ export default function StatCards({ variant = 'live' }: Props) {
         return (
           <div
             key={stat.id}
-            className="cp-card-elevated relative overflow-hidden px-5 pb-4 pt-5"
-            style={{
-              border: '1px solid var(--cp-border)',
-              borderTop: `2px solid ${widgetStatusVar(topStatus)}`,
-              boxShadow: 'var(--cp-card-shadow)',
-            }}
+            className="cp-card-elevated relative flex flex-col gap-2 overflow-hidden p-[18px]"
           >
-            {/* Large stat number */}
+            <div className="font-medium" style={{ fontSize: 13, color: 'var(--cp-muted)' }}>
+              {stat.label}
+            </div>
             <div
-              className="mt-2 tabular-nums leading-none"
+              className="cp-num leading-none"
               style={{
-                fontSize: '2.5rem',
-                fontWeight: 300,
+                fontSize: 30,
+                fontWeight: 500,
                 color: numberColor,
-                letterSpacing: '-0.02em',
+                letterSpacing: '-0.01em',
               }}
             >
               {stat.value ?? '—'}
             </div>
-
-            {/* Label */}
             <div
-              className="mt-2 font-medium"
-              style={{ fontSize: '0.75rem', color: 'var(--cp-muted)' }}
-            >
-              {stat.label}
-            </div>
+              aria-hidden
+              style={{
+                height: 4,
+                borderRadius: 2,
+                background: widgetStatusVar(topStatus),
+                opacity: 0.85,
+              }}
+            />
 
             {/* Sub-label */}
-            {stat.sub && (
-              <div className="mt-0.5" style={{ fontSize: '0.7rem', color: 'var(--cp-muted2)' }}>
-                {stat.sub}
-              </div>
-            )}
+            {stat.sub && <div style={{ fontSize: 12, color: 'var(--cp-muted)' }}>{stat.sub}</div>}
 
             {/* Alert link */}
             {stat.alertLink && (
-              <div className="mt-3 pt-2" style={{ borderTop: '1px solid var(--cp-border)' }}>
+              <div className="pt-1">
                 <button
                   type="button"
                   onClick={() => {
@@ -316,10 +310,10 @@ export default function StatCards({ variant = 'live' }: Props) {
                       router.push('?tab=alerts');
                     }
                   }}
-                  className="text-xs font-medium transition-colors hover:underline"
-                  style={{ color: 'var(--cp-green)', fontSize: 10 }}
+                  className="min-h-[32px] text-[13px] font-medium transition-colors hover:underline"
+                  style={{ color: 'var(--cp-green)' }}
                 >
-                  → Åbn advarsler
+                  Åbn advarsler
                 </button>
               </div>
             )}

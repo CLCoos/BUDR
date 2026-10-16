@@ -350,25 +350,26 @@ function PortalSidebarInner({
           />
         ) : (
           <>
-            {/* Orb logo */}
             <div
+              aria-hidden
+              className="flex shrink-0 items-center justify-center rounded-lg text-[13px] font-semibold"
               style={{
-                width: 28,
-                height: 28,
-                borderRadius: '50%',
-                flexShrink: 0,
-                background: 'radial-gradient(circle at 35% 35%, #6ee7b7, #059669)',
-                boxShadow: '0 0 12px rgba(45,212,160,0.4)',
+                width: 30,
+                height: 30,
+                background: 'var(--cp-ink-2)',
+                color: 'var(--cp-ink-accent)',
               }}
-            />
+            >
+              {(orgName ?? 'B').trim().charAt(0).toUpperCase()}
+            </div>
             {!collapsed && (
               <div className="min-w-0">
                 <div
                   style={{
-                    fontFamily: "'DM Serif Display', serif",
-                    fontSize: 15,
+                    fontSize: 14,
+                    fontWeight: 600,
                     color: 'var(--cp-sidebar-text)',
-                    lineHeight: 1.2,
+                    lineHeight: 1.25,
                   }}
                 >
                   {orgName ?? 'BUDR'}
@@ -382,7 +383,7 @@ function PortalSidebarInner({
                     lineHeight: 1.4,
                   }}
                 >
-                  Care Portal
+                  Bosted
                 </div>
                 {departmentOptions !== null && departmentOptions.length > 1 ? (
                   <div className="mt-2 w-full">
@@ -422,7 +423,7 @@ function PortalSidebarInner({
                   title={collapsed ? item.label : undefined}
                 >
                   <div
-                    className="relative mx-2 mb-0.5 flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 transition-all duration-150 hover:bg-[var(--cp-sidebar-hover-bg)]"
+                    className="relative mx-2 mb-0.5 flex min-h-[40px] cursor-pointer items-center gap-3 rounded-[10px] px-3 transition-colors duration-150 hover:bg-[var(--cp-sidebar-hover-bg)]"
                     style={
                       active
                         ? {
@@ -441,23 +442,26 @@ function PortalSidebarInner({
                           left: 0,
                           top: '50%',
                           transform: 'translateY(-50%)',
-                          width: 2,
-                          height: '60%',
-                          backgroundColor: 'var(--cp-green)',
+                          width: 3,
+                          height: '55%',
+                          backgroundColor: 'var(--cp-ink-accent)',
                           borderRadius: '0 2px 2px 0',
                         }}
                       />
                     )}
-                    <item.icon size={16} className="flex-shrink-0" />
+                    <item.icon size={18} strokeWidth={1.8} className="flex-shrink-0" />
                     {!collapsed && (
-                      <span className="flex-1 truncate" style={{ fontSize: 13, fontWeight: 400 }}>
+                      <span
+                        className="flex-1 truncate"
+                        style={{ fontSize: 14, fontWeight: active ? 500 : 400 }}
+                      >
                         {item.label}
                       </span>
                     )}
                     {!collapsed && item.badge > 0 && (
                       <span
-                        className="flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-xs font-bold"
-                        style={{ backgroundColor: 'var(--cp-red-dim)', color: 'var(--cp-red)' }}
+                        className="cp-num flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-medium"
+                        style={{ backgroundColor: '#f59e0b', color: '#1a1206' }}
                       >
                         {item.badge}
                       </span>

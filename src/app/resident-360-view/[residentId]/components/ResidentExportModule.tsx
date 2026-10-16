@@ -214,7 +214,8 @@ pre{white-space:pre-wrap;font-family:inherit;font-size:12.5px;margin:0}
                             ? {
                                 borderColor: 'var(--cp-green)',
                                 backgroundColor: 'var(--cp-green-dim)',
-                                boxShadow: '0 0 0 1px rgba(45,212,160,0.2)',
+                                boxShadow:
+                                  '0 0 0 1px color-mix(in srgb, var(--cp-green) 20%, transparent)',
                               }
                             : {
                                 borderColor: 'var(--cp-border)',
@@ -328,8 +329,9 @@ pre{white-space:pre-wrap;font-family:inherit;font-size:12.5px;margin:0}
                 style={
                   carePortalDark
                     ? {
-                        background: 'linear-gradient(135deg, #2dd4a0 0%, #0d9488 100%)',
-                        boxShadow: '0 2px 12px rgba(45,212,160,0.25)',
+                        background: 'var(--cp-green)',
+                        boxShadow:
+                          '0 2px 12px color-mix(in srgb, var(--cp-green) 25%, transparent)',
                       }
                     : undefined
                 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
-import { DM_Sans, DM_Serif_Display } from 'next/font/google';
+import { DM_Sans, DM_Serif_Display, Geist, Geist_Mono } from 'next/font/google';
 import AnalyticsGate from '@/components/AnalyticsGate';
 import DemoGuidedTourProvider from '@/components/demo/DemoGuidedTourProvider';
 import SonnerToaster from '@/components/SonnerToaster';
@@ -22,6 +22,21 @@ const dmSerifDisplay = DM_Serif_Display({
   weight: '400',
   style: ['normal', 'italic'],
   variable: '--font-budr-wordmark',
+});
+
+/** Care Portal (nyt look 2026-10): Geist til tekst, Geist Mono til tal. */
+const geist = Geist({
+  subsets: ['latin'],
+  display: 'swap',
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-portal',
+});
+
+const geistMono = Geist_Mono({
+  subsets: ['latin'],
+  display: 'swap',
+  weight: ['400', '500'],
+  variable: '--font-portal-mono',
 });
 
 export const viewport: Viewport = {
@@ -67,7 +82,10 @@ const organizationSchema = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="da" className={`${dmSans.variable} ${dmSerifDisplay.variable}`}>
+    <html
+      lang="da"
+      className={`${dmSans.variable} ${dmSerifDisplay.variable} ${geist.variable} ${geistMono.variable}`}
+    >
       <body>
         <Script
           id="budr-organization-schema"

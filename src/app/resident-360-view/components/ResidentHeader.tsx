@@ -38,8 +38,8 @@ function trafficStyle(tl: TrafficUi): { bg: string; border: string; label: strin
     };
   if (tl === 'groen')
     return {
-      bg: 'rgba(45,212,160,0.1)',
-      border: 'rgba(45,212,160,0.35)',
+      bg: 'color-mix(in srgb, var(--cp-green) 10%, transparent)',
+      border: 'color-mix(in srgb, var(--cp-green) 35%, transparent)',
       label: TL_LABEL.groen,
       dot: 'var(--cp-green)',
     };
@@ -54,8 +54,7 @@ function trafficStyle(tl: TrafficUi): { bg: string; border: string; label: strin
 function avatarBg(tl: TrafficUi): React.CSSProperties {
   if (tl === 'roed') return { backgroundColor: 'rgba(245,101,101,0.2)', color: 'var(--cp-red)' };
   if (tl === 'gul') return { backgroundColor: 'rgba(246,173,85,0.2)', color: 'var(--cp-amber)' };
-  if (tl === 'groen')
-    return { background: 'linear-gradient(135deg, #2dd4a0, #0d9488)', color: '#fff' };
+  if (tl === 'groen') return { background: 'var(--cp-green)', color: '#fff' };
   return { backgroundColor: 'var(--cp-bg3)', color: 'var(--cp-muted)' };
 }
 
@@ -151,10 +150,10 @@ export default function ResidentHeader({
       <section
         className="mb-4 overflow-hidden rounded-2xl border"
         style={{
-          borderColor: 'rgba(45,212,160,0.28)',
+          borderColor: 'color-mix(in srgb, var(--cp-green) 28%, transparent)',
           background:
-            'linear-gradient(135deg, rgba(45,212,160,0.08) 0%, var(--cp-bg2) 40%, var(--cp-bg2) 100%)',
-          boxShadow: '0 0 0 1px rgba(45,212,160,0.06)',
+            'linear-gradient(135deg, color-mix(in srgb, var(--cp-green) 8%, transparent) 0%, var(--cp-bg2) 40%, var(--cp-bg2) 100%)',
+          boxShadow: '0 0 0 1px color-mix(in srgb, var(--cp-green) 6%, transparent)',
         }}
       >
         <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:gap-5 sm:p-5">
@@ -162,7 +161,7 @@ export default function ResidentHeader({
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl"
             style={{
               background: 'linear-gradient(135deg, rgba(110,231,183,0.25), rgba(5,150,105,0.2))',
-              boxShadow: '0 4px 20px rgba(45,212,160,0.15)',
+              boxShadow: '0 4px 20px color-mix(in srgb, var(--cp-green) 15%, transparent)',
             }}
           >
             <BrainCircuit className="h-6 w-6" style={{ color: 'var(--cp-green)' }} aria-hidden />
@@ -179,7 +178,7 @@ export default function ResidentHeader({
                 <span
                   className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
                   style={{
-                    backgroundColor: 'rgba(45,212,160,0.12)',
+                    backgroundColor: 'color-mix(in srgb, var(--cp-green) 12%, transparent)',
                     color: 'var(--cp-green)',
                   }}
                 >
@@ -242,7 +241,7 @@ export default function ResidentHeader({
       >
         <div
           className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full opacity-[0.07]"
-          style={{ background: 'radial-gradient(circle, #2dd4a0 0%, transparent 70%)' }}
+          style={{ background: 'var(--cp-green)' }}
           aria-hidden
         />
 
@@ -259,7 +258,7 @@ export default function ResidentHeader({
               <div>
                 <h1
                   className="text-xl font-normal sm:text-2xl"
-                  style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--cp-text)' }}
+                  style={{ fontFamily: 'var(--cp-font)', color: 'var(--cp-text)' }}
                 >
                   {name}
                 </h1>

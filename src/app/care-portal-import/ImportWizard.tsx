@@ -380,7 +380,7 @@ export default function ImportWizard() {
       <div className="mb-6">
         <h1
           className="text-xl font-bold tracking-tight"
-          style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--cp-text)' }}
+          style={{ fontFamily: 'var(--cp-font)', color: 'var(--cp-text)' }}
         >
           Importer beboere
         </h1>
@@ -721,7 +721,7 @@ Camilla Frost,`}
                 >
                   <h2
                     className="text-lg font-bold"
-                    style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--cp-text)' }}
+                    style={{ fontFamily: 'var(--cp-font)', color: 'var(--cp-text)' }}
                   >
                     Import afsluttet
                   </h2>
