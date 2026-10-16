@@ -390,7 +390,7 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
           givenCount === totalActive
             ? {
                 backgroundColor: 'var(--cp-green-dim)',
-                borderColor: 'rgba(45,212,160,0.35)',
+                borderColor: 'color-mix(in srgb, var(--cp-green) 35%, transparent)',
               }
             : {
                 backgroundColor: 'var(--cp-amber-dim)',
@@ -542,7 +542,7 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
                             ? {
                                 backgroundColor: 'var(--cp-green-dim)',
                                 color: 'var(--cp-green)',
-                                borderColor: 'rgba(45,212,160,0.35)',
+                                borderColor: 'color-mix(in srgb, var(--cp-green) 35%, transparent)',
                               }
                             : {
                                 backgroundColor: 'var(--cp-green)',

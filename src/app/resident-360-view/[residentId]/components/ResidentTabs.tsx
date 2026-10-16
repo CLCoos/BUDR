@@ -69,7 +69,7 @@ export default function ResidentTabs<T extends string>({
                   ? {
                       backgroundColor: 'var(--cp-green-dim)',
                       color: 'var(--cp-green)',
-                      boxShadow: '0 0 0 1px rgba(45,212,160,0.2)',
+                      boxShadow: '0 0 0 1px color-mix(in srgb, var(--cp-green) 20%, transparent)',
                     }
                   : { color: 'var(--cp-muted)' }
               }

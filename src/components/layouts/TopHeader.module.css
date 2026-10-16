@@ -1,6 +1,7 @@
 .header {
   height: var(--header-height);
   border-bottom: 1px solid var(--border-subtle);
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -21,6 +22,40 @@
   display: flex;
   align-items: center;
   flex-shrink: 0;
+  align-self: stretch;
+}
+
+/* Portalen: blæk-blå blok over sidemenuen, så menuen løber i fuld højde */
+@media (min-width: 768px) {
+  :global(#care-portal-shell) .left {
+    width: 224px;
+    margin-left: calc(-1 * var(--page-padding-x));
+    padding-left: 20px;
+    background: var(--cp-ink);
+    border-bottom: 1px solid var(--cp-ink);
+  }
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+@media (min-width: 768px) {
+  :global(#care-portal-shell) .brand {
+    color: #ffffff;
+  }
+}
+
+.wordmark {
+  font-family: var(--cp-font, var(--font-body));
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.01em;
 }
 
 .center {

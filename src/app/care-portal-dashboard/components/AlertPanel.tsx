@@ -515,7 +515,7 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
             padding: '4px 10px',
             borderRadius: 20,
             backgroundColor: 'var(--cp-green-dim)',
-            border: '1px solid rgba(45,212,160,0.2)',
+            border: '1px solid color-mix(in srgb, var(--cp-green) 20%, transparent)',
           }}
         >
           <div

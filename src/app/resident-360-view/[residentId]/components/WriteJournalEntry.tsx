@@ -409,8 +409,8 @@ export default function WriteJournalEntry({
         style={
           carePortalDark
             ? {
-                background: 'linear-gradient(135deg, #2dd4a0 0%, #0d9488 100%)',
-                boxShadow: '0 2px 12px rgba(45,212,160,0.25)',
+                background: 'var(--cp-green)',
+                boxShadow: '0 2px 12px color-mix(in srgb, var(--cp-green) 25%, transparent)',
               }
             : undefined
         }
@@ -530,7 +530,8 @@ export default function WriteJournalEntry({
                               ? {
                                   backgroundColor: 'var(--cp-green-dim)',
                                   color: 'var(--cp-green)',
-                                  boxShadow: '0 0 0 1px rgba(45,212,160,0.2)',
+                                  boxShadow:
+                                    '0 0 0 1px color-mix(in srgb, var(--cp-green) 20%, transparent)',
                                 }
                               : {
                                   backgroundColor: 'var(--cp-bg3)',
@@ -879,7 +880,8 @@ export default function WriteJournalEntry({
                             ? {
                                 backgroundColor: 'var(--cp-green-dim)',
                                 color: 'var(--cp-green)',
-                                boxShadow: '0 0 0 1px rgba(45,212,160,0.2)',
+                                boxShadow:
+                                  '0 0 0 1px color-mix(in srgb, var(--cp-green) 20%, transparent)',
                               }
                             : {
                                 backgroundColor: 'var(--cp-bg3)',
@@ -970,8 +972,9 @@ export default function WriteJournalEntry({
                 style={
                   carePortalDark
                     ? {
-                        background: 'linear-gradient(135deg, #2dd4a0 0%, #0d9488 100%)',
-                        boxShadow: '0 2px 12px rgba(45,212,160,0.2)',
+                        background: 'var(--cp-green)',
+                        boxShadow:
+                          '0 2px 12px color-mix(in srgb, var(--cp-green) 20%, transparent)',
                       }
                     : undefined
                 }

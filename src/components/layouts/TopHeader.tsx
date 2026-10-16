@@ -16,8 +16,9 @@ export function TopHeader({ fixed = true }: TopHeaderProps) {
   return (
     <header className={cn(styles.header, fixed && styles.fixed)}>
       <div className={styles.left}>
-        <Link href="/care-portal-dashboard" aria-label="BUDR forside">
-          <BudrLogo />
+        <Link href="/care-portal-dashboard" aria-label="BUDRcare forside" className={styles.brand}>
+          <BudrLogo dark size={30} showWordmark={false} />
+          <span className={styles.wordmark}>BUDRcare</span>
         </Link>
       </div>
       <div className={styles.center}>

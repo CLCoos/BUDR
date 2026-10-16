@@ -439,7 +439,7 @@ function DokumentSøgningInner({
   };
 
   const shellCls =
-    'border shadow-none transition-all duration-200 focus-within:shadow-[0_0_0_1px_rgba(45,212,160,0.12)]';
+    'border shadow-none transition-all duration-200 focus-within:shadow-[0_0_0_1px_color-mix(in_srgb,var(--cp-green)_12%,transparent)]';
   const shellStyle: React.CSSProperties = {
     backgroundColor: 'var(--cp-input-bg)',
     borderColor: 'var(--cp-input-border)',
@@ -479,14 +479,14 @@ function DokumentSøgningInner({
   const rowActive = (active: boolean) =>
     dark
       ? active
-        ? 'bg-[var(--cp-bg3)] ring-1 ring-[rgba(45,212,160,0.25)]'
+        ? 'bg-[var(--cp-bg3)] ring-1 ring-[color-mix(in_srgb,var(--cp-green)_25%,transparent)]'
         : 'hover:bg-[var(--cp-bg3)]'
       : active
         ? 'bg-gray-50 ring-1 ring-budr-purple/20'
         : 'hover:bg-gray-50';
 
   const chipCls = dark
-    ? 'rounded-full bg-[var(--cp-bg)] px-2 py-0.5 text-[10px] font-medium text-[var(--cp-text)] transition-all duration-200 hover:bg-[rgba(45,212,160,0.12)] hover:text-[var(--cp-green)]'
+    ? 'rounded-full bg-[var(--cp-bg)] px-2 py-0.5 text-[10px] font-medium text-[var(--cp-text)] transition-all duration-200 hover:bg-[color-mix(in_srgb,var(--cp-green)_12%,transparent)] hover:text-[var(--cp-green)]'
     : 'rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-700 transition-all duration-200 hover:bg-budr-lavender hover:text-budr-purple';
 
   const docMetaCls = dark ? 'text-xs text-[var(--cp-muted)]' : 'text-xs text-gray-400';

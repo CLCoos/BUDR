@@ -130,8 +130,12 @@ function PlanTimeline({ items, compact = false }: { items: PlanItem[]; compact?:
                 className="min-w-0 flex-1 rounded-lg border px-3 py-2 transition-colors"
                 style={{
                   opacity: isPast ? 0.55 : 1,
-                  backgroundColor: isCurrent ? 'rgba(45,212,160,0.12)' : 'var(--cp-bg3)',
-                  borderColor: isCurrent ? 'rgba(45,212,160,0.35)' : 'var(--cp-border)',
+                  backgroundColor: isCurrent
+                    ? 'color-mix(in srgb, var(--cp-green) 12%, transparent)'
+                    : 'var(--cp-bg3)',
+                  borderColor: isCurrent
+                    ? 'color-mix(in srgb, var(--cp-green) 35%, transparent)'
+                    : 'var(--cp-border)',
                 }}
               >
                 <div className="flex items-center gap-1.5">
@@ -145,7 +149,7 @@ function PlanTimeline({ items, compact = false }: { items: PlanItem[]; compact?:
                       <span
                         className="ml-2 rounded-full px-1.5 py-0.5 text-xs font-semibold"
                         style={{
-                          backgroundColor: 'rgba(45,212,160,0.2)',
+                          backgroundColor: 'color-mix(in srgb, var(--cp-green) 20%, transparent)',
                           color: 'var(--cp-green)',
                         }}
                       >
@@ -309,7 +313,7 @@ export default function DagsPlanPortal({
               style={{
                 color: 'var(--cp-green)',
                 backgroundColor: 'var(--cp-green-dim)',
-                borderColor: 'rgba(45,212,160,0.25)',
+                borderColor: 'color-mix(in srgb, var(--cp-green) 25%, transparent)',
               }}
             >
               <div className="h-1.5 w-1.5 rounded-full bg-[var(--cp-green)]" />

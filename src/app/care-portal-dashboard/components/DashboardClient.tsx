@@ -73,10 +73,10 @@ function LivePill({ children }: { children: React.ReactNode }) {
     <div
       className="flex items-center gap-1.5"
       style={{
-        padding: '4px 10px',
-        borderRadius: 20,
+        padding: '0 10px',
+        height: 30,
+        borderRadius: 999,
         backgroundColor: 'var(--cp-green-dim)',
-        border: '1px solid rgba(45,212,160,0.2)',
       }}
     >
       <div
@@ -85,11 +85,10 @@ function LivePill({ children }: { children: React.ReactNode }) {
           height: 6,
           borderRadius: '50%',
           backgroundColor: 'var(--cp-green)',
-          boxShadow: '0 0 6px var(--cp-green)',
         }}
       />
-      <span style={{ fontSize: 11, color: 'var(--cp-green)', fontWeight: 500 }}>
-        Live · {children}
+      <span style={{ fontSize: 12, color: 'var(--cp-green)', fontWeight: 500 }}>
+        Opdateret {children}
       </span>
     </div>
   );
@@ -108,32 +107,43 @@ function PillButton({
     <button
       type="button"
       onClick={onClick}
-      className="flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors"
-      style={
-        danger
-          ? {
-              border: '1px solid var(--cp-red-dim)',
-              color: 'var(--cp-red)',
-              backgroundColor: 'transparent',
-            }
-          : {
-              border: '1px solid var(--cp-border)',
-              color: 'var(--cp-muted)',
-              backgroundColor: 'transparent',
-            }
-      }
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--cp-bg3)';
-        (e.currentTarget as HTMLElement).style.color = danger ? 'var(--cp-red)' : 'var(--cp-text)';
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
-        (e.currentTarget as HTMLElement).style.color = danger ? 'var(--cp-red)' : 'var(--cp-muted)';
+      className="flex min-h-[40px] items-center gap-1.5 rounded-[10px] px-4 text-[13px] font-medium transition-colors hover:bg-[var(--cp-bg3)]"
+      style={{
+        border: '1px solid var(--cp-border2)',
+        color: danger ? 'var(--cp-red)' : 'var(--cp-text)',
+        backgroundColor: 'var(--cp-bg2)',
       }}
     >
       {children}
     </button>
   );
+}
+
+/** "God morgen" osv. efter dansk tid. */
+function greetingFor(now: Date): string {
+  const h = Number(
+    new Intl.DateTimeFormat('da-DK', {
+      hour: '2-digit',
+      hour12: false,
+      timeZone: 'Europe/Copenhagen',
+    })
+      .format(now)
+      .slice(0, 2)
+  );
+  if (h >= 5 && h < 10) return 'God morgen';
+  if (h >= 10 && h < 17) return 'God dag';
+  if (h >= 17 && h < 23) return 'God aften';
+  return 'God nat';
+}
+
+function todayLabel(now: Date): string {
+  const s = new Intl.DateTimeFormat('da-DK', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    timeZone: 'Europe/Copenhagen',
+  }).format(now);
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 // ── Inner component ───────────────────────────────────────────
@@ -148,6 +158,9 @@ function DashboardClientInner({
   const pilotSim = carePortalPilotSimulatedData();
   const { isBingbong, ready: bingbongReady } = useStaffOrgIsBingbong();
   const [headerSubtitle, setHeaderSubtitle] = useState('Care Portal');
+  const [firstName, setFirstName] = useState<string | null>(null);
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => setNow(new Date()), []);
   const [lastUpdated, setLastUpdated] = useState(() =>
     new Date()
       .toLocaleString('da-DK', {
@@ -200,6 +213,11 @@ function DashboardClientInner({
         'Team';
       const orgName = authState.org.name?.trim() || 'Organisation';
       setHeaderSubtitle(`${orgName} · ${staffLabel}`);
+      const displayName =
+        typeof authState.user.user_metadata?.display_name === 'string'
+          ? authState.user.user_metadata.display_name.trim()
+          : '';
+      setFirstName(displayName ? (displayName.split(/\s+/)[0] ?? null) : null);
       return;
     }
     if (authState.status === 'authenticated-incomplete') {
@@ -325,7 +343,7 @@ function DashboardClientInner({
             <h1
               className="font-bold"
               style={{
-                fontFamily: "'DM Serif Display', serif",
+                fontFamily: 'var(--cp-font)',
                 fontSize: 22,
                 color: 'var(--cp-text)',
                 lineHeight: 1.2,
@@ -344,7 +362,7 @@ function DashboardClientInner({
                 padding: '4px 10px',
                 borderRadius: 20,
                 backgroundColor: 'var(--cp-green-dim)',
-                border: '1px solid rgba(45,212,160,0.2)',
+                border: '1px solid color-mix(in srgb, var(--cp-green) 20%, transparent)',
               }}
             >
               <div
@@ -537,23 +555,29 @@ function DashboardClientInner({
   return (
     <div className="relative">
       {/* ── Page header ─────────────────────────────────────── */}
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <div style={{ fontSize: 13, color: 'var(--cp-muted)' }}>
+            {now ? `${todayLabel(now)} · ` : ''}
+            {facilityLabel}
+          </div>
           <h1
             style={{
-              fontFamily: "'DM Serif Display', serif",
-              fontSize: 22,
+              fontSize: 'clamp(24px, 3.2vw, 32px)',
+              fontWeight: 600,
+              letterSpacing: '-0.02em',
               color: 'var(--cp-text)',
               lineHeight: 1.2,
+              margin: 0,
             }}
           >
-            Dagsoverblik
+            {now ? greetingFor(now) : 'Velkommen'}
+            {firstName ? `, ${firstName}` : ''}.
           </h1>
-          <div style={{ fontSize: 13, color: 'var(--cp-muted)' }}>{headerSubtitle}</div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <LivePill>{lastUpdated}</LivePill>
+          <LivePill>{lastUpdated.split('·')[1]?.trim() ?? lastUpdated}</LivePill>
           <PillButton onClick={() => setOverrapportOpen(true)}>Overrapport</PillButton>
           <PillButton onClick={() => setIndsatsOpen(true)} danger>
             Indsatsdok.
@@ -562,30 +586,29 @@ function DashboardClientInner({
           <button
             type="button"
             onClick={openJournalComposer}
-            className="flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-90"
-            style={{ backgroundColor: 'var(--cp-green)' }}
+            className="flex min-h-[40px] items-center gap-1.5 rounded-[10px] px-4 text-[13px] font-semibold transition-opacity hover:opacity-90"
+            style={{ backgroundColor: 'var(--cp-green)', color: 'var(--cp-on-green)' }}
           >
-            <Plus size={14} aria-hidden />
+            <Plus size={15} aria-hidden />
             Ny journal
           </button>
           <PillButton onClick={() => window.location.reload()}>
-            <RefreshCw size={11} />
+            <RefreshCw size={12} aria-hidden />
             Opdater
           </PillButton>
         </div>
       </div>
 
-      <ActionCards onOpenOverrapport={() => setOverrapportOpen(true)} />
+      {/* ── Nøgletal først, så assistentens forslag ─────────── */}
+      <div className="mb-6">
+        <StatCards />
+      </div>
 
       <AssistantWidget />
 
-      {/* ── Zone 1: Status bar (full width) ─────────────────── */}
       <OnboardingChecklist />
 
-      {/* ── Zone 1: Status bar (full width) ─────────────────── */}
-      <div className="mb-5">
-        <StatCards />
-      </div>
+      <ActionCards onOpenOverrapport={() => setOverrapportOpen(true)} />
 
       {/* ── Zone 2: Hero grid (3 cols → 2 → 1) ───────────────
           md: medicin lå i én kolonne (halv bredde) — fuld række md, min. 280px tredje spor lg+. */}

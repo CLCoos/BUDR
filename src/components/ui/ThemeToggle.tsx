@@ -5,7 +5,7 @@ import { Sun, Moon } from 'lucide-react';
 import { applyBudrTheme, readStoredBudrTheme, type BudrTheme } from '@/lib/budrTheme';
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<BudrTheme>('dark');
+  const [theme, setTheme] = useState<BudrTheme>('light');
 
   useEffect(() => {
     const initial = readStoredBudrTheme();
@@ -21,19 +21,22 @@ export function ThemeToggle() {
 
   return (
     <button
+      type="button"
       onClick={toggle}
       aria-label="Skift tema"
       title={theme === 'dark' ? 'Skift til lyst tema' : 'Skift til mørkt tema'}
       style={{
-        background: theme === 'dark' ? '#ffffff' : '#1a1f2e',
-        border: 'none',
+        background: 'transparent',
+        border: '1px solid color-mix(in srgb, currentColor 28%, transparent)',
         borderRadius: '8px',
-        padding: '6px 12px',
+        padding: '0 12px',
+        minHeight: '36px',
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',
         gap: '7px',
-        color: theme === 'dark' ? '#1a1f2e' : '#ffffff',
+        color: 'inherit',
+        font: 'inherit',
         transition: 'background 0.15s',
       }}
     >

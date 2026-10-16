@@ -73,43 +73,124 @@
     --status-neutral: #3b82f6;
   }
 
-  #care-portal-shell[data-theme='light'] {
-    /* Care Portal light theme */
-    --cp-bg: #f4f6fb;
+  /* ── Care Portal: "klinisk ro" (2026-10) ──
+     Lys er standard. Blæk-blå sidemenu, hvide flader, én teal accent, statusfarver for sig. */
+  #care-portal-shell {
+    --cp-bg: #f3f5f7;
     --cp-bg2: #ffffff;
-    --cp-bg3: #e8ecf4;
-    --cp-border: rgba(0, 0, 0, 0.08);
-    --cp-border2: rgba(0, 0, 0, 0.14);
-    --cp-text: #1a1f2e;
-    --cp-muted: #4b5563;
-    --cp-muted2: #6b7280;
-    --cp-green: #0f9b72;
-    --cp-green-dim: rgba(15, 155, 114, 0.1);
-    --cp-red: #dc2626;
-    --cp-red-dim: rgba(220, 38, 38, 0.1);
-    --cp-amber: #d97706;
-    --cp-amber-dim: rgba(217, 119, 6, 0.1);
-    --cp-blue: #2563eb;
-    --cp-blue-dim: rgba(37, 99, 235, 0.1);
+    --cp-bg3: #eef1f4;
+    --cp-border: #e2e6ea;
+    --cp-border2: #d5dbe1;
+    --cp-text: #0b1b2b;
+    --cp-muted: #556270;
+    --cp-muted2: #6b7785;
+    --cp-green: #0e7c6b;
+    --cp-green-dim: #e3f3ef;
+    --cp-on-green: #ffffff;
+    --cp-red: #b42318;
+    --cp-red-dim: #fde4e1;
+    --cp-amber: #b45309;
+    --cp-amber-dim: #fef0cc;
+    --cp-blue: #1d4ed8;
+    --cp-blue-dim: #e0e9ff;
 
-    --cp-sidebar-bg: #1e2a3a;
+    --cp-ink: #0b1b2b;
+    --cp-ink-2: #16304a;
+    --cp-ink-accent: #5eead4;
+
+    --cp-sidebar-bg: var(--cp-ink);
     --cp-sidebar-text: #ffffff;
-    --cp-sidebar-muted: #b8c8de;
+    --cp-sidebar-muted: #a9b8c6;
     --cp-sidebar-border: rgba(255, 255, 255, 0.08);
-    --cp-sidebar-active-bg: rgba(45, 212, 160, 0.12);
-    --cp-sidebar-hover-bg: rgba(255, 255, 255, 0.05);
-    --cp-sidebar-header-bg: #162030;
-    --cp-input-bg: #edf0f7;
-    --cp-input-border: rgba(0, 0, 0, 0.12);
+    --cp-sidebar-active-bg: var(--cp-ink-2);
+    --cp-sidebar-hover-bg: rgba(255, 255, 255, 0.06);
+    --cp-sidebar-header-bg: var(--cp-ink);
+    --cp-input-bg: #f8fafb;
+    --cp-input-border: #d5dbe1;
     --cp-card-bg: #ffffff;
-    --cp-card-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.06);
-    --cp-nav-bg: rgba(255, 255, 255, 0.92);
+    --cp-card-shadow: none;
+    --cp-nav-bg: #ffffff;
+    --cp-nav-shadow: none;
 
-    --status-ok: #10b981;
-    --status-attention: #f59e0b;
-    --status-action: #ef4444;
-    --status-neutral: #3b82f6;
-    --cp-nav-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+    --status-ok: #0f8a5f;
+    --status-attention: #d98a04;
+    --status-action: #b42318;
+    --status-neutral: #1d4ed8;
+
+    /* Design-system-tokens (topbar, brugermenu, knapper) følger portalens tema */
+    --bg-canvas: var(--cp-bg);
+    --bg-surface: var(--cp-bg2);
+    --bg-surface-2: var(--cp-bg2);
+    --bg-surface-3: var(--cp-bg3);
+    --border-subtle: var(--cp-border);
+    --border-default: var(--cp-border2);
+    --border-strong: #b7c1cb;
+    --text-primary: var(--cp-text);
+    --text-secondary: var(--cp-muted);
+    --text-tertiary: var(--cp-muted2);
+    --brand-primary: var(--cp-green);
+    --font-display: var(--font-portal), ui-sans-serif, system-ui, sans-serif;
+    --font-body: var(--font-portal), ui-sans-serif, system-ui, sans-serif;
+    --font-mono: var(--font-portal-mono), ui-monospace, 'SF Mono', Menlo, monospace;
+    --cp-font: var(--font-portal), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --cp-font-mono: var(--font-portal-mono), ui-monospace, 'SF Mono', Menlo, monospace;
+
+    font-family: var(--cp-font);
+    color: var(--cp-text);
+  }
+
+  #care-portal-shell[data-theme='dark'] {
+    --cp-bg: #0a121b;
+    --cp-bg2: #111c27;
+    --cp-bg3: #172431;
+    --cp-border: #22313f;
+    --cp-border2: #2c3d4e;
+    --cp-text: #e6edf3;
+    --cp-muted: #97a6b5;
+    --cp-muted2: #6f8091;
+    --cp-green: #2bb59b;
+    --cp-green-dim: rgba(43, 181, 155, 0.14);
+    --cp-on-green: #04140f;
+    --cp-red: #f0675a;
+    --cp-red-dim: rgba(240, 103, 90, 0.14);
+    --cp-amber: #f2b13a;
+    --cp-amber-dim: rgba(242, 177, 58, 0.14);
+    --cp-blue: #7fa5ff;
+    --cp-blue-dim: rgba(127, 165, 255, 0.14);
+
+    --cp-ink: #060e17;
+    --cp-ink-2: #13283e;
+
+    --cp-sidebar-muted: #8fa3b6;
+    --cp-input-bg: #0e1822;
+    --cp-input-border: #2c3d4e;
+    --cp-card-bg: #111c27;
+    --cp-nav-bg: #111c27;
+
+    --status-ok: #34c48b;
+    --status-attention: #f2b13a;
+    --status-action: #f0675a;
+    --status-neutral: #7fa5ff;
+
+    --border-strong: #3a4d60;
+    color-scheme: dark;
+  }
+
+  #care-portal-shell .cp-num,
+  #care-portal-shell .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+  #care-portal-shell .cp-num {
+    font-family: var(--cp-font-mono);
+  }
+  #care-portal-shell h1,
+  #care-portal-shell h2,
+  #care-portal-shell h3 {
+    text-wrap: balance;
+  }
+  #care-portal-shell :focus-visible {
+    outline: 2px solid var(--cp-green);
+    outline-offset: 2px;
   }
 
   * {
@@ -124,7 +205,8 @@
   /** Borger-app (Lys) — samme DM Sans som Care Portal (`font-sans` i Tailwind). */
   #budr-lys-root,
   .budr-lys-root {
-    font-family: var(--font-landing-body, 'DM Sans'), 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+    font-family:
+      var(--font-landing-body, 'DM Sans'), 'DM Sans', ui-sans-serif, system-ui, sans-serif;
   }
 }
 
@@ -176,6 +258,13 @@
     border: 1px solid var(--cp-border);
     border-radius: 14px;
     box-shadow: 0 4px 28px rgba(0, 0, 0, 0.35);
+  }
+
+  #care-portal-shell .cp-card-elevated {
+    background-color: var(--cp-card-bg);
+    border: 1px solid var(--cp-border);
+    border-radius: 16px;
+    box-shadow: none;
   }
 
   @keyframes lysSheetUp {

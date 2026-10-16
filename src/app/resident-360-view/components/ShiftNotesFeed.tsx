@@ -432,7 +432,7 @@ export default function ShiftNotesFeed({ variant = 'mock', residentId, carePorta
                         d
                           ? {
                               background:
-                                'linear-gradient(135deg, rgba(45,212,160,0.9) 0%, #0d9488 100%)',
+                                'linear-gradient(135deg, color-mix(in srgb, var(--cp-green) 90%, transparent) 0%, #0d9488 100%)',
                             }
                           : { backgroundColor: '#0F1B2D' }
                       }
