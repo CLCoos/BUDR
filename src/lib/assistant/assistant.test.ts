@@ -4,6 +4,7 @@ import { copenhagenLocalToDate } from './apply';
 import {
   appointmentFollowUps,
   documentDeadlines,
+  fagsystemReminders,
   isHealthAppointment,
   trafficLightStreaks,
   type GeneratorResident,
@@ -327,6 +328,53 @@ describe('trafficLightStreaks', () => {
           checkin('2026-10-13', 'rød'),
           checkin('2026-10-15', 'rød'),
         ],
+      })
+    ).toEqual([]);
+  });
+});
+
+describe('fagsystemReminders', () => {
+  const now = new Date('2026-10-15T08:00:00Z'); // 10.00 dansk tid
+  const notes = [
+    { id: 'a', org_id: ORG, staff_id: STAFF, created_at: '2026-10-14T10:00:00Z' },
+    { id: 'b', org_id: ORG, staff_id: STAFF, created_at: '2026-10-13T10:00:00Z' },
+    { id: 'c', org_id: ORG, staff_id: STAFF, created_at: '2026-10-15T07:00:00Z' },
+    { id: 'd', org_id: ORG, staff_id: STAFF, created_at: '2026-10-12T10:00:00Z' },
+    { id: 'e', org_id: 'andet-bosted', staff_id: STAFF, created_at: '2026-10-14T10:00:00Z' },
+  ];
+
+  it('tæller ikke-overførte notater fra tidligere dage i bosteder der bruger det', () => {
+    const out = fagsystemReminders({
+      now,
+      notes,
+      transferredIds: new Set(['d']),
+      activeOrgs: new Set([ORG]),
+    });
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({
+      recipient_id: STAFF,
+      kind: 'fagsystem',
+      dedupe_key: `fagsystem:${STAFF}:2026-10-15`,
+      link: '/care-portal-fagsystem?mine=1',
+    });
+    expect(out[0]!.title).toContain('2 notater');
+  });
+
+  it('intet før kl. 7 eller når alt er overført', () => {
+    expect(
+      fagsystemReminders({
+        now: new Date('2026-10-15T03:00:00Z'),
+        notes,
+        transferredIds: new Set(),
+        activeOrgs: new Set([ORG]),
+      })
+    ).toEqual([]);
+    expect(
+      fagsystemReminders({
+        now,
+        notes,
+        transferredIds: new Set(['a', 'b', 'd']),
+        activeOrgs: new Set([ORG]),
       })
     ).toEqual([]);
   });

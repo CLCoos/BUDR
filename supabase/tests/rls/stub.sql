@@ -19,7 +19,7 @@ CREATE TABLE resident_plan_items (id serial primary key, resident_id uuid, org_i
 CREATE TABLE daily_plans (id serial primary key, resident_id uuid, org_id uuid, plan_date date);
 CREATE TABLE plan_proposals (id serial primary key, resident_id uuid, org_id uuid, date date NOT NULL DEFAULT current_date, status text, reviewed_by uuid, reviewed_at timestamptz);
 CREATE TABLE marketing_content_blocks (key text primary key, draft jsonb);
-CREATE TABLE journal_entries (id serial primary key, org_id uuid, resident_id uuid, staff_id uuid, staff_name text, entry_text text, category text, created_at timestamptz not null default now(), show_in_diary boolean);
+CREATE TABLE journal_entries (id uuid primary key default gen_random_uuid(), org_id uuid, resident_id uuid, staff_id uuid, staff_name text, entry_text text, category text, created_at timestamptz not null default now(), show_in_diary boolean);
 CREATE TABLE crisis_plans (id serial primary key, resident_id uuid);
 CREATE TABLE lys_conversations (id serial primary key, resident_id uuid);
 CREATE TABLE lys_recovery_stories (id serial primary key, resident_id uuid);
