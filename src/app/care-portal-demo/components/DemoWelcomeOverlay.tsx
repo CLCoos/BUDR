@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { readDemoGuidedTourCompleted } from '@/lib/carePortalDemoGuidedTour';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowRight, X } from 'lucide-react';
@@ -57,7 +58,12 @@ type Props = {
 export default function DemoWelcomeOverlay({ onOpenOverrapport }: Props) {
   const router = useRouter();
   const { startGuidedTour, suppressWelcomeOverlays, isTourOpen } = useDemoGuidedTour();
-  const [open, setOpen] = useState(() => !suppressWelcomeOverlays && !isTourOpen);
+  // Starter lukket, så server og browser tegner det samme; åbnes efter mount.
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!readDemoGuidedTourCompleted()) setOpen(true);
+  }, []);
 
   useEffect(() => {
     if (suppressWelcomeOverlays || isTourOpen) setOpen(false);
@@ -133,7 +139,7 @@ export default function DemoWelcomeOverlay({ onOpenOverrapport }: Props) {
 
         <h2
           className="mb-1 text-[1.4rem] font-normal leading-tight"
-          style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--cp-text)' }}
+          style={{ fontFamily: 'var(--cp-font)', color: 'var(--cp-text)' }}
         >
           Velkommen til BUDR Care Portal (DEMO)
         </h2>
@@ -218,7 +224,7 @@ export default function DemoWelcomeOverlay({ onOpenOverrapport }: Props) {
               onClick={dismiss}
               className="flex-1 rounded-xl py-2.5 text-sm font-semibold text-white transition-all duration-150 hover:brightness-110 active:scale-[0.98]"
               style={{
-                background: 'linear-gradient(135deg, #8b84e8 0%, #5E56C0 55%, #4c3d91 100%)',
+                background: 'var(--cp-green)',
                 boxShadow: '0 6px 20px rgba(94, 86, 192, 0.35)',
               }}
             >
@@ -247,7 +253,7 @@ export default function DemoWelcomeOverlay({ onOpenOverrapport }: Props) {
             }}
             className="w-full rounded-xl border py-2.5 text-sm font-semibold transition-colors"
             style={{
-              borderColor: 'rgba(45,212,160,0.35)',
+              borderColor: 'color-mix(in srgb, var(--cp-green) 35%, transparent)',
               color: 'var(--cp-green)',
               backgroundColor: 'var(--cp-green-dim)',
             }}

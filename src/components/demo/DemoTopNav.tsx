@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Sparkles } from 'lucide-react';
+import { BudrLogo } from '@/components/brand/BudrLogo';
 import DokumentSøgning from '@/components/DokumentSøgning';
 import DepartmentSelect from '@/components/DepartmentSelect';
 import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
@@ -17,29 +18,19 @@ export default function DemoTopNav() {
       className="cp-glass-nav fixed left-0 right-0 top-0 z-[10001] flex h-[52px] items-center gap-2 px-3 sm:gap-3 sm:px-6"
       aria-label="Care Portal demo"
     >
-      <div className="mr-0 flex shrink-0 items-center gap-2 sm:mr-1 sm:gap-2.5">
-        <div
-          className="shrink-0 rounded-full"
-          style={{
-            width: 28,
-            height: 28,
-            background: 'radial-gradient(circle at 35% 35%, #6ee7b7, #059669)',
-            boxShadow: '0 0 14px rgba(45,212,160,0.45)',
-          }}
-          aria-hidden
-        />
-        <span
-          className="text-[15px] font-normal tracking-tight"
-          style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--cp-text)' }}
-        >
-          BUDR
-        </span>
-      </div>
+      <Link
+        href="/care-portal-demo"
+        aria-label="BUDRcare demo forside"
+        className="mr-0 flex shrink-0 items-center gap-2 self-stretch text-[var(--cp-text)] sm:mr-1 sm:gap-2.5 md:-ml-6 md:w-56 md:bg-[var(--cp-ink)] md:pl-5 md:text-white"
+      >
+        <BudrLogo dark size={28} showWordmark={false} />
+        <span className="text-[17px] font-bold tracking-tight">BUDRcare</span>
+      </Link>
 
       <span
         className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider sm:px-2.5 sm:text-[10px]"
         style={{
-          borderColor: 'rgba(246, 173, 85, 0.35)',
+          borderColor: 'transparent',
           backgroundColor: 'var(--cp-amber-dim)',
           color: 'var(--cp-amber)',
         }}
@@ -75,8 +66,7 @@ export default function DemoTopNav() {
           href="/care-portal-login"
           className="rounded-[10px] px-3 py-2 text-xs font-semibold text-white transition-all hover:brightness-110"
           style={{
-            background: 'linear-gradient(135deg, #2dd4a0 0%, #0d9488 100%)',
-            boxShadow: '0 2px 14px rgba(45,212,160,0.35)',
+            background: 'var(--cp-green)',
           }}
         >
           Log ind

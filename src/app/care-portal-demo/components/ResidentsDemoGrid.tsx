@@ -152,7 +152,7 @@ export default function ResidentsDemoGrid({
       <div className="mb-6">
         <h1
           className="text-xl font-semibold"
-          style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--cp-text)' }}
+          style={{ fontFamily: 'var(--cp-font)', color: 'var(--cp-text)' }}
         >
           Beboere
         </h1>
@@ -170,9 +170,9 @@ export default function ResidentsDemoGrid({
         <div
           className="mb-4 rounded-xl border px-4 py-3"
           style={{
-            borderColor: 'rgba(45,212,160,0.28)',
+            borderColor: 'color-mix(in srgb, var(--cp-green) 28%, transparent)',
             backgroundColor: 'var(--cp-bg2)',
-            boxShadow: '0 0 0 1px rgba(45,212,160,0.08)',
+            boxShadow: '0 0 0 1px color-mix(in srgb, var(--cp-green) 8%, transparent)',
           }}
         >
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -212,8 +212,8 @@ export default function ResidentsDemoGrid({
                 href={`${residentHrefFor(focusResident)}${focusTab ? `?tab=${encodeURIComponent(focusTab)}` : ''}`}
                 className="inline-flex items-center justify-center gap-1 rounded-lg px-3 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90"
                 style={{
-                  background: 'linear-gradient(135deg, #2dd4a0 0%, #0d9488 100%)',
-                  boxShadow: '0 2px 12px rgba(45,212,160,0.25)',
+                  background: 'var(--cp-green)',
+                  boxShadow: '0 2px 12px color-mix(in srgb, var(--cp-green) 25%, transparent)',
                 }}
               >
                 Åbn fuld profil
@@ -293,7 +293,7 @@ export default function ResidentsDemoGrid({
                 href={residentHrefFor(r.id)}
                 className={`flex min-h-[52px] items-center gap-4 px-4 py-3 transition-colors hover:bg-[rgba(255,255,255,0.04)] active:bg-[rgba(255,255,255,0.06)] ${
                   focusResident === r.id
-                    ? 'ring-1 ring-inset ring-[rgba(45,212,160,0.35)] bg-[rgba(45,212,160,0.06)]'
+                    ? 'ring-1 ring-inset ring-[color-mix(in_srgb,var(--cp-green)_35%,transparent)] bg-[color-mix(in_srgb,var(--cp-green)_6%,transparent)]'
                     : ''
                 }`}
               >
@@ -306,7 +306,7 @@ export default function ResidentsDemoGrid({
                         : r.trafficLight === 'gul'
                           ? 'linear-gradient(135deg,#f6ad55,#c05621)'
                           : r.trafficLight === 'groen'
-                            ? 'linear-gradient(135deg,#2dd4a0,#0d9488)'
+                            ? 'var(--cp-green)'
                             : 'linear-gradient(135deg,#64748b,#475569)',
                   }}
                 >

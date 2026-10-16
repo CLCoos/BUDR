@@ -193,7 +193,7 @@ export default function ResidentListDemo({ onNewJournal }: ResidentListDemoProps
               style={{
                 backgroundColor: 'var(--cp-green-dim)',
                 color: 'var(--cp-green)',
-                border: '1px solid rgba(45,212,160,0.2)',
+                border: '1px solid color-mix(in srgb, var(--cp-green) 20%, transparent)',
               }}
             >
               <span
