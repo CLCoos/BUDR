@@ -9,6 +9,7 @@ import OpgaveWidget from './OpgaveWidget';
 import DocumentInboxWidget from './DocumentInboxWidget';
 import AssistantWidget from '@/components/assistant/AssistantWidget';
 import VagtPanel from './VagtPanel';
+import TilsynPanel from './TilsynPanel';
 import OnCallStaffWidget from './OnCallStaffWidget';
 import ResidentList from './ResidentList';
 import StatCards from './StatCards';
@@ -36,6 +37,8 @@ type DashboardClientProps = {
   medicationWidget?: React.ReactNode;
   mode?: 'dashboard' | 'single';
   singleWidget?: DashboardWidgetKey;
+  /** Leder ser tilsynsoverblikket øverst. */
+  isLeader?: boolean;
 };
 
 type DashboardWidgetKey =
@@ -153,6 +156,7 @@ function DashboardClientInner({
   medicationWidget,
   mode = 'dashboard',
   singleWidget,
+  isLeader = false,
 }: DashboardClientProps) {
   const { department } = useCarePortalDepartment();
   const authState = useAuthenticatedUser();
@@ -603,6 +607,8 @@ function DashboardClientInner({
       <OnboardingChecklist />
 
       {/* ── Vagten: Mød ind, Nu, Gå hjem ─────────────────────── */}
+      {isLeader && <TilsynPanel />}
+
       <VagtPanel assistant={<AssistantWidget hideIntake />} />
 
       {/* ── Alt overblik: de klassiske moduler, foldet sammen ── */}
@@ -716,6 +722,7 @@ export default function DashboardClient({
   medicationWidget,
   mode = 'dashboard',
   singleWidget,
+  isLeader = false,
 }: DashboardClientProps) {
   return (
     <Suspense
@@ -732,6 +739,7 @@ export default function DashboardClient({
         medicationWidget={medicationWidget}
         mode={mode}
         singleWidget={singleWidget}
+        isLeader={isLeader}
       />
     </Suspense>
   );
