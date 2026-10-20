@@ -13,7 +13,8 @@ Svar KUN med gyldig JSON uden markdown:
     {"type": "journal_note", "category": "Døgnnotat|Sundhed|Socialt|Hændelse|Samtale", "text": "…"},
     {"type": "task", "title": "…", "deadline": "YYYY-MM-DD"},
     {"type": "calendar", "title": "…", "category": "laege|aktivitet|intern|transport|andet", "date": "YYYY-MM-DD", "time": "HH:MM", "location": "…"},
-    {"type": "medication_request", "text": "…"}
+    {"type": "medication_request", "text": "…"},
+    {"type": "handover", "text": "…"}
   ]
 }
 
@@ -22,6 +23,7 @@ Regler:
 - task: kun når noget konkret skal følges op senere. Sæt en realistisk frist ud fra teksten (fx "om en uge"); ellers i dag.
 - calendar: kun når teksten nævner en ny aftale med dato. Tid skal stå i teksten; ellers lav en task i stedet.
 - medication_request: når en ordination er ny, ændret eller stoppet. Du ændrer aldrig selv medicin; det sendes til den medicinansvarlige.
+- handover: én kort linje til næste vagt, kun når noget er vigtigt at vide eller følge op på i dag eller i nat (fx uro, ny aftale, noget der er lovet). Højst én.
 - Brug kun oplysninger fra teksten. Opfind aldrig diagnoser, doser, tider eller navne.
 - Hvis teksten ikke indeholder noget at dokumentere, så svar med "actions": [] og forklar kort i summary.`;
 

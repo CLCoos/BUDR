@@ -31,18 +31,21 @@ export type CalendarAction = {
   location: string;
 };
 export type MedicationRequestAction = { id: string; type: 'medication_request'; text: string };
+export type HandoverAction = { id: string; type: 'handover'; text: string };
 
 export type AssistantAction =
   | JournalNoteAction
   | TaskAction
   | CalendarAction
-  | MedicationRequestAction;
+  | MedicationRequestAction
+  | HandoverAction;
 
 export const ACTION_LABELS: Record<AssistantAction['type'], string> = {
   journal_note: 'Journalnotat (kladde)',
   task: 'Opgave',
   calendar: 'Aftale i kalenderen',
   medication_request: 'Til medicinansvarlig',
+  handover: 'Til vagtoverleveringen',
 };
 
 const YMD_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -103,6 +106,9 @@ export function sanitizeActions(raw: unknown, today: string): AssistantAction[] 
     } else if (o.type === 'medication_request') {
       const t = text(o.text, 500);
       if (t) out.push({ id, type: 'medication_request', text: t });
+    } else if (o.type === 'handover') {
+      const t = text(o.text, 500);
+      if (t) out.push({ id, type: 'handover', text: t });
     }
     if (out.length >= MAX_ACTIONS) break;
   }
@@ -131,6 +137,7 @@ export function describeAction(a: AssistantAction): string {
     case 'calendar':
       return `${a.title} ${formatDanishDate(a.date)} kl. ${a.time.replace(':', '.')}`;
     case 'medication_request':
+    case 'handover':
       return a.text;
   }
 }
