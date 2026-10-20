@@ -19,10 +19,13 @@ import ResidentLysSamtalerTab from '@/app/care-portal-dashboard/components/Resid
 import ResidentVumTab from './components/ResidentVumTab';
 import ResidentTabs from './components/ResidentTabs';
 import ResidentDocumentsTab from './components/ResidentDocumentsTab';
+import ResidentForloebTab, { type ForloebProps } from './components/ResidentForloebTab';
+import { buildTimeline, dailyMood, medsToday, moodSummary, nextUp, ownWords } from '@/lib/forloeb';
+import { getDocumentType } from '@/lib/documents/registry';
 import type { DailyPlan, PendingProposal } from './components/DagsPlanPortal';
 import type { MedDefinition } from './components/types';
 import type { ResidentExportInput } from '@/lib/residentExport/types';
-import { copenhagenStartOfTodayUtcIso } from '@/lib/copenhagenDay';
+import { copenhagenStartOfTodayUtcIso, copenhagenYmd } from '@/lib/copenhagenDay';
 import { formatResidentName, getInitials } from '@/lib/residents/formatName';
 import {
   getRecoveryProfile,
@@ -91,6 +94,10 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
     medsRes,
     concernRes,
     aiBriefRes,
+    plannerRes,
+    openDocsRes,
+    medGivenRes,
+    crisisRes,
   ] = await Promise.all([
     supabase
       .from('care_residents')
@@ -149,7 +156,44 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
+    // Til «Forløb»: kommende aftaler, åbne dokumentfrister, dagens udleveringer og kriseplan.
+    supabase
+      .from('care_planner_entries')
+      .select('id, title, starts_at, location')
+      .eq('resident_user_id', residentId)
+      .gte('starts_at', new Date().toISOString())
+      .lt('starts_at', new Date(Date.now() + 14 * 86400000).toISOString())
+      .order('starts_at', { ascending: true })
+      .limit(10),
+    supabase
+      .from('resident_documents')
+      .select('id, doc_type, title, due_date')
+      .eq('resident_id', residentId)
+      .in('status', ['kladde', 'til_godkendelse'])
+      .not('due_date', 'is', null)
+      .lte('due_date', new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10))
+      .limit(10),
+    supabase
+      .from('medication_administrations')
+      .select('medication_id')
+      .eq('resident_id', residentId)
+      .eq('scheduled_date', copenhagenYmd(new Date()))
+      .is('cancelled_at', null),
+    supabase
+      .from('crisis_plans')
+      .select('warning_signs, helpful_strategies, steps')
+      .eq('resident_id', residentId)
+      .maybeSingle(),
   ]);
+
+  for (const [name, res] of Object.entries({
+    planner: plannerRes,
+    openDocs: openDocsRes,
+    medGiven: medGivenRes,
+    crisis: crisisRes,
+  })) {
+    if (res.error) console.error(`[forloeb] ${name}:`, res.error.message);
+  }
 
   type JournalRow = {
     id: string;
@@ -256,6 +300,102 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
 
   const profileCompletionPercent = computeRecoveryProfileCompletion(recoveryProfile);
 
+  const firstName =
+    ((r.first_name as string | null) ?? '').trim() ||
+    ((r.display_name as string | null) ?? '').trim().split(/\s+/)[0] ||
+    'Borgeren';
+  const now = new Date();
+  const todayYmd = copenhagenYmd(now);
+  const mood = dailyMood(allCheckins, todayYmd, 14);
+  const latestWords = allCheckins.find((ch) => ch.free_text?.trim());
+  const crisisRow = crisisRes.data as {
+    warning_signs: string[] | null;
+    helpful_strategies: string[] | null;
+    steps: { title?: string; description?: string }[] | null;
+  } | null;
+  const crisisSteps = (crisisRow?.steps ?? [])
+    .map((st) => [st.title?.trim(), st.description?.trim()].filter(Boolean).join(': '))
+    .filter(Boolean);
+  const clean = (xs: string[] | null | undefined) =>
+    (xs ?? []).map((x) => x.trim()).filter(Boolean);
+  const crisis =
+    crisisRow &&
+    (clean(crisisRow.warning_signs).length > 0 ||
+      clean(crisisRow.helpful_strategies).length > 0 ||
+      crisisSteps.length > 0)
+      ? {
+          warningSigns: clean(crisisRow.warning_signs),
+          helps: clean(crisisRow.helpful_strategies),
+          steps: crisisSteps,
+        }
+      : null;
+
+  const forloeb: Omit<ForloebProps, 'residentId'> = {
+    firstName,
+    today: {
+      traffic: tl,
+      mood: c ? ((c.mood_score as number | null) ?? null) : null,
+      when: c ? formatCheckin(c.created_at as string) : null,
+      note: c ? ((c.note as string | null) ?? null) : null,
+    },
+    mood,
+    moodSummary: moodSummary(mood),
+    goals: activeNextSteps.map((g) => ({
+      id: g.id,
+      title: g.title,
+      description: g.description,
+      targetDate: g.target_date,
+      byResident: g.created_by_type === 'resident',
+      residentNote: g.resident_note,
+    })),
+    timeline: buildTimeline({
+      journal: journalExportResolved,
+      concerns: (concernRes.data ?? []) as {
+        id: string;
+        note: string;
+        category: string;
+        staff_name: string;
+        created_at: string;
+      }[],
+      checkins: allCheckins,
+      limit: 12,
+    }),
+    ownWords: ownWords(recoveryProfile),
+    latestLysWords: latestWords?.free_text
+      ? { text: latestWords.free_text.trim(), when: formatCheckin(latestWords.created_at) }
+      : null,
+    next: nextUp({
+      today: todayYmd,
+      residentId,
+      appointments: (plannerRes.data ?? []) as {
+        id: string;
+        title: string;
+        starts_at: string;
+        location: string | null;
+      }[],
+      documents: (
+        (openDocsRes.data ?? []) as {
+          id: string;
+          doc_type: string;
+          title: string | null;
+          due_date: string;
+        }[]
+      ).map((d) => ({
+        id: d.id,
+        title: d.title?.trim() || getDocumentType(d.doc_type)?.title || 'Dokument',
+        due_date: String(d.due_date),
+      })),
+    }),
+    meds: medsToday(
+      (medsRes.data ?? []) as MedDefinition[],
+      new Set(
+        ((medGivenRes.data ?? []) as { medication_id: string }[]).map((g) => g.medication_id)
+      ),
+      now
+    ),
+    crisis,
+  };
+
   return {
     resident: {
       id: r.user_id as string,
@@ -308,6 +448,7 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
     recentReflections,
     recentWeeklyCheckins,
     aiBrief: aiBriefRes.data ?? null,
+    forloeb,
   };
 }
 
@@ -319,6 +460,7 @@ type Props = {
 };
 
 const ALL_TABS = [
+  'forloeb',
   'overblik',
   'recovery',
   'vum',
@@ -332,6 +474,7 @@ const ALL_TABS = [
 type TabId = (typeof ALL_TABS)[number];
 
 const TAB_LABELS: Record<TabId, string> = {
+  forloeb: 'Forløb',
   overblik: 'Overblik',
   recovery: 'Recovery',
   vum: 'VUM 2.0',
@@ -345,11 +488,11 @@ const TAB_LABELS: Record<TabId, string> = {
 
 export default async function ResidentDagPage({ params, searchParams }: Props) {
   const { residentId } = await params;
-  const { tab = 'overblik', writeJournal } = (await searchParams) as {
+  const { tab = 'forloeb', writeJournal } = (await searchParams) as {
     tab?: string;
     writeJournal?: string;
   };
-  const activeTab = (ALL_TABS as readonly string[]).includes(tab) ? (tab as TabId) : 'overblik';
+  const activeTab = (ALL_TABS as readonly string[]).includes(tab) ? (tab as TabId) : 'forloeb';
 
   preloadPortalShell();
   const supabase = await createServerSupabaseClient();
@@ -382,6 +525,7 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
     recentReflections,
     recentWeeklyCheckins,
     aiBrief,
+    forloeb,
   } = data;
 
   const exportInput: ResidentExportInput = {
@@ -468,6 +612,7 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
           defaultTab={activeTab}
           pendingProposals={proposals.length}
           panels={{
+            forloeb: <ResidentForloebTab residentId={residentId} {...forloeb} />,
             overblik: (
               <>
                 <ResidentActiveDevices residentUserId={residentId} />
