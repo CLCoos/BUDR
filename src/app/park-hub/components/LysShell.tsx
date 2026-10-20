@@ -31,7 +31,7 @@ import LysKrisekort from './LysKrisekort';
 import LysVagtplan from './LysVagtplan';
 import LysMyStories from './LysMyStories';
 import { createClient } from '@/lib/supabase/client';
-import { Moon, Sun } from 'lucide-react';
+import { LifeBuoy, Moon, Sun } from 'lucide-react';
 
 type Props = {
   firstName: string;
@@ -268,8 +268,8 @@ export default function LysShell({
         <div
           className="w-full transition-all duration-200"
           style={{
-            /* Bundmenu + flydende krise-knap (h-14) så genveje ikke blokeres */
-            paddingBottom: 'calc(5rem + 4.25rem + max(1rem, env(safe-area-inset-bottom, 0px)))',
+            /* Plads til bundmenuen, så det nederste indhold ikke skjules */
+            paddingBottom: 'calc(5.5rem + max(1rem, env(safe-area-inset-bottom, 0px)))',
           }}
         >
           <div
@@ -292,6 +292,20 @@ export default function LysShell({
               lys
             </div>
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setOverlay('crisis')}
+                className="flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold transition-all active:scale-95"
+                style={{
+                  backgroundColor: 'rgba(233, 162, 59, 0.16)',
+                  color: shellTokens.text,
+                  borderColor: 'rgba(233, 162, 59, 0.55)',
+                }}
+                aria-label="Hjælp: kriseplan og få fat i personalet"
+              >
+                <LifeBuoy size={15} strokeWidth={2} aria-hidden />
+                Hjælp
+              </button>
               <button
                 type="button"
                 onClick={toggleAppearance}
@@ -531,24 +545,6 @@ export default function LysShell({
           <LysPhoneOverlayShell backgroundColor="#0F1B2D">
             <LysKrisekort firstName={firstName} onClose={() => setOverlay(null)} />
           </LysPhoneOverlayShell>
-        )}
-
-        {!overlay && (
-          <button
-            type="button"
-            onClick={() => setOverlay('crisis')}
-            className="fixed z-[60] h-14 w-14 rounded-full text-2xl font-black text-white shadow-lg active:scale-95"
-            style={{
-              right:
-                'max(0.75rem, env(safe-area-inset-right, 0px), calc((100vw - min(430px, 100vw)) / 2 + 0.75rem))',
-              bottom: 'calc(5.5rem + max(0.5rem, env(safe-area-inset-bottom, 0px)))',
-              background: 'linear-gradient(135deg, #C0392B, #B91C1C)',
-              boxShadow: '0 4px 20px rgba(192,57,43,0.45)',
-            }}
-            aria-label="Åbn krisehjælp"
-          >
-            ⚡
-          </button>
         )}
 
         <LysBottomNav

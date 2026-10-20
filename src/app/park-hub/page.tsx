@@ -46,15 +46,13 @@ export default async function ParkHubPage() {
     return (
       <>
         <DemoSeeder />
-        <div className="pt-8">
-          <LysShell
-            firstName="Anders"
-            initials="AM"
-            residentId={DEMO_RESIDENT_ID}
-            facilityId={null}
-            isDemoMode
-          />
-        </div>
+        <LysShell
+          firstName="Anders"
+          initials="AM"
+          residentId={DEMO_RESIDENT_ID}
+          facilityId={null}
+          isDemoMode
+        />
       </>
     );
   }
