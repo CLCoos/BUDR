@@ -42,17 +42,17 @@ export const DEMO_GUIDED_TOUR_STEPS: DemoGuidedTourStep[] = [
   },
   {
     id: 'moenster',
-    path: '/care-portal-demo/residents/res-sara?tab=overblik',
+    path: '/care-portal-demo/residents/res-sara',
     title: '3 · Mønsteret ingen så',
     body: 'Åbn Saras forløb. AI har set noget over de sidste uger, som er svært at fange i en travl hverdag: hendes dårlige dage kommer typisk et par dage efter mors besøg. Ikke under besøget — bagefter. Den slags indsigt er kernen i BUDR.',
-    scrollToId: 'section-oversigt',
+    scrollToId: 'forloeb-humoer',
   },
   {
     id: 'samtale',
     path: '/care-portal-demo/residents/res-sara',
     title: '4 · Lys fangede det først',
     body: 'Da det spidsede til, talte Sara med Lys om natten. Samtalen viste tidlige tegn, og sikkerhedslaget gav personalet besked — stille, uden alarm. Her ser du hvad borgeren delte, og hvad systemet reagerede på.',
-    scrollToId: 'section-borgerapp',
+    scrollToId: 'forloeb-lys',
   },
   {
     id: 'handover',
@@ -65,7 +65,7 @@ export const DEMO_GUIDED_TOUR_STEPS: DemoGuidedTourStep[] = [
     path: '/care-portal-demo/residents/res-sara',
     title: '6 · Da mestringen virkede',
     body: 'Uger senere kommer de samme tidlige tegn igen. Men denne gang griber Sara selv ind — hun bruger sin tryghedsplan, og uroen vendes uden indlæggelse. Forløbet viser fremgangen sort på hvidt, og det er den historie en handleplan skal kunne fortælle.',
-    scrollToId: 'section-indtjek',
+    scrollToId: 'forloeb-maal',
   },
   {
     id: 'lys',
