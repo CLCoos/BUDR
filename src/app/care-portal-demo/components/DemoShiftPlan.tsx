@@ -333,7 +333,7 @@ const NEEDS_YOU = [
     why: 'Gul i Lys tre dage i træk og sover dårligt.',
     tip: 'Hun har det bedst med ro. Spørg til søvnen.',
     tone: 'amber' as const,
-    href: '/care-portal-demo/residents',
+    href: '/care-portal-demo/residents/res-camilla',
   },
   {
     initials: 'MT',
@@ -341,7 +341,7 @@ const NEEDS_YOU = [
     why: 'Afslog aftenmedicin i går. Morgendosis kl. 08.',
     tip: 'Giv dosis sammen med morgenmaden, det plejer at gå.',
     tone: 'red' as const,
-    href: '/care-portal-demo/residents',
+    href: '/care-portal-demo/residents/res-mikkel',
   },
   {
     initials: 'SK',
