@@ -154,7 +154,7 @@ export default function LoenDemoClient({
       </Link>
       <h1
         className="mt-4 text-xl font-semibold"
-        style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--cp-text)' }}
+        style={{ fontFamily: 'var(--cp-font)', color: 'var(--cp-text)' }}
       >
         Løn &amp; timer
       </h1>
