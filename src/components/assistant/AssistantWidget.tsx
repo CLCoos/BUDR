@@ -75,6 +75,7 @@ function savedMessage(results: AppliedResult[]): string {
       ? 'opgave'
       : null,
     ok.filter((r) => r.type === 'calendar').length > 0 ? 'kalenderaftale' : null,
+    ok.filter((r) => r.type === 'handover').length > 0 ? 'overlevering' : null,
   ].filter(Boolean);
   return `Gemt: ${parts.join(', ')}`;
 }
