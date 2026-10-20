@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { defaultMoment, lysConcerns, minutesIntoShift, previousHandovers } from './vagt';
+import {
+  defaultMoment,
+  lysConcerns,
+  messageText,
+  minutesIntoShift,
+  previousHandovers,
+} from './vagt';
 
 // Oktober 2026 er sommertid: dansk tid = UTC + 2.
 const dk = (hhmm: string, day = '2026-10-20') => {
@@ -68,5 +74,14 @@ describe('lysConcerns', () => {
       { resident_id: 'c', traffic_light: 'rød', mood_score: 3, created_at: '2026-10-20T02:00:00Z' },
     ]);
     expect(out.map((r) => r.resident_id)).toEqual(['c', 'b']);
+  });
+});
+
+describe('messageText', () => {
+  it('tager teksten mellem «» og dropper navnet', () => {
+    expect(messageText('Lars Hansen: «Jeg vil gerne tale med nogen 💬»')).toBe(
+      'Jeg vil gerne tale med nogen 💬'
+    );
+    expect(messageText('Uden format')).toBe('Uden format');
   });
 });

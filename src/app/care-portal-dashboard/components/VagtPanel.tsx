@@ -10,6 +10,7 @@ import {
   ClipboardList,
   FileText,
   Loader2,
+  MessageCircle,
   Mic,
 } from 'lucide-react';
 import { api } from '@/components/documents/shared';
@@ -54,6 +55,13 @@ type Vagt = {
     residentId: string | null;
     name: string | null;
     location: string;
+  }[];
+  residentMessages: {
+    id: string;
+    residentId: string;
+    name: string | null;
+    text: string;
+    at: string;
   }[];
   myDraftsToday: number;
   handoverWrittenCount: number;
@@ -161,6 +169,83 @@ function MomentSwitch({
         );
       })}
     </div>
+  );
+}
+
+/** Beskeder fra borgerne i Lys. «Set» giver borgeren en kvittering i Lys. */
+function ResidentMessages({
+  messages,
+  onSeen,
+}: {
+  messages: Vagt['residentMessages'];
+  onSeen: (id: string) => void;
+}) {
+  const [busy, setBusy] = useState<string | null>(null);
+  const markSeen = async (id: string) => {
+    setBusy(id);
+    try {
+      await api(`/api/portal/notifications/${id}/acknowledge`, { method: 'POST' });
+      onSeen(id);
+    } catch {
+      // Beskeden bliver stående, så man kan prøve igen.
+    } finally {
+      setBusy(null);
+    }
+  };
+  return (
+    <section
+      className="rounded-2xl border"
+      style={{ ...panel, borderColor: 'var(--cp-amber)' }}
+      aria-labelledby="vagt-beskeder"
+    >
+      <div
+        className="flex items-center gap-2 border-b px-5 py-4"
+        style={{ borderColor: 'var(--cp-border)' }}
+      >
+        <MessageCircle size={18} style={{ color: 'var(--cp-amber)' }} aria-hidden />
+        <h2 id="vagt-beskeder" className="text-base font-semibold" style={text}>
+          Beskeder fra borgerne
+        </h2>
+        <span className="text-xs" style={muted}>
+          Borgeren kan se, når du har trykket «Set»
+        </span>
+      </div>
+      <ul>
+        {messages.map((m) => (
+          <li
+            key={m.id}
+            className="flex flex-col gap-3 border-b px-5 py-3.5 last:border-b-0 sm:flex-row sm:items-center"
+            style={{ borderColor: 'var(--cp-border)' }}
+          >
+            <span className="min-w-0 flex-1">
+              <Link
+                href={residentHref(m.residentId)}
+                className="text-[15px] font-semibold hover:underline"
+                style={text}
+              >
+                {m.name}
+              </Link>
+              <span className="ml-2 text-xs" style={muted}>
+                kl. {clock(m.at)}
+              </span>
+              <span className="block text-[15px] leading-snug" style={text}>
+                «{m.text}»
+              </span>
+            </span>
+            <button
+              type="button"
+              onClick={() => void markSeen(m.id)}
+              disabled={busy === m.id}
+              className="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold disabled:opacity-60"
+              style={{ backgroundColor: 'var(--cp-green)', color: 'var(--cp-on-green)' }}
+            >
+              <Check size={16} aria-hidden />
+              Set
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -593,6 +678,18 @@ export default function VagtPanel({ assistant }: { assistant: React.ReactNode })
         </p>
         <MomentSwitch moment={moment} onChange={setMoment} />
       </div>
+      {v.residentMessages.length > 0 && (
+        <ResidentMessages
+          messages={v.residentMessages}
+          onSeen={(id) =>
+            setV((prev) =>
+              prev
+                ? { ...prev, residentMessages: prev.residentMessages.filter((m) => m.id !== id) }
+                : prev
+            )
+          }
+        />
+      )}
       {moment === 'moed' && <MoedInd v={v} onReady={() => setMoment('nu')} />}
       {moment === 'nu' && <Nu v={v} assistant={assistant} />}
       {moment === 'hjem' && (
