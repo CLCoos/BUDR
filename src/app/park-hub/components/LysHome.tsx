@@ -209,7 +209,7 @@ function greetingLine(phase: LysPhase, name: string): { static: string; italic: 
 
 export default function LysHome({
   firstName,
-  initials,
+  initials: _initials,
   residentId,
   tokens,
   accent,
@@ -235,6 +235,14 @@ export default function LysHome({
     Array<{ id: string; title: string; time: string }>
   >([]);
   const [completedToday, setCompletedToday] = useState<Set<string>>(new Set());
+
+  // Antal klaret tælles kun blandt dagens egne punkter, så tallet aldrig overstiger planen.
+  const doneCount = todayPreview.filter((i) => completedToday.has(i.id)).length;
+  // Forsiden viser de næste fem: først det, der ikke er klaret endnu.
+  const previewItems = [
+    ...todayPreview.filter((i) => !completedToday.has(i.id)),
+    ...todayPreview.filter((i) => completedToday.has(i.id)),
+  ].slice(0, 5);
 
   const lastAssistant =
     [...messages].reverse().find((m) => m.role === 'assistant')?.content ?? null;
@@ -302,27 +310,29 @@ export default function LysHome({
             title: row.title,
             time: String(row.time_of_day).slice(0, 5),
           }));
-        const items = [...fromDaily, ...fromResident]
-          .sort((a, b) => a.time.localeCompare(b.time))
-          .slice(0, 5);
+        const items = [...fromDaily, ...fromResident].sort((a, b) => a.time.localeCompare(b.time));
         setTodayPreview(items);
         setCompletedToday(new Set(bundle.completions));
       });
       return;
     }
 
-    void dataService.getPlanItems(session.storageMode, activeId).then((all) => {
-      const items = all
-        .filter((p) => p.active_from <= today)
-        .map((p) => ({
-          id: p.id,
-          title: p.title,
-          time: (p.time_of_day || '09:00').slice(0, 5),
-        }))
-        .sort((a, b) => a.time.localeCompare(b.time))
-        .slice(0, 5);
-      setTodayPreview(items);
-    });
+    const demo = isLysDemoResidentId(residentId);
+    void dataService
+      .getPlanItems(demo ? 'local' : session.storageMode, demo ? residentId : activeId)
+      .then((all) => {
+        const items = all
+          .filter((p) =>
+            p.recurrence === 'none' ? p.active_from === today : p.active_from <= today
+          )
+          .map((p) => ({
+            id: p.id,
+            title: p.title,
+            time: (p.time_of_day || '09:00').slice(0, 5),
+          }))
+          .sort((a, b) => a.time.localeCompare(b.time));
+        setTodayPreview(items);
+      });
     try {
       const raw = localStorage.getItem(`budr_dag_completed_${today}`);
       setCompletedToday(new Set(raw ? (JSON.parse(raw) as string[]) : []));
@@ -395,27 +405,6 @@ export default function LysHome({
             {todayStr}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <div
-            className="h-10 w-10 shrink-0 rounded-full flex items-center justify-center text-sm font-black text-white"
-            style={{
-              background: 'linear-gradient(135deg, #2D5BE3, #4A7FF7)',
-              boxShadow: '0 6px 18px rgba(45,91,227,0.28)',
-            }}
-            aria-hidden
-          >
-            {initials}
-          </div>
-          <button
-            type="button"
-            onClick={() => void handleLogout()}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium transition-opacity hover:opacity-70"
-            style={{ color: 'var(--lys-muted)' }}
-            aria-label="Log ud"
-          >
-            ×
-          </button>
-        </div>
       </header>
 
       <main className="space-y-4 px-5 pb-4">
@@ -432,32 +421,32 @@ export default function LysHome({
           >
             <div>
               <p className="text-sm font-semibold" style={{ color: 'var(--lys-text)' }}>
-                {completedToday.size} af {Math.max(todayPreview.length, 1)} gennemført
+                {todayPreview.length > 0
+                  ? `${doneCount} af ${todayPreview.length} klaret`
+                  : 'Ingen plan for i dag endnu'}
               </p>
               <p className="text-xs" style={{ color: 'var(--lys-muted)' }}>
-                Flot arbejde i dag
+                {todayPreview.length === 0
+                  ? 'Personalet kan lave den sammen med dig'
+                  : doneCount === 0
+                    ? 'Tag det i dit eget tempo'
+                    : 'Flot arbejde i dag'}
               </p>
             </div>
-            <div
-              className="flex h-10 w-10 items-center justify-center rounded-full text-[11px] font-bold"
-              style={{
-                backgroundColor: 'var(--lys-icon-tile-bg)',
-                color: 'var(--lys-icon-tile-fg)',
-              }}
-            >
-              {Math.round((completedToday.size / Math.max(todayPreview.length, 1)) * 100)}%
-            </div>
+            {todayPreview.length > 0 && (
+              <div
+                className="flex h-10 w-10 items-center justify-center rounded-full text-[11px] font-bold"
+                style={{
+                  backgroundColor: 'var(--lys-icon-tile-bg)',
+                  color: 'var(--lys-icon-tile-fg)',
+                }}
+              >
+                {Math.round((doneCount / todayPreview.length) * 100)}%
+              </div>
+            )}
           </div>
           <div>
-            {(todayPreview.length > 0
-              ? todayPreview
-              : [
-                  { id: 's1', title: 'Morgenmøde', time: '09:30' },
-                  { id: 's2', title: 'Gåtur i parken', time: '11:00' },
-                  { id: 's3', title: 'Hvile / Egentid', time: '14:00' },
-                  { id: 's4', title: 'Aftensmad', time: '16:30' },
-                ]
-            ).map((item, idx) => {
+            {previewItems.map((item, idx) => {
               const done = completedToday.has(item.id);
               return (
                 <button
@@ -467,9 +456,7 @@ export default function LysHome({
                   className="w-full flex items-center gap-3 px-4 py-3 text-left"
                   style={{
                     borderBottom:
-                      idx < (todayPreview.length > 0 ? todayPreview.length : 4) - 1
-                        ? '1px solid var(--lys-row-divider)'
-                        : 'none',
+                      idx < previewItems.length - 1 ? '1px solid var(--lys-row-divider)' : 'none',
                     backgroundColor: done ? 'var(--lys-bg4)' : 'transparent',
                     opacity: done ? 0.55 : 1,
                   }}
@@ -777,6 +764,16 @@ export default function LysHome({
             </div>
           </div>
         )}
+        <div className="flex justify-center pt-4">
+          <button
+            type="button"
+            onClick={() => void handleLogout()}
+            className="min-h-[44px] px-4 text-sm font-medium underline-offset-4 hover:underline"
+            style={{ color: 'var(--lys-muted)' }}
+          >
+            Log ud af Lys
+          </button>
+        </div>
       </main>
     </div>
   );
