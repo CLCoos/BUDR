@@ -27,19 +27,19 @@ import { carePortalPilotSimulatedData } from '@/lib/carePortalPilotSimulated';
 import { enumerateCivilMedicationSlotDates } from '@/lib/medicationScheduleSlots';
 import { createClient } from '@/lib/supabase/client';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
-import { copenhagenYmd } from '@/lib/copenhagenDay';
+import { copenhagenLocalToDate, copenhagenYmd } from '@/lib/copenhagenDay';
 import {
-  fetchMedicationAdministrationsForDate,
-  givenAtByMedicationId,
+  fetchGivenAtByMedicationId,
   liveMedicationTaskId,
   markMedicationGiven,
+  parseLiveMedicationTaskId,
   unmarkMedicationGiven,
 } from '@/lib/medicationAdministration';
 import { useCarePortalDepartment } from '@/contexts/CarePortalDepartmentContext';
 import { getWidgetStatus, widgetStatusVar } from '@/lib/widgetStatus';
 import { useNameDisplay } from '@/lib/residents/useNameDisplay';
 import type { ResidentNameFields } from '@/lib/residents/formatName';
-import { scheduledHhMm } from '@/lib/medicationSchedule';
+import { doseOccasion } from '@/lib/medicationSchedule';
 
 export interface MedicationTask {
   id: string;
@@ -94,15 +94,6 @@ function careHouseFromOnboarding(od: Record<string, unknown>): CareHouse {
   const single = /^([ABCD])$/i.exec(h);
   if (single) return single[1]!.toUpperCase() as CareHouse;
   return 'D';
-}
-
-function scheduledTodayFromMed(timeGroup: string, timeLabel: string, anchor: Date): Date {
-  const [hs, ms] = scheduledHhMm(timeGroup, timeLabel)
-    .split(':')
-    .map((n) => parseInt(n, 10));
-  const d = new Date(anchor);
-  d.setHours(hs ?? 12, ms ?? 0, 0, 0);
-  return d;
 }
 
 type DbResidentMedRow = {
@@ -169,7 +160,6 @@ async function fetchLiveMedicationTasksForOrg(
   if (medErr || !medRows?.length) return [];
 
   const now = new Date();
-  const ymd = copenhagenYmd(now);
   const tasks: MedicationTask[] = [];
 
   for (const raw of medRows as DbResidentMedRow[]) {
@@ -177,9 +167,9 @@ async function fetchLiveMedicationTasksForOrg(
     if (!meta) continue;
     // Behovsmedicin har intet fast tidspunkt; den gives og kvitteres fra borgerens 360°.
     if (raw.time_group === 'behoev') continue;
-    const scheduledAt = scheduledTodayFromMed(raw.time_group, raw.time_label, now);
+    const occasion = doseOccasion(now, raw.time_group, raw.time_label);
     tasks.push({
-      id: liveMedicationTaskId(raw.id, ymd),
+      id: liveMedicationTaskId(raw.id, occasion.ymd),
       residentId: raw.resident_id,
       residentName: meta.name,
       initials: meta.initials,
@@ -190,21 +180,26 @@ async function fetchLiveMedicationTasksForOrg(
       quantity: 1,
       unit: 'tabletter',
       routeLabel: 'Oralt',
-      scheduledAt,
+      scheduledAt: copenhagenLocalToDate(occasion.ymd, occasion.hhmm),
       givenAt: null,
       medicationId: raw.id,
     });
   }
 
-  const admin = await fetchMedicationAdministrationsForDate(
+  const given = await fetchGivenAtByMedicationId(
     supabase,
-    tasks.map((t) => t.medicationId).filter((id): id is string => Boolean(id)),
-    ymd
+    (medRows as DbResidentMedRow[])
+      .filter((raw) => raw.time_group !== 'behoev' && resMeta.has(raw.resident_id))
+      .map((raw) => ({
+        id: raw.id,
+        time_group: raw.time_group,
+        time_label: raw.time_label,
+      })),
+    now
   );
-  const givenMap = givenAtByMedicationId(admin.rows);
   for (const task of tasks) {
     if (!task.medicationId) continue;
-    const givenAt = givenMap.get(task.medicationId);
+    const givenAt = given.givenAt.get(task.medicationId);
     if (givenAt) task.givenAt = givenAt;
   }
 
@@ -891,7 +886,6 @@ export default function MedicationWidget({ demoMode = false }: MedicationWidgetP
     if (targetIds.length === 0) return;
 
     const at = new Date();
-    const ymd = copenhagenYmd(at);
     const targets = entriesRef.current.filter((e) => targetIds.includes(e.id));
     const live = targets.filter((e) => e.medicationId);
     const localOnlyIds = targets.filter((e) => !e.medicationId).map((e) => e.id);
@@ -904,17 +898,18 @@ export default function MedicationWidget({ demoMode = false }: MedicationWidgetP
         return;
       }
       for (const task of live) {
+        const scheduledDate = parseLiveMedicationTaskId(task.id)?.ymd ?? copenhagenYmd(at);
         const result = given
           ? await markMedicationGiven({
               supabase,
               residentId: task.residentId,
               medicationId: task.medicationId!,
-              scheduledDate: ymd,
+              scheduledDate,
             })
           : await unmarkMedicationGiven({
               supabase,
               medicationId: task.medicationId!,
-              scheduledDate: ymd,
+              scheduledDate,
             });
         if (result.ok) {
           applied.add(task.id);
