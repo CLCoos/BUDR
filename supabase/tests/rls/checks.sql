@@ -317,6 +317,11 @@ DO $$ DECLARE n int; BEGIN
       INSERT INTO r VALUES ('doc_create_approved','HOLE');
     EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_create_approved','blocked'); END;
     BEGIN EXECUTE $q$UPDATE resident_documents SET sections = '{"maal":"Mål: lave mad"}'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('doc_edit (should work)', CASE WHEN n>0 THEN 'works' ELSE 'BROKEN' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_edit (should work)','BROKEN'); END;
+    BEGIN
+      PERFORM 1 FROM resident_documents_apply_patch('00000000-0000-0000-0000-0000000000e1', '{"anbefalinger":"Fortsæt"}'::jsonb, NULL, NULL, NULL, false, NULL, false, NULL, false);
+      EXECUTE $q$SELECT count(*) FROM resident_documents WHERE id = '00000000-0000-0000-0000-0000000000e1' AND sections->>'maal' = 'Mål: lave mad' AND sections->>'anbefalinger' = 'Fortsæt'$q$ INTO n;
+      INSERT INTO r VALUES ('doc_patch_merges_sections (should work)', CASE WHEN n=1 THEN 'works' ELSE 'BROKEN' END);
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_patch_merges_sections (should work)','BROKEN'); END;
     BEGIN EXECUTE $q$UPDATE resident_documents SET resident_id = '00000000-0000-0000-0000-0000000000b2'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('doc_move_resident', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_move_resident','blocked'); END;
     BEGIN EXECUTE $q$UPDATE resident_documents SET approved_by = '00000000-0000-0000-0000-0000000000c2'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('doc_fake_approver', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_fake_approver','blocked'); END;
     BEGIN EXECUTE $q$UPDATE resident_documents SET status = 'godkendt'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('doc_approve_without_permission', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_approve_without_permission','blocked'); END;
@@ -340,6 +345,11 @@ DO $$ DECLARE n int; BEGIN
     EXECUTE $q$SELECT count(*) FROM resident_document_events WHERE document_id = '00000000-0000-0000-0000-0000000000e1' AND action = 'godkendt' AND detail ? 'sections'$q$ INTO n;
     INSERT INTO r VALUES ('doc_approval_snapshot (should work)', CASE WHEN n=1 THEN 'works' ELSE 'BROKEN' END);
     BEGIN EXECUTE $q$UPDATE resident_documents SET sections = '{"maal":"ændret efter godkendelse"}'$q$; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('doc_edit_approved', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_edit_approved','blocked'); END;
+    BEGIN
+      PERFORM 1 FROM resident_documents_apply_patch('00000000-0000-0000-0000-0000000000e1', '{"maal":"ændret via patch"}'::jsonb, NULL, NULL, NULL, false, NULL, false, NULL, false);
+      EXECUTE $q$SELECT count(*) FROM resident_documents WHERE id = '00000000-0000-0000-0000-0000000000e1' AND status = 'godkendt' AND sections->>'maal' IS DISTINCT FROM 'ændret via patch'$q$ INTO n;
+      INSERT INTO r VALUES ('doc_patch_approved', CASE WHEN n=1 THEN 'blocked' ELSE 'HOLE' END);
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('doc_patch_approved','blocked'); END;
     BEGIN
       EXECUTE $q$INSERT INTO resident_documents (id, org_id, resident_id, doc_type, previous_id) VALUES ('00000000-0000-0000-0000-0000000000e2','00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-0000000000b1','statusrapport','00000000-0000-0000-0000-0000000000e1')$q$;
       EXECUTE $q$SELECT count(*) FROM resident_documents WHERE (id = '00000000-0000-0000-0000-0000000000e2' AND version = 2) OR (id = '00000000-0000-0000-0000-0000000000e1' AND status = 'erstattet')$q$ INTO n;

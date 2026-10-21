@@ -51,6 +51,7 @@ import {
   primaryButton,
 } from './shared';
 import { MetaInput } from './MetaInput';
+import { createSerialQueue } from '@/lib/documents/serialQueue';
 
 type StaffRow = { id: string; full_name: string | null; role: string | null };
 
@@ -165,6 +166,9 @@ function Editor({
     sources: {},
   });
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Én gem ad gangen. Ellers kan et langsomt kald, der læste den gamle tekst,
+  // blive færdigt sidst og overskrive det, der blev skrevet bagefter.
+  const enqueue = useMemo(() => createSerialQueue(), []);
   // onChange skifter identitet ved hver render hos forælderen; hold den i en ref,
   // så `patch`/`flush` er stabile og oprydnings-effekten kun kører ved unmount.
   const onChangeRef = useRef(onChange);
@@ -173,23 +177,24 @@ function Editor({
   }, [onChange]);
 
   const patch = useCallback(
-    async (body: Record<string, unknown>) => {
-      setSaveState('saving');
-      try {
-        const json = await api<{ document: ResidentDocumentRow }>(
-          `/api/portal/documents/${doc.id}`,
-          { method: 'PATCH', body: JSON.stringify(body) }
-        );
-        onChangeRef.current(json.document);
-        setSaveState('saved');
-        return json.document;
-      } catch (e) {
-        setSaveState('error');
-        setError(e instanceof Error ? e.message : 'Kunne ikke gemme');
-        return null;
-      }
-    },
-    [doc.id]
+    (body: Record<string, unknown>) =>
+      enqueue(async () => {
+        setSaveState('saving');
+        try {
+          const json = await api<{ document: ResidentDocumentRow }>(
+            `/api/portal/documents/${doc.id}`,
+            { method: 'PATCH', body: JSON.stringify(body) }
+          );
+          onChangeRef.current(json.document);
+          setSaveState('saved');
+          return json.document;
+        } catch (e) {
+          setSaveState('error');
+          setError(e instanceof Error ? e.message : 'Kunne ikke gemme');
+          return null;
+        }
+      }),
+    [doc.id, enqueue]
   );
 
   const flush = useCallback(async () => {
@@ -201,7 +206,8 @@ function Editor({
     if (Object.keys(s).length > 0) body.sections = s;
     if (Object.keys(src).length > 0) body.section_sources = src;
     if (Object.keys(body).length > 0) await patch(body);
-  }, [patch]);
+    else await enqueue(async () => undefined);
+  }, [patch, enqueue]);
 
   const setSection = useCallback(
     (key: string, text: string, newSources?: SourceRef[]) => {
