@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { trackEvent } from '@/lib/analytics';
 import type { LysThemeTokens } from '../lib/lysTheme';
 
-const STORAGE_KEY = 'budr_lys_onboarding_v1';
+const STORAGE_KEY = 'budr_lys_onboarding_v2';
 
 type Step = {
   title: string;
@@ -14,15 +14,15 @@ type Step = {
 const STEPS: Step[] = [
   {
     title: 'Velkommen til Lys',
-    body: 'Her får du overblik over dagen, kan skrive med Lys og sige til personalet, hvordan du har det — i dit eget tempo.',
+    body: 'Her får du overblik over dagen, kan skrive med Lys og sige til personalet, hvordan du har det. I dit eget tempo.',
   },
   {
     title: 'Fanerne nedenfor',
-    body: 'Hjem er dit overblik. Dag viser din plan. Journal og Mig er til dig og dine ting. Tryk dig rundt, når du er klar.',
+    body: 'Nu viser det vigtigste lige nu. Min dag er din plan. Fortæl er knappen i midten, hvor du kan tale eller skrive. Min vej er dine mål og dine ting.',
   },
   {
     title: 'Det du sender videre',
-    body: 'Stemning, beskeder og forslag til personalet vises i deres portal, så de kan hjælpe dig. Det er meningen — dit bosted følger med.',
+    body: 'Når du fortæller noget, vælger du selv, hvem der må se det. Det, du sender til personalet, og dine samtaler med Lys, kan personalet læse.',
   },
 ];
 

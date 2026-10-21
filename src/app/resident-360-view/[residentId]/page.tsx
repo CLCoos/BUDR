@@ -17,6 +17,7 @@ import WriteJournalEntry from './components/WriteJournalEntry';
 import ResidentOverflowMenu from './components/ResidentOverflowMenu';
 import ResidentLysSamtalerTab from '@/app/care-portal-dashboard/components/ResidentLysSamtalerTab';
 import ResidentVumTab from './components/ResidentVumTab';
+import ResidentLysBox from './components/ResidentLysBox';
 import ResidentTabs from './components/ResidentTabs';
 import ResidentDocumentsTab from './components/ResidentDocumentsTab';
 import ResidentForloebTab, { type ForloebProps } from './components/ResidentForloebTab';
@@ -483,7 +484,7 @@ const TAB_LABELS: Record<TabId, string> = {
   dagsplan: 'Dagsplan',
   plan: 'Plan',
   haven: 'Haven 🌿',
-  'lys-samtaler': 'Lys-samtaler',
+  'lys-samtaler': 'Lys',
 };
 
 export default async function ResidentDagPage({ params, searchParams }: Props) {
@@ -657,7 +658,12 @@ export default async function ResidentDagPage({ params, searchParams }: Props) {
             ),
             plan: <ResidentPlanTab residentId={residentId} residentName={resident.name} />,
             haven: <ResidentHavenTab residentId={residentId} residentName={resident.name} />,
-            'lys-samtaler': <ResidentLysSamtalerTab residentId={residentId} />,
+            'lys-samtaler': (
+              <>
+                <ResidentLysBox residentId={residentId} residentName={resident.name} />
+                <ResidentLysSamtalerTab residentId={residentId} />
+              </>
+            ),
           }}
         />
       </div>

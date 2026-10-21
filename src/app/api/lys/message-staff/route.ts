@@ -28,7 +28,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const text = body.message?.trim();
+  const text = body.message?.trim().slice(0, 2000);
   if (!text) {
     return NextResponse.json({ error: 'Besked må ikke være tom' }, { status: 400 });
   }

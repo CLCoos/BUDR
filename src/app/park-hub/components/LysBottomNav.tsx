@@ -1,45 +1,49 @@
 'use client';
 
 import React from 'react';
-import { CalendarDays, LifeBuoy, PenLine, Sun, UserRound } from 'lucide-react';
+import { CalendarDays, Compass, LifeBuoy, Mic, Sun } from 'lucide-react';
 import type { LysThemeTokens } from '../lib/lysTheme';
 import { lysParkHubShell } from '../lib/lysTheme';
 
-export type LysNavTab = 'hjem' | 'dag' | 'skriv' | 'mig';
+export type LysNavTab = 'nu' | 'dag' | 'vej';
 
 type Props = {
   tokens?: LysThemeTokens;
   active: LysNavTab;
   onChange: (tab: LysNavTab) => void;
-  onCrisis?: () => void;
-  showDagReminderDot: boolean;
+  onFortael: () => void;
+  onHjaelp: () => void;
   hidden?: boolean;
   simpleMode?: boolean;
 };
 
-/** Fire faste faner. Enkel tilstand: tre store knapper med Hjælp i midten af hånden. */
+type Item =
+  | { kind: 'tab'; id: LysNavTab; label: string; Icon: typeof Sun }
+  | { kind: 'fortael' }
+  | { kind: 'hjaelp' };
+
+/**
+ * Nu, Min dag og Min vej, med Fortæl som den store knap.
+ * Enkel tilstand: tre store knapper, Nu, Fortæl og Hjælp.
+ */
 export default function LysBottomNav({
   tokens = lysParkHubShell(),
   active,
   onChange,
-  onCrisis,
-  showDagReminderDot,
+  onFortael,
+  onHjaelp,
   hidden,
   simpleMode = false,
 }: Props) {
   if (hidden) return null;
 
-  const tabs = simpleMode
-    ? [
-        { id: 'hjem', label: 'I dag', Icon: Sun, onPress: () => onChange('hjem') },
-        { id: 'skriv', label: 'Skriv', Icon: PenLine, onPress: () => onChange('skriv') },
-        { id: 'krise', label: 'Hjælp', Icon: LifeBuoy, onPress: () => onCrisis?.() },
-      ]
+  const items: Item[] = simpleMode
+    ? [{ kind: 'tab', id: 'nu', label: 'Nu', Icon: Sun }, { kind: 'fortael' }, { kind: 'hjaelp' }]
     : [
-        { id: 'hjem', label: 'I dag', Icon: Sun, onPress: () => onChange('hjem') },
-        { id: 'dag', label: 'Min dag', Icon: CalendarDays, onPress: () => onChange('dag') },
-        { id: 'skriv', label: 'Skriv', Icon: PenLine, onPress: () => onChange('skriv') },
-        { id: 'mig', label: 'Mig', Icon: UserRound, onPress: () => onChange('mig') },
+        { kind: 'tab', id: 'nu', label: 'Nu', Icon: Sun },
+        { kind: 'tab', id: 'dag', label: 'Min dag', Icon: CalendarDays },
+        { kind: 'fortael' },
+        { kind: 'tab', id: 'vej', label: 'Min vej', Icon: Compass },
       ];
 
   return (
@@ -53,54 +57,69 @@ export default function LysBottomNav({
       aria-label="Hovedmenu"
     >
       <div
-        className={`grid min-h-[64px] w-full items-stretch px-2 ${simpleMode ? 'grid-cols-3' : 'grid-cols-4'}`}
+        className={`grid min-h-[64px] w-full items-end px-2 pt-1.5 ${simpleMode ? 'grid-cols-3' : 'grid-cols-4'}`}
       >
-        {tabs.map((tab) => {
-          const isOn = active === (tab.id as LysNavTab);
-          const Icon = tab.Icon;
-          const showDot = tab.id === 'dag' && showDagReminderDot;
-
+        {items.map((item) => {
+          if (item.kind === 'fortael') {
+            return (
+              <button
+                key="fortael"
+                type="button"
+                onClick={onFortael}
+                className="flex min-h-[56px] flex-col items-center justify-end gap-1"
+                aria-label="Fortæl: tal eller skriv"
+              >
+                <span
+                  className="-mt-7 flex h-[58px] w-[58px] items-center justify-center rounded-full text-white transition-transform active:scale-95"
+                  style={{
+                    backgroundColor: tokens.accent,
+                    boxShadow: `0 0 0 4px ${tokens.bg}, 0 10px 22px -8px rgba(29,158,117,0.75)`,
+                  }}
+                  aria-hidden
+                >
+                  <Mic size={26} strokeWidth={2.2} />
+                </span>
+                <span
+                  className="text-[12px] font-semibold leading-none tracking-wide"
+                  style={{ color: tokens.accentSoftText }}
+                >
+                  Fortæl
+                </span>
+              </button>
+            );
+          }
+          if (item.kind === 'hjaelp') {
+            return (
+              <button
+                key="hjaelp"
+                type="button"
+                onClick={onHjaelp}
+                className="flex min-h-[56px] flex-col items-center justify-center gap-1 rounded-xl"
+                style={{ color: tokens.text }}
+              >
+                <LifeBuoy className="h-[24px] w-[24px]" strokeWidth={2} aria-hidden />
+                <span className="text-[12px] font-semibold leading-none tracking-wide">Hjælp</span>
+              </button>
+            );
+          }
+          const isOn = active === item.id;
+          const Icon = item.Icon;
           return (
             <button
-              key={tab.id}
+              key={item.id}
               type="button"
-              onClick={tab.onPress}
-              className="relative flex min-h-[56px] flex-col items-center justify-center gap-1 rounded-xl transition-all duration-200"
-              style={{
-                backgroundColor: isOn ? tokens.accentSoft : 'transparent',
-                color: isOn ? tokens.accent : tokens.textMuted,
-              }}
+              onClick={() => onChange(item.id)}
+              className="relative flex min-h-[56px] flex-col items-center justify-center gap-1 rounded-xl transition-colors duration-200"
+              style={{ color: isOn ? tokens.accent : tokens.textMuted }}
               aria-current={isOn ? 'page' : undefined}
             >
-              <span className="relative z-10 inline-flex">
-                <Icon
-                  className="h-[22px] w-[22px] transition-all duration-200"
-                  strokeWidth={isOn ? 2.3 : 1.8}
-                  aria-hidden
-                />
-                {showDot && (
-                  <span
-                    className="absolute -right-1 -top-0.5 h-2 w-2 rounded-full"
-                    style={{
-                      backgroundColor: '#B85C00',
-                      boxShadow: `0 0 0 2px ${tokens.bottomNavBg}, 0 0 6px rgba(184,92,0,0.4)`,
-                    }}
-                    aria-hidden
-                  />
-                )}
+              <Icon className="h-[22px] w-[22px]" strokeWidth={isOn ? 2.3 : 1.8} aria-hidden />
+              <span className="text-[12px] font-semibold leading-none tracking-wide">
+                {item.label}
               </span>
-
-              <span
-                className="relative z-10 text-[12px] font-semibold leading-none tracking-wide"
-                style={{ color: isOn ? tokens.accent : tokens.textMuted }}
-              >
-                {tab.label}
-              </span>
-
-              {/* Active dot indicator */}
               {isOn && (
                 <span
-                  className="absolute bottom-1 h-1 w-1 rounded-full"
+                  className="absolute bottom-0.5 h-1 w-4 rounded-full"
                   style={{ backgroundColor: tokens.accent }}
                   aria-hidden
                 />

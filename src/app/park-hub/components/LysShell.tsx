@@ -1,29 +1,22 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { toast } from 'sonner';
-import { useResidentSession } from '@/hooks/useResidentSession';
+import { useRouter } from 'next/navigation';
+import { X } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics';
-import { tryEarnFirstChatBadge } from '@/lib/residentBadgeSync';
-import { getLysPhase, lysParkHubShell, lysParkHubShellDark } from '../lib/lysTheme';
+import { lysParkHubShell, lysParkHubShellDark } from '../lib/lysTheme';
 import type { LysFlowOverlay } from '../lib/lysOverlay';
-import { useLysConversation } from '../hooks/useLysConversation';
-import { useSpeech } from '../hooks/useSpeech';
 import LysBottomNav, { type LysNavTab } from './LysBottomNav';
 import { ResidentProvider } from '../context/ResidentContext';
-import LysIDag from './LysIDag';
-import LysSkriv from './LysSkriv';
-import { demoCheckinKey } from './lysUi';
-import { isLysDemoResidentId } from '@/lib/lysDemoResident';
-import LysMigScreen from './LysMigScreen';
+import LysNu, { weeklyDoneKey } from './LysNu';
+import LysFortael, { type FortaelTarget } from './LysFortael';
+import LysHjaelp from './LysHjaelp';
+import LysMinVej from './LysMinVej';
 import LysDagTab from './LysDagTab';
-import LysStemningskort from './LysStemningskort';
+import LysJournalTab from './LysJournalTab';
 import LysRecoveryProfile from './LysRecoveryProfile';
-import LysReflection from './LysReflection';
 import LysNextSteps from './LysNextSteps';
 import LysWeeklyReflection from './LysWeeklyReflection';
-import LysDagligSejr from './LysDagligSejr';
 import LysSansekasse from './LysSansekasse';
 import LysAACBoard from './LysAACBoard';
 import LysOnboarding from './LysOnboarding';
@@ -31,8 +24,7 @@ import LysStatusChrome from './LysStatusChrome';
 import LysKrisekort from './LysKrisekort';
 import LysVagtplan from './LysVagtplan';
 import LysMyStories from './LysMyStories';
-import { createClient } from '@/lib/supabase/client';
-import { LifeBuoy, Moon, Sun } from 'lucide-react';
+import { LifeBuoy } from 'lucide-react';
 
 type Props = {
   firstName: string;
@@ -52,7 +44,7 @@ function LysPhoneOverlayShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex justify-center bg-black/35">
+    <div className="fixed inset-0 z-[250] flex justify-center bg-black/35">
       <div
         className="h-full w-full max-w-[430px] overflow-y-auto shadow-2xl"
         style={{ backgroundColor }}
@@ -72,30 +64,17 @@ export default function LysShell({
 }: Props) {
   const [now, setNow] = useState(() => new Date());
   const [reducedMotion, setReducedMotion] = useState(false);
-  const [tab, setTab] = useState<LysNavTab>('hjem');
+  const [tab, setTab] = useState<LysNavTab>('nu');
   const [overlay, setOverlay] = useState<LysFlowOverlay | null>(null);
-  const [moodLabel, setMoodLabel] = useState<string | null>(null);
-  /** Tælles op efter det lange tjek-ind, så «I dag» henter igen. */
-  const [checkinTick, setCheckinTick] = useState(0);
+  /** Hvem Fortæl er forvalgt til, når den åbnes fra et bestemt sted. */
+  const [fortaelTarget, setFortaelTarget] = useState<FortaelTarget | null>(null);
+  /** Overlay, der skal åbnes igen, når kommunikationstavlen lukkes. */
+  const [returnTo, setReturnTo] = useState<LysFlowOverlay | null>(null);
   const [simpleMode, setSimpleMode] = useState(false);
   const [appearance, setAppearance] = useState<'light' | 'dark'>('light');
 
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
 
-  useEffect(() => {
-    if (searchParams?.get('openCheckin') === '1') {
-      setOverlay('mood');
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete('openCheckin');
-      const query = params.toString();
-      router.replace(query ? `${pathname}?${query}` : pathname);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const phase = useMemo(() => getLysPhase(now), [now]);
   /** Én palet for faner + fuldskærms-flows — følger brugerens lys/mørk-valg */
   const shellTokens = useMemo(
     () => (appearance === 'dark' ? lysParkHubShellDark() : lysParkHubShell()),
@@ -103,20 +82,10 @@ export default function LysShell({
   );
   const shellAccent = shellTokens.accent;
 
-  const session = useResidentSession();
-
-  const onLysAssistantSuccess = useCallback(() => {
-    void tryEarnFirstChatBadge(session.storageMode, session.activeId);
-  }, [session.storageMode, session.activeId]);
-
-  const { sendToLys } = useLysConversation({
-    firstName,
-    phase,
-    moodLabel,
-    onAssistantSuccess: onLysAssistantSuccess,
-  });
-
-  const { speak } = useSpeech();
+  const openFortael = useCallback((target: FortaelTarget | null = null) => {
+    setFortaelTarget(target);
+    setOverlay('fortael');
+  }, []);
 
   useEffect(() => {
     const t = window.setInterval(() => setNow(new Date()), 60_000);
@@ -161,94 +130,25 @@ export default function LysShell({
   }, [residentId, isDemoMode]);
 
   useEffect(() => {
+    // Demo: «?enkel=1» viser enkel tilstand, så den kan ses uden en rigtig borger.
+    if (isDemoMode) {
+      setSimpleMode(new URLSearchParams(window.location.search).get('enkel') === '1');
+      return;
+    }
     if (!residentId) return;
     let cancelled = false;
-    void (async () => {
-      try {
-        const cacheKey = `budr_simple_mode_${residentId}`;
-        const cached = sessionStorage.getItem(cacheKey);
-        if (cached === '1' || cached === '0') {
-          if (!cancelled) setSimpleMode(cached === '1');
-          return;
-        }
-        const supabase = createClient();
-        if (!supabase) return;
-        const { data } = await supabase
-          .from('care_residents')
-          .select('simple_mode')
-          .eq('user_id', residentId)
-          .maybeSingle();
-        const enabled = Boolean((data as { simple_mode?: boolean } | null)?.simple_mode);
-        if (!cancelled) {
-          setSimpleMode(enabled);
-          sessionStorage.setItem(cacheKey, enabled ? '1' : '0');
-        }
-      } catch {
-        // ignore
-      }
-    })();
+    // Borgeren har ikke et Supabase-login, så indstillingen hentes gennem serveren.
+    // Hentes ved hver åbning, så personalets valg slår igennem med det samme.
+    void fetch('/api/lys/resident-me', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { simple_mode?: boolean } | null) => {
+        if (!cancelled && d) setSimpleMode(Boolean(d.simple_mode));
+      })
+      .catch(() => undefined);
     return () => {
       cancelled = true;
     };
-  }, [residentId]);
-
-  const speakSafe = useCallback((t: string) => speak(t, reducedMotion), [speak, reducedMotion]);
-
-  const handleMoodComplete = async (payload: {
-    label: string;
-    traffic: 'groen' | 'gul' | 'roed';
-    note: string;
-    moodScore: number;
-    voiceTranscript?: string;
-    aiSummary?: string;
-  }) => {
-    setMoodLabel(payload.label);
-
-    trackEvent('lys_mood_registered', { traffic: payload.traffic });
-
-    try {
-      const res = await fetch('/api/lys/daily-checkin', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mood_score: payload.moodScore,
-          traffic_light: payload.traffic,
-          mood_label: payload.label,
-          note: payload.note || undefined,
-          voice_transcript: payload.voiceTranscript,
-          ai_summary: payload.aiSummary,
-        }),
-      });
-      if (!res.ok) {
-        toast.error('Kunne ikke sende stemning til personalet — prøv igen');
-        return;
-      }
-    } catch {
-      toast.error('Ingen forbindelse — stemning blev ikke sendt');
-      return;
-    }
-
-    if (isDemoMode || isLysDemoResidentId(residentId)) {
-      try {
-        localStorage.setItem(
-          demoCheckinKey(new Date()),
-          JSON.stringify({ label: payload.label, at: new Date().toISOString() })
-        );
-      } catch {
-        /* ignore */
-      }
-    }
-    setCheckinTick((t) => t + 1);
-    toast.success(`📋 Sendt til portalen: Stemning registreret for ${firstName}`);
-
-    if (payload.label === 'Meget svært' || payload.traffic === 'roed') {
-      toast.success('📋 Sendt til portalen: Personalet ser, at du har haft det svært');
-    }
-    setOverlay(null);
-    const note = payload.note ? ` Jeg skrev også: ${payload.note}` : '';
-    await sendToLys(`Jeg har det sådan her: ${payload.label}.${note}`);
-  };
+  }, [residentId, isDemoMode]);
 
   const handleLogout = async () => {
     try {
@@ -296,46 +196,33 @@ export default function LysShell({
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => setOverlay('crisis')}
-                className="flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold transition-all active:scale-95"
+                onClick={() => setOverlay('hjaelp')}
+                className="flex h-10 items-center gap-1.5 rounded-full border px-4 text-[15px] font-semibold transition-all active:scale-95"
                 style={{
                   backgroundColor: 'rgba(233, 162, 59, 0.16)',
                   color: shellTokens.text,
                   borderColor: 'rgba(233, 162, 59, 0.55)',
                 }}
-                aria-label="Hjælp: kriseplan og få fat i personalet"
+                aria-label="Hjælp: kriseplan, ro og personalet"
               >
-                <LifeBuoy size={15} strokeWidth={2} aria-hidden />
+                <LifeBuoy size={16} strokeWidth={2} aria-hidden />
                 Hjælp
               </button>
-              <button
-                type="button"
-                onClick={toggleAppearance}
-                className="flex h-9 min-w-[2.25rem] items-center justify-center gap-1 rounded-full border px-2 text-xs font-semibold transition-all active:scale-95"
-                style={{
-                  backgroundColor: shellTokens.cardBg,
-                  color: shellTokens.textMuted,
-                  borderColor: shellTokens.cardBorder,
-                }}
-                title={appearance === 'light' ? 'Skift til mørkt tema' : 'Skift til lyst tema'}
-                aria-label={appearance === 'light' ? 'Skift til mørkt tema' : 'Skift til lyst tema'}
-              >
-                {appearance === 'light' ? (
-                  <Moon size={15} strokeWidth={2} aria-hidden />
-                ) : (
-                  <Sun size={15} strokeWidth={2} aria-hidden />
-                )}
-              </button>
-              <div
-                className="flex h-9 w-9 items-center justify-center rounded-full border text-xs font-semibold"
-                style={{
-                  backgroundColor: shellTokens.accentSoft,
-                  color: shellTokens.accentSoftText,
-                  borderColor: 'rgba(29, 158, 117, 0.35)',
-                }}
-              >
-                {initials || 'B'}
-              </div>
+              {!simpleMode && (
+                <button
+                  type="button"
+                  onClick={() => setTab('vej')}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border text-xs font-semibold"
+                  style={{
+                    backgroundColor: shellTokens.accentSoft,
+                    color: shellTokens.accentSoftText,
+                    borderColor: 'rgba(29, 158, 117, 0.35)',
+                  }}
+                  aria-label="Min vej"
+                >
+                  {initials || 'B'}
+                </button>
+              )}
             </div>
           </div>
           <div
@@ -345,9 +232,8 @@ export default function LysShell({
               minHeight: 'calc(100dvh - 76px)',
             }}
           >
-            {tab === 'hjem' && (
-              <LysIDag
-                key={checkinTick}
+            {(tab === 'nu' || simpleMode) && (
+              <LysNu
                 firstName={firstName}
                 residentId={residentId}
                 isDemoMode={isDemoMode}
@@ -355,32 +241,24 @@ export default function LysShell({
                 accent={shellAccent}
                 now={now}
                 onSwitchTab={setTab}
-                onCheckedIn={setMoodLabel}
-                onOpenLongCheckin={() => setOverlay('mood')}
+                onCheckedIn={() => trackEvent('lys_checkin_done', {})}
+                onOpenFortael={openFortael}
+                onOpen={setOverlay}
               />
             )}
 
-            {tab === 'dag' && <LysDagTab tokens={shellTokens} accent={shellAccent} />}
-
-            {tab === 'skriv' && (
-              <LysSkriv
-                residentId={residentId}
-                isDemoMode={isDemoMode}
-                tokens={shellTokens}
-                accent={shellAccent}
-                onOpenAac={() => setOverlay('aac')}
-              />
+            {tab === 'dag' && !simpleMode && (
+              <LysDagTab tokens={shellTokens} accent={shellAccent} />
             )}
 
-            {tab === 'mig' && (
-              <LysMigScreen
+            {tab === 'vej' && !simpleMode && (
+              <LysMinVej
                 tokens={shellTokens}
                 accent={shellAccent}
                 firstName={firstName}
                 initials={initials}
-                reducedMotion={reducedMotion}
-                flowerFilledThisWeek={false}
-                onOpenBlomst={() => setOverlay('flower')}
+                appearance={appearance}
+                onToggleAppearance={toggleAppearance}
                 onOpen={setOverlay}
                 onLogout={() => void handleLogout()}
               />
@@ -393,29 +271,63 @@ export default function LysShell({
           from { opacity: 0; transform: translateY(8px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        @keyframes lysCelebrate {
-          0%   { opacity: 0; transform: scale(0.7) translateY(12px); }
-          65%  { opacity: 1; transform: scale(1.06) translateY(-3px); }
-          100% { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        @keyframes lysPop {
-          0%, 100% { transform: scale(1); }
-          50%       { transform: scale(0.93); }
-        }
-        .lys-celebrate { animation: lysCelebrate 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards; }
-        .lys-pop        { animation: lysPop 0.18s ease-out; }
       `}</style>
 
-        {overlay === 'mood' && (
+        {overlay === 'fortael' && (
           <LysPhoneOverlayShell backgroundColor={shellTokens.bg}>
-            <LysStemningskort
+            <LysFortael
+              residentId={residentId}
+              isDemoMode={isDemoMode}
               tokens={shellTokens}
               accent={shellAccent}
-              firstName={firstName}
-              reducedMotion={reducedMotion}
-              onBack={() => setOverlay(null)}
-              onComplete={handleMoodComplete}
+              initialTarget={fortaelTarget}
+              onClose={() => setOverlay(null)}
+              onOpenAac={() => {
+                setReturnTo('fortael');
+                setOverlay('aac');
+              }}
             />
+          </LysPhoneOverlayShell>
+        )}
+
+        {overlay === 'hjaelp' && (
+          <LysPhoneOverlayShell backgroundColor={shellTokens.bg}>
+            <LysHjaelp
+              tokens={shellTokens}
+              accent={shellAccent}
+              onClose={() => setOverlay(null)}
+              onCrisis={() => setOverlay('crisis')}
+              onCalm={() => setOverlay('sanser')}
+              onWhoIsHere={() => setOverlay('vagtplan')}
+              onWriteStaff={() => openFortael('personale')}
+            />
+          </LysPhoneOverlayShell>
+        )}
+
+        {overlay === 'dagbog' && (
+          <LysPhoneOverlayShell backgroundColor={shellTokens.bg}>
+            <div className="flex items-center justify-between px-5 pt-5">
+              <h1
+                className="text-[28px] font-bold leading-tight tracking-[-0.02em]"
+                style={{ color: shellTokens.text }}
+              >
+                Min dagbog
+              </h1>
+              <button
+                type="button"
+                onClick={() => setOverlay(null)}
+                className="flex h-11 w-11 items-center justify-center rounded-full"
+                style={{
+                  backgroundColor: shellTokens.cardBg,
+                  border: `1px solid ${shellTokens.cardBorder}`,
+                  color: shellTokens.text,
+                }}
+                aria-label="Luk"
+              >
+                <X size={20} aria-hidden />
+              </button>
+            </div>
+            <LysJournalTab tokens={shellTokens} accent={shellAccent} />
           </LysPhoneOverlayShell>
         )}
 
@@ -428,21 +340,6 @@ export default function LysShell({
               reducedMotion={reducedMotion}
               onBack={() => setOverlay(null)}
               onDone={() => setOverlay(null)}
-            />
-          </LysPhoneOverlayShell>
-        )}
-
-        {overlay === 'thought' && (
-          <LysPhoneOverlayShell backgroundColor={shellTokens.bg}>
-            <LysReflection
-              tokens={shellTokens}
-              accent={shellAccent}
-              firstName={firstName}
-              reducedMotion={reducedMotion}
-              speak={speakSafe}
-              storageMode={session.storageMode}
-              activeId={session.activeId}
-              onBack={() => setOverlay(null)}
             />
           </LysPhoneOverlayShell>
         )}
@@ -467,7 +364,14 @@ export default function LysShell({
               firstName={firstName}
               reducedMotion={reducedMotion}
               onBack={() => setOverlay(null)}
-              onDone={() => setOverlay(null)}
+              onDone={() => {
+                try {
+                  localStorage.setItem(weeklyDoneKey(new Date()), '1');
+                } catch {
+                  /* ignore */
+                }
+                setOverlay(null);
+              }}
             />
           </LysPhoneOverlayShell>
         )}
@@ -481,17 +385,6 @@ export default function LysShell({
               reducedMotion={reducedMotion}
               onBack={() => setOverlay(null)}
               onDone={() => setOverlay(null)}
-            />
-          </LysPhoneOverlayShell>
-        )}
-
-        {overlay === 'dailyWin' && (
-          <LysPhoneOverlayShell backgroundColor={shellTokens.bg}>
-            <LysDagligSejr
-              tokens={shellTokens}
-              accent={shellAccent}
-              firstName={firstName}
-              onBack={() => setOverlay(null)}
             />
           </LysPhoneOverlayShell>
         )}
@@ -512,7 +405,10 @@ export default function LysShell({
               tokens={shellTokens}
               accent={shellAccent}
               residentId={residentId}
-              onClose={() => setOverlay(null)}
+              onClose={() => {
+                setOverlay(returnTo);
+                setReturnTo(null);
+              }}
             />
           </LysPhoneOverlayShell>
         )}
@@ -544,8 +440,8 @@ export default function LysShell({
           tokens={shellTokens}
           active={tab}
           onChange={setTab}
-          onCrisis={() => setOverlay('crisis')}
-          showDagReminderDot={false}
+          onFortael={() => openFortael(null)}
+          onHjaelp={() => setOverlay('hjaelp')}
           hidden={!!overlay}
           simpleMode={simpleMode}
         />

@@ -4,7 +4,9 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { ArrowLeft, Heart, Users, Sun, User, Compass, Loader2 } from 'lucide-react';
 import type { StorageMode } from '@/types/local';
+import { isLysDemoResidentId } from '@/lib/lysDemoResident';
 import type { LysThemeTokens } from '../lib/lysTheme';
+import { useResident } from '../context/ResidentContext';
 
 type ScoreKey =
   | 'connectedness_score'
@@ -121,6 +123,7 @@ export default function LysWeeklyReflection({
   });
   const [freeText, setFreeText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const { residentId } = useResident();
 
   const mutedBg = tokens.textMuted ? `${tokens.textMuted}22` : 'rgba(0,0,0,0.08)';
 
@@ -128,6 +131,13 @@ export default function LysWeeklyReflection({
 
   async function handleSubmit() {
     setSubmitting(true);
+    // Demo: intet sendes til serveren.
+    if (isLysDemoResidentId(residentId)) {
+      toast.success('Tak. I demoen gemmes intet.');
+      setSubmitting(false);
+      onDone?.();
+      return;
+    }
     try {
       const res = await fetch('/api/lys/weekly-reflection', {
         method: 'POST',
