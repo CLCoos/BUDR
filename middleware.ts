@@ -401,6 +401,11 @@ export const config = {
     '/care-portal-planner/:path*',
     '/care-portal-alerts',
     '/care-portal-alerts/:path*',
+    // Allowlisten er udtømmende: en ny /care-portal-*-side kører ikke staff-tjekket,
+    // medmindre den står her. /care-portal-fagsystem blev glemt og kunne derfor åbnes
+    // efter deaktivering, hvor de øvrige portalsider sendes til opsætning.
+    '/care-portal-fagsystem',
+    '/care-portal-fagsystem/:path*',
     '/handover-workspace',
     '/handover-workspace/:path*',
     '/resident-360-view',

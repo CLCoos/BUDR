@@ -12,16 +12,17 @@ import { useLysConversation } from '../hooks/useLysConversation';
 import { useSpeech } from '../hooks/useSpeech';
 import LysBottomNav, { type LysNavTab } from './LysBottomNav';
 import { ResidentProvider } from '../context/ResidentContext';
-import LysHome from './LysHome';
+import LysIDag from './LysIDag';
+import LysSkriv from './LysSkriv';
+import { demoCheckinKey } from './lysUi';
+import { isLysDemoResidentId } from '@/lib/lysDemoResident';
 import LysMigScreen from './LysMigScreen';
 import LysDagTab from './LysDagTab';
-import LysJournalTab from './LysJournalTab';
 import LysStemningskort from './LysStemningskort';
 import LysRecoveryProfile from './LysRecoveryProfile';
 import LysReflection from './LysReflection';
 import LysNextSteps from './LysNextSteps';
 import LysWeeklyReflection from './LysWeeklyReflection';
-import { LysWeeklyBanner } from './LysWeeklyBanner';
 import LysDagligSejr from './LysDagligSejr';
 import LysSansekasse from './LysSansekasse';
 import LysAACBoard from './LysAACBoard';
@@ -74,10 +75,8 @@ export default function LysShell({
   const [tab, setTab] = useState<LysNavTab>('hjem');
   const [overlay, setOverlay] = useState<LysFlowOverlay | null>(null);
   const [moodLabel, setMoodLabel] = useState<string | null>(null);
-  const [moodTraffic, setMoodTraffic] = useState<'groen' | 'gul' | 'roed' | null>(null);
-  const [moodRegisteredToday, setMoodRegisteredToday] = useState(false);
-  const [moodTick, setMoodTick] = useState(0);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  /** Tælles op efter det lange tjek-ind, så «I dag» henter igen. */
+  const [checkinTick, setCheckinTick] = useState(0);
   const [simpleMode, setSimpleMode] = useState(false);
   const [appearance, setAppearance] = useState<'light' | 'dark'>('light');
 
@@ -110,7 +109,7 @@ export default function LysShell({
     void tryEarnFirstChatBadge(session.storageMode, session.activeId);
   }, [session.storageMode, session.activeId]);
 
-  const { messages, loading, sendToLys } = useLysConversation({
+  const { sendToLys } = useLysConversation({
     firstName,
     phase,
     moodLabel,
@@ -204,7 +203,6 @@ export default function LysShell({
     aiSummary?: string;
   }) => {
     setMoodLabel(payload.label);
-    setMoodTraffic(payload.traffic);
 
     trackEvent('lys_mood_registered', { traffic: payload.traffic });
 
@@ -231,7 +229,17 @@ export default function LysShell({
       return;
     }
 
-    setMoodRegisteredToday(true);
+    if (isDemoMode || isLysDemoResidentId(residentId)) {
+      try {
+        localStorage.setItem(
+          demoCheckinKey(new Date()),
+          JSON.stringify({ label: payload.label, at: new Date().toISOString() })
+        );
+      } catch {
+        /* ignore */
+      }
+    }
+    setCheckinTick((t) => t + 1);
     toast.success(`📋 Sendt til portalen: Stemning registreret for ${firstName}`);
 
     if (payload.label === 'Meget svært' || payload.traffic === 'roed') {
@@ -240,22 +248,16 @@ export default function LysShell({
     setOverlay(null);
     const note = payload.note ? ` Jeg skrev også: ${payload.note}` : '';
     await sendToLys(`Jeg har det sådan her: ${payload.label}.${note}`);
-    setMoodTick((t) => t + 1);
   };
 
-  const openCheckIn = () => {
-    setDrawerOpen(false);
-    setOverlay('mood');
-  };
-
-  const openFromDrawer = (target: 'journal' | 'mig' | 'day' | 'crisis' | 'goals' | 'vagtplan') => {
-    setDrawerOpen(false);
-    if (target === 'journal') setTab('journal');
-    else if (target === 'mig') setTab('mig');
-    else if (target === 'day') setTab('dag');
-    else if (target === 'crisis') setOverlay('crisis');
-    else if (target === 'goals') setOverlay('goals');
-    else if (target === 'vagtplan') setOverlay('vagtplan');
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/resident-session', { method: 'DELETE' });
+    } catch {
+      // Ryd i det mindste den lokale cookie, selvom serveren ikke svarer
+    }
+    document.cookie = 'budr_resident_id=; path=/; max-age=0';
+    router.replace('/');
   };
 
   return (
@@ -344,42 +346,31 @@ export default function LysShell({
             }}
           >
             {tab === 'hjem' && (
-              <>
-                {!overlay && (
-                  <div className="px-5 pt-2">
-                    <LysWeeklyBanner
-                      tokens={shellTokens}
-                      accent={shellAccent}
-                      reducedMotion={reducedMotion}
-                      onOpen={() => setOverlay('weekly')}
-                    />
-                  </div>
-                )}
-                <LysHome
-                  firstName={firstName}
-                  initials={initials}
-                  residentId={residentId}
-                  tokens={shellTokens}
-                  accent={shellAccent}
-                  phase={phase}
-                  now={now}
-                  reducedMotion={reducedMotion}
-                  messages={messages}
-                  loading={loading}
-                  sendToLys={sendToLys}
-                  speakSafe={speakSafe}
-                  onOpenFlow={setOverlay}
-                  onSwitchTab={setTab}
-                  moodLabel={moodLabel}
-                  moodTraffic={moodTraffic}
-                  moodTick={moodTick}
-                />
-              </>
+              <LysIDag
+                key={checkinTick}
+                firstName={firstName}
+                residentId={residentId}
+                isDemoMode={isDemoMode}
+                tokens={shellTokens}
+                accent={shellAccent}
+                now={now}
+                onSwitchTab={setTab}
+                onCheckedIn={setMoodLabel}
+                onOpenLongCheckin={() => setOverlay('mood')}
+              />
             )}
 
             {tab === 'dag' && <LysDagTab tokens={shellTokens} accent={shellAccent} />}
 
-            {tab === 'journal' && <LysJournalTab tokens={shellTokens} accent={shellAccent} />}
+            {tab === 'skriv' && (
+              <LysSkriv
+                residentId={residentId}
+                isDemoMode={isDemoMode}
+                tokens={shellTokens}
+                accent={shellAccent}
+                onOpenAac={() => setOverlay('aac')}
+              />
+            )}
 
             {tab === 'mig' && (
               <LysMigScreen
@@ -390,6 +381,8 @@ export default function LysShell({
                 reducedMotion={reducedMotion}
                 flowerFilledThisWeek={false}
                 onOpenBlomst={() => setOverlay('flower')}
+                onOpen={setOverlay}
+                onLogout={() => void handleLogout()}
               />
             )}
           </div>
@@ -551,78 +544,11 @@ export default function LysShell({
           tokens={shellTokens}
           active={tab}
           onChange={setTab}
-          onCheckIn={openCheckIn}
-          onCrisis={() => {
-            setDrawerOpen(false);
-            setOverlay('crisis');
-          }}
-          onMore={() => setDrawerOpen((v) => !v)}
-          isMoreOpen={drawerOpen}
-          showDagReminderDot={!moodRegisteredToday}
+          onCrisis={() => setOverlay('crisis')}
+          showDagReminderDot={false}
           hidden={!!overlay}
           simpleMode={simpleMode}
         />
-
-        {drawerOpen && !overlay && !simpleMode && (
-          <>
-            <button
-              type="button"
-              onClick={() => setDrawerOpen(false)}
-              className="fixed inset-0 z-40"
-              style={{ backgroundColor: 'rgba(26,24,20,0.35)' }}
-              aria-label="Luk menu"
-            />
-            <div
-              className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-[430px] rounded-t-3xl border px-5 pb-10 pt-3"
-              style={{ backgroundColor: shellTokens.cardBg, borderColor: shellTokens.cardBorder }}
-            >
-              <div
-                className="mx-auto mb-4 h-1 w-10 rounded-full"
-                style={{ backgroundColor: shellTokens.cardBorder }}
-              />
-              <p
-                className="mb-3 text-[10px] font-semibold uppercase tracking-[0.2em]"
-                style={{ color: shellTokens.textMuted }}
-              >
-                Alle sektioner
-              </p>
-              <div className="space-y-2">
-                {[
-                  { label: 'Vagtplan', icon: '⊙', action: () => openFromDrawer('vagtplan') },
-                  { label: 'Kriseplan', icon: '⚡', action: () => openFromDrawer('crisis') },
-                  { label: 'Mine mål', icon: '◇', action: () => openFromDrawer('goals') },
-                  { label: 'Aktiviteter', icon: '✦', action: () => openFromDrawer('day') },
-                  { label: 'Journal', icon: '◎', action: () => openFromDrawer('journal') },
-                  { label: 'Profil', icon: '◉', action: () => openFromDrawer('mig') },
-                ].map((item) => (
-                  <button
-                    key={item.label}
-                    type="button"
-                    onClick={item.action}
-                    className="flex w-full items-center gap-3 rounded-2xl border px-3 py-3 text-left"
-                    style={{
-                      borderColor: shellTokens.cardBorder,
-                      backgroundColor: shellTokens.cardBg,
-                    }}
-                  >
-                    <span
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-xl"
-                      style={{ backgroundColor: shellTokens.accentSoft, color: shellTokens.accent }}
-                    >
-                      {item.icon}
-                    </span>
-                    <span className="text-[15px]" style={{ color: shellTokens.text }}>
-                      {item.label}
-                    </span>
-                    <span className="ml-auto" style={{ color: shellTokens.textMuted }}>
-                      ›
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
 
         <LysOnboarding
           residentId={residentId}

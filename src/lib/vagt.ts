@@ -142,3 +142,9 @@ export function lysConcerns(rows: CheckinRow[]): CheckinRow[] {
         Date.parse(b.created_at) - Date.parse(a.created_at)
     );
 }
+
+/** Selve beskeden fra en Lys-notifikation («Navn: «tekst»»), uden borgerens navn foran. */
+export function messageText(detail: string): string {
+  const m = /«([\s\S]*)»\s*$/.exec(detail);
+  return (m ? m[1]! : detail).trim();
+}

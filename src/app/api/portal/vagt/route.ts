@@ -9,6 +9,7 @@ import { PERMISSIONS } from '@/lib/permissions';
 import {
   SHIFT_NAMES,
   lysConcerns,
+  messageText,
   previousHandovers,
   type CheckinRow,
   type HandoverRow,
@@ -31,7 +32,7 @@ export async function GET() {
   const todayStart = copenhagenStartOfDateUtcIso(today);
   const tomorrowStart = copenhagenStartOfDateUtcIso(shiftYmd(today, 1));
 
-  const [residents, staffName, handoverRes, lysRes, tasksRes, plannerRes, draftsRes] =
+  const [residents, staffName, handoverRes, lysRes, tasksRes, plannerRes, draftsRes, messagesRes] =
     await Promise.all([
       loadResidents(supabase, orgId),
       loadStaffName(supabase, user.id),
@@ -71,6 +72,16 @@ export async function GET() {
         .eq('staff_id', user.id)
         .eq('journal_status', 'kladde')
         .gte('created_at', todayStart),
+      // Beskeder fra borgerne i Lys, som ingen har set endnu.
+      supabase
+        .from('care_portal_notifications')
+        .select('id, resident_id, detail, created_at')
+        .eq('org_id', orgId)
+        .eq('type', 'besked')
+        .is('acknowledged_at', null)
+        .gte('created_at', new Date(now.getTime() - 7 * 86400000).toISOString())
+        .order('created_at', { ascending: false })
+        .limit(20),
     ]);
 
   for (const [name, res] of Object.entries({
@@ -79,6 +90,7 @@ export async function GET() {
     tasks: tasksRes,
     planner: plannerRes,
     drafts: draftsRes,
+    messages: messagesRes,
   })) {
     if (res.error) console.error(`[vagt] ${name}:`, res.error.message);
   }
@@ -158,6 +170,20 @@ export async function GET() {
       residentId: p.resident_user_id,
       name: label(p.resident_user_id),
       location: p.location ?? '',
+    })),
+    residentMessages: (
+      (messagesRes.data ?? []) as {
+        id: string;
+        resident_id: string;
+        detail: string;
+        created_at: string;
+      }[]
+    ).map((m) => ({
+      id: m.id,
+      residentId: m.resident_id,
+      name: label(m.resident_id),
+      text: messageText(m.detail),
+      at: m.created_at,
     })),
     myDraftsToday: draftsRes.count ?? 0,
     handoverWrittenCount: writtenThisShift.size,
