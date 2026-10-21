@@ -4,7 +4,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { copenhagenYmd } from '@/lib/copenhagenDay';
-import { appendHandoverLine, handoverShiftDate, handoverShiftNow } from '@/lib/handoverNotes';
+import { appendHandoverLine, handoverRecordDate, handoverShiftNow } from '@/lib/handoverNotes';
 import { buildPlannerInsertRow } from '@/lib/plannerEntries';
 import { buildStaffTaskInsertRow, initialsFromDisplayName } from '@/lib/staffTasks';
 import type { AssistantAction } from './actions';
@@ -120,8 +120,8 @@ async function applyOne(ctx: ApplyContext, a: AssistantAction): Promise<AppliedR
     }
     case 'handover': {
       // Én række pr. borger, dag og vagt: linjen lægges under det, kollegerne allerede har skrevet.
-      const shiftDate = handoverShiftDate();
       const shiftLabel = handoverShiftNow();
+      const shiftDate = handoverRecordDate(shiftLabel);
       const { data: existing, error: readError } = await ctx.supabase
         .from('care_handover_notes')
         .select('body')

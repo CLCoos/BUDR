@@ -1,4 +1,4 @@
-import { copenhagenYmd } from '@/lib/copenhagenDay';
+import { copenhagenHour, copenhagenYmd } from '@/lib/copenhagenDay';
 
 export const HANDOVER_SHIFT_LABELS = ['dag', 'aften', 'nat', 'doegnnotat'] as const;
 export type HandoverShiftLabel = (typeof HANDOVER_SHIFT_LABELS)[number];
@@ -58,19 +58,76 @@ export function handoverShiftDate(ref = new Date()): string {
   return copenhagenYmd(ref);
 }
 
+/** Nattevagten slutter kl. 7. Før det hører notatet til den dag, vagten startede. */
+const NIGHT_SHIFT_END_HOUR = 7;
+
+function previousCopenhagenYmd(ymd: string): string {
+  const d = new Date(`${ymd}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Datoen et vagtnotat gemmes under.
+ * Dag og aften følger kalenderdagen. Nat (23–07) beholder startdatoen, også efter midnat,
+ * så et notat skrevet kl. 23:40 og en linje kl. 01:10 lander på samme række.
+ */
+export function handoverRecordDate(shift: HandoverShiftLabel, ref = new Date()): string {
+  const today = copenhagenYmd(ref);
+  if (shift === 'nat' && copenhagenHour(ref) < NIGHT_SHIFT_END_HOUR) {
+    return previousCopenhagenYmd(today);
+  }
+  return today;
+}
+
+/**
+ * Nattevagtsrækker skrevet efter midnat blev tidligere stemplet med morgenens dato.
+ * De hører til vagten, der startede dagen før. En række, der allerede ligger på startdatoen,
+ * flyttes ikke, heller ikke når den er rettet kl. 6.
+ */
+export function anchorHandoverShiftDate(
+  shiftDate: string,
+  shiftLabel: string,
+  atIso: string
+): string {
+  const date = normalizeHandoverShiftDate(shiftDate);
+  if (shiftLabel !== 'nat') return date;
+  const at = new Date(atIso);
+  if (Number.isNaN(at.getTime()) || copenhagenHour(at) >= NIGHT_SHIFT_END_HOUR) return date;
+  if (copenhagenYmd(at) !== date) return date;
+  return previousCopenhagenYmd(date);
+}
+
 /** Vagten lige nu efter dansk klokkeslæt: dag 07–15, aften 15–23, ellers nat. */
 export function handoverShiftNow(ref = new Date()): Exclude<HandoverShiftLabel, 'doegnnotat'> {
-  const hour =
-    Number(
-      new Intl.DateTimeFormat('en-GB', {
-        timeZone: 'Europe/Copenhagen',
-        hour: '2-digit',
-        hour12: false,
-      }).format(ref)
-    ) % 24;
+  const hour = copenhagenHour(ref);
   if (hour >= 7 && hour < 15) return 'dag';
   if (hour >= 15 && hour < 23) return 'aften';
   return 'nat';
+}
+
+/**
+ * To tekster om samme vagt. Den nye linje lægges under, medmindre den allerede står i notatet,
+ * så en fejlplaceret række ikke fordobler teksten, næste gang den læses.
+ */
+export function mergeHandoverBodies(
+  existing: string | null | undefined,
+  extra: string | null | undefined
+): string {
+  const prev = (existing ?? '').trim();
+  const next = (extra ?? '').trim();
+  if (!next) return prev;
+  if (!prev || prev === next) return clipHandoverBody(prev || next);
+  // Allerede lagt sammen ved et tidligere læs: behold den længste, så linjen ikke kommer to gange.
+  if (prev.endsWith(`\n${next}`) || prev.startsWith(`${next}\n`)) return clipHandoverBody(prev);
+  if (next.endsWith(`\n${prev}`) || next.startsWith(`${prev}\n`)) return clipHandoverBody(next);
+  return clipHandoverBody(`${prev}\n${next}`);
+}
+
+function preferHandoverFlag(a: string | null, b: string | null): string | null {
+  const rank = (f: string | null) =>
+    f === 'roed' || f === 'sort' ? 3 : f === 'gul' ? 2 : f === 'groen' ? 1 : 0;
+  return rank(a) >= rank(b) ? a : b;
 }
 
 /** Tilføjer en linje til et eksisterende vagtnotat uden at overskrive det, der står. */
@@ -122,6 +179,34 @@ export function normalizeHandoverShiftDate(value: string): string {
   return m?.[1] ?? value.trim();
 }
 
+/**
+ * Samler rækker, der er den samme vagt. En nattevagt stemplet med morgenens dato
+ * lægges sammen med notatet fra den aften, vagten startede, ældste tekst først.
+ */
+export function collapseHandoverNotes(notes: StoredHandoverNote[]): StoredHandoverNote[] {
+  const groups = new Map<string, StoredHandoverNote>();
+  for (const note of notes) {
+    const shiftDate = anchorHandoverShiftDate(note.shift_date, note.shift_label, note.created_at);
+    const key = noteKey(note.resident_id, shiftDate, note.shift_label);
+    const anchored = { ...note, shift_date: shiftDate };
+    const existing = groups.get(key);
+    if (!existing) {
+      groups.set(key, anchored);
+      continue;
+    }
+    const newerIsAnchored = createdMs(anchored.created_at) >= createdMs(existing.created_at);
+    const older = newerIsAnchored ? existing : anchored;
+    const newer = newerIsAnchored ? anchored : existing;
+    groups.set(key, {
+      ...newer,
+      shift_date: shiftDate,
+      body: mergeHandoverBodies(older.body, newer.body),
+      flag_color: preferHandoverFlag(older.flag_color, newer.flag_color),
+    });
+  }
+  return [...groups.values()];
+}
+
 export function applyStoredNotes<
   T extends {
     residentId: string;
@@ -143,7 +228,7 @@ export function applyStoredNotes<
   const currentByResident = new Map<string, StoredHandoverNote>();
   const previousByResident = new Map<string, StoredHandoverNote>();
 
-  for (const note of notes) {
+  for (const note of collapseHandoverNotes(notes)) {
     const shiftDate = normalizeHandoverShiftDate(note.shift_date);
     if (shiftDate === current.shiftDate && note.shift_label === current.shiftLabel) {
       const existing = currentByResident.get(note.resident_id);

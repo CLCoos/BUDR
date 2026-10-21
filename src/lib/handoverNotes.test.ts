@@ -5,8 +5,11 @@ import {
   clipHandoverBody,
   HANDOVER_NOTE_MAX_CHARS,
   handoverConflictKey,
+  handoverRecordDate,
   handoverShiftDate,
   handoverShiftNow,
+  anchorHandoverShiftDate,
+  mergeHandoverBodies,
   appendHandoverLine,
   handoverShiftLabelDa,
   shouldPersistHandoverEntry,
@@ -88,7 +91,7 @@ describe('applyStoredNotes', () => {
           shift_date: '2026-08-26',
           body: 'Nat: uro kl. 02',
           flag_color: 'roed',
-          created_at: '2026-08-26T00:10:00.000Z',
+          created_at: '2026-08-26T20:10:00.000Z',
         },
         {
           resident_id: RES_A,
@@ -117,7 +120,7 @@ describe('applyStoredNotes', () => {
           shift_date: '2026-08-26T00:00:00.000Z',
           body: 'ISO-dato fra API',
           flag_color: 'gul',
-          created_at: '2026-08-26T00:10:00.000Z',
+          created_at: '2026-08-26T20:10:00.000Z',
         },
       ],
       { shiftDate: '2026-08-26', shiftLabel: 'nat' }
@@ -173,5 +176,83 @@ describe('appendHandoverLine', () => {
     expect(appendHandoverLine(null, ' Ny linje ')).toBe('Ny linje');
     expect(appendHandoverLine('Første', 'Anden')).toBe('Første\nAnden');
     expect(appendHandoverLine('Første', '  ')).toBe('Første');
+  });
+});
+
+describe('handoverRecordDate', () => {
+  it('holder nattevagten på startdatoen efter midnat', () => {
+    // 2026-10-20 23:40 CEST = 21:40 UTC. 2026-10-21 01:10 CEST = 23:10 UTC dagen før.
+    const beforeMidnight = new Date('2026-10-20T21:40:00.000Z');
+    const afterMidnight = new Date('2026-10-20T23:10:00.000Z');
+    expect(handoverShiftNow(beforeMidnight)).toBe('nat');
+    expect(handoverShiftNow(afterMidnight)).toBe('nat');
+    expect(handoverRecordDate('nat', beforeMidnight)).toBe('2026-10-20');
+    expect(handoverRecordDate('nat', afterMidnight)).toBe('2026-10-20');
+    expect(handoverShiftDate(afterMidnight)).toBe('2026-10-21');
+  });
+
+  it('lader dag og aften følge kalenderdagen, også om vinteren', () => {
+    const morning = new Date('2026-01-11T07:30:00.000Z'); // 08:30 CET
+    expect(handoverRecordDate('dag', morning)).toBe('2026-01-11');
+    const evening = new Date('2026-01-11T15:00:00.000Z'); // 16:00 CET
+    expect(handoverRecordDate('aften', evening)).toBe('2026-01-11');
+    const night = new Date('2026-01-11T01:00:00.000Z'); // 02:00 CET
+    expect(handoverRecordDate('nat', night)).toBe('2026-01-10');
+  });
+});
+
+describe('anchorHandoverShiftDate', () => {
+  it('flytter en nattevagt stemplet med morgenens dato tilbage til startdatoen', () => {
+    // 01:10 CEST ligger på 2026-10-21, men vagten startede 2026-10-20.
+    expect(anchorHandoverShiftDate('2026-10-21', 'nat', '2026-10-20T23:10:00.000Z')).toBe(
+      '2026-10-20'
+    );
+  });
+
+  it('lader en række, der allerede har startdatoen, blive, også når den rettes kl. 6', () => {
+    expect(anchorHandoverShiftDate('2026-10-20', 'nat', '2026-10-21T04:00:00.000Z')).toBe(
+      '2026-10-20'
+    );
+    expect(anchorHandoverShiftDate('2026-10-20', 'nat', '2026-10-20T21:40:00.000Z')).toBe(
+      '2026-10-20'
+    );
+  });
+});
+
+describe('mergeHandoverBodies', () => {
+  it('lægger fragmentet under det oprindelige notat én gang', () => {
+    const merged = mergeHandoverBodies('Krampeanfald kl. 23', 'Væk ham kl. 6');
+    expect(merged).toBe('Krampeanfald kl. 23\nVæk ham kl. 6');
+    expect(mergeHandoverBodies(merged, 'Væk ham kl. 6')).toBe(merged);
+  });
+});
+
+describe('applyStoredNotes nat over midnat', () => {
+  it('viser både notatet fra før midnat og linjen skrevet efter midnat', () => {
+    const applied = applyStoredNotes(
+      [{ residentId: RES_A, note: '', flagColor: null }],
+      [
+        {
+          resident_id: RES_A,
+          shift_label: 'nat',
+          shift_date: '2026-10-20',
+          body: 'Krampeanfald kl. 23. Observér.',
+          flag_color: 'roed',
+          created_at: '2026-10-20T21:40:00.000Z',
+        },
+        {
+          resident_id: RES_A,
+          shift_label: 'nat',
+          shift_date: '2026-10-21',
+          body: 'Væk ham kl. 6',
+          flag_color: null,
+          created_at: '2026-10-20T23:10:00.000Z',
+        },
+      ],
+      { shiftDate: '2026-10-20', shiftLabel: 'nat' }
+    );
+    expect(applied[0]?.note).toBe('Krampeanfald kl. 23. Observér.\nVæk ham kl. 6');
+    expect(applied[0]?.flagColor).toBe('roed');
+    expect(applied[0]?.previousNote).toBeUndefined();
   });
 });

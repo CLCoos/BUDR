@@ -4,7 +4,7 @@ import { residentLabel } from '@/lib/assistant/names';
 import { loadResidents, loadStaffName } from '@/lib/assistant/server';
 import { shiftYmd } from '@/lib/assistant/actions';
 import { copenhagenStartOfDateUtcIso, copenhagenYmd } from '@/lib/copenhagenDay';
-import { handoverShiftDate, handoverShiftNow } from '@/lib/handoverNotes';
+import { anchorHandoverShiftDate, handoverRecordDate, handoverShiftNow } from '@/lib/handoverNotes';
 import { PERMISSIONS } from '@/lib/permissions';
 import {
   SHIFT_NAMES,
@@ -26,7 +26,7 @@ export async function GET() {
   const now = new Date();
   const today = copenhagenYmd(now);
   const shift = handoverShiftNow(now);
-  const shiftDate = handoverShiftDate(now);
+  const shiftDate = handoverRecordDate(shift, now);
   const since16h = new Date(now.getTime() - 16 * 60 * 60 * 1000).toISOString();
   const todayStart = copenhagenStartOfDateUtcIso(today);
   const tomorrowStart = copenhagenStartOfDateUtcIso(shiftYmd(today, 1));
@@ -91,7 +91,10 @@ export async function GET() {
   const writtenThisShift = new Set(
     handoverRows
       .filter(
-        (r) => r.shift_date.slice(0, 10) === shiftDate && r.shift_label === shift && r.body.trim()
+        (r) =>
+          anchorHandoverShiftDate(r.shift_date, r.shift_label, r.updated_at) === shiftDate &&
+          r.shift_label === shift &&
+          r.body.trim()
       )
       .map((r) => r.resident_id)
   );
