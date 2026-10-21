@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 const pStyle = { color: 'var(--cp-muted)' } as const;
 const h2Style = {
-  fontFamily: "'DM Serif Display', serif",
+  fontFamily: 'var(--cp-font)',
   color: 'var(--cp-text)',
 } as const;
 
@@ -81,8 +81,8 @@ export default function OmCarePortalDemoPage() {
           href="/care-portal-demo"
           className="inline-flex rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-95"
           style={{
-            background: 'linear-gradient(135deg, #2dd4a0 0%, #0d9488 100%)',
-            boxShadow: '0 2px 14px rgba(45,212,160,0.35)',
+            background: 'var(--cp-green)',
+            boxShadow: '0 2px 14px color-mix(in srgb, var(--cp-green) 35%, transparent)',
           }}
         >
           Tilbage til demo-dashboard

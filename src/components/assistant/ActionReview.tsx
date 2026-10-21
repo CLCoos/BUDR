@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { CalendarPlus, CheckSquare, FileText, Loader2, Pill } from 'lucide-react';
+import { ArrowRightLeft, CalendarPlus, CheckSquare, FileText, Loader2, Pill } from 'lucide-react';
 import { ghostButton, inputStyle, primaryButton } from '@/components/documents/shared';
 import {
   ACTION_LABELS,
@@ -24,6 +24,7 @@ const ICONS: Record<AssistantAction['type'], typeof FileText> = {
   task: CheckSquare,
   calendar: CalendarPlus,
   medication_request: Pill,
+  handover: ArrowRightLeft,
 };
 
 const fieldClass = 'w-full rounded-lg border px-3 py-2 text-sm';
@@ -270,6 +271,21 @@ function ActionFields({
           <p className="text-xs" style={muted}>
             Bliver en opgave med høj prioritet til den medicinansvarlige. Medicinlisten ændres ikke
             automatisk.
+          </p>
+        </>
+      );
+    case 'handover':
+      return (
+        <>
+          <input
+            value={a.text}
+            onChange={(e) => onChange({ text: e.target.value })}
+            className={fieldClass}
+            style={inputStyle}
+            aria-label="Linje til overleveringen"
+          />
+          <p className="text-xs" style={muted}>
+            Lægges under det, kollegerne allerede har skrevet til denne vagts overlevering.
           </p>
         </>
       );

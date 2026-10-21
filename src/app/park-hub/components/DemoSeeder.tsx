@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { grantWaterCredit } from '@/lib/havenWaterCredits';
 import { LYS_DEMO_RESIDENT_ID } from '@/lib/lysDemoResident';
 
@@ -474,24 +474,10 @@ function seedLocalStorage() {
 }
 
 export default function DemoSeeder() {
-  const [dismissed, setDismissed] = useState(false);
-
   useEffect(() => {
     seedLocalStorage();
   }, []);
 
-  if (dismissed) return null;
-
-  return (
-    <div className="fixed top-0 left-0 right-0 z-[200] flex items-center justify-between px-4 py-1.5 bg-amber-50 border-b border-amber-200">
-      <span className="text-xs font-medium text-amber-800">Demo · Anders M. · Simulerede data</span>
-      <button
-        type="button"
-        onClick={() => setDismissed(true)}
-        className="text-xs text-amber-600 hover:underline"
-      >
-        Skjul
-      </button>
-    </div>
-  );
+  // Demo-mærket vises af LysStatusChrome; ét bånd er nok.
+  return null;
 }

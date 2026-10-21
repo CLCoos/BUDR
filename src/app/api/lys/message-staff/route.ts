@@ -96,3 +96,59 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   return NextResponse.json({ ok: true });
 }
+
+/**
+ * GET — status på borgerens seneste besked til personalet (de sidste 7 dage), så Lys kan vise
+ * «Mette har set din besked kl. 14.12». Kun egen besked; navnet er personalets fornavn.
+ */
+export async function GET(): Promise<NextResponse> {
+  const residentId = await getResidentId();
+  if (!residentId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  if (isDemoResidentId(residentId)) {
+    return NextResponse.json({ latest: null, demo: true });
+  }
+
+  const supabase = getServiceClient();
+  if (!supabase) {
+    return NextResponse.json({ error: 'Server ikke konfigureret' }, { status: 503 });
+  }
+
+  const since = new Date(Date.now() - 7 * 86400000).toISOString();
+  const { data, error } = await supabase
+    .from('care_portal_notifications')
+    .select('created_at, acknowledged_at, acknowledged_by')
+    .eq('resident_id', residentId)
+    .eq('type', 'besked')
+    .gte('created_at', since)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error('[message-staff] status:', error.message);
+    return NextResponse.json({ error: 'Kunne ikke hente status' }, { status: 500 });
+  }
+  if (!data) return NextResponse.json({ latest: null });
+
+  const row = data as {
+    created_at: string;
+    acknowledged_at: string | null;
+    acknowledged_by: string | null;
+  };
+  let seenBy: string | null = null;
+  if (row.acknowledged_by) {
+    const { data: staff } = await supabase
+      .from('care_staff')
+      .select('full_name')
+      .eq('id', row.acknowledged_by)
+      .maybeSingle();
+    const full = (staff as { full_name?: string | null } | null)?.full_name?.trim();
+    seenBy = full ? full.split(/\s+/)[0]! : null;
+  }
+
+  return NextResponse.json({
+    latest: { sentAt: row.created_at, seenAt: row.acknowledged_at, seenBy },
+  });
+}

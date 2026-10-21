@@ -27,6 +27,7 @@ function restoreAction(a: AssistantAction, name: string): AssistantAction {
     case 'calendar':
       return { ...a, title: restoreName(a.title, name) };
     case 'medication_request':
+    case 'handover':
       return { ...a, text: restoreName(a.text, name) };
   }
 }

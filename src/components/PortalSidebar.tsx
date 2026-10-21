@@ -3,6 +3,7 @@ import React, { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
+  Mic,
   LayoutDashboard,
   ClipboardList,
   Users,
@@ -22,6 +23,7 @@ import {
   ClipboardCopy,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { useFortael } from '@/components/fortael/Fortael';
 import DepartmentSelect, { type DepartmentOption } from '@/components/DepartmentSelect';
 import { createClient } from '@/lib/supabase/client';
 import { hasPermission } from '@/lib/auth/hasPermission';
@@ -313,6 +315,7 @@ function PortalSidebarInner({
   };
 
   const mobileClosed = !mobileOpen;
+  const fortael = useFortael();
 
   return (
     <aside
@@ -401,6 +404,23 @@ function PortalSidebarInner({
         )}
       </div>
 
+      {fortael.enabled && (
+        <div className="hidden px-3 pt-3 md:block">
+          <button
+            type="button"
+            onClick={() => {
+              onMobileClose();
+              fortael.openFortael();
+            }}
+            className={`flex min-h-[48px] w-full items-center rounded-xl text-[15px] font-semibold transition-opacity hover:opacity-90 ${collapsed ? 'justify-center' : 'gap-2.5 px-4'}`}
+            style={{ backgroundColor: 'var(--cp-ink-accent)', color: 'var(--cp-ink)' }}
+            aria-label="Fortæl"
+          >
+            <Mic size={18} aria-hidden />
+            {!collapsed && 'Fortæl'}
+          </button>
+        </div>
+      )}
       <div className="flex-1 overflow-y-auto py-3 scrollbar-hide cp-scroll">
         {navGroups.map((group, groupIndex) => (
           <section key={group.label} className={groupIndex > 0 ? 'mt-2' : ''}>
