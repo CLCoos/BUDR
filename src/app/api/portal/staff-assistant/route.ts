@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
   const staffName =
     (user.user_metadata?.full_name as string | undefined) ?? user.email ?? 'kollega';
 
-  const system = `Du er en erfaren faglig kollega og supervisor på et socialpsykiatrisk bosted i Danmark. Du er ikke en robot eller AI-assistent — du er "den erfarne kollega" der altid har tid og aldrig dømmer.
+  const system = `Du er en erfaren faglig kollega og supervisor på et socialpsykiatrisk bosted i Danmark. Du er en AI-assistent i BUDR og taler som "den erfarne kollega", der altid har tid og aldrig dømmer. Spørger nogen, så sig ærligt, at du er en AI-assistent.
 
 Du taler med ${staffName}, der arbejder på dette bosted.
 
@@ -141,6 +141,7 @@ Brødteksten før blokken må ikke nævne XML, JSON eller "budr_followups".`;
     {
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 900,
+      temperature: 0.5,
       system,
       messages,
     },

@@ -10,7 +10,6 @@ import * as dataService from '@/lib/dataService';
 import { syncBadgesAfterJournal } from '@/lib/residentBadgeSync';
 import { getLysPhase, phaseDaLabel } from '../lib/lysTheme';
 import type { LysThemeTokens } from '../lib/lysTheme';
-import { ANTHROPIC_CHAT_MODEL } from '@/lib/ai/anthropicModel';
 import type { JournalEntry, SelfLetter } from '@/types/local';
 import { LOCAL_KEYS } from '@/types/local';
 import { safeRandomUUID } from '@/lib/uuid';
@@ -364,7 +363,7 @@ export default function LysJournalTab({ tokens, accent }: Props) {
     setLysMsgLoading(true);
     try {
       const phase = getLysPhase(new Date());
-      const historyLines = recentEntries.slice(0, 3).map((e) => {
+      const history = recentEntries.slice(0, 3).map((e) => {
         const d = new Date(e.date).toLocaleDateString('da-DK', {
           weekday: 'short',
           day: 'numeric',
@@ -372,32 +371,19 @@ export default function LysJournalTab({ tokens, accent }: Props) {
         const m = MOOD_OPTIONS.find((o) => o.value === e.mood)?.label ?? '';
         return `${d}: "${e.text.slice(0, 80)}"${m ? ` (${m})` : ''}`;
       });
-      const historyCtx =
-        historyLines.length > 0 ? `\n\nSeneste indlæg:\n${historyLines.join('\n')}` : '';
-
-      const res = await fetch('/api/ai/chat-completion', {
+      const res = await fetch('/api/lys/journal-reply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
-          provider: 'ANTHROPIC',
-          model: ANTHROPIC_CHAT_MODEL,
-          messages: [
-            {
-              role: 'system',
-              content:
-                'Du er Lys — en varm, empatisk ledsager i en dansk mental sundhedsapp. Skriv én kort, oprigtig og personlig kommentar (maks 2 sætninger, maks 35 ord) til hvad borgeren netop har skrevet. Hvis du ser et positivt mønster på tværs af de seneste indlæg, fremhæv det varmt og anerkendende. Slut med ét roligt emoji.',
-            },
-            {
-              role: 'user',
-              content: `Stemning: ${MOOD_OPTIONS.find((o) => o.value === moodVal)?.label ?? 'OK'}. Tidspunkt: ${phaseDaLabel(phase)}.${historyCtx}\n\nDagens indlæg: "${content.slice(0, 400)}"`,
-            },
-          ],
-          stream: false,
-          parameters: { max_tokens: 90, temperature: 0.75 },
+          content,
+          mood: MOOD_OPTIONS.find((o) => o.value === moodVal)?.label ?? 'OK',
+          phase: phaseDaLabel(phase),
+          history,
         }),
       });
-      const d = (await res.json()) as { choices?: [{ message: { content: string } }] };
-      const msg = d.choices?.[0]?.message?.content?.trim();
+      const d = res.ok ? ((await res.json()) as { text?: string }) : {};
+      const msg = d.text?.trim();
       if (msg && mountedRef.current) setLysMsg(msg);
     } catch {
       /* silently fail */

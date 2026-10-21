@@ -93,6 +93,7 @@ export async function POST(req: Request) {
     system: INTAKE_SYSTEM,
     userMessage,
     maxTokens: 1500,
+    temperature: 0,
   });
   if (!result.ok) {
     console.error('[assistant intake] anthropic failed:', result.lastModel, result.status);

@@ -3,12 +3,21 @@ import { parseBudrFollowUpsBlock } from '@/lib/portalStaffAssistantFollowUps';
 import { CARE_DEMO_RESIDENT_PROFILES } from '@/lib/careDemoResidents';
 import { CARE_PORTAL_DEMO_FACILITY_NAME } from '@/lib/carePortalDemoBranding';
 import { claudeApiKey, claudeMessagesFetch } from '@/lib/ai/claudeTransport';
+import { checkApiRateLimit, getClientIp } from '@/lib/apiRateLimit';
 
 /**
  * Public demo endpoint for /care-portal-demo/assistant — same Anthropic integration as
  * staff-assistant, but with static demo beboer-kontekst (ingen login).
  */
 export async function POST(req: NextRequest) {
+  const rl = checkApiRateLimit('staff-assistant-demo', getClientIp(req), 15, 10 * 60_000);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: 'Demoen har fået mange spørgsmål på kort tid. Prøv igen om lidt.' },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } }
+    );
+  }
+
   let body: { messages?: Array<{ role: 'user' | 'assistant'; content: string }> };
   try {
     body = await req.json();
@@ -16,7 +25,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const messages = body.messages ?? [];
+  const messages = (Array.isArray(body.messages) ? body.messages : [])
+    .slice(-12)
+    .map((m) => ({
+      role: m.role === 'assistant' ? ('assistant' as const) : ('user' as const),
+      content: typeof m.content === 'string' ? m.content.slice(0, 2000) : '',
+    }))
+    .filter((m) => m.content.trim().length > 0);
   if (messages.length === 0) {
     return NextResponse.json({ error: 'No messages' }, { status: 400 });
   }
@@ -29,7 +44,7 @@ export async function POST(req: NextRequest) {
   });
   const residentContext = residentLines.join('\n');
 
-  const system = `Du er en erfaren faglig kollega og supervisor på et socialpsykiatrisk bosted i Danmark. Du er ikke en robot eller AI-assistent — du er "den erfarne kollega" der altid har tid og aldrig dømmer.
+  const system = `Du er en erfaren faglig kollega og supervisor på et socialpsykiatrisk bosted i Danmark. Du er en AI-assistent i BUDR og taler som "den erfarne kollega", der altid har tid og aldrig dømmer. Spørger nogen, så sig ærligt, at du er en AI-assistent.
 
 Du taler med demo-personale der prøver Care Portal-demo (${CARE_PORTAL_DEMO_FACILITY_NAME}, fiktivt).
 
@@ -60,6 +75,7 @@ Regler for JSON inde i blokken:
     {
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 900,
+      temperature: 0.5,
       system,
       messages,
     },
