@@ -7,7 +7,9 @@ import {
   draftFromAssignments,
   emptyOnCallDraft,
   formatDanishPhoneDisplay,
+  mergeOnCallRowsForInstant,
   normalizeDanishPhone,
+  onCallRecordDate,
   onCallShiftDate,
 } from './onCallStaff';
 
@@ -106,5 +108,53 @@ describe('Copenhagen shift date', () => {
 
   it('maps afternoon Copenhagen time to evening shift', () => {
     expect(copenhagenOnCallShift(new Date('2026-08-30T13:00:00.000Z'))).toBe('evening');
+  });
+});
+
+describe('onCallRecordDate', () => {
+  it('keeps the night shift on the civil day it started after midnight', () => {
+    // 00:30 CEST 30 Aug — the shift that started 29 Aug 22:00 is still on duty
+    const afterMidnight = new Date('2026-08-29T22:30:00.000Z');
+    expect(onCallShiftDate(afterMidnight)).toBe('2026-08-30');
+    expect(copenhagenOnCallShift(afterMidnight)).toBe('night');
+    expect(onCallRecordDate(afterMidnight, 'night')).toBe('2026-08-29');
+    expect(onCallRecordDate(afterMidnight, 'day')).toBe('2026-08-30');
+  });
+
+  it('uses the same civil date once the night shift has started in the evening', () => {
+    const nightStart = new Date('2026-08-15T20:00:00.000Z'); // 22:00 CEST
+    expect(onCallRecordDate(nightStart, 'night')).toBe('2026-08-15');
+  });
+
+  it('uses yesterday before 06:00 in winter, including across a month boundary', () => {
+    const beforeSix = new Date('2026-01-15T04:59:00.000Z'); // 05:59 CET
+    expect(onCallRecordDate(beforeSix)).toBe('2026-01-14');
+    const marchFirst = new Date('2026-02-28T23:30:00.000Z'); // 00:30 CET 1 Mar
+    expect(onCallRecordDate(marchFirst, 'night')).toBe('2026-02-28');
+  });
+
+  it('shows the ongoing night number, not the night that starts this evening', () => {
+    const afterMidnight = new Date('2026-08-29T22:30:00.000Z');
+    expect(
+      mergeOnCallRowsForInstant(
+        [
+          { shift: 'day', phone: '11111111' },
+          { shift: 'night', phone: '22222222' },
+        ],
+        [{ shift: 'night', phone: '33333333' }],
+        afterMidnight
+      )
+    ).toEqual([
+      { shift: 'day', phone: '11111111' },
+      { shift: 'night', phone: '33333333' },
+    ]);
+  });
+
+  it('leaves daytime rows unchanged', () => {
+    const afternoon = new Date('2026-08-30T13:00:00.000Z'); // 15:00 CEST
+    const rows = [{ shift: 'night', phone: '22222222' }];
+    expect(
+      mergeOnCallRowsForInstant(rows, [{ shift: 'night', phone: '33333333' }], afternoon)
+    ).toEqual(rows);
   });
 });

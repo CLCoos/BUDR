@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getResidentId } from '@/lib/residentAuth';
 import { isValidUuid } from '@/lib/uuid';
-import { copenhagenYmd } from '@/lib/copenhagenDay';
+import { onCallRecordDate } from '@/lib/onCallStaff';
 import {
   currentOnCallShift,
   emptyCrisisSupportPayload,
@@ -56,8 +56,8 @@ export async function GET(): Promise<NextResponse> {
 
   const orgId = (resident as { org_id?: string | null }).org_id ?? null;
   const now = new Date();
-  const today = copenhagenYmd(now);
   const shift = currentOnCallShift(now);
+  const recordDate = onCallRecordDate(now, shift);
 
   const [planRes, contactsRes, onCallRes] = await Promise.all([
     supabase
@@ -77,7 +77,7 @@ export async function GET(): Promise<NextResponse> {
           .from('on_call_staff')
           .select('id, phone, shift')
           .eq('org_id', orgId)
-          .eq('date', today)
+          .eq('date', recordDate)
           .eq('shift', shift)
           .maybeSingle()
       : Promise.resolve({ data: null, error: null }),
