@@ -45,6 +45,32 @@ export function copenhagenStartOfTodayUtcIso(ref = new Date()): string {
   return copenhagenStartOfDateUtcIso(copenhagenYmd(ref));
 }
 
+function copenhagenOffsetMinutes(at: Date): number {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: DK,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(at);
+  const get = (t: string) => Number(parts.find((p) => p.type === t)?.value ?? '0');
+  const hour = get('hour') === 24 ? 0 : get('hour');
+  const asUtc = Date.UTC(get('year'), get('month') - 1, get('day'), hour, get('minute'));
+  return Math.round((asUtc - at.getTime()) / 60000);
+}
+
+/** Dansk vægur ("2026-10-15", "09:45") → det rigtige UTC-øjeblik, også omkring sommertid. */
+export function copenhagenLocalToDate(ymd: string, hhmm: string): Date {
+  const [y, m, d] = ymd.split('-').map(Number);
+  const [h, min] = hhmm.split(':').map(Number);
+  const wall = Date.UTC(y!, m! - 1, d!, h!, min!);
+  let guess = new Date(wall - copenhagenOffsetMinutes(new Date(wall)) * 60000);
+  guess = new Date(wall - copenhagenOffsetMinutes(guess) * 60000);
+  return guess;
+}
+
 /** Time of day (0–23) in Europe/Copenhagen. */
 export function copenhagenHour(ref = new Date()): number {
   const parts = new Intl.DateTimeFormat('en-GB', {

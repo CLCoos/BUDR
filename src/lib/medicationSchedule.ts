@@ -1,5 +1,13 @@
-import { copenhagenYmd } from '@/lib/copenhagenDay';
+import { copenhagenHour, copenhagenYmd } from '@/lib/copenhagenDay';
 import { minutesLate } from '@/lib/lys/medicationReminders';
+
+/**
+ * Frem til morgenmedicinen kl. 8 hører en endnu ikke indtruffet aftendosis til gårsdagen,
+ * så nattevagten kan kvittere den ved overleveringen uden at optage dagens plads.
+ */
+const MORNING_DOSE_HOUR = 8;
+/** Klokkeslæt fra 18:00 kan stadig være gårsdagens dosis, når vagten skriver efter midnat. */
+const EVENING_DOSE_FROM_HOUR = 18;
 
 /** Standardtidspunkt pr. tidsgruppe, når ordinationens time_label ikke indeholder et klokkeslæt. */
 export const TIME_GROUP_DEFAULT_HHMM: Record<string, string> = {
@@ -26,6 +34,46 @@ export function scheduledHhMm(timeGroup: string, timeLabel: string): string {
     TIME_GROUP_DEFAULT_HHMM[String(timeGroup ?? '').toLowerCase()] ??
     '12:30'
   );
+}
+
+function previousCivilYmd(ymd: string): string {
+  const d = new Date(`${ymd}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Kalenderdag en fast dosis hører til, når den registreres nu.
+ *
+ * En aftendosis (kl. 18 eller senere), der kvitteres før kl. 8,
+ * hører til gårsdagen: dagens klokkeslæt er endnu ikke indtruffet. Ellers ville
+ * kvitteringen optage dagens unikke plads, mens gårsdagens dosis stadig så
+ * uafleveret ud. Morgen- og middagsdoser efter midnat hører til i dag.
+ */
+export function administrationYmd(now: Date, hhmm: string): string {
+  const today = copenhagenYmd(now);
+  const late = minutesLate(now, hhmm);
+  const scheduledHour = Number(hhmm.split(':')[0]);
+  if (
+    late !== null &&
+    late < 0 &&
+    Number.isFinite(scheduledHour) &&
+    scheduledHour >= EVENING_DOSE_FROM_HOUR &&
+    copenhagenHour(now) < MORNING_DOSE_HOUR
+  ) {
+    return previousCivilYmd(today);
+  }
+  return today;
+}
+
+/** Dosis der skal vises og kvitteres: klokkeslæt plus den kalenderdag den hører til. */
+export function doseOccasion(
+  now: Date,
+  timeGroup: string,
+  timeLabel: string
+): { ymd: string; hhmm: string } {
+  const hhmm = scheduledHhMm(timeGroup, timeLabel);
+  return { ymd: administrationYmd(now, hhmm), hhmm };
 }
 
 export type ScheduledMedication = {

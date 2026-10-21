@@ -8,6 +8,7 @@ import {
   sanitizeSections,
   validatePeriod,
 } from '@/lib/documents/registry';
+import type { DocumentMeta, DocumentSectionSources, DocumentSections } from '@/lib/documents/types';
 import { UUID_RE, optionalText, readJson, requireStaff } from '../_auth';
 
 type Params = { params: Promise<{ id: string }> };
@@ -60,10 +61,41 @@ export async function GET(_req: NextRequest, { params }: Params) {
   });
 }
 
+type PatchArgs = {
+  sections?: DocumentSections;
+  section_sources?: DocumentSectionSources;
+  meta?: DocumentMeta;
+  due_date?: string | null;
+  responsible_id?: string | null;
+  title?: string | null;
+};
+
+/** Funktionen findes først, når migration 20261015160000 er kørt. */
+function isMissingPatchFunction(error: { code?: string; message?: string }): boolean {
+  if (error.code === 'PGRST202' || error.code === '42883') return true;
+  const message = error.message?.toLowerCase() ?? '';
+  return (
+    message.includes('resident_documents_apply_patch') &&
+    (message.includes('could not find') ||
+      message.includes('does not exist') ||
+      message.includes('schema cache'))
+  );
+}
+
+function rowFromRpc(data: unknown): Record<string, unknown> | null {
+  if (Array.isArray(data)) {
+    const row = data[0];
+    return row && typeof row === 'object' ? (row as Record<string, unknown>) : null;
+  }
+  if (data && typeof data === 'object') return data as Record<string, unknown>;
+  return null;
+}
+
 /**
  * PATCH /api/portal/documents/[id]
  * Body (alle valgfri): { sections, section_sources, meta, due_date, responsible_id, title }
- * Afsnit og kilder flettes ind i de eksisterende. Godkendte dokumenter er låst (RLS).
+ * Afsnit, kilder og metadata flettes ind i rækken i databasen (ikke som et helt
+ * øjebliksbillede), så to gem ikke kan slette hinandens felter. Godkendte dokumenter er låst.
  */
 export async function PATCH(req: NextRequest, { params }: Params) {
   const ctx = await requireStaff(PERMISSIONS.WRITE_JOURNAL);
@@ -87,35 +119,31 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'Dokumentet er godkendt og låst' }, { status: 409 });
   }
 
-  const update: Record<string, unknown> = {};
+  const patch: PatchArgs = {};
   if (body.sections !== undefined) {
-    update.sections = {
-      ...sanitizeSections(type, current.sections),
-      ...sanitizeSections(type, body.sections),
-    };
+    const sections = sanitizeSections(type, body.sections);
+    if (Object.keys(sections).length > 0) patch.sections = sections;
   }
   if (body.section_sources !== undefined) {
     const keys = type.sections.map((s) => s.key);
-    update.section_sources = {
-      ...sanitizeSectionSources(keys, current.section_sources),
-      ...sanitizeSectionSources(keys, body.section_sources),
-    };
+    const sources = sanitizeSectionSources(keys, body.section_sources);
+    if (Object.keys(sources).length > 0) patch.section_sources = sources;
   }
   if (body.meta !== undefined) {
     const res = sanitizeMeta(type, body.meta, true);
     if (!res.ok) return NextResponse.json({ error: res.error }, { status: 400 });
-    const merged = { ...(current.meta as Record<string, string | null>), ...res.meta };
+    const merged = { ...(current.meta as DocumentMeta), ...res.meta };
     const periodErr = validatePeriod(type, merged);
     if (periodErr) return NextResponse.json({ error: periodErr }, { status: 400 });
-    update.meta = merged;
+    if (Object.keys(res.meta).length > 0) patch.meta = res.meta;
   }
   if (body.due_date !== undefined) {
-    if (body.due_date === null || body.due_date === '') update.due_date = null;
-    else if (isValidDate(body.due_date)) update.due_date = body.due_date;
+    if (body.due_date === null || body.due_date === '') patch.due_date = null;
+    else if (isValidDate(body.due_date)) patch.due_date = body.due_date;
     else return NextResponse.json({ error: 'Ugyldig frist' }, { status: 400 });
   }
   if (body.responsible_id !== undefined) {
-    if (body.responsible_id === null) update.responsible_id = null;
+    if (body.responsible_id === null) patch.responsible_id = null;
     else if (typeof body.responsible_id === 'string' && UUID_RE.test(body.responsible_id)) {
       const { data: staff } = await ctx.supabase
         .from('care_staff')
@@ -124,15 +152,54 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         .eq('org_id', ctx.orgId)
         .maybeSingle();
       if (!staff) return NextResponse.json({ error: 'Ukendt medarbejder' }, { status: 400 });
-      update.responsible_id = body.responsible_id;
+      patch.responsible_id = body.responsible_id;
     } else return NextResponse.json({ error: 'Ukendt medarbejder' }, { status: 400 });
   }
   const title = optionalText(body.title, 200);
-  if (title !== undefined) update.title = title;
+  if (title !== undefined) patch.title = title;
 
-  if (Object.keys(update).length === 0) {
+  if (Object.keys(patch).length === 0) {
     return NextResponse.json({ error: 'Intet at opdatere' }, { status: 400 });
   }
+
+  const rpc = await ctx.supabase.rpc('resident_documents_apply_patch', {
+    p_id: id,
+    p_sections: patch.sections ?? null,
+    p_section_sources: patch.section_sources ?? null,
+    p_meta: patch.meta ?? null,
+    p_due_date: patch.due_date ?? null,
+    p_set_due_date: patch.due_date !== undefined,
+    p_responsible_id: patch.responsible_id ?? null,
+    p_set_responsible: patch.responsible_id !== undefined,
+    p_title: patch.title ?? null,
+    p_set_title: patch.title !== undefined,
+  });
+  if (!rpc.error) {
+    const row = rowFromRpc(rpc.data);
+    if (!row) return NextResponse.json({ error: 'Ingen adgang' }, { status: 403 });
+    return NextResponse.json({ document: row });
+  }
+  if (!isMissingPatchFunction(rpc.error)) {
+    return NextResponse.json({ error: rpc.error.message }, { status: 500 });
+  }
+
+  // Migrationen er ikke kørt endnu: samme fletning, men læst i appen. Overlappende
+  // kald kan stadig tabe felter, indtil funktionen findes. Editoren sender dem i rækkefølge.
+  const update: Record<string, unknown> = {};
+  if (patch.sections) {
+    update.sections = { ...sanitizeSections(type, current.sections), ...patch.sections };
+  }
+  if (patch.section_sources) {
+    const keys = type.sections.map((s) => s.key);
+    update.section_sources = {
+      ...sanitizeSectionSources(keys, current.section_sources),
+      ...patch.section_sources,
+    };
+  }
+  if (patch.meta) update.meta = { ...(current.meta as DocumentMeta), ...patch.meta };
+  if (patch.due_date !== undefined) update.due_date = patch.due_date;
+  if (patch.responsible_id !== undefined) update.responsible_id = patch.responsible_id;
+  if (patch.title !== undefined) update.title = patch.title;
 
   const { data, error } = await ctx.supabase
     .from('resident_documents')
