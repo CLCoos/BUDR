@@ -14,20 +14,21 @@ const INSTITUTIONER_FAQ = [
   {
     q: 'Erstatter BUDR vores nuværende journalsystem?',
     paragraphs: [
-      'For mindre socialpsykiatriske bosteder med 5-25 borgere, hvor BUDR-funktionaliteten dækker jeres dokumentationsbehov: ja. BUDR er bygget som komplet driftssystem — journal, vagtoverdragelse, dokumentation, recoveryarbejde og borgerinddragelse i ét system.',
-      'For større bosteder eller bosteder med intern medicinhåndtering har vi FMK- og MedCom-integration på roadmap for 2027. Vi vurderer det altid konkret sammen ved indledende samtale.',
+      'Nej. BUDR er det sted, hvor det pædagogiske arbejde sker: vagten, notaterne, borgerens forløb og dokumenterne til kommunen. Jeres officielle journal i fx Sensum eller Nexus bliver, hvor den er.',
+      'Med «Til fagsystem» kopierer I de godkendte notater over med ét tryk, så ingen skal skrive det samme to gange.',
     ],
   },
   {
     q: 'Understøtter BUDR VUM 2.0?',
     paragraphs: [
-      "Ja. BUDR's datamodel mapper direkte til VUM 2.0's 11 udredningstemaer og Fælles Faglige Begreber. CHIME-rammeværket matcher VUM 2.0's fokus på recoveryorienteret rehabilitering — to lag af samme faglige praksis.",
+      'Ja. Statusudtalelsen til kommunen følger VUM 2.0’s opbygning. BUDR laver et udkast ud fra jeres notater og borgerens egne ord, og kontaktpersonen retter og godkender.',
     ],
   },
   {
     q: 'Hvad med GDPR?',
     paragraphs: [
       "Vi indgår databehandleraftale før pilotstart. Borgerdata lagres i EU/EØS (Supabase på AWS-region Stockholm, Sverige) under EU's databeskyttelseslovgivning, og krypteres i hvile (AES-256) og under transport (TLS 1.3). Fuld liste over underdatabehandlere udleveres til jeres IT/DPO.",
+      'AI-forslagene behandles i dag hos en udbyder i USA. Vi er i gang med at flytte dem til EU (Frankfurt). Spørg os om status.',
     ],
   },
   {
@@ -50,14 +51,12 @@ const INSTITUTIONER_FAQ = [
   },
   {
     q: 'Hvem ejer dataene?',
-    paragraphs: [
-      'Bostedet og borgeren. Vi er databehandler — ikke ejer. Fuld eksport ved opsigelse i standardformater (CSV, JSON, PDF).',
-    ],
+    paragraphs: ['Bostedet og borgeren. Vi er kun databehandler.'],
   },
   {
     q: 'Hvad med tilsynsrapporter?',
     paragraphs: [
-      'BUDR genererer eksportbare dokumentationsrapporter til socialtilsyn baseret på Social- og Boligstyrelsens kvalitetsmodel. Personalet kan fremvise journalhistorik, indsatsmål og recoveryprogression direkte fra systemet.',
+      'Lederen har et tilsynsoverblik, der viser, hvad der mangler: dokumenter til godkendelse, frister og huller. Notater, delmål og borgerens forløb kan vises direkte fra systemet, og dokumenterne kan printes.',
     ],
   },
   {
@@ -207,7 +206,7 @@ export default function InstitutionerPage({ className = '' }: InstitutionerPageP
 
         <section className="institutioner-solution fi" id="loesning">
           <div className="shell institutioner-copy-shell">
-            <h2 className="section-h">BUDR som komplet driftssystem</h2>
+            <h2 className="section-h">Ét system til hverdagen på bostedet</h2>
             <p className="section-p">
               Care Portal samler personalets daglige arbejde: journal, vagtoverdragelse,
               AI-assisteret dokumentation, advarselssystem ved kritiske mønstre, VUM 2.0-skabeloner

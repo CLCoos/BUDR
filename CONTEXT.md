@@ -318,6 +318,8 @@ After changing variables, trigger a **new deploy** so Next.js picks them up.
 
 Leveringsmønster: **små vertikale skiver** (ét gennemført flow ad gangen). Seneste spor: **marketing** (troværdig copy + rolig hero-indgang), **portal-navigation** (dokumentsøgning med `q`, dybe links fra Faglig støtte), **Lys journal i skyen** for rigtige beboere, **badges/haven** for engagement og demo/kvalitet.
 
+**Forside (2026-10-21):** `/` er bygget om i lys portal-stil (`HomeLandingPage.tsx` + `src/app/budr-forside.css`, alt scoped under `.bf`). Den bygger på tre løfter: klar til tilsyn hver dag, dokumentationen skriver sig selv med Fortæl, intet glipper ved vagtskifte eller medicin. Skærmbillederne i `public/marketing/` er taget fra demoen (fiktive data). Primær CTA er «Prøv demoen selv» (`/care-portal-demo`). Påstande skal kunne holdes: BUDR arbejder sammen med fagsystemet (Sensum/Nexus) og erstatter det ikke, og AI kører i USA, indtil EU-kontakten er slået til. De gamle sektioner (`DayInLifeDemo`, `ChimeInteractive`, `BudrVideo`) bruges ikke længere på forsiden.
+
 Mål på mellemlang sigt: **én sandhed pr. beboer**, tydelig **borger ↔ portal**-synlighed, **kladde → godkendt journal** på tværs af demo og live, og skærpede **RLS**-grænser på flere tabeller.
 
 **Supabase CLI:** The repo root `.env.local` must be valid dotenv (every line `KEY=value`). A stray line without `=` breaks `supabase` commands. Run **`supabase db push`** after pulling new migrations; **`supabase link`** must use project ref **`olszwyeikwbtjcoopfid`** (same host as `NEXT_PUBLIC_SUPABASE_URL`). Local link metadata lives under `supabase/.temp/` (gitignored).

@@ -1,17 +1,16 @@
 import type { Metadata } from 'next';
 import HomeLandingPage from '@/components/marketing/HomeLandingPage';
 import { marketingFontVariableClassName } from './marketing-fonts';
-import './budr-landing.css';
-import './budr-landing-longform.css';
+import './budr-forside.css';
 
 export const metadata: Metadata = {
-  title: 'BUDR — Driftssystem til socialpsykiatriske bosteder',
+  title: 'BUDR: Vagt, dokumentation og tilsyn til socialpsykiatriske bosteder',
   description:
-    'Det første danske driftssystem til socialpsykiatriske bosteder bygget på CHIME-rammeværket. Journal, vagtoverdragelse, recovery og borgerinddragelse i ét.',
+    'BUDR guider personalet gennem vagten, skriver notaterne, mens I fortæller, og holder bostedet klar til tilsyn. Til socialpsykiatriske bosteder (§107 og §108).',
   openGraph: {
-    title: 'BUDR — Driftssystem til socialpsykiatriske bosteder',
+    title: 'BUDR: Vagt, dokumentation og tilsyn til socialpsykiatriske bosteder',
     description:
-      'Det første danske driftssystem til socialpsykiatriske bosteder bygget på CHIME-rammeværket. Journal, vagtoverdragelse, recovery og borgerinddragelse i ét.',
+      'BUDR guider personalet gennem vagten, skriver notaterne, mens I fortæller, og holder bostedet klar til tilsyn. Til socialpsykiatriske bosteder (§107 og §108).',
     url: 'https://budrcare.dk',
     siteName: 'BUDR',
     locale: 'da_DK',
@@ -19,9 +18,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'BUDR — Driftssystem til socialpsykiatriske bosteder',
+    title: 'BUDR: Vagt, dokumentation og tilsyn til socialpsykiatriske bosteder',
     description:
-      'Det første danske driftssystem til socialpsykiatriske bosteder bygget på CHIME-rammeværket.',
+      'Hver vagt ved, hvad der skal ske. Intet glipper. Til socialpsykiatriske bosteder.',
   },
 };
 
