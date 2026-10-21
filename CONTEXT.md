@@ -250,7 +250,7 @@ Do **not** commit real project URLs or secrets; use environment variables only.
 
 ## Legal / compliance (site)
 
-- `/privacy` — Privatlivspolitik (GDPR-oriented template; adjust with counsel for your DPA).
+- `/privacy` — Privatlivspolitik (GDPR-oriented template; adjust with counsel for your DPA). Lists sub-processors by name and location (2026-10-21): Supabase (EU), Netlify (functions in Frankfurt), Anthropic, OpenAI (Lys STT), ElevenLabs (Lys TTS) and Sentry in the USA. Update this list when AI moves to Bedrock Frankfurt or a vendor changes.
 - `/cookies` — Cookies og lokal lagring.
 - `/terms` — Vilkår, herunder ansvar for dokumentation og serviceloven.
 
