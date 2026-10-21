@@ -46,11 +46,39 @@ export default function PrivacyPage() {
 
         <h2>Modtagere og underdatabehandlere</h2>
         <p>
-          Drift kan ske hos godkendte underdatabehandlere (fx hosting- og databaseleverandører inden
-          for EU/EØS). Liste over underdatabehandlere kan rekvireres på{' '}
-          <a href="mailto:hej@budrcare.dk">hej@budrcare.dk</a>. Hvis AI-funktioner anvendes, skal
-          formål, modelleverandør og databehandlergrundlag være beskrevet i den aktuelle
-          databehandleraftale.
+          Vi bruger disse underdatabehandlere. Ikke alle ligger i EU/EØS, og vi skriver ærligt, hvor
+          data behandles:
+        </p>
+        <ul>
+          <li>
+            <strong>Supabase</strong> (database og login): data gemmes i EU (Stockholm, Sverige).
+          </li>
+          <li>
+            <strong>Netlify</strong> (hosting af websitet og serverfunktioner): serverfunktionerne
+            kører i EU (Frankfurt, Tyskland). Netlify er en amerikansk virksomhed.
+          </li>
+          <li>
+            <strong>Anthropic</strong> (AI-forslag, fx udkast til notater og dokumenter): behandles
+            i dag i USA. Vi er i gang med at flytte AI-behandlingen til EU (Amazon Web Services,
+            Frankfurt).
+          </li>
+          <li>
+            <strong>OpenAI</strong> (tale til tekst i borger-appen Lys, når borgeren bruger
+            mikrofonen): behandles i USA.
+          </li>
+          <li>
+            <strong>ElevenLabs</strong> (oplæsning af tekst i Lys): behandles i USA.
+          </li>
+          <li>
+            <strong>Sentry</strong> (fejlovervågning, så vi kan rette tekniske fejl): behandles i
+            USA.
+          </li>
+        </ul>
+        <p>
+          Overførsel til USA sker på grundlag af EU-Kommissionens standardkontraktbestemmelser
+          og/eller EU-US Data Privacy Framework. AI-forslag gemmes aldrig, før en medarbejder har
+          godkendt dem. Den fulde liste og aftalegrundlaget fremgår af databehandleraftalen og kan
+          rekvireres på <a href="mailto:hej@budrcare.dk">hej@budrcare.dk</a>.
         </p>
 
         <h2>Kontaktformular på websitet</h2>
