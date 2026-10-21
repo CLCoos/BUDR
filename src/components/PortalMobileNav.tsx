@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { Menu } from 'lucide-react';
 import PortalSidebar from '@/components/PortalSidebar';
+import { FortaelFab, FortaelProvider } from '@/components/fortael/Fortael';
+import { PERMISSIONS } from '@/lib/permissions';
 import type { Permission } from '@/lib/permissions';
 import DokumentSøgning from '@/components/DokumentSøgning';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
@@ -30,9 +32,10 @@ export default function PortalMobileNav({
   const pilot = carePortalPilotSimulatedData();
 
   const mobileTitle = orgName?.trim() || 'Care Portal';
+  const canFortael = !pilot && permissions.includes(PERMISSIONS.WRITE_JOURNAL);
 
   return (
-    <>
+    <FortaelProvider enabled={canFortael}>
       <header
         className="flex shrink-0 flex-col gap-2 border-b px-3 pb-3 pt-0 md:hidden"
         style={{
@@ -93,8 +96,13 @@ export default function PortalMobileNav({
           staffRole={staffRole}
           permissions={permissions}
         />
-        <main className="cp-scroll min-w-0 flex-1 overflow-y-auto">{children}</main>
+        <main
+          className={`cp-scroll min-w-0 flex-1 overflow-y-auto ${canFortael ? 'pb-24 md:pb-0' : ''}`}
+        >
+          {children}
+        </main>
       </div>
-    </>
+      <FortaelFab />
+    </FortaelProvider>
   );
 }

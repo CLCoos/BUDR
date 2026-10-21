@@ -332,7 +332,7 @@ export default function ResidentHandoverCard({ entry, onUpdate, carePortalDark =
                   disabled={loadingAI}
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all disabled:opacity-50 ${
                     pd
-                      ? 'border-[rgba(45,212,160,0.35)] bg-[rgba(45,212,160,0.08)] text-[var(--cp-green)] hover:bg-[rgba(45,212,160,0.14)]'
+                      ? 'border-[color-mix(in_srgb,var(--cp-green)_35%,transparent)] bg-[color-mix(in_srgb,var(--cp-green)_8%,transparent)] text-[var(--cp-green)] hover:bg-[color-mix(in_srgb,var(--cp-green)_14%,transparent)]'
                       : 'border-[#1D9E75]/30 bg-[#E6F7F2] text-[#1D9E75] hover:bg-[#1D9E75]/20'
                   }`}
                 >
@@ -349,7 +349,7 @@ export default function ResidentHandoverCard({ entry, onUpdate, carePortalDark =
               value={entry.note}
               onChange={(e) => onUpdate({ note: e.target.value })}
               placeholder="Skriv observationer, hændelser og anbefalinger til næste vagt..."
-              className="w-full resize-none rounded-lg border p-3 text-sm transition-colors focus:outline-none focus:border-[#1D9E75] focus:ring-1 focus:ring-[rgba(45,212,160,0.25)]"
+              className="w-full resize-none rounded-lg border p-3 text-sm transition-colors focus:outline-none focus:border-[#1D9E75] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--cp-green)_25%,transparent)]"
               style={
                 pd
                   ? {

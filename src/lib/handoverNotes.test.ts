@@ -6,6 +6,8 @@ import {
   HANDOVER_NOTE_MAX_CHARS,
   handoverConflictKey,
   handoverShiftDate,
+  handoverShiftNow,
+  appendHandoverLine,
   handoverShiftLabelDa,
   shouldPersistHandoverEntry,
 } from './handoverNotes';
@@ -153,5 +155,23 @@ describe('handoverShiftLabelDa', () => {
   it('labels Danish shifts', () => {
     expect(handoverShiftLabelDa('nat')).toBe('Natvagt');
     expect(handoverShiftLabelDa('doegnnotat')).toBe('Døgnnotat');
+  });
+});
+
+describe('handoverShiftNow', () => {
+  it('følger dansk klokkeslæt, også om sommeren', () => {
+    // 2026-08-25 05:30 UTC = 07:30 i København
+    expect(handoverShiftNow(new Date('2026-08-25T05:30:00.000Z'))).toBe('dag');
+    expect(handoverShiftNow(new Date('2026-08-25T13:30:00.000Z'))).toBe('aften');
+    expect(handoverShiftNow(new Date('2026-08-25T21:30:00.000Z'))).toBe('nat');
+    expect(handoverShiftNow(new Date('2026-01-10T03:00:00.000Z'))).toBe('nat');
+  });
+});
+
+describe('appendHandoverLine', () => {
+  it('lægger nye linjer under det eksisterende', () => {
+    expect(appendHandoverLine(null, ' Ny linje ')).toBe('Ny linje');
+    expect(appendHandoverLine('Første', 'Anden')).toBe('Første\nAnden');
+    expect(appendHandoverLine('Første', '  ')).toBe('Første');
   });
 });

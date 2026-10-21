@@ -58,6 +58,29 @@ export function handoverShiftDate(ref = new Date()): string {
   return copenhagenYmd(ref);
 }
 
+/** Vagten lige nu efter dansk klokkeslæt: dag 07–15, aften 15–23, ellers nat. */
+export function handoverShiftNow(ref = new Date()): Exclude<HandoverShiftLabel, 'doegnnotat'> {
+  const hour =
+    Number(
+      new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Europe/Copenhagen',
+        hour: '2-digit',
+        hour12: false,
+      }).format(ref)
+    ) % 24;
+  if (hour >= 7 && hour < 15) return 'dag';
+  if (hour >= 15 && hour < 23) return 'aften';
+  return 'nat';
+}
+
+/** Tilføjer en linje til et eksisterende vagtnotat uden at overskrive det, der står. */
+export function appendHandoverLine(existing: string | null | undefined, line: string): string {
+  const prev = (existing ?? '').trim();
+  const next = line.trim();
+  if (!next) return prev;
+  return clipHandoverBody(prev ? `${prev}\n${next}` : next);
+}
+
 export function buildHandoverUpsertRows(args: {
   entries: Array<{ residentId: string; note: string; flagColor: string | null }>;
   orgId: string;

@@ -40,6 +40,39 @@ export function onCallShiftDate(ref = new Date()): string {
   return copenhagenYmd(ref);
 }
 
+function previousCopenhagenYmd(ymd: string): string {
+  const dt = new Date(`${ymd}T12:00:00.000Z`);
+  dt.setUTCDate(dt.getUTCDate() - 1);
+  return dt.toISOString().slice(0, 10);
+}
+
+/**
+ * Date the on-call row is stored under.
+ * Nattevagt (22:00–06:00) is saved on the civil day it starts. From midnight
+ * until 06:00 that row is still yesterday — looking up "today" returns the
+ * night that has not started yet, and the resident gets no number.
+ */
+export function onCallRecordDate(ref = new Date(), shift?: OnCallShiftKey): string {
+  const activeShift = shift ?? copenhagenOnCallShift(ref);
+  const today = onCallShiftDate(ref);
+  if (activeShift === 'night' && copenhagenHour(ref) < 6) {
+    return previousCopenhagenYmd(today);
+  }
+  return today;
+}
+
+/** Before 06:00, the night row in force is yesterday's. Drop today's night so it is not shown as the current shift. */
+export function mergeOnCallRowsForInstant<T extends { shift?: unknown }>(
+  todayRows: T[],
+  overnightNightRows: T[],
+  ref = new Date()
+): T[] {
+  if (onCallRecordDate(ref, 'night') === onCallShiftDate(ref)) return todayRows;
+  const withoutUpcomingNight = todayRows.filter((row) => row.shift !== 'night');
+  const ongoingNight = overnightNightRows.filter((row) => row.shift === 'night');
+  return [...withoutUpcomingNight, ...ongoingNight];
+}
+
 export function copenhagenOnCallShift(ref = new Date()): OnCallShiftKey {
   const hour = copenhagenHour(ref);
   if (hour >= 6 && hour < 14) return 'day';

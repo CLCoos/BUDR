@@ -31,13 +31,13 @@ export default function TopNav() {
             height: 26,
             borderRadius: '50%',
             background: 'radial-gradient(circle at 35% 35%, #6ee7b7, #059669)',
-            boxShadow: '0 0 12px rgba(45,212,160,0.4)',
+            boxShadow: '0 0 12px color-mix(in srgb, var(--cp-green) 40%, transparent)',
             flexShrink: 0,
           }}
         />
         <span
           style={{
-            fontFamily: "'DM Serif Display', serif",
+            fontFamily: 'var(--cp-font)',
             fontSize: 15,
             color: 'var(--cp-text)',
             letterSpacing: '-0.01em',
@@ -67,7 +67,7 @@ export default function TopNav() {
                 ? {
                     backgroundColor: 'var(--cp-green-dim)',
                     color: 'var(--cp-green)',
-                    border: '1px solid rgba(45,212,160,0.2)',
+                    border: '1px solid color-mix(in srgb, var(--cp-green) 20%, transparent)',
                   }
                 : { color: 'var(--cp-muted)', backgroundColor: 'transparent' }
             }
@@ -85,7 +85,7 @@ export default function TopNav() {
         </span>
         <div
           className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-semibold"
-          style={{ background: 'linear-gradient(135deg, #2dd4a0, #0694a2)' }}
+          style={{ background: 'var(--cp-green)' }}
         >
           SK
         </div>

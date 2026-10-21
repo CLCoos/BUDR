@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getResidentId } from '@/lib/residentAuth';
-import { onCallShiftDate } from '@/lib/onCallStaff';
+import { mergeOnCallRowsForInstant, onCallRecordDate, onCallShiftDate } from '@/lib/onCallStaff';
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -42,7 +42,9 @@ export async function GET(): Promise<NextResponse> {
   }
 
   const orgId = resRow.org_id as string;
-  const today = onCallShiftDate();
+  const now = new Date();
+  const today = onCallShiftDate(now);
+  const nightDate = onCallRecordDate(now, 'night');
 
   const { data: onRows, error: onErr } = await supabase
     .from('on_call_staff')
@@ -56,12 +58,36 @@ export async function GET(): Promise<NextResponse> {
     return NextResponse.json({ error: onErr.message }, { status: 500 });
   }
 
-  const rows = (onRows ?? []) as Array<{
+  let nightRows: Array<{
     staff_id: string;
     phone: string;
     shift: ResidentOnCallShift;
     date: string;
-  }>;
+  }> = [];
+  if (nightDate !== today) {
+    const { data: ongoingNight, error: nightErr } = await supabase
+      .from('on_call_staff')
+      .select('staff_id, phone, shift, date')
+      .eq('org_id', orgId)
+      .eq('date', nightDate)
+      .eq('shift', 'night');
+    if (nightErr) {
+      console.error('[resident-on-call] night', nightErr.message);
+      return NextResponse.json({ error: nightErr.message }, { status: 500 });
+    }
+    nightRows = (ongoingNight ?? []) as typeof nightRows;
+  }
+
+  const rows = mergeOnCallRowsForInstant(
+    (onRows ?? []) as Array<{
+      staff_id: string;
+      phone: string;
+      shift: ResidentOnCallShift;
+      date: string;
+    }>,
+    nightRows,
+    now
+  );
 
   const staffIds = [...new Set(rows.map((r) => r.staff_id))];
   const nameById = new Map<string, string>();

@@ -1,33 +1,28 @@
 'use client';
 
 import React from 'react';
-import { CalendarDays, Home, Menu, PlusCircle } from 'lucide-react';
+import { CalendarDays, LifeBuoy, PenLine, Sun, UserRound } from 'lucide-react';
 import type { LysThemeTokens } from '../lib/lysTheme';
 import { lysParkHubShell } from '../lib/lysTheme';
 
-export type LysNavTab = 'hjem' | 'dag' | 'journal' | 'mig';
+export type LysNavTab = 'hjem' | 'dag' | 'skriv' | 'mig';
 
 type Props = {
   tokens?: LysThemeTokens;
   active: LysNavTab;
   onChange: (tab: LysNavTab) => void;
-  onCheckIn: () => void;
   onCrisis?: () => void;
-  onMore: () => void;
-  isMoreOpen: boolean;
   showDagReminderDot: boolean;
   hidden?: boolean;
   simpleMode?: boolean;
 };
 
+/** Fire faste faner. Enkel tilstand: tre store knapper med Hjælp i midten af hånden. */
 export default function LysBottomNav({
   tokens = lysParkHubShell(),
   active,
   onChange,
-  onCheckIn,
   onCrisis,
-  onMore,
-  isMoreOpen,
   showDagReminderDot,
   hidden,
   simpleMode = false,
@@ -36,20 +31,15 @@ export default function LysBottomNav({
 
   const tabs = simpleMode
     ? [
-        { id: 'hjem', label: 'Hjem', Icon: Home, onPress: () => onChange('hjem') },
-        { id: 'checkin', label: 'Check-in', Icon: PlusCircle, onPress: onCheckIn },
-        { id: 'krise', label: 'Hjælp', Icon: Menu, onPress: () => onCrisis?.() },
+        { id: 'hjem', label: 'I dag', Icon: Sun, onPress: () => onChange('hjem') },
+        { id: 'skriv', label: 'Skriv', Icon: PenLine, onPress: () => onChange('skriv') },
+        { id: 'krise', label: 'Hjælp', Icon: LifeBuoy, onPress: () => onCrisis?.() },
       ]
     : [
-        { id: 'hjem', label: 'Hjem', Icon: Home, onPress: () => onChange('hjem') },
-        {
-          id: 'dag',
-          label: 'Kalender',
-          Icon: CalendarDays,
-          onPress: () => onChange('dag'),
-        },
-        { id: 'checkin', label: 'Check-in', Icon: PlusCircle, onPress: onCheckIn },
-        { id: 'mere', label: 'Mere', Icon: Menu, onPress: onMore },
+        { id: 'hjem', label: 'I dag', Icon: Sun, onPress: () => onChange('hjem') },
+        { id: 'dag', label: 'Min dag', Icon: CalendarDays, onPress: () => onChange('dag') },
+        { id: 'skriv', label: 'Skriv', Icon: PenLine, onPress: () => onChange('skriv') },
+        { id: 'mig', label: 'Mig', Icon: UserRound, onPress: () => onChange('mig') },
       ];
 
   return (
@@ -66,7 +56,7 @@ export default function LysBottomNav({
         className={`grid min-h-[64px] w-full items-stretch px-2 ${simpleMode ? 'grid-cols-3' : 'grid-cols-4'}`}
       >
         {tabs.map((tab) => {
-          const isOn = tab.id === 'mere' ? isMoreOpen : active === (tab.id as LysNavTab);
+          const isOn = active === (tab.id as LysNavTab);
           const Icon = tab.Icon;
           const showDot = tab.id === 'dag' && showDagReminderDot;
 
@@ -101,7 +91,7 @@ export default function LysBottomNav({
               </span>
 
               <span
-                className="relative z-10 text-[11px] font-semibold leading-none tracking-wide"
+                className="relative z-10 text-[12px] font-semibold leading-none tracking-wide"
                 style={{ color: isOn ? tokens.accent : tokens.textMuted }}
               >
                 {tab.label}

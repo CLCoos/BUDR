@@ -34,7 +34,7 @@ export default async function DashboardLiveNotice() {
       <div
         className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 text-[11px] leading-snug"
         style={{
-          borderColor: 'rgba(45,212,160,0.22)',
+          borderColor: 'color-mix(in srgb, var(--cp-green) 22%, transparent)',
           backgroundColor: 'var(--cp-green-dim)',
           color: 'var(--cp-muted)',
         }}

@@ -226,7 +226,7 @@ export default function MarketingCopyCmsCard() {
                   className="space-y-2 rounded-lg p-3"
                   style={{
                     backgroundColor: draft.variant === v ? 'var(--cp-green-dim)' : 'var(--cp-bg3)',
-                    border: `1px solid ${draft.variant === v ? 'rgba(45,212,160,0.35)' : 'var(--cp-border)'}`,
+                    border: `1px solid ${draft.variant === v ? 'color-mix(in srgb, var(--cp-green) 35%, transparent)' : 'var(--cp-border)'}`,
                   }}
                 >
                   <div className="flex items-center justify-between">
@@ -235,7 +235,9 @@ export default function MarketingCopyCmsCard() {
                       className="rounded-md px-2 py-1 text-xs font-semibold"
                       style={{
                         backgroundColor:
-                          draft.variant === v ? 'rgba(45,212,160,0.16)' : 'transparent',
+                          draft.variant === v
+                            ? 'color-mix(in srgb, var(--cp-green) 16%, transparent)'
+                            : 'transparent',
                         color: draft.variant === v ? 'var(--cp-green)' : 'var(--cp-muted)',
                       }}
                       onClick={() => setDraft((prev) => ({ ...prev, variant: v }))}
@@ -348,8 +350,8 @@ export default function MarketingCopyCmsCard() {
                     className="rounded-md px-2 py-1 text-[11px] font-semibold disabled:opacity-50"
                     style={{
                       color: 'var(--cp-green)',
-                      border: '1px solid rgba(45,212,160,0.35)',
-                      backgroundColor: 'rgba(45,212,160,0.08)',
+                      border: '1px solid color-mix(in srgb, var(--cp-green) 35%, transparent)',
+                      backgroundColor: 'color-mix(in srgb, var(--cp-green) 8%, transparent)',
                     }}
                   >
                     Gendan

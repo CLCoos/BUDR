@@ -14,6 +14,8 @@ import {
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { resolveStaffOrgResidents } from '@/lib/staffOrgScope';
+import { loadTransfers } from '@/lib/fagsystem/client';
+import FagsystemCopyButton from '@/components/fagsystem/FagsystemCopyButton';
 
 type JournalRow = {
   id: string;
@@ -90,6 +92,7 @@ export default function JournalOverblikWidget() {
   const [nameByResident, setNameByResident] = useState<Record<string, string>>({});
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [hasJournalStatusColumn, setHasJournalStatusColumn] = useState(true);
+  const [transferred, setTransferred] = useState<Set<string>>(new Set());
 
   const load = useCallback(async () => {
     const supabase = createClient();
@@ -163,6 +166,11 @@ export default function JournalOverblikWidget() {
     }
 
     setRows(list);
+    const t = await loadTransfers(
+      supabase,
+      list.filter((r) => !isDraft(r)).map((r) => r.id)
+    );
+    setTransferred(new Set(t.map.keys()));
 
     const ids = [...new Set(list.map((r) => r.resident_id))];
     if (ids.length > 0) {
@@ -282,6 +290,15 @@ export default function JournalOverblikWidget() {
           )}
           Opdater
         </button>
+      </div>
+      <div className="-mt-2 mb-4 flex justify-end">
+        <Link
+          href="/care-portal-fagsystem"
+          className="text-xs font-medium underline"
+          style={{ color: 'var(--cp-green)' }}
+        >
+          Overfør notater til fagsystem
+        </Link>
       </div>
 
       {loading ? (
@@ -428,6 +445,8 @@ export default function JournalOverblikWidget() {
                           isDraftCard={false}
                           approvingId={approvingId}
                           onApprove={() => {}}
+                          transferred={transferred.has(j.id)}
+                          onMarked={(id) => setTransferred((prev) => new Set(prev).add(id))}
                         />
                       );
                     })}
@@ -449,9 +468,20 @@ type NoteCardProps = {
   isDraftCard: boolean;
   approvingId: string | null;
   onApprove: () => void;
+  transferred?: boolean;
+  onMarked?: (id: string) => void;
 };
 
-function NoteCard({ j, resName, initials, isDraftCard, approvingId, onApprove }: NoteCardProps) {
+function NoteCard({
+  j,
+  resName,
+  initials,
+  isDraftCard,
+  approvingId,
+  onApprove,
+  transferred,
+  onMarked,
+}: NoteCardProps) {
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -553,6 +583,11 @@ function NoteCard({ j, resName, initials, isDraftCard, approvingId, onApprove }:
             <CheckCircle2 className="h-3 w-3" aria-hidden />
             {approvingId === j.id ? 'Godkender…' : 'Godkend'}
           </button>
+        )}
+        {!isDraftCard && (
+          <span style={{ marginLeft: 'auto' }}>
+            <FagsystemCopyButton note={j} transferred={transferred} onMarked={onMarked} />
+          </span>
         )}
       </div>
     </div>

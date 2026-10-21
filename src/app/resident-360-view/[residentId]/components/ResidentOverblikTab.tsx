@@ -19,6 +19,8 @@ import { fetchMedicationAdministrationsForDate } from '@/lib/medicationAdministr
 import type { MedDefinition } from './types';
 import WriteJournalEntry from './WriteJournalEntry';
 import type { LysRecoveryStory } from '@/types/lys';
+import FagsystemCopyButton from '@/components/fagsystem/FagsystemCopyButton';
+import { loadTransfers } from '@/lib/fagsystem/client';
 import JournalRowRecoveryStory from './JournalRowRecoveryStory';
 import GoalProgress from '../../components/GoalProgress';
 import ShiftNotesFeed from '../../components/ShiftNotesFeed';
@@ -77,8 +79,8 @@ const TL_CONFIG: Record<
   groen: {
     label: 'Grøn',
     color: 'var(--cp-green)',
-    bg: 'rgba(45,212,160,0.12)',
-    border: 'rgba(45,212,160,0.35)',
+    bg: 'color-mix(in srgb, var(--cp-green) 12%, transparent)',
+    border: 'color-mix(in srgb, var(--cp-green) 35%, transparent)',
   },
   gul: {
     label: 'Gul',
@@ -125,6 +127,23 @@ export default function ResidentOverblikTab({
   useEffect(() => {
     setJournalList(journalEntries);
   }, [journalEntries]);
+
+  const [transferred, setTransferred] = useState<Set<string>>(new Set());
+  const approvedIdsKey = journalList
+    .filter((e) => e.journal_status !== 'kladde')
+    .map((e) => e.id)
+    .join(',');
+  useEffect(() => {
+    const supabase = createClient();
+    if (!supabase || !approvedIdsKey) return;
+    let alive = true;
+    void loadTransfers(supabase, approvedIdsKey.split(',')).then(
+      (t) => alive && setTransferred(new Set(t.map.keys()))
+    );
+    return () => {
+      alive = false;
+    };
+  }, [approvedIdsKey]);
 
   const refetchJournalToday = useCallback(async () => {
     const supabase = createClient();
@@ -319,7 +338,7 @@ export default function ResidentOverblikTab({
             <div
               className="mt-2 rounded-lg border px-2.5 py-2"
               style={{
-                borderColor: 'rgba(45,212,160,0.35)',
+                borderColor: 'color-mix(in srgb, var(--cp-green) 35%, transparent)',
                 backgroundColor: 'var(--cp-green-dim)',
               }}
             >
@@ -403,8 +422,8 @@ export default function ResidentOverblikTab({
             style={
               medicationGivenCount === medicationTotalCount
                 ? {
-                    borderColor: 'rgba(45,212,160,0.35)',
-                    backgroundColor: 'rgba(45,212,160,0.08)',
+                    borderColor: 'color-mix(in srgb, var(--cp-green) 35%, transparent)',
+                    backgroundColor: 'color-mix(in srgb, var(--cp-green) 8%, transparent)',
                   }
                 : {
                     borderColor: 'rgba(246,173,85,0.4)',
@@ -736,17 +755,26 @@ export default function ResidentOverblikTab({
                       <p className="line-clamp-2 text-xs" style={{ color: 'var(--cp-muted)' }}>
                         {entry.entry_text}
                       </p>
-                      {entry.category && (
-                        <span
-                          className="mt-1 inline-block rounded px-1.5 py-0.5 text-[10px]"
-                          style={{
-                            backgroundColor: 'var(--cp-bg3)',
-                            color: 'var(--cp-muted)',
-                          }}
-                        >
-                          {entry.category}
-                        </span>
-                      )}
+                      <div className="mt-1 flex items-center justify-between gap-2">
+                        {entry.category ? (
+                          <span
+                            className="inline-block rounded px-1.5 py-0.5 text-[10px]"
+                            style={{
+                              backgroundColor: 'var(--cp-bg3)',
+                              color: 'var(--cp-muted)',
+                            }}
+                          >
+                            {entry.category}
+                          </span>
+                        ) : (
+                          <span />
+                        )}
+                        <FagsystemCopyButton
+                          note={{ ...entry, resident_id: residentId }}
+                          transferred={transferred.has(entry.id)}
+                          onMarked={(id) => setTransferred((prev) => new Set(prev).add(id))}
+                        />
+                      </div>
                       {story && <JournalRowRecoveryStory story={story} />}
                     </div>
                   );

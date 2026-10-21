@@ -157,8 +157,28 @@ function badgeLabelFor(alert: AlertRow): string {
 
 // ── AlertCard ─────────────────────────────────────────────────
 
-function AlertCard({ alert, group }: { alert: AlertRow; group: 'roed' | 'gul' }) {
+function AlertCard({
+  alert,
+  group,
+  onSeen,
+}: {
+  alert: AlertRow;
+  group: 'roed' | 'gul';
+  onSeen?: (id: string) => void;
+}) {
   const router = useRouter();
+  const [marking, setMarking] = useState(false);
+  const markSeen = async () => {
+    setMarking(true);
+    try {
+      const res = await fetch(`/api/portal/notifications/${alert.id}/acknowledge`, {
+        method: 'POST',
+      });
+      if (res.ok) onSeen?.(alert.id);
+    } finally {
+      setMarking(false);
+    }
+  };
   const accentColor = group === 'roed' ? 'var(--cp-red)' : 'var(--cp-amber)';
   const dimColor = group === 'roed' ? 'var(--cp-red-dim)' : 'var(--cp-amber-dim)';
   const cardHref = `/resident-360-view/${alert.residentId}?tab=overblik`;
@@ -225,6 +245,17 @@ function AlertCard({ alert, group }: { alert: AlertRow; group: 'roed' | 'gul' })
             >
               {actionLabel} →
             </Link>
+            {alert.source === 'notification' && onSeen && (
+              <button
+                type="button"
+                onClick={() => void markSeen()}
+                disabled={marking}
+                className="relative text-[11px] font-semibold px-2 py-1 rounded border transition-opacity hover:opacity-80 disabled:opacity-60"
+                style={{ borderColor: 'var(--cp-border2)', color: 'var(--cp-text)' }}
+              >
+                Markér som set
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -244,6 +275,11 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
   const [inactiveAlerts, setInactiveAlerts] = useState<AlertRow[]>([]);
   const [loading, setLoading] = useState(variant !== 'demo');
   const [inaktivitetExpanded, setInaktivitetExpanded] = useState(false);
+  const live = variant !== 'demo';
+  const markSeenLocal = useCallback(
+    (id: string) => setDbAlerts((prev) => prev.filter((a) => a.id !== id)),
+    []
+  );
 
   const demoAlertsScoped = useMemo(() => {
     if (variant !== 'demo') return [] as AlertRow[];
@@ -515,7 +551,7 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
             padding: '4px 10px',
             borderRadius: 20,
             backgroundColor: 'var(--cp-green-dim)',
-            border: '1px solid rgba(45,212,160,0.2)',
+            border: '1px solid color-mix(in srgb, var(--cp-green) 20%, transparent)',
           }}
         >
           <div
@@ -571,7 +607,12 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
                 Kræver handling nu
               </div>
               {group1.map((alert) => (
-                <AlertCard key={alert.id} alert={alert} group="roed" />
+                <AlertCard
+                  key={alert.id}
+                  alert={alert}
+                  group="roed"
+                  onSeen={live ? markSeenLocal : undefined}
+                />
               ))}
             </div>
           )}
@@ -586,7 +627,12 @@ export default function AlertPanel({ variant = 'live' }: AlertPanelProps) {
                 Hold øje med
               </div>
               {group2.map((alert) => (
-                <AlertCard key={alert.id} alert={alert} group="gul" />
+                <AlertCard
+                  key={alert.id}
+                  alert={alert}
+                  group="gul"
+                  onSeen={live ? markSeenLocal : undefined}
+                />
               ))}
             </div>
           )}

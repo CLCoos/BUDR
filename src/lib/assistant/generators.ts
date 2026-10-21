@@ -8,7 +8,12 @@ import { formatDanishDate } from '@/lib/documents/render';
 import { shiftYmd, type AssistantAction } from './actions';
 import { residentLabel, type ResidentNameRow } from './names';
 
-export type SuggestionKind = 'aftale_opfoelgning' | 'dokument_frist' | 'trafiklys' | 'svar';
+export type SuggestionKind =
+  | 'aftale_opfoelgning'
+  | 'dokument_frist'
+  | 'trafiklys'
+  | 'svar'
+  | 'fagsystem';
 
 export type SuggestionInsert = {
   org_id: string;
@@ -50,6 +55,12 @@ export type DocumentRow = {
   responsible_id: string | null;
 };
 export type CheckinRow = { resident_id: string; created_at: string; traffic_light: string | null };
+export type TransferNoteRow = {
+  id: string;
+  org_id: string | null;
+  staff_id: string | null;
+  created_at: string;
+};
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
@@ -259,4 +270,56 @@ export function trafficLightStreaks(args: {
     }
   }
   return out;
+}
+
+function copenhagenHour(d: Date): number {
+  const h = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Copenhagen',
+    hour: '2-digit',
+    hour12: false,
+  }).format(d);
+  return Number(h) % 24;
+}
+
+/**
+ * Påmindelse til den, der skrev notaterne: godkendte notater fra tidligere dage, som ikke er
+ * overført til fagsystemet. Kun i bosteder, der bruger overførslen (har overført mindst ét notat),
+ * og først fra kl. 7, så nattevagten ikke får den midt i vagten.
+ */
+export function fagsystemReminders(args: {
+  now: Date;
+  notes: TransferNoteRow[];
+  transferredIds: Set<string>;
+  activeOrgs: Set<string>;
+}): SuggestionInsert[] {
+  if (copenhagenHour(args.now) < 7) return [];
+  const today = copenhagenYmd(args.now);
+  const counts = new Map<string, { org_id: string; staff_id: string; n: number }>();
+  for (const note of args.notes) {
+    if (!note.org_id || !note.staff_id || !args.activeOrgs.has(note.org_id)) continue;
+    if (args.transferredIds.has(note.id)) continue;
+    if (copenhagenYmd(new Date(note.created_at)) >= today) continue;
+    const key = `${note.org_id}|${note.staff_id}`;
+    const cur = counts.get(key);
+    if (cur) cur.n += 1;
+    else counts.set(key, { org_id: note.org_id, staff_id: note.staff_id, n: 1 });
+  }
+  return [...counts.values()].map((c) => ({
+    org_id: c.org_id,
+    resident_id: null,
+    recipient_id: c.staff_id,
+    audience: 'personlig' as const,
+    kind: 'fagsystem' as const,
+    title:
+      c.n === 1
+        ? 'Du har 1 notat fra de seneste dage, som ikke er overført til fagsystemet.'
+        : `Du har ${c.n} notater fra de seneste dage, som ikke er overført til fagsystemet.`,
+    body: 'Åbn listen, tryk Kopiér og sæt teksten ind i fagsystemet.',
+    actions: [],
+    prompt: null,
+    link: '/care-portal-fagsystem?mine=1',
+    dedupe_key: `fagsystem:${c.staff_id}:${today}`,
+    source: { notes: c.n },
+    expires_at: new Date(args.now.getTime() + DAY).toISOString(),
+  }));
 }

@@ -15,8 +15,8 @@ export default function DemoModeRibbon() {
         top: 52,
         height: CARE_PORTAL_DEMO_RIBBON_BELOW_NAV_PX,
         minHeight: CARE_PORTAL_DEMO_RIBBON_BELOW_NAV_PX,
-        backgroundColor: 'rgba(246, 173, 85, 0.12)',
-        borderColor: 'rgba(246, 173, 85, 0.35)',
+        backgroundColor: 'var(--cp-amber-dim)',
+        borderColor: 'color-mix(in srgb, var(--cp-amber) 30%, transparent)',
         color: 'var(--cp-amber)',
       }}
       role="status"

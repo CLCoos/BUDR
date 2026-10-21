@@ -39,7 +39,7 @@ export default function ResidentsOpsClient({ residents, residentNameDisplayMode 
         <h1
           className="font-bold"
           style={{
-            fontFamily: "'DM Serif Display', serif",
+            fontFamily: 'var(--cp-font)',
             fontSize: 22,
             color: 'var(--cp-text)',
             lineHeight: 1.2,
