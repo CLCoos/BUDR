@@ -15,7 +15,9 @@ import {
   draftFromAssignments,
   emptyOnCallDraft,
   formatDanishPhoneDisplay,
+  mergeOnCallRowsForInstant,
   normalizeDanishPhone,
+  onCallRecordDate,
   onCallShiftDate,
   type OnCallDraft,
   type OnCallShiftKey,
@@ -81,8 +83,10 @@ export default function OnCallStaffWidget({ demoMode = false }: Props) {
       return;
     }
 
-    const dateYmd = onCallShiftDate();
-    const [{ data: staffRows, error: staffErr }, { data: onCallRows, error: onErr }] =
+    const now = new Date();
+    const dateYmd = onCallShiftDate(now);
+    const nightDate = onCallRecordDate(now, 'night');
+    const [{ data: staffRows, error: staffErr }, { data: onCallRows, error: onErr }, nightRes] =
       await Promise.all([
         supabase
           .from('care_staff')
@@ -94,10 +98,26 @@ export default function OnCallStaffWidget({ demoMode = false }: Props) {
           .select('staff_id, phone, shift')
           .eq('org_id', resolvedOrg)
           .eq('date', dateYmd),
+        nightDate === dateYmd
+          ? Promise.resolve({
+              data: [] as { staff_id: string; phone: string; shift: string }[],
+              error: null,
+            })
+          : supabase
+              .from('on_call_staff')
+              .select('staff_id, phone, shift')
+              .eq('org_id', resolvedOrg)
+              .eq('date', nightDate)
+              .eq('shift', 'night'),
       ]);
 
-    if (staffErr || onErr) {
-      setScopeError(staffErr?.message ?? onErr?.message ?? 'Kunne ikke hente vagthavende');
+    if (staffErr || onErr || nightRes.error) {
+      setScopeError(
+        staffErr?.message ??
+          onErr?.message ??
+          nightRes.error?.message ??
+          'Kunne ikke hente vagthavende'
+      );
       setDraft(emptyOnCallDraft());
       setStaffOptions([]);
       setOrgId(resolvedOrg);
@@ -115,7 +135,8 @@ export default function OnCallStaffWidget({ demoMode = false }: Props) {
 
     setOrgId(resolvedOrg);
     setStaffOptions(options);
-    setDraft(draftFromAssignments(assignmentMapFromRows(onCallRows ?? [])));
+    const visibleRows = mergeOnCallRowsForInstant(onCallRows ?? [], nightRes.data ?? [], now);
+    setDraft(draftFromAssignments(assignmentMapFromRows(visibleRows)));
     setScopeError(null);
     setLoading(false);
     setRefreshing(false);
@@ -160,7 +181,7 @@ export default function OnCallStaffWidget({ demoMode = false }: Props) {
       orgId,
       staffId: draft[shift].staffId,
       phone: draft[shift].phone,
-      dateYmd: onCallShiftDate(),
+      dateYmd: onCallRecordDate(new Date(), shift),
       shift,
       allowedStaffIds: staffOptions.map((s) => s.id),
     });
