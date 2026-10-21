@@ -68,3 +68,6 @@ supabase/.temp/
 .env.local.save
 diagnostics/
 .env.staging.local
+
+# AI-testsættets rapporter
+eval-results/

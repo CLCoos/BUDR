@@ -67,9 +67,10 @@ export function replaceNames(text: string, names: string[], replacement: string)
   );
   let out = text;
   for (const name of unique) {
+    // Også ejefald ("Miras", "Lars'"), så navnet ikke slipper igennem med et s bagpå.
     out = out.replace(
-      new RegExp(`(?<![\\p{L}])${escapeRegExp(name)}(?![\\p{L}])`, 'giu'),
-      replacement
+      new RegExp(`(?<![\\p{L}])${escapeRegExp(name)}(s|')?(?![\\p{L}])`, 'giu'),
+      (_m, genitive?: string) => (genitive ? `${replacement}s` : replacement)
     );
   }
   return out;

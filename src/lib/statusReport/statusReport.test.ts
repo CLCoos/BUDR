@@ -38,9 +38,9 @@ const baseSources: StatusReportSources = {
 };
 
 describe('pseudonymize', () => {
-  it('erstatter navne som hele ord, også med store/små bogstaver', () => {
+  it('erstatter navne som hele ord, også med store/små bogstaver og i ejefald', () => {
     expect(pseudonymize('anna og ANNA. Annas bog. Hannah', ['Anna'])).toBe(
-      'Borgeren og Borgeren. Annas bog. Hannah'
+      'Borgeren og Borgeren. Borgerens bog. Hannah'
     );
   });
   it('erstatter længste navn først', () => {

@@ -20,3 +20,14 @@ describe('createAliasMap', () => {
     );
   });
 });
+
+describe('ejefald', () => {
+  it('skjuler også navne med s bagpå og sætter dem ind igen', () => {
+    const map = createAliasMap([
+      { label: 'Mira Søndergaard', names: namePartsFor('Mira Søndergaard') },
+    ]);
+    const hidden = map.hide('Lægen har ændret Miras medicin.');
+    expect(hidden).toBe('Lægen har ændret Borger 1s medicin.');
+    expect(map.restore(hidden)).toBe('Lægen har ændret Mira Søndergaards medicin.');
+  });
+});

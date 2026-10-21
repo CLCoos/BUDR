@@ -78,6 +78,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     system: drafter.system,
     userMessage: buildSectionUserMessage(section, material.text),
     maxTokens: 1200,
+    temperature: 0.2,
     preferredModels: preferred ? [preferred] : [],
   });
   if (!ai.ok) {

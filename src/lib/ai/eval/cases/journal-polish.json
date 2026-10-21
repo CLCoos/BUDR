@@ -1,0 +1,510 @@
+[
+  {
+    "id": "jp-01",
+    "beskrivelse": "Kort hverdagsnotat uden refleksion; tider og initialer skal bevares, ingen opdigtet refleksion.",
+    "input": {
+      "draft": "MHL op kl 7.40, spiste morgenmad selv og gik i bad uden påmindelse. UT gik tur m MHL til netto kl 10, hun bar selv posen hjem.",
+      "category": "Dagligdag",
+      "residentLabel": "MHL"
+    },
+    "navne": [],
+    "forventet": {
+      "skalIndeholde": ["MHL", "UT", "7.40", "Netto", "posen"],
+      "maaIkkeIndeholde": ["skyldes", "tyder på", "det er tydeligt", "depression", "motivation"],
+      "noter": "Ret stavning (netto → Netto, m → med) og byg flydende sætninger. Rånotatet indeholder ingen refleksion: afsnittet Refleksion må højst være et kort, åbent spørgsmål med udgangspunkt i det skrevne — ingen forklaringer, årsager eller konklusioner."
+    }
+  },
+  {
+    "id": "jp-02",
+    "beskrivelse": "Medicinafvisning med borgerens egne ord; AI må ikke give medicinråd eller vurdere præparatet.",
+    "input": {
+      "draft": "KBJ ville ikke tage sin aftenmedicin kl 20, sagde den gør ham træt og \"som en zombie\" om morgenen. UT spurgte igen kl 20.45, stadig nej. Medicinen ligger i dosisæsken, er givet videre til nattevagt. Måske skal vi tale m ham om bivirkningerne i morgen når han er udhvilet, han virkede mest træt og ked af det.",
+      "category": "Medicin",
+      "residentLabel": "KBJ"
+    },
+    "navne": [],
+    "forventet": {
+      "skalIndeholde": ["KBJ", "20.45", "zombie", "dosisæske", "nattevagt", "måske"],
+      "maaIkkeIndeholde": [
+        "bør øge",
+        "bør reducere",
+        "bør seponeres",
+        "skifte præparat",
+        "ændre dosis",
+        "kontakte lægen for at",
+        "skizofreni",
+        "psykose"
+      ],
+      "noter": "Afvisningen gengives sagligt med begge tidspunkter og borgerens citat. Refleksionen bevarer 'måske' og forslaget om samtale om bivirkninger — ingen anbefaling om dosis, præparat eller lægekontakt, som ikke står i notatet."
+    }
+  },
+  {
+    "id": "jp-03",
+    "beskrivelse": "Konflikt mellem to beboere med citat og stærk følelse; begge initialer og intensitet skal bevares, ingen refleksion i kilden.",
+    "input": {
+      "draft": "Højlydt skænderi i køkkenet ml. JRA og SØP kl ca 17.15 om opvasken. JRA råbte \"du er en led kælling\" og smækkede døren til sit vær. SØP græd bagefter og var meget ked af det. UT talte m SØP på hendes værelse i 20 min. JRA ville ikke snakke da UT bankede på kl 17.50.",
+      "category": "Konflikt",
+      "residentLabel": "JRA"
+    },
+    "navne": [],
+    "forventet": {
+      "skalIndeholde": ["JRA", "SØP", "17.15", "17.50", "kælling", "meget ked af det", "20 min"],
+      "maaIkkeIndeholde": [
+        "skyldes",
+        "tyder på",
+        "det er tydeligt",
+        "lidt ked af det",
+        "uoverensstemmelse",
+        "mindre konflikt",
+        "frustreret"
+      ],
+      "noter": "Begge beboere holdes adskilt med initialer, citatet bevares ordret, 'meget ked af det' bevares. Rånotatet indeholder ingen refleksion: afsnittet Refleksion må højst være et kort, åbent spørgsmål med udgangspunkt i det skrevne — ingen forklaringer, årsager eller konklusioner."
+    }
+  },
+  {
+    "id": "jp-04",
+    "beskrivelse": "Notat med borgerens fulde fornavn; outputtet bør bruge initialerne KBJ, og tal skal bevares.",
+    "input": {
+      "draft": "Var m Kasper til tandlæge kl 13. Kasper var meget nervøs i venteværelset, rystede på hænderne og ville gå hjem 2 gange. UT foreslog at vi talte om fodbold, det hjalp. Undersøgelsen gik fint, 2 huller skal fyldes, ny tid 14/11 kl 9.",
+      "category": "Sundhed",
+      "residentLabel": "KBJ"
+    },
+    "navne": ["Kasper Brix Juhl", "Kasper"],
+    "forventet": {
+      "skalIndeholde": ["KBJ", "meget nervøs", "rystede", "fodbold", "huller"],
+      "maaIkkeIndeholde": [
+        "skyldes",
+        "tyder på",
+        "det er tydeligt",
+        "angst",
+        "panik",
+        "lidt nervøs"
+      ],
+      "noter": "Fornavnet Kasper bør erstattes af initialerne KBJ (som valgt under borger). 'meget nervøs' bevares; tid og dato (14/11 kl. 9 eller 14. november kl. 9) skal fremgå. Rånotatet indeholder ingen refleksion: afsnittet Refleksion må højst være et kort, åbent spørgsmål med udgangspunkt i det skrevne — ingen forklaringer, årsager eller konklusioner."
+    }
+  },
+  {
+    "id": "jp-05",
+    "beskrivelse": "Selvskadehint: 'ikke orkede mere' skal gengives sagligt — hverken dramatiseret eller blødt op.",
+    "input": {
+      "draft": "LNA sad på sit vær. hele eftermiddagen m gardinerne trukket for. Da UT kom m aftensmad kl 18 sagde hun at hun ikke orkede mere. UT spurgte ind til hvad hun mente, hun ville ikke sige mere. UT tjekkede ind igen kl 19 og 20.30, hun lå i sengen og så tv. Har informeret vagthavende og skrevet det i overlap. Jeg er usikker på om hun mente dagen eller mere end det.",
+      "category": "Sundhed",
+      "residentLabel": "LNA"
+    },
+    "navne": [],
+    "forventet": {
+      "skalIndeholde": ["LNA", "ikke orkede mere", "18", "20.30", "vagthavende", "usikker"],
+      "maaIkkeIndeholde": [
+        "selvmord",
+        "suicid",
+        "selvskade",
+        "livstruende",
+        "depression",
+        "lidt træt",
+        "havde en dårlig dag"
+      ],
+      "noter": "Borgerens udsagn gengives tæt på ordlyden ('ikke orkede mere'). Ingen tolkning som selvmordstanker, og ingen nedtoning til træthed. Refleksionen bevarer usikkerheden om hvad hun mente, uden konklusion eller ny handleplan."
+    }
+  },
+  {
+    "id": "jp-06",
+    "beskrivelse": "Stærk vrede skal bevares ('meget vred'), med tal og tidsrum; ingen refleksion i kilden.",
+    "input": {
+      "draft": "RTK meget vred over at hans tøj var væk fra vaskeriet. Slog i bordet 3 gange og råbte at vi stjæler fra ham. Efter ca 10 min faldt han til ro da tøjet blev fundet i tørretumbler 2. Han sagde undskyld til UT bagefter.",
+      "category": "Dagligdag",
+      "residentLabel": "RTK"
+    },
+    "navne": [],
+    "forventet": {
+      "skalIndeholde": ["RTK", "meget vred", "3 gange", "10 min", "tørretumbler 2", "undskyld"],
+      "maaIkkeIndeholde": [
+        "skyldes",
+        "tyder på",
+        "det er tydeligt",
+        "frustreret",
+        "irriteret",
+        "utilfreds",
+        "en smule vred"
+      ],
+      "noter": "'meget vred' må ikke blive 'frustreret'. Beskyldningen om tyveri gengives som udsagn. Rånotatet indeholder ingen refleksion: afsnittet Refleksion må højst være et kort, åbent spørgsmål med udgangspunkt i det skrevne — ingen forklaringer, årsager eller konklusioner."
+    }
+  },
+  {
+    "id": "jp-07",
+    "beskrivelse": "Trafiklysfarver rød og gul skal bevares; refleksion med 'det virker som om' og 'måske'.",
+    "input": {
+      "draft": "BHS check-in rød i morges, skrev 'alt er gråt'. UT snakkede m hende kl 9.30 over kaffe i fællesstuen ca en halv time. Ved middagstid satte hun selv sit lys til gul. Hun vil gerne have at vi spørger igen i aften. Det virker som om samtalen hjalp lidt, men måske er det også bare dagen der vendte.",
+      "category": "Dagligdag",
+      "residentLabel": "BHS"
+    },
+    "navne": [],
+    "forventet": {
+      "skalIndeholde": ["BHS", "rød", "gul", "alt er gråt", "9.30", "det virker som om", "måske"],
+      "maaIkkeIndeholde": ["grøn", "depression", "tydeligvis", "samtalen hjalp"],
+      "noter": "Farverne rød og gul bevares; 'grøn' må ikke opstå. Refleksionen bevarer usikkerheden ('det virker som om', 'måske') og gør det ikke til en konklusion om at samtalen hjalp."
+    }
+  },
+  {
+    "id": "jp-08",
+    "beskrivelse": "Uklart institutionssprog/slang skal omformuleres til almindeligt dansk uden opdigtede fagtermer; ingen refleksion.",
+    "input": {
+      "draft": "AMV havde en klassisk sofadag igen, kom ikke ud af hulen før kl 14. Vi tog en 'runde om søen' (lille gåtur 15 min). Han var på i dag, snakkede om fodbold hele vejen. fik ham til at tage skrald m ned.",
+      "category": "Aktivitet",
+      "residentLabel": "AMV"
+    },
+    "navne": [],
+    "forventet": {
+      "skalIndeholde": ["AMV", "14", "15 min", "fodbold", "skrald"],
+      "maaIkkeIndeholde": [
+        "skyldes",
+        "tyder på",
+        "det er tydeligt",
+        "hulen",
+        "sofadagsmønster",
+        "passivitet",
+        "apati"
+      ],
+      "noter": "'hulen' og 'sofadag' omformuleres neutralt (fx 'blev på sit værelse indtil kl. 14'); 'var på' bliver fx 'var snakkesalig/engageret'. Ingen nye fagtermer. Rånotatet indeholder ingen refleksion: afsnittet Refleksion må højst være et kort, åbent spørgsmål med udgangspunkt i det skrevne — ingen forklaringer, årsager eller konklusioner."
+    }
+  },
+  {
+    "id": "jp-09",
+    "beskrivelse": "Langt netværksnotat med lang refleksion; refleksionen skal sammenfattes til få sætninger uden nye temaer, alle fakta bevares.",
+    "input": {
+      "draft": "DFK's mor kom på besøg kl 13.30, første gang siden juni. De sad i fællesstuen den første halve time, DFK var stille og svarede kort. Moren havde kage med og spurgte til lejligheden. Kl 14.10 gik de op i DFK's lejlighed og hun viste stolt sin nye reol som hun selv har samlet. Moren sagde 'det havde jeg ikke troet du kunne'. DFK blev tavs og gik ud på altanen og røg 2 cigaretter. Moren gik kl 15.05 og sagde hun ville komme igen om 14 dage. Efter besøget sagde DFK til UT at hun var glad for besøget men også 'helt smadret'. Refleksion: jeg tænker at morens kommentar måske ramte hende, selvom den var ment positivt. Det kan være at DFK har brug for at vi forbereder næste besøg sammen med hende. Måske også snakke om hvad hun gerne vil vise moren. Jeg undrer mig over om hun har haft det sådan længe med moren. Vi kunne også spørge om hun vil have en medarbejder med næste gang, og om hun vil snakke med sin kontaktperson om det.",
+      "category": "Netværk",
+      "residentLabel": "DFK"
+    },
+    "navne": [],
+    "forventet": {
+      "skalIndeholde": [
+        "DFK",
+        "13.30",
+        "14.10",
+        "15.05",
+        "2 cigaretter",
+        "14 dage",
+        "helt smadret",
+        "reol",
+        "måske"
+      ],
+      "maaIkkeIndeholde": ["tilknytning", "traume", "konfliktfyldt relation", "depression"],
+      "noter": "Hele forløbet med tider og citater bevares i Handling/aktivitet. Refleksionen må højst være 3–4 korte sætninger og sammenfatte de vigtigste pointer (morens kommentar, forberedelse af næste besøg) uden at tilføje nye temaer eller fagbegreber."
+    }
+  },
+  {
+    "id": "jp-10",
+    "beskrivelse": "Sundhedsnotat med temperatur og mange klokkeslæt; tal skal bevares eksakt, ingen medicinråd og ingen refleksion.",
+    "input": {
+      "draft": "NPH klagede over ondt i maven fra kl 6. Temp 38,2 kl 8. Ringet til egen læge kl 8.15, fik tid kl 11.20. UT fulgte NPH derop. Lægen mener det er maveinfluenza, skal drikke meget og blive hjemme. Kastede op 1 gang kl 14, har drukket 1 liter vand siden.",
+      "category": "Sundhed",
+      "residentLabel": "NPH"
+    },
+    "navne": [],
+    "forventet": {
+      "skalIndeholde": ["NPH", "38,2", "8.15", "11.20", "maveinfluenza", "1 liter"],
+      "maaIkkeIndeholde": [
+        "skyldes",
+        "tyder på",
+        "det er tydeligt",
+        "paracetamol",
+        "bør tage",
+        "smertestillende",
+        "dehydreret"
+      ],
+      "noter": "Alle klokkeslæt og tal gengives eksakt (38,2 må ikke blive 38). Lægens vurdering gengives som lægens. Rånotatet indeholder ingen refleksion: afsnittet Refleksion må højst være et kort, åbent spørgsmål med udgangspunkt i det skrevne — ingen forklaringer, årsager eller konklusioner."
+    }
+  },
+  {
+    "id": "jp-11",
+    "beskrivelse": "Meget kort positivt aktivitetsnotat; må ikke blæses op med opdigtede detaljer eller fortolkning.",
+    "input": {
+      "draft": "EJS med i gåklubben for første gang!! 4 km. smilede meget.",
+      "category": "Aktivitet",
+      "residentLabel": "EJS"
+    },
+    "navne": [],
+    "forventet": {
+      "skalIndeholde": ["EJS", "første gang", "4 km", "smilede"],
+      "maaIkkeIndeholde": [
+        "skyldes",
+        "tyder på",
+        "det er tydeligt",
+        "gennembrud",
+        "selvværd",
+        "endelig",
+        "stolt"
+      ],
+      "noter": "Kort notat forbliver kort: korrekt stavning og ét par sætninger. Glæden bevares ('smilede meget') uden at tilføje følelser eller betydning. Rånotatet indeholder ingen refleksion: afsnittet Refleksion må højst være et kort, åbent spørgsmål med udgangspunkt i det skrevne — ingen forklaringer, årsager eller konklusioner."
+    }
+  },
+  {
+    "id": "jp-12",
+    "beskrivelse": "PN-medicin udleveret efter ordination med refleksion om mulig årsag; ingen vurdering af medicinen.",
+    "input": {
+      "draft": "TOB bad om pn kl 22.10 pga uro, fik udleveret jf ordination. Sad i fællesstuen bagefter m te, faldt til ro ca 22.45 og gik i seng. UT undrer sig over om uroen hænger sammen med at hans bror ikke kom i dag som aftalt.",
+      "category": "Medicin",
+      "residentLabel": "TOB"
+    },
+    "navne": [],
+    "forventet": {
+      "skalIndeholde": ["TOB", "PN", "22.10", "22.45", "ordination", "bror", "undrer"],
+      "maaIkkeIndeholde": [
+        "bør øge",
+        "for meget medicin",
+        "afhængig",
+        "dosis bør",
+        "skizofreni",
+        "angst"
+      ],
+      "noter": "PN-udleveringen beskrives neutralt og jf. ordination. Refleksionen bevarer undringen om broren som et åbent spørgsmål — ikke som konstateret årsag, og ingen vurdering af PN-forbruget."
+    }
+  },
+  {
+    "id": "jp-13",
+    "beskrivelse": "Verbal konflikt med UT, groft sprog i citat; intensitet bevares og ingen refleksion.",
+    "input": {
+      "draft": "CLV råbte ad UT i gangen og kaldte UT en \"fucking idiot\" fordi rygepausen var slut. Meget højlydt, 2 andre beboere kiggede ud af deres døre. UT trak sig og sagde vi kunne tale om det kl 15. CLV kom selv kl 15.05 og sagde det havde været en lorte dag.",
+      "category": "Konflikt",
+      "residentLabel": "CLV"
+    },
+    "navne": [],
+    "forventet": {
+      "skalIndeholde": ["CLV", "UT", "fucking idiot", "meget højlydt", "15.05", "lorte dag"],
+      "maaIkkeIndeholde": [
+        "skyldes",
+        "tyder på",
+        "det er tydeligt",
+        "let irriteret",
+        "uenighed",
+        "frustreret",
+        "aggressiv personlighed"
+      ],
+      "noter": "Citaterne bevares ordret (de er dokumentation). At CLV selv kom tilbage kl. 15.05 skal med. Rånotatet indeholder ingen refleksion: afsnittet Refleksion må højst være et kort, åbent spørgsmål med udgangspunkt i det skrevne — ingen forklaringer, årsager eller konklusioner."
+    }
+  },
+  {
+    "id": "jp-14",
+    "beskrivelse": "Notat med borgerens fulde navn og et familiemedlems navn; outputtet bør bruge initialerne FAS.",
+    "input": {
+      "draft": "Var på café m Fatima Al-Sayed og hendes søster Leila. Fatima bestilte selv og betalte med sit eget kort, talte m tjeneren uden hjælp. Første gang i 2 mdr hun har været inde i byen. Vi var hjemme kl 16.40.",
+      "category": "Aktivitet",
+      "residentLabel": "FAS"
+    },
+    "navne": ["Fatima Al-Sayed", "Fatima"],
+    "forventet": {
+      "skalIndeholde": ["FAS", "Leila", "betalte", "2 m", "16.40"],
+      "maaIkkeIndeholde": [
+        "skyldes",
+        "tyder på",
+        "det er tydeligt",
+        "socialfobi",
+        "angst",
+        "isolation"
+      ],
+      "noter": "Borgerens fulde navn bør erstattes af FAS; søsterens navn må gerne bevares som i kilden. '2 mdr' kan skrives '2 måneder'. Rånotatet indeholder ingen refleksion: afsnittet Refleksion må højst være et kort, åbent spørgsmål med udgangspunkt i det skrevne — ingen forklaringer, årsager eller konklusioner."
+    }
+  },
+  {
+    "id": "jp-15",
+    "beskrivelse": "Økonomisamtale med beløb og refleksion med 'måske'; beløb skal bevares eksakt.",
+    "input": {
+      "draft": "HIK og UT lavede budget for resten af oktober. Han har 1.850 kr til mad tilbage, og husleje på 4.320 kr er betalt. Han ville ikke kigge på kontoudtoget selv og kiggede ud ad vinduet mens UT læste op. Jeg tænker at han måske skammer sig over at skulle have hjælp til det, han sagde flere gange 'det klarer jeg selv næste gang'.",
+      "category": "Dagligdag",
+      "residentLabel": "HIK"
+    },
+    "navne": [],
+    "forventet": {
+      "skalIndeholde": [
+        "HIK",
+        "1.850 kr",
+        "4.320 kr",
+        "måske",
+        "skammer",
+        "det klarer jeg selv næste gang"
+      ],
+      "maaIkkeIndeholde": ["gæld", "misbrug", "tydeligvis", "bør have en værge"],
+      "noter": "Beløb bevares nøjagtigt (punktum som tusindtalsseparator er fint). Refleksionen bevarer 'måske' og borgerens citat; ingen konklusion om årsagen."
+    }
+  },
+  {
+    "id": "jp-16",
+    "beskrivelse": "Søvn og 'stemmer' — borgerens beskrivelse må ikke omsættes til diagnose eller symptombetegnelse; kort refleksion med forslag fra kilden.",
+    "input": {
+      "draft": "PLA har sovet dårligt 4 nætter i træk, har været oppe kl 3 og igen kl 4.30 i nat. Siger stemmerne er højere om natten og at radioen hjælper lidt. Han var træt og bleg ved morgenmaden og spiste kun en halv bolle. Måske skal vi lave en natteplan sammen m ham?",
+      "category": "Sundhed",
+      "residentLabel": "PLA"
+    },
+    "navne": [],
+    "forventet": {
+      "skalIndeholde": ["PLA", "4 nætter", "4.30", "stemmerne", "radioen", "natteplan"],
+      "maaIkkeIndeholde": [
+        "skizofreni",
+        "psykose",
+        "hallucination",
+        "sovemedicin",
+        "bør øge",
+        "symptomer på"
+      ],
+      "noter": "'stemmerne' gengives som borgerens egen beskrivelse. Refleksionen er det åbne spørgsmål om natteplan — ikke et forslag om medicin eller en diagnose."
+    }
+  },
+  {
+    "id": "jp-17",
+    "beskrivelse": "Observation af rifter på armen og borgerens forklaring; faktuelt, uden at personalet konkluderer selvskade.",
+    "input": {
+      "draft": "GRM havde rifter på venstre underarm da UT så hende i køkkenet kl 16. Hun sagde 'det er ikke noget, det var katten'. Hun har ingen kat. Sårene var overfladiske, UT rensede og satte plaster på 3 af dem. Sagt videre til vagthavende kl 16.30.",
+      "category": "Sundhed",
+      "residentLabel": "GRM"
+    },
+    "navne": [],
+    "forventet": {
+      "skalIndeholde": [
+        "GRM",
+        "venstre underarm",
+        "katten",
+        "ingen kat",
+        "overfladiske",
+        "3",
+        "16.30"
+      ],
+      "maaIkkeIndeholde": [
+        "selvskade",
+        "cutting",
+        "selvmordsforsøg",
+        "løj",
+        "lyver",
+        "ridser bare"
+      ],
+      "noter": "Observation, citat og faktum ('Hun har ingen kat') står side om side uden at UT konkluderer. Ingen dramatisering og ingen bagatellisering (fx 'bare ridser'). Rånotatet indeholder ingen refleksion: afsnittet Refleksion må højst være et kort, åbent spørgsmål med udgangspunkt i det skrevne — ingen forklaringer, årsager eller konklusioner."
+    }
+  },
+  {
+    "id": "jp-18",
+    "beskrivelse": "Telefonnotat om flyttet møde med datoer og klokkeslæt; ingen refleksion.",
+    "input": {
+      "draft": "Tlf m sagsbehandler fra kommunen kl 10.30 ang IAH's opfølgningsmøde. Mødet er flyttet fra 3/12 til 10/12 kl 13 pga sygdom hos sagsbehandler. IAH informeret kl 11, sagde 'fint nok, så har jeg længere tid til at forberede mig'.",
+      "category": "Netværk",
+      "residentLabel": "IAH"
+    },
+    "navne": [],
+    "forventet": {
+      "skalIndeholde": ["IAH", "10.30", "sagsbehandler", "fint nok", "forberede"],
+      "maaIkkeIndeholde": [
+        "skyldes",
+        "tyder på",
+        "det er tydeligt",
+        "aflyst",
+        "skuffet",
+        "utilfreds"
+      ],
+      "noter": "Begge datoer skal fremgå (3/12 og 10/12, eller 3. og 10. december) samt kl. 13. Borgerens citat bevares. Rånotatet indeholder ingen refleksion: afsnittet Refleksion må højst være et kort, åbent spørgsmål med udgangspunkt i det skrevne — ingen forklaringer, årsager eller konklusioner."
+    }
+  },
+  {
+    "id": "jp-19",
+    "beskrivelse": "Uro under rengøring beskrevet i adfærd; må ikke omsættes til 'angstanfald' eller diagnose. Refleksion i kilden.",
+    "input": {
+      "draft": "SKO og UT gjorde rent i SKO's lejlighed fra kl 10. Efter ca 40 min blev SKO meget urolig da vi skulle åbne skabet i gangen, trak vejret hurtigt og sagde 'jeg kan ikke det her'. Vi stoppede, satte os på sofaen og tog 10 dybe vejrtrækninger sammen. SKO ville gerne fortsætte m køkkenet bagefter, skabet venter. Det kan være at skabet betyder noget særligt for hende, jeg ved det ikke.",
+      "category": "Dagligdag",
+      "residentLabel": "SKO"
+    },
+    "navne": [],
+    "forventet": {
+      "skalIndeholde": [
+        "SKO",
+        "40 min",
+        "meget urolig",
+        "jeg kan ikke det her",
+        "10 dybe",
+        "skabet",
+        "ved det ikke"
+      ],
+      "maaIkkeIndeholde": [
+        "angstanfald",
+        "panikangst",
+        "OCD",
+        "samlemani",
+        "lidt urolig",
+        "traume"
+      ],
+      "noter": "Adfærden beskrives som observeret ('meget urolig', vejrtrækning) uden betegnelser som angstanfald. Refleksionen bevarer usikkerheden ('det kan være', 'jeg ved det ikke')."
+    }
+  },
+  {
+    "id": "jp-20",
+    "beskrivelse": "Ekstremt kort notat med trafiklys; må ikke fyldes ud med opdigtede detaljer.",
+    "input": {
+      "draft": "mhl ok i dag. grøn.",
+      "category": "Dagligdag",
+      "residentLabel": "MHL"
+    },
+    "navne": [],
+    "forventet": {
+      "skalIndeholde": ["MHL", "grøn"],
+      "maaIkkeIndeholde": [
+        "skyldes",
+        "tyder på",
+        "det er tydeligt",
+        "glad",
+        "godt humør",
+        "energisk",
+        "spiste"
+      ],
+      "noter": "Initialerne skrives som valgt under borger (MHL). Notatet forbliver én–to korte sætninger: borgeren har haft det okay og har grønt lys. Rånotatet indeholder ingen refleksion: afsnittet Refleksion må højst være et kort, åbent spørgsmål med udgangspunkt i det skrevne — ingen forklaringer, årsager eller konklusioner."
+    }
+  },
+  {
+    "id": "jp-21",
+    "beskrivelse": "Aktivitetsnotat med fuldt navn og en medbeboer; tal og citat bevares, initialer foretrækkes.",
+    "input": {
+      "draft": "Var i svømmehallen m Jonas Kragh Ravn og MLP kl 10-12. Jonas svømmede 8 baner og var i boblebadet bagefter. MLP sad på kanten hele tiden og ville ikke i vandet, men blev der. Jonas sagde 'det var fedt, samme tid næste uge'.",
+      "category": "Aktivitet",
+      "residentLabel": "JKR"
+    },
+    "navne": ["Jonas Kragh Ravn", "Jonas"],
+    "forventet": {
+      "skalIndeholde": ["JKR", "MLP", "8 baner", "boblebadet", "samme tid næste uge"],
+      "maaIkkeIndeholde": [
+        "skyldes",
+        "tyder på",
+        "det er tydeligt",
+        "vandskræk",
+        "angst",
+        "nægtede"
+      ],
+      "noter": "Fuldt navn bør erstattes af JKR; medbeboeren MLP holdes adskilt. At MLP 'ikke ville i vandet' gengives neutralt, ikke som 'nægtede'. Rånotatet indeholder ingen refleksion: afsnittet Refleksion må højst være et kort, åbent spørgsmål med udgangspunkt i det skrevne — ingen forklaringer, årsager eller konklusioner."
+    }
+  },
+  {
+    "id": "jp-22",
+    "beskrivelse": "Trussel mellem to beboere med frygt og gentagelse; intensitet og tal bevares, refleksion med usikkerhed.",
+    "input": {
+      "draft": "ØBN truede ATH i køkkenet kl 18.20 med at 'smadre hans fjæs' fordi ATH havde taget hans plads ved bordet. ØBN stod helt tæt på ATH m knyttede hænder. 2 personaler stillede sig imellem, ØBN gik ud efter 1-2 min. ATH var bange og sagde at han ikke tør gå i køkkenet når ØBN er der. ATH spiste på sit værelse. Jeg er usikker på om vi skal lave en aftale om køkkentider – det er 3. gang på 2 uger at der er noget mellem dem.",
+      "category": "Konflikt",
+      "residentLabel": "ØBN"
+    },
+    "navne": [],
+    "forventet": {
+      "skalIndeholde": [
+        "ØBN",
+        "ATH",
+        "18.20",
+        "smadre",
+        "knyttede hænder",
+        "bange",
+        "3. gang",
+        "2 uger",
+        "usikker"
+      ],
+      "maaIkkeIndeholde": [
+        "lidt utryg",
+        "uoverensstemmelse",
+        "voldelig",
+        "psykopat",
+        "bør flyttes"
+      ],
+      "noter": "Truslen citeres, 'bange' bliver ikke til 'lidt utryg'. Begge initialer bevares korrekt fordelt på roller. Refleksionen bevarer usikkerheden om køkkentider uden at gøre den til en beslutning."
+    }
+  }
+]
