@@ -174,6 +174,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const residentId = await getResidentId();
+  if (!residentId) {
+    return NextResponse.json(
+      { error: 'Du skal være logget ind i Lys for at tale med Lys.' },
+      { status: 401 }
+    );
+  }
+
   const key = claudeApiKey();
   if (!key) {
     return NextResponse.json(
@@ -214,7 +222,6 @@ ${mood ? `- ${mood}` : ''}
 ${ctx ? `\nTidligere små glimt fra samtaler:\n${ctx}` : ''}`;
 
   const msgs: LysChatMessage[] = Array.isArray(body.messages) ? body.messages : [];
-  const residentId = await getResidentId();
   const lastUserUtterance = getLastUserUtterance(msgs);
   const conversationIdRaw =
     typeof body.conversation_id === 'string' ? body.conversation_id.trim() : '';
@@ -304,6 +311,7 @@ async function streamAnthropicToSse(
     {
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 200,
+      temperature: 0.7,
       system,
       messages,
       stream: true,
@@ -456,6 +464,7 @@ async function callAnthropic(
     {
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 200,
+      temperature: 0.7,
       system,
       messages,
     },

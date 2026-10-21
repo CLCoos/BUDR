@@ -101,6 +101,7 @@ export async function classifyUtterance(
       {
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 150,
+        temperature: 0,
         system: SAFETY_SYSTEM_PROMPT,
         messages: [{ role: 'user', content: utterance }],
       },

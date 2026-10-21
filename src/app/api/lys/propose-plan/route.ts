@@ -59,6 +59,7 @@ export async function POST(req: NextRequest) {
     {
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 1500,
+      temperature: 0.2,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: userContent }],
     },

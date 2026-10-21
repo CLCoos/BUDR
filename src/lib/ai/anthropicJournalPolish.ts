@@ -28,8 +28,6 @@ function polishModelCandidates(preferred: string[] = []): string[] {
     fromEnv,
     ANTHROPIC_CHAT_MODEL,
     'claude-haiku-4-5-20251001',
-    'claude-3-5-sonnet-20241022',
-    'claude-3-haiku-20240307',
   ].filter((m): m is string => typeof m === 'string' && m.length > 0);
   return [...new Set(fallbacks)];
 }
@@ -44,6 +42,8 @@ export async function callAnthropicJournalPolish(params: {
   maxTokens: number;
   /** Modeller der prøves først (fx en stærkere model til længere dokumenter). */
   preferredModels?: string[];
+  /** Lav værdi til faste formater (journal, rapporter); højere til samtale. Standard 0,3. */
+  temperature?: number;
 }): Promise<
   | { ok: true; text: string; model: string }
   | { ok: false; status: number; body: string; lastModel: string }
@@ -61,6 +61,7 @@ export async function callAnthropicJournalPolish(params: {
         {
           model,
           max_tokens: params.maxTokens,
+          temperature: params.temperature ?? 0.3,
           system: params.system,
           messages: [{ role: 'user', content: params.userMessage }],
         },

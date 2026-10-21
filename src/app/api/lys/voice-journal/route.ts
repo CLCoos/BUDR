@@ -90,6 +90,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     {
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 1500,
+      temperature: 0.2,
       system: VOICE_JOURNAL_SYSTEM,
       messages: [{ role: 'user', content: transcript }],
     },

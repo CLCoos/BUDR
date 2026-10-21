@@ -3,7 +3,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { X, Copy, Check, FileText, Pencil, LayoutList } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { ANTHROPIC_CHAT_MODEL } from '@/lib/ai/anthropicModel';
 import {
   composeStructuredOverrapport,
   needsOverrapportAttention,
@@ -152,59 +151,14 @@ export default function OverrapportModal({
     };
 
     try {
-      const residentLines = data
-        .map((r) => {
-          const parts = [`${r.name}:`];
-          if (r.checkinTime) parts.push(`check-in kl. ${r.checkinTime}`);
-          if (r.moodLabel) parts.push(`stemning: ${r.moodLabel}`);
-          if (r.trafficLight) parts.push(`trafiklys: ${r.trafficLight}`);
-          if (r.notePreview) parts.push(`note: "${r.notePreview.slice(0, 80)}"`);
-          if (r.pendingMessages > 0) parts.push(`${r.pendingMessages} besked(er) til personalet`);
-          if (!r.checkinTime) parts.push('ingen check-in i dag');
-          return parts.join(', ');
-        })
-        .join('\n');
-
-      const res = await fetch('/api/ai/chat-completion', {
+      const res = await fetch('/api/portal/ai/overrapport', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          provider: 'ANTHROPIC',
-          model: ANTHROPIC_CHAT_MODEL,
-          messages: [
-            {
-              role: 'system',
-              content: `Du er en assistent der hjælper pædagoger på et botilbud med at skrive vagtskifterapporter. Skriv kort, præcist og professionelt dansk — let at læse højt ved vagtskifte.
-
-Brug PRÆCIS disse fire overskrifter på egne linjer (nummer + punktum + titel):
-1. Kort overblik
-2. Borgere med særlig fokus
-3. Øvrige borgere
-4. Til næste vagt
-
-Under hver overskrift: maks. 2 korte afsnit eller punktliste med · foran hvert punkt. Ingen andre niveau-overskrifter.
-Afsnit 1: tal på check-in og om nogen kræver ekstra fokus (én eller to sætninger).
-Afsnit 2: kun borgere med rød/gul, dårligt humør eller åbne beskeder — eller én sætning hvis ingen.
-Afsnit 3: resten i meget korte linjer.
-Afsnit 4: konkrete punkter til næste vagt med · 
-
-Max ca. 280 ord. Afslut IKKE med metatekst om AI.`,
-            },
-            {
-              role: 'user',
-              content: `Vagtskifterapport — ${dateStr}, kl. ${timeStr}\n\nBorgerdata for i dag:\n${residentLines}\n\nSkriv overrapporten.`,
-            },
-          ],
-          stream: false,
-          parameters: { max_tokens: 500, temperature: 0.5 },
-        }),
+        body: JSON.stringify({ residents: data, dateStr, timeStr }),
       });
 
-      const d = (await res.json()) as {
-        choices?: [{ message?: { content?: string | null } }];
-        error?: string;
-      };
-      const text = d.choices?.[0]?.message?.content?.trim();
+      const d = res.ok ? ((await res.json()) as { text?: string }) : {};
+      const text = d.text?.trim();
       if (res.ok && text && mountedRef.current) {
         setReport(text);
         setReportSource('ai');

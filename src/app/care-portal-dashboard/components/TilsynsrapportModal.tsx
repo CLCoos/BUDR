@@ -4,7 +4,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { X, Copy, Check, Printer, ClipboardList, Pencil, LayoutList } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { parseStaffOrgId } from '@/lib/staffOrgScope';
-import { ANTHROPIC_CHAT_MODEL } from '@/lib/ai/anthropicModel';
 import {
   composeStructuredTilsynsrapport,
   type TilsynsIndsatsRecord,
@@ -209,15 +208,6 @@ export default function TilsynsrapportModal({
       year: 'numeric',
     });
 
-    const trafficCounts = { grøn: 0, gul: 0, rød: 0, ingen: 0 };
-    for (const r of residents) {
-      const t = r.trafficLight?.trim().toLowerCase();
-      if (t === 'grøn' || t === 'groen') trafficCounts.grøn++;
-      else if (t === 'gul') trafficCounts.gul++;
-      else if (t === 'rød' || t === 'roed') trafficCounts.rød++;
-      else trafficCounts.ingen++;
-    }
-
     const indsatsLite = toIndsatsLite(indsatsRows);
 
     const applyTemplate = () => {
@@ -231,80 +221,30 @@ export default function TilsynsrapportModal({
       setReportSource('template');
     };
 
-    const residentLines = residents
-      .map(
-        (r) =>
-          `${r.name}: trafiklys=${r.trafficLight ?? 'ingen'}, stemning=${r.moodLabel ?? 'ikke registreret'}${r.note ? `, note: "${r.note.slice(0, 80)}"` : ''}`
-      )
-      .join('\n');
-
-    const magtanvendelseLines =
-      indsatsRows
-        .filter(
-          (r) =>
-            r.paragraph === '§136' ||
-            r.paragraph === '§141' ||
-            r.paragraph === '§ 136' ||
-            r.paragraph === '§ 141'
-        )
-        .map(
-          (r) =>
-            `${new Date(r.tidspunkt).toLocaleString('da-DK')} — ${r.type} (${r.paragraph}): ${r.beskrivelse.slice(0, 120)}`
-        )
-        .join('\n') || 'Ingen registrerede magtanvendelser i indlæste indsatsnotater.';
-
-    const indsatsSummary = `${indsatsRows.length} indsatsnotat(er) i lokallager; fordeling: ${[...new Set(indsatsRows.map((x) => x.paragraph))].join(', ') || '—'}`;
-
     try {
-      const res = await fetch('/api/ai/chat-completion', {
+      const magtanvendelser = indsatsRows
+        .filter((r) => /^§\s?(136|141)$/.test(r.paragraph))
+        .map((r) => ({
+          tidspunkt: new Date(r.tidspunkt).toLocaleString('da-DK'),
+          type: r.type,
+          paragraph: r.paragraph,
+          beskrivelse: r.beskrivelse,
+        }));
+      const res = await fetch('/api/portal/ai/tilsynsrapport', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          provider: 'ANTHROPIC',
-          model: ANTHROPIC_CHAT_MODEL,
-          messages: [
-            {
-              role: 'system',
-              content: `Du hjælper med udkast til tilsynsrapport på dansk (socialpsykiatri). Skriv formelt og fagligt, men læsbart.
-
-Brug PRÆCIS disse fem overskrifter på hver sin linje (nummer + punktum + titel):
-1. Generelle oplysninger om tilbuddet
-2. Borgersammensætning og trivselsoverblik
-3. Dokumenterede magtanvendelser
-4. Handleplaner og indsatser
-5. Personalets vurdering af den aktuelle periode
-
-Under hver overskrift: korte afsnit og/eller punktlister med · foran hvert punkt. Ingen andre niveau-overskrifter.
-Max ca. 450 ord. Afslut IKKE med egen disclaimer om AI.`,
-            },
-            {
-              role: 'user',
-              content: `Tilsynsrapport — ${displayFacility} · ${dateStr}
-
-Antal borgere i datagrundlag: ${residents.length}
-Trafiklysfordeling: ${trafficCounts.grøn} grøn, ${trafficCounts.gul} gul, ${trafficCounts.rød} rød, ${trafficCounts.ingen} ikke registreret
-
-Borgerdata:
-${residentLines || 'Ingen borgerdata'}
-
-Magtanvendelser (§ 136 / § 141) i indlæste indsatsnotater:
-${magtanvendelseLines}
-
-Indsatser (resume): ${indsatsSummary}
-
-Udarbejd tilsynsrapporten.`,
-            },
-          ],
-          stream: false,
-          parameters: { max_tokens: 900, temperature: 0.35 },
+          facilityName: displayFacility,
+          dateStr,
+          residents,
+          magtanvendelser,
+          indsatsCount: indsatsRows.length,
+          indsatsParagraphs: indsatsRows.map((x) => x.paragraph),
         }),
       });
 
-      const d = (await res.json()) as {
-        choices?: [{ message?: { content?: string | null } }];
-        error?: string;
-      };
-      const text = d.choices?.[0]?.message?.content?.trim();
+      const d = res.ok ? ((await res.json()) as { text?: string }) : {};
+      const text = d.text?.trim();
       if (res.ok && text && mountedRef.current) {
         setReport(text);
         setReportSource('ai');
