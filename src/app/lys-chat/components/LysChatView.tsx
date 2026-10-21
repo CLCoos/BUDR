@@ -716,7 +716,7 @@ export default function LysChatView() {
             Lys
           </p>
           <p className="text-xs" style={{ color: tokens.textMuted }}>
-            Din ledsager
+            Personalet kan læse med
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -865,7 +865,11 @@ export default function LysChatView() {
             </div>
             <p className="text-base font-semibold mb-1">Hej. Jeg er Lys.</p>
             <p className="text-sm" style={{ color: tokens.textMuted }}>
-              Hvad har du på hjerte? Du kan skrive eller tale frit — jeg lytter.
+              Hvad har du på hjerte? Du kan skrive eller tale frit. Jeg lytter.
+            </p>
+            <p className="text-xs mt-3" style={{ color: tokens.textMuted }}>
+              Personalet på dit bosted kan læse dine samtaler med Lys, så de kan hjælpe dig. Vil du
+              skrive noget kun til dig selv, så brug Fortæl og vælg «Kun mig».
             </p>
             {!online && (
               <p className="text-xs mt-3 font-medium" style={{ color: tokens.textMuted }}>

@@ -25,7 +25,7 @@ export async function GET(): Promise<NextResponse> {
   const { data, error } = await supabase
     .from('care_residents')
     .select(
-      'user_id, display_name, onboarding_data, org_id, nickname, color_theme, avatar_url, lys_voice_id, lys_voice_autoplay, lys_voice_intro_played_at'
+      'user_id, display_name, onboarding_data, org_id, nickname, color_theme, avatar_url, simple_mode, lys_voice_id, lys_voice_autoplay, lys_voice_intro_played_at'
     )
     .eq('user_id', residentId)
     .maybeSingle();

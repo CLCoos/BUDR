@@ -30,14 +30,8 @@ const PHASES: { phase: BreathPhase; label: string; duration: number; scale: numb
 ];
 
 const HOTLINES = [
-  { name: 'Livslinien', number: '70 201 201', desc: 'Anonym rådgivning døgnet rundt' },
-  {
-    name: 'BørneTelefonen (Røde Kors)',
-    number: '116 111',
-    desc: 'Til dig under 18 — fortrolig linje',
-  },
+  { name: 'Livslinien', number: '70 201 201', desc: 'Hvis du tænker på selvmord. Anonymt.' },
   { name: 'Seniortelefonerne', number: '70 278 278', desc: 'Støtte til ældre og ensomme' },
-  { name: 'Selvmordsforebyggelse', number: '70 201 201', desc: 'Specialiseret krisehjælp' },
   { name: 'Angstlinjen', number: '70 200 120', desc: 'Rådgivning om angst og bekymring' },
 ];
 

@@ -1,13 +1,23 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
-import { ArrowRight, Check, MessageCircle, Users } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import {
+  ArrowRight,
+  CalendarCheck,
+  Check,
+  Heart,
+  LifeBuoy,
+  MessageCircle,
+  Users,
+  Wind,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { useResidentSession } from '@/hooks/useResidentSession';
 import * as dataService from '@/lib/dataService';
 import { trackEvent } from '@/lib/analytics';
 import { isLysDemoResidentId } from '@/lib/lysDemoResident';
 import { copenhagenOnCallShift } from '@/lib/onCallStaff';
+import { syncBadgesAfterCheckin } from '@/lib/residentBadgeSync';
 import {
   LYS_QUICK_MOODS,
   moodLabelFromScore,
@@ -16,21 +26,15 @@ import {
   receiptText,
   type OnCallItem,
   type PlanPoint,
-  type StaffMessageStatus,
 } from '@/lib/lys/iDag';
 import { fetchLysPlanBundle, isPlanItemActiveOnDate, patchLysPlanItem } from '@/lib/lys/planItems';
 import type { LysThemeTokens } from '../lib/lysTheme';
+import type { LysFlowOverlay } from '../lib/lysOverlay';
+import { useStaffReceipt } from '../hooks/useStaffReceipt';
 import type { LysNavTab } from './LysBottomNav';
+import type { FortaelTarget } from './LysFortael';
 import MedicinReminder from './MedicinReminder';
-import {
-  DEMO_ON_CALL,
-  demoCheckinKey,
-  LysCard,
-  LysLabel,
-  lysMoodColors,
-  lysSun,
-  readDemoStaffMessage,
-} from './lysUi';
+import { DEMO_ON_CALL, demoCheckinKey, LysCard, LysLabel, lysMoodColors, lysSun } from './lysUi';
 
 type Props = {
   firstName: string;
@@ -41,9 +45,16 @@ type Props = {
   now: Date;
   onSwitchTab: (tab: LysNavTab) => void;
   onCheckedIn: (moodLabel: string) => void;
-  /** Åbner det lange tjek-ind med stemme og flere ord. */
-  onOpenLongCheckin: () => void;
+  onOpenFortael: (target: FortaelTarget | null) => void;
+  onOpen: (overlay: LysFlowOverlay) => void;
 };
+
+const HARD_MOODS = new Set(['Svært', 'Meget svært']);
+
+/** Nøgle til ugens tilbageblik, så søndagskortet forsvinder, når det er gjort. */
+export function weeklyDoneKey(d: Date): string {
+  return `budr_lys_uge_${ymdLocal(d)}`;
+}
 
 function ymdLocal(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -68,8 +79,27 @@ function greeting(d: Date): string {
   return 'God aften';
 }
 
-/** «I dag»: Lys' forside. Ét spørgsmål, det næste, og hvem der er her. */
-export default function LysIDag({
+function readFlag(key: string): boolean {
+  try {
+    return localStorage.getItem(key) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writeFlag(key: string) {
+  try {
+    localStorage.setItem(key, '1');
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * «Nu»: Lys' forside. Ét spørgsmål, det næste på planen og hvem der er her.
+ * En svær dag skærer alt andet væk. Om aftenen og om søndagen kommer et ekstra kort.
+ */
+export default function LysNu({
   firstName,
   residentId,
   isDemoMode,
@@ -78,7 +108,8 @@ export default function LysIDag({
   now,
   onSwitchTab,
   onCheckedIn,
-  onOpenLongCheckin,
+  onOpenFortael,
+  onOpen,
 }: Props) {
   const session = useResidentSession();
   const demo = isDemoMode || isLysDemoResidentId(residentId);
@@ -156,8 +187,9 @@ export default function LysIDag({
           /* ignore */
         }
       }
-      trackEvent('lys_mood_registered', { traffic: mood.traffic, source: 'i_dag' });
+      trackEvent('lys_mood_registered', { traffic: mood.traffic, source: 'nu' });
       onCheckedIn(mood.label);
+      void syncBadgesAfterCheckin(session.storageMode, session.activeId || residentId);
       setPicked(null);
       setNote('');
       setAgain(false);
@@ -167,6 +199,12 @@ export default function LysIDag({
       setSending(false);
     }
   };
+
+  // ── Svær dag ──────────────────────────────────────────────────────────────
+  const hardKey = `budr_lys_svaer_dag_skjult_${today}`;
+  const [hardDismissed, setHardDismissed] = useState(false);
+  useEffect(() => setHardDismissed(readFlag(hardKey)), [hardKey]);
+  const hardDay = !!checkin && HARD_MOODS.has(checkin.label) && !again && !hardDismissed;
 
   // ── Dagens plan ───────────────────────────────────────────────────────────
   const [plan, setPlan] = useState<PlanPoint[] | null>(null);
@@ -238,58 +276,184 @@ export default function LysIDag({
   };
 
   const { next, left, total } = nextPlanPoint(plan ?? [], done, hhmm(now));
+  const later = next
+    ? [...(plan ?? [])]
+        .filter((p) => !done.has(p.id) && p.id !== next.id && p.time > next.time)
+        .sort((a, b) => a.time.localeCompare(b.time))
+        .slice(0, 4)
+    : [];
 
-  // ── På arbejde nu og kvittering ───────────────────────────────────────────
+  // ── Personalet og kvittering ──────────────────────────────────────────────
   const [onCall, setOnCall] = useState<OnCallItem[] | null>(null);
-  const [message, setMessage] = useState<StaffMessageStatus | null>(null);
   const shift = copenhagenOnCallShift(now);
-
-  const loadStatus = useCallback(() => {
-    if (demo) {
-      setOnCall([{ shift, staffName: DEMO_ON_CALL[shift] }]);
-      setMessage(readDemoStaffMessage(DEMO_ON_CALL[shift].split(' ')[0]!));
-      return;
-    }
-    void fetch('/api/lys/resident-on-call', { credentials: 'include' })
-      .then((r) => (r.ok ? r.json() : { items: [] }))
-      .then((d: { items?: OnCallItem[] }) => setOnCall(d.items ?? []))
-      .catch(() => setOnCall([]));
-    void fetch('/api/lys/message-staff', { credentials: 'include' })
-      .then((r) => (r.ok ? r.json() : { latest: null }))
-      .then((d: { latest?: StaffMessageStatus | null }) => setMessage(d.latest ?? null))
-      .catch(() => undefined);
-  }, [demo, shift]);
+  const { status: message } = useStaffReceipt(demo);
 
   useEffect(() => {
-    loadStatus();
-    const t = window.setInterval(loadStatus, 60_000);
+    if (demo) {
+      setOnCall([{ shift, staffName: DEMO_ON_CALL[shift] }]);
+      return;
+    }
+    const load = () =>
+      void fetch('/api/lys/resident-on-call', { credentials: 'include' })
+        .then((r) => (r.ok ? r.json() : { items: [] }))
+        .then((d: { items?: OnCallItem[] }) => setOnCall(d.items ?? []))
+        .catch(() => setOnCall([]));
+    load();
+    const t = window.setInterval(load, 5 * 60_000);
     return () => window.clearInterval(t);
-  }, [loadStatus]);
+  }, [demo, shift]);
 
   const shiftLine = onCall ? onShiftLine(onCall, shift) : null;
   const receipt = message ? receiptText(message) : null;
 
+  // ── Aftenkort og søndagskort ──────────────────────────────────────────────
+  const evening = now.getHours() >= 18;
+  const eveningKey = `budr_lys_aften_${today}`;
+  const [eveningDone, setEveningDone] = useState(false);
+  const [eveningText, setEveningText] = useState('');
+  const [eveningSaving, setEveningSaving] = useState(false);
+  useEffect(() => setEveningDone(readFlag(eveningKey)), [eveningKey]);
+
+  const saveEvening = async (privacy: 'private' | 'shared') => {
+    const t = eveningText.trim();
+    if (!t || eveningSaving) return;
+    setEveningSaving(true);
+    try {
+      await dataService.saveJournalEntry(session.storageMode, session.activeId || residentId, {
+        date: new Date().toISOString(),
+        mode: 'write',
+        text: t,
+        privacy,
+        prompt: 'Hvad gik godt i dag?',
+      });
+      writeFlag(eveningKey);
+      setEveningDone(true);
+      trackEvent('lys_evening_card', { privacy });
+    } catch {
+      toast.error('Det blev ikke gemt. Prøv igen om lidt.');
+    } finally {
+      setEveningSaving(false);
+    }
+  };
+
+  const sunday = now.getDay() === 0;
+  const [weeklyDone, setWeeklyDone] = useState(false);
+  useEffect(() => setWeeklyDone(readFlag(weeklyDoneKey(now))), [now]);
+
   const showPicker = checkinLoaded && (!checkin || again);
+
+  const header = (
+    <header>
+      <h1 className="text-[28px] font-bold leading-tight tracking-[-0.02em]">
+        {greeting(now)}, {firstName || 'du'}
+      </h1>
+      <p className="mt-0.5 text-[15px] first-letter:uppercase" style={{ color: tokens.textMuted }}>
+        {now.toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long' })}
+      </p>
+    </header>
+  );
+
+  if (hardDay) {
+    const big =
+      'flex min-h-[84px] items-center gap-4 rounded-3xl px-5 py-4 text-left transition-transform active:scale-[0.98]';
+    return (
+      <div className="flex flex-col gap-4 px-5 pb-6 pt-5" style={{ color: tokens.text }}>
+        {header}
+        <section
+          className="rounded-3xl p-5"
+          style={{ backgroundColor: sun.soft, border: `1px solid ${sun.border}` }}
+        >
+          <h2 className="text-[21px] font-bold leading-snug">Det er en svær dag</h2>
+          <p className="mt-1 text-[16px]">
+            Du behøver ikke klare det alene. Personalet kan se, at du har det svært.
+          </p>
+        </section>
+        <button
+          type="button"
+          onClick={() => onOpenFortael('personale')}
+          className={big}
+          style={{ backgroundColor: accent, color: '#fff' }}
+        >
+          <MessageCircle size={28} aria-hidden />
+          <span>
+            <span className="block text-[19px] font-bold">Tal med personalet</span>
+            <span className="block text-[15px] opacity-90">
+              {shiftLine ?? 'Der er altid en voksen på bostedet'}
+            </span>
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onOpen('sanser')}
+          className={`${big} border`}
+          style={{ backgroundColor: tokens.cardBg, borderColor: tokens.cardBorder }}
+        >
+          <Wind size={28} style={{ color: accent }} aria-hidden />
+          <span>
+            <span className="block text-[19px] font-bold">Find ro</span>
+            <span className="block text-[15px]" style={{ color: tokens.textMuted }}>
+              Øvelser for kroppen og sanserne
+            </span>
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onOpen('crisis')}
+          className={`${big} border`}
+          style={{ backgroundColor: tokens.cardBg, borderColor: tokens.cardBorder }}
+        >
+          <LifeBuoy size={28} style={{ color: '#d9583f' }} aria-hidden />
+          <span>
+            <span className="block text-[19px] font-bold">Jeg har brug for hjælp nu</span>
+            <span className="block text-[15px]" style={{ color: tokens.textMuted }}>
+              Din kriseplan og vejrtrækning
+            </span>
+          </span>
+        </button>
+        {receipt && (
+          <p
+            className="flex items-start gap-2 rounded-2xl px-4 py-3 text-[15px] font-medium"
+            style={{ backgroundColor: tokens.accentSoft, color: tokens.accentSoftText }}
+            role="status"
+          >
+            <MessageCircle size={18} className="mt-0.5 shrink-0" aria-hidden />
+            {receipt.text}
+          </p>
+        )}
+        <div className="flex justify-center gap-6 pt-1">
+          <button
+            type="button"
+            onClick={() => setAgain(true)}
+            className="min-h-[44px] text-[15px] font-medium underline underline-offset-4"
+            style={{ color: tokens.textMuted }}
+          >
+            Det går bedre nu
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              writeFlag(hardKey);
+              setHardDismissed(true);
+            }}
+            className="min-h-[44px] text-[15px] font-medium underline underline-offset-4"
+            style={{ color: tokens.textMuted }}
+          >
+            Vis resten af Lys
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4 px-5 pb-6 pt-5" style={{ color: tokens.text }}>
-      <header>
-        <h1 className="text-[28px] font-bold leading-tight tracking-[-0.02em]">
-          {greeting(now)}, {firstName || 'du'}
-        </h1>
-        <p
-          className="mt-0.5 text-[15px] first-letter:uppercase"
-          style={{ color: tokens.textMuted }}
-        >
-          {now.toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long' })}
-        </p>
-      </header>
+      {header}
 
       {/* 1. Ét spørgsmål */}
       <section
         className="rounded-3xl p-5"
         style={{ backgroundColor: sun.soft, border: `1px solid ${sun.border}` }}
-        aria-labelledby="lys-idag-checkin"
+        aria-labelledby="lys-nu-checkin"
       >
         {!checkinLoaded ? (
           <p className="text-[15px]" style={{ color: tokens.textMuted }}>
@@ -305,7 +469,7 @@ export default function LysIDag({
               <Check size={22} strokeWidth={2.5} />
             </span>
             <div className="min-w-0 flex-1">
-              <h2 id="lys-idag-checkin" className="text-[17px] font-semibold">
+              <h2 id="lys-nu-checkin" className="text-[17px] font-semibold">
                 Du har det {checkin.label.toLowerCase()} i dag
               </h2>
               <p className="text-sm" style={{ color: tokens.textMuted }}>
@@ -323,7 +487,7 @@ export default function LysIDag({
           </div>
         ) : (
           <>
-            <h2 id="lys-idag-checkin" className="text-[19px] font-semibold leading-snug">
+            <h2 id="lys-nu-checkin" className="text-[19px] font-semibold leading-snug">
               Hvordan har du det lige nu?
             </h2>
             <div className="mt-4 grid grid-cols-5 gap-1.5" role="radiogroup" aria-label="Humør">
@@ -363,12 +527,12 @@ export default function LysIDag({
             </div>
             {picked !== null && (
               <div className="mt-4 flex flex-col gap-3">
-                <label htmlFor="lys-idag-note" className="text-sm font-medium">
+                <label htmlFor="lys-nu-note" className="text-sm font-medium">
                   Vil du sige lidt mere?{' '}
                   <span style={{ color: tokens.textMuted }}>(du behøver ikke)</span>
                 </label>
                 <textarea
-                  id="lys-idag-note"
+                  id="lys-nu-note"
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   rows={2}
@@ -392,27 +556,100 @@ export default function LysIDag({
                 </button>
               </div>
             )}
-            <button
-              type="button"
-              onClick={onOpenLongCheckin}
-              className="mt-3 min-h-[40px] text-sm font-medium"
-              style={{
-                color: tokens.textMuted,
-                textDecoration: 'underline',
-                textUnderlineOffset: 4,
-              }}
-            >
-              Hellere fortælle med stemmen
-            </button>
+            <p className="mt-3 text-sm" style={{ color: tokens.textMuted }}>
+              Vil du hellere sige det med dine egne ord, så tryk på Fortæl.
+            </p>
           </>
         )}
       </section>
 
       <MedicinReminder residentId={residentId} tokens={tokens} accent={accent} />
 
-      {/* 2. Det næste */}
-      <LysCard tokens={tokens} labelledBy="lys-idag-naeste">
-        <LysLabel tokens={tokens} id="lys-idag-naeste">
+      {/* 2. Aftenkort */}
+      {evening && (
+        <LysCard tokens={tokens} labelledBy="lys-nu-aften">
+          <div className="flex items-center gap-2">
+            <Heart size={18} style={{ color: accent }} aria-hidden />
+            <h2 id="lys-nu-aften" className="text-[17px] font-semibold">
+              Hvad gik godt i dag?
+            </h2>
+          </div>
+          {eveningDone ? (
+            <p className="text-[15px]" style={{ color: tokens.textMuted }}>
+              Tak. Det er gemt i din dagbog under Min vej.
+            </p>
+          ) : (
+            <>
+              <p className="text-[15px]" style={{ color: tokens.textMuted }}>
+                Bare én lille ting. Det må gerne være småt.
+              </p>
+              <textarea
+                value={eveningText}
+                onChange={(e) => setEveningText(e.target.value)}
+                rows={2}
+                maxLength={1000}
+                aria-labelledby="lys-nu-aften"
+                placeholder="Fx: Jeg gik en tur. Jeg fik ringet til min søster."
+                className="w-full resize-none rounded-2xl border px-4 py-3 text-[16px] outline-none"
+                style={{
+                  backgroundColor: tokens.bg,
+                  borderColor: tokens.cardBorder,
+                  color: tokens.text,
+                }}
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  disabled={!eveningText.trim() || eveningSaving}
+                  onClick={() => void saveEvening('private')}
+                  className="min-h-[48px] rounded-2xl text-[15px] font-semibold text-white disabled:opacity-40"
+                  style={{ backgroundColor: accent }}
+                >
+                  Gem til mig
+                </button>
+                <button
+                  type="button"
+                  disabled={!eveningText.trim() || eveningSaving}
+                  onClick={() => void saveEvening('shared')}
+                  className="min-h-[48px] rounded-2xl text-[15px] font-semibold disabled:opacity-40"
+                  style={{ backgroundColor: tokens.accentSoft, color: tokens.accentSoftText }}
+                >
+                  Del med personalet
+                </button>
+              </div>
+            </>
+          )}
+        </LysCard>
+      )}
+
+      {/* 3. Søndagskort */}
+      {sunday && !weeklyDone && (
+        <button
+          type="button"
+          onClick={() => onOpen('weekly')}
+          className="flex min-h-[72px] items-center gap-3 rounded-3xl border px-5 py-4 text-left"
+          style={{ backgroundColor: tokens.cardBg, borderColor: tokens.cardBorder }}
+        >
+          <span
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl"
+            style={{ backgroundColor: tokens.accentSoft, color: tokens.accentSoftText }}
+            aria-hidden
+          >
+            <CalendarCheck size={20} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[17px] font-semibold">Hvordan har ugen været?</span>
+            <span className="block text-sm" style={{ color: tokens.textMuted }}>
+              Fem korte spørgsmål om din uge
+            </span>
+          </span>
+          <ArrowRight size={18} style={{ color: tokens.textMuted }} aria-hidden />
+        </button>
+      )}
+
+      {/* 4. Det næste */}
+      <LysCard tokens={tokens} labelledBy="lys-nu-naeste">
+        <LysLabel tokens={tokens} id="lys-nu-naeste">
           Det næste
         </LysLabel>
         {plan === null ? (
@@ -447,9 +684,26 @@ export default function LysIDag({
                 Hele min dag
               </button>
             </div>
-            <p className="text-sm" style={{ color: tokens.textMuted }}>
-              {total - left} af {total} klaret i dag. Det er fint at tage det i dit eget tempo.
-            </p>
+            {later.length > 0 && (
+              <div className="mt-1 border-t pt-3" style={{ borderColor: tokens.cardBorder }}>
+                <p className="mb-1.5 text-sm font-semibold" style={{ color: tokens.textMuted }}>
+                  Senere i dag
+                </p>
+                <ul className="flex flex-col gap-1.5">
+                  {later.map((p) => (
+                    <li key={p.id} className="flex gap-3 text-[15px]">
+                      <span
+                        className="w-12 shrink-0 tabular-nums"
+                        style={{ color: tokens.textMuted }}
+                      >
+                        {p.time}
+                      </span>
+                      <span>{p.title}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </>
         ) : (
           <p className="text-[15px]">
@@ -460,9 +714,9 @@ export default function LysIDag({
         )}
       </LysCard>
 
-      {/* 3. Hvem er her, og har de set min besked */}
-      <LysCard tokens={tokens} labelledBy="lys-idag-her">
-        <LysLabel tokens={tokens} id="lys-idag-her">
+      {/* 5. Hvem er her, og har de set min besked */}
+      <LysCard tokens={tokens} labelledBy="lys-nu-her">
+        <LysLabel tokens={tokens} id="lys-nu-her">
           Personalet
         </LysLabel>
         <div className="flex items-center gap-3">
@@ -495,7 +749,7 @@ export default function LysIDag({
         )}
         <button
           type="button"
-          onClick={() => onSwitchTab('skriv')}
+          onClick={() => onOpenFortael('personale')}
           className="flex min-h-[48px] items-center justify-between rounded-2xl px-4 text-[15px] font-semibold"
           style={{ backgroundColor: tokens.accentSoft, color: tokens.accentSoftText }}
         >

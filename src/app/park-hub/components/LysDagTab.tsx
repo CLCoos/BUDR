@@ -1,7 +1,20 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
+import Link from 'next/link';
+import {
+  Activity,
+  ChevronLeft,
+  ChevronRight,
+  Circle,
+  Moon,
+  Pill,
+  Plus,
+  Send,
+  Users,
+  Utensils,
+  X,
+} from 'lucide-react';
 import { useResident } from '../context/ResidentContext';
 import { useResidentSession } from '@/hooks/useResidentSession';
 import * as dataService from '@/lib/dataService';
@@ -51,13 +64,28 @@ const CATEGORY_EMOJI: Record<string, string> = {
   struktur: '🔵',
 };
 
+/** Rolige ikoner i stedet for emojis på skærmen. Emojien gemmes stadig på punktet. */
+const CATEGORY_ICON: Record<string, typeof Circle> = {
+  mad: Utensils,
+  medicin: Pill,
+  aktivitet: Activity,
+  hvile: Moon,
+  social: Users,
+  struktur: Circle,
+};
+
 const CATEGORIES = [
-  { key: 'aktivitet', label: 'Aktivitet', emoji: '⚡' },
-  { key: 'mad', label: 'Mad', emoji: '🍽' },
-  { key: 'medicin', label: 'Medicin', emoji: '💊' },
-  { key: 'hvile', label: 'Hvile', emoji: '😌' },
-  { key: 'social', label: 'Social', emoji: '👥' },
+  { key: 'aktivitet', label: 'Aktivitet' },
+  { key: 'mad', label: 'Mad' },
+  { key: 'medicin', label: 'Medicin' },
+  { key: 'hvile', label: 'Hvile' },
+  { key: 'social', label: 'Social' },
 ];
+
+function CategoryIcon({ category, size = 18 }: { category: string; size?: number }) {
+  const Icon = CATEGORY_ICON[category] ?? Circle;
+  return <Icon size={size} aria-hidden />;
+}
 
 function timeToMin(t: string) {
   const [h = 0, m = 0] = t.split(':').map(Number);
@@ -95,7 +123,6 @@ export default function LysDagTab({ tokens, accent }: Props) {
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [items, setItems] = useState<PlanItem[] | null>(null);
   const [completed, setCompleted] = useState<Set<string>>(new Set());
-  const [xpEarned, setXpEarned] = useState(0);
   const [showFab, setShowFab] = useState(false);
   const [approving, setApproving] = useState<string | null>(null);
 
@@ -235,16 +262,8 @@ export default function LysDagTab({ tokens, accent }: Props) {
         } else {
           next.add(id);
           if (HAVEN_ENABLED && residentId) grantWaterCredit(residentId);
-          setXpEarned((xp) => xp + 5);
           if (storageMode === 'supabase') {
             void patchLysPlanItem({ action: 'complete', id, date: dateStr });
-          }
-          try {
-            const raw = localStorage.getItem('budr_xp_v1');
-            const xpData = raw ? (JSON.parse(raw) as { total: number }) : { total: 0 };
-            localStorage.setItem('budr_xp_v1', JSON.stringify({ total: xpData.total + 5 }));
-          } catch {
-            /* ignore */
           }
         }
         try {
@@ -332,7 +351,7 @@ export default function LysDagTab({ tokens, accent }: Props) {
       >
         <div className="flex items-center justify-between mb-2">
           <p className="text-lg font-semibold" style={{ color: tokens.text }}>
-            Kalender
+            Min dag
           </p>
           <button
             type="button"
@@ -427,10 +446,6 @@ export default function LysDagTab({ tokens, accent }: Props) {
                 {completedCount}/{totalCount}
               </span>
             </div>
-            <div className="flex items-center gap-3 text-sm font-bold">
-              <span>🔥 5</span>
-              {xpEarned > 0 && <span style={{ color: accent }}>⚡ +{xpEarned}</span>}
-            </div>
           </div>
         )}
       </div>
@@ -475,7 +490,7 @@ export default function LysDagTab({ tokens, accent }: Props) {
                       className="h-10 w-10 shrink-0 rounded-xl flex items-center justify-center text-xl"
                       style={{ backgroundColor: 'rgba(127,119,221,0.15)' }}
                     >
-                      {item.emoji ?? CATEGORY_EMOJI[item.category] ?? '📌'}
+                      <CategoryIcon category={item.category} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold">{item.title}</p>
@@ -522,10 +537,9 @@ export default function LysDagTab({ tokens, accent }: Props) {
               border: `1px solid ${accent}20`,
             }}
           >
-            <p className="text-5xl mb-4 leading-none select-none">📋</p>
-            <p className="text-xl font-black mb-2">Plan mangler</p>
-            <p className="text-sm leading-relaxed mb-4" style={{ color: tokens.textMuted }}>
-              Tryk + for at tilføje din første aktivitet
+            <p className="text-xl font-bold mb-2">Ingen plan endnu</p>
+            <p className="text-[15px] leading-relaxed" style={{ color: tokens.textMuted }}>
+              Tryk + for at tilføje noget selv, eller foreslå en plan til personalet herunder.
             </p>
           </div>
         )}
@@ -541,7 +555,6 @@ export default function LysDagTab({ tokens, accent }: Props) {
             <div className="space-y-1">
               {approvedItems.map((item) => {
                 const isDone = completed.has(item.id);
-                const emoji = item.emoji ?? CATEGORY_EMOJI[item.category] ?? '📌';
                 return (
                   <div key={item.id} className="flex gap-3 items-stretch">
                     {/* Time + dot column */}
@@ -573,11 +586,11 @@ export default function LysDagTab({ tokens, accent }: Props) {
                       }}
                     >
                       <div
-                        className="h-9 w-9 shrink-0 rounded-xl flex items-center justify-center text-lg"
-                        style={{ backgroundColor: `${accent}15` }}
+                        className="h-9 w-9 shrink-0 rounded-xl flex items-center justify-center"
+                        style={{ backgroundColor: tokens.accentSoft, color: tokens.accentSoftText }}
                         aria-hidden
                       >
-                        {emoji}
+                        <CategoryIcon category={item.category} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p
@@ -624,6 +637,29 @@ export default function LysDagTab({ tokens, accent }: Props) {
             </div>
           </div>
         )}
+        <Link
+          href="/park-hub/dag"
+          className="flex min-h-[56px] items-center gap-3 rounded-2xl border px-4 py-3"
+          style={{
+            borderColor: tokens.cardBorder,
+            backgroundColor: tokens.cardBg,
+            color: tokens.text,
+          }}
+        >
+          <span
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+            style={{ backgroundColor: tokens.accentSoft, color: tokens.accentSoftText }}
+            aria-hidden
+          >
+            <Send size={17} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[15px] font-semibold">Foreslå en plan til personalet</span>
+            <span className="block text-sm" style={{ color: tokens.textMuted }}>
+              Personalet ser dit forslag og godkender det
+            </span>
+          </span>
+        </Link>
       </div>
 
       {/* New item modal */}
@@ -717,7 +753,7 @@ export default function LysDagTab({ tokens, accent }: Props) {
                       color: form.category === cat.key ? accent : tokens.textMuted,
                     }}
                   >
-                    <span>{cat.emoji}</span>
+                    <CategoryIcon category={cat.key} size={14} />
                     {cat.label}
                   </button>
                 ))}

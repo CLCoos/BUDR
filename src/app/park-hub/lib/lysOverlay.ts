@@ -1,13 +1,12 @@
 export type LysFlowOverlay =
-  | 'mood'
+  | 'fortael'
+  | 'hjaelp'
   | 'flower'
-  | 'thought'
   | 'goals'
-  | 'dailyWin'
   | 'crisis'
   | 'sanser'
-  | 'kriseplan'
   | 'aac'
   | 'vagtplan'
   | 'weekly'
-  | 'mineHistorier';
+  | 'mineHistorier'
+  | 'dagbog';
