@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  administrationYmd,
+  doseOccasion,
   findNotGivenDoses,
   parseHhMmFromTimeLabel,
   scheduledHhMm,
@@ -51,6 +53,31 @@ describe('findNotGivenDoses', () => {
       now
     );
     expect(result).toEqual([]);
+  });
+
+  it('lægger en aftendosis registreret efter midnat på gårsdagen', () => {
+    // 22:45 UTC 13. okt = 00:45 dansk sommertid 14. okt
+    const afterMidnight = new Date('2026-10-13T22:45:00Z');
+    expect(administrationYmd(afterMidnight, '23:30')).toBe('2026-10-13');
+    expect(administrationYmd(afterMidnight, '20:00')).toBe('2026-10-13');
+    expect(doseOccasion(afterMidnight, 'aften', 'Aften')).toEqual({
+      ymd: '2026-10-13',
+      hhmm: '20:00',
+    });
+    // Morgen- og middagsdoser samme nat hører til den nye dag.
+    expect(administrationYmd(afterMidnight, '08:00')).toBe('2026-10-14');
+    expect(administrationYmd(afterMidnight, '12:30')).toBe('2026-10-14');
+
+    // 21:00 UTC 13. okt = 23:00 dansk: aftendosis samme aften er i dag.
+    const sameEvening = new Date('2026-10-13T21:00:00Z');
+    expect(administrationYmd(sameEvening, '20:00')).toBe('2026-10-13');
+    expect(administrationYmd(sameEvening, '23:30')).toBe('2026-10-13');
+
+    // 05:59 UTC 14. okt = 07:59 dansk: overleveringen kan stadig kvittere gårsdagens aftendosis.
+    expect(administrationYmd(new Date('2026-10-14T05:59:00Z'), '23:30')).toBe('2026-10-13');
+    // 06:00 UTC 14. okt = 08:00 dansk: morgenmedicinen er nået, næste aftendosis er i dag.
+    expect(administrationYmd(new Date('2026-10-14T06:00:00Z'), '23:30')).toBe('2026-10-14');
+    expect(administrationYmd(new Date('2026-10-14T05:30:00Z'), '08:00')).toBe('2026-10-14');
   });
 
   it('fanger gårsdagens sene aftendosis efter midnat', () => {

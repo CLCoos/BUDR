@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { copenhagenYmd } from '@/lib/copenhagenDay';
+import { doseOccasion } from '@/lib/medicationSchedule';
 
 export type MedicationAdministrationRow = {
   medication_id: string;
@@ -39,6 +40,31 @@ export function givenAtByMedicationId(rows: MedicationAdministrationRow[]): Map<
     map.set(row.medication_id, new Date(t));
   }
   return map;
+}
+
+/**
+ * Aktive kvitteringer for de doser, der er aktuelle nu. Aftendoser før kl. 8
+ * slås op på gårsdagen; øvrige doser på i dag.
+ */
+export async function fetchGivenAtByMedicationId(
+  supabase: SupabaseClient,
+  meds: { id: string; time_group: string; time_label: string }[],
+  now = new Date()
+): Promise<{ givenAt: Map<string, Date>; error: string | null }> {
+  const givenAt = new Map<string, Date>();
+  const byDate = new Map<string, string[]>();
+  for (const med of meds) {
+    const { ymd } = doseOccasion(now, med.time_group, med.time_label);
+    const ids = byDate.get(ymd) ?? [];
+    ids.push(med.id);
+    byDate.set(ymd, ids);
+  }
+  for (const [ymd, ids] of byDate) {
+    const { rows, error } = await fetchMedicationAdministrationsForDate(supabase, ids, ymd);
+    if (error) return { givenAt: new Map(), error };
+    for (const [id, at] of givenAtByMedicationId(rows)) givenAt.set(id, at);
+  }
+  return { givenAt, error: null };
 }
 
 export async function fetchMedicationAdministrationsForDate(

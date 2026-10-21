@@ -7,11 +7,11 @@ import { createClient } from '@/lib/supabase/client';
 import { logPortalAudit } from '@/lib/auditClient';
 import { copenhagenYmd } from '@/lib/copenhagenDay';
 import {
-  fetchMedicationAdministrationsForDate,
-  givenAtByMedicationId,
+  fetchGivenAtByMedicationId,
   markMedicationGiven,
   unmarkMedicationGiven,
 } from '@/lib/medicationAdministration';
+import { doseOccasion } from '@/lib/medicationSchedule';
 import {
   MEDICATION_TIME_SLOTS,
   formatSlotLabelDa,
@@ -46,14 +46,16 @@ const GROUP_LABELS: Record<MedDefinition['time_group'], string> = {
 
 const GROUPS: MedDefinition['time_group'][] = ['morgen', 'middag', 'aften', 'behoev'];
 
-function recordsFromAdministrations(
-  rows: { medication_id: string; given_at: string }[]
-): Record<string, GivenRecord> {
+function recordsFromGivenAt(givenAt: Map<string, Date>): Record<string, GivenRecord> {
   const next: Record<string, GivenRecord> = {};
-  for (const [medicationId, givenAt] of givenAtByMedicationId(rows)) {
-    next[medicationId] = { given: true, givenAt: givenAt.toISOString() };
+  for (const [medicationId, at] of givenAt) {
+    next[medicationId] = { given: true, givenAt: at.toISOString() };
   }
   return next;
+}
+
+function doseYmd(med: { time_group: string; time_label: string }, now = new Date()): string {
+  return doseOccasion(now, med.time_group, med.time_label).ymd;
 }
 
 // ── Component ────────────────────────────────────────────────
@@ -73,10 +75,7 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
   const [newTime, setNewTime] = useState(MEDICATION_TIME_SLOTS[0]!.time);
   const [savingReminder, setSavingReminder] = useState(false);
 
-  const medicationIdsKey = medications.map((m) => m.id).join(',');
-
   useEffect(() => {
-    const ids = medicationIdsKey ? medicationIdsKey.split(',') : [];
     let cancelled = false;
     void (async () => {
       const supabase = createClient();
@@ -84,13 +83,17 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
         if (!cancelled) setGiven({});
         return;
       }
-      const { rows } = await fetchMedicationAdministrationsForDate(supabase, ids, copenhagenYmd());
-      if (!cancelled) setGiven(recordsFromAdministrations(rows));
+      const fixed = medications.filter((m) => !isPrnMedication(m));
+      const { givenAt } = await fetchGivenAtByMedicationId(
+        supabase,
+        fixed.map((m) => ({ id: m.id, time_group: m.time_group, time_label: m.time_label }))
+      );
+      if (!cancelled) setGiven(recordsFromGivenAt(givenAt));
     })();
     return () => {
       cancelled = true;
     };
-  }, [residentId, medicationIdsKey]);
+  }, [residentId, medications]);
 
   useEffect(() => {
     let cancelled = false;
@@ -229,9 +232,11 @@ export default function ResidentMedicinTab({ residentId, medications }: Props) {
       return;
     }
     const currentlyGiven = Boolean(given[medId]?.given);
+    const med = medications.find((m) => m.id === medId);
+    const scheduledDate = med ? doseYmd(med) : copenhagenYmd();
     const result = currentlyGiven
-      ? await unmarkMedicationGiven({ supabase, medicationId: medId })
-      : await markMedicationGiven({ supabase, residentId, medicationId: medId });
+      ? await unmarkMedicationGiven({ supabase, medicationId: medId, scheduledDate })
+      : await markMedicationGiven({ supabase, residentId, medicationId: medId, scheduledDate });
     if (!result.ok) {
       toast.error('Kunne ikke gemme medicinstatus');
       return;
