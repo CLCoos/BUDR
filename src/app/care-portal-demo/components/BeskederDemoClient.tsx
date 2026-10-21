@@ -231,7 +231,7 @@ export default function BeskederDemoClient() {
         <div>
           <h1
             className="text-xl font-semibold"
-            style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--cp-text)' }}
+            style={{ fontFamily: 'var(--cp-font)', color: 'var(--cp-text)' }}
           >
             Beskeder
           </h1>
@@ -353,8 +353,12 @@ export default function BeskederDemoClient() {
                       key={m.id}
                       className="rounded-lg border px-3 py-2"
                       style={{
-                        borderColor: m.mine ? 'rgba(45,212,160,0.35)' : 'var(--cp-border)',
-                        backgroundColor: m.mine ? 'rgba(45,212,160,0.08)' : 'var(--cp-bg3)',
+                        borderColor: m.mine
+                          ? 'color-mix(in srgb, var(--cp-green) 35%, transparent)'
+                          : 'var(--cp-border)',
+                        backgroundColor: m.mine
+                          ? 'color-mix(in srgb, var(--cp-green) 8%, transparent)'
+                          : 'var(--cp-bg3)',
                       }}
                     >
                       <div

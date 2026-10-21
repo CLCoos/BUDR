@@ -4,6 +4,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { copenhagenLocalToDate, copenhagenYmd } from '@/lib/copenhagenDay';
+import { appendHandoverLine, handoverShiftDate, handoverShiftNow } from '@/lib/handoverNotes';
 import { buildPlannerInsertRow } from '@/lib/plannerEntries';
 import { buildStaffTaskInsertRow, initialsFromDisplayName } from '@/lib/staffTasks';
 import type { AssistantAction } from './actions';
@@ -22,7 +23,7 @@ export type AppliedResult = {
   action_id: string;
   type: AssistantAction['type'];
   ok: boolean;
-  table?: 'journal_entries' | 'care_staff_tasks' | 'care_planner_entries';
+  table?: 'journal_entries' | 'care_staff_tasks' | 'care_planner_entries' | 'care_handover_notes';
   record_id?: string;
   error?: string;
 };
@@ -90,6 +91,42 @@ async function applyOne(ctx: ApplyContext, a: AssistantAction): Promise<AppliedR
       return r.id
         ? { ...base, ok: true, table: 'care_planner_entries', record_id: r.id }
         : { ...base, ok: false, error: r.error };
+    }
+    case 'handover': {
+      // Én række pr. borger, dag og vagt: linjen lægges under det, kollegerne allerede har skrevet.
+      const shiftDate = handoverShiftDate();
+      const shiftLabel = handoverShiftNow();
+      const { data: existing, error: readError } = await ctx.supabase
+        .from('care_handover_notes')
+        .select('body')
+        .eq('resident_id', ctx.residentId)
+        .eq('shift_date', shiftDate)
+        .eq('shift_label', shiftLabel)
+        .maybeSingle();
+      if (readError) return { ...base, ok: false, error: readError.message };
+      const { data, error } = await ctx.supabase
+        .from('care_handover_notes')
+        .upsert(
+          {
+            resident_id: ctx.residentId,
+            org_id: ctx.orgId,
+            staff_id: ctx.staffId,
+            shift_label: shiftLabel,
+            shift_date: shiftDate,
+            body: appendHandoverLine((existing as { body?: string } | null)?.body, a.text),
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'resident_id,shift_date,shift_label' }
+        )
+        .select('id')
+        .single();
+      if (error) return { ...base, ok: false, error: error.message };
+      return {
+        ...base,
+        ok: true,
+        table: 'care_handover_notes',
+        record_id: (data as { id: string }).id,
+      };
     }
   }
 }

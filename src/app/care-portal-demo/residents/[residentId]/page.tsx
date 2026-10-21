@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { careDemoProfileById } from '@/lib/careDemoResidents';
-import ResidentDemo360Client from './ResidentDemo360Client';
+import ResidentForloebClient from './ResidentForloebClient';
 
 function Loading() {
   return (
@@ -21,7 +21,7 @@ export default async function CarePortalDemoResidentPage({
 
   return (
     <Suspense fallback={<Loading />}>
-      <ResidentDemo360Client residentId={residentId} />
+      <ResidentForloebClient residentId={residentId} />
     </Suspense>
   );
 }

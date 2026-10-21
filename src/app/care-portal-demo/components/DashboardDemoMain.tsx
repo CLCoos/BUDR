@@ -4,7 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { BookOpen, RefreshCw, Sparkles } from 'lucide-react';
+import { ChevronDown, Mic, MoreHorizontal } from 'lucide-react';
+import { useDemoFortael } from '@/components/demo/DemoFortael';
 import AlertPanel from '@/app/care-portal-dashboard/components/AlertPanel';
 import StatCards from '@/app/care-portal-dashboard/components/StatCards';
 import MedicationWidget from '@/app/care-portal-dashboard/components/MedicationWidget';
@@ -13,12 +14,20 @@ import KalenderWidget from '@/app/care-portal-dashboard/components/KalenderWidge
 import OnCallStaffWidget from '@/app/care-portal-dashboard/components/OnCallStaffWidget';
 import OpgaveWidget from '@/app/care-portal-dashboard/components/OpgaveWidget';
 import ResidentListDemo from '@/app/care-portal-dashboard/components/ResidentListDemo';
-import DemoActionCards from './DemoActionCards';
-import DemoWhyBox from '@/components/demo/DemoWhyBox';
+import DemoAssistant from './DemoAssistant';
+import DemoSidePanels from './DemoSidePanels';
 import {
-  CARE_PORTAL_DEMO_DISCLAIMER_SHORT,
-  CARE_PORTAL_DEMO_FACILITY_NAME,
-} from '@/lib/carePortalDemoBranding';
+  DemoGaaHjem,
+  DemoMoedInd,
+  DemoMomentSwitch,
+  DemoNextTask,
+  DemoRoleSwitch,
+  DemoShiftChecklist,
+  type ShiftMoment,
+} from './DemoShiftPlan';
+import { demoRole, readDemoRole, saveDemoRole, type DemoRole } from './demoRoles';
+import DemoWhyBox from '@/components/demo/DemoWhyBox';
+import { CARE_PORTAL_DEMO_FACILITY_NAME } from '@/lib/carePortalDemoBranding';
 import { useDemoGuidedTour } from '@/components/demo/DemoGuidedTourProvider';
 
 const OverrapportModal = dynamic(
@@ -42,6 +51,32 @@ const JournalAiDemoModal = dynamic(
 );
 
 const DEMO_INDSATS_KEY = 'budr_indsats_records_v1';
+
+function demoGreeting(now: Date): string {
+  const h = Number(
+    new Intl.DateTimeFormat('da-DK', {
+      hour: '2-digit',
+      hour12: false,
+      timeZone: 'Europe/Copenhagen',
+    })
+      .format(now)
+      .slice(0, 2)
+  );
+  if (h >= 5 && h < 10) return 'God morgen';
+  if (h >= 10 && h < 17) return 'God dag';
+  if (h >= 17 && h < 23) return 'God aften';
+  return 'God nat';
+}
+
+function demoTodayLabel(now: Date): string {
+  const s = new Intl.DateTimeFormat('da-DK', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    timeZone: 'Europe/Copenhagen',
+  }).format(now);
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 
 function formatDemoLastUpdated(): string {
   return new Date()
@@ -130,47 +165,78 @@ function seedDemoIndsatsIfEmpty() {
   }
 }
 
-function ToolbarButton({
-  children,
-  onClick,
-  variant = 'default',
-}: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  variant?: 'default' | 'danger';
-}) {
-  const base =
-    variant === 'danger'
-      ? {
-          border: '1px solid rgba(245,101,101,0.35)',
-          color: 'var(--cp-red)',
-          backgroundColor: 'transparent',
-        }
-      : {
-          border: '1px solid var(--cp-border)',
-          color: 'var(--cp-muted)',
-          backgroundColor: 'rgba(30, 37, 53, 0.5)',
-        };
+function FortaelButton() {
+  const { openFortael } = useDemoFortael();
   return (
     <button
       type="button"
-      onClick={onClick}
-      className="flex items-center gap-1.5 rounded-[10px] px-3 py-2 text-xs font-medium transition-all"
-      style={base}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--cp-bg3)';
-        (e.currentTarget as HTMLElement).style.color =
-          variant === 'danger' ? 'var(--cp-red)' : 'var(--cp-text)';
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLElement).style.backgroundColor =
-          variant === 'danger' ? 'transparent' : 'rgba(30, 37, 53, 0.5)';
-        (e.currentTarget as HTMLElement).style.color =
-          variant === 'danger' ? 'var(--cp-red)' : 'var(--cp-muted)';
-      }}
+      onClick={openFortael}
+      className="hidden min-h-[44px] items-center gap-2 whitespace-nowrap rounded-xl px-5 text-sm font-semibold transition-opacity hover:opacity-90 sm:inline-flex"
+      style={{ backgroundColor: 'var(--cp-green)', color: 'var(--cp-on-green)' }}
     >
-      {children}
+      <Mic size={16} aria-hidden />
+      Fortæl
     </button>
+  );
+}
+
+function DemoMoreMenu({ items }: { items: { label: string; onSelect: () => void }[] }) {
+  const [open, setOpen] = useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    document.addEventListener('mousedown', close);
+    document.addEventListener('keydown', esc);
+    return () => {
+      document.removeEventListener('mousedown', close);
+      document.removeEventListener('keydown', esc);
+    };
+  }, [open]);
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className="inline-flex min-h-[44px] items-center gap-2 whitespace-nowrap rounded-xl border px-4 text-sm font-medium transition-colors hover:bg-[var(--cp-bg3)]"
+        style={{
+          borderColor: 'var(--cp-border2)',
+          backgroundColor: 'var(--cp-bg2)',
+          color: 'var(--cp-text)',
+        }}
+      >
+        <MoreHorizontal size={16} aria-hidden />
+        Rapporter
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 top-[calc(100%+6px)] z-50 w-[240px] overflow-hidden rounded-xl border py-1 shadow-xl max-sm:left-0 max-sm:right-auto"
+          style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
+        >
+          {items.map((it) => (
+            <button
+              key={it.label}
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                it.onSelect();
+              }}
+              className="flex min-h-[44px] w-full items-center px-4 text-left text-sm transition-colors hover:bg-[var(--cp-bg3)]"
+              style={{ color: 'var(--cp-text)' }}
+            >
+              {it.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -182,11 +248,23 @@ export default function DashboardDemoMain() {
   const openOverrapport = searchParams.get('openOverrapport');
 
   const [lastUpdated, setLastUpdated] = useState(() => formatDemoLastUpdated());
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => setNow(new Date()), []);
   const [overrapportOpen, setOverrapportOpen] = useState(false);
   const [overrapportPanelOpen, setOverrapportPanelOpen] = useState(false);
   const [indsatsOpen, setIndsatsOpen] = useState(false);
   const [tilsynsrapportOpen, setTilsynsrapportOpen] = useState(false);
   const [journalOpen, setJournalOpen] = useState(false);
+  const [role, setRole] = useState<DemoRole>('medarbejder');
+  useEffect(() => setRole(readDemoRole()), []);
+  const profile = demoRole(role);
+  const changeRole = (r: DemoRole) => {
+    setRole(r);
+    saveDemoRole(r);
+  };
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [moment, setMoment] = useState<ShiftMoment>('nu');
+  const { openFortael } = useDemoFortael();
 
   useEffect(() => {
     seedDemoIndsatsIfEmpty();
@@ -208,8 +286,14 @@ export default function DashboardDemoMain() {
   }, [tab]);
 
   useEffect(() => {
-    if (tab !== 'planner' && tab !== 'alerts') return;
-    const id = tab === 'planner' ? 'budr-planlaegger' : 'budr-advarsler';
+    if (tab !== 'planner' && tab !== 'alerts' && tab !== 'medicin') return;
+    setMoreOpen(true);
+    const id =
+      tab === 'planner'
+        ? 'budr-planlaegger'
+        : tab === 'medicin'
+          ? 'demo-medicin'
+          : 'budr-advarsler';
     const frame = requestAnimationFrame(() => {
       document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
@@ -232,148 +316,165 @@ export default function DashboardDemoMain() {
   return (
     <div
       id="demo-tour-dashboard"
-      className="mx-auto max-w-[1600px] px-4 pb-28 pt-8 sm:px-6 lg:px-10"
+      className="mx-auto max-w-[1320px] px-4 pb-28 pt-6 sm:px-6 sm:pt-8 lg:px-8"
     >
-      <header className="mb-8 flex flex-col gap-6 lg:mb-10 lg:flex-row lg:items-end lg:justify-between">
-        <div className="max-w-xl">
-          <p
-            className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em]"
-            style={{ color: 'var(--cp-muted)' }}
-          >
-            Care Portal · DEMO · {CARE_PORTAL_DEMO_FACILITY_NAME}
+      <header className="mb-5 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex min-w-0 flex-col gap-1">
+          <p className="text-[13px]" style={{ color: 'var(--cp-muted)' }}>
+            {now ? `${demoTodayLabel(now)} · ` : ''}
+            {CARE_PORTAL_DEMO_FACILITY_NAME}
+            <span className="hidden sm:inline">
+              {' '}
+              · Opdateret {lastUpdated.split('·')[1]?.trim() ?? lastUpdated}
+            </span>
           </p>
           <h1
-            className="text-[1.75rem] font-normal leading-tight sm:text-[2rem]"
+            className="m-0"
             style={{
-              fontFamily: "'DM Serif Display', serif",
+              fontSize: 'clamp(26px, 3.2vw, 34px)',
+              fontWeight: 600,
+              letterSpacing: '-0.02em',
+              lineHeight: 1.15,
               color: 'var(--cp-text)',
             }}
           >
-            Dagsoverblik
+            {now ? demoGreeting(now) : 'Velkommen'}, {profile.person}.
           </h1>
-          <p className="mt-2 text-sm leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
-            Dagvagt · Lars N. — samme overblik som efter login, med simuleret data.{' '}
-            <span className="font-medium" style={{ color: 'var(--cp-amber)' }}>
-              {CARE_PORTAL_DEMO_DISCLAIMER_SHORT}
-            </span>
+          <p className="max-w-[56ch] text-[15px]" style={{ color: 'var(--cp-muted)' }}>
+            {profile.intro}
           </p>
         </div>
 
-        <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-          <div
-            className="inline-flex items-center gap-2 self-start rounded-full px-3 py-1.5 sm:self-auto"
-            style={{
-              backgroundColor: 'var(--cp-green-dim)',
-              border: '1px solid rgba(45,212,160,0.22)',
-            }}
-          >
-            <span
-              className="h-1.5 w-1.5 rounded-full"
-              style={{
-                backgroundColor: 'var(--cp-green)',
-                boxShadow: '0 0 8px var(--cp-green)',
-                animation: 'pulse 2s infinite',
-              }}
-            />
-            <span className="text-[11px] font-medium" style={{ color: 'var(--cp-green)' }}>
-              Opdateret {lastUpdated}
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={startGuidedTour}
-              className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-opacity hover:opacity-90"
-              style={{
-                borderColor: 'rgba(139, 132, 232, 0.45)',
-                color: '#c4bffc',
-                backgroundColor: 'rgba(139, 132, 232, 0.12)',
-              }}
-            >
-              <Sparkles size={14} aria-hidden />
-              Guidet tour
-            </button>
-            <Link
-              href="/resident-demo"
-              className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors hover:opacity-90"
-              style={{
-                borderColor: 'rgba(139, 132, 232, 0.45)',
-                color: '#c4bffc',
-                backgroundColor: 'rgba(139, 132, 232, 0.12)',
-              }}
-            >
-              <Sparkles size={14} aria-hidden />
-              Borger-app
-            </Link>
-            <ToolbarButton onClick={() => setOverrapportOpen(true)}>Overrapport</ToolbarButton>
-            <ToolbarButton onClick={() => setIndsatsOpen(true)} variant="danger">
-              Indsatsdok.
-            </ToolbarButton>
-            <ToolbarButton onClick={() => setTilsynsrapportOpen(true)}>
-              Tilsynsrapport
-            </ToolbarButton>
-            <ToolbarButton onClick={() => window.location.reload()}>
-              <RefreshCw size={13} aria-hidden />
-              Opdater
-            </ToolbarButton>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <DemoRoleSwitch role={role} onChange={changeRole} />
+          <div className="flex items-center gap-2">
+            {role !== 'vikar' && (
+              <div className="hidden sm:block">
+                <DemoMoreMenu
+                  items={[
+                    { label: 'Overrapport', onSelect: () => setOverrapportOpen(true) },
+                    { label: 'Indsatsdokumentation', onSelect: () => setIndsatsOpen(true) },
+                    { label: 'Tilsynsrapport', onSelect: () => setTilsynsrapportOpen(true) },
+                    { label: 'Guidet tour (5 min)', onSelect: startGuidedTour },
+                  ]}
+                />
+              </div>
+            )}
+            <FortaelButton />
           </div>
         </div>
       </header>
 
-      <div id="demo-tour-handlinger" className="mb-6 space-y-4">
-        <DemoActionCards onOpenOverrapport={() => setOverrapportPanelOpen(true)} />
+      <div className="mb-6 flex flex-col gap-6">
+        <DemoMomentSwitch moment={moment} onChange={setMoment} />
+
+        {moment === 'moed' && <DemoMoedInd onReady={() => setMoment('nu')} />}
+
+        {moment === 'nu' && (
+          <>
+            <DemoNextTask profile={profile} />
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
+              <DemoShiftChecklist profile={profile} />
+              <div className="min-w-0 [&>section]:mb-0">
+                <DemoAssistant role={role} />
+              </div>
+            </div>
+          </>
+        )}
+
+        {moment === 'hjem' && <DemoGaaHjem person={profile.person} onFortael={openFortael} />}
+      </div>
+
+      {role === 'leder' && (
+        <>
+          <h2
+            className="mb-3 mt-10 text-[13px] font-semibold uppercase tracking-[0.08em]"
+            style={{ color: 'var(--cp-muted)' }}
+          >
+            Bostedet lige nu
+          </h2>
+          <div className="mb-6">
+            <StatCards variant="demo" />
+          </div>
+          <div className="mb-6">
+            <DemoSidePanels />
+          </div>
+        </>
+      )}
+
+      <details
+        className="group mb-6 rounded-2xl border"
+        style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-card-bg)' }}
+        open={moreOpen}
+        onToggle={(e) => setMoreOpen((e.currentTarget as HTMLDetailsElement).open)}
+      >
+        <summary
+          className="flex min-h-[56px] cursor-pointer list-none items-center justify-between gap-3 px-5 text-[15px] font-semibold [&::-webkit-details-marker]:hidden"
+          style={{ color: 'var(--cp-text)' }}
+        >
+          <span>
+            Alt overblik
+            <span className="ml-2 text-xs font-normal" style={{ color: 'var(--cp-muted)' }}>
+              Medicin, kalender, opgaver, advarsler og beboere
+            </span>
+          </span>
+          <ChevronDown
+            size={18}
+            className="shrink-0 transition-transform group-open:rotate-180"
+            style={{ color: 'var(--cp-muted)' }}
+            aria-hidden
+          />
+        </summary>
+        <div className="border-t p-4 sm:p-5" style={{ borderColor: 'var(--cp-border)' }}>
+          <div className="mb-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
+            <div id="demo-medicin" className="min-w-0">
+              <MedicationWidget demoMode />
+            </div>
+            <BekymringsnotatWidget demoMode />
+            <KalenderWidget variant="demo" />
+            <OnCallStaffWidget demoMode />
+            <OpgaveWidget demoMode />
+          </div>
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.45fr)] xl:gap-8">
+            <AlertPanel variant="demo" />
+            <div id="demo-tour-beboerliste">
+              <ResidentListDemo />
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <DemoWhyBox
           title="Hvorfor AI-udkast og godkendelse?"
           storageKey="budr_demo_why_ai_godkendelse"
         >
           Andre systemer kan lade AI skrive direkte ind i journalen. I BUDR er AI et{' '}
-          <strong style={{ color: 'var(--cp-text)' }}>hjælpeværktøj</strong>: udkast og forslag —
-          intet går ud til teamet som endelig journal før personalet godkender. Fagligt ansvar
+          <strong style={{ color: 'var(--cp-text)' }}>hjælpeværktøj</strong>: udkast og forslag.
+          Intet går ud til teamet som endelig journal, før personalet godkender. Fagligt ansvar
           ligger hos jer, ikke i modellen.
         </DemoWhyBox>
-      </div>
-
-      <div className="mb-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
-        <MedicationWidget demoMode />
-        <BekymringsnotatWidget demoMode />
-        <KalenderWidget variant="demo" />
-        <OnCallStaffWidget demoMode />
-        <OpgaveWidget demoMode />
-      </div>
-
-      <div className="mb-6">
-        <StatCards variant="demo" />
-      </div>
-
-      <div className="mb-4">
         <DemoWhyBox
           title="Hvorfor advarsler og krisehåndtering?"
           storageKey="budr_demo_why_advarsler"
         >
           Varsler samler signaler (humør, beskeder, mønstre), så vagten kan prioritere. Kriseflow
           understøtter <strong style={{ color: 'var(--cp-text)' }}>strukturerede trin</strong> og
-          dokumentation — det erstatter ikke 112, lægevurdering eller jeres egne procedurer.
+          dokumentation. Det erstatter ikke 112, lægevurdering eller jeres egne procedurer.
         </DemoWhyBox>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.45fr)] xl:gap-8">
-        <AlertPanel variant="demo" />
-        <div id="demo-tour-beboerliste">
-          <ResidentListDemo />
-        </div>
       </div>
 
       <section
         id="demo-tour-cta"
         className="mt-14 rounded-2xl border p-6 sm:p-8"
         style={{
-          borderColor: 'rgba(45,212,160,0.28)',
+          borderColor: 'color-mix(in srgb, var(--cp-green) 28%, transparent)',
           backgroundColor: 'var(--cp-green-dim)',
         }}
       >
         <h2
           className="text-lg font-normal sm:text-xl"
-          style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--cp-text)' }}
+          style={{ fontFamily: 'var(--cp-font)', color: 'var(--cp-text)' }}
         >
           Vil du se BUDR med jeres egne data?
         </h2>
@@ -386,8 +487,8 @@ export default function DashboardDemoMain() {
             href="/institutioner#kontakt"
             className="inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-95"
             style={{
-              background: 'linear-gradient(135deg, #2dd4a0 0%, #0d9488 100%)',
-              boxShadow: '0 2px 14px rgba(45,212,160,0.35)',
+              background: 'var(--cp-green)',
+              boxShadow: '0 2px 14px color-mix(in srgb, var(--cp-green) 35%, transparent)',
             }}
           >
             Kontakt BUDR
@@ -401,21 +502,6 @@ export default function DashboardDemoMain() {
           </Link>
         </div>
       </section>
-
-      <button
-        type="button"
-        onClick={() => setJournalOpen(true)}
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full px-5 py-3.5 text-sm font-semibold text-white transition-all duration-200 hover:scale-[1.03] hover:brightness-110 active:scale-[0.98]"
-        style={{
-          background: 'linear-gradient(135deg, #8b84e8 0%, #5E56C0 55%, #4c3d91 100%)',
-          boxShadow: '0 8px 32px rgba(94, 86, 192, 0.45), 0 0 0 1px rgba(255,255,255,0.08)',
-        }}
-        aria-label="Åbn journaludkast med AI (demo)"
-      >
-        <BookOpen className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
-        <span className="hidden sm:inline">Journal · AI-demo</span>
-        <span className="sm:hidden">Journal</span>
-      </button>
 
       <JournalAiDemoModal open={journalOpen} onClose={closeJournal} />
       <OverrapportModal

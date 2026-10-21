@@ -8,6 +8,8 @@ import KalenderWidget from './KalenderWidget';
 import OpgaveWidget from './OpgaveWidget';
 import DocumentInboxWidget from './DocumentInboxWidget';
 import AssistantWidget from '@/components/assistant/AssistantWidget';
+import VagtPanel from './VagtPanel';
+import TilsynPanel from './TilsynPanel';
 import OnCallStaffWidget from './OnCallStaffWidget';
 import ResidentList from './ResidentList';
 import StatCards from './StatCards';
@@ -35,6 +37,8 @@ type DashboardClientProps = {
   medicationWidget?: React.ReactNode;
   mode?: 'dashboard' | 'single';
   singleWidget?: DashboardWidgetKey;
+  /** Leder ser tilsynsoverblikket øverst. */
+  isLeader?: boolean;
 };
 
 type DashboardWidgetKey =
@@ -152,6 +156,7 @@ function DashboardClientInner({
   medicationWidget,
   mode = 'dashboard',
   singleWidget,
+  isLeader = false,
 }: DashboardClientProps) {
   const { department } = useCarePortalDepartment();
   const authState = useAuthenticatedUser();
@@ -599,74 +604,102 @@ function DashboardClientInner({
         </div>
       </div>
 
-      {/* ── Nøgletal først, så assistentens forslag ─────────── */}
-      <div className="mb-6">
-        <StatCards />
-      </div>
-
-      <AssistantWidget />
-
       <OnboardingChecklist />
 
-      <ActionCards onOpenOverrapport={() => setOverrapportOpen(true)} />
+      {/* ── Vagten: Mød ind, Nu, Gå hjem ─────────────────────── */}
+      {isLeader && <TilsynPanel />}
 
-      {/* ── Zone 2: Hero grid (3 cols → 2 → 1) ───────────────
-          md: medicin lå i én kolonne (halv bredde) — fuld række md, min. 280px tredje spor lg+. */}
-      <div
-        className="mb-5 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(280px,1fr)]"
-        style={{ alignItems: 'start' }}
+      <VagtPanel assistant={<AssistantWidget hideIntake />} />
+
+      {/* ── Alt overblik: de klassiske moduler, foldet sammen ── */}
+      <details
+        id="alt-overblik"
+        open={tab === 'alerts' || tab === 'planner' || tab === 'medicin' ? true : undefined}
+        className="group rounded-2xl border"
+        style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
       >
-        <div className="min-w-0">
-          <Zone2Card accent={alertZoneAccent}>
-            <AlertPanel />
-          </Zone2Card>
-        </div>
-
-        <div className="min-w-0">
-          <Zone2Card accent={residentsZoneAccent}>
-            <ResidentList compact onNewJournal={openJournalForResident} />
-          </Zone2Card>
-        </div>
-
-        <div className="min-w-0 md:col-span-2 lg:col-span-1">
-          <div className="overflow-hidden rounded-xl">{medicationWidget}</div>
-        </div>
-      </div>
-
-      <DocumentInboxWidget />
-
-      {/* ── Zone 3: Mid grid (2 cols → 1) ────────────────────── */}
-      <div className="mb-5 grid grid-cols-1 gap-5 md:grid-cols-2">
-        <KalenderWidget />
-        <OnCallStaffWidget />
-      </div>
-
-      {/* ── Zone 4: Bottom — collapsed secondary sections ─────── */}
-      <div className="space-y-3">
-        <DashboardModule
-          id="dash-live-journal"
-          title="Journal"
-          subtitle="7 dages notater og godkendelse"
+        <summary
+          className="flex min-h-[56px] cursor-pointer list-none items-center gap-2 px-5 text-[15px] font-semibold"
+          style={{ color: 'var(--cp-text)' }}
         >
-          <JournalOverblikWidget />
-        </DashboardModule>
+          Alt overblik
+          <span className="text-sm font-normal" style={{ color: 'var(--cp-muted)' }}>
+            Nøgletal, advarsler, borgere, medicin, kalender og journal
+          </span>
+          <span
+            className="ml-auto transition-transform group-open:rotate-180"
+            style={{ color: 'var(--cp-muted)' }}
+            aria-hidden
+          >
+            ▾
+          </span>
+        </summary>
+        <div className="px-3 pb-4 sm:px-5">
+          <div className="mb-6">
+            <StatCards />
+          </div>
 
-        <DashboardModule
-          id="dash-live-bek"
-          title="Bekymringsnotater"
-          subtitle="Hurtige observationer · synligt på 360°"
-        >
-          <BekymringsnotatWidget />
-        </DashboardModule>
+          <ActionCards onOpenOverrapport={() => setOverrapportOpen(true)} />
 
-        <DashboardModule
-          id="dash-live-opgaver"
-          title="Opgaver"
-          subtitle="Åbne og igangværende opgaver"
-        >
-          <OpgaveWidget />
-        </DashboardModule>
-      </div>
+          {/* ── Zone 2: Hero grid (3 cols → 2 → 1) ───────────────
+          md: medicin lå i én kolonne (halv bredde) — fuld række md, min. 280px tredje spor lg+. */}
+          <div
+            className="mb-5 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(280px,1fr)]"
+            style={{ alignItems: 'start' }}
+          >
+            <div className="min-w-0">
+              <Zone2Card accent={alertZoneAccent}>
+                <AlertPanel />
+              </Zone2Card>
+            </div>
+
+            <div className="min-w-0">
+              <Zone2Card accent={residentsZoneAccent}>
+                <ResidentList compact onNewJournal={openJournalForResident} />
+              </Zone2Card>
+            </div>
+
+            <div className="min-w-0 md:col-span-2 lg:col-span-1">
+              <div className="overflow-hidden rounded-xl">{medicationWidget}</div>
+            </div>
+          </div>
+
+          <DocumentInboxWidget />
+
+          {/* ── Zone 3: Mid grid (2 cols → 1) ────────────────────── */}
+          <div className="mb-5 grid grid-cols-1 gap-5 md:grid-cols-2">
+            <KalenderWidget />
+            <OnCallStaffWidget />
+          </div>
+
+          {/* ── Zone 4: Bottom — collapsed secondary sections ─────── */}
+          <div className="space-y-3">
+            <DashboardModule
+              id="dash-live-journal"
+              title="Journal"
+              subtitle="7 dages notater og godkendelse"
+            >
+              <JournalOverblikWidget />
+            </DashboardModule>
+
+            <DashboardModule
+              id="dash-live-bek"
+              title="Bekymringsnotater"
+              subtitle="Hurtige observationer · synligt på 360°"
+            >
+              <BekymringsnotatWidget />
+            </DashboardModule>
+
+            <DashboardModule
+              id="dash-live-opgaver"
+              title="Opgaver"
+              subtitle="Åbne og igangværende opgaver"
+            >
+              <OpgaveWidget />
+            </DashboardModule>
+          </div>
+        </div>
+      </details>
 
       {/* ── Modals ─────────────────────────────────────────────── */}
       <HurtigJournalModal
@@ -689,6 +722,7 @@ export default function DashboardClient({
   medicationWidget,
   mode = 'dashboard',
   singleWidget,
+  isLeader = false,
 }: DashboardClientProps) {
   return (
     <Suspense
@@ -705,6 +739,7 @@ export default function DashboardClient({
         medicationWidget={medicationWidget}
         mode={mode}
         singleWidget={singleWidget}
+        isLeader={isLeader}
       />
     </Suspense>
   );

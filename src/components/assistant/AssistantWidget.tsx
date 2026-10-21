@@ -75,6 +75,7 @@ function savedMessage(results: AppliedResult[]): string {
       ? 'opgave'
       : null,
     ok.filter((r) => r.type === 'calendar').length > 0 ? 'kalenderaftale' : null,
+    ok.filter((r) => r.type === 'handover').length > 0 ? 'overlevering' : null,
   ].filter(Boolean);
   return `Gemt: ${parts.join(', ')}`;
 }
@@ -84,7 +85,12 @@ function savedMessage(results: AppliedResult[]): string {
  * medarbejderen fortælle med almindelige ord, hvad der er sket. Assistenten foreslår så, hvad
  * der skal skrives hvor. Intet gemmes uden et tryk på "Gem".
  */
-export default function AssistantWidget() {
+export default function AssistantWidget({
+  hideIntake = false,
+}: {
+  /** Skjul fritekstfeltet, når «Fortæl» findes i menuen. Svar på et forslag virker stadig. */
+  hideIntake?: boolean;
+} = {}) {
   const [feed, setFeed] = useState<Feed | null>(null);
   const [text, setText] = useState('');
   const [residentId, setResidentId] = useState('');
@@ -191,6 +197,8 @@ export default function AssistantWidget() {
     feed?.residents.find((r) => r.id === id)?.name ?? 'Borger';
 
   if (!feed || (!feed.canWrite && feed.suggestions.length === 0)) return null;
+  if (hideIntake && feed.suggestions.length === 0 && !review && !done) return null;
+  const showIntake = feed.canWrite && (!hideIntake || replyTo !== null);
 
   const muted = { color: 'var(--cp-muted)' };
 
@@ -373,7 +381,7 @@ export default function AssistantWidget() {
               />
             )}
           </div>
-        ) : feed.canWrite ? (
+        ) : showIntake ? (
           <form
             onSubmit={(e) => {
               e.preventDefault();

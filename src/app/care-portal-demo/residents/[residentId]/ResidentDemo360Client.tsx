@@ -111,9 +111,9 @@ function trafficStyle(t: TrafficDemo): { bg: string; label: string; border: stri
     };
   if (t === 'groen')
     return {
-      bg: 'rgba(45,212,160,0.1)',
+      bg: 'color-mix(in srgb, var(--cp-green) 10%, transparent)',
       label: 'Grøn',
-      border: 'rgba(45,212,160,0.35)',
+      border: 'color-mix(in srgb, var(--cp-green) 35%, transparent)',
     };
   return {
     bg: 'var(--cp-bg3)',
@@ -136,8 +136,8 @@ function unifiedTileSurface(tone: UnifiedStatusTone): React.CSSProperties {
       };
     case 'ok':
       return {
-        borderColor: 'rgba(45,212,160,0.32)',
-        backgroundColor: 'rgba(45,212,160,0.07)',
+        borderColor: 'color-mix(in srgb, var(--cp-green) 32%, transparent)',
+        backgroundColor: 'color-mix(in srgb, var(--cp-green) 7%, transparent)',
       };
     default:
       return {
@@ -318,12 +318,13 @@ export default function ResidentDemo360Client({
             borderColor: 'var(--cp-border)',
             background:
               'linear-gradient(145deg, var(--cp-bg2) 0%, rgba(15,23,42,0.5) 45%, var(--cp-bg2) 100%)',
-            boxShadow: '0 0 0 1px rgba(45,212,160,0.06), 0 24px 48px rgba(0,0,0,0.2)',
+            boxShadow:
+              '0 0 0 1px color-mix(in srgb, var(--cp-green) 6%, transparent), 0 24px 48px rgba(0,0,0,0.2)',
           }}
         >
           <div
             className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full opacity-[0.12]"
-            style={{ background: 'radial-gradient(circle, #2dd4a0, transparent 70%)' }}
+            style={{ background: 'var(--cp-green)' }}
             aria-hidden
           />
           <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -337,7 +338,7 @@ export default function ResidentDemo360Client({
                       : traffic === 'gul'
                         ? 'linear-gradient(135deg,#f6ad55,#b45309)'
                         : traffic === 'groen'
-                          ? 'linear-gradient(135deg,#2dd4a0,#0d9488)'
+                          ? 'var(--cp-green)'
                           : 'linear-gradient(135deg,#64748b,#475569)',
                 }}
               >
@@ -352,7 +353,7 @@ export default function ResidentDemo360Client({
                 </p>
                 <h1
                   className="mt-0.5 text-2xl font-semibold leading-tight sm:text-3xl"
-                  style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--cp-text)' }}
+                  style={{ fontFamily: 'var(--cp-font)', color: 'var(--cp-text)' }}
                 >
                   {profile.displayName}
                 </h1>
@@ -383,10 +384,10 @@ export default function ResidentDemo360Client({
           id="section-status"
           className="mb-6 scroll-mt-[5.5rem] rounded-2xl border p-4 sm:p-5"
           style={{
-            borderColor: 'rgba(45,212,160,0.22)',
+            borderColor: 'color-mix(in srgb, var(--cp-green) 22%, transparent)',
             background:
-              'linear-gradient(165deg, rgba(45,212,160,0.07) 0%, var(--cp-bg2) 38%, var(--cp-bg2) 100%)',
-            boxShadow: '0 0 0 1px rgba(45,212,160,0.05)',
+              'linear-gradient(165deg, color-mix(in srgb, var(--cp-green) 7%, transparent) 0%, var(--cp-bg2) 38%, var(--cp-bg2) 100%)',
+            boxShadow: '0 0 0 1px color-mix(in srgb, var(--cp-green) 5%, transparent)',
           }}
           aria-labelledby="samlet-status-heading"
         >
@@ -395,8 +396,8 @@ export default function ResidentDemo360Client({
               <div
                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
                 style={{
-                  backgroundColor: 'rgba(45,212,160,0.12)',
-                  border: '1px solid rgba(45,212,160,0.22)',
+                  backgroundColor: 'color-mix(in srgb, var(--cp-green) 12%, transparent)',
+                  border: '1px solid color-mix(in srgb, var(--cp-green) 22%, transparent)',
                 }}
               >
                 <Layers className="h-5 w-5" style={{ color: 'var(--cp-green)' }} aria-hidden />
@@ -548,9 +549,9 @@ export default function ResidentDemo360Client({
                       key={f}
                       className="rounded-lg border px-2.5 py-1 text-xs font-medium"
                       style={{
-                        borderColor: 'rgba(45,212,160,0.25)',
+                        borderColor: 'color-mix(in srgb, var(--cp-green) 25%, transparent)',
                         color: 'var(--cp-muted)',
-                        backgroundColor: 'rgba(45,212,160,0.06)',
+                        backgroundColor: 'color-mix(in srgb, var(--cp-green) 6%, transparent)',
                       }}
                     >
                       {f}
@@ -659,7 +660,7 @@ export default function ResidentDemo360Client({
                     ? {
                         backgroundColor: 'var(--cp-green-dim)',
                         color: 'var(--cp-green)',
-                        boxShadow: '0 0 0 1px rgba(45,212,160,0.2)',
+                        boxShadow: '0 0 0 1px color-mix(in srgb, var(--cp-green) 20%, transparent)',
                       }
                     : { color: 'var(--cp-muted)', backgroundColor: 'var(--cp-bg3)' }
                 }
@@ -705,10 +706,10 @@ export default function ResidentDemo360Client({
             id="section-assistent"
             className="scroll-mt-[5.5rem] overflow-hidden rounded-2xl border"
             style={{
-              borderColor: 'rgba(45,212,160,0.28)',
+              borderColor: 'color-mix(in srgb, var(--cp-green) 28%, transparent)',
               background:
-                'linear-gradient(135deg, rgba(45,212,160,0.08) 0%, var(--cp-bg2) 40%, var(--cp-bg2) 100%)',
-              boxShadow: '0 0 0 1px rgba(45,212,160,0.06)',
+                'linear-gradient(135deg, color-mix(in srgb, var(--cp-green) 8%, transparent) 0%, var(--cp-bg2) 40%, var(--cp-bg2) 100%)',
+              boxShadow: '0 0 0 1px color-mix(in srgb, var(--cp-green) 6%, transparent)',
             }}
           >
             <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:gap-5 sm:p-5">
@@ -717,7 +718,7 @@ export default function ResidentDemo360Client({
                 style={{
                   background:
                     'linear-gradient(135deg, rgba(110,231,183,0.25), rgba(5,150,105,0.2))',
-                  boxShadow: '0 4px 20px rgba(45,212,160,0.15)',
+                  boxShadow: '0 4px 20px color-mix(in srgb, var(--cp-green) 15%, transparent)',
                 }}
               >
                 <BrainCircuit
@@ -737,7 +738,7 @@ export default function ResidentDemo360Client({
                   <span
                     className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
                     style={{
-                      backgroundColor: 'rgba(45,212,160,0.12)',
+                      backgroundColor: 'color-mix(in srgb, var(--cp-green) 12%, transparent)',
                       color: 'var(--cp-green)',
                     }}
                   >
@@ -777,8 +778,8 @@ export default function ResidentDemo360Client({
                     href={navLinks.assistant}
                     className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-white transition-opacity hover:opacity-90 sm:text-sm"
                     style={{
-                      background: 'linear-gradient(135deg, #2dd4a0 0%, #0d9488 100%)',
-                      boxShadow: '0 2px 12px rgba(45,212,160,0.25)',
+                      background: 'var(--cp-green)',
+                      boxShadow: '0 2px 12px color-mix(in srgb, var(--cp-green) 25%, transparent)',
                     }}
                   >
                     <MessageSquare className="h-3.5 w-3.5" aria-hidden />
@@ -936,8 +937,8 @@ export default function ResidentDemo360Client({
             <div
               className="mb-4 rounded-xl border px-3 py-3 sm:px-4"
               style={{
-                borderColor: 'rgba(45,212,160,0.28)',
-                backgroundColor: 'rgba(45,212,160,0.06)',
+                borderColor: 'color-mix(in srgb, var(--cp-green) 28%, transparent)',
+                backgroundColor: 'color-mix(in srgb, var(--cp-green) 6%, transparent)',
               }}
             >
               <div
@@ -967,9 +968,15 @@ export default function ResidentDemo360Client({
                     key={tpl.id}
                     className="rounded-xl border p-4"
                     style={{
-                      borderColor: recommended ? 'rgba(45,212,160,0.4)' : 'var(--cp-border)',
-                      backgroundColor: recommended ? 'rgba(45,212,160,0.05)' : 'var(--cp-bg3)',
-                      boxShadow: recommended ? '0 0 0 1px rgba(45,212,160,0.12)' : undefined,
+                      borderColor: recommended
+                        ? 'color-mix(in srgb, var(--cp-green) 40%, transparent)'
+                        : 'var(--cp-border)',
+                      backgroundColor: recommended
+                        ? 'color-mix(in srgb, var(--cp-green) 5%, transparent)'
+                        : 'var(--cp-bg3)',
+                      boxShadow: recommended
+                        ? '0 0 0 1px color-mix(in srgb, var(--cp-green) 12%, transparent)'
+                        : undefined,
                     }}
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1209,7 +1216,7 @@ export default function ResidentDemo360Client({
                       key={i}
                       className="rounded-xl border p-3"
                       style={{
-                        borderColor: 'rgba(45,212,160,0.2)',
+                        borderColor: 'color-mix(in srgb, var(--cp-green) 20%, transparent)',
                         backgroundColor: 'var(--cp-bg3)',
                       }}
                     >
@@ -1235,7 +1242,7 @@ export default function ResidentDemo360Client({
                             className="h-full rounded-full transition-all"
                             style={{
                               width: `${g.progress}%`,
-                              background: 'linear-gradient(90deg, #2dd4a0, #0d9488)',
+                              background: 'var(--cp-green)',
                             }}
                           />
                         </div>

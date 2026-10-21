@@ -15,6 +15,7 @@ import {
   applyStoredNotes,
   buildHandoverUpsertRows,
   handoverShiftDate,
+  handoverShiftNow,
   isHandoverShiftLabel,
   type StoredHandoverNote,
 } from '@/lib/handoverNotes';
@@ -236,9 +237,9 @@ export default function HandoverClient({
   }, [carePortalDark]);
 
   useEffect(() => {
-    const detected = detectShiftFromTodayPlan();
-    setCurrentShift(detected);
-  }, []);
+    // Live: vagten følger klokken, så linjer fra «Fortæl» lander på den vagt, man ser her.
+    setCurrentShift(useDemoData ? detectShiftFromTodayPlan() : handoverShiftNow());
+  }, [useDemoData]);
 
   const demoEntries = useMemo(
     () => (useDemoData ? buildDemoHandoverEntries(currentShift) : null),
