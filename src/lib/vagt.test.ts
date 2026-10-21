@@ -58,6 +58,25 @@ describe('previousHandovers', () => {
     );
     expect(out.map((r) => `${r.resident_id}:${r.shift_label}`)).toEqual(['b:nat', 'a:nat']);
   });
+
+  it('dagvagten ser hele nattevagten, også linjen der blev stemplet efter midnat', () => {
+    const out = previousHandovers(
+      [
+        row('a', 'nat', '2026-10-20', '2026-10-20T21:40:00.000Z', 'roed'),
+        {
+          ...row('a', 'nat', '2026-10-21', '2026-10-20T23:10:00.000Z'),
+          body: 'Væk ham kl. 6',
+        },
+        row('a', 'aften', '2026-10-20', '2026-10-20T16:00:00.000Z'),
+      ],
+      { shiftDate: '2026-10-21', shiftLabel: 'dag' }
+    );
+    expect(out).toHaveLength(1);
+    expect(out[0]?.shift_label).toBe('nat');
+    expect(out[0]?.shift_date).toBe('2026-10-20');
+    expect(out[0]?.body).toBe('a nat\nVæk ham kl. 6');
+    expect(out[0]?.flag_color).toBe('roed');
+  });
 });
 
 describe('lysConcerns', () => {

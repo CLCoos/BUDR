@@ -14,6 +14,7 @@ import { copenhagenStartOfTodayUtcIso } from '@/lib/copenhagenDay';
 import {
   applyStoredNotes,
   buildHandoverUpsertRows,
+  handoverRecordDate,
   handoverShiftDate,
   handoverShiftNow,
   isHandoverShiftLabel,
@@ -295,7 +296,8 @@ export default function HandoverClient({
 
       const ids = rows.map((r) => r.user_id as string);
       const todayStartIso = copenhagenStartOfTodayUtcIso();
-      const shiftDate = handoverShiftDate();
+      // Demoen har ingen vagt over midnat. Live nattevagt før kl. 7 ligger på startdatoen.
+      const shiftDate = useDemoData ? handoverShiftDate() : handoverRecordDate(currentShift);
 
       const { data: checkins } = await supabase
         .from('park_daily_checkin')
@@ -376,7 +378,7 @@ export default function HandoverClient({
       orgId: liveOrgId ?? '',
       staffId: null,
       shiftLabel: isHandoverShiftLabel(currentShift) ? currentShift : 'doegnnotat',
-      shiftDate: handoverShiftDate(),
+      shiftDate: useDemoData ? handoverShiftDate() : handoverRecordDate(currentShift),
     });
     if (persistable.length === 0) {
       toast.error('Skriv mindst ét vagtnotat (eller sæt et flag) før du gemmer');

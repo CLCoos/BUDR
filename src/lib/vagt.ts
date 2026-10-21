@@ -2,7 +2,12 @@
  * «Vagten»: forsiden følger vagtens rytme i tre øjeblikke. Rene hjælpefunktioner, så
  * både API-ruten og testene bruger samme regler.
  */
-import { normalizeHandoverShiftDate, type HandoverShiftLabel } from '@/lib/handoverNotes';
+import {
+  anchorHandoverShiftDate,
+  mergeHandoverBodies,
+  normalizeHandoverShiftDate,
+  type HandoverShiftLabel,
+} from '@/lib/handoverNotes';
 
 export type ShiftNow = Exclude<HandoverShiftLabel, 'doegnnotat'>;
 export type VagtMoment = 'moed' | 'nu' | 'hjem';
@@ -60,12 +65,43 @@ export type HandoverRow = {
  * Det, kollegerne skrev på de seneste vagter, uden den vagt man selv står i.
  * Nyeste notat pr. borger, kun med tekst eller flag.
  */
+function preferHandoverFlag(a: string | null, b: string | null): string | null {
+  const rank = (f: string | null) =>
+    f === 'roed' || f === 'sort' ? 3 : f === 'gul' ? 2 : f === 'groen' ? 1 : 0;
+  return rank(a) >= rank(b) ? a : b;
+}
+
+/** Samme nattevagt kan ligge på to datoer, hvis noget blev skrevet efter midnat. De læses som ét notat. */
+function collapseHandoverRows(rows: HandoverRow[]): HandoverRow[] {
+  const groups = new Map<string, HandoverRow>();
+  for (const row of rows) {
+    const date = anchorHandoverShiftDate(row.shift_date, row.shift_label, row.updated_at);
+    const key = `${row.resident_id}|${date}|${row.shift_label}`;
+    const anchored = { ...row, shift_date: date };
+    const existing = groups.get(key);
+    if (!existing) {
+      groups.set(key, anchored);
+      continue;
+    }
+    const newerIsAnchored = Date.parse(anchored.updated_at) >= Date.parse(existing.updated_at);
+    const older = newerIsAnchored ? existing : anchored;
+    const newer = newerIsAnchored ? anchored : existing;
+    groups.set(key, {
+      ...newer,
+      shift_date: date,
+      body: mergeHandoverBodies(older.body, newer.body),
+      flag_color: preferHandoverFlag(older.flag_color, newer.flag_color),
+    });
+  }
+  return [...groups.values()];
+}
+
 export function previousHandovers(
   rows: HandoverRow[],
   current: { shiftDate: string; shiftLabel: string }
 ): HandoverRow[] {
   const byResident = new Map<string, HandoverRow>();
-  for (const row of rows) {
+  for (const row of collapseHandoverRows(rows)) {
     const date = normalizeHandoverShiftDate(row.shift_date);
     if (date === current.shiftDate && row.shift_label === current.shiftLabel) continue;
     if (!row.body.trim() && !row.flag_color) continue;
