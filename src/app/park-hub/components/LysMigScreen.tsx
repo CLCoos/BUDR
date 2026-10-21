@@ -12,7 +12,10 @@ import {
   normalizeBadgeKeyForDisplay,
   type ResidentBadgeDef,
 } from '@/lib/residentBadges';
+import { BookOpen, CalendarCheck, LifeBuoy, Target, Users, Wind } from 'lucide-react';
 import type { LysThemeTokens } from '../lib/lysTheme';
+import type { LysFlowOverlay } from '../lib/lysOverlay';
+import { LysCard, LysLabel, LysLinkRow } from './lysUi';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -30,15 +33,6 @@ const THEMES = [
   { key: 'green', color: '#10B981' },
 ];
 
-const TREND_ENCOURAGEMENT: Record<string, string> = {
-  Energi:
-    'Dit energiniveau har holdt sig stabilt de seneste dage. Fortsæt med at prioritere søvn og bevægelse 💪',
-  Stemning: 'Din stemning viser en positiv retning. Det du gør, virker — bliv ved 🌟',
-  Søvn: 'Bedre søvn er en af de stærkeste ressourcer du har. Hvert ekstra kvarter tæller 🌙',
-  Social: 'Social kontakt er sundt. Selv en kort samtale med en kollega eller ven hjælper 💬',
-  Stress: 'Du håndterer stress bedre end du tror. Husk at tage pauser i løbet af dagen 🌿',
-};
-
 type MoodPoint = { date: string; label: string; value: number | null; dayName: string };
 type XPData = { total_xp: number; level: number };
 type BadgeRow = { badge_key: string; earned_at: string };
@@ -51,6 +45,8 @@ type Props = {
   reducedMotion: boolean;
   flowerFilledThisWeek?: boolean;
   onOpenBlomst: () => void;
+  onOpen: (overlay: LysFlowOverlay) => void;
+  onLogout: () => void;
 };
 
 function getLevelInfo(xp: number) {
@@ -65,6 +61,8 @@ export default function LysMigScreen({
   reducedMotion: _reducedMotion,
   flowerFilledThisWeek = false,
   onOpenBlomst,
+  onOpen,
+  onLogout,
 }: Props) {
   const { residentId } = useResident();
   const session = useResidentSession();
@@ -89,40 +87,7 @@ export default function LysMigScreen({
   const [colorTheme, setColorTheme] = useState('purple');
   const [selectedMoodDay, setSelectedMoodDay] = useState<MoodPoint | null>(null);
   const [selectedBadge, setSelectedBadge] = useState<ResidentBadgeDef | null>(null);
-  const [selectedTrend, setSelectedTrend] = useState<string | null>(null);
-  const [staffMsg, setStaffMsg] = useState('');
-  const [sendState, setSendState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const fileRef = useRef<HTMLInputElement>(null);
-
-  const sendToStaff = async () => {
-    if (!staffMsg.trim() || sendState === 'sending') return;
-    setSendState('sending');
-    try {
-      const res = await fetch('/api/lys/message-staff', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: staffMsg }),
-      });
-      if (res.ok) {
-        try {
-          const cur = await dataService.getBadges(mode, activeId);
-          if (!cur.some((b) => b.badge_key === 'staff_bridge')) {
-            await dataService.earnBadge(mode, activeId, 'staff_bridge');
-          }
-          void dataService.getBadges(mode, activeId).then((d) => setBadges(d as BadgeRow[]));
-        } catch {
-          /* ignore */
-        }
-        setSendState('sent');
-        setStaffMsg('');
-        setTimeout(() => setSendState('idle'), 4000);
-      } else {
-        setSendState('error');
-      }
-    } catch {
-      setSendState('error');
-    }
-  };
 
   // Load XP, badges, profile
   useEffect(() => {
@@ -238,14 +203,6 @@ export default function LysMigScreen({
     return 'Meget svært';
   }
 
-  const trendRows = [
-    { label: 'Energi', val: 3.8, delta: +0.3 },
-    { label: 'Stemning', val: 3.5, delta: -0.2 },
-    { label: 'Søvn', val: 3.2, delta: +0.5 },
-    { label: 'Social', val: 2.9, delta: 0 },
-    { label: 'Stress', val: 2.5, delta: -0.4 },
-  ];
-
   return (
     <div className="space-y-4 px-5 pb-8 pt-4 font-sans" style={{ color: tokens.text }}>
       {/* ── Profile hero ─────────────────────────────────────────── */}
@@ -344,16 +301,6 @@ export default function LysMigScreen({
         {/* Stats */}
         <div className="flex items-center gap-0 mb-4">
           <div className="flex-1 text-center">
-            <p className="text-2xl font-black">🔥 5</p>
-            <p className="text-xs mt-0.5" style={{ color: subtext }}>
-              dages streak
-            </p>
-          </div>
-          <div
-            className="w-px h-10 self-center"
-            style={{ backgroundColor: `${profileAccent}25` }}
-          />
-          <div className="flex-1 text-center">
             <p className="text-2xl font-black" style={{ color: profileAccent }}>
               {xpData.total_xp}
             </p>
@@ -420,6 +367,57 @@ export default function LysMigScreen({
           </div>
         </div>
       </section>
+
+      {/* ── Mine ting ─────────────────────────────────────────── */}
+      <LysCard tokens={tokens} labelledBy="lys-mig-ting">
+        <LysLabel tokens={tokens} id="lys-mig-ting">
+          Mine ting
+        </LysLabel>
+        <div className="flex flex-col">
+          <LysLinkRow
+            tokens={tokens}
+            icon={<Target size={18} />}
+            title="Mine mål"
+            sub="Det, du arbejder hen imod"
+            onClick={() => onOpen('goals')}
+          />
+          <LysLinkRow
+            tokens={tokens}
+            icon={<LifeBuoy size={18} />}
+            title="Min kriseplan"
+            sub="Hvad hjælper, når det er svært"
+            onClick={() => onOpen('crisis')}
+          />
+          <LysLinkRow
+            tokens={tokens}
+            icon={<Wind size={18} />}
+            title="Ro og sanser"
+            sub="Øvelser, der giver ro"
+            onClick={() => onOpen('sanser')}
+          />
+          <LysLinkRow
+            tokens={tokens}
+            icon={<Users size={18} />}
+            title="Hvem er på arbejde"
+            sub="Vagtplanen for i dag og i morgen"
+            onClick={() => onOpen('vagtplan')}
+          />
+          <LysLinkRow
+            tokens={tokens}
+            icon={<BookOpen size={18} />}
+            title="Mine historier"
+            sub="Det, du har delt med personalet"
+            onClick={() => onOpen('mineHistorier')}
+          />
+          <LysLinkRow
+            tokens={tokens}
+            icon={<CalendarCheck size={18} />}
+            title="Ugens tilbageblik"
+            sub="Se tilbage på din uge"
+            onClick={() => onOpen('weekly')}
+          />
+        </div>
+      </LysCard>
 
       {/* ── 14-day stemning — interactive bars ─────────────────── */}
       <section
@@ -669,65 +667,6 @@ export default function LysMigScreen({
         )}
       </section>
 
-      {/* ── Ressourcetendenser — interactive rows ────────────────── */}
-      <section
-        className="rounded-3xl overflow-hidden"
-        style={{ backgroundColor: cardBg, boxShadow: isDarkish ? 'none' : tokens.shadow }}
-      >
-        <div className="px-5 pt-4 pb-2">
-          <h2 className="text-sm font-bold">Ressourcetendenser</h2>
-          <p className="text-xs mt-0.5" style={{ color: subtext }}>
-            Tryk på en kategori for at lære mere
-          </p>
-        </div>
-        <div className="px-5 pb-4 space-y-2.5">
-          {trendRows.map((r) => {
-            const isOpen = selectedTrend === r.label;
-            return (
-              <div key={r.label}>
-                <button
-                  type="button"
-                  onClick={() => setSelectedTrend(isOpen ? null : r.label)}
-                  className="w-full flex items-center gap-3 py-1 transition-all active:opacity-70"
-                >
-                  <p className="text-sm font-medium w-20 shrink-0 text-left">{r.label}</p>
-                  <div
-                    className="flex-1 h-2 rounded-full overflow-hidden"
-                    style={{ backgroundColor: `${profileAccent}14` }}
-                  >
-                    <div
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{
-                        width: `${(r.val / 5) * 100}%`,
-                        backgroundColor: isOpen ? profileAccent : `${profileAccent}88`,
-                      }}
-                    />
-                  </div>
-                  <span
-                    className="text-xs font-bold w-8 text-right"
-                    style={{ color: r.delta > 0 ? '#22C55E' : r.delta < 0 ? '#EF4444' : subtext }}
-                  >
-                    {r.delta > 0 ? `+${r.delta}` : r.delta === 0 ? '→' : r.delta}
-                  </span>
-                </button>
-                {isOpen && (
-                  <div
-                    className="rounded-2xl px-3.5 py-2.5 mt-1.5 text-xs leading-relaxed"
-                    style={{
-                      backgroundColor: `${profileAccent}10`,
-                      border: `1px solid ${profileAccent}20`,
-                      color: tokens.text,
-                    }}
-                  >
-                    {TREND_ENCOURAGEMENT[r.label] ?? 'Hold godt fast i det, der virker.'}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
       {/* ── Ressourceblomst ──────────────────────────────────────── */}
       <section
         className="rounded-3xl overflow-hidden"
@@ -768,70 +707,16 @@ export default function LysMigScreen({
         </div>
       </section>
 
-      {/* ── Skriv til personalet ──────────────────────────────────── */}
-      <section
-        className="rounded-3xl p-5"
-        style={{ backgroundColor: cardBg, boxShadow: isDarkish ? 'none' : tokens.shadow }}
-      >
-        <div className="flex items-center gap-3 mb-3">
-          <span className="text-xl">💬</span>
-          <div>
-            <h2 className="text-sm font-bold" style={{ color: tokens.text }}>
-              Skriv til personalet
-            </h2>
-            <p className="text-xs mt-0.5" style={{ color: subtext }}>
-              Send en besked direkte til bostedet
-            </p>
-          </div>
-        </div>
-
-        {sendState === 'sent' ? (
-          <div
-            className="rounded-2xl px-4 py-4 text-center"
-            style={{
-              backgroundColor: `${profileAccent}14`,
-              border: `1px solid ${profileAccent}30`,
-            }}
-          >
-            <p className="text-sm font-bold" style={{ color: profileAccent }}>
-              Sendt ✓
-            </p>
-            <p className="text-xs mt-1" style={{ color: subtext }}>
-              Personalet har modtaget din besked
-            </p>
-          </div>
-        ) : (
-          <>
-            <textarea
-              value={staffMsg}
-              onChange={(e) => setStaffMsg(e.target.value)}
-              placeholder="Skriv din besked her…"
-              rows={3}
-              className="w-full rounded-2xl px-4 py-3 text-sm resize-none focus:outline-none transition-colors mb-3"
-              style={{
-                backgroundColor: `${profileAccent}10`,
-                border: `1px solid ${profileAccent}25`,
-                color: tokens.text,
-              }}
-            />
-            {sendState === 'error' && (
-              <p className="text-xs text-red-400 mb-2">Noget gik galt — prøv igen</p>
-            )}
-            <button
-              type="button"
-              disabled={!staffMsg.trim() || sendState === 'sending'}
-              onClick={() => void sendToStaff()}
-              className="w-full rounded-2xl py-3.5 text-sm font-bold text-white transition-all duration-200 active:scale-[0.98] disabled:opacity-40"
-              style={{
-                background: `linear-gradient(135deg, ${profileAccent}, ${profileAccent}cc)`,
-                boxShadow: staffMsg.trim() ? `0 4px 16px ${profileAccent}35` : undefined,
-              }}
-            >
-              {sendState === 'sending' ? 'Sender…' : 'Send besked'}
-            </button>
-          </>
-        )}
-      </section>
+      <div className="flex justify-center pt-2">
+        <button
+          type="button"
+          onClick={onLogout}
+          className="min-h-[44px] px-4 text-sm font-medium underline underline-offset-4"
+          style={{ color: subtext }}
+        >
+          Log ud af Lys
+        </button>
+      </div>
     </div>
   );
 }
