@@ -29,7 +29,7 @@ Regler:
 - journal_note og handover indeholder kun det, der skete, og det, medarbejderen selv har gjort eller aftalt. Tilføj ikke anbefalinger som "bør tilbydes" eller "vurder behov for".
 - Tidsord skal passe: "i morgen" er dagen efter i dag. Står der ikke, hvornår noget starter, så skriv det ikke.
 - Brug kun oplysninger fra teksten. Opfind aldrig diagnoser, doser, tider eller navne.
-- Hvis teksten ikke indeholder noget at dokumentere, så svar med "actions": [] og forklar kort i summary.`);
+- Hvis teksten ikke indeholder noget at dokumentere, så svar med "actions": [] og skriv i summary kun, at der ikke er noget at dokumentere, uden at beskrive eller tolke det, der skete.`);
 
 export function buildIntakeMessage(text: string, today: string): string {
   const weekday = WEEKDAYS[new Date(`${today}T12:00:00Z`).getUTCDay()];
