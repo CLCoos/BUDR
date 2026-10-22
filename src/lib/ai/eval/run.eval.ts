@@ -137,7 +137,8 @@ describe.skipIf(!apiKey)('AI-testsæt', () => {
       const alle: Resultat[] = [];
       for (const feature of FEATURES) {
         if (only && feature.key !== only) continue;
-        alle.push(...(await inBatches(loadCases(feature.key), 4, (c) => runCase(feature, c))));
+        const cases = loadCases(feature.key).filter((c) => feature.bruges?.(c) ?? true);
+        alle.push(...(await inBatches(cases, 4, (c) => runCase(feature, c))));
       }
       const dir = path.resolve(process.cwd(), 'eval-results');
       mkdirSync(dir, { recursive: true });
@@ -145,7 +146,8 @@ describe.skipIf(!apiKey)('AI-testsæt', () => {
       const md = rapport(alle);
       writeFileSync(path.join(dir, `ai-eval-${stamp}.md`), md);
       writeFileSync(path.join(dir, `ai-eval-${stamp}.json`), JSON.stringify(alle, null, 2));
-      console.info(md.split('\n').slice(0, 8).join('\n'));
+      // Hele rapporten i loggen, så den kan læses uden at hente artefaktet.
+      console.info(md);
       expect(alle.length).toBeGreaterThan(0);
     },
     30 * 60_000

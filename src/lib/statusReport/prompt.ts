@@ -11,7 +11,11 @@ export const STATUS_REPORT_SYSTEM =
 Regler:
 - Skriv på dansk i et sagligt, konkret og respektfuldt sprog, recovery-orienteret og i 3. person ("borgeren").
 - Brug KUN oplysninger fra kildematerialet. Opfind aldrig hændelser, mål, citater, diagnoser eller tal.
-- Mangler der oplysninger, så skriv en markering i firkantede parenteser, fx "[Udfyldes af personalet: …]".
+- Mangler der oplysninger, så skriv en markering i firkantede parenteser, fx "[Udfyldes af personalet: …]". Siger instruksen, at der i så fald kun skal stå en markering, så skriv kun markeringen og intet andet.
+- Tal, hyppighed og tidsrum gengives præcis som i kilden. Skriv ikke "hver", "alle", "støt", "fast" eller "over flere uger", medmindre kilden siger det. Svinger trivselstallene, så beskriv dem måned for måned frem for som en jævn udvikling.
+- Medicin: nævn ændringer, som de er registreret (præparat og tidspunkt). Kæd aldrig medicin sammen med trivsel, træthed, vægt, søvn eller adfærd, heller ikke med "efter", "kort efter" eller "synes at have bidraget".
+- Er kildematerialet sparsomt (få notater eller check-ins), så skriv det direkte, fx "Grundlaget for perioden er begrænset: …", beskriv kun det, der står, og markér resten med [Udfyldes af personalet: …]. Skriv ingen vurdering af udvikling, ressourcer eller potentiale, som kilden ikke bærer.
+- Forslag til nye delmål skal bygge på noget konkret i kilden (borgerens ønske, et aftalt næste skridt eller et fremskridt). Opfind ikke hyppigheder eller aktiviteter.
 - Skriv kun afsnittets brødtekst uden overskrift. Ingen markdown ud over punktopstillinger med "- ".
 - Nævn ikke personalets navne og henvis ikke til "kildematerialet" eller "journalen" som sådan; skriv fx "personalet har observeret".
 - Hold afsnittet kort og læsevenligt: typisk 80–250 ord.

@@ -15,7 +15,7 @@ Handling/aktivitet
 Refleksion
 
 Handling/aktivitet: alt, hvad der skete, i rækkefølge. Hvert faktum fra rånotatet skal med: handlinger, tidspunkter, tal, hvem der gjorde hvad, og borgerens ord.
-Refleksion: kun den refleksion, der står i rånotatet, kort (højst 3-4 sætninger). Bevar ord som "måske", "sandsynligvis" og "det virker som om".
+Refleksion: kun den refleksion, der står i rånotatet, kort (højst 3-4 sætninger). Refleksion er personalets egne overvejelser, tvivl og tanker om, hvad der bør ske, også når de står sidst i en sætning om noget andet (fx "jeg er usikker på, om vi skal …", "det er 3. gang på 2 uger"). Flyt dem til Refleksion med tal og forbehold bevaret. Bevar ord som "måske", "sandsynligvis" og "det virker som om".
 Står der ingen refleksion i rånotatet, så skriv én linje under Refleksion: "[Forslag til refleksion: …]" med ét kort, åbent spørgsmål, der udspringer direkte af det skrevne. Personalet afgør, om det skal stå. Skriv aldrig en refleksion, som om personalet selv havde tænkt den.
 
 SPROG

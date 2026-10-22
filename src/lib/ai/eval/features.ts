@@ -50,6 +50,8 @@ export type Feature = {
   key: string;
   titel: string;
   prepare: (c: EvalCase) => Prepared;
+  /** Cases, der ikke svarer til noget, AI'en gør i appen, springes over i kørslen. */
+  bruges?: (c: EvalCase) => boolean;
 };
 
 export const FEATURES: Feature[] = [
@@ -85,8 +87,10 @@ export const FEATURES: Feature[] = [
         input.timeStr
       );
       return {
-        opgave: 'Skriv vagtskifterapporten ud fra dagens check-in-data med fire faste afsnit.',
-        materiale: JSON.stringify(input.residents, null, 1),
+        opgave:
+          'Skriv vagtskifterapporten ud fra dagens check-in-data med fire faste afsnit. Borgerne skal stå med initialer. Afsnit 4 skal indeholde konkrete punkter til næste vagt, der følger direkte af data (fx svar på en besked, tal med en borger med rød/gul, svær stemning eller uden check-in); sådanne punkter er ikke opdigtede.',
+        // Det samme, som AI'en fik (dato, tid og initialer), så bedømmeren ikke straffer korrekt brug af dem.
+        materiale: restore(request.userMessage),
         request,
         efterbehandl: restore,
         overskrifter: [...OVERRAPPORT_HEADINGS],
@@ -97,6 +101,12 @@ export const FEATURES: Feature[] = [
   {
     key: 'statusudtalelse',
     titel: 'Statusudtalelse',
+    // Afsnit med aiDraft: false (fx indsatsformål) skrives aldrig af AI'en i appen.
+    bruges: (c) => {
+      const type = getDocumentType('statusrapport');
+      const section = type && c.sectionKey ? getSection(type, c.sectionKey) : undefined;
+      return section?.aiDraft !== false;
+    },
     prepare: (c) => {
       const type = getDocumentType('statusrapport');
       const section = type && c.sectionKey ? getSection(type, c.sectionKey) : undefined;
