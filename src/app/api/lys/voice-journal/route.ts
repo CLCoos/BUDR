@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getResidentId } from '@/lib/residentAuth';
 import { claudeApiKey, claudeMessagesFetch } from '@/lib/ai/claudeTransport';
+import { checkResidentText } from '@/lib/lys/residentTextSafety';
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -207,7 +208,16 @@ export async function POST(req: Request): Promise<NextResponse> {
     // best-effort
   }
 
+  const safety = await checkResidentText({
+    supabase,
+    residentId,
+    orgId,
+    text: transcript,
+    source: 'stemmedagbog',
+  });
+
   return NextResponse.json({
+    safety: safety.risk_level,
     entry_id: journalId,
     story_id: (story as { id: string } | null)?.id ?? null,
     journal_note: parsed.journal_note,

@@ -37,7 +37,7 @@ const TARGETS: {
   {
     id: 'mig',
     title: 'Kun mig',
-    sub: 'Gemmes i din dagbog. Personalet kan ikke se det.',
+    sub: 'Gemmes i din dagbog. Personalet kan ikke læse det, men hvis du er i fare, får de besked om at tale med dig.',
     Icon: Lock,
     button: 'Gem i min dagbog',
   },

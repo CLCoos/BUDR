@@ -1,5 +1,6 @@
 import { journalQueryMissingColumn } from '@/lib/journalEntriesQueryCompat';
 import { isValidUuid } from '@/lib/uuid';
+import { signalLysSafety } from '@/lib/lys/safetySignal';
 
 export const STAFF_MESSAGE_JOURNAL_CATEGORY = 'Besked fra beboer';
 
@@ -103,5 +104,7 @@ export async function postLysStaffMessage(
     body: JSON.stringify({ message }),
   });
   if (!res.ok) return { ok: false, status: res.status };
+  const data = (await res.json().catch(() => ({}))) as { safety?: string };
+  signalLysSafety(data.safety);
   return { ok: true };
 }

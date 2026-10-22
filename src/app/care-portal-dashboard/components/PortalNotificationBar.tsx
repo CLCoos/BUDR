@@ -12,6 +12,7 @@ import {
   subscribeSafetyEvents,
   type SafetyEventWithResident,
 } from '@/lib/lys/safetyEventsService';
+import { SAFETY_RISK_LABELS, safetySourceLabel } from '@/lib/lys/safetySources';
 
 function badgeStyle(events: SafetyEventWithResident[]): React.CSSProperties | null {
   if (events.length === 0) return null;
@@ -126,7 +127,9 @@ export default function PortalNotificationBar() {
                     onClick={() => {
                       setOpen(false);
                       router.push(
-                        `/resident-360-view/${event.resident_id}?tab=lys-samtaler&conversationId=${event.conversation_id ?? ''}`
+                        event.conversation_id
+                          ? `/resident-360-view/${event.resident_id}?tab=lys-samtaler&conversationId=${event.conversation_id}`
+                          : `/resident-360-view/${event.resident_id}`
                       );
                     }}
                   >
@@ -134,7 +137,8 @@ export default function PortalNotificationBar() {
                       {event.resident_name}
                     </p>
                     <p className="mt-0.5 text-xs" style={{ color: 'var(--cp-muted)' }}>
-                      {event.risk_level} · {event.category} · {formatRelativeDa(event.created_at)}
+                      {SAFETY_RISK_LABELS[event.risk_level] ?? event.risk_level} ·{' '}
+                      {safetySourceLabel(event.source)} · {formatRelativeDa(event.created_at)}
                     </p>
                   </button>
                 </li>

@@ -19,6 +19,7 @@ import {
   navneITekst,
   nyeDiagnoser,
 } from '@/lib/ai/faglighed/tjek';
+import { classifyUtterance } from '@/lib/lys/safetyClassifier';
 import { bedoem, type Bedoemmelse } from './judge';
 import { FEATURES, type EvalCase, type Feature } from './features';
 
@@ -130,6 +131,31 @@ function rapport(alle: Resultat[]): string {
   return lines.join('\n');
 }
 
+type Krisecase = { id: string; tekst: string; forventet: 'none' | 'elevated' | 'acute' };
+const NIVEAU = { none: 0, elevated: 1, acute: 2 } as const;
+
+/** Krisetegn: missede tegn er det alvorlige; for højt niveau koster kun en ekstra besked. */
+async function koerKrisetegn(): Promise<string> {
+  const file = path.resolve(__dirname, 'cases', 'krisetegn.json');
+  const cases = (JSON.parse(readFileSync(file, 'utf8')) as Krisecase[]).slice(0, limit);
+  const svar = await inBatches(cases, 5, async (c) => ({
+    c,
+    fundet: (await classifyUtterance(c.tekst)).risk_level,
+  }));
+  const missede = svar.filter((r) => NIVEAU[r.fundet] < NIVEAU[r.c.forventet]);
+  const forHoeje = svar.filter((r) => NIVEAU[r.fundet] > NIVEAU[r.c.forventet]);
+  const lines = [
+    '# Krisetegn',
+    '',
+    `Rigtige: ${svar.length - missede.length - forHoeje.length}/${svar.length} · Missede eller for lavt: ${missede.length} · For højt: ${forHoeje.length}`,
+    '',
+  ];
+  for (const r of [...missede, ...forHoeje]) {
+    lines.push(`- ${r.c.id} forventet ${r.c.forventet}, fik ${r.fundet}: «${r.c.tekst}»`);
+  }
+  return lines.join('\n');
+}
+
 describe.skipIf(!apiKey)('AI-testsæt', () => {
   it(
     'kører alle cases',
@@ -143,12 +169,13 @@ describe.skipIf(!apiKey)('AI-testsæt', () => {
       const dir = path.resolve(process.cwd(), 'eval-results');
       mkdirSync(dir, { recursive: true });
       const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
-      const md = rapport(alle);
+      const krise = !only || only === 'krisetegn' ? await koerKrisetegn() : '';
+      const md = [alle.length ? rapport(alle) : '', krise].filter(Boolean).join('\n\n');
       writeFileSync(path.join(dir, `ai-eval-${stamp}.md`), md);
       writeFileSync(path.join(dir, `ai-eval-${stamp}.json`), JSON.stringify(alle, null, 2));
       // Hele rapporten i loggen, så den kan læses uden at hente artefaktet.
       console.info(md);
-      expect(alle.length).toBeGreaterThan(0);
+      expect(alle.length + (krise ? 1 : 0)).toBeGreaterThan(0);
     },
     30 * 60_000
   );

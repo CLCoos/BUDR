@@ -7,6 +7,7 @@ import {
   omitMissingJournalInsertColumn,
   staffMessageNotificationRow,
 } from '@/lib/lysStaffMessage';
+import { checkResidentText } from '@/lib/lys/residentTextSafety';
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -94,7 +95,15 @@ export async function POST(req: Request): Promise<NextResponse> {
     console.error('[message-staff] notification insert failed:', notifyErr.message);
   }
 
-  return NextResponse.json({ ok: true });
+  const safety = await checkResidentText({
+    supabase,
+    residentId,
+    orgId: residentOrgId,
+    text,
+    source: 'besked_til_personalet',
+  });
+
+  return NextResponse.json({ ok: true, safety: safety.risk_level });
 }
 
 /**

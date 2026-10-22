@@ -14,6 +14,8 @@ export type SafetyEventRow = {
   category: string;
   reasoning: string | null;
   user_utterance: string;
+  /** Hvor borgeren skrev det (fx 'tjek_ind'); null på ældre hændelser fra Lys-samtaler. */
+  source?: string | null;
   acknowledged_at: string | null;
   acknowledged_by: string | null;
   created_at: string;

@@ -4,6 +4,7 @@ import { checkApiRateLimit, getClientIp } from '@/lib/apiRateLimit';
 import { getResidentId } from '@/lib/residentAuth';
 import { classifyUtterance, type SafetyClassification } from '@/lib/lys/safetyClassifier';
 import { ownedConversationIdForSafetyEvent } from '@/lib/lys/lysConversations';
+import { checkResidentText } from '@/lib/lys/residentTextSafety';
 import { isValidUuid } from '@/lib/uuid';
 import { claudeApiKey, claudeMessagesFetch } from '@/lib/ai/claudeTransport';
 
@@ -146,19 +147,15 @@ async function insertSafetyEvent(input: SafetyEventInput): Promise<void> {
     });
   }
 
-  const { error } = await supabase.from('lys_safety_events').insert({
-    resident_id: input.residentId,
-    organisation_id: organisationId,
-    conversation_id: conversationId,
-    risk_level: input.classification.risk_level,
-    category: input.classification.category,
-    reasoning: input.classification.reasoning,
-    user_utterance: input.utterance,
+  await checkResidentText({
+    supabase,
+    residentId: input.residentId,
+    orgId: organisationId,
+    text: input.utterance,
+    source: 'lys_samtale',
+    conversationId,
+    classify: async () => input.classification,
   });
-
-  if (error) {
-    console.error('[lys-chat] safety insert failed', error.message);
-  }
 }
 
 export async function POST(req: NextRequest) {

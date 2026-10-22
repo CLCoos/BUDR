@@ -14,6 +14,7 @@ import {
   truncateSafetyUtterance,
   type SafetyEventWithResident,
 } from '@/lib/lys/safetyEventsService';
+import { SAFETY_RISK_LABELS, safetySourceLabel } from '@/lib/lys/safetySources';
 
 type Props = {
   onOpenOverrapport: () => void;
@@ -310,13 +311,14 @@ export default function ActionCards({ onOpenOverrapport, showPilotBorgerCard = f
                         className={isAcute ? 'animate-pulse' : undefined}
                         aria-hidden
                       />
-                      {event.risk_level}
+                      {SAFETY_RISK_LABELS[event.risk_level] ?? event.risk_level}
                     </span>
                     <span className="text-xs font-medium" style={{ color: 'var(--cp-text)' }}>
                       {event.resident_name}
                     </span>
                     <span className="text-xs" style={{ color: 'var(--cp-muted)' }}>
-                      {event.category} · {formatRelativeDa(event.created_at)}
+                      {safetySourceLabel(event.source)} · {event.category} ·{' '}
+                      {formatRelativeDa(event.created_at)}
                     </span>
                   </div>
                   <p className="mt-1 line-clamp-2 text-xs" style={{ color: 'var(--cp-muted)' }}>
@@ -329,11 +331,13 @@ export default function ActionCards({ onOpenOverrapport, showPilotBorgerCard = f
                       style={{ borderColor: 'var(--cp-border2)', color: 'var(--cp-text)' }}
                       onClick={() =>
                         router.push(
-                          `/resident-360-view/${event.resident_id}?tab=lys-samtaler&conversationId=${event.conversation_id ?? ''}`
+                          event.conversation_id
+                            ? `/resident-360-view/${event.resident_id}?tab=lys-samtaler&conversationId=${event.conversation_id}`
+                            : `/resident-360-view/${event.resident_id}`
                         )
                       }
                     >
-                      Åbn samtale
+                      {event.conversation_id ? 'Åbn samtale' : 'Åbn borger'}
                     </button>
                     {auth.status === 'authenticated' ? (
                       <button
