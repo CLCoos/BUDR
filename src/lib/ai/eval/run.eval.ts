@@ -170,7 +170,7 @@ describe.skipIf(!apiKey)('AI-testsæt', () => {
       mkdirSync(dir, { recursive: true });
       const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
       const krise = !only || only === 'krisetegn' ? await koerKrisetegn() : '';
-      const md = [rapport(alle), krise].filter(Boolean).join('\n\n');
+      const md = [alle.length ? rapport(alle) : '', krise].filter(Boolean).join('\n\n');
       writeFileSync(path.join(dir, `ai-eval-${stamp}.md`), md);
       writeFileSync(path.join(dir, `ai-eval-${stamp}.json`), JSON.stringify(alle, null, 2));
       // Hele rapporten i loggen, så den kan læses uden at hente artefaktet.
