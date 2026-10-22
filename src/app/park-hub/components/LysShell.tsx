@@ -233,18 +233,45 @@ export default function LysShell({
             }}
           >
             {(tab === 'nu' || simpleMode) && (
-              <LysNu
-                firstName={firstName}
-                residentId={residentId}
-                isDemoMode={isDemoMode}
-                tokens={shellTokens}
-                accent={shellAccent}
-                now={now}
-                onSwitchTab={setTab}
-                onCheckedIn={() => trackEvent('lys_checkin_done', {})}
-                onOpenFortael={openFortael}
-                onOpen={setOverlay}
-              />
+              <>
+                <LysNu
+                  firstName={firstName}
+                  residentId={residentId}
+                  isDemoMode={isDemoMode}
+                  tokens={shellTokens}
+                  accent={shellAccent}
+                  now={now}
+                  simpleMode={simpleMode}
+                  onSwitchTab={setTab}
+                  onCheckedIn={() => trackEvent('lys_checkin_done', {})}
+                  onOpenFortael={openFortael}
+                  onOpen={setOverlay}
+                />
+                {simpleMode && (
+                  <div className="flex flex-col items-center gap-2 px-5 pb-8">
+                    <button
+                      type="button"
+                      onClick={() => setOverlay('dagbog')}
+                      className="min-h-[52px] w-full rounded-2xl border text-[16px] font-semibold"
+                      style={{
+                        backgroundColor: shellTokens.cardBg,
+                        borderColor: shellTokens.cardBorder,
+                        color: shellTokens.text,
+                      }}
+                    >
+                      Min dagbog
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleLogout()}
+                      className="min-h-[44px] px-4 text-sm font-medium underline underline-offset-4"
+                      style={{ color: shellTokens.textMuted }}
+                    >
+                      Log ud af Lys
+                    </button>
+                  </div>
+                )}
+              </>
             )}
 
             {tab === 'dag' && !simpleMode && (
@@ -280,6 +307,7 @@ export default function LysShell({
               isDemoMode={isDemoMode}
               tokens={shellTokens}
               accent={shellAccent}
+              simpleMode={simpleMode}
               initialTarget={fortaelTarget}
               onClose={() => setOverlay(null)}
               onOpenAac={() => {
