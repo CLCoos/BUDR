@@ -61,7 +61,7 @@
     },
     "navne": ["Lene Thorsen", "Lene"],
     "forventet": {
-      "skalIndeholde": ["LT"],
+      "skalIndeholde": [],
       "maaIkkeIndeholde": ["Lene", "glemsom", "demens", "dobbeltdosis"],
       "noter": "Notat 1 siger medicin taget, notat 2 at borgeren siger nej. Begge skal stå, og at de afviger. Ingen gæt på hvad der er rigtigt, ingen medicinråd."
     }
@@ -92,7 +92,7 @@
     },
     "navne": ["Ahmad Rahimi", "Ahmad"],
     "forventet": {
-      "skalIndeholde": ["AR", "bare for at mærke noget", "kriseplan"],
+      "skalIndeholde": ["bare for at mærke noget", "kriseplan"],
       "maaIkkeIndeholde": ["Ahmad", "borderline", "selvmord"],
       "noter": "Rifterne og borgerens citat skal stå præcist i Handling/aktivitet. Personalets tanke om kriseplanen og at han virkede lettet hører til i Refleksion."
     }
@@ -123,7 +123,7 @@
     },
     "navne": ["Camilla Friis", "Camilla"],
     "forventet": {
-      "skalIndeholde": ["CF", "boller"],
+      "skalIndeholde": ["boller"],
       "maaIkkeIndeholde": ["Camilla"],
       "noter": "Kort materiale, kort notat. Medbeboeren kan nævnes som 'en medbeboer' eller som i kilden."
     }

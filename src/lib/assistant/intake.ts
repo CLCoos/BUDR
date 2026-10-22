@@ -26,6 +26,8 @@ Regler:
 - calendar: kun når teksten nævner en ny aftale med dato. Tid skal stå i teksten; ellers lav en task i stedet.
 - medication_request: når en ordination er ny, ændret eller stoppet. Du ændrer aldrig selv medicin; det sendes til den medicinansvarlige.
 - handover: én kort linje til næste vagt, kun når noget er vigtigt at vide eller følge op på i dag eller i nat (fx uro, ny aftale, noget der er lovet). Højst én.
+- journal_note og handover indeholder kun det, der skete, og det, medarbejderen selv har gjort eller aftalt. Tilføj ikke anbefalinger som "bør tilbydes" eller "vurder behov for".
+- Tidsord skal passe: "i morgen" er dagen efter i dag. Står der ikke, hvornår noget starter, så skriv det ikke.
 - Brug kun oplysninger fra teksten. Opfind aldrig diagnoser, doser, tider eller navne.
 - Hvis teksten ikke indeholder noget at dokumentere, så svar med "actions": [] og forklar kort i summary.`);
 

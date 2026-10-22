@@ -9,6 +9,7 @@ import { parseStaffOrgId } from '@/lib/staffOrgScope';
 import { claudeApiKey } from '@/lib/ai/claudeTransport';
 import type { ResidentNameRow } from '@/lib/assistant/names';
 import { buildDaySynthesisRequest } from '@/lib/journal/daySynthesisPrompt';
+import { loadResidents } from '@/lib/assistant/server';
 
 export const maxDuration = 60;
 
@@ -100,8 +101,10 @@ export async function POST(req: NextRequest) {
   if (!key) return NextResponse.json({ error: 'AI ikke konfigureret' }, { status: 503 });
 
   // Personalets navne sendes ikke med; borgerens navn skjules, og svaret får initialer.
+  const others = await loadResidents(supabase, orgId);
   const { request, restore } = buildDaySynthesisRequest({
     resident: cr as ResidentNameRow,
+    others,
     notes: rows.map((r) => ({
       time: new Date(r.created_at).toLocaleTimeString('da-DK', {
         hour: '2-digit',

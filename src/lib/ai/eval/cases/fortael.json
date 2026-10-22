@@ -78,7 +78,14 @@
     "navne": ["Rikke Dahl", "Rikke"],
     "forventet": {
       "skalIndeholde": ["RD", "meningen med at leve", "handover"],
-      "maaIkkeIndeholde": ["Rikke", "selvmordstruet", "depression"],
+      "maaIkkeIndeholde": [
+        "Rikke",
+        "selvmordstruet",
+        "depression",
+        "selvmordstanker",
+        "bør tilbydes",
+        "vurder behov"
+      ],
       "noter": "Notat med borgerens ord gengivet præcist og at vagthavende er orienteret; en overleveringslinje til næste vagt."
     }
   }

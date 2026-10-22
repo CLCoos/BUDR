@@ -165,7 +165,7 @@ export const FEATURES: Feature[] = [
       };
       return {
         opgave:
-          'Skriv et kort overblik (JSON med lead, bullets, actions) over én borger til en kollega ud fra check-ins og journalnotater. Borgeren skal stå som initialer eller "borgeren". Et mønster kræver mindst to datapunkter. Handlingsforslag, der følger direkte af data, er ikke opfundet.',
+          'Skriv et kort overblik over én borger (AI\'en svarer i JSON med lead, bullets og actions; her vist som tekst: første linje er lead, · er bullets, → er actions) over én borger til en kollega ud fra check-ins og journalnotater. Borgeren skal stå som initialer eller "borgeren". Et mønster kræver mindst to datapunkter. Handlingsforslag, der følger direkte af data, er ikke opfundet.',
         materiale: restore(request.userMessage),
         request,
         efterbehandl: vis,
@@ -232,8 +232,9 @@ export const FEATURES: Feature[] = [
       };
       return {
         opgave:
-          'En medarbejder fortæller med egne ord, hvad der er sket med en borger. Assistenten foreslår handlinger (journalnotat, opgave, kalenderaftale, medicinanmodning, overlevering) som JSON. Kun det, teksten bærer; ingen opfundne tider, doser eller diagnoser. Medicin ændres aldrig, kun en anmodning til den medicinansvarlige. Borgeren står med initialer.',
-        materiale: userMessage,
+          'En medarbejder fortæller med egne ord, hvad der er sket med en borger. Assistenten foreslår handlinger (journalnotat, opgave, kalenderaftale, medicinanmodning, overlevering); vist som tekst med én linje pr. handling. Personalet godkender hver handling, så markeringer i [ ] er i orden. Kun det, teksten bærer; ingen opfundne tider, doser eller diagnoser. Medicin ændres aldrig, kun en anmodning til den medicinansvarlige. Borgeren står med initialer.',
+        // "Borgeren" skiftes til initialerne i appen, så de er ikke opfundet.
+        materiale: `${userMessage}\n\n(I det færdige svar står "Borgeren" som initialerne ${initials}.)`,
         request: { system: INTAKE_SYSTEM, userMessage, maxTokens: 1500, temperature: 0 },
         efterbehandl: vis,
         overskrifter: [],

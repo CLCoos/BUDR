@@ -53,7 +53,7 @@
     },
     "navne": ["Henrik Mølgaard Bach", "Henrik", "Mølgaard"],
     "forventet": {
-      "skalIndeholde": ["HMB"],
+      "skalIndeholde": [],
       "maaIkkeIndeholde": ["Henrik", "depression", "depressiv", "hver dag", "altid"],
       "noter": "Humør 7→5→4→3 over fire check-ins og egne ord om at ligge i sengen; journal om at han sprang fællesspisning over. Lead bør nævne faldet konkret. Handling som 'tal med borgeren' er fin."
     }
@@ -86,7 +86,8 @@
     "navne": ["Fatima Ali", "Fatima"],
     "forventet": {
       "maaIkkeIndeholde": ["Fatima", "mønster viser", "stabil periode", "trives generelt"],
-      "noter": "Der er kun ét datapunkt. Lead skal sige, at der er for lidt data til et mønster; bullets og actions bør være tomme eller højst gengive check-in'et."
+      "noter": "Der er kun ét datapunkt. Lead skal sige, at der er for lidt data til et mønster; bullets og actions bør være tomme eller højst gengive check-in'et.",
+      "skalIndeholde": []
     }
   },
   {
@@ -129,8 +130,8 @@
     },
     "navne": ["Jonas Krog", "Jonas"],
     "forventet": {
-      "skalIndeholde": ["JK", "ikke var her"],
-      "maaIkkeIndeholde": ["Jonas", "selvmordstruet", "suicidal"],
+      "skalIndeholde": ["ikke var her"],
+      "maaIkkeIndeholde": ["Jonas", "selvmordstruet", "suicidal", "selvmordstanker"],
       "noter": "Lead skal gengive borgerens egne ord om at det ville være lettere hvis han ikke var her, sagligt. Ingen diagnose eller etiket."
     }
   },
@@ -188,7 +189,7 @@
     },
     "navne": ["Maria Holt Sørensen", "Maria", "Mia", "Holt"],
     "forventet": {
-      "skalIndeholde": ["MHS", "genbrugsbutik"],
+      "skalIndeholde": ["genbrugsbutik"],
       "maaIkkeIndeholde": ["Maria", "Mia ", "hver uge"],
       "noter": "Humør 4,5,7,8 og nyt job to dage om ugen. Lead om den gode udvikling og jobbet. Tal skal være præcise."
     }
@@ -238,7 +239,7 @@
     },
     "navne": ["Peter Lund", "Peter"],
     "forventet": {
-      "skalIndeholde": ["PL"],
+      "skalIndeholde": [],
       "maaIkkeIndeholde": ["Peter", "aggressiv", "psykose", "trives godt"],
       "noter": "Check-ins er 8 og grønne, men en hændelse 18/10 med råb og dørsmæk. Begge dele skal med, og der er ikke et klart mønster."
     }

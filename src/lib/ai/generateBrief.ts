@@ -20,6 +20,7 @@ Svar KUN med gyldig JSON, ingen markdown og ingen kodeblokke:
 Regler:
 - Kald borgeren "Borgeren" eller brug initialerne fra data. Ingen navne.
 - Et mønster kræver mindst to datapunkter, der peger samme vej. Ellers beskriver du kun det, der står.
+- Har borgeren skrevet noget i et check-in, så brug borgerens egne ord i anførselstegn.
 - Skriv tal og hyppighed præcist, som de står (fx "humør 3 den 12. og 4 den 14."), ikke "hver dag" eller "altid".
 - Forbudte ord: "korrelerer", "signalerer", "indikerer". Ingen indledninger som "Det ses at" eller "Data viser".
 - Ingen orddeling med bindestreg midt i ord.

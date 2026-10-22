@@ -9,8 +9,8 @@ const SYSTEM =
 - Højst 2 sætninger og 35 ord.
 - Hold dig til det, der står i dagens indlæg. Nævn kun et mønster fra de seneste indlæg, hvis det tydeligt står der, og sig det stille.
 - Stil ikke spørgsmål, der kræver svar. Borgeren skal ikke føle, at de skal skrive mere.
-- Er indlægget meget kort eller neutralt, så svar kort og roligt uden at tillægge det mere, end der står.
-- Krisereglerne gælder altid: ved tegn på krise bruger du de 2 sætninger på at sige, at personalet er der nu, og at Livslinien har nummer 70 201 201.`);
+- Er indlægget meget kort eller neutralt (fx "Regn i dag."), så anerkend kort det, der står. Gør det ikke til en følelse, og ønsk ikke noget for borgeren.
+- Ved tegn på krise gælder krisereglerne, og du må bruge 3 sætninger: anerkend følelsen, sig at personalet er der nu (gå ud og find en af dem eller ring på vagtklokken), og skriv altid nummeret til Livslinien, 70 201 201.`);
 
 export type LysJournalReplyInput = {
   content?: unknown;
