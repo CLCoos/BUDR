@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { callAnthropicJournalPolish } from '@/lib/ai/anthropicJournalPolish';
 import { claudeApiKey } from '@/lib/ai/claudeTransport';
-import { clipText, createAliasMap, namePartsFor } from '@/lib/ai/aliases';
+import { clipText, createAliasMap, initialerAfNavn, namePartsFor } from '@/lib/ai/aliases';
 import { requireStaffForAi } from '@/lib/ai/staffAiAuth';
 import { PERMISSIONS } from '@/lib/permissions';
 
@@ -59,8 +59,10 @@ export async function POST(req: NextRequest) {
   const magt = Array.isArray(body.magtanvendelser) ? body.magtanvendelser.slice(0, MAX_MAGT) : [];
   const aliases = createAliasMap(
     residents.map((r) => {
-      const label = clipText(r.name, 80) || 'Borger';
-      return { label, names: namePartsFor(label) };
+      // Borgere står altid med initialer i rapporten (GDPR).
+      const name = clipText(r.name, 80);
+      const initials = initialerAfNavn(name) || 'Borger';
+      return { label: initials, names: namePartsFor(name, initials) };
     })
   );
 

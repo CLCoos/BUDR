@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createAliasMap, namePartsFor } from './aliases';
+import { createAliasMap, initialerAfNavn, namePartsFor } from './aliases';
 
 describe('createAliasMap', () => {
   const people = [
@@ -29,5 +29,13 @@ describe('ejefald', () => {
     const hidden = map.hide('Lægen har ændret Miras medicin.');
     expect(hidden).toBe('Lægen har ændret Borger 1s medicin.');
     expect(map.restore(hidden)).toBe('Lægen har ændret Mira Søndergaards medicin.');
+  });
+});
+
+describe('initialer', () => {
+  it('laver initialer af navne og bevarer initialer', () => {
+    expect(initialerAfNavn('Asta Lindberg Fog')).toBe('ALF');
+    expect(initialerAfNavn('Fatima Al-Sayed')).toBe('FAS');
+    expect(initialerAfNavn('KBJ')).toBe('KBJ');
   });
 });

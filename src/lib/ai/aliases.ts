@@ -41,6 +41,18 @@ export function createAliasMap(people: AliasPerson[]): AliasMap {
   };
 }
 
+/** Initialer af et navn: forbogstavet i hvert ord ("Asta Lindberg Fog" → "ALF"). Initialer bevares. */
+export function initialerAfNavn(navn: string): string {
+  const t = navn.trim();
+  if (/^[\p{Lu}]{2,4}$/u.test(t)) return t;
+  return t
+    .split(/[\s-]+/)
+    .filter(Boolean)
+    .map((w) => w[0]!.toUpperCase())
+    .join('')
+    .slice(0, 4);
+}
+
 /** Navnedele, der skal skjules: hele navnet, hvert ord i det og initialer. */
 export function namePartsFor(fullName: string, initials?: string | null): string[] {
   const parts = fullName.split(/\s+/).filter((p) => p.length >= 2);

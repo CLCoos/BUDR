@@ -1,3 +1,5 @@
+import { initialerAfNavn, namePartsFor } from '@/lib/ai/aliases';
+import { replaceNames } from '@/lib/assistant/names';
 import { eksemplerTekst, medGrundlag, type Eksempel } from '@/lib/ai/faglighed/grundlag';
 
 /** Overskrifterne i et forbedret journalnotat. */
@@ -20,7 +22,7 @@ SPROG
 - Ret stavefejl, grammatik og tegnsætning. Skriv flydende dansk med variation i sætningerne og præcise verber ("afviser" frem for "siger nej til"), men uden at ændre betydningen.
 - Følg Retskrivningsordbogen. Opfind ikke nye fagord eller sammensætninger; er rånotatet uklart, så omskriv til almindeligt dansk, alle forstår.
 - Bevar "UT" (den medarbejder, der skriver), borgerens initialer præcis som skrevet og farvekoder (grøn/gul/rød).
-- Står borgerens fulde navn i rånotatet, så skriv initialerne fra "Beboer", hvis de er oplyst, ellers navnet som skrevet.
+- Borgere skrives altid med initialer, aldrig med navn (GDPR). Står et navn i rånotatet, så skriv borgerens initialer fra "Beboer" eller forbogstaverne i navnet.
 
 FORBUDT
 - At fjerne eller sammenfatte faktuelle observationer i Handling/aktivitet.
@@ -64,13 +66,19 @@ export type JournalPolishInput = { draft: string; category?: string; residentLab
 
 /** Systeminstruks, brugerbesked og indstillinger til journalforbedring. Bruges af ruten og testsættet. */
 export function buildJournalPolishRequest(input: JournalPolishInput) {
+  // Klienten sender ofte borgerens navn; AI'en får kun initialerne, og navnet skiftes ud i teksten.
+  const label = input.residentLabel?.trim() ?? '';
+  const initials = label ? initialerAfNavn(label) : '';
   const extra = [
     input.category ? `Kategori: ${input.category}` : null,
-    input.residentLabel ? `Beboer (kun kontekst): ${input.residentLabel}` : null,
+    initials ? `Beboer (kun kontekst): ${initials}` : null,
   ]
     .filter(Boolean)
     .join('\n');
-  const draft = input.draft.trim();
+  const draft =
+    label && initials && label !== initials
+      ? replaceNames(input.draft.trim(), namePartsFor(label), initials)
+      : input.draft.trim();
   return {
     system: SYSTEM,
     userMessage: extra ? `${extra}\n\n---\n\n${draft}` : draft,

@@ -1,4 +1,4 @@
-import { clipText, createAliasMap, namePartsFor } from '@/lib/ai/aliases';
+import { clipText, createAliasMap, initialerAfNavn, namePartsFor } from '@/lib/ai/aliases';
 import { medGrundlag } from '@/lib/ai/faglighed/grundlag';
 
 export const OVERRAPPORT_HEADINGS = [
@@ -43,7 +43,7 @@ export type OverrapportResidentIn = {
   pendingMessages?: unknown;
 };
 
-/** Instruks og data til overrapporten med navne skiftet ud. `restore` sætter navnene ind igen. */
+/** Instruks og data til overrapporten med navne skiftet ud. `restore` sætter initialerne ind. */
 export function buildOverrapportRequest(
   residentsIn: OverrapportResidentIn[],
   dateStrIn: unknown,
@@ -52,8 +52,10 @@ export function buildOverrapportRequest(
   const residents = residentsIn.slice(0, MAX_RESIDENTS);
   const aliases = createAliasMap(
     residents.map((r) => {
-      const label = clipText(r.name, 80) || 'Borger';
-      return { label, names: namePartsFor(label, clipText(r.initials, 4)) };
+      // Borgere står altid med initialer i teksten (GDPR); navnet bruges kun til at skjule det.
+      const name = clipText(r.name, 80);
+      const initials = clipText(r.initials, 4) || initialerAfNavn(name) || 'Borger';
+      return { label: initials, names: namePartsFor(name, initials) };
     })
   );
 

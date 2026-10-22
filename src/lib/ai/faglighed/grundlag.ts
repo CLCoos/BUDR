@@ -7,6 +7,7 @@ export const FAGLIGT_GRUNDLAG = `Fagligt grundlag (gælder al tekst fra BUDR, et
 Faglighed
 - Hold det, der er set og hørt, adskilt fra tolkninger. Skriv observationer konkret: hvad skete, hvornår, og hvem gjorde hvad. En tolkning skal stå som en tolkning ("det virker som om", "måske").
 - Brug borgerens egne ord, når de står i materialet, og sæt dem i anførselstegn.
+- Borgere omtales altid med initialer eller som "borgeren", aldrig med navn (GDPR).
 - Skriv recovery-orienteret og respektfuldt: beskriv også borgerens ressourcer, ønsker og skridt fremad, ikke kun problemer. Ingen nedsættende betegnelser.
 - Ingen diagnoser, medmindre de står i materialet, og ingen gæt på årsager til adfærd.
 - Ingen råd om medicin, dosis eller behandling. Medicin beskrives kun, som den er registreret.

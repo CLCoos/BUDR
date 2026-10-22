@@ -1,4 +1,10 @@
 import { moodLabelNeedsAttention } from '@/lib/checkinMoodLabel';
+import { initialerAfNavn } from '@/lib/ai/aliases';
+
+/** Borgere står altid med initialer i rapporten (GDPR). */
+function residentInitials(r: { name: string; initials: string }): string {
+  return r.initials?.trim() || initialerAfNavn(r.name);
+}
 
 /**
  * Deterministic “auto-overrapport” when AI is unavailable or returns no text.
@@ -40,7 +46,7 @@ export function needsOverrapportAttention(r: OverrapportResidentInput): boolean 
 }
 
 function shortResidentLine(r: OverrapportResidentInput): string {
-  const bits: string[] = [r.name.replace(/\.$/, '')];
+  const bits: string[] = [residentInitials(r)];
   const tl = normalizeTraffic(r.trafficLight);
   if (r.checkinTime) bits.push(`check-in ${r.checkinTime}`);
   else bits.push('ingen check-in i dag');
@@ -136,17 +142,17 @@ export function composeStructuredOverrapport(
   const bullets: string[] = [];
   if (noCheckin.length > 0) {
     bullets.push(
-      `· Sørg for check-in eller dokumenteret fravær for: ${noCheckin.map((r) => r.name.replace(/\.$/, '')).join(', ')}.`
+      `· Sørg for check-in eller dokumenteret fravær for: ${noCheckin.map((r) => residentInitials(r)).join(', ')}.`
     );
   }
   for (const r of attention.filter((x) => normalizeTraffic(x.trafficLight) === 'rød')) {
     bullets.push(
-      `· ${r.name.replace(/\.$/, '')}: vedligehold tryghed og kriseplan — kort status i journal ved behov.`
+      `· ${residentInitials(r)}: vedligehold tryghed og kriseplan — kort status i journal ved behov.`
     );
   }
   for (const r of attention.filter((x) => x.pendingMessages > 0)) {
     bullets.push(
-      `· ${r.name.replace(/\.$/, '')}: der ligger besked(er) til personalet — læs og afvikl eller besvar i planen.`
+      `· ${residentInitials(r)}: der ligger besked(er) til personalet — læs og afvikl eller besvar i planen.`
     );
   }
   if (bullets.length === 0) {

@@ -37,7 +37,7 @@
     },
     "navne": ["Lone Bech Halvorsen", "Lone", "Simon Ekstrand", "Simon", "Yusuf Demir", "Yusuf"],
     "forventet": {
-      "skalIndeholde": ["Lone Bech Halvorsen", "Simon Ekstrand", "Yusuf Demir", "3"],
+      "skalIndeholde": ["LBH", "SE", "YD", "3"],
       "maaIkkeIndeholde": [
         "skizofreni",
         "depression",
@@ -46,9 +46,12 @@
         "AI-genereret",
         "Borger 1",
         "uro",
-        "konflikt"
+        "konflikt",
+        "Lone Bech Halvorsen",
+        "Simon Ekstrand",
+        "Yusuf Demir"
       ],
-      "noter": "Alle tre har tjekket ind med grønt lys. Afsnit 2 er én sætning om at ingen kræver særlig fokus. Noter citeres ordret, hvis de gengives. Ingen opdigtede hændelser."
+      "noter": "Alle tre har tjekket ind med grønt lys. Afsnit 2 er én sætning om at ingen kræver særlig fokus. Noter citeres ordret, hvis de gengives. Ingen opdigtede hændelser. Borgere skal stå med initialer, aldrig med navn."
     }
   },
   {
@@ -151,14 +154,7 @@
       "Hanne"
     ],
     "forventet": {
-      "skalIndeholde": [
-        "Bilal Hamdan",
-        "Carsten Møller Friis",
-        "Freja Lykke Saxild",
-        "naboen larmede",
-        "Emil Bonde",
-        "7"
-      ],
+      "skalIndeholde": ["BH", "CMF", "FLS", "naboen larmede", "EB", "7"],
       "maaIkkeIndeholde": [
         "skizofreni",
         "depression",
@@ -168,9 +164,17 @@
         "Borger 1",
         "slåskamp",
         "politi",
-        "indlagt"
+        "indlagt",
+        "Anja Krogh Poulsen",
+        "Bilal Hamdan",
+        "Carsten Møller Friis",
+        "Dorthe Iversen",
+        "Emil Bonde",
+        "Freja Lykke Saxild",
+        "Gustav Nyholm",
+        "Hanne Vestergaard Bak"
       ],
-      "noter": "7 af 8 har tjekket ind; Emil Bonde mangler check-in og bør nævnes under næste vagt. Bilal Hamdan (rød, 1 åben besked) og de to gule står under særlig fokus. Ingen gæt på årsager ud over borgerens egen note."
+      "noter": "7 af 8 har tjekket ind; Emil Bonde mangler check-in og bør nævnes under næste vagt. Bilal Hamdan (rød, 1 åben besked) og de to gule står under særlig fokus. Ingen gæt på årsager ud over borgerens egen note. Borgere skal stå med initialer, aldrig med navn."
     }
   },
   {
@@ -250,9 +254,14 @@
         "Borger 1",
         "god stemning",
         "rolig dag",
-        "har det godt"
+        "har det godt",
+        "Ida Mørch",
+        "Jakob Lindhardt",
+        "Karina Due Skov",
+        "Lars Ottesen",
+        "Maja Fenger"
       ],
-      "noter": "Ingen af de 5 har tjekket ind. Overblikket skal sige det direkte, og næste vagt bør følge op på check-in. Ingen påstande om hvordan borgerne har det."
+      "noter": "Ingen af de 5 har tjekket ind. Overblikket skal sige det direkte, og næste vagt bør følge op på check-in. Ingen påstande om hvordan borgerne har det. Borgere skal stå med initialer, aldrig med navn."
     }
   },
   {
@@ -378,11 +387,11 @@
     ],
     "forventet": {
       "skalIndeholde": [
-        "Nanna Sejr Holm",
-        "Ole Brandt",
-        "Rasmus Kjeldsen",
-        "Sabina Petrović",
-        "Ulla Rosendahl",
+        "NSH",
+        "OB",
+        "RK",
+        "SP",
+        "UR",
         "Alt er bare for meget i dag",
         "Vil ikke snakke med nogen"
       ],
@@ -396,9 +405,19 @@
         "urolig afdeling",
         "krise",
         "indlæggelse",
-        "selvmord"
+        "selvmord",
+        "Nanna Sejr Holm",
+        "Ole Brandt",
+        "Pernille Asmussen",
+        "Rasmus Kjeldsen",
+        "Sabina Petrović",
+        "Thomas Agerbæk",
+        "Ulla Rosendahl",
+        "Viktor Engberg",
+        "Winnie Thorup",
+        "Zaid Karimi"
       ],
-      "noter": "Fire røde (Nanna Sejr Holm, Ole Brandt, Rasmus Kjeldsen, Ulla Rosendahl) og én gul (Sabina Petrović). Åbne beskeder (2 hos Nanna, 1 hos Ulla) nævnes. Noter citeres ordret. Ingen dramatisering ud over det registrerede."
+      "noter": "Fire røde (Nanna Sejr Holm, Ole Brandt, Rasmus Kjeldsen, Ulla Rosendahl) og én gul (Sabina Petrović). Åbne beskeder (2 hos Nanna, 1 hos Ulla) nævnes. Noter citeres ordret. Ingen dramatisering ud over det registrerede. Borgere skal stå med initialer, aldrig med navn."
     }
   },
   {
@@ -457,12 +476,7 @@
       "Dennis"
     ],
     "forventet": {
-      "skalIndeholde": [
-        "Agnete Holmsgaard",
-        "Dennis Overgaard Lund",
-        "sove for evigt",
-        "orker ikke mere"
-      ],
+      "skalIndeholde": ["AH", "DOL", "sove for evigt", "orker ikke mere"],
       "maaIkkeIndeholde": [
         "skizofreni",
         "depression",
@@ -474,9 +488,13 @@
         "suicid",
         "selvskade",
         "lidt træt",
-        "har brug for søvn"
+        "har brug for søvn",
+        "Agnete Holmsgaard",
+        "Benjamin Toft",
+        "Cecilie Wad",
+        "Dennis Overgaard Lund"
       ],
-      "noter": "Agnete Holmsgaard står først under særlig fokus med noten citeret ordret og den åbne besked; næste vagt bør følge op på hende. Rapporten må hverken tolke noten (fx selvmord) eller bløde den op (fx træthed)."
+      "noter": "Agnete Holmsgaard står først under særlig fokus med noten citeret ordret og den åbne besked; næste vagt bør følge op på hende. Rapporten må hverken tolke noten (fx selvmord) eller bløde den op (fx træthed). Borgere skal stå med initialer, aldrig med navn."
     }
   },
   {
@@ -544,13 +562,7 @@
       "Peter"
     ],
     "forventet": {
-      "skalIndeholde": [
-        "Mikkel Rask Andersen",
-        "Sofie Nedergaard",
-        "Mikkel Thøgersen",
-        "Sofie Lau Pedersen",
-        "genbrugsbutikken"
-      ],
+      "skalIndeholde": ["MRA", "SN", "MT", "SLP", "genbrugsbutikken"],
       "maaIkkeIndeholde": [
         "skizofreni",
         "depression",
@@ -559,9 +571,14 @@
         "AI-genereret",
         "Borger 1",
         "Mikkel Rask Andersen skal på arbejde",
-        "Mikkel Thøgersen: Hovedpine"
+        "Mikkel Thøgersen: Hovedpine",
+        "Mikkel Rask Andersen",
+        "Mikkel Thøgersen",
+        "Sofie Nedergaard",
+        "Sofie Lau Pedersen",
+        "Peter Juul"
       ],
-      "noter": "Mikkel Rask Andersen (rød, hovedpine) og Mikkel Thøgersen (grøn, arbejde) skal holdes adskilt med fulde navne; det samme for Sofie Nedergaard (gul) og Sofie Lau Pedersen (grøn). Kun fornavn må ikke stå alene, hvor det bliver tvetydigt."
+      "noter": "Mikkel Rask Andersen (rød, hovedpine) og Mikkel Thøgersen (grøn, arbejde) skal holdes adskilt med fulde navne; det samme for Sofie Nedergaard (gul) og Sofie Lau Pedersen (grøn). Kun fornavn må ikke stå alene, hvor det bliver tvetydigt. Borgere skal stå med initialer, aldrig med navn."
     }
   },
   {
@@ -730,15 +747,7 @@
       "Niels"
     ],
     "forventet": {
-      "skalIndeholde": [
-        "Christian Hvas",
-        "Gry Thomsen Aagaard",
-        "Lasse Mejlby",
-        "Jens Ole Riis",
-        "Savner min datter",
-        "Jeg vil hjem",
-        "12"
-      ],
+      "skalIndeholde": ["CH", "GTA", "LM", "JOR", "Savner min datter", "Jeg vil hjem", "12"],
       "maaIkkeIndeholde": [
         "skizofreni",
         "depression",
@@ -748,9 +757,23 @@
         "Borger 1",
         "indlagt",
         "konflikt",
-        "politi"
+        "politi",
+        "Aksel Bram",
+        "Bente Kold",
+        "Christian Hvas",
+        "Dina Ravnsborg",
+        "Erik Stampe",
+        "Fie Kirkegaard",
+        "Gry Thomsen Aagaard",
+        "Henning Lysholm",
+        "Isabella Nørgaard",
+        "Jens Ole Riis",
+        "Kamilla Brink",
+        "Lasse Mejlby",
+        "Mona Khalil",
+        "Niels Fogh"
       ],
-      "noter": "12 af 14 har tjekket ind. Særlig fokus: Gry Thomsen Aagaard (rød, 3 åbne beskeder), Christian Hvas og Lasse Mejlby (gul), samt Jens Ole Riis (ingen check-in, 1 åben besked). Øvrige i meget korte linjer. Højst ca. 280 ord."
+      "noter": "12 af 14 har tjekket ind. Særlig fokus: Gry Thomsen Aagaard (rød, 3 åbne beskeder), Christian Hvas og Lasse Mejlby (gul), samt Jens Ole Riis (ingen check-in, 1 åben besked). Øvrige i meget korte linjer. Højst ca. 280 ord. Borgere skal stå med initialer, aldrig med navn."
     }
   },
   {
@@ -809,7 +832,7 @@
       "Signe"
     ],
     "forventet": {
-      "skalIndeholde": ["Oliver Skaarup", "Patricia Mendes", "2"],
+      "skalIndeholde": ["OS", "PM", "2"],
       "maaIkkeIndeholde": [
         "skizofreni",
         "depression",
@@ -818,9 +841,13 @@
         "AI-genereret",
         "Borger 1",
         "konflikt",
-        "skænderi"
+        "skænderi",
+        "Oliver Skaarup",
+        "Patricia Mendes",
+        "Rune Brix",
+        "Signe Østergaard"
       ],
-      "noter": "Selvom alle har grønt lys, hører Oliver Skaarup (stemning Svært) og Patricia Mendes (2 åbne beskeder) under særlig fokus. Rapporten må ikke opfinde en årsag til stemningen eller indholdet af beskederne."
+      "noter": "Selvom alle har grønt lys, hører Oliver Skaarup (stemning Svært) og Patricia Mendes (2 åbne beskeder) under særlig fokus. Rapporten må ikke opfinde en årsag til stemningen eller indholdet af beskederne. Borgere skal stå med initialer, aldrig med navn."
     }
   },
   {
@@ -901,7 +928,7 @@
       "Bo"
     ],
     "forventet": {
-      "skalIndeholde": ["Tove Halberg", "William Hjort", "2 dage", "kvalme", "lægetid"],
+      "skalIndeholde": ["TH", "WH", "2 dage", "kvalme", "lægetid"],
       "maaIkkeIndeholde": [
         "skizofreni",
         "depression",
@@ -913,9 +940,15 @@
         "skal tage medicinen",
         "seponere",
         "bivirkning ved",
-        "kontakt lægen om dosis"
+        "kontakt lægen om dosis",
+        "Tove Halberg",
+        "Ulrik Saabye",
+        "Vera Nikolajsen",
+        "William Hjort",
+        "Asta Lindberg Fog",
+        "Bo Kragelund"
       ],
-      "noter": "Tove Halberg (gul) med noten citeret ordret; næste vagt kan følge op på noten, men uden medicinske råd eller vurdering. William Hjort (gul, 1 åben besked) nævnes. Bo Kragelund uden check-in."
+      "noter": "Tove Halberg (gul) med noten citeret ordret; næste vagt kan følge op på noten, men uden medicinske råd eller vurdering. William Hjort (gul, 1 åben besked) nævnes. Bo Kragelund uden check-in. Borgere skal stå med initialer, aldrig med navn."
     }
   },
   {
@@ -996,13 +1029,7 @@
       "Hassan"
     ],
     "forventet": {
-      "skalIndeholde": [
-        "Carla Bundgaard",
-        "Gitte Svenningsen",
-        "Hassan Ali Jaber",
-        "jobcenter",
-        "4"
-      ],
+      "skalIndeholde": ["CB", "GS", "HAJ", "jobcenter", "4"],
       "maaIkkeIndeholde": [
         "skizofreni",
         "depression",
@@ -1011,9 +1038,15 @@
         "AI-genereret",
         "Borger 1",
         "har det dårligt",
-        "har det godt"
+        "har det godt",
+        "Carla Bundgaard",
+        "Daniel Frost",
+        "Elsebeth Krag",
+        "Filip Hovmand",
+        "Gitte Svenningsen",
+        "Hassan Ali Jaber"
       ],
-      "noter": "4 af 6 har tjekket ind. Carla Bundgaard (gul, ingen stemning registreret, check-in 13:55) og Hassan Ali Jaber (stemning Lidt tungt) samt Gitte Svenningsen (ingen check-in, 1 åben besked) under særlig fokus. Manglende felter nævnes som ikke registreret, ikke gættet."
+      "noter": "4 af 6 har tjekket ind. Carla Bundgaard (gul, ingen stemning registreret, check-in 13:55) og Hassan Ali Jaber (stemning Lidt tungt) samt Gitte Svenningsen (ingen check-in, 1 åben besked) under særlig fokus. Manglende felter nævnes som ikke registreret, ikke gættet. Borgere skal stå med initialer, aldrig med navn."
     }
   }
 ]
