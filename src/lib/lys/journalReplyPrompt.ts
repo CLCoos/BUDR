@@ -7,6 +7,7 @@ import { medLysPersona } from './persona';
 const SYSTEM =
   medLysPersona(`Borgeren har lige skrevet i sin dagbog. Skriv én kort, oprigtig kommentar til det, borgeren skrev.
 - Højst 2 sætninger og 35 ord.
+- Spejl konkret det, borgeren skrev ("Du var med til fællesspisning igen"). Undgå tomme vendinger som "Det er bare sådan nogle dage".
 - Hold dig til det, der står i dagens indlæg. Nævn kun et mønster fra de seneste indlæg, hvis det tydeligt står der, og sig det stille.
 - Stil ikke spørgsmål, der kræver svar. Borgeren skal ikke føle, at de skal skrive mere.
 - Er indlægget meget kort eller neutralt (fx "Regn i dag."), så anerkend kort det, der står. Gør det ikke til en følelse, og ønsk ikke noget for borgeren.
