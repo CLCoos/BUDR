@@ -7,6 +7,8 @@ import { PERMISSIONS } from '@/lib/permissions';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { parseStaffOrgId } from '@/lib/staffOrgScope';
 import { claudeApiKey } from '@/lib/ai/claudeTransport';
+import type { ResidentNameRow } from '@/lib/assistant/names';
+import { buildDaySynthesisRequest } from '@/lib/journal/daySynthesisPrompt';
 
 export const maxDuration = 60;
 
@@ -18,18 +20,6 @@ function copenhagenYmd(d: Date): string {
     day: '2-digit',
   }).format(d);
 }
-
-const SYSTEM = `Du er faglig konsulent på et dansk socialpsykiatrisk bosted. Personalet har skrevet flere korte, uformelle notater i løbet af dagen om samme beboer.
-
-Din opgave er at samle dem til ÉT sammenhængende, professionelt journalnotat — som om det skrives om aftenen til dokumentation og overdragelse.
-
-KRAV TIL OUTPUT:
-- Svar KUN med det færdige notat — ingen hilsen, ingen forklaring, ingen anførselstegn om hele teksten.
-- Brug PRÆCIS disse to overskrifter på hver sin linje: "Aktivitet/Handling" og "Refleksion".
-- Aktivitet/Handling: objektiv sammenfatning af hvad der skete (kronologisk eller tematisk). Ingen opdigtede detaljer — kun det der fremgår af kilderne.
-- Refleksion: samlet faglig vurdering og evt. næste skridt. Observerbart sprog.
-- Fjern gentagelser og talesprog. Bevar konkrete facts (navne på aktiviteter, tidspunkter hvis nævnt).
-- Mål ca. 200–450 ord afhængigt af hvor meget der er i kilderne.`;
 
 /**
  * POST /api/portal/journal-day-synthesis
@@ -68,7 +58,7 @@ export async function POST(req: NextRequest) {
 
   const { data: cr, error: crErr } = await supabase
     .from('care_residents')
-    .select('user_id')
+    .select('user_id, first_name, last_name, display_name, nickname')
     .eq('user_id', residentId)
     .eq('org_id', orgId)
     .maybeSingle();
@@ -109,23 +99,21 @@ export async function POST(req: NextRequest) {
   const key = claudeApiKey();
   if (!key) return NextResponse.json({ error: 'AI ikke konfigureret' }, { status: 503 });
 
-  const lines = rows.map((r, i) => {
-    const t = new Date(r.created_at).toLocaleTimeString('da-DK', {
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'Europe/Copenhagen',
-    });
-    return `### Notat ${i + 1} (${t}, ${r.staff_name}, ${r.category})\n${r.entry_text.trim()}`;
+  // Personalets navne sendes ikke med; borgerens navn skjules, og svaret får initialer.
+  const { request, restore } = buildDaySynthesisRequest({
+    resident: cr as ResidentNameRow,
+    notes: rows.map((r) => ({
+      time: new Date(r.created_at).toLocaleTimeString('da-DK', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Europe/Copenhagen',
+      }),
+      category: r.category,
+      text: r.entry_text,
+    })),
   });
 
-  const userMsg = lines.join('\n\n---\n\n');
-
-  const ai = await callAnthropicJournalPolish({
-    apiKey: key,
-    system: SYSTEM,
-    userMessage: userMsg,
-    maxTokens: 2200,
-  });
+  const ai = await callAnthropicJournalPolish({ apiKey: key, ...request });
 
   if (!ai.ok) {
     console.error(
@@ -143,5 +131,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'AI svarer ikke — prøv igen' }, { status: 502 });
   }
 
-  return NextResponse.json({ text: ai.text, sourceCount: rows.length });
+  return NextResponse.json({ text: restore(ai.text), sourceCount: rows.length });
 }

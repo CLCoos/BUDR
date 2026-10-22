@@ -1,36 +1,31 @@
 import { callAnthropicJournalPolish } from '@/lib/ai/anthropicJournalPolish';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { claudeApiKey } from '@/lib/ai/claudeTransport';
+import { residentAliasMap } from '@/lib/ai/aliases';
+import { medGrundlag } from '@/lib/ai/faglighed/grundlag';
+import type { ResidentNameRow } from '@/lib/assistant/names';
 
-const SYSTEM = `Du er en erfaren kontaktpædagog der skriver et kort overblik til en 
-travl kollega på et dansk socialpsykiatrisk bosted. Kollegaen skal kunne skanne det 
-på 10 sekunder.
+const SYSTEM =
+  medGrundlag(`Du skriver et kort overblik over én borger til en travl kollega på et socialpsykiatrisk bosted. Kollegaen skal kunne læse det på 10 sekunder.
 
-Du får en beboers seneste check-ins (humør 1-10, trafiklys, fritekst) og personalets 
-journalnotater. Find ÉT konkret, brugbart mønster og beskriv det.
+Du får borgerens seneste check-ins i Lys (humør 1-10, trafiklys, egne ord) og personalets godkendte journalnotater. Find det vigtigste mønster lige nu, hvis der er et.
 
-Svar KUN med gyldig JSON, intet andet, ingen markdown, ingen kodeblokke:
+Svar KUN med gyldig JSON, ingen markdown og ingen kodeblokke:
 {
-  "lead": "Højst 2 korte sætninger. Det vigtigste mønster lige nu, i klart hverdagssprog.",
-  "bullets": ["2-4 korte observationer. Hver med konkret dato og hvad der skete."],
-  "actions": [{"label": "Kort handling, max 6 ord", "sectionId": "indtjek"}]
+  "lead": "Højst 2 korte sætninger: det vigtigste lige nu, i klart hverdagssprog.",
+  "bullets": ["2-4 korte observationer, hver med dato og hvad der skete."],
+  "actions": [{"label": "Kort handling, højst 6 ord", "sectionId": "indtjek"}]
 }
 
-SPROGKRAV (vigtigt):
-- Skriv naturligt, fagligt dansk. Brug altid æ, ø, å.
-- Brug beboerens navn (fx "Sara"), aldrig "mødrenes", "vedkommende" eller kringlede former.
-- ALDRIG orddeling med bindestreg midt i et ord ( skriv "mønster", ikke "møn-ster").
-- Forbudte ord: "korrelerer", "signalerer", "indikerer", "gensignaliserer". 
-  Skriv som et menneske taler.
-- Korte sætninger. Ingen fyld. Ingen indledning som "Det ses at" eller "Data viser".
-
-INDHOLDSKRAV:
-- Brug kun det der står i dataene. Opdigt aldrig begivenheder, tal eller datoer.
-- Observerbart sprog. Ingen diagnoser, ingen vurdering af årsag som faktum 
-  (skriv "ser ud til" / "ofte", ikke påstande).
-- actions: korte handlingsforslag, IKKE hele spørgsmål. Max 6 ord pr. label.
-- sectionId skal være én af: 'indtjek', 'journal', 'borgerapp'.
-- Hvis der ikke er nok data til et mønster: lead forklarer det kort, bullets [], actions [].`;
+Regler:
+- Kald borgeren "Borgeren" eller brug initialerne fra data. Ingen navne.
+- Et mønster kræver mindst to datapunkter, der peger samme vej. Ellers beskriver du kun det, der står.
+- Skriv tal og hyppighed præcist, som de står (fx "humør 3 den 12. og 4 den 14."), ikke "hver dag" eller "altid".
+- Forbudte ord: "korrelerer", "signalerer", "indikerer". Ingen indledninger som "Det ses at" eller "Data viser".
+- Ingen orddeling med bindestreg midt i ord.
+- Har borgeren skrevet noget om selvskade, selvmordstanker eller vold, så står det i lead med borgerens egne ord.
+- actions: korte handlingsforslag, ikke spørgsmål. sectionId er én af 'indtjek', 'journal', 'borgerapp'.
+- Er der ikke nok data til et mønster, så siger lead det kort, og bullets og actions er [].`);
 
 function copenhagenYmd(d: Date): string {
   return new Intl.DateTimeFormat('sv-SE', {
@@ -78,7 +73,7 @@ function parseBriefJson(text: string): BriefPayload | null {
   }
 }
 
-type LysCheckinRow = {
+export type LysCheckinRow = {
   created_at: string;
   mood_score: number;
   mood_label: string | null;
@@ -86,7 +81,7 @@ type LysCheckinRow = {
   free_text: string | null;
 };
 
-type JournalRow = {
+export type JournalRow = {
   created_at: string;
   entry_text: string;
   category: string;
@@ -106,6 +101,40 @@ function formatJournalLine(r: JournalRow): string {
   return `- ${d}, ${r.category}: ${r.entry_text.trim()}`;
 }
 
+export type BriefInput = {
+  resident: ResidentNameRow;
+  briefType: 'daily' | 'weekly';
+  windowStartYmd: string;
+  windowEndYmd: string;
+  checkins: LysCheckinRow[];
+  journal: JournalRow[];
+};
+
+/** Systeminstruks og besked til overblikket. AI'en ser "Borger 1"; svaret får initialerne. */
+export function buildBriefRequest(input: BriefInput) {
+  const aliases = residentAliasMap([input.resident]);
+  const checkinBlock =
+    input.checkins.length > 0
+      ? input.checkins.map(formatCheckinLine).join('\n')
+      : '(ingen check-ins i perioden)';
+  const journalBlock =
+    input.journal.length > 0
+      ? input.journal.map(formatJournalLine).join('\n')
+      : '(ingen journalnotater i perioden)';
+  const userMessage = aliases.hide(`Borger: ${aliases.alias(0)}
+Vindue: ${input.windowStartYmd} – ${input.windowEndYmd} (${input.briefType === 'weekly' ? '28' : '7'} dage)
+
+Check-ins:
+${checkinBlock}
+
+Journalnotater:
+${journalBlock}`);
+  return {
+    request: { system: SYSTEM, userMessage, maxTokens: 1024, temperature: 0.2 },
+    restore: aliases.restore,
+  };
+}
+
 export type GenerateBriefOutcome =
   | { status: 'ok'; brief: Record<string, unknown> }
   | { status: 'no_data' }
@@ -118,10 +147,11 @@ export async function generateBriefForResident(args: {
   supabase: SupabaseClient;
   residentId: string;
   orgId: string;
-  residentLabel: string;
+  /** Borgerens navne: de skjules for AI'en, og overblikket bruger initialerne. */
+  resident: ResidentNameRow;
   briefType: 'daily' | 'weekly';
 }): Promise<GenerateBriefOutcome> {
-  const { supabase, residentId, orgId, residentLabel, briefType } = args;
+  const { supabase, residentId, orgId, resident, briefType } = args;
   const days = windowDays(briefType);
 
   const now = new Date();
@@ -162,39 +192,25 @@ export async function generateBriefForResident(args: {
     return { status: 'no_data' };
   }
 
-  const checkinBlock =
-    checkinList.length > 0
-      ? checkinList.map(formatCheckinLine).join('\n')
-      : '(ingen check-ins i perioden)';
-  const journalBlock =
-    journalList.length > 0
-      ? journalList.map(formatJournalLine).join('\n')
-      : '(ingen journalnotater i perioden)';
-
-  const userMessage = `Beboer: ${residentLabel}
-Vindue: ${windowStartYmd} – ${windowEndYmd} (${briefType === 'weekly' ? '28' : '7'} dage)
-
-Check-ins:
-${checkinBlock}
-
-Journalnotater:
-${journalBlock}`;
+  const request = buildBriefRequest({
+    resident,
+    briefType,
+    windowStartYmd,
+    windowEndYmd,
+    checkins: checkinList,
+    journal: journalList,
+  });
 
   const apiKey = claudeApiKey();
   if (!apiKey) return { status: 'not_configured' };
 
-  const ai = await callAnthropicJournalPolish({
-    apiKey,
-    system: SYSTEM,
-    userMessage,
-    maxTokens: 1024,
-  });
+  const ai = await callAnthropicJournalPolish({ apiKey, ...request.request });
 
   if (!ai.ok) {
     return { status: 'ai_error' };
   }
 
-  const parsed = parseBriefJson(ai.text);
+  const parsed = parseBriefJson(request.restore(ai.text));
   if (!parsed) {
     return { status: 'parse_error' };
   }

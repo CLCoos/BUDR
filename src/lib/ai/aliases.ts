@@ -2,7 +2,7 @@
  * Borgernavne ud, før tekst sendes til AI; navnene sættes ind igen i svaret.
  * Hver borger får et nummer ("Borger 1"), så AI'en kan holde personerne adskilt uden at kende dem.
  */
-import { replaceNames } from '@/lib/assistant/names';
+import { replaceNames, residentNames, type ResidentNameRow } from '@/lib/assistant/names';
 
 export type AliasPerson = {
   /** Det navn, der skal stå i det færdige svar. */
@@ -51,6 +51,28 @@ export function initialerAfNavn(navn: string): string {
     .map((w) => w[0]!.toUpperCase())
     .join('')
     .slice(0, 4);
+}
+
+/** Borgerens initialer ud fra det fulde navn (fornavn + efternavn), ellers visningsnavnet. */
+export function residentInitials(r: ResidentNameRow): string {
+  const full = [r.first_name, r.last_name]
+    .map((n) => (n ?? '').trim())
+    .filter(Boolean)
+    .join(' ');
+  return initialerAfNavn(full.includes(' ') ? full : r.display_name?.trim() || full) || 'Borger';
+}
+
+/**
+ * Aliaskort for et bosteds borgere: AI'en ser "Borger 1", "Borger 2" …, og svaret får
+ * borgernes initialer (GDPR). Fulde navne, fornavne, kaldenavne og initialer skjules.
+ */
+export function residentAliasMap(rows: ResidentNameRow[]): AliasMap {
+  return createAliasMap(
+    rows.map((r) => {
+      const initials = residentInitials(r);
+      return { label: initials, names: [...residentNames(r), initials] };
+    })
+  );
 }
 
 /** Navnedele, der skal skjules: hele navnet, hvert ord i det og initialer. */

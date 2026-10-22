@@ -17,6 +17,15 @@ import {
   cleanSectionText,
 } from '@/lib/statusReport/prompt';
 import type { StatusReportSources } from '@/lib/statusReport/types';
+import { buildBriefRequest, type BriefInput } from '@/lib/ai/generateBrief';
+import { buildDaySynthesisRequest, type DaySynthesisNote } from '@/lib/journal/daySynthesisPrompt';
+import {
+  buildLysJournalReplyRequest,
+  type LysJournalReplyInput,
+} from '@/lib/lys/journalReplyPrompt';
+import { INTAKE_SYSTEM, buildIntakeMessage, parseIntakeResponse } from '@/lib/assistant/intake';
+import { replaceNames, residentNames, type ResidentNameRow } from '@/lib/assistant/names';
+import { residentInitials } from '@/lib/ai/aliases';
 
 export type Forventet = { skalIndeholde?: string[]; maaIkkeIndeholde?: string[]; noter?: string };
 
@@ -124,6 +133,109 @@ export const FEATURES: Feature[] = [
         },
         efterbehandl: (raw) =>
           cleanSectionText(extractCitations(raw, material.refs).text, section.title),
+        overskrifter: [],
+        skjulteNavne: c.navne ?? [],
+      };
+    },
+  },
+  {
+    key: 'overblik',
+    titel: 'Overblik på borgerens side',
+    prepare: (c) => {
+      const input = c.input as BriefInput;
+      const { request, restore } = buildBriefRequest(input);
+      const vis = (raw: string) => {
+        const t = restore(raw)
+          .trim()
+          .replace(/^```(?:json)?\s*|\s*```$/g, '');
+        try {
+          const b = JSON.parse(t) as {
+            lead?: string;
+            bullets?: unknown[];
+            actions?: { label?: string }[];
+          };
+          return [
+            b.lead ?? '',
+            ...(b.bullets ?? []).map((x) => `· ${String(x)}`),
+            ...(b.actions ?? []).map((a) => `→ ${a.label ?? ''}`),
+          ].join('\n');
+        } catch {
+          return `[ugyldig JSON] ${t}`;
+        }
+      };
+      return {
+        opgave:
+          'Skriv et kort overblik (JSON med lead, bullets, actions) over én borger til en kollega ud fra check-ins og journalnotater. Borgeren skal stå som initialer eller "borgeren". Et mønster kræver mindst to datapunkter. Handlingsforslag, der følger direkte af data, er ikke opfundet.',
+        materiale: restore(request.userMessage),
+        request,
+        efterbehandl: vis,
+        overskrifter: [],
+        skjulteNavne: c.navne ?? [],
+      };
+    },
+  },
+  {
+    key: 'dagssammenfatning',
+    titel: 'Saml dagens notater',
+    prepare: (c) => {
+      const input = c.input as { resident: ResidentNameRow; notes: DaySynthesisNote[] };
+      const { request, restore } = buildDaySynthesisRequest(input);
+      return {
+        opgave:
+          'Saml dagens korte notater om én borger til ét journalnotat med overskrifterne Handling/aktivitet og Refleksion. Alt fra notaterne skal med, intet må opfindes. Borgeren står med initialer eller "borgeren". Mangler refleksion, skrives en markering i [ ].',
+        materiale: restore(request.userMessage),
+        request,
+        efterbehandl: restore,
+        overskrifter: [...JOURNAL_POLISH_HEADINGS],
+        skjulteNavne: c.navne ?? [],
+      };
+    },
+  },
+  {
+    key: 'lys-dagbog',
+    titel: 'Lys svarer på dagbog',
+    prepare: (c) => {
+      const { content: _content, ...request } = buildLysJournalReplyRequest(
+        c.input as LysJournalReplyInput
+      );
+      void _content;
+      return {
+        opgave:
+          'Lys (en rolig AI-følgesvend for borgere på et bosted) skriver højst 2 sætninger og 35 ord til borgeren om det, de lige har skrevet i dagbogen. Spejl borgerens ord, ingen råd om medicin, ingen diagnoser, ingen emojis, ingen spørgsmål der kræver svar. Ved krisetegn: sig roligt at personalet er der nu og nævn Livslinien 70 201 201. Vurdér "faglighed" som recovery-orienteret, anerkendende tone og "format" som længde og form.',
+        materiale: request.userMessage,
+        request,
+        efterbehandl: (raw) => raw,
+        overskrifter: [],
+        skjulteNavne: [],
+      };
+    },
+  },
+  {
+    key: 'fortael',
+    titel: 'Fortæl assistenten',
+    prepare: (c) => {
+      const input = c.input as { resident: ResidentNameRow; text: string; today: string };
+      const initials = residentInitials(input.resident);
+      const userMessage = buildIntakeMessage(
+        replaceNames(input.text, residentNames(input.resident), 'Borgeren'),
+        input.today
+      );
+      const vis = (raw: string) => {
+        const parsed = parseIntakeResponse(raw, input.today);
+        if (!parsed) return `[ugyldigt svar] ${raw}`;
+        const navn = (t: string) =>
+          t.replace(/\bBorgerens\b/g, `${initials}s`).replace(/\bBorgeren\b/g, initials);
+        return [
+          navn(parsed.summary),
+          ...parsed.actions.map((a) => `· ${a.type}: ${navn(JSON.stringify(a))}`),
+        ].join('\n');
+      };
+      return {
+        opgave:
+          'En medarbejder fortæller med egne ord, hvad der er sket med en borger. Assistenten foreslår handlinger (journalnotat, opgave, kalenderaftale, medicinanmodning, overlevering) som JSON. Kun det, teksten bærer; ingen opfundne tider, doser eller diagnoser. Medicin ændres aldrig, kun en anmodning til den medicinansvarlige. Borgeren står med initialer.',
+        materiale: userMessage,
+        request: { system: INTAKE_SYSTEM, userMessage, maxTokens: 1500, temperature: 0 },
+        efterbehandl: vis,
         overskrifter: [],
         skjulteNavne: c.navne ?? [],
       };

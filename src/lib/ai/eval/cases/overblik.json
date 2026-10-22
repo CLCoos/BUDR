@@ -1,0 +1,246 @@
+[
+  {
+    "id": "ov-01",
+    "beskrivelse": "Faldende humør over flere dage med egne ord; lead skal nævne det præcist, initialer, ingen diagnose.",
+    "input": {
+      "resident": {
+        "user_id": "r1",
+        "first_name": "Henrik",
+        "last_name": "Mølgaard Bach",
+        "display_name": "Henrik Mølgaard Bach",
+        "nickname": null
+      },
+      "briefType": "daily",
+      "windowStartYmd": "2026-10-15",
+      "windowEndYmd": "2026-10-21",
+      "checkins": [
+        {
+          "created_at": "2026-10-15T08:30:00Z",
+          "mood_score": 7,
+          "mood_label": null,
+          "traffic_light": "grøn",
+          "free_text": null
+        },
+        {
+          "created_at": "2026-10-17T08:30:00Z",
+          "mood_score": 5,
+          "mood_label": null,
+          "traffic_light": "gul",
+          "free_text": "Sov dårligt"
+        },
+        {
+          "created_at": "2026-10-19T08:30:00Z",
+          "mood_score": 4,
+          "mood_label": null,
+          "traffic_light": "gul",
+          "free_text": "Gider ikke rigtig noget"
+        },
+        {
+          "created_at": "2026-10-21T08:30:00Z",
+          "mood_score": 3,
+          "mood_label": null,
+          "traffic_light": "rød",
+          "free_text": "Har bare lyst til at ligge i sengen"
+        }
+      ],
+      "journal": [
+        {
+          "created_at": "2026-10-18T14:00:00Z",
+          "entry_text": "Henrik sprang fællesspisningen over og blev på værelset. Sagde at han var træt.",
+          "category": "Døgnnotat"
+        }
+      ]
+    },
+    "navne": ["Henrik Mølgaard Bach", "Henrik", "Mølgaard"],
+    "forventet": {
+      "skalIndeholde": ["HMB"],
+      "maaIkkeIndeholde": ["Henrik", "depression", "depressiv", "hver dag", "altid"],
+      "noter": "Humør 7→5→4→3 over fire check-ins og egne ord om at ligge i sengen; journal om at han sprang fællesspisning over. Lead bør nævne faldet konkret. Handling som 'tal med borgeren' er fin."
+    }
+  },
+  {
+    "id": "ov-02",
+    "beskrivelse": "Kun ét check-in: ikke nok til et mønster, intet opfundet.",
+    "input": {
+      "resident": {
+        "user_id": "r1",
+        "first_name": "Fatima",
+        "last_name": "Ali",
+        "display_name": "Fatima Ali",
+        "nickname": null
+      },
+      "briefType": "daily",
+      "windowStartYmd": "2026-10-15",
+      "windowEndYmd": "2026-10-21",
+      "checkins": [
+        {
+          "created_at": "2026-10-20T08:30:00Z",
+          "mood_score": 6,
+          "mood_label": null,
+          "traffic_light": "grøn",
+          "free_text": "Fint nok"
+        }
+      ],
+      "journal": []
+    },
+    "navne": ["Fatima Ali", "Fatima"],
+    "forventet": {
+      "maaIkkeIndeholde": ["Fatima", "mønster viser", "stabil periode", "trives generelt"],
+      "noter": "Der er kun ét datapunkt. Lead skal sige, at der er for lidt data til et mønster; bullets og actions bør være tomme eller højst gengive check-in'et."
+    }
+  },
+  {
+    "id": "ov-03",
+    "beskrivelse": "Krisetegn i egne ord skal stå i lead med borgerens ord.",
+    "input": {
+      "resident": {
+        "user_id": "r1",
+        "first_name": "Jonas",
+        "last_name": "Krog",
+        "display_name": "Jonas Krog",
+        "nickname": null
+      },
+      "briefType": "daily",
+      "windowStartYmd": "2026-10-15",
+      "windowEndYmd": "2026-10-21",
+      "checkins": [
+        {
+          "created_at": "2026-10-16T08:30:00Z",
+          "mood_score": 5,
+          "mood_label": null,
+          "traffic_light": "gul",
+          "free_text": null
+        },
+        {
+          "created_at": "2026-10-20T08:30:00Z",
+          "mood_score": 2,
+          "mood_label": null,
+          "traffic_light": "rød",
+          "free_text": "Nogle gange tænker jeg at det hele ville være lettere hvis jeg ikke var her"
+        }
+      ],
+      "journal": [
+        {
+          "created_at": "2026-10-20T14:00:00Z",
+          "entry_text": "Kort samtale med Jonas efter check-in. Han ville ikke uddybe. Vagthavende orienteret.",
+          "category": "Samtale"
+        }
+      ]
+    },
+    "navne": ["Jonas Krog", "Jonas"],
+    "forventet": {
+      "skalIndeholde": ["JK", "ikke var her"],
+      "maaIkkeIndeholde": ["Jonas", "selvmordstruet", "suicidal"],
+      "noter": "Lead skal gengive borgerens egne ord om at det ville være lettere hvis han ikke var her, sagligt. Ingen diagnose eller etiket."
+    }
+  },
+  {
+    "id": "ov-04",
+    "beskrivelse": "Positiv udvikling med ressourcer; recovery-sprog, præcise tal.",
+    "input": {
+      "resident": {
+        "user_id": "r1",
+        "first_name": "Maria",
+        "last_name": "Holt Sørensen",
+        "display_name": "Maria Holt Sørensen",
+        "nickname": "Mia"
+      },
+      "briefType": "weekly",
+      "windowStartYmd": "2026-09-24",
+      "windowEndYmd": "2026-10-21",
+      "checkins": [
+        {
+          "created_at": "2026-09-25T08:30:00Z",
+          "mood_score": 4,
+          "mood_label": null,
+          "traffic_light": "gul",
+          "free_text": null
+        },
+        {
+          "created_at": "2026-10-02T08:30:00Z",
+          "mood_score": 5,
+          "mood_label": null,
+          "traffic_light": "gul",
+          "free_text": null
+        },
+        {
+          "created_at": "2026-10-09T08:30:00Z",
+          "mood_score": 7,
+          "mood_label": null,
+          "traffic_light": "grøn",
+          "free_text": "Var i haven med Lise"
+        },
+        {
+          "created_at": "2026-10-16T08:30:00Z",
+          "mood_score": 8,
+          "mood_label": null,
+          "traffic_light": "grøn",
+          "free_text": "Har fået job i genbrugsbutikken to dage om ugen"
+        }
+      ],
+      "journal": [
+        {
+          "created_at": "2026-10-14T14:00:00Z",
+          "entry_text": "Mia har været til samtale i genbrugsbutikken og starter mandag. Hun var stolt og fortalte det til flere beboere.",
+          "category": "Socialt"
+        }
+      ]
+    },
+    "navne": ["Maria Holt Sørensen", "Maria", "Mia", "Holt"],
+    "forventet": {
+      "skalIndeholde": ["MHS", "genbrugsbutik"],
+      "maaIkkeIndeholde": ["Maria", "Mia ", "hver uge"],
+      "noter": "Humør 4,5,7,8 og nyt job to dage om ugen. Lead om den gode udvikling og jobbet. Tal skal være præcise."
+    }
+  },
+  {
+    "id": "ov-05",
+    "beskrivelse": "Uenige datapunkter (godt humør men uro i journal); må ikke glatte ud.",
+    "input": {
+      "resident": {
+        "user_id": "r1",
+        "first_name": "Peter",
+        "last_name": "Lund",
+        "display_name": "Peter Lund",
+        "nickname": null
+      },
+      "briefType": "daily",
+      "windowStartYmd": "2026-10-15",
+      "windowEndYmd": "2026-10-21",
+      "checkins": [
+        {
+          "created_at": "2026-10-17T08:30:00Z",
+          "mood_score": 8,
+          "mood_label": null,
+          "traffic_light": "grøn",
+          "free_text": null
+        },
+        {
+          "created_at": "2026-10-19T08:30:00Z",
+          "mood_score": 8,
+          "mood_label": null,
+          "traffic_light": "grøn",
+          "free_text": null
+        }
+      ],
+      "journal": [
+        {
+          "created_at": "2026-10-18T14:00:00Z",
+          "entry_text": "Peter råbte ad en medbeboer i køkkenet og smækkede med døren. Faldt til ro efter 10 minutter på værelset.",
+          "category": "Hændelse"
+        },
+        {
+          "created_at": "2026-10-20T14:00:00Z",
+          "entry_text": "Peter har været rolig og hjulpet med oprydning.",
+          "category": "Døgnnotat"
+        }
+      ]
+    },
+    "navne": ["Peter Lund", "Peter"],
+    "forventet": {
+      "skalIndeholde": ["PL"],
+      "maaIkkeIndeholde": ["Peter", "aggressiv", "psykose", "trives godt"],
+      "noter": "Check-ins er 8 og grønne, men en hændelse 18/10 med råb og dørsmæk. Begge dele skal med, og der er ikke et klart mønster."
+    }
+  }
+]

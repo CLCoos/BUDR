@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { createAliasMap, initialerAfNavn, namePartsFor } from './aliases';
+import {
+  createAliasMap,
+  initialerAfNavn,
+  namePartsFor,
+  residentAliasMap,
+  residentInitials,
+} from './aliases';
 
 describe('createAliasMap', () => {
   const people = [
@@ -37,5 +43,30 @@ describe('initialer', () => {
     expect(initialerAfNavn('Asta Lindberg Fog')).toBe('ALF');
     expect(initialerAfNavn('Fatima Al-Sayed')).toBe('FAS');
     expect(initialerAfNavn('KBJ')).toBe('KBJ');
+  });
+});
+
+describe('residentAliasMap', () => {
+  const rows = [
+    {
+      user_id: 'a',
+      first_name: 'Karin',
+      last_name: 'Bech Jensen',
+      display_name: 'Karin B.',
+      nickname: 'Kis',
+    },
+    { user_id: 'b', first_name: null, last_name: null, display_name: 'Ole Dam', nickname: null },
+  ];
+
+  it('giver initialer ud fra fulde navn eller visningsnavn', () => {
+    expect(residentInitials(rows[0]!)).toBe('KBJ');
+    expect(residentInitials(rows[1]!)).toBe('OD');
+  });
+
+  it('skjuler alle navne og sætter initialer ind i svaret', () => {
+    const map = residentAliasMap(rows);
+    const hidden = map.hide('Kis og Karin talte med Ole Dam.');
+    expect(hidden).not.toMatch(/Kis|Karin|Ole/);
+    expect(map.restore(hidden)).toBe('KBJ og KBJ talte med OD.');
   });
 });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getStaffPermissions } from '@/lib/auth/getStaffPermissions';
 import { hasPermission } from '@/lib/auth/hasPermission';
+import type { ResidentNameRow } from '@/lib/assistant/names';
 import { generateBriefForResident } from '@/lib/ai/generateBrief';
 import { PERMISSIONS } from '@/lib/permissions';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
 
   const { data: cr, error: crErr } = await supabase
     .from('care_residents')
-    .select('user_id, org_id, first_name, display_name')
+    .select('user_id, org_id, first_name, last_name, display_name, nickname')
     .eq('user_id', residentId)
     .maybeSingle();
 
@@ -62,16 +63,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Ingen adgang til beboer' }, { status: 403 });
   }
 
-  const residentLabel =
-    (typeof cr.display_name === 'string' && cr.display_name.trim()) ||
-    (typeof cr.first_name === 'string' && cr.first_name.trim()) ||
-    'Beboer';
-
   const result = await generateBriefForResident({
     supabase,
     residentId,
     orgId,
-    residentLabel,
+    resident: cr as ResidentNameRow,
     briefType,
   });
 

@@ -12,7 +12,7 @@ import {
   restoreName,
 } from '@/lib/assistant/names';
 import { loadResidents } from '@/lib/assistant/server';
-import { firstName } from '@/lib/assistant/generators';
+import { residentInitials } from '@/lib/ai/aliases';
 import { copenhagenYmd } from '@/lib/copenhagenDay';
 import { PERMISSIONS } from '@/lib/permissions';
 
@@ -35,7 +35,7 @@ function restoreAction(a: AssistantAction, name: string): AssistantAction {
 /**
  * POST /api/portal/assistant/intake — { text, resident_id?, context? }
  * Medarbejderen fortæller med almindelige ord; assistenten foreslår notater, opgaver og aftaler.
- * Intet gemmes her. Navne erstattes før AI og sættes ind igen bagefter.
+ * Intet gemmes her. Navne erstattes før AI, og svaret bruger borgerens initialer.
  */
 export async function POST(req: Request) {
   const ctx = await requireStaff(PERMISSIONS.WRITE_JOURNAL);
@@ -112,7 +112,8 @@ export async function POST(req: Request) {
     );
   }
 
-  const name = firstName(resident);
+  // AI-tekst nævner borgeren med initialer (GDPR); det fulde navn står kun på borgerens side.
+  const name = residentInitials(resident);
   return NextResponse.json({
     resident: { id: resident.user_id, name: residentLabel(resident) },
     summary: restoreName(parsed.summary, name),
