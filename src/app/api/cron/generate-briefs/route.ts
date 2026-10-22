@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminSupabaseClient } from '@/lib/supabase/admin';
 import { generateBriefForResident } from '@/lib/ai/generateBrief';
+import type { ResidentNameRow } from '@/lib/assistant/names';
 
 export const maxDuration = 60;
 
-type ResidentRow = {
-  user_id: string;
-  org_id: string;
-  display_name: string | null;
-  first_name: string | null;
-};
+type ResidentRow = ResidentNameRow & { org_id: string };
 
 export async function POST(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
@@ -25,7 +21,9 @@ export async function POST(req: NextRequest) {
 
   const supabase = createAdminSupabaseClient();
 
-  let query = supabase.from('care_residents').select('user_id, org_id, display_name, first_name');
+  let query = supabase
+    .from('care_residents')
+    .select('user_id, org_id, display_name, first_name, last_name, nickname');
   if (onlyResidentId) query = query.eq('user_id', onlyResidentId);
 
   const { data: residents, error: resErr } = await query;
@@ -43,12 +41,11 @@ export async function POST(req: NextRequest) {
   const summary = { brief_type: briefType, total: list.length, ok: 0, no_data: 0, errors: 0 };
 
   for (const r of list) {
-    const residentLabel = r.display_name?.trim() || r.first_name?.trim() || 'Beboer';
     const result = await generateBriefForResident({
       supabase,
       residentId: r.user_id,
       orgId: r.org_id,
-      residentLabel,
+      resident: r,
       briefType,
     });
     if (result.status === 'ok') summary.ok += 1;

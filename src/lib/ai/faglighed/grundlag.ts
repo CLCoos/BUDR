@@ -20,6 +20,7 @@ Sandhed
 
 Sikkerhed
 - Står der noget om selvskade, selvmordstanker, vold eller overgreb, så gengiv det sagligt og præcist med borgerens egne ord, og læg det, hvor personalet ikke kan overse det.
+- Sæt ikke selv en betegnelse på det, borgeren har sagt (skriv ikke fx "selvmordstanker" eller "selvmordstruet"); gengiv ordene. Tilføj ikke anbefalinger eller vurderinger, som ikke står i materialet, medmindre opgaven beder om det.
 
 Sprog
 - Klart og korrekt dansk, som en erfaren kollega skriver det: aktive verber, korte sætninger, ingen fyldord og ingen engelske ord, hvor der findes et dansk.

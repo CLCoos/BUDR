@@ -2,22 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getResidentId } from '@/lib/residentAuth';
 import { claudeApiKey, claudeMessagesFetch } from '@/lib/ai/claudeTransport';
+import { PLAN_PROPOSAL_SYSTEM, laasMedicin, type PlanItem } from '@/lib/lys/planProposal';
 
-export type PlanItem = {
-  id: string;
-  time: string;
-  title: string;
-  description?: string;
-  category: 'mad' | 'medicin' | 'aktivitet' | 'hvile' | 'social';
-};
-
-const SYSTEM_PROMPT =
-  'Du er en hjælpsom AI-assistent i Lys-appen for borgere på et socialpsykiatrisk bosted. ' +
-  'Borgeren beder om en ændring til sin dagsplan. ' +
-  'Foreslå en revideret plan baseret på borgerens ønske. ' +
-  'Vær imødekommende og realistisk. ' +
-  'Returner KUN gyldig JSON uden markdown-blokke: ' +
-  '{ "proposed_items": [{"id": "...", "time": "HH:MM", "title": "...", "description": "...", "category": "mad|medicin|aktivitet|hvile|social"}], "ai_reasoning": "..." }';
+export type { PlanItem };
 
 export async function POST(req: NextRequest) {
   const sessionResidentId = await getResidentId();
@@ -60,7 +47,7 @@ export async function POST(req: NextRequest) {
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 1500,
       temperature: 0.2,
-      system: SYSTEM_PROMPT,
+      system: PLAN_PROPOSAL_SYSTEM,
       messages: [{ role: 'user', content: userContent }],
     },
     { apiKey: apiKey }
@@ -113,7 +100,7 @@ export async function POST(req: NextRequest) {
       org_id: (residentRow as { org_id: string | null }).org_id ?? null,
       plan_date: today,
       user_message: userMessage.trim().slice(0, 2000),
-      proposed_items: parsed.proposed_items,
+      proposed_items: laasMedicin(currentPlan ?? [], parsed.proposed_items ?? []),
       ai_reasoning: parsed.ai_reasoning,
       status: 'pending',
     })
@@ -127,7 +114,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     proposalId: proposal.id as string,
-    proposed_items: parsed.proposed_items,
+    proposed_items: laasMedicin(currentPlan ?? [], parsed.proposed_items ?? []),
     ai_reasoning: parsed.ai_reasoning,
   });
 }

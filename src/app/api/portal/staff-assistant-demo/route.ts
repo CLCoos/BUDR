@@ -4,6 +4,8 @@ import { CARE_DEMO_RESIDENT_PROFILES } from '@/lib/careDemoResidents';
 import { CARE_PORTAL_DEMO_FACILITY_NAME } from '@/lib/carePortalDemoBranding';
 import { claudeApiKey, claudeMessagesFetch } from '@/lib/ai/claudeTransport';
 import { checkApiRateLimit, getClientIp } from '@/lib/apiRateLimit';
+import { residentAliasMap } from '@/lib/ai/aliases';
+import { buildStaffAssistantSystem } from '@/lib/assistant/staffAssistantPrompt';
 
 /**
  * Public demo endpoint for /care-portal-demo/assistant — same Anthropic integration as
@@ -39,45 +41,38 @@ export async function POST(req: NextRequest) {
   const key = claudeApiKey();
   if (!key) return NextResponse.json({ error: 'AI ikke konfigureret' }, { status: 503 });
 
-  const residentLines = CARE_DEMO_RESIDENT_PROFILES.map((r) => {
-    return `• ${r.displayName} (beboer-id: ${r.id}), hus ${r.house}, værelse ${r.room}`;
+  // Også demoens fiktive borgere står med initialer i svaret.
+  const demoRows = CARE_DEMO_RESIDENT_PROFILES.map((r) => ({
+    user_id: r.id,
+    first_name: null,
+    last_name: null,
+    display_name: r.displayName,
+    nickname: null,
+  }));
+  const aliases = residentAliasMap(demoRows);
+  const residentLines = CARE_DEMO_RESIDENT_PROFILES.map(
+    (r, i) => `• ${aliases.alias(i)} (beboer-id: ${r.id}), hus ${r.house}, værelse ${r.room}`
+  );
+
+  const system = buildStaffAssistantSystem({
+    residentLines,
+    stedet: `Dette er en interaktiv demo af BUDR (${CARE_PORTAL_DEMO_FACILITY_NAME}, fiktivt). Der er ingen rigtige journaldata. Svar som om borgerne ovenfor findes, og henvis til demoens sider, hvor det giver mening.`,
+    residentTabs:
+      'demo: overblik, medicin, dagsplan, plan, haven, notes, goals, medication eller aftaler',
   });
-  const residentContext = residentLines.join('\n');
-
-  const system = `Du er en erfaren faglig kollega og supervisor på et socialpsykiatrisk bosted i Danmark. Du er en AI-assistent i BUDR og taler som "den erfarne kollega", der altid har tid og aldrig dømmer. Spørger nogen, så sig ærligt, at du er en AI-assistent.
-
-Du taler med demo-personale der prøver Care Portal-demo (${CARE_PORTAL_DEMO_FACILITY_NAME}, fiktivt).
-
-BEBOERE I DEMoen (fiktive profiler):
-${residentContext}
-
-Dette er en interaktiv demo — der er ingen rigtige journaldata i databasen. Svar som om beboerne ovenfor findes, og henvis til demo-flows i BUDR hvor det giver mening.
-
-DIN TONE:
-- Varm, rolig og konkret — som en erfaren kollega der sætter sig ned med dig
-- Kortfattet: 3-5 sætninger normalt, mere kun hvis nødvendigt
-- Brug "du" og naturligt dansk
-
-VIGTIG GRÆNSE: Du erstatter ikke supervision, lægefaglig vurdering eller akut hjælp (112).
-
-GENVEJE I BUDR (påkrævet i hvert svar):
-Efter dit almindelige svar skal du tilføje PRÆCIST ét ekstra afsnit med følgende XML-blok:
-
-<budr_followups>[{"key":"indsatsdok","reason":"kort dansk grund"}]</budr_followups>
-
-Regler for JSON inde i blokken:
-- Et array med 1–4 objekter. Hvert objekt skal mindst have "key" (string) og "reason" (kort streng på dansk).
-- Tilladte key-værdier: indsatsdok, dataimport, beboere, journal, handover, tilsyn, settings.
-- Valgfrie felter: "searchQuery", "resident360Id" (demo-id som res-sara), "residentTab" (demo: overblik, medicin, dagsplan, plan, haven, notes, goals, medication, aftaler).
-- Brødteksten før blokken må ikke nævne XML, JSON eller "budr_followups".`;
+  const aiMessages = messages.map((m) => ({ ...m, content: aliases.hide(m.content) }));
+  while (aiMessages[0]?.role === 'assistant') aiMessages.shift();
+  if (aiMessages.length === 0) {
+    return NextResponse.json({ error: 'No messages' }, { status: 400 });
+  }
 
   const res = await claudeMessagesFetch(
     {
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 900,
-      temperature: 0.5,
+      temperature: 0.3,
       system,
-      messages,
+      messages: aiMessages,
     },
     { apiKey: key }
   );
@@ -90,7 +85,7 @@ Regler for JSON inde i blokken:
 
   const data = (await res.json()) as { content?: Array<{ type?: string; text?: string }> };
   const block = data.content?.find((c) => c.type === 'text');
-  const text = block?.text?.trim();
+  const text = block?.text ? aliases.restore(block.text.trim()) : '';
 
   if (!text) {
     return NextResponse.json({ error: 'Tomt svar fra AI' }, { status: 502 });

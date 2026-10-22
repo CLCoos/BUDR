@@ -3,6 +3,7 @@ import { callAnthropicJournalPolish } from '@/lib/ai/anthropicJournalPolish';
 import { claudeApiKey } from '@/lib/ai/claudeTransport';
 import { clipText, createAliasMap, initialerAfNavn, namePartsFor } from '@/lib/ai/aliases';
 import { requireStaffForAi } from '@/lib/ai/staffAiAuth';
+import { medGrundlag } from '@/lib/ai/faglighed/grundlag';
 import { PERMISSIONS } from '@/lib/permissions';
 
 export const maxDuration = 60;
@@ -10,7 +11,8 @@ export const maxDuration = 60;
 const MAX_RESIDENTS = 60;
 const MAX_MAGT = 40;
 
-const SYSTEM = `Du skriver et udkast til en tilsynsrapport fra et socialpsykiatrisk botilbud. Skriv formelt og fagligt, men læsbart dansk.
+const SYSTEM =
+  medGrundlag(`Du skriver et udkast til en tilsynsrapport fra et socialpsykiatrisk botilbud. Skriv formelt og fagligt, men læsbart dansk.
 
 Borgerne hedder "Borger 1", "Borger 2" osv. Brug præcis de betegnelser, så navnene kan sættes ind bagefter.
 
@@ -29,7 +31,7 @@ Regler:
 - Afsnit 5 er personalets egen vurdering. Skriv kun markeringer med de spørgsmål, personalet bør besvare, ikke en vurdering.
 - Henvis kun til lovparagraffer, der står i data.
 - Ingen diagnoser. Skriv hvad der er registreret, ikke gæt om årsager.
-- Højst ca. 450 ord. Afslut ikke med metatekst om AI.`;
+- Højst ca. 450 ord. Afslut ikke med metatekst om AI.`);
 
 type ResidentIn = { name?: unknown; trafficLight?: unknown; moodLabel?: unknown; note?: unknown };
 type MagtIn = { tidspunkt?: unknown; type?: unknown; paragraph?: unknown; beskrivelse?: unknown };

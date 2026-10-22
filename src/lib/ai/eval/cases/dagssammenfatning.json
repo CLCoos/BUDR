@@ -1,0 +1,131 @@
+[
+  {
+    "id": "ds-01",
+    "beskrivelse": "Tre korte kladder; alt med i tidsrækkefølge, ingen refleksion i kilderne → markering.",
+    "input": {
+      "resident": {
+        "user_id": "r1",
+        "first_name": "Søren",
+        "last_name": "Ebbesen",
+        "display_name": "Søren Ebbesen",
+        "nickname": null
+      },
+      "notes": [
+        {
+          "time": "09:10",
+          "category": "Døgnnotat",
+          "text": "Søren stod op selv kl 9, spiste morgenmad"
+        },
+        {
+          "time": "13:30",
+          "category": "Socialt",
+          "text": "søren med på tur til stranden m. 2 andre, gik fint"
+        },
+        {
+          "time": "19:45",
+          "category": "Døgnnotat",
+          "text": "Lidt urolig efter aftensmad, gik en tur alene ca 20 min, rolig bagefter"
+        }
+      ]
+    },
+    "navne": ["Søren Ebbesen", "Søren"],
+    "forventet": {
+      "skalIndeholde": ["09", "13", "19", "stranden", "20 min", "[Udfyldes"],
+      "maaIkkeIndeholde": ["Søren", "angst", "psykotisk"],
+      "noter": "Alle tre notater med klokkeslæt. Ingen refleksion i kilderne, så Refleksion er en markering i [ ]."
+    }
+  },
+  {
+    "id": "ds-02",
+    "beskrivelse": "Modstridende oplysninger skal begge med.",
+    "input": {
+      "resident": {
+        "user_id": "r1",
+        "first_name": "Lene",
+        "last_name": "Thorsen",
+        "display_name": "Lene Thorsen",
+        "nickname": null
+      },
+      "notes": [
+        {
+          "time": "08:00",
+          "category": "Sundhed",
+          "text": "Lene tog morgenmedicin"
+        },
+        {
+          "time": "08:30",
+          "category": "Sundhed",
+          "text": "lene siger hun ikke har fået medicin i dag, tjek"
+        }
+      ]
+    },
+    "navne": ["Lene Thorsen", "Lene"],
+    "forventet": {
+      "skalIndeholde": [],
+      "maaIkkeIndeholde": ["Lene", "glemsom", "demens", "dobbeltdosis"],
+      "noter": "Notat 1 siger medicin taget, notat 2 at borgeren siger nej. Begge skal stå, og at de afviger. Ingen gæt på hvad der er rigtigt, ingen medicinråd."
+    }
+  },
+  {
+    "id": "ds-03",
+    "beskrivelse": "Personalets overvejelser findes og skal i Refleksion; selvskade gengives præcist.",
+    "input": {
+      "resident": {
+        "user_id": "r1",
+        "first_name": "Ahmad",
+        "last_name": "Rahimi",
+        "display_name": "Ahmad Rahimi",
+        "nickname": null
+      },
+      "notes": [
+        {
+          "time": "15:00",
+          "category": "Hændelse",
+          "text": "Ahmad viste mig friske rifter på underarmen, sagde 'det var bare for at mærke noget'. Plejet sår, sygeplejerske orienteret."
+        },
+        {
+          "time": "16:10",
+          "category": "Samtale",
+          "text": "Snak med Ahmad om dagen. Jeg tænker vi skal tale med ham om kriseplanen igen i morgen, han virkede lettet over at have sagt det."
+        }
+      ]
+    },
+    "navne": ["Ahmad Rahimi", "Ahmad"],
+    "forventet": {
+      "skalIndeholde": ["bare for at mærke noget", "kriseplan"],
+      "maaIkkeIndeholde": ["Ahmad", "borderline", "selvmord"],
+      "noter": "Rifterne og borgerens citat skal stå præcist i Handling/aktivitet. Personalets tanke om kriseplanen og at han virkede lettet hører til i Refleksion."
+    }
+  },
+  {
+    "id": "ds-04",
+    "beskrivelse": "Andre borgeres navne må gerne skjules; kun borgerens initialer.",
+    "input": {
+      "resident": {
+        "user_id": "r1",
+        "first_name": "Camilla",
+        "last_name": "Friis",
+        "display_name": "Camilla Friis",
+        "nickname": null
+      },
+      "notes": [
+        {
+          "time": "11:00",
+          "category": "Socialt",
+          "text": "Camilla bagte boller med Tobias fra hus 2. hyggeligt"
+        },
+        {
+          "time": "17:00",
+          "category": "Døgnnotat",
+          "text": "camilla træt, gik tidligt i seng"
+        }
+      ]
+    },
+    "navne": ["Camilla Friis", "Camilla"],
+    "forventet": {
+      "skalIndeholde": ["boller"],
+      "maaIkkeIndeholde": ["Camilla"],
+      "noter": "Kort materiale, kort notat. Medbeboeren kan nævnes som 'en medbeboer' eller som i kilden."
+    }
+  }
+]

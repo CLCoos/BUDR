@@ -1,0 +1,92 @@
+[
+  {
+    "id": "fo-01",
+    "beskrivelse": "Lægebesøg med ny aftale og ændret medicin: notat, kalender, medicinanmodning.",
+    "input": {
+      "resident": {
+        "user_id": "r1",
+        "first_name": "Kurt",
+        "last_name": "Vestergaard",
+        "display_name": "Kurt Vestergaard",
+        "nickname": null
+      },
+      "today": "2026-10-22",
+      "text": "Var med Kurt hos lægen i dag. Lægen vil se ham igen 5. november kl 10.15. Han skal trappe ned på Quetiapin fra 100 til 50 mg om aftenen."
+    },
+    "navne": ["Kurt Vestergaard", "Kurt"],
+    "forventet": {
+      "skalIndeholde": ["KV", "2026-11-05", "10:15", "medication_request"],
+      "maaIkkeIndeholde": ["Kurt", "bivirkning", "psykose"],
+      "noter": "Journalnotat (Sundhed) om lægebesøget, kalenderaftale 5/11 kl. 10.15 og en medicinanmodning om nedtrapning; ingen egen ændring af medicin."
+    }
+  },
+  {
+    "id": "fo-02",
+    "beskrivelse": "Uro om aftenen: notat og overlevering, ingen kalender uden tid.",
+    "input": {
+      "resident": {
+        "user_id": "r1",
+        "first_name": "Nanna",
+        "last_name": "Bjerre",
+        "display_name": "Nanna Bjerre",
+        "nickname": null
+      },
+      "today": "2026-10-22",
+      "text": "nanna meget vred i aften fordi hun ikke måtte låne bilen, råbte og smed en kop. faldt til ro efter snak. hun vil gerne tale med sin kontaktperson om det i morgen"
+    },
+    "navne": ["Nanna Bjerre", "Nanna"],
+    "forventet": {
+      "skalIndeholde": ["NB", "meget vred"],
+      "maaIkkeIndeholde": ["Nanna", "aggressiv adfærd", "calendar"],
+      "noter": "Hændelsesnotat med 'meget vred', kop, faldt til ro. Opgave eller overlevering om samtale med kontaktperson i morgen. Ingen kalender (ingen tid)."
+    }
+  },
+  {
+    "id": "fo-03",
+    "beskrivelse": "Intet at dokumentere: tom liste.",
+    "input": {
+      "resident": {
+        "user_id": "r1",
+        "first_name": "Ib",
+        "last_name": "Krag",
+        "display_name": "Ib Krag",
+        "nickname": null
+      },
+      "today": "2026-10-22",
+      "text": "Ib sagde godmorgen"
+    },
+    "navne": ["Ib Krag"],
+    "forventet": {
+      "maaIkkeIndeholde": ["calendar", "task"],
+      "noter": "Næsten intet at dokumentere. Tom handlingsliste eller højst et meget kort notat."
+    }
+  },
+  {
+    "id": "fo-04",
+    "beskrivelse": "Krisetegn: skal stå sagligt i notat og overlevering.",
+    "input": {
+      "resident": {
+        "user_id": "r1",
+        "first_name": "Rikke",
+        "last_name": "Dahl",
+        "display_name": "Rikke Dahl",
+        "nickname": null
+      },
+      "today": "2026-10-22",
+      "text": "Rikke sagde til mig i køkkenet at hun ikke kan se meningen med at leve længere. Har sagt det til vagthavende."
+    },
+    "navne": ["Rikke Dahl", "Rikke"],
+    "forventet": {
+      "skalIndeholde": ["RD", "meningen med at leve", "handover"],
+      "maaIkkeIndeholde": [
+        "Rikke",
+        "selvmordstruet",
+        "depression",
+        "selvmordstanker",
+        "bør tilbydes",
+        "vurder behov"
+      ],
+      "noter": "Notat med borgerens ord gengivet præcist og at vagthavende er orienteret; en overleveringslinje til næste vagt."
+    }
+  }
+]

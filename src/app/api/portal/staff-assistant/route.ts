@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { parseBudrFollowUpsBlock } from '@/lib/portalStaffAssistantFollowUps';
 import { claudeApiKey, claudeMessagesFetch } from '@/lib/ai/claudeTransport';
+import { clipText, residentAliasMap } from '@/lib/ai/aliases';
+import type { ResidentNameRow } from '@/lib/assistant/names';
+import { buildStaffAssistantSystem } from '@/lib/assistant/staffAssistantPrompt';
 
 export async function POST(req: NextRequest) {
   // Verify staff auth
@@ -37,113 +40,76 @@ export async function POST(req: NextRequest) {
     .maybeSingle();
   if (!staffRow) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  // Fetch resident context
+  // Borgerne hedder "Borger 1", "Borger 2" … for AI'en; svaret får initialer (GDPR).
   const { data: residents } = await supabase
     .from('care_residents')
-    .select('user_id, display_name, onboarding_data')
+    .select('user_id, first_name, last_name, display_name, nickname, onboarding_data')
     .order('display_name');
+  const residentRows = (residents ?? []) as Array<
+    ResidentNameRow & { onboarding_data: Record<string, string> | null }
+  >;
+  const aliases = residentAliasMap(residentRows);
+  const aliasOf = new Map(residentRows.map((r, i) => [r.user_id, aliases.alias(i)]));
 
-  // Fetch recent journal entries for context (last 7 days, capped at 15)
+  // Godkendte journalnotater fra de seneste 7 dage (højst 15) som baggrund.
   const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
   const { data: journal } = await supabase
     .from('journal_entries')
-    .select('entry_text, category, created_at, care_residents(display_name)')
+    .select('resident_id, entry_text, category, created_at')
     .eq('journal_status', 'godkendt')
     .gte('created_at', since)
     .order('created_at', { ascending: false })
     .limit(15);
 
-  // Build resident list
-  const residentLines = (residents ?? []).map((r) => {
-    const od = r.onboarding_data as Record<string, string> | null;
-    const uid = r.user_id as string;
-    const parts = [`• ${r.display_name as string} (beboer-id: ${uid})`];
+  // Kontaktpersoners navne sendes ikke; kun relationen.
+  const residentLines = residentRows.map((r) => {
+    const od = r.onboarding_data;
+    const parts = [`• ${aliasOf.get(r.user_id)} (beboer-id: ${r.user_id})`];
     if (od?.move_in_date) parts.push(`indflyttet ${od.move_in_date}`);
     if (od?.primary_contact) {
-      const rel = od.primary_contact_relation ? ` (${od.primary_contact_relation})` : '';
-      parts.push(`primær kontakt: ${od.primary_contact}${rel}`);
+      parts.push(
+        `har en primær kontakt${od.primary_contact_relation ? ` (${od.primary_contact_relation})` : ''}`
+      );
     }
     return parts.join(', ');
   });
 
-  const residentContext =
-    residentLines.length > 0 ? residentLines.join('\n') : 'Ingen beboere registreret endnu.';
-
-  // Build journal context — truncated, for background awareness only
   const journalLines = (journal ?? []).map((j) => {
-    const cr = j.care_residents as { display_name?: string } | { display_name?: string }[] | null;
-    const row = Array.isArray(cr) ? cr[0] : cr;
-    const name = row?.display_name ?? 'Beboer';
-    const date = new Date(j.created_at).toLocaleDateString('da-DK', {
+    const date = new Date(j.created_at as string).toLocaleDateString('da-DK', {
       day: 'numeric',
       month: 'short',
+      timeZone: 'Europe/Copenhagen',
     });
-    const text = (j.entry_text as string).slice(0, 120);
-    return `[${date}] ${name} — ${j.category as string}: ${text}`;
+    const who = aliasOf.get(j.resident_id as string) ?? 'En borger';
+    const text = aliases.hide(clipText(j.entry_text, 160));
+    return `[${date}] ${who}, ${j.category as string}: ${text}`;
   });
 
-  const journalContext =
-    journalLines.length > 0
-      ? `\nSENESTE JOURNALOBSERVATIONER (brug kun som baggrundskontekst — del ikke specifikt indhold direkte):\n${journalLines.join('\n')}`
-      : '';
-
-  const staffName =
-    (user.user_metadata?.full_name as string | undefined) ?? user.email ?? 'kollega';
-
-  const system = `Du er en erfaren faglig kollega og supervisor på et socialpsykiatrisk bosted i Danmark. Du er en AI-assistent i BUDR og taler som "den erfarne kollega", der altid har tid og aldrig dømmer. Spørger nogen, så sig ærligt, at du er en AI-assistent.
-
-Du taler med ${staffName}, der arbejder på dette bosted.
-
-HVEM DU HJÆLPER:
-Primært nye medarbejdere og vikarer der mangler kontekst. De er måske alene på en aftenvagt, kender ikke beboerne endnu, eller har ikke set en specifik situation før. De skal kunne spørge dig om alt uden at føle sig dumme.
-
-DU KAN HJÆLPE MED:
-- Beboerspecifik viden: hvem er de, hvad er vigtigt at vide, hvad skal man ikke gøre
-- Praktisk faglig vejledning i svære situationer (konflikter, uro, selvskade, isolation)
-- Kommunikationsstrategier: hvordan taler man med en beboer der er i krise?
-- Dansk lovgivning: Serviceloven, magtanvendelsesreglerne §§ 124-136, handleplaner, indberetningspligt
-- Dokumentation: hvad skal med i en journal, hvordan formulerer man sig fagligt?
-- Vagtoverblik: hvad er normalt på dette bosted, hvad bør man være opmærksom på?
-
-DIN TONE:
-- Varm, rolig og konkret — som en erfaren kollega der sætter sig ned med dig
-- Kortfattet: 3-5 sætninger normalt, mere kun hvis nødvendigt
-- Ingen lange lister med bullets medmindre brugeren specifikt beder om det
-- Brug "du" og naturligt dansk — ikke klinisk fagsprog
-
-BEBOERE PÅ DETTE BOSTED:
-${residentContext}
-${journalContext}
-
-VIGTIG GRÆNSE: Du erstatter ikke supervision, lægefaglig vurdering eller akut hjælp (112). Hvis noget er akut eller alvorligt, sig det klart og opfordr til at kontakte leder eller politi/ambulance.
-
-GENVEJE I BUDR (påkrævet i hvert svar):
-Brugeren skal altid kunne gå videre til konkrete steder i BUDR-portalen. Når du nævner dokumenter, aftaler, handleplaner, husets retningslinjer, pædagogiske planer, importfiler eller lignende, skal du inkludere mindst én relevant genvej.
-
-Efter dit almindelige svar til kollegaen skal du — uden at forklare dette i brødteksten — tilføje PRÆCIST ét ekstra afsnit bestående af følgende XML-blok (ingen markdown omkring, ingen ekstra tekst efter blokken):
-
-<budr_followups>[{"key":"indsatsdok","reason":"kort dansk grund"}]</budr_followups>
-
-Regler for JSON inde i blokken:
-- Et array med 1–4 objekter. Hvert objekt skal mindst have "key" (string) og "reason" (kort streng på dansk, max ca. 12 ord).
-- Valgfrie felter (brug kun når det giver klar mening):
-  - "searchQuery": kort søgetekst der forudfylder dokumentsøgning i topbaren via URL (?q=), fx medicinnavn eller dokumenttitel.
-  - "resident360Id": præcis UUID fra listen "BEBOERE" ovenfor (beboer-id), kun sammen med key "beboere" eller "journal" når svaret handler om én konkret beboer.
-  - "residentTab": ved dybt link til 360°: brug én af overblik, medicin, dagsplan, plan, haven (små bogstaver som vist).
-- Tilladte key-værdier: indsatsdok, dataimport, beboere, journal, handover, tilsyn, settings.
-- Vælg kun keys der matcher det du skrev: fx aftaler og husets dokumenter → indsatsdok og/eller dataimport; beboerspecifikke aftaler → beboere; journalnotater → journal; vagtskifte → handover; tilsyn → tilsyn; organisatorisk → settings.
-- Hvis intet passer, brug tom array: <budr_followups>[]</budr_followups>
-
-Brødteksten før blokken må ikke nævne XML, JSON eller "budr_followups".`;
+  const system = buildStaffAssistantSystem({
+    residentLines,
+    journalLines,
+    residentTabs: 'overblik, medicin, dagsplan, plan eller haven',
+  });
+  const aiMessages = messages
+    .slice(-12)
+    .map((m) => ({
+      role: m.role === 'assistant' ? ('assistant' as const) : ('user' as const),
+      content: aliases.hide(typeof m.content === 'string' ? m.content.slice(0, 2000).trim() : ''),
+    }))
+    .filter((m) => m.content.length > 0);
+  while (aiMessages[0]?.role === 'assistant') aiMessages.shift();
+  if (aiMessages.length === 0) {
+    return NextResponse.json({ error: 'No messages' }, { status: 400 });
+  }
 
   // Call Anthropic API directly (same pattern as lys-chat which works on Netlify)
   const res = await claudeMessagesFetch(
     {
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 900,
-      temperature: 0.5,
+      temperature: 0.3,
       system,
-      messages,
+      messages: aiMessages,
     },
     { apiKey: key }
   );
@@ -156,7 +122,7 @@ Brødteksten før blokken må ikke nævne XML, JSON eller "budr_followups".`;
 
   const data = (await res.json()) as { content?: Array<{ type?: string; text?: string }> };
   const block = data.content?.find((c) => c.type === 'text');
-  const text = block?.text?.trim();
+  const text = block?.text ? aliases.restore(block.text.trim()) : '';
 
   if (!text) {
     return NextResponse.json({ error: 'Tomt svar fra AI' }, { status: 502 });
