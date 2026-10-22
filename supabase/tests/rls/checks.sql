@@ -484,6 +484,36 @@ DO $$ DECLARE n int; BEGIN
     BEGIN EXECUTE 'DELETE FROM journal_fagsystem_transfers'; GET DIAGNOSTICS n = ROW_COUNT; INSERT INTO r VALUES ('fagsystem_other_org_delete', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('fagsystem_other_org_delete','blocked'); END;
   END IF;
 END $$;
+-- CPR på borgeren: kun via funktionerne, kun i eget bosted
+SET test.uid = '00000000-0000-0000-0000-0000000000c1';
+DO $$ DECLARE v text; BEGIN
+  IF to_regclass('public.care_resident_cpr') IS NOT NULL THEN
+    BEGIN
+      PERFORM set_resident_cpr('00000000-0000-0000-0000-0000000000b1', '010190-1234');
+      v := reveal_resident_cpr('00000000-0000-0000-0000-0000000000b1');
+      INSERT INTO r VALUES ('cpr_leder_set_and_reveal (should work)', CASE WHEN v = '010190-1234' THEN 'works' ELSE 'BROKEN' END);
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('cpr_leder_set_and_reveal (should work)','BROKEN'); END;
+  END IF;
+END $$;
+SET test.uid = '00000000-0000-0000-0000-0000000000c2';
+DO $$ DECLARE v text; n int; BEGIN
+  IF to_regclass('public.care_resident_cpr') IS NOT NULL THEN
+    BEGIN
+      v := get_resident_cpr_masked('00000000-0000-0000-0000-0000000000b1');
+      INSERT INTO r VALUES ('cpr_staff_masked (should work)', CASE WHEN v = '010190-••••' THEN 'works' ELSE 'BROKEN' END);
+    EXCEPTION WHEN others THEN INSERT INTO r VALUES ('cpr_staff_masked (should work)','BROKEN'); END;
+    BEGIN EXECUTE 'SELECT count(*) FROM care_resident_cpr' INTO n; INSERT INTO r VALUES ('cpr_table_direct_read', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('cpr_table_direct_read','blocked'); END;
+    BEGIN PERFORM set_resident_cpr('00000000-0000-0000-0000-0000000000b1', '0202021111'); INSERT INTO r VALUES ('cpr_staff_without_manage_set','HOLE'); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('cpr_staff_without_manage_set','blocked'); END;
+    BEGIN EXECUTE 'SELECT count(*) FROM care_resident_cpr_log' INTO n; INSERT INTO r VALUES ('cpr_log_read_without_audit', CASE WHEN n>0 THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('cpr_log_read_without_audit','blocked'); END;
+  END IF;
+END $$;
+SET test.uid = '00000000-0000-0000-0000-0000000000c3';
+DO $$ DECLARE v text; BEGIN
+  IF to_regclass('public.care_resident_cpr') IS NOT NULL THEN
+    BEGIN v := reveal_resident_cpr('00000000-0000-0000-0000-0000000000b1'); INSERT INTO r VALUES ('cpr_other_org_reveal', CASE WHEN v IS NOT NULL THEN 'HOLE' ELSE 'blocked' END); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('cpr_other_org_reveal','blocked'); END;
+    BEGIN PERFORM set_resident_cpr('00000000-0000-0000-0000-0000000000b1', '0303031111'); INSERT INTO r VALUES ('cpr_other_org_set','HOLE'); EXCEPTION WHEN others THEN INSERT INTO r VALUES ('cpr_other_org_set','blocked'); END;
+  END IF;
+END $$;
 -- leder in org1 can still manage roles
 SET test.uid = '00000000-0000-0000-0000-0000000000c1';
 DO $$ DECLARE n int; BEGIN
