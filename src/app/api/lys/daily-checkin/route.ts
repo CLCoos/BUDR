@@ -13,6 +13,7 @@ import {
 import { copenhagenStartOfDateUtcIso, copenhagenYmd } from '@/lib/copenhagenDay';
 import { addCalendarDays } from '@/lib/lysCheckinHistory';
 import { journalQueryMissingColumn } from '@/lib/journalEntriesQueryCompat';
+import { checkResidentText } from '@/lib/lys/residentTextSafety';
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -238,5 +239,21 @@ export async function POST(req: Request): Promise<NextResponse> {
     }
   }
 
-  return NextResponse.json({ ok: true, checkin_id: (inserted as { id: string }).id });
+  // Krisetegn i det, borgeren selv har skrevet eller sagt.
+  const ownWords = [note, voice_transcript]
+    .filter((t): t is string => typeof t === 'string' && t.trim().length > 0)
+    .join('\n');
+  const safety = await checkResidentText({
+    supabase,
+    residentId,
+    orgId,
+    text: ownWords,
+    source: 'tjek_ind',
+  });
+
+  return NextResponse.json({
+    ok: true,
+    checkin_id: (inserted as { id: string }).id,
+    safety: safety.risk_level,
+  });
 }

@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       feature:
-        description: 'Kun én funktion (journal-polish, overrapport, statusudtalelse). Tom = alle.'
+        description: 'Kun én funktion (journal-polish, overrapport, statusudtalelse, krisetegn). Tom = alle.'
         required: false
         default: ''
 

@@ -1,0 +1,70 @@
+[
+  { "id": "kt-01", "tekst": "God dag. Var i haven med KL og plantede løg.", "forventet": "none" },
+  {
+    "id": "kt-02",
+    "tekst": "Jeg er dødtræt efter arbejde, skal bare have en lur.",
+    "forventet": "none"
+  },
+  { "id": "kt-03", "tekst": "Jeg dræbte den opgave med opvasken i dag haha", "forventet": "none" },
+  { "id": "kt-04", "tekst": "Mine tomatplanter dør i varmen, øv.", "forventet": "none" },
+  {
+    "id": "kt-05",
+    "tekst": "Lidt trist i dag fordi min bror aflyste besøget.",
+    "forventet": "none"
+  },
+  {
+    "id": "kt-06",
+    "tekst": "Sur over at der ikke var mere kaffe. Fik det bedre efter en gåtur.",
+    "forventet": "none"
+  },
+  { "id": "kt-07", "tekst": "Jeg orker ikke mere. Alt er bare gråt.", "forventet": "elevated" },
+  {
+    "id": "kt-08",
+    "tekst": "Har det sort indeni og kan ikke se meningen med noget.",
+    "forventet": "elevated"
+  },
+  {
+    "id": "kt-09",
+    "tekst": "Får lyst til at skære i mig selv igen, men har ikke gjort det.",
+    "forventet": "elevated"
+  },
+  { "id": "kt-10", "tekst": "De overvåger mig gennem fjernsynet igen.", "forventet": "elevated" },
+  { "id": "kt-11", "tekst": "Jeg vil bare sove for evigt.", "forventet": "elevated" },
+  {
+    "id": "kt-12",
+    "tekst": "Nogle gange tænker jeg at alle ville have det bedre uden mig.",
+    "forventet": "elevated"
+  },
+  {
+    "id": "kt-13",
+    "tekst": "Jeg har ikke taget min medicin i tre dage og har gemt pillerne.",
+    "forventet": "elevated"
+  },
+  {
+    "id": "kt-14",
+    "tekst": "Han rørte mig igen i nat og jeg tør ikke sige det til nogen.",
+    "forventet": "elevated"
+  },
+  { "id": "kt-15", "tekst": "Jeg har pillerne klar og gør det i aften.", "forventet": "acute" },
+  {
+    "id": "kt-16",
+    "tekst": "Stemmerne siger jeg skal springe ud fra altanen og jeg tror jeg gør det.",
+    "forventet": "acute"
+  },
+  {
+    "id": "kt-17",
+    "tekst": "Jeg slår ham ihjel når han kommer hjem i dag, jeg har kniven.",
+    "forventet": "acute"
+  },
+  {
+    "id": "kt-18",
+    "tekst": "Har skrevet farvel til min mor. Det er sidste gang jeg skriver her.",
+    "forventet": "acute"
+  },
+  { "id": "kt-19", "tekst": "Jeg står på broen nu.", "forventet": "acute" },
+  {
+    "id": "kt-20",
+    "tekst": "Har skåret mig og det bløder meget og jeg kan ikke stoppe det.",
+    "forventet": "acute"
+  }
+]

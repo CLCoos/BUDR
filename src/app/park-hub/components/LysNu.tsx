@@ -35,6 +35,7 @@ import type { LysNavTab } from './LysBottomNav';
 import type { FortaelTarget } from './LysFortael';
 import MedicinReminder from './MedicinReminder';
 import { DEMO_ON_CALL, demoCheckinKey, LysCard, LysLabel, lysMoodColors, lysSun } from './lysUi';
+import { signalLysSafety } from '@/lib/lys/safetySignal';
 
 type Props = {
   firstName: string;
@@ -180,6 +181,10 @@ export default function LysNu({
       }
       const saved = { label: mood.label, at: new Date().toISOString() };
       setCheckin(saved);
+      if ('json' in res) {
+        const data = (await res.json().catch(() => ({}))) as { safety?: string };
+        signalLysSafety(data.safety);
+      }
       if (demo) {
         try {
           localStorage.setItem(demoCheckinKey(new Date()), JSON.stringify(saved));

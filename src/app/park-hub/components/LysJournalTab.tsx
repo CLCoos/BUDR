@@ -13,6 +13,7 @@ import type { LysThemeTokens } from '../lib/lysTheme';
 import type { JournalEntry, SelfLetter } from '@/types/local';
 import { LOCAL_KEYS } from '@/types/local';
 import { safeRandomUUID } from '@/lib/uuid';
+import { signalLysSafety } from '@/lib/lys/safetySignal';
 
 type Mode = 'write' | 'voice';
 type JournalSection = 'dagbog' | 'brev';
@@ -343,7 +344,12 @@ export default function LysJournalTab({ tokens, accent }: Props) {
         credentials: 'include',
       });
       if (!res.ok) throw new Error('server_error');
-      const data = (await res.json()) as { entry_id: string; journal_note?: string };
+      const data = (await res.json()) as {
+        entry_id: string;
+        journal_note?: string;
+        safety?: string;
+      };
+      signalLysSafety(data.safety);
       if (mountedRef.current) {
         setParkDraftContent(data.journal_note ?? '');
         setParkDraftState('done');
@@ -912,7 +918,7 @@ export default function LysJournalTab({ tokens, accent }: Props) {
                   </p>
                   <p className="text-xs mt-0.5" style={{ color: tokens.textMuted }}>
                     {privacy === 'private'
-                      ? 'Personalet kan ikke se dette indlæg'
+                      ? 'Personalet kan ikke læse det. Er du i fare, får de besked om at tale med dig.'
                       : 'Dit team kan se dette indlæg'}
                   </p>
                 </div>

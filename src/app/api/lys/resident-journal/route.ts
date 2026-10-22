@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { getResidentId } from '@/lib/residentAuth';
 import { isResidentUuidForCloud } from '@/lib/residentUuid';
 import type { JournalEntry } from '@/types/local';
+import { checkResidentText } from '@/lib/lys/residentTextSafety';
 
 function getServiceClient() {
   return createClient(
@@ -15,6 +16,9 @@ function getServiceClient() {
 const CATEGORY = 'Lys journal';
 const META_PREFIX = 'BUDR_META:';
 const MAX_TEXT = 20_000;
+
+/** Besluttet med Christian: se CONTEXT.md «Krisetegn alle steder». */
+const PRIVATE_DIARY_ALERT_FROM = 'acute' as const;
 
 type MetaV1 = {
   v: 1;
@@ -196,5 +200,16 @@ export async function POST(req: Request): Promise<NextResponse> {
     console.error('[resident-journal POST count]', countError.message);
   }
 
-  return NextResponse.json({ ok: true, lysEntryCount: count ?? 0 });
+  // Krisetegn: borgeren får altid hjælp i Lys. Fra den private dagbog får personalet kun besked
+  // ved akutte tegn, og uden teksten.
+  const safety = await checkResidentText({
+    supabase,
+    residentId,
+    orgId: (resident as { org_id?: string } | null)?.org_id ?? null,
+    text,
+    source: isPrivate ? 'privat_dagbog' : 'dagbog',
+    alertStaffFrom: isPrivate ? PRIVATE_DIARY_ALERT_FROM : 'elevated',
+  });
+
+  return NextResponse.json({ ok: true, lysEntryCount: count ?? 0, safety: safety.risk_level });
 }

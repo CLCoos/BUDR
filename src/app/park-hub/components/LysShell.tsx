@@ -22,6 +22,7 @@ import LysAACBoard from './LysAACBoard';
 import LysOnboarding from './LysOnboarding';
 import LysStatusChrome from './LysStatusChrome';
 import LysKrisekort from './LysKrisekort';
+import { onLysSafety } from '@/lib/lys/safetySignal';
 import LysVagtplan from './LysVagtplan';
 import LysMyStories from './LysMyStories';
 import { LifeBuoy } from 'lucide-react';
@@ -86,6 +87,16 @@ export default function LysShell({
     setFortaelTarget(target);
     setOverlay('fortael');
   }, []);
+
+  // Krisetegn i noget, borgeren lige har skrevet: vis roligt hjælp (akut: krisekortet direkte),
+  // efter et øjeblik, så kvitteringen for det sendte når at blive set.
+  useEffect(
+    () =>
+      onLysSafety((level) => {
+        window.setTimeout(() => setOverlay(level === 'acute' ? 'crisis' : 'hjaelp'), 1200);
+      }),
+    []
+  );
 
   useEffect(() => {
     const t = window.setInterval(() => setNow(new Date()), 60_000);

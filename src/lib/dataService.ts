@@ -29,6 +29,7 @@ import type {
   LysConversation,
   LocalProfile,
 } from '@/types/local';
+import { signalLysSafety } from '@/lib/lys/safetySignal';
 
 // ── XP helpers ────────────────────────────────────────────────────────────────
 
@@ -131,10 +132,12 @@ export async function saveJournalEntry(
       ok?: boolean;
       lysEntryCount?: number;
       error?: string;
+      safety?: string;
     };
     if (!res.ok) {
       throw new Error(data.error ?? 'Kunne ikke gemme journalen');
     }
+    signalLysSafety(data.safety);
     return { lysEntryCount: data.lysEntryCount };
   }
 
