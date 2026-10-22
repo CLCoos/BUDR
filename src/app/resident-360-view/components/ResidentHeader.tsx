@@ -3,6 +3,7 @@
 import React, { useCallback, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import ResidentCprField from './ResidentCprField';
 import {
   ChevronLeft,
   Phone,
@@ -265,6 +266,7 @@ export default function ResidentHeader({
                 <p className="mt-0.5 text-sm" style={{ color: 'var(--cp-muted)' }}>
                   Beboer · Værelse {room}
                 </p>
+                <ResidentCprField residentId={residentId} />
               </div>
               <div className="flex flex-shrink-0 flex-wrap items-center gap-2">
                 <span
