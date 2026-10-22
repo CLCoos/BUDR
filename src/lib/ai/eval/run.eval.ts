@@ -137,7 +137,8 @@ describe.skipIf(!apiKey)('AI-testsæt', () => {
       const alle: Resultat[] = [];
       for (const feature of FEATURES) {
         if (only && feature.key !== only) continue;
-        alle.push(...(await inBatches(loadCases(feature.key), 4, (c) => runCase(feature, c))));
+        const cases = loadCases(feature.key).filter((c) => feature.bruges?.(c) ?? true);
+        alle.push(...(await inBatches(cases, 4, (c) => runCase(feature, c))));
       }
       const dir = path.resolve(process.cwd(), 'eval-results');
       mkdirSync(dir, { recursive: true });
