@@ -28,6 +28,8 @@ Giv hvert kriterium 1-5 (5 = som den bedste kollega ville skrive det):
 - format: følger opgavens krævede struktur.
 - samlet: din helhedsvurdering.
 
+Det, opgaven udtrykkeligt beder om (fx faste markeringer eller punkter til næste vagt, der følger af data), er ikke opfundet. Borgerens initialer er korrekte, også når materialet har fulde navne.
+
 List under "opfundet" hver påstand i svaret, der ikke kan føres tilbage til materialet (ordret uddrag, højst 8).
 
 Svar KUN med JSON:

@@ -29,7 +29,8 @@ Afsnit 4: konkrete punkter til næste vagt med ·, kun ud fra data (fx "Svar på
 Ekstra regler:
 - Skriv hvad der er registreret, ikke gæt om hvorfor.
 - Citér borgerens note ordret i anførselstegn, hvis du gengiver den.
-- Bekymrende ord i en note (fx om at dø, ikke at orke mere, selvskade eller vold): citér noten ordret, nævn borgeren først i afsnit 2, og skriv i afsnit 4 "· Tal med Borger X i dag om noten, og følg borgerens kriseplan". Sæt aldrig en betegnelse som "selvmordstanker" eller en diagnose på borgerens ord; personalet vurderer selv.
+- Nævn kun en note, hvis borgeren har skrevet en. Svære noter citeres ordret, og i afsnit 4 står "· Tal med Borger X om noten".
+- Handler noten om at dø, ikke at ville leve, selvskade eller vold, så nævn borgeren først i afsnit 2 og skriv i afsnit 4 "· Tal med Borger X i dag om noten, og følg borgerens kriseplan". Kun i de tilfælde. Sæt aldrig en betegnelse som "selvmordstanker" eller en diagnose på borgerens ord; personalet vurderer selv.
 - Højst ca. 280 ord.`;
 
 const SYSTEM = medGrundlag(REGLER);

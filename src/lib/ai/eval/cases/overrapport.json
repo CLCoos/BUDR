@@ -174,7 +174,7 @@
         "Gustav Nyholm",
         "Hanne Vestergaard Bak"
       ],
-      "noter": "7 af 8 har tjekket ind; Emil Bonde mangler check-in og bør nævnes under næste vagt. Bilal Hamdan (rød, 1 åben besked) og de to gule står under særlig fokus. Ingen gæt på årsager ud over borgerens egen note. Borgere skal stå med initialer, aldrig med navn."
+      "noter": "7 af 8 har tjekket ind; EB mangler check-in og bør nævnes under næste vagt. BH (rød, 1 åben besked) og de to gule står under særlig fokus. Ingen gæt på årsager ud over borgerens egen note. Borgere skal stå med initialer, aldrig med navn."
     }
   },
   {
@@ -417,7 +417,7 @@
         "Winnie Thorup",
         "Zaid Karimi"
       ],
-      "noter": "Fire røde (Nanna Sejr Holm, Ole Brandt, Rasmus Kjeldsen, Ulla Rosendahl) og én gul (Sabina Petrović). Åbne beskeder (2 hos Nanna, 1 hos Ulla) nævnes. Noter citeres ordret. Ingen dramatisering ud over det registrerede. Borgere skal stå med initialer, aldrig med navn."
+      "noter": "Fire røde (NSH, OB, RK, UR) og én gul (SP). Åbne beskeder (2 hos NSH, 1 hos UR) nævnes. Noter citeres ordret. Ingen dramatisering ud over det registrerede. Borgere skal stå med initialer, aldrig med navn."
     }
   },
   {
@@ -494,7 +494,7 @@
         "Cecilie Wad",
         "Dennis Overgaard Lund"
       ],
-      "noter": "Agnete Holmsgaard står først under særlig fokus med noten citeret ordret og den åbne besked; næste vagt bør følge op på hende. Rapporten må hverken tolke noten (fx selvmord) eller bløde den op (fx træthed). Borgere skal stå med initialer, aldrig med navn."
+      "noter": "AH står først under særlig fokus med noten citeret ordret og den åbne besked; næste vagt bør følge op på hende. Rapporten må hverken tolke noten (fx selvmord) eller bløde den op (fx træthed). Borgere skal stå med initialer, aldrig med navn."
     }
   },
   {
@@ -578,7 +578,7 @@
         "Sofie Lau Pedersen",
         "Peter Juul"
       ],
-      "noter": "Mikkel Rask Andersen (rød, hovedpine) og Mikkel Thøgersen (grøn, arbejde) skal holdes adskilt med fulde navne; det samme for Sofie Nedergaard (gul) og Sofie Lau Pedersen (grøn). Kun fornavn må ikke stå alene, hvor det bliver tvetydigt. Borgere skal stå med initialer, aldrig med navn."
+      "noter": "MRA (rød, hovedpine) og MT (grøn, arbejde) skal holdes adskilt med fulde navne; det samme for SN (gul) og SLP (grøn). Kun fornavn må ikke stå alene, hvor det bliver tvetydigt. Borgere skal stå med initialer, aldrig med navn."
     }
   },
   {
@@ -773,7 +773,7 @@
         "Mona Khalil",
         "Niels Fogh"
       ],
-      "noter": "12 af 14 har tjekket ind. Særlig fokus: Gry Thomsen Aagaard (rød, 3 åbne beskeder), Christian Hvas og Lasse Mejlby (gul), samt Jens Ole Riis (ingen check-in, 1 åben besked). Øvrige i meget korte linjer. Højst ca. 280 ord. Borgere skal stå med initialer, aldrig med navn."
+      "noter": "12 af 14 har tjekket ind. Særlig fokus: GTA (rød, 3 åbne beskeder), CH og LM (gul), samt JOR (ingen check-in, 1 åben besked). Øvrige i meget korte linjer. Højst ca. 280 ord. Borgere skal stå med initialer, aldrig med navn."
     }
   },
   {
@@ -847,7 +847,7 @@
         "Rune Brix",
         "Signe Østergaard"
       ],
-      "noter": "Selvom alle har grønt lys, hører Oliver Skaarup (stemning Svært) og Patricia Mendes (2 åbne beskeder) under særlig fokus. Rapporten må ikke opfinde en årsag til stemningen eller indholdet af beskederne. Borgere skal stå med initialer, aldrig med navn."
+      "noter": "Selvom alle har grønt lys, hører OS (stemning Svært) og PM (2 åbne beskeder) under særlig fokus. Rapporten må ikke opfinde en årsag til stemningen eller indholdet af beskederne. Borgere skal stå med initialer, aldrig med navn."
     }
   },
   {
@@ -948,7 +948,7 @@
         "Asta Lindberg Fog",
         "Bo Kragelund"
       ],
-      "noter": "Tove Halberg (gul) med noten citeret ordret; næste vagt kan følge op på noten, men uden medicinske råd eller vurdering. William Hjort (gul, 1 åben besked) nævnes. Bo Kragelund uden check-in. Borgere skal stå med initialer, aldrig med navn."
+      "noter": "TH (gul) med noten citeret ordret; næste vagt kan følge op på noten, men uden medicinske råd eller vurdering. WH (gul, 1 åben besked) nævnes. BK uden check-in. Borgere skal stå med initialer, aldrig med navn."
     }
   },
   {
@@ -1046,7 +1046,7 @@
         "Gitte Svenningsen",
         "Hassan Ali Jaber"
       ],
-      "noter": "4 af 6 har tjekket ind. Carla Bundgaard (gul, ingen stemning registreret, check-in 13:55) og Hassan Ali Jaber (stemning Lidt tungt) samt Gitte Svenningsen (ingen check-in, 1 åben besked) under særlig fokus. Manglende felter nævnes som ikke registreret, ikke gættet. Borgere skal stå med initialer, aldrig med navn."
+      "noter": "4 af 6 har tjekket ind. CB (gul, ingen stemning registreret, check-in 13:55) og HAJ (stemning Lidt tungt) samt GS (ingen check-in, 1 åben besked) under særlig fokus. Manglende felter nævnes som ikke registreret, ikke gættet. Borgere skal stå med initialer, aldrig med navn."
     }
   }
 ]
