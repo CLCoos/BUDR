@@ -1,3 +1,4 @@
+import { initialerAfNavn } from '@/lib/ai/aliases';
 /**
  * Deterministisk tilsynsrapport-udkast når AI ikke svarer — samme fem afsnit som vi beder modellen om.
  */
@@ -26,7 +27,7 @@ function trafficWord(tl: string | null): string {
 }
 
 function shortResidentLine(r: TilsynsResidentRow): string {
-  const bits = [r.name.replace(/\.$/, '')];
+  const bits = [initialerAfNavn(r.name)];
   bits.push(r.moodLabel ? `stemning: ${r.moodLabel}` : 'stemning: ikke registreret');
   bits.push(`${trafficWord(r.trafficLight)} trafiklys`);
   if (r.note) bits.push(`note: «${r.note.slice(0, 100)}${r.note.length > 100 ? '…' : ''}»`);

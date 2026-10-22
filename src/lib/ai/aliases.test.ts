@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createAliasMap, namePartsFor } from './aliases';
+import { createAliasMap, initialerAfNavn, namePartsFor } from './aliases';
 
 describe('createAliasMap', () => {
   const people = [
@@ -18,5 +18,24 @@ describe('createAliasMap', () => {
     expect(map.restore('Borger 1 og Borger 12 spiste sammen.')).toBe(
       'Anna Holm og Navn10 spiste sammen.'
     );
+  });
+});
+
+describe('ejefald', () => {
+  it('skjuler også navne med s bagpå og sætter dem ind igen', () => {
+    const map = createAliasMap([
+      { label: 'Mira Søndergaard', names: namePartsFor('Mira Søndergaard') },
+    ]);
+    const hidden = map.hide('Lægen har ændret Miras medicin.');
+    expect(hidden).toBe('Lægen har ændret Borger 1s medicin.');
+    expect(map.restore(hidden)).toBe('Lægen har ændret Mira Søndergaards medicin.');
+  });
+});
+
+describe('initialer', () => {
+  it('laver initialer af navne og bevarer initialer', () => {
+    expect(initialerAfNavn('Asta Lindberg Fog')).toBe('ALF');
+    expect(initialerAfNavn('Fatima Al-Sayed')).toBe('FAS');
+    expect(initialerAfNavn('KBJ')).toBe('KBJ');
   });
 });

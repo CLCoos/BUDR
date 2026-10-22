@@ -1,0 +1,40 @@
+name: AI-testsæt
+
+# Køres manuelt fra fanen Actions. Kræver repository-secret ANTHROPIC_API_KEY.
+on:
+  workflow_dispatch:
+    inputs:
+      feature:
+        description: 'Kun én funktion (journal-polish, overrapport, statusudtalelse). Tom = alle.'
+        required: false
+        default: ''
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Kør testsættet
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          EVAL_FEATURE: ${{ inputs.feature }}
+        run: npm run eval:ai
+
+      - name: Rapport i jobbets oversigt
+        if: always()
+        run: cat eval-results/*.md >> "$GITHUB_STEP_SUMMARY" || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ai-eval-rapport
+          path: eval-results/

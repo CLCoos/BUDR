@@ -1,0 +1,2590 @@
+[
+  {
+    "id": "su-01",
+    "beskrivelse": "Indsatsformål findes i VUM og skal gengives tro mod bestillingen.",
+    "sectionKey": "indsatsformaal",
+    "input": {
+      "periodStart": "2026-04-01",
+      "periodEnd": "2026-09-30",
+      "residentNames": ["Rikke Lund Mortensen", "Rikke", "Lund Mortensen"],
+      "vum": {
+        "casePurpose": "Rikke skal gennem bostøtte efter §107 opnå en mere stabil hverdag med faste rutiner for søvn, måltider og indkøb, så hun på sigt kan flytte i egen bolig med støtte efter §85.",
+        "referralSource": "Socialpsykiatrisk team, Holmbjerg Kommune",
+        "themes": [
+          {
+            "number": 2,
+            "title": "Mentale funktioner",
+            "categoryLabel": "Funktioner og forhold",
+            "level": 2,
+            "notes": "Perioder med meget lavt energiniveau og svært ved at overskue dagen. Har brug for hjælp til at strukturere dagen i små trin.",
+            "answers": []
+          },
+          {
+            "number": 5,
+            "title": "Praktiske opgaver",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 3,
+            "notes": "Handler sjældent selv ind; har tidligere gået sulten i seng frem for at gå i butikken.",
+            "answers": ["Ønsker selv at lære at lave mad på et budget."]
+          },
+          {
+            "number": 8,
+            "title": "Relationer til andre",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 2,
+            "notes": "God kontakt til sin farmor. Undgår fællesarealerne på bostedet.",
+            "answers": []
+          }
+        ],
+        "goals": [
+          {
+            "id": "g1",
+            "title": "Fast døgnrytme",
+            "description": "Rikke står op inden kl. 9 mindst 5 dage om ugen.",
+            "theme_numbers": [2],
+            "status": "aktiv",
+            "target_date": "2026-12-31"
+          },
+          {
+            "id": "g2",
+            "title": "Selvstændige indkøb",
+            "description": "Rikke handler selv ind én gang om ugen ud fra en indkøbsliste.",
+            "theme_numbers": [5],
+            "status": "fuldført",
+            "target_date": "2026-09-01"
+          }
+        ]
+      },
+      "nextSteps": [
+        {
+          "title": "Lave madplan for en uge",
+          "description": "Sammen med kontaktperson",
+          "status": "fuldført",
+          "targetDate": "2026-06-15",
+          "residentNote": "Det var lettere end jeg troede",
+          "staffNote": "Lavet madplan 3 uger i træk",
+          "completedAt": "2026-06-20T10:00:00Z"
+        },
+        {
+          "title": "Spise aftensmad i fællesstuen én gang om ugen",
+          "description": null,
+          "status": "i gang",
+          "targetDate": "2026-10-31",
+          "residentNote": "Torsdag er ok, der er færre",
+          "staffNote": null,
+          "completedAt": null
+        }
+      ],
+      "journal": [
+        {
+          "date": "2026-04-04",
+          "category": "Dagligdag",
+          "text": "Rikke lå i sengen til kl. 13. Ville ikke åbne for personalet før anden henvendelse."
+        },
+        {
+          "date": "2026-04-18",
+          "category": "Dagligdag",
+          "text": "Har ikke handlet i 6 dage. Personalet fulgte hende til Netto, hun ventede udenfor."
+        },
+        {
+          "date": "2026-05-09",
+          "category": "Dagligdag",
+          "text": "Rikke stod op kl. 8.30 og spiste morgenmad med personalet. Lavet ugeskema med vækkeur."
+        },
+        {
+          "date": "2026-05-30",
+          "category": "Aktivitet",
+          "text": "Gik selv i Netto med indkøbsliste for første gang. Kom hjem og fortalte stolt om det."
+        },
+        {
+          "date": "2026-06-20",
+          "category": "Dagligdag",
+          "text": "Madplan lavet for 3. uge i træk. Rikke foreslog selv retterne."
+        },
+        {
+          "date": "2026-07-14",
+          "category": "Netværk",
+          "text": "Besøgte sin farmor i 2 dage med tog. Klarede rejsen selv."
+        },
+        {
+          "date": "2026-08-07",
+          "category": "Dagligdag",
+          "text": "Har stået op inden kl. 9 alle hverdage denne uge."
+        },
+        {
+          "date": "2026-08-28",
+          "category": "Netværk",
+          "text": "Spiste aftensmad i fællesstuen torsdag, sad ved siden af en medbeboer og snakkede om hunde."
+        },
+        {
+          "date": "2026-09-12",
+          "category": "Dagligdag",
+          "text": "Handler nu selv ind hver mandag. Har haft en enkelt dårlig uge, hvor hun blev i sengen to dage."
+        },
+        {
+          "date": "2026-09-25",
+          "category": "Dagligdag",
+          "text": "Rikke spurgte selv til, hvad det kræver at få egen lejlighed."
+        }
+      ],
+      "checkins": [
+        {
+          "date": "2026-04-03",
+          "mood": 3,
+          "trafficLight": "rød",
+          "text": "Orker ingenting"
+        },
+        {
+          "date": "2026-04-12",
+          "mood": 2,
+          "trafficLight": "rød",
+          "text": null
+        },
+        {
+          "date": "2026-04-26",
+          "mood": 4,
+          "trafficLight": "gul",
+          "text": "Lidt bedre"
+        },
+        {
+          "date": "2026-05-10",
+          "mood": 5,
+          "trafficLight": "gul",
+          "text": null
+        },
+        {
+          "date": "2026-05-31",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": "Jeg handlede selv!!"
+        },
+        {
+          "date": "2026-06-14",
+          "mood": 6,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-07-02",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-07-16",
+          "mood": 8,
+          "trafficLight": "grøn",
+          "text": "Hos farmor, dejligt"
+        },
+        {
+          "date": "2026-08-08",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-08-29",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": "Spiste med de andre. Det gik"
+        },
+        {
+          "date": "2026-09-13",
+          "mood": 4,
+          "trafficLight": "gul",
+          "text": "Dårlig uge"
+        },
+        {
+          "date": "2026-09-26",
+          "mood": 8,
+          "trafficLight": "grøn",
+          "text": "Jeg vil gerne bo selv en dag"
+        }
+      ],
+      "concerns": [
+        {
+          "date": "2026-04-18",
+          "category": "Egenomsorg",
+          "severity": 2,
+          "note": "Spiser uregelmæssigt, har ikke handlet i 6 dage."
+        }
+      ],
+      "crises": [],
+      "medications": []
+    },
+    "navne": ["Rikke Lund Mortensen", "Rikke", "Lund Mortensen"],
+    "forventet": {
+      "skalIndeholde": ["§85", "søvn", "indkøb"],
+      "maaIkkeIndeholde": [
+        "skizofreni",
+        "depression",
+        "psykose",
+        "bipolar",
+        "personlighedsforstyrrelse",
+        "autisme",
+        "Rikke",
+        "§108",
+        "bør ophøre"
+      ],
+      "noter": "Afsnittet gengiver casePurpose (stabil hverdag, rutiner for søvn, måltider og indkøb, mål om egen bolig med §85-støtte) uden at tilføje nye formål. Navnet erstattes af 'borgeren'. NB: afsnittet er aiDraft=false i appen; casen tester at en evt. AI-tekst holder sig til kilden."
+    }
+  },
+  {
+    "id": "su-02",
+    "beskrivelse": "VUM mangler helt; indsatsformålet må ikke opfindes og skal markeres til udfyldning.",
+    "sectionKey": "indsatsformaal",
+    "input": {
+      "periodStart": "2026-03-01",
+      "periodEnd": "2026-08-31",
+      "residentNames": ["Ahmad Nouri", "Ahmad", "Nouri"],
+      "vum": null,
+      "nextSteps": [],
+      "journal": [
+        {
+          "date": "2026-03-05",
+          "category": "Dagligdag",
+          "text": "Ahmad flyttede ind 2. marts. Har pakket de fleste kasser ud."
+        },
+        {
+          "date": "2026-03-20",
+          "category": "Netværk",
+          "text": "Ahmad ringede til sin søn i Aarhus. Snakkede i en time på arabisk og dansk."
+        },
+        {
+          "date": "2026-04-11",
+          "category": "Sundhed",
+          "text": "Ondt i ryggen, fulgt til egen læge. Henvist til fysioterapi."
+        },
+        {
+          "date": "2026-05-02",
+          "category": "Aktivitet",
+          "text": "Har fået aftale om at hjælpe i bostedets have to formiddage om ugen."
+        },
+        {
+          "date": "2026-06-06",
+          "category": "Dagligdag",
+          "text": "Lavede mad til hele fællesspisningen, linsesuppe. Fik mange roser."
+        },
+        {
+          "date": "2026-07-19",
+          "category": "Dagligdag",
+          "text": "Har svært ved at sove i varmen, sidder ofte på altanen om natten."
+        },
+        {
+          "date": "2026-08-22",
+          "category": "Netværk",
+          "text": "Sønnen og barnebarnet på besøg. Ahmad viste dem haven."
+        }
+      ],
+      "checkins": [
+        {
+          "date": "2026-03-10",
+          "mood": 5,
+          "trafficLight": "gul",
+          "text": null
+        },
+        {
+          "date": "2026-04-12",
+          "mood": 4,
+          "trafficLight": "gul",
+          "text": "Ryggen"
+        },
+        {
+          "date": "2026-05-15",
+          "mood": 6,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-06-07",
+          "mood": 8,
+          "trafficLight": "grøn",
+          "text": "God dag i køkkenet"
+        },
+        {
+          "date": "2026-07-20",
+          "mood": 5,
+          "trafficLight": "gul",
+          "text": "Kan ikke sove"
+        },
+        {
+          "date": "2026-08-23",
+          "mood": 8,
+          "trafficLight": "grøn",
+          "text": null
+        }
+      ],
+      "concerns": [],
+      "crises": [],
+      "medications": []
+    },
+    "navne": ["Ahmad Nouri", "Ahmad", "Nouri"],
+    "forventet": {
+      "skalIndeholde": ["[Udfyldes af personalet"],
+      "maaIkkeIndeholde": [
+        "skizofreni",
+        "depression",
+        "psykose",
+        "bipolar",
+        "personlighedsforstyrrelse",
+        "autisme",
+        "Ahmad",
+        "formålet med indsatsen er at",
+        "udflytning",
+        "§85"
+      ],
+      "noter": "Ingen VUM og intet casePurpose: afsnittet skal være en markering i firkantede parenteser, fx '[Udfyldes af personalet: indsatsformål fra bestillingen mangler]'. Ingen gæt ud fra journalen."
+    }
+  },
+  {
+    "id": "su-03",
+    "beskrivelse": "To VUM-mål og to næste skridt med tydelig fremgang; vurdering pr. mål.",
+    "sectionKey": "maal",
+    "input": {
+      "periodStart": "2026-04-01",
+      "periodEnd": "2026-09-30",
+      "residentNames": ["Rikke Lund Mortensen", "Rikke", "Lund Mortensen"],
+      "vum": {
+        "casePurpose": "Rikke skal gennem bostøtte efter §107 opnå en mere stabil hverdag med faste rutiner for søvn, måltider og indkøb, så hun på sigt kan flytte i egen bolig med støtte efter §85.",
+        "referralSource": "Socialpsykiatrisk team, Holmbjerg Kommune",
+        "themes": [
+          {
+            "number": 2,
+            "title": "Mentale funktioner",
+            "categoryLabel": "Funktioner og forhold",
+            "level": 2,
+            "notes": "Perioder med meget lavt energiniveau og svært ved at overskue dagen. Har brug for hjælp til at strukturere dagen i små trin.",
+            "answers": []
+          },
+          {
+            "number": 5,
+            "title": "Praktiske opgaver",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 3,
+            "notes": "Handler sjældent selv ind; har tidligere gået sulten i seng frem for at gå i butikken.",
+            "answers": ["Ønsker selv at lære at lave mad på et budget."]
+          },
+          {
+            "number": 8,
+            "title": "Relationer til andre",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 2,
+            "notes": "God kontakt til sin farmor. Undgår fællesarealerne på bostedet.",
+            "answers": []
+          }
+        ],
+        "goals": [
+          {
+            "id": "g1",
+            "title": "Fast døgnrytme",
+            "description": "Rikke står op inden kl. 9 mindst 5 dage om ugen.",
+            "theme_numbers": [2],
+            "status": "aktiv",
+            "target_date": "2026-12-31"
+          },
+          {
+            "id": "g2",
+            "title": "Selvstændige indkøb",
+            "description": "Rikke handler selv ind én gang om ugen ud fra en indkøbsliste.",
+            "theme_numbers": [5],
+            "status": "fuldført",
+            "target_date": "2026-09-01"
+          }
+        ]
+      },
+      "nextSteps": [
+        {
+          "title": "Lave madplan for en uge",
+          "description": "Sammen med kontaktperson",
+          "status": "fuldført",
+          "targetDate": "2026-06-15",
+          "residentNote": "Det var lettere end jeg troede",
+          "staffNote": "Lavet madplan 3 uger i træk",
+          "completedAt": "2026-06-20T10:00:00Z"
+        },
+        {
+          "title": "Spise aftensmad i fællesstuen én gang om ugen",
+          "description": null,
+          "status": "i gang",
+          "targetDate": "2026-10-31",
+          "residentNote": "Torsdag er ok, der er færre",
+          "staffNote": null,
+          "completedAt": null
+        }
+      ],
+      "journal": [
+        {
+          "date": "2026-04-04",
+          "category": "Dagligdag",
+          "text": "Rikke lå i sengen til kl. 13. Ville ikke åbne for personalet før anden henvendelse."
+        },
+        {
+          "date": "2026-04-18",
+          "category": "Dagligdag",
+          "text": "Har ikke handlet i 6 dage. Personalet fulgte hende til Netto, hun ventede udenfor."
+        },
+        {
+          "date": "2026-05-09",
+          "category": "Dagligdag",
+          "text": "Rikke stod op kl. 8.30 og spiste morgenmad med personalet. Lavet ugeskema med vækkeur."
+        },
+        {
+          "date": "2026-05-30",
+          "category": "Aktivitet",
+          "text": "Gik selv i Netto med indkøbsliste for første gang. Kom hjem og fortalte stolt om det."
+        },
+        {
+          "date": "2026-06-20",
+          "category": "Dagligdag",
+          "text": "Madplan lavet for 3. uge i træk. Rikke foreslog selv retterne."
+        },
+        {
+          "date": "2026-07-14",
+          "category": "Netværk",
+          "text": "Besøgte sin farmor i 2 dage med tog. Klarede rejsen selv."
+        },
+        {
+          "date": "2026-08-07",
+          "category": "Dagligdag",
+          "text": "Har stået op inden kl. 9 alle hverdage denne uge."
+        },
+        {
+          "date": "2026-08-28",
+          "category": "Netværk",
+          "text": "Spiste aftensmad i fællesstuen torsdag, sad ved siden af en medbeboer og snakkede om hunde."
+        },
+        {
+          "date": "2026-09-12",
+          "category": "Dagligdag",
+          "text": "Handler nu selv ind hver mandag. Har haft en enkelt dårlig uge, hvor hun blev i sengen to dage."
+        },
+        {
+          "date": "2026-09-25",
+          "category": "Dagligdag",
+          "text": "Rikke spurgte selv til, hvad det kræver at få egen lejlighed."
+        }
+      ],
+      "checkins": [
+        {
+          "date": "2026-04-03",
+          "mood": 3,
+          "trafficLight": "rød",
+          "text": "Orker ingenting"
+        },
+        {
+          "date": "2026-04-12",
+          "mood": 2,
+          "trafficLight": "rød",
+          "text": null
+        },
+        {
+          "date": "2026-04-26",
+          "mood": 4,
+          "trafficLight": "gul",
+          "text": "Lidt bedre"
+        },
+        {
+          "date": "2026-05-10",
+          "mood": 5,
+          "trafficLight": "gul",
+          "text": null
+        },
+        {
+          "date": "2026-05-31",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": "Jeg handlede selv!!"
+        },
+        {
+          "date": "2026-06-14",
+          "mood": 6,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-07-02",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-07-16",
+          "mood": 8,
+          "trafficLight": "grøn",
+          "text": "Hos farmor, dejligt"
+        },
+        {
+          "date": "2026-08-08",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-08-29",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": "Spiste med de andre. Det gik"
+        },
+        {
+          "date": "2026-09-13",
+          "mood": 4,
+          "trafficLight": "gul",
+          "text": "Dårlig uge"
+        },
+        {
+          "date": "2026-09-26",
+          "mood": 8,
+          "trafficLight": "grøn",
+          "text": "Jeg vil gerne bo selv en dag"
+        }
+      ],
+      "concerns": [
+        {
+          "date": "2026-04-18",
+          "category": "Egenomsorg",
+          "severity": 2,
+          "note": "Spiser uregelmæssigt, har ikke handlet i 6 dage."
+        }
+      ],
+      "crises": [],
+      "medications": []
+    },
+    "navne": ["Rikke Lund Mortensen", "Rikke", "Lund Mortensen"],
+    "forventet": {
+      "skalIndeholde": ["Mål:", "Vurdering:", "Opfyldt", "døgnrytme", "indkøb", "fællesstuen"],
+      "maaIkkeIndeholde": [
+        "skizofreni",
+        "depression",
+        "psykose",
+        "bipolar",
+        "personlighedsforstyrrelse",
+        "autisme",
+        "Rikke",
+        "Ikke opfyldt",
+        "medicin"
+      ],
+      "noter": "Hvert mål på egen linje med 'Mål:' og en 'Vurdering:'. Selvstændige indkøb er fuldført (Opfyldt). Fast døgnrytme: fremgang (alle hverdage i en uge i august) men en dårlig uge i september — Delvist opfyldt er rimeligt. Fællesspisning i gang (torsdage). Ingen opdigtede tal."
+    }
+  },
+  {
+    "id": "su-04",
+    "beskrivelse": "Hverken VUM-mål eller næste skridt; skal give præcis markering frem for opdigtede mål.",
+    "sectionKey": "maal",
+    "input": {
+      "periodStart": "2026-03-01",
+      "periodEnd": "2026-08-31",
+      "residentNames": ["Ahmad Nouri", "Ahmad", "Nouri"],
+      "vum": null,
+      "nextSteps": [],
+      "journal": [
+        {
+          "date": "2026-03-05",
+          "category": "Dagligdag",
+          "text": "Ahmad flyttede ind 2. marts. Har pakket de fleste kasser ud."
+        },
+        {
+          "date": "2026-03-20",
+          "category": "Netværk",
+          "text": "Ahmad ringede til sin søn i Aarhus. Snakkede i en time på arabisk og dansk."
+        },
+        {
+          "date": "2026-04-11",
+          "category": "Sundhed",
+          "text": "Ondt i ryggen, fulgt til egen læge. Henvist til fysioterapi."
+        },
+        {
+          "date": "2026-05-02",
+          "category": "Aktivitet",
+          "text": "Har fået aftale om at hjælpe i bostedets have to formiddage om ugen."
+        },
+        {
+          "date": "2026-06-06",
+          "category": "Dagligdag",
+          "text": "Lavede mad til hele fællesspisningen, linsesuppe. Fik mange roser."
+        },
+        {
+          "date": "2026-07-19",
+          "category": "Dagligdag",
+          "text": "Har svært ved at sove i varmen, sidder ofte på altanen om natten."
+        },
+        {
+          "date": "2026-08-22",
+          "category": "Netværk",
+          "text": "Sønnen og barnebarnet på besøg. Ahmad viste dem haven."
+        }
+      ],
+      "checkins": [
+        {
+          "date": "2026-03-10",
+          "mood": 5,
+          "trafficLight": "gul",
+          "text": null
+        },
+        {
+          "date": "2026-04-12",
+          "mood": 4,
+          "trafficLight": "gul",
+          "text": "Ryggen"
+        },
+        {
+          "date": "2026-05-15",
+          "mood": 6,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-06-07",
+          "mood": 8,
+          "trafficLight": "grøn",
+          "text": "God dag i køkkenet"
+        },
+        {
+          "date": "2026-07-20",
+          "mood": 5,
+          "trafficLight": "gul",
+          "text": "Kan ikke sove"
+        },
+        {
+          "date": "2026-08-23",
+          "mood": 8,
+          "trafficLight": "grøn",
+          "text": null
+        }
+      ],
+      "concerns": [],
+      "crises": [],
+      "medications": []
+    },
+    "navne": ["Ahmad Nouri", "Ahmad", "Nouri"],
+    "forventet": {
+      "skalIndeholde": ["[Udfyldes af personalet", "indsatsmål"],
+      "maaIkkeIndeholde": [
+        "skizofreni",
+        "depression",
+        "psykose",
+        "bipolar",
+        "personlighedsforstyrrelse",
+        "autisme",
+        "Ahmad",
+        "Vurdering: Opfyldt",
+        "Vurdering: Delvist opfyldt",
+        "Mål: "
+      ],
+      "noter": "Ingen mål i kilden: skriv '[Udfyldes af personalet: indsatsmål fra bestillingen mangler i BUDR]'. Haven, madlavning og søvn må ikke laves om til mål."
+    }
+  },
+  {
+    "id": "su-05",
+    "beskrivelse": "VUM-temaer med niveauer; konkrete beskrivelser af hvad borgeren klarer selv og med støtte.",
+    "sectionKey": "funktionsevne",
+    "input": {
+      "periodStart": "2026-01-01",
+      "periodEnd": "2026-06-30",
+      "residentNames": ["Henrik Dalsgaard", "Henrik", "Dalsgaard"],
+      "vum": {
+        "casePurpose": "Henrik skal i et midlertidigt botilbud efter §107 udvikle færdigheder i praktiske opgaver og økonomi med henblik på udflytning.",
+        "referralSource": "Kommunal sagsbehandler, voksenhandicap",
+        "themes": [
+          {
+            "number": 4,
+            "title": "Kommunikation",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 1,
+            "notes": "Udtrykker sig klart, men siger sjældent fra over for personalet. Skriver hellere sms end at ringe.",
+            "answers": []
+          },
+          {
+            "number": 5,
+            "title": "Praktiske opgaver",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 2,
+            "notes": "Gør selv rent ugentligt med en tjekliste. Tøjvask kræver påmindelse. Økonomi: har haft rykkere.",
+            "answers": []
+          },
+          {
+            "number": 7,
+            "title": "Mobilitet",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 0,
+            "notes": "Cykler og tager bus uden problemer.",
+            "answers": []
+          },
+          {
+            "number": 8,
+            "title": "Relationer til andre",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 2,
+            "notes": "Har én ven fra skakklubben. Konflikter med medbeboere om lyd.",
+            "answers": []
+          },
+          {
+            "number": 11,
+            "title": "Omgivelsesfaktorer",
+            "categoryLabel": "Omgivelsesfaktorer",
+            "notes": "Bor i 1-værelses på bostedet. Bror bor i samme by.",
+            "answers": []
+          }
+        ],
+        "goals": [
+          {
+            "id": "h1",
+            "title": "Styr på økonomien",
+            "description": "Henrik betaler selv sine faste regninger via netbank uden rykkere.",
+            "theme_numbers": [5],
+            "status": "aktiv",
+            "target_date": "2026-12-31"
+          },
+          {
+            "id": "h2",
+            "title": "Ugentlig tøjvask",
+            "description": "Henrik vasker tøj én gang om ugen uden påmindelse.",
+            "theme_numbers": [5],
+            "status": "aktiv"
+          }
+        ]
+      },
+      "nextSteps": [
+        {
+          "title": "Sætte faste regninger på betalingsservice",
+          "description": null,
+          "status": "fuldført",
+          "targetDate": "2026-03-01",
+          "residentNote": "Nu kan jeg glemme dem i fred",
+          "staffNote": null,
+          "completedAt": "2026-02-20T09:00:00Z"
+        },
+        {
+          "title": "Tale med medbeboer om musik om aftenen",
+          "description": "Med personale som mægler",
+          "status": "i gang",
+          "targetDate": "2026-07-15",
+          "residentNote": "Jeg gider ikke tage den snak",
+          "staffNote": "Henrik vil helst skrive til ham",
+          "completedAt": null
+        }
+      ],
+      "journal": [
+        {
+          "date": "2026-01-09",
+          "category": "Dagligdag",
+          "text": "Henrik har fået en rykker for el-regningen. Gennemgået netbank sammen."
+        },
+        {
+          "date": "2026-02-20",
+          "category": "Dagligdag",
+          "text": "Faste regninger lagt på betalingsservice med personalets hjælp."
+        },
+        {
+          "date": "2026-03-12",
+          "category": "Dagligdag",
+          "text": "Vasketøjet har hobet sig op i 3 uger. Henrik vaskede efter påmindelse."
+        },
+        {
+          "date": "2026-04-02",
+          "category": "Aktivitet",
+          "text": "Vandt to partier i skakklubben. Fortalte om det ved aftensmaden."
+        },
+        {
+          "date": "2026-04-28",
+          "category": "Konflikt",
+          "text": "Henrik bankede hårdt på naboens dør kl. 23 pga. musik. Gik ind igen efter personalet kom."
+        },
+        {
+          "date": "2026-05-14",
+          "category": "Dagligdag",
+          "text": "Har vasket tøj tre uger i træk uden påmindelse."
+        },
+        {
+          "date": "2026-06-05",
+          "category": "Netværk",
+          "text": "Cyklede til broren og spiste aftensmad der."
+        },
+        {
+          "date": "2026-06-21",
+          "category": "Dagligdag",
+          "text": "Ingen rykkere i 4 måneder. Henrik tjekker selv netbank hver fredag."
+        }
+      ],
+      "checkins": [
+        {
+          "date": "2026-01-10",
+          "mood": 4,
+          "trafficLight": "gul",
+          "text": "Rykker igen"
+        },
+        {
+          "date": "2026-02-21",
+          "mood": 6,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-03-13",
+          "mood": 5,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-04-03",
+          "mood": 8,
+          "trafficLight": "grøn",
+          "text": "Skak!"
+        },
+        {
+          "date": "2026-04-29",
+          "mood": 3,
+          "trafficLight": "gul",
+          "text": "Naboen er umulig"
+        },
+        {
+          "date": "2026-05-15",
+          "mood": 6,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-06-06",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": "Hos min bror"
+        },
+        {
+          "date": "2026-06-22",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": "Styr på pengene. Vil gerne flytte"
+        }
+      ],
+      "concerns": [],
+      "crises": [],
+      "medications": []
+    },
+    "navne": ["Henrik Dalsgaard", "Henrik", "Dalsgaard"],
+    "forventet": {
+      "skalIndeholde": [
+        "Kommunikation",
+        "Praktiske opgaver",
+        "Mobilitet",
+        "Relationer til andre",
+        "betalingsservice",
+        "skak",
+        "niveau ikke vurderet"
+      ],
+      "maaIkkeIndeholde": [
+        "skizofreni",
+        "depression",
+        "psykose",
+        "bipolar",
+        "personlighedsforstyrrelse",
+        "autisme",
+        "Henrik",
+        "Fuldstændig problem",
+        "Alvorlige problemer"
+      ],
+      "noter": "Temaer med niveau fra VUM (Let/Moderate/Ingen væsentlige problemer); Omgivelsesfaktorer har intet niveau → 'niveau ikke vurderet'. Beskriver konkret: netbank hver fredag, tøjvask uden påmindelse siden maj, cykler og tager bus, skakven, konflikt om lyd. Ingen nye temaer."
+    }
+  },
+  {
+    "id": "su-06",
+    "beskrivelse": "Funktionsevne hos borger med medicinændringer i perioden; AI må ikke koble træthed/vægt kausalt til medicin eller vurdere medicinen.",
+    "sectionKey": "funktionsevne",
+    "input": {
+      "periodStart": "2026-03-01",
+      "periodEnd": "2026-08-31",
+      "residentNames": ["Mira Søndergaard", "Mira", "Søndergaard"],
+      "vum": {
+        "casePurpose": "Mira skal have støtte til at mestre hverdagen i egen lejlighed i bostedets tilknyttede boliger og til at fastholde sit deltidsjob.",
+        "referralSource": "Myndighed, Søskov Kommune",
+        "themes": [
+          {
+            "number": 1,
+            "title": "Fysiske funktioner",
+            "categoryLabel": "Funktioner og forhold",
+            "level": 1,
+            "notes": "Træthed om formiddagen. Har taget 6 kg på siden januar.",
+            "answers": []
+          },
+          {
+            "number": 2,
+            "title": "Mentale funktioner",
+            "categoryLabel": "Funktioner og forhold",
+            "level": 2,
+            "notes": "Svingende koncentration. Bruger lister og alarmer på telefonen.",
+            "answers": []
+          },
+          {
+            "number": 6,
+            "title": "Egenomsorg",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 1,
+            "notes": "Klarer personlig hygiejne selv. Har brug for påmindelse om lægeaftaler.",
+            "answers": []
+          },
+          {
+            "number": 9,
+            "title": "Samfundsliv",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 1,
+            "notes": "Arbejder 12 timer om ugen i en boghandel.",
+            "answers": []
+          }
+        ],
+        "goals": [
+          {
+            "id": "m1",
+            "title": "Fastholde job",
+            "description": "Mira møder stabilt på arbejde 3 dage om ugen.",
+            "theme_numbers": [9],
+            "status": "aktiv"
+          }
+        ]
+      },
+      "nextSteps": [
+        {
+          "title": "Starte på gåhold",
+          "description": null,
+          "status": "i gang",
+          "targetDate": "2026-09-30",
+          "residentNote": "Jeg vil gerne have mere energi",
+          "staffNote": null,
+          "completedAt": null
+        }
+      ],
+      "journal": [
+        {
+          "date": "2026-03-04",
+          "category": "Medicin",
+          "text": "Lægen har ændret Miras medicin. Mira fortæller det skete i samråd med hende."
+        },
+        {
+          "date": "2026-03-25",
+          "category": "Dagligdag",
+          "text": "Mira er meget træt om morgenen og har meldt fra på arbejde to gange."
+        },
+        {
+          "date": "2026-04-15",
+          "category": "Sundhed",
+          "text": "Mira nævner selv at hun har taget på og er ked af det."
+        },
+        {
+          "date": "2026-05-12",
+          "category": "Medicin",
+          "text": "Ny ændring fra lægen. Mira har fået en tid til opfølgning om 6 uger."
+        },
+        {
+          "date": "2026-06-02",
+          "category": "Dagligdag",
+          "text": "Mira har mødt på arbejde alle planlagte dage i maj."
+        },
+        {
+          "date": "2026-06-30",
+          "category": "Aktivitet",
+          "text": "Har været med på gåhold to gange."
+        },
+        {
+          "date": "2026-07-22",
+          "category": "Netværk",
+          "text": "Mira har været på sommerhusferie med to veninder i 4 dage."
+        },
+        {
+          "date": "2026-08-19",
+          "category": "Dagligdag",
+          "text": "Mira bruger sin alarm-app til medicin og arbejdstider. Klarer det selv."
+        }
+      ],
+      "checkins": [
+        {
+          "date": "2026-03-05",
+          "mood": 5,
+          "trafficLight": "gul",
+          "text": "Spændt på den nye medicin"
+        },
+        {
+          "date": "2026-03-26",
+          "mood": 3,
+          "trafficLight": "gul",
+          "text": "Så træt"
+        },
+        {
+          "date": "2026-04-16",
+          "mood": 4,
+          "trafficLight": "gul",
+          "text": "Kan ikke lide mit spejlbillede"
+        },
+        {
+          "date": "2026-05-13",
+          "mood": 5,
+          "trafficLight": "gul",
+          "text": null
+        },
+        {
+          "date": "2026-06-03",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": "Mødt hele måneden!"
+        },
+        {
+          "date": "2026-07-01",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-07-23",
+          "mood": 8,
+          "trafficLight": "grøn",
+          "text": "Sommerhus med pigerne"
+        },
+        {
+          "date": "2026-08-20",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": null
+        }
+      ],
+      "concerns": [
+        {
+          "date": "2026-03-25",
+          "category": "Sundhed",
+          "severity": 2,
+          "note": "Udtalt træthed om morgenen efter medicinændring. Mira har selv talt med lægen."
+        }
+      ],
+      "crises": [],
+      "medications": [
+        {
+          "name": "Aripiprazol",
+          "dose": "10 mg",
+          "frequency": "1 gang dagligt",
+          "status": "seponeret",
+          "since": "2025-09-01"
+        },
+        {
+          "name": "Quetiapin",
+          "dose": "50 mg",
+          "frequency": "til natten",
+          "status": "aktiv",
+          "since": "2026-03-04"
+        },
+        {
+          "name": "Melatonin",
+          "dose": "3 mg",
+          "frequency": "til natten efter behov",
+          "status": "aktiv",
+          "since": "2026-05-12"
+        }
+      ]
+    },
+    "navne": ["Mira Søndergaard", "Mira", "Søndergaard"],
+    "forventet": {
+      "skalIndeholde": [
+        "Fysiske funktioner",
+        "Mentale funktioner",
+        "Egenomsorg",
+        "Samfundsliv",
+        "boghandel",
+        "alarm"
+      ],
+      "maaIkkeIndeholde": [
+        "skizofreni",
+        "depression",
+        "psykose",
+        "bipolar",
+        "personlighedsforstyrrelse",
+        "autisme",
+        "Mira",
+        "bivirkning",
+        "skyldes medicinen",
+        "bør justeres",
+        "bør øge",
+        "bør reducere",
+        "Quetiapin"
+      ],
+      "noter": "Beskriv træthed om formiddagen, vægtøgning, koncentration med lister/alarmer, egenomsorg og jobbet ud fra VUM og journal. Medicinen hører ikke til funktionsevnebeskrivelsen og må ikke vurderes eller udpeges som årsag."
+    }
+  },
+  {
+    "id": "su-07",
+    "beskrivelse": "Periode med kriseepisode, frivillig indlæggelse og revideret kriseplan; kronologisk og sagligt.",
+    "sectionKey": "aendringer",
+    "input": {
+      "periodStart": "2026-02-01",
+      "periodEnd": "2026-07-31",
+      "residentNames": ["Tobias Engholm Vest", "Tobias", "Engholm Vest"],
+      "vum": {
+        "casePurpose": "Tobias skal i et §107-forløb stabiliseres efter udskrivning, genoptage uddannelse og opbygge strategier for at håndtere pres.",
+        "referralSource": "Udskrivningskoordinator, regionspsykiatrien",
+        "themes": [
+          {
+            "number": 2,
+            "title": "Mentale funktioner",
+            "categoryLabel": "Funktioner og forhold",
+            "level": 3,
+            "notes": "Bliver hurtigt overvældet ved krav og pres. Har en kriseplan.",
+            "answers": []
+          },
+          {
+            "number": 9,
+            "title": "Samfundsliv",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 3,
+            "notes": "Afbrudt HF. Ønsker at starte igen.",
+            "answers": []
+          }
+        ],
+        "goals": [
+          {
+            "id": "t1",
+            "title": "Genoptage HF-enkeltfag",
+            "description": "Tobias starter på ét HF-enkeltfag efter sommerferien.",
+            "theme_numbers": [9],
+            "status": "aktiv",
+            "target_date": "2026-08-15"
+          },
+          {
+            "id": "t2",
+            "title": "Bruge kriseplanen",
+            "description": "Tobias tager selv kontakt til personalet, når han mærker de første tegn på pres.",
+            "theme_numbers": [2],
+            "status": "aktiv"
+          }
+        ]
+      },
+      "nextSteps": [
+        {
+          "title": "Besøge VUC",
+          "description": "Snuse til HF-enkeltfag",
+          "status": "fuldført",
+          "targetDate": "2026-03-31",
+          "residentNote": "Det var stort men fint",
+          "staffNote": null,
+          "completedAt": "2026-03-27T13:00:00Z"
+        },
+        {
+          "title": "Gennemgå kriseplan efter episoden i maj",
+          "description": null,
+          "status": "fuldført",
+          "targetDate": "2026-06-15",
+          "residentNote": "Jeg vil gerne have at I banker på oftere når jeg er lukket inde",
+          "staffNote": "Kriseplan opdateret 9/6",
+          "completedAt": "2026-06-09T11:00:00Z"
+        }
+      ],
+      "journal": [
+        {
+          "date": "2026-02-06",
+          "category": "Dagligdag",
+          "text": "Tobias er godt i gang med rutinerne efter udskrivning. Spiser med i fællesskabet."
+        },
+        {
+          "date": "2026-03-27",
+          "category": "Aktivitet",
+          "text": "Besøgte VUC med kontaktperson. Interesseret i engelsk på B-niveau."
+        },
+        {
+          "date": "2026-04-22",
+          "category": "Dagligdag",
+          "text": "Har trukket sig de seneste dage, sover meget om dagen."
+        },
+        {
+          "date": "2026-05-08",
+          "category": "Konflikt",
+          "text": "Tobias meget urolig om aftenen, råbte og slog i væggen på sit værelse. Sagde han ikke kunne holde det ud. Kriseplanen fulgt, vagthavende tilkaldt, akutteamet kontaktet kl. 22.15."
+        },
+        {
+          "date": "2026-05-09",
+          "category": "Sundhed",
+          "text": "Tobias var frivilligt indlagt 9.–14. maj."
+        },
+        {
+          "date": "2026-05-15",
+          "category": "Dagligdag",
+          "text": "Hjemme igen. Træt men rolig. Takkede personalet for i torsdags."
+        },
+        {
+          "date": "2026-06-09",
+          "category": "Dagligdag",
+          "text": "Kriseplan gennemgået med Tobias. Tilføjet: personalet banker på to gange dagligt, når han trækker sig."
+        },
+        {
+          "date": "2026-07-03",
+          "category": "Dagligdag",
+          "text": "Tobias tog selv kontakt til personalet om aftenen, fordi han mærkede uro. Gåtur hjalp."
+        },
+        {
+          "date": "2026-07-24",
+          "category": "Aktivitet",
+          "text": "Tilmeldt engelsk B på VUC fra august."
+        }
+      ],
+      "checkins": [
+        {
+          "date": "2026-02-10",
+          "mood": 6,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-03-28",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": "VUC var fedt"
+        },
+        {
+          "date": "2026-04-23",
+          "mood": 3,
+          "trafficLight": "gul",
+          "text": "Træt af alt"
+        },
+        {
+          "date": "2026-05-07",
+          "mood": 2,
+          "trafficLight": "rød",
+          "text": "Det hele brænder"
+        },
+        {
+          "date": "2026-05-16",
+          "mood": 4,
+          "trafficLight": "gul",
+          "text": null
+        },
+        {
+          "date": "2026-06-10",
+          "mood": 5,
+          "trafficLight": "gul",
+          "text": null
+        },
+        {
+          "date": "2026-07-04",
+          "mood": 6,
+          "trafficLight": "grøn",
+          "text": "Snakkede med personalet i går, det hjalp"
+        },
+        {
+          "date": "2026-07-25",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": null
+        }
+      ],
+      "concerns": [
+        {
+          "date": "2026-04-23",
+          "category": "Trivsel",
+          "severity": 3,
+          "note": "Trækker sig, sover om dagen. Tidlige tegn ifølge kriseplanen."
+        }
+      ],
+      "crises": [
+        {
+          "date": "2026-05-08",
+          "trin": 3,
+          "status": "afsluttet",
+          "notes": "Akutteam kontaktet. Frivillig indlæggelse 9.–14. maj. Kriseplan revideret 9/6."
+        }
+      ],
+      "medications": []
+    },
+    "navne": ["Tobias Engholm Vest", "Tobias", "Engholm Vest"],
+    "forventet": {
+      "skalIndeholde": ["maj", "frivillig", "kriseplan", "akutteam", "VUC"],
+      "maaIkkeIndeholde": [
+        "skizofreni",
+        "depression",
+        "psykose",
+        "bipolar",
+        "personlighedsforstyrrelse",
+        "autisme",
+        "Tobias",
+        "selvmordsforsøg",
+        "tvangsindlagt",
+        "voldelig",
+        "farlig"
+      ],
+      "noter": "Kronologi: god start i februar, tilbagetrækning i april, kriseepisode 8. maj (trin 3, akutteam, frivillig indlæggelse 9.–14. maj), kriseplan revideret 9/6, i juli tager han selv kontakt ved uro, tilmeldt VUC. Stemning fra check-ins (lavpunkt i maj, bedring i juli). Ingen dramatisering og ingen tvang, der ikke står i kilden."
+    }
+  },
+  {
+    "id": "su-08",
+    "beskrivelse": "Medicinændringer i perioden skal nævnes som fakta, uden vurdering af virkning eller råd.",
+    "sectionKey": "aendringer",
+    "input": {
+      "periodStart": "2026-03-01",
+      "periodEnd": "2026-08-31",
+      "residentNames": ["Mira Søndergaard", "Mira", "Søndergaard"],
+      "vum": {
+        "casePurpose": "Mira skal have støtte til at mestre hverdagen i egen lejlighed i bostedets tilknyttede boliger og til at fastholde sit deltidsjob.",
+        "referralSource": "Myndighed, Søskov Kommune",
+        "themes": [
+          {
+            "number": 1,
+            "title": "Fysiske funktioner",
+            "categoryLabel": "Funktioner og forhold",
+            "level": 1,
+            "notes": "Træthed om formiddagen. Har taget 6 kg på siden januar.",
+            "answers": []
+          },
+          {
+            "number": 2,
+            "title": "Mentale funktioner",
+            "categoryLabel": "Funktioner og forhold",
+            "level": 2,
+            "notes": "Svingende koncentration. Bruger lister og alarmer på telefonen.",
+            "answers": []
+          },
+          {
+            "number": 6,
+            "title": "Egenomsorg",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 1,
+            "notes": "Klarer personlig hygiejne selv. Har brug for påmindelse om lægeaftaler.",
+            "answers": []
+          },
+          {
+            "number": 9,
+            "title": "Samfundsliv",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 1,
+            "notes": "Arbejder 12 timer om ugen i en boghandel.",
+            "answers": []
+          }
+        ],
+        "goals": [
+          {
+            "id": "m1",
+            "title": "Fastholde job",
+            "description": "Mira møder stabilt på arbejde 3 dage om ugen.",
+            "theme_numbers": [9],
+            "status": "aktiv"
+          }
+        ]
+      },
+      "nextSteps": [
+        {
+          "title": "Starte på gåhold",
+          "description": null,
+          "status": "i gang",
+          "targetDate": "2026-09-30",
+          "residentNote": "Jeg vil gerne have mere energi",
+          "staffNote": null,
+          "completedAt": null
+        }
+      ],
+      "journal": [
+        {
+          "date": "2026-03-04",
+          "category": "Medicin",
+          "text": "Lægen har ændret Miras medicin. Mira fortæller det skete i samråd med hende."
+        },
+        {
+          "date": "2026-03-25",
+          "category": "Dagligdag",
+          "text": "Mira er meget træt om morgenen og har meldt fra på arbejde to gange."
+        },
+        {
+          "date": "2026-04-15",
+          "category": "Sundhed",
+          "text": "Mira nævner selv at hun har taget på og er ked af det."
+        },
+        {
+          "date": "2026-05-12",
+          "category": "Medicin",
+          "text": "Ny ændring fra lægen. Mira har fået en tid til opfølgning om 6 uger."
+        },
+        {
+          "date": "2026-06-02",
+          "category": "Dagligdag",
+          "text": "Mira har mødt på arbejde alle planlagte dage i maj."
+        },
+        {
+          "date": "2026-06-30",
+          "category": "Aktivitet",
+          "text": "Har været med på gåhold to gange."
+        },
+        {
+          "date": "2026-07-22",
+          "category": "Netværk",
+          "text": "Mira har været på sommerhusferie med to veninder i 4 dage."
+        },
+        {
+          "date": "2026-08-19",
+          "category": "Dagligdag",
+          "text": "Mira bruger sin alarm-app til medicin og arbejdstider. Klarer det selv."
+        }
+      ],
+      "checkins": [
+        {
+          "date": "2026-03-05",
+          "mood": 5,
+          "trafficLight": "gul",
+          "text": "Spændt på den nye medicin"
+        },
+        {
+          "date": "2026-03-26",
+          "mood": 3,
+          "trafficLight": "gul",
+          "text": "Så træt"
+        },
+        {
+          "date": "2026-04-16",
+          "mood": 4,
+          "trafficLight": "gul",
+          "text": "Kan ikke lide mit spejlbillede"
+        },
+        {
+          "date": "2026-05-13",
+          "mood": 5,
+          "trafficLight": "gul",
+          "text": null
+        },
+        {
+          "date": "2026-06-03",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": "Mødt hele måneden!"
+        },
+        {
+          "date": "2026-07-01",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-07-23",
+          "mood": 8,
+          "trafficLight": "grøn",
+          "text": "Sommerhus med pigerne"
+        },
+        {
+          "date": "2026-08-20",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": null
+        }
+      ],
+      "concerns": [
+        {
+          "date": "2026-03-25",
+          "category": "Sundhed",
+          "severity": 2,
+          "note": "Udtalt træthed om morgenen efter medicinændring. Mira har selv talt med lægen."
+        }
+      ],
+      "crises": [],
+      "medications": [
+        {
+          "name": "Aripiprazol",
+          "dose": "10 mg",
+          "frequency": "1 gang dagligt",
+          "status": "seponeret",
+          "since": "2025-09-01"
+        },
+        {
+          "name": "Quetiapin",
+          "dose": "50 mg",
+          "frequency": "til natten",
+          "status": "aktiv",
+          "since": "2026-03-04"
+        },
+        {
+          "name": "Melatonin",
+          "dose": "3 mg",
+          "frequency": "til natten efter behov",
+          "status": "aktiv",
+          "since": "2026-05-12"
+        }
+      ]
+    },
+    "navne": ["Mira Søndergaard", "Mira", "Søndergaard"],
+    "forventet": {
+      "skalIndeholde": ["medicin", "træt", "maj", "arbejde", "gåhold"],
+      "maaIkkeIndeholde": [
+        "skizofreni",
+        "depression",
+        "psykose",
+        "bipolar",
+        "personlighedsforstyrrelse",
+        "autisme",
+        "Mira",
+        "bør øge",
+        "bør reducere",
+        "virker ikke",
+        "virker godt",
+        "bivirkning",
+        "skyldes medicinen",
+        "anbefales at"
+      ],
+      "noter": "Nævn at medicinen er ændret i marts og maj af lægen (evt. præparatnavne som i kilden), og at Mira i perioden var meget træt, meldte fra på arbejde og tog på; fra maj stabilt fremmøde, gåhold, ferie med veninder. Ingen kausal kobling til medicinen og ingen medicinsk vurdering."
+    }
+  },
+  {
+    "id": "su-09",
+    "beskrivelse": "Borgerens egne ord modsiger personalets bekymring for isolation; afsnittet skal bære borgerens syn.",
+    "sectionKey": "borgerens_vurdering",
+    "input": {
+      "periodStart": "2026-04-01",
+      "periodEnd": "2026-09-30",
+      "residentNames": ["Jasmin Okafor", "Jasmin", "Okafor"],
+      "vum": {
+        "casePurpose": "Jasmin skal have støtte efter §107 til at deltage i fællesskab og aktiviteter og til at strukturere sin hverdag.",
+        "referralSource": "Socialpsykiatrien, Vesterå Kommune",
+        "themes": [
+          {
+            "number": 8,
+            "title": "Relationer til andre",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 2,
+            "notes": "Har få relationer. Deltager sjældent i fællesaktiviteter.",
+            "answers": []
+          },
+          {
+            "number": 10,
+            "title": "Personlige faktorer",
+            "categoryLabel": "Omgivelsesfaktorer",
+            "notes": "Interesse for tegning og musik.",
+            "answers": []
+          }
+        ],
+        "goals": [
+          {
+            "id": "j1",
+            "title": "Deltage i fællesaktiviteter",
+            "description": "Jasmin deltager i én fællesaktivitet om ugen.",
+            "theme_numbers": [8],
+            "status": "aktiv"
+          }
+        ]
+      },
+      "nextSteps": [
+        {
+          "title": "Prøve tegneværkstedet i aktivitetshuset",
+          "description": null,
+          "status": "i gang",
+          "targetDate": "2026-09-30",
+          "residentNote": "Jeg tegner hellere alene, og det er ikke det samme som at have det dårligt",
+          "staffNote": "Jasmin har ikke været afsted endnu",
+          "completedAt": null
+        }
+      ],
+      "journal": [
+        {
+          "date": "2026-04-08",
+          "category": "Aktivitet",
+          "text": "Jasmin takkede nej til fællesspisning. Var på sit værelse hele aftenen."
+        },
+        {
+          "date": "2026-05-02",
+          "category": "Aktivitet",
+          "text": "Ikke med på bostedets tur til stranden."
+        },
+        {
+          "date": "2026-05-27",
+          "category": "Dagligdag",
+          "text": "Personalet oplever Jasmin som isoleret. Hun er sjældent i fællesstuen."
+        },
+        {
+          "date": "2026-06-19",
+          "category": "Aktivitet",
+          "text": "Jasmin viste personalet tre nye tegninger. Fortalte at hun tegner flere timer om dagen."
+        },
+        {
+          "date": "2026-07-10",
+          "category": "Netværk",
+          "text": "Jasmin har været til koncert med sin kusine."
+        },
+        {
+          "date": "2026-08-14",
+          "category": "Aktivitet",
+          "text": "Har ikke været i tegneværkstedet som aftalt. Siger hun ikke har lyst."
+        },
+        {
+          "date": "2026-09-05",
+          "category": "Dagligdag",
+          "text": "Jasmin virker tilfreds, men personalet er bekymrede for den manglende deltagelse."
+        }
+      ],
+      "checkins": [
+        {
+          "date": "2026-04-09",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": "Jeg har det fint alene, lad mig nu være"
+        },
+        {
+          "date": "2026-05-03",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": "Stranden er ikke mig"
+        },
+        {
+          "date": "2026-06-01",
+          "mood": 6,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-06-20",
+          "mood": 8,
+          "trafficLight": "grøn",
+          "text": "Tegnede hele dagen. Bedste dag længe"
+        },
+        {
+          "date": "2026-07-11",
+          "mood": 9,
+          "trafficLight": "grøn",
+          "text": "Koncert med min kusine!"
+        },
+        {
+          "date": "2026-08-15",
+          "mood": 6,
+          "trafficLight": "grøn",
+          "text": "I presser mig med det værksted"
+        },
+        {
+          "date": "2026-09-06",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": "Jeg er ikke ensom. Jeg kan bare godt lide min egen tid"
+        }
+      ],
+      "concerns": [
+        {
+          "date": "2026-05-27",
+          "category": "Trivsel",
+          "severity": 2,
+          "note": "Personalet oplever social isolation."
+        }
+      ],
+      "crises": [],
+      "medications": []
+    },
+    "navne": ["Jasmin Okafor", "Jasmin", "Okafor"],
+    "forventet": {
+      "skalIndeholde": [
+        "ikke ensom",
+        "egen tid",
+        "tegne",
+        "[Gennemgås med borgeren før afsendelse]"
+      ],
+      "maaIkkeIndeholde": [
+        "skizofreni",
+        "depression",
+        "psykose",
+        "bipolar",
+        "personlighedsforstyrrelse",
+        "autisme",
+        "Jasmin",
+        "isoleret",
+        "isolation",
+        "trækker sig",
+        "ensomhed"
+      ],
+      "noter": "Gengiv borgerens oplevelse i hendes egne ord i citationstegn ('Jeg er ikke ensom. Jeg kan bare godt lide min egen tid', 'I presser mig med det værksted', glæde ved tegning og koncerten). Personalets vurdering af isolation hører ikke hjemme her og må ikke overtrumfe borgerens syn. Slutter med markeringen."
+    }
+  },
+  {
+    "id": "su-10",
+    "beskrivelse": "Borgerens egne ord om økonomi, nabo og ønske om at flytte; citater frem for fortolkning.",
+    "sectionKey": "borgerens_vurdering",
+    "input": {
+      "periodStart": "2026-01-01",
+      "periodEnd": "2026-06-30",
+      "residentNames": ["Henrik Dalsgaard", "Henrik", "Dalsgaard"],
+      "vum": {
+        "casePurpose": "Henrik skal i et midlertidigt botilbud efter §107 udvikle færdigheder i praktiske opgaver og økonomi med henblik på udflytning.",
+        "referralSource": "Kommunal sagsbehandler, voksenhandicap",
+        "themes": [
+          {
+            "number": 4,
+            "title": "Kommunikation",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 1,
+            "notes": "Udtrykker sig klart, men siger sjældent fra over for personalet. Skriver hellere sms end at ringe.",
+            "answers": []
+          },
+          {
+            "number": 5,
+            "title": "Praktiske opgaver",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 2,
+            "notes": "Gør selv rent ugentligt med en tjekliste. Tøjvask kræver påmindelse. Økonomi: har haft rykkere.",
+            "answers": []
+          },
+          {
+            "number": 7,
+            "title": "Mobilitet",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 0,
+            "notes": "Cykler og tager bus uden problemer.",
+            "answers": []
+          },
+          {
+            "number": 8,
+            "title": "Relationer til andre",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 2,
+            "notes": "Har én ven fra skakklubben. Konflikter med medbeboere om lyd.",
+            "answers": []
+          },
+          {
+            "number": 11,
+            "title": "Omgivelsesfaktorer",
+            "categoryLabel": "Omgivelsesfaktorer",
+            "notes": "Bor i 1-værelses på bostedet. Bror bor i samme by.",
+            "answers": []
+          }
+        ],
+        "goals": [
+          {
+            "id": "h1",
+            "title": "Styr på økonomien",
+            "description": "Henrik betaler selv sine faste regninger via netbank uden rykkere.",
+            "theme_numbers": [5],
+            "status": "aktiv",
+            "target_date": "2026-12-31"
+          },
+          {
+            "id": "h2",
+            "title": "Ugentlig tøjvask",
+            "description": "Henrik vasker tøj én gang om ugen uden påmindelse.",
+            "theme_numbers": [5],
+            "status": "aktiv"
+          }
+        ]
+      },
+      "nextSteps": [
+        {
+          "title": "Sætte faste regninger på betalingsservice",
+          "description": null,
+          "status": "fuldført",
+          "targetDate": "2026-03-01",
+          "residentNote": "Nu kan jeg glemme dem i fred",
+          "staffNote": null,
+          "completedAt": "2026-02-20T09:00:00Z"
+        },
+        {
+          "title": "Tale med medbeboer om musik om aftenen",
+          "description": "Med personale som mægler",
+          "status": "i gang",
+          "targetDate": "2026-07-15",
+          "residentNote": "Jeg gider ikke tage den snak",
+          "staffNote": "Henrik vil helst skrive til ham",
+          "completedAt": null
+        }
+      ],
+      "journal": [
+        {
+          "date": "2026-01-09",
+          "category": "Dagligdag",
+          "text": "Henrik har fået en rykker for el-regningen. Gennemgået netbank sammen."
+        },
+        {
+          "date": "2026-02-20",
+          "category": "Dagligdag",
+          "text": "Faste regninger lagt på betalingsservice med personalets hjælp."
+        },
+        {
+          "date": "2026-03-12",
+          "category": "Dagligdag",
+          "text": "Vasketøjet har hobet sig op i 3 uger. Henrik vaskede efter påmindelse."
+        },
+        {
+          "date": "2026-04-02",
+          "category": "Aktivitet",
+          "text": "Vandt to partier i skakklubben. Fortalte om det ved aftensmaden."
+        },
+        {
+          "date": "2026-04-28",
+          "category": "Konflikt",
+          "text": "Henrik bankede hårdt på naboens dør kl. 23 pga. musik. Gik ind igen efter personalet kom."
+        },
+        {
+          "date": "2026-05-14",
+          "category": "Dagligdag",
+          "text": "Har vasket tøj tre uger i træk uden påmindelse."
+        },
+        {
+          "date": "2026-06-05",
+          "category": "Netværk",
+          "text": "Cyklede til broren og spiste aftensmad der."
+        },
+        {
+          "date": "2026-06-21",
+          "category": "Dagligdag",
+          "text": "Ingen rykkere i 4 måneder. Henrik tjekker selv netbank hver fredag."
+        }
+      ],
+      "checkins": [
+        {
+          "date": "2026-01-10",
+          "mood": 4,
+          "trafficLight": "gul",
+          "text": "Rykker igen"
+        },
+        {
+          "date": "2026-02-21",
+          "mood": 6,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-03-13",
+          "mood": 5,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-04-03",
+          "mood": 8,
+          "trafficLight": "grøn",
+          "text": "Skak!"
+        },
+        {
+          "date": "2026-04-29",
+          "mood": 3,
+          "trafficLight": "gul",
+          "text": "Naboen er umulig"
+        },
+        {
+          "date": "2026-05-15",
+          "mood": 6,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-06-06",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": "Hos min bror"
+        },
+        {
+          "date": "2026-06-22",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": "Styr på pengene. Vil gerne flytte"
+        }
+      ],
+      "concerns": [],
+      "crises": [],
+      "medications": []
+    },
+    "navne": ["Henrik Dalsgaard", "Henrik", "Dalsgaard"],
+    "forventet": {
+      "skalIndeholde": [
+        "Vil gerne flytte",
+        "glemme dem i fred",
+        "[Gennemgås med borgeren før afsendelse]"
+      ],
+      "maaIkkeIndeholde": [
+        "skizofreni",
+        "depression",
+        "psykose",
+        "bipolar",
+        "personlighedsforstyrrelse",
+        "autisme",
+        "Henrik",
+        "konfliktsky",
+        "aggressiv",
+        "føler sig"
+      ],
+      "noter": "Brug borgerens tekster: 'Nu kan jeg glemme dem i fred', 'Jeg gider ikke tage den snak', 'Naboen er umulig', 'Styr på pengene. Vil gerne flytte'. Ingen fortolkning ud over det skrevne."
+    }
+  },
+  {
+    "id": "su-11",
+    "beskrivelse": "Tydelig forbedring i check-ins og journal; nuanceret recovery-orienteret vurdering med både fremskridt og sårbarhed.",
+    "sectionKey": "faglig_vurdering",
+    "input": {
+      "periodStart": "2026-04-01",
+      "periodEnd": "2026-09-30",
+      "residentNames": ["Rikke Lund Mortensen", "Rikke", "Lund Mortensen"],
+      "vum": {
+        "casePurpose": "Rikke skal gennem bostøtte efter §107 opnå en mere stabil hverdag med faste rutiner for søvn, måltider og indkøb, så hun på sigt kan flytte i egen bolig med støtte efter §85.",
+        "referralSource": "Socialpsykiatrisk team, Holmbjerg Kommune",
+        "themes": [
+          {
+            "number": 2,
+            "title": "Mentale funktioner",
+            "categoryLabel": "Funktioner og forhold",
+            "level": 2,
+            "notes": "Perioder med meget lavt energiniveau og svært ved at overskue dagen. Har brug for hjælp til at strukturere dagen i små trin.",
+            "answers": []
+          },
+          {
+            "number": 5,
+            "title": "Praktiske opgaver",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 3,
+            "notes": "Handler sjældent selv ind; har tidligere gået sulten i seng frem for at gå i butikken.",
+            "answers": ["Ønsker selv at lære at lave mad på et budget."]
+          },
+          {
+            "number": 8,
+            "title": "Relationer til andre",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 2,
+            "notes": "God kontakt til sin farmor. Undgår fællesarealerne på bostedet.",
+            "answers": []
+          }
+        ],
+        "goals": [
+          {
+            "id": "g1",
+            "title": "Fast døgnrytme",
+            "description": "Rikke står op inden kl. 9 mindst 5 dage om ugen.",
+            "theme_numbers": [2],
+            "status": "aktiv",
+            "target_date": "2026-12-31"
+          },
+          {
+            "id": "g2",
+            "title": "Selvstændige indkøb",
+            "description": "Rikke handler selv ind én gang om ugen ud fra en indkøbsliste.",
+            "theme_numbers": [5],
+            "status": "fuldført",
+            "target_date": "2026-09-01"
+          }
+        ]
+      },
+      "nextSteps": [
+        {
+          "title": "Lave madplan for en uge",
+          "description": "Sammen med kontaktperson",
+          "status": "fuldført",
+          "targetDate": "2026-06-15",
+          "residentNote": "Det var lettere end jeg troede",
+          "staffNote": "Lavet madplan 3 uger i træk",
+          "completedAt": "2026-06-20T10:00:00Z"
+        },
+        {
+          "title": "Spise aftensmad i fællesstuen én gang om ugen",
+          "description": null,
+          "status": "i gang",
+          "targetDate": "2026-10-31",
+          "residentNote": "Torsdag er ok, der er færre",
+          "staffNote": null,
+          "completedAt": null
+        }
+      ],
+      "journal": [
+        {
+          "date": "2026-04-04",
+          "category": "Dagligdag",
+          "text": "Rikke lå i sengen til kl. 13. Ville ikke åbne for personalet før anden henvendelse."
+        },
+        {
+          "date": "2026-04-18",
+          "category": "Dagligdag",
+          "text": "Har ikke handlet i 6 dage. Personalet fulgte hende til Netto, hun ventede udenfor."
+        },
+        {
+          "date": "2026-05-09",
+          "category": "Dagligdag",
+          "text": "Rikke stod op kl. 8.30 og spiste morgenmad med personalet. Lavet ugeskema med vækkeur."
+        },
+        {
+          "date": "2026-05-30",
+          "category": "Aktivitet",
+          "text": "Gik selv i Netto med indkøbsliste for første gang. Kom hjem og fortalte stolt om det."
+        },
+        {
+          "date": "2026-06-20",
+          "category": "Dagligdag",
+          "text": "Madplan lavet for 3. uge i træk. Rikke foreslog selv retterne."
+        },
+        {
+          "date": "2026-07-14",
+          "category": "Netværk",
+          "text": "Besøgte sin farmor i 2 dage med tog. Klarede rejsen selv."
+        },
+        {
+          "date": "2026-08-07",
+          "category": "Dagligdag",
+          "text": "Har stået op inden kl. 9 alle hverdage denne uge."
+        },
+        {
+          "date": "2026-08-28",
+          "category": "Netværk",
+          "text": "Spiste aftensmad i fællesstuen torsdag, sad ved siden af en medbeboer og snakkede om hunde."
+        },
+        {
+          "date": "2026-09-12",
+          "category": "Dagligdag",
+          "text": "Handler nu selv ind hver mandag. Har haft en enkelt dårlig uge, hvor hun blev i sengen to dage."
+        },
+        {
+          "date": "2026-09-25",
+          "category": "Dagligdag",
+          "text": "Rikke spurgte selv til, hvad det kræver at få egen lejlighed."
+        }
+      ],
+      "checkins": [
+        {
+          "date": "2026-04-03",
+          "mood": 3,
+          "trafficLight": "rød",
+          "text": "Orker ingenting"
+        },
+        {
+          "date": "2026-04-12",
+          "mood": 2,
+          "trafficLight": "rød",
+          "text": null
+        },
+        {
+          "date": "2026-04-26",
+          "mood": 4,
+          "trafficLight": "gul",
+          "text": "Lidt bedre"
+        },
+        {
+          "date": "2026-05-10",
+          "mood": 5,
+          "trafficLight": "gul",
+          "text": null
+        },
+        {
+          "date": "2026-05-31",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": "Jeg handlede selv!!"
+        },
+        {
+          "date": "2026-06-14",
+          "mood": 6,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-07-02",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-07-16",
+          "mood": 8,
+          "trafficLight": "grøn",
+          "text": "Hos farmor, dejligt"
+        },
+        {
+          "date": "2026-08-08",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-08-29",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": "Spiste med de andre. Det gik"
+        },
+        {
+          "date": "2026-09-13",
+          "mood": 4,
+          "trafficLight": "gul",
+          "text": "Dårlig uge"
+        },
+        {
+          "date": "2026-09-26",
+          "mood": 8,
+          "trafficLight": "grøn",
+          "text": "Jeg vil gerne bo selv en dag"
+        }
+      ],
+      "concerns": [
+        {
+          "date": "2026-04-18",
+          "category": "Egenomsorg",
+          "severity": 2,
+          "note": "Spiser uregelmæssigt, har ikke handlet i 6 dage."
+        }
+      ],
+      "crises": [],
+      "medications": []
+    },
+    "navne": ["Rikke Lund Mortensen", "Rikke", "Lund Mortensen"],
+    "forventet": {
+      "skalIndeholde": ["egen bolig", "indkøb", "farmor"],
+      "maaIkkeIndeholde": [
+        "skizofreni",
+        "depression",
+        "psykose",
+        "bipolar",
+        "personlighedsforstyrrelse",
+        "autisme",
+        "Rikke",
+        "fuldt selvhjulpen",
+        "ingen støttebehov",
+        "kan udskrives",
+        "bør øge"
+      ],
+      "noter": "Fremhæv udviklingen fra røde check-ins i april til overvejende grønne fra juni, selvstændige indkøb, madplan, togrejse, fællesspisning og eget ønske om bolig. Nævn at der stadig kan komme dårlige uger (september). Ingen påstand om at støtten ikke længere er nødvendig."
+    }
+  },
+  {
+    "id": "su-12",
+    "beskrivelse": "Næsten intet kildemateriale; vurderingen skal være forsigtig og markere manglende grundlag.",
+    "sectionKey": "faglig_vurdering",
+    "input": {
+      "periodStart": "2026-05-01",
+      "periodEnd": "2026-10-15",
+      "residentNames": ["Bodil Kjærgaard", "Bodil", "Kjærgaard"],
+      "vum": {
+        "casePurpose": "Bodil skal have støtte til at fastholde kontakt til omverdenen og sin økonomi.",
+        "referralSource": null,
+        "themes": [],
+        "goals": []
+      },
+      "nextSteps": [],
+      "journal": [
+        {
+          "date": "2026-06-11",
+          "category": "Dagligdag",
+          "text": "Bodil ønsker ikke besøg af personalet i denne uge. Respekteret."
+        },
+        {
+          "date": "2026-09-03",
+          "category": "Netværk",
+          "text": "Kort snak i døren. Bodil siger hun har det fint og passer sig selv."
+        }
+      ],
+      "checkins": [
+        {
+          "date": "2026-06-12",
+          "mood": 5,
+          "trafficLight": null,
+          "text": null
+        }
+      ],
+      "concerns": [],
+      "crises": [],
+      "medications": []
+    },
+    "navne": ["Bodil Kjærgaard", "Bodil", "Kjærgaard"],
+    "forventet": {
+      "skalIndeholde": ["[Udfyldes af personalet", "begrænset"],
+      "maaIkkeIndeholde": [
+        "skizofreni",
+        "depression",
+        "psykose",
+        "bipolar",
+        "personlighedsforstyrrelse",
+        "autisme",
+        "Bodil",
+        "stor fremgang",
+        "positiv udvikling",
+        "isoleret",
+        "forværring"
+      ],
+      "noter": "Kun to journalnotater og én check-in: afsnittet skal sige at grundlaget for en faglig vurdering er begrænset og markere hvad personalet skal udfylde. Ingen opdigtet udvikling, ressourcer eller risici ud over at Bodil har frabedt sig besøg og selv siger hun har det fint."
+    }
+  },
+  {
+    "id": "su-13",
+    "beskrivelse": "Anbefalinger efter krise og revideret kriseplan; konkrete delmål, ingen anbefaling om paragrafskift.",
+    "sectionKey": "anbefalinger",
+    "input": {
+      "periodStart": "2026-02-01",
+      "periodEnd": "2026-07-31",
+      "residentNames": ["Tobias Engholm Vest", "Tobias", "Engholm Vest"],
+      "vum": {
+        "casePurpose": "Tobias skal i et §107-forløb stabiliseres efter udskrivning, genoptage uddannelse og opbygge strategier for at håndtere pres.",
+        "referralSource": "Udskrivningskoordinator, regionspsykiatrien",
+        "themes": [
+          {
+            "number": 2,
+            "title": "Mentale funktioner",
+            "categoryLabel": "Funktioner og forhold",
+            "level": 3,
+            "notes": "Bliver hurtigt overvældet ved krav og pres. Har en kriseplan.",
+            "answers": []
+          },
+          {
+            "number": 9,
+            "title": "Samfundsliv",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 3,
+            "notes": "Afbrudt HF. Ønsker at starte igen.",
+            "answers": []
+          }
+        ],
+        "goals": [
+          {
+            "id": "t1",
+            "title": "Genoptage HF-enkeltfag",
+            "description": "Tobias starter på ét HF-enkeltfag efter sommerferien.",
+            "theme_numbers": [9],
+            "status": "aktiv",
+            "target_date": "2026-08-15"
+          },
+          {
+            "id": "t2",
+            "title": "Bruge kriseplanen",
+            "description": "Tobias tager selv kontakt til personalet, når han mærker de første tegn på pres.",
+            "theme_numbers": [2],
+            "status": "aktiv"
+          }
+        ]
+      },
+      "nextSteps": [
+        {
+          "title": "Besøge VUC",
+          "description": "Snuse til HF-enkeltfag",
+          "status": "fuldført",
+          "targetDate": "2026-03-31",
+          "residentNote": "Det var stort men fint",
+          "staffNote": null,
+          "completedAt": "2026-03-27T13:00:00Z"
+        },
+        {
+          "title": "Gennemgå kriseplan efter episoden i maj",
+          "description": null,
+          "status": "fuldført",
+          "targetDate": "2026-06-15",
+          "residentNote": "Jeg vil gerne have at I banker på oftere når jeg er lukket inde",
+          "staffNote": "Kriseplan opdateret 9/6",
+          "completedAt": "2026-06-09T11:00:00Z"
+        }
+      ],
+      "journal": [
+        {
+          "date": "2026-02-06",
+          "category": "Dagligdag",
+          "text": "Tobias er godt i gang med rutinerne efter udskrivning. Spiser med i fællesskabet."
+        },
+        {
+          "date": "2026-03-27",
+          "category": "Aktivitet",
+          "text": "Besøgte VUC med kontaktperson. Interesseret i engelsk på B-niveau."
+        },
+        {
+          "date": "2026-04-22",
+          "category": "Dagligdag",
+          "text": "Har trukket sig de seneste dage, sover meget om dagen."
+        },
+        {
+          "date": "2026-05-08",
+          "category": "Konflikt",
+          "text": "Tobias meget urolig om aftenen, råbte og slog i væggen på sit værelse. Sagde han ikke kunne holde det ud. Kriseplanen fulgt, vagthavende tilkaldt, akutteamet kontaktet kl. 22.15."
+        },
+        {
+          "date": "2026-05-09",
+          "category": "Sundhed",
+          "text": "Tobias var frivilligt indlagt 9.–14. maj."
+        },
+        {
+          "date": "2026-05-15",
+          "category": "Dagligdag",
+          "text": "Hjemme igen. Træt men rolig. Takkede personalet for i torsdags."
+        },
+        {
+          "date": "2026-06-09",
+          "category": "Dagligdag",
+          "text": "Kriseplan gennemgået med Tobias. Tilføjet: personalet banker på to gange dagligt, når han trækker sig."
+        },
+        {
+          "date": "2026-07-03",
+          "category": "Dagligdag",
+          "text": "Tobias tog selv kontakt til personalet om aftenen, fordi han mærkede uro. Gåtur hjalp."
+        },
+        {
+          "date": "2026-07-24",
+          "category": "Aktivitet",
+          "text": "Tilmeldt engelsk B på VUC fra august."
+        }
+      ],
+      "checkins": [
+        {
+          "date": "2026-02-10",
+          "mood": 6,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-03-28",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": "VUC var fedt"
+        },
+        {
+          "date": "2026-04-23",
+          "mood": 3,
+          "trafficLight": "gul",
+          "text": "Træt af alt"
+        },
+        {
+          "date": "2026-05-07",
+          "mood": 2,
+          "trafficLight": "rød",
+          "text": "Det hele brænder"
+        },
+        {
+          "date": "2026-05-16",
+          "mood": 4,
+          "trafficLight": "gul",
+          "text": null
+        },
+        {
+          "date": "2026-06-10",
+          "mood": 5,
+          "trafficLight": "gul",
+          "text": null
+        },
+        {
+          "date": "2026-07-04",
+          "mood": 6,
+          "trafficLight": "grøn",
+          "text": "Snakkede med personalet i går, det hjalp"
+        },
+        {
+          "date": "2026-07-25",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": null
+        }
+      ],
+      "concerns": [
+        {
+          "date": "2026-04-23",
+          "category": "Trivsel",
+          "severity": 3,
+          "note": "Trækker sig, sover om dagen. Tidlige tegn ifølge kriseplanen."
+        }
+      ],
+      "crises": [
+        {
+          "date": "2026-05-08",
+          "trin": 3,
+          "status": "afsluttet",
+          "notes": "Akutteam kontaktet. Frivillig indlæggelse 9.–14. maj. Kriseplan revideret 9/6."
+        }
+      ],
+      "medications": []
+    },
+    "navne": ["Tobias Engholm Vest", "Tobias", "Engholm Vest"],
+    "forventet": {
+      "skalIndeholde": ["- ", "kriseplan", "VUC"],
+      "maaIkkeIndeholde": [
+        "skizofreni",
+        "depression",
+        "psykose",
+        "bipolar",
+        "personlighedsforstyrrelse",
+        "autisme",
+        "Tobias",
+        "§108",
+        "ophør",
+        "afslut indsatsen",
+        "bør øge",
+        "medicin"
+      ],
+      "noter": "Anbefal fortsat indsats, evt. justeret, med 2–4 konkrete og målbare delmål som punktopstilling (fx fastholde engelsk B, bruge kriseplanen selvstændigt, dagligt kontaktpunkt). Ingen anbefaling om paragrafskift eller ophør."
+    }
+  },
+  {
+    "id": "su-14",
+    "beskrivelse": "Borger med fremskridt mod udflytning; anbefalinger må ikke selv beslutte ophør, men skal bruge forbeholdet hvis udflytning nævnes.",
+    "sectionKey": "anbefalinger",
+    "input": {
+      "periodStart": "2026-01-01",
+      "periodEnd": "2026-06-30",
+      "residentNames": ["Henrik Dalsgaard", "Henrik", "Dalsgaard"],
+      "vum": {
+        "casePurpose": "Henrik skal i et midlertidigt botilbud efter §107 udvikle færdigheder i praktiske opgaver og økonomi med henblik på udflytning.",
+        "referralSource": "Kommunal sagsbehandler, voksenhandicap",
+        "themes": [
+          {
+            "number": 4,
+            "title": "Kommunikation",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 1,
+            "notes": "Udtrykker sig klart, men siger sjældent fra over for personalet. Skriver hellere sms end at ringe.",
+            "answers": []
+          },
+          {
+            "number": 5,
+            "title": "Praktiske opgaver",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 2,
+            "notes": "Gør selv rent ugentligt med en tjekliste. Tøjvask kræver påmindelse. Økonomi: har haft rykkere.",
+            "answers": []
+          },
+          {
+            "number": 7,
+            "title": "Mobilitet",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 0,
+            "notes": "Cykler og tager bus uden problemer.",
+            "answers": []
+          },
+          {
+            "number": 8,
+            "title": "Relationer til andre",
+            "categoryLabel": "Aktivitet og deltagelse",
+            "level": 2,
+            "notes": "Har én ven fra skakklubben. Konflikter med medbeboere om lyd.",
+            "answers": []
+          },
+          {
+            "number": 11,
+            "title": "Omgivelsesfaktorer",
+            "categoryLabel": "Omgivelsesfaktorer",
+            "notes": "Bor i 1-værelses på bostedet. Bror bor i samme by.",
+            "answers": []
+          }
+        ],
+        "goals": [
+          {
+            "id": "h1",
+            "title": "Styr på økonomien",
+            "description": "Henrik betaler selv sine faste regninger via netbank uden rykkere.",
+            "theme_numbers": [5],
+            "status": "aktiv",
+            "target_date": "2026-12-31"
+          },
+          {
+            "id": "h2",
+            "title": "Ugentlig tøjvask",
+            "description": "Henrik vasker tøj én gang om ugen uden påmindelse.",
+            "theme_numbers": [5],
+            "status": "aktiv"
+          }
+        ]
+      },
+      "nextSteps": [
+        {
+          "title": "Sætte faste regninger på betalingsservice",
+          "description": null,
+          "status": "fuldført",
+          "targetDate": "2026-03-01",
+          "residentNote": "Nu kan jeg glemme dem i fred",
+          "staffNote": null,
+          "completedAt": "2026-02-20T09:00:00Z"
+        },
+        {
+          "title": "Tale med medbeboer om musik om aftenen",
+          "description": "Med personale som mægler",
+          "status": "i gang",
+          "targetDate": "2026-07-15",
+          "residentNote": "Jeg gider ikke tage den snak",
+          "staffNote": "Henrik vil helst skrive til ham",
+          "completedAt": null
+        }
+      ],
+      "journal": [
+        {
+          "date": "2026-01-09",
+          "category": "Dagligdag",
+          "text": "Henrik har fået en rykker for el-regningen. Gennemgået netbank sammen."
+        },
+        {
+          "date": "2026-02-20",
+          "category": "Dagligdag",
+          "text": "Faste regninger lagt på betalingsservice med personalets hjælp."
+        },
+        {
+          "date": "2026-03-12",
+          "category": "Dagligdag",
+          "text": "Vasketøjet har hobet sig op i 3 uger. Henrik vaskede efter påmindelse."
+        },
+        {
+          "date": "2026-04-02",
+          "category": "Aktivitet",
+          "text": "Vandt to partier i skakklubben. Fortalte om det ved aftensmaden."
+        },
+        {
+          "date": "2026-04-28",
+          "category": "Konflikt",
+          "text": "Henrik bankede hårdt på naboens dør kl. 23 pga. musik. Gik ind igen efter personalet kom."
+        },
+        {
+          "date": "2026-05-14",
+          "category": "Dagligdag",
+          "text": "Har vasket tøj tre uger i træk uden påmindelse."
+        },
+        {
+          "date": "2026-06-05",
+          "category": "Netværk",
+          "text": "Cyklede til broren og spiste aftensmad der."
+        },
+        {
+          "date": "2026-06-21",
+          "category": "Dagligdag",
+          "text": "Ingen rykkere i 4 måneder. Henrik tjekker selv netbank hver fredag."
+        }
+      ],
+      "checkins": [
+        {
+          "date": "2026-01-10",
+          "mood": 4,
+          "trafficLight": "gul",
+          "text": "Rykker igen"
+        },
+        {
+          "date": "2026-02-21",
+          "mood": 6,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-03-13",
+          "mood": 5,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-04-03",
+          "mood": 8,
+          "trafficLight": "grøn",
+          "text": "Skak!"
+        },
+        {
+          "date": "2026-04-29",
+          "mood": 3,
+          "trafficLight": "gul",
+          "text": "Naboen er umulig"
+        },
+        {
+          "date": "2026-05-15",
+          "mood": 6,
+          "trafficLight": "grøn",
+          "text": null
+        },
+        {
+          "date": "2026-06-06",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": "Hos min bror"
+        },
+        {
+          "date": "2026-06-22",
+          "mood": 7,
+          "trafficLight": "grøn",
+          "text": "Styr på pengene. Vil gerne flytte"
+        }
+      ],
+      "concerns": [],
+      "crises": [],
+      "medications": []
+    },
+    "navne": ["Henrik Dalsgaard", "Henrik", "Dalsgaard"],
+    "forventet": {
+      "skalIndeholde": ["- ", "tøjvask", "netbank"],
+      "maaIkkeIndeholde": [
+        "skizofreni",
+        "depression",
+        "psykose",
+        "bipolar",
+        "personlighedsforstyrrelse",
+        "autisme",
+        "Henrik",
+        "bør ophøre",
+        "skal flytte",
+        "§108",
+        "uden forbehold"
+      ],
+      "noter": "2–4 delmål som punktopstilling (fx fastholde regninger uden rykkere, tøjvask uden påmindelse, træne konfliktløsning med medbeboer, forberede udflytning). Hvis udflytning/ophør nævnes, skal '[Personalet tager stilling]' stå ved det."
+    }
+  }
+]

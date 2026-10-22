@@ -52,7 +52,8 @@
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e:demo": "playwright test e2e/care-portal-demo-console.spec.ts",
-    "eval:safety": "node scripts/eval-safety-classifier.mjs"
+    "eval:safety": "node scripts/eval-safety-classifier.mjs",
+    "eval:ai": "vitest run --config vitest.eval.config.ts"
   },
   "dependencies": {
     "@anthropic-ai/bedrock-sdk": "^0.35.0",

@@ -1,10 +1,12 @@
 import { VUM_FUNCTION_LEVEL_LABELS } from '@/lib/vum/vumThemes';
 import { CITATION_INSTRUCTION } from '@/lib/documents/citations';
+import { medGrundlag } from '@/lib/ai/faglighed/grundlag';
 import type { DocumentSectionDefinition } from '@/lib/documents/registry';
 import type { SourceRef } from '@/lib/documents/types';
 import type { StatusReportSources } from './types';
 
-export const STATUS_REPORT_SYSTEM = `Du skriver ét afsnit af en statusudtalelse fra et socialpsykiatrisk botilbud (servicelovens §107/§108) til borgerens kommune (sagsbehandleren) før et opfølgningsmøde.
+export const STATUS_REPORT_SYSTEM =
+  medGrundlag(`Du skriver ét afsnit af en statusudtalelse fra et socialpsykiatrisk botilbud (servicelovens §107/§108) til borgerens kommune (sagsbehandleren) før et opfølgningsmøde.
 
 Regler:
 - Skriv på dansk i et sagligt, konkret og respektfuldt sprog, recovery-orienteret og i 3. person ("borgeren").
@@ -14,7 +16,7 @@ Regler:
 - Nævn ikke personalets navne og henvis ikke til "kildematerialet" eller "journalen" som sådan; skriv fx "personalet har observeret".
 - Hold afsnittet kort og læsevenligt: typisk 80–250 ord.
 
-${CITATION_INSTRUCTION}`;
+${CITATION_INSTRUCTION}`);
 
 const MAX_JOURNAL_CHARS = 30000;
 const MAX_ENTRY_CHARS = 700;
@@ -31,8 +33,9 @@ export function pseudonymize(text: string, names: string[]): string {
     (a, b) => b.length - a.length
   );
   for (const name of unique) {
-    const re = new RegExp(`(?<![\\p{L}])${escapeRegExp(name)}(?![\\p{L}])`, 'giu');
-    out = out.replace(re, 'Borgeren');
+    // Også ejefald: "Miras" og "Lars'" bliver til "Borgerens".
+    const re = new RegExp(`(?<![\\p{L}])${escapeRegExp(name)}(s|')?(?![\\p{L}])`, 'giu');
+    out = out.replace(re, (_m, genitive?: string) => (genitive ? 'Borgerens' : 'Borgeren'));
   }
   return out;
 }
