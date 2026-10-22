@@ -145,7 +145,8 @@ describe.skipIf(!apiKey)('AI-testsæt', () => {
       const md = rapport(alle);
       writeFileSync(path.join(dir, `ai-eval-${stamp}.md`), md);
       writeFileSync(path.join(dir, `ai-eval-${stamp}.json`), JSON.stringify(alle, null, 2));
-      console.info(md.split('\n').slice(0, 8).join('\n'));
+      // Hele rapporten i loggen, så den kan læses uden at hente artefaktet.
+      console.info(md);
       expect(alle.length).toBeGreaterThan(0);
     },
     30 * 60_000
