@@ -13,6 +13,7 @@ import {
   buildIndsatsInsertRow,
   escapeIndsatsHtml,
   canSaveIndsatsForm,
+  fetchIndsatsRecords,
   loadDemoIndsatsRecords,
   paragraphForIndsatsType,
   parseIndsatsRecord,
@@ -82,24 +83,14 @@ export default function IndsatsModal({ open, onClose, useDemoData = false }: Pro
       setLoadingList(false);
       return;
     }
-    const { data, error } = await supabase
-      .from('care_indsats_records')
-      .select(
-        'id, created_at, type, paragraph, tidspunkt, varighed, involverede_borgere, involverede_personale, beskrivelse, forudgaaende, handling, borgerens_reaktion, opfoelgning, underskrift'
-      )
-      .eq('org_id', orgId)
-      .order('created_at', { ascending: false });
+    const { records: rows, error } = await fetchIndsatsRecords(supabase, orgId);
     if (error) {
       toast.error('Kunne ikke hente gemte registreringer. Er migrationen kørt?');
       setRecords([]);
       setLoadingList(false);
       return;
     }
-    setRecords(
-      (data ?? [])
-        .map((row) => parseIndsatsRecord(row as Record<string, unknown>))
-        .filter((row): row is IndsatsRecord => row !== null)
-    );
+    setRecords(rows);
     setLoadingList(false);
   }, [useDemoData]);
 

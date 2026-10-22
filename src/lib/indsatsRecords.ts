@@ -1,4 +1,5 @@
 /** Magtanvendelse / indsatsdokumentation (serviceloven). Live rows live in `care_indsats_records`. */
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const INDSATS_TYPES = [
   '§136_fastholdelse',
@@ -158,4 +159,29 @@ export function saveDemoIndsatsRecords(records: IndsatsRecord[]): void {
   } catch {
     /* ignore quota / private mode */
   }
+}
+
+export const INDSATS_SELECT =
+  'id, created_at, type, paragraph, tidspunkt, varighed, involverede_borgere, involverede_personale, beskrivelse, forudgaaende, handling, borgerens_reaktion, opfoelgning, underskrift';
+
+export function isMagtanvendelse(r: Pick<IndsatsRecord, 'paragraph'>): boolean {
+  return /^§\s?(136|141)$/.test(r.paragraph.trim());
+}
+
+/** Gemte registreringer for organisationen, nyeste først. `since` er en ISO-dato. */
+export async function fetchIndsatsRecords(
+  supabase: SupabaseClient,
+  orgId: string,
+  since?: string
+): Promise<{ records: IndsatsRecord[]; error: string | null }> {
+  let query = supabase.from('care_indsats_records').select(INDSATS_SELECT).eq('org_id', orgId);
+  if (since) query = query.gte('created_at', since);
+  const { data, error } = await query.order('created_at', { ascending: false });
+  if (error) return { records: [], error: error.message };
+  return {
+    records: (data ?? [])
+      .map((row) => parseIndsatsRecord(row as Record<string, unknown>))
+      .filter((row): row is IndsatsRecord => row !== null),
+    error: null,
+  };
 }

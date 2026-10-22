@@ -12,31 +12,18 @@ import {
 import { getDemoTilsynsResidents } from '@/lib/tilsynsrapport/demoResidents';
 import { parseOverrapportDocument } from '@/lib/overrapport/parseOverrapportSections';
 import { moodLabelFromCheckin } from '@/lib/checkinMoodLabel';
+import {
+  fetchIndsatsRecords,
+  isMagtanvendelse,
+  loadDemoIndsatsRecords,
+  type IndsatsRecord,
+} from '@/lib/indsatsRecords';
 import FormattedNumberedReportBody from '@/app/care-portal-dashboard/components/FormattedNumberedReportBody';
-
-const INDSATS_STORAGE_KEY = 'budr_indsats_records_v1';
-
-type IndsatsRecord = {
-  id: string;
-  created_at: string;
-  type: string;
-  paragraph: string;
-  tidspunkt: string;
-  varighed: string;
-  involverede_borgere: string;
-  involverede_personale: string;
-  beskrivelse: string;
-  forudgaaende: string;
-  handling: string;
-  borgerens_reaktion: string;
-  opfoelgning: string;
-  underskrift: string;
-};
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  /** Demo: brug realistiske beboerdata når Supabase er tom. */
+  /** Demo: brug realistiske beboerdata når Supabase er tom, og indsatslog fra browseren. */
   preferDemoWhenNoResidents?: boolean;
   facilityName?: string;
 };
@@ -91,6 +78,8 @@ export default function TilsynsrapportModal({
   const [dataSource, setDataSource] = useState<'live' | 'demo'>('live');
   const [viewMode, setViewMode] = useState<'read' | 'edit'>('read');
   const [residentsSnapshot, setResidentsSnapshot] = useState<TilsynsResidentRow[]>([]);
+  const [indsatsSnapshot, setIndsatsSnapshot] = useState<IndsatsRecord[]>([]);
+  const [indsatsError, setIndsatsError] = useState(false);
   const [reportFacilityLabel, setReportFacilityLabel] = useState('Organisation');
   const mountedRef = useRef(true);
 
@@ -117,13 +106,26 @@ export default function TilsynsrapportModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const loadIndsatsFromStorage = (): IndsatsRecord[] => {
-    try {
-      const raw = localStorage.getItem(INDSATS_STORAGE_KEY);
-      return raw ? (JSON.parse(raw) as IndsatsRecord[]) : [];
-    } catch {
-      return [];
-    }
+  /** Demo-ruter læser browserens indsatslog; den rigtige portal læser databasen (seneste 12 mdr.). */
+  const loadIndsats = async (): Promise<{ records: IndsatsRecord[]; failed: boolean }> => {
+    if (preferDemoWhenNoResidents) return { records: loadDemoIndsatsRecords(), failed: false };
+    const supabase = createClient();
+    if (!supabase) return { records: [], failed: true };
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user?.id) return { records: [], failed: true };
+    const { data: staffRow } = await supabase
+      .from('care_staff')
+      .select('org_id')
+      .eq('id', user.id)
+      .maybeSingle();
+    const orgId = parseStaffOrgId(staffRow?.org_id ?? null);
+    if (!orgId) return { records: [], failed: true };
+    const since = new Date();
+    since.setFullYear(since.getFullYear() - 1);
+    const { records, error } = await fetchIndsatsRecords(supabase, orgId, since.toISOString());
+    return { records, failed: Boolean(error) };
   };
 
   const fetchAndGenerate = async () => {
@@ -179,9 +181,11 @@ export default function TilsynsrapportModal({
       if (mountedRef.current) setLoading(false);
     }
 
-    const indsatsRecords = loadIndsatsFromStorage();
+    const { records: indsatsRecords, failed } = await loadIndsats();
     if (mountedRef.current) {
       setResidentsSnapshot(residents);
+      setIndsatsSnapshot(indsatsRecords);
+      setIndsatsError(failed);
       setDataSource(source);
       void generateReport(residents, indsatsRecords, source);
     }
@@ -222,14 +226,12 @@ export default function TilsynsrapportModal({
     };
 
     try {
-      const magtanvendelser = indsatsRows
-        .filter((r) => /^§\s?(136|141)$/.test(r.paragraph))
-        .map((r) => ({
-          tidspunkt: new Date(r.tidspunkt).toLocaleString('da-DK'),
-          type: r.type,
-          paragraph: r.paragraph,
-          beskrivelse: r.beskrivelse,
-        }));
+      const magtanvendelser = indsatsRows.filter(isMagtanvendelse).map((r) => ({
+        tidspunkt: new Date(r.tidspunkt).toLocaleString('da-DK'),
+        type: r.type,
+        paragraph: r.paragraph,
+        beskrivelse: r.beskrivelse,
+      }));
       const res = await fetch('/api/portal/ai/tilsynsrapport', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -292,13 +294,7 @@ export default function TilsynsrapportModal({
     }
   };
 
-  const magtCount = loadIndsatsFromStorage().filter(
-    (r) =>
-      r.paragraph === '§136' ||
-      r.paragraph === '§141' ||
-      r.paragraph === '§ 136' ||
-      r.paragraph === '§ 141'
-  ).length;
+  const magtCount = indsatsSnapshot.filter(isMagtanvendelse).length;
 
   if (!open) return null;
 
@@ -325,7 +321,7 @@ export default function TilsynsrapportModal({
               <p className="text-xs text-gray-500 mt-0.5 leading-snug">
                 {reportSource === 'ai'
                   ? 'AI-udkast til tilsynsbrug — gennemlæs og tilpas'
-                  : 'Struktureret udkast ud fra portaldata og indsatslog (browser)'}
+                  : 'Struktureret udkast ud fra portaldata og indsatslog'}
               </p>
             </div>
           </div>
@@ -375,8 +371,14 @@ export default function TilsynsrapportModal({
                 {trafficCounts.grøn} grøn / {trafficCounts.gul} gul / {trafficCounts.rød} rød
               </span>
               <span className="rounded-full bg-slate-50 border border-slate-200 px-3 py-1 text-xs font-medium text-slate-700">
-                {loadIndsatsFromStorage().length} indsatsnotater (lokal)
+                {indsatsSnapshot.length} indsatsnotater
+                {dataSource === 'demo' ? ' (demo)' : ' (seneste 12 mdr.)'}
               </span>
+              {indsatsError && (
+                <span className="rounded-full bg-red-50 border border-red-200 px-3 py-1 text-xs font-medium text-red-800">
+                  Indsatsloggen kunne ikke hentes. Tjek magtanvendelser, før rapporten deles.
+                </span>
+              )}
               {magtCount > 0 && (
                 <span className="rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-medium text-amber-800">
                   {magtCount} § 136/141
@@ -475,8 +477,7 @@ export default function TilsynsrapportModal({
               onClick={() => {
                 setEdited(false);
                 setViewMode('read');
-                const indsats = loadIndsatsFromStorage();
-                void generateReport(residentsSnapshot, indsats, dataSource);
+                void generateReport(residentsSnapshot, indsatsSnapshot, dataSource);
               }}
               disabled={generating}
               className="rounded-xl px-4 py-2.5 text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40"
