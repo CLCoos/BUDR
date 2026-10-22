@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  isMagtanvendelse,
   INDSATS_TYPES,
   buildIndsatsInsertRow,
   canSaveIndsatsForm,
@@ -79,5 +80,14 @@ describe('escapeIndsatsHtml', () => {
       '&lt;img src=x onerror=&quot;alert(1)&quot;&gt;'
     );
     expect(escapeIndsatsHtml("Sara & Ole's")).toBe('Sara &amp; Ole&#39;s');
+  });
+});
+
+describe('isMagtanvendelse', () => {
+  it('tæller §136 og §141 med og uden mellemrum, men ikke notater', () => {
+    expect(isMagtanvendelse({ paragraph: '§136' })).toBe(true);
+    expect(isMagtanvendelse({ paragraph: '§ 141' })).toBe(true);
+    expect(isMagtanvendelse({ paragraph: '' })).toBe(false);
+    expect(isMagtanvendelse({ paragraph: '§1360' })).toBe(false);
   });
 });
