@@ -9,6 +9,7 @@ import * as dataService from '@/lib/dataService';
 import { isLysDemoResidentId } from '@/lib/lysDemoResident';
 import { postLysStaffMessage } from '@/lib/lysStaffMessage';
 import { receiptText } from '@/lib/lys/iDag';
+import { journalSavedWhere } from '@/lib/lys/simpleMode';
 import { syncBadgesAfterJournal } from '@/lib/residentBadgeSync';
 import type { LysThemeTokens } from '../lib/lysTheme';
 import { useSpeech } from '../hooks/useSpeech';
@@ -62,6 +63,8 @@ type Props = {
   isDemoMode: boolean;
   tokens: LysThemeTokens;
   accent: string;
+  /** Enkel Lys har ingen Min vej, så bekræftelsen skal pege på dagbogen på Nu. */
+  simpleMode?: boolean;
   /** Forvalgt modtager, fx når borgeren trykker «Skriv til personalet» på Nu. */
   initialTarget?: FortaelTarget | null;
   /** Forudfyldt tekst, fx fra aftenkortet. */
@@ -79,6 +82,7 @@ export default function LysFortael({
   isDemoMode,
   tokens,
   accent,
+  simpleMode = false,
   initialTarget = null,
   initialText = '',
   onClose,
@@ -219,7 +223,7 @@ export default function LysFortael({
           </h2>
           <p className="text-[16px]" style={{ color: tokens.textMuted }}>
             {done === 'mig'
-              ? 'Det er kun dig, der kan se det. Du finder det under Min vej.'
+              ? journalSavedWhere(simpleMode)
               : 'Du kan se her og på Nu, når de har læst det.'}
           </p>
           <button

@@ -28,6 +28,7 @@ import {
   type PlanPoint,
 } from '@/lib/lys/iDag';
 import { fetchLysPlanBundle, isPlanItemActiveOnDate, patchLysPlanItem } from '@/lib/lys/planItems';
+import { eveningSavedWhere } from '@/lib/lys/simpleMode';
 import type { LysThemeTokens } from '../lib/lysTheme';
 import type { LysFlowOverlay } from '../lib/lysOverlay';
 import { useStaffReceipt } from '../hooks/useStaffReceipt';
@@ -43,6 +44,8 @@ type Props = {
   tokens: LysThemeTokens;
   accent: string;
   now: Date;
+  /** Enkel Lys skjuler Min vej. Aftenkortet må ikke henvise dertil. */
+  simpleMode?: boolean;
   onSwitchTab: (tab: LysNavTab) => void;
   onCheckedIn: (moodLabel: string) => void;
   onOpenFortael: (target: FortaelTarget | null) => void;
@@ -106,6 +109,7 @@ export default function LysNu({
   tokens,
   accent,
   now,
+  simpleMode = false,
   onSwitchTab,
   onCheckedIn,
   onOpenFortael,
@@ -576,7 +580,7 @@ export default function LysNu({
           </div>
           {eveningDone ? (
             <p className="text-[15px]" style={{ color: tokens.textMuted }}>
-              Tak. Det er gemt i din dagbog under Min vej.
+              {eveningSavedWhere(simpleMode)}
             </p>
           ) : (
             <>
@@ -666,7 +670,7 @@ export default function LysNu({
               <span className="text-[26px] font-bold tabular-nums leading-none">{next.time}</span>
               <span className="text-[18px] font-semibold leading-snug">{next.title}</span>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className={`grid gap-2 ${simpleMode ? 'grid-cols-1' : 'grid-cols-2'}`}>
               <button
                 type="button"
                 onClick={() => markDone(next.id)}
@@ -675,14 +679,16 @@ export default function LysNu({
               >
                 Klaret
               </button>
-              <button
-                type="button"
-                onClick={() => onSwitchTab('dag')}
-                className="min-h-[48px] rounded-2xl text-[15px] font-semibold"
-                style={{ backgroundColor: tokens.accentSoft, color: tokens.accentSoftText }}
-              >
-                Hele min dag
-              </button>
+              {!simpleMode && (
+                <button
+                  type="button"
+                  onClick={() => onSwitchTab('dag')}
+                  className="min-h-[48px] rounded-2xl text-[15px] font-semibold"
+                  style={{ backgroundColor: tokens.accentSoft, color: tokens.accentSoftText }}
+                >
+                  Hele min dag
+                </button>
+              )}
             </div>
             {later.length > 0 && (
               <div className="mt-1 border-t pt-3" style={{ borderColor: tokens.cardBorder }}>
