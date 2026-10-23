@@ -39,7 +39,7 @@ const NAV = [
 const FAQ = [
   {
     q: 'Erstatter BUDR vores journalsystem?',
-    a: 'Nej. BUDR er det sted, hvor det pædagogiske arbejde sker: vagten, notaterne, borgerens forløb og dokumenterne til kommunen. Jeres officielle journal i fx Sensum eller Nexus bliver, hvor den er. Med «Til fagsystem» kopierer I de godkendte notater over med ét tryk, så ingen skal skrive det samme to gange.',
+    a: 'Ja, hvis I vil. BUDR har journal med godkendelse, medicin med kvittering, kalender, vagtplan, overlevering, VUM 2.0-dokumenter og registrering af magtanvendelser. Beskeder til og fra lægen (MedCom) er endnu ikke med. Kommunen eller jeres organisation kræver måske, at den officielle journal bliver i fx Sensum eller Nexus. Så bruger I BUDR til det daglige arbejde og kopierer de godkendte notater over med ét tryk.',
   },
   {
     q: 'Hvor ligger vores data?',
@@ -473,8 +473,9 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
                   <div>
                     <strong>Du godkender, og det er gjort</strong>
                     <p>
-                      <Copy size={14} aria-hidden className="bf-inline-icon" /> Kopiér notatet til
-                      Sensum eller Nexus med ét tryk.
+                      <Copy size={14} aria-hidden className="bf-inline-icon" /> Notatet ligger i
+                      borgerens journal. Bruger I også et andet fagsystem, kopierer I det over med
+                      ét tryk.
                     </p>
                   </div>
                 </li>
@@ -623,7 +624,7 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
                 <li>Databehandleraftale underskrives før piloten.</li>
                 <li>AI foreslår kun. Intet gemmes uden et ja fra en medarbejder.</li>
                 <li>AI-forslag behandles i dag i USA. Vi flytter dem til EU.</li>
-                <li>Arbejder sammen med jeres fagsystem, erstatter det ikke.</li>
+                <li>Kan være jeres eneste system eller arbejde sammen med det, I har.</li>
               </ul>
             </article>
             <article className="bf-card bf-founder">

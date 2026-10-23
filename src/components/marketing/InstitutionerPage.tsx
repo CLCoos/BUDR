@@ -14,8 +14,8 @@ const INSTITUTIONER_FAQ = [
   {
     q: 'Erstatter BUDR vores nuværende journalsystem?',
     paragraphs: [
-      'Nej. BUDR er det sted, hvor det pædagogiske arbejde sker: vagten, notaterne, borgerens forløb og dokumenterne til kommunen. Jeres officielle journal i fx Sensum eller Nexus bliver, hvor den er.',
-      'Med «Til fagsystem» kopierer I de godkendte notater over med ét tryk, så ingen skal skrive det samme to gange.',
+      'Ja, hvis I vil. BUDR har journal med godkendelse, medicin med kvittering, kalender, vagtplan, overlevering, VUM 2.0-dokumenter og registrering af magtanvendelser. Beskeder til og fra lægen (MedCom) er endnu ikke med.',
+      'Skal den officielle journal blive i fx Sensum eller Nexus, bruger I BUDR til det daglige arbejde og kopierer de godkendte notater over med ét tryk med «Til fagsystem».',
     ],
   },
   {
