@@ -184,14 +184,15 @@ export function buildDemoIndsatsRecords(now: Date = new Date()): IndsatsRecord[]
     rec('demo-indsats-cb', 'observation', demoLocalStamp(now, 1, 21, 50), {
       varighed: '30 min',
       involverede_borgere: 'CB',
-      involverede_personale: 'Peter N.',
+      involverede_personale: 'Lars N.',
       beskrivelse: 'Urolig aften. CB kunne ikke falde til ro på grund af larm fra den nye nabo.',
       forudgaaende: 'CB har været gul i Lys tre dage i træk og sovet dårligt.',
       handling:
         'Støttende samtale i fællesstuen med en kop te. Vi talte om, hvad der hjælper hende til at sove.',
-      borgerens_reaktion: 'CB blev roligere og sov kl. 23.',
-      opfoelgning: 'Samtale om søvn i morgen kl. 11. Tal med naboen om støj efter kl. 22.',
-      underskrift: 'Peter N.',
+      borgerens_reaktion:
+        'CB blev roligere og sov kl. 23. Larmen vækkede hende igen, og hun sov først kl. 02.',
+      opfoelgning: 'Samtale om søvn i dag kl. 11 med Lars N. Tal med naboen om støj efter kl. 22.',
+      underskrift: 'Lars N.',
     }),
     rec('demo-indsats-sk', 'hændelse', demoLocalStamp(now, 8, 2, 14), {
       varighed: '45 min',

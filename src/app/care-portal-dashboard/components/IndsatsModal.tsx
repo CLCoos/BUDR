@@ -27,9 +27,17 @@ type Props = {
   useDemoData?: boolean;
 };
 
+/** Nu, i lokal tid, som `datetime-local`-værdi (toISOString ville give UTC). */
+function localNowStamp(): string {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+}
+
+/** Starter som observationsnotat: det almindelige på et §107-bosted. Magtanvendelse vælges aktivt. */
 const EMPTY_FORM: IndsatsFormFields = {
-  type: '§136_fastholdelse',
-  tidspunkt: new Date().toISOString().slice(0, 16),
+  type: 'observation',
+  tidspunkt: localNowStamp(),
   varighed: '',
   involverede_borgere: '',
   involverede_personale: '',
@@ -96,8 +104,11 @@ export default function IndsatsModal({ open, onClose, useDemoData = false }: Pro
 
   useEffect(() => {
     if (!open) return;
+    // Demoen åbner på arkivet, så man først ser, hvordan dokumentationen ser ud.
+    setView(useDemoData ? 'list' : 'new');
+    setForm({ ...EMPTY_FORM, tidspunkt: localNowStamp() });
     void loadRecords();
-  }, [open, loadRecords]);
+  }, [open, loadRecords, useDemoData]);
 
   if (!open) return null;
 
@@ -123,7 +134,7 @@ export default function IndsatsModal({ open, onClose, useDemoData = false }: Pro
       toast.success('Demo: registrering gemt lokalt i denne browser');
       window.setTimeout(() => {
         setSaved(false);
-        setForm({ ...EMPTY_FORM, tidspunkt: new Date().toISOString().slice(0, 16) });
+        setForm({ ...EMPTY_FORM, tidspunkt: localNowStamp() });
       }, 2000);
       return;
     }
@@ -178,7 +189,7 @@ export default function IndsatsModal({ open, onClose, useDemoData = false }: Pro
     toast.success('Indsatsdokumentation gemt');
     window.setTimeout(() => {
       setSaved(false);
-      setForm({ ...EMPTY_FORM, tidspunkt: new Date().toISOString().slice(0, 16) });
+      setForm({ ...EMPTY_FORM, tidspunkt: localNowStamp() });
     }, 2000);
   };
 
@@ -329,7 +340,13 @@ ${rec.underskrift ? `<div class="field" style="margin-top:32px;border-top:1px so
                             </span>
                           </div>
                           <p className="text-xs text-gray-500">
-                            {new Date(rec.tidspunkt).toLocaleString('da-DK')}
+                            {new Date(rec.tidspunkt).toLocaleString('da-DK', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
                           </p>
                           {rec.involverede_borgere && (
                             <p className="text-xs text-gray-600 mt-1">

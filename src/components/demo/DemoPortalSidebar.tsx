@@ -1,10 +1,16 @@
 'use client';
 
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { CARE_PORTAL_DEMO_FACILITY_NAME } from '@/lib/carePortalDemoBranding';
 import { useDemoFortael } from '@/components/demo/DemoFortael';
+import {
+  DEMO_ROLE_EVENT,
+  demoRole,
+  readDemoRole,
+  type DemoRole,
+} from '@/app/care-portal-demo/components/demoRoles';
 import {
   LayoutDashboard,
   ClipboardList,
@@ -73,6 +79,14 @@ function DemoPortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl
   const searchParams = useSearchParams();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+  const [role, setRole] = useState<DemoRole>('medarbejder');
+  useEffect(() => {
+    setRole(readDemoRole());
+    const onRole = (e: Event) => setRole((e as CustomEvent<DemoRole>).detail ?? readDemoRole());
+    window.addEventListener(DEMO_ROLE_EVENT, onRole);
+    return () => window.removeEventListener(DEMO_ROLE_EVENT, onRole);
+  }, []);
+  const staff = demoRole(role);
 
   const mobileClosed = !mobileOpen;
   const { openFortael } = useDemoFortael();
@@ -254,17 +268,17 @@ function DemoPortalSidebarInner({ mobileOpen, onMobileClose, orgName, orgLogoUrl
               className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
               style={{ background: 'var(--cp-green)' }}
             >
-              SK
+              {staff.person.charAt(0)}
             </div>
             <div className="min-w-0">
               <div
                 className="truncate text-xs font-medium"
                 style={{ color: 'var(--cp-sidebar-text)' }}
               >
-                Sara K.
+                {staff.person}
               </div>
               <div className="truncate text-xs" style={{ color: 'var(--cp-sidebar-muted)' }}>
-                Demo-personale
+                {staff.label} · demo
               </div>
             </div>
           </div>
