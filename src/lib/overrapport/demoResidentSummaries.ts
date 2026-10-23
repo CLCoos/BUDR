@@ -26,7 +26,7 @@ export function getDemoOverrapportResidents(): OverrapportResidentInput[] {
       trafficLight: 'gul',
       checkinTime: '08.05',
       notePreview:
-        'Gul i Lys tre dage i træk. Larm fra ny nabo til kl. 1 i nat. Samtale om søvn kl. 11.',
+        'Gul i Lys tre dage i træk. Larm fra ny nabo til kl. 1, sov først igen kl. 02. Samtale om søvn kl. 11.',
       pendingMessages: 1,
     },
     {

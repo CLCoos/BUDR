@@ -8,8 +8,8 @@ import Link from 'next/link';
 const DEADLINES = [
   {
     date: 'Om 6 dage',
-    title: 'Statusudtalelse',
-    who: 'Sara K. · til kommunen',
+    title: 'Statusudtalelse til kommunen',
+    who: 'SK · kontaktperson Peter N.',
     state: 'Udkast klar',
     warn: true,
     href: '/care-portal-demo/dokumenter',
@@ -17,7 +17,7 @@ const DEADLINES = [
   {
     date: 'Om 13 dage',
     title: 'Opfølgning på handleplan',
-    who: 'Camilla B. · kontaktperson Peter N.',
+    who: 'CB · kontaktperson Peter N.',
     state: 'Ikke startet',
   },
   {

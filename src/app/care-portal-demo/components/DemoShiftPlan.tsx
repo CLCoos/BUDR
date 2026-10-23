@@ -321,7 +321,7 @@ export function DemoMomentSwitch({
 const panel = { backgroundColor: 'var(--cp-card-bg)', borderColor: 'var(--cp-border)' } as const;
 
 const NIGHT_NOTES = [
-  'Camilla faldt først i søvn kl. 02. Hun var urolig og fik en kop te.',
+  'Camilla blev vækket af larm fra naboen og faldt først i søvn igen kl. 02. Hun fik en kop te.',
   'Mikkel afslog aftenmedicin kl. 22. Det er noteret, lægen er ikke kontaktet.',
   'Sara havde en rolig nat og glæder sig til at handle ind.',
 ];

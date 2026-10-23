@@ -54,7 +54,7 @@ export const DEMO_ROLES: DemoRoleProfile[] = [
       { id: 'm2', time: '08.00', title: 'Morgenmedicin til 5 borgere', doneFromStart: true },
       {
         id: 'm3',
-        time: '10.00',
+        time: '11.00',
         title: 'Samtale med Camilla om søvn',
         detail: 'Hun har været gul i tre dage',
       },
@@ -135,8 +135,9 @@ export const DEMO_ROLES: DemoRoleProfile[] = [
       {
         id: 'l2',
         time: 'I dag',
-        title: 'Indberet magtanvendelse til kommunen',
-        detail: 'Udfyldt 80 %',
+        title: 'Læs ugens indsatsnotater',
+        detail: '3 nye · ingen magtanvendelser',
+        href: '/care-portal-demo/indsatsdok',
       },
       {
         id: 'l3',
@@ -210,9 +211,17 @@ export function readDemoRole(): DemoRole {
   return 'medarbejder';
 }
 
+/** Sendes på `window`, når rollen skiftes, så fx sidemenuen kan vise den rigtige person. */
+export const DEMO_ROLE_EVENT = 'budr-demo-role';
+
 export function saveDemoRole(id: DemoRole): void {
   try {
     window.localStorage.setItem(DEMO_ROLE_STORAGE_KEY, id);
+  } catch {
+    /* ignore */
+  }
+  try {
+    window.dispatchEvent(new CustomEvent(DEMO_ROLE_EVENT, { detail: id }));
   } catch {
     /* ignore */
   }
