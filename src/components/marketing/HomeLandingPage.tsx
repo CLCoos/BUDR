@@ -629,17 +629,19 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
             </article>
             <article className="bf-card bf-founder">
               <p className="bf-kicker">Hvem står bag</p>
-              <h3>Bygget af én, der har arbejdet på gulvet</h3>
+              <h3>Bygget på gulvet, ikke på et kontor</h3>
               <p>
-                BUDR er startet af Christian Cloos, der selv har arbejdet som pædagogmedhjælper på
-                et socialpsykiatrisk bosted. Han savnede et system, der hjælper personalet i stedet
-                for bare at kræve mere dokumentation.
+                Christian Cloos arbejder selv på et socialpsykiatrisk bosted. Han kender
+                aftenvagten, hvor man bruger mere tid på at klikke sig gennem skemaer end på at være
+                sammen med borgerne. Han kender vikaren, der ikke ved, hvem der mangler medicin, og
+                statusudtalelsen, der skrives i Word ved siden af systemet, fordi systemet ikke kan.
+                BUDR er bygget, så systemet arbejder for personalet og ikke omvendt.
               </p>
               <p>
                 Recovery-tankegangen (CHIME) ligger under det hele: forbundethed, håb, identitet,
                 mening og egen styrke.
               </p>
-              <p className="bf-founder-sign">Christian Cloos · stifter, BUDR ApS, Aalborg</p>
+              <p className="bf-founder-sign">Christian Cloos · stifter, BUDR Care, Aalborg</p>
             </article>
           </div>
         </section>
@@ -717,7 +719,7 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
               </a>
             </div>
             <p className="bf-final-fine">
-              {CONTACT_EMAIL} · <Link href={CONTACT_URL}>Skriv til os</Link> · BUDR ApS, Aalborg
+              {CONTACT_EMAIL} · <Link href={CONTACT_URL}>Skriv til os</Link> · BUDR Care, Aalborg
             </p>
           </div>
         </section>
@@ -757,7 +759,7 @@ export default function HomeLandingPage({ className = '' }: HomeLandingPageProps
           </div>
         </div>
         <div className="bf-shell bf-footer-bottom">
-          <span>© {new Date().getFullYear()} BUDR ApS · Aalborg, Danmark</span>
+          <span>© {new Date().getFullYear()} BUDR Care · Aalborg, Danmark</span>
           <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
         </div>
       </footer>

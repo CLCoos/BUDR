@@ -517,7 +517,7 @@ export default function PilotpakkePage({ className = '' }: Props) {
             </div>
           </div>
           <div className="footer-bottom shell">
-            <span>© {new Date().getFullYear()} BUDR ApS · Aalborg, Danmark</span>
+            <span>© {new Date().getFullYear()} BUDR Care · Aalborg, Danmark</span>
           </div>
         </footer>
       </div>
