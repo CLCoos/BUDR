@@ -54,7 +54,7 @@ export const DEMO_ROLES: DemoRoleProfile[] = [
       { id: 'm2', time: '08.00', title: 'Morgenmedicin til 5 borgere', doneFromStart: true },
       {
         id: 'm3',
-        time: '10.00',
+        time: '11.00',
         title: 'Samtale med Camilla om søvn',
         detail: 'Hun har været gul i tre dage',
       },
