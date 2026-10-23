@@ -63,7 +63,7 @@ export const metadata: Metadata = {
 const organizationSchema = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
-  name: 'BUDR ApS',
+  name: 'BUDR Care',
   url: 'https://budrcare.dk',
   description:
     'Driftssystem til socialpsykiatriske bosteder i Danmark. Bygget på CHIME-rammeværket og VUM 2.0-kompatibelt.',
