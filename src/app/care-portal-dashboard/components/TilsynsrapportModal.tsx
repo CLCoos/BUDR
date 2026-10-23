@@ -10,6 +10,7 @@ import {
   type TilsynsResidentRow,
 } from '@/lib/tilsynsrapport/composeStructuredTilsynsrapport';
 import { getDemoTilsynsResidents } from '@/lib/tilsynsrapport/demoResidents';
+import { CARE_PORTAL_DEMO_FACILITY_NAME } from '@/lib/carePortalDemoBranding';
 import { parseOverrapportDocument } from '@/lib/overrapport/parseOverrapportSections';
 import { moodLabelFromCheckin } from '@/lib/checkinMoodLabel';
 import {
@@ -25,6 +26,11 @@ type Props = {
   onClose: () => void;
   /** Demo: brug realistiske beboerdata når Supabase er tom, og indsatslog fra browseren. */
   preferDemoWhenNoResidents?: boolean;
+  /**
+   * Kun /care-portal-demo: brug altid demoens borgere og indsatsnotater, også når man er
+   * logget ind, og byg rapporten uden AI, så alle besøgende ser den samme rapport.
+   */
+  demoOnly?: boolean;
   facilityName?: string;
 };
 
@@ -42,6 +48,7 @@ function toIndsatsLite(rows: IndsatsRecord[]): TilsynsIndsatsRecord[] {
     tidspunkt: r.tidspunkt,
     type: r.type,
     beskrivelse: r.beskrivelse,
+    involverede_borgere: r.involverede_borgere,
   }));
 }
 
@@ -67,6 +74,7 @@ export default function TilsynsrapportModal({
   open,
   onClose,
   preferDemoWhenNoResidents = false,
+  demoOnly = false,
   facilityName,
 }: Props) {
   const [loading, setLoading] = useState(false);
@@ -106,9 +114,9 @@ export default function TilsynsrapportModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  /** Demo-ruter læser browserens indsatslog; den rigtige portal læser databasen (seneste 12 mdr.). */
+  /** Demoen læser browserens indsatslog; den rigtige portal læser databasen (seneste 12 mdr.). */
   const loadIndsats = async (): Promise<{ records: IndsatsRecord[]; failed: boolean }> => {
-    if (preferDemoWhenNoResidents) return { records: loadDemoIndsatsRecords(), failed: false };
+    if (demoOnly) return { records: loadDemoIndsatsRecords(), failed: false };
     const supabase = createClient();
     if (!supabase) return { records: [], failed: true };
     const {
@@ -130,6 +138,19 @@ export default function TilsynsrapportModal({
 
   const fetchAndGenerate = async () => {
     setLoading(true);
+    if (demoOnly) {
+      const demoResidents = getDemoTilsynsResidents();
+      const { records: demoIndsats } = await loadIndsats();
+      if (mountedRef.current) {
+        setLoading(false);
+        setResidentsSnapshot(demoResidents);
+        setIndsatsSnapshot(demoIndsats);
+        setIndsatsError(false);
+        setDataSource('demo');
+        void generateReport(demoResidents, demoIndsats, 'demo');
+      }
+      return;
+    }
     let residents: TilsynsResidentRow[] = [];
     let source: 'live' | 'demo' = 'live';
 
@@ -196,7 +217,9 @@ export default function TilsynsrapportModal({
     indsatsRows: IndsatsRecord[],
     _source: 'live' | 'demo'
   ) => {
-    const displayFacility = await resolveReportFacilityName(facilityName);
+    const displayFacility = await resolveReportFacilityName(
+      facilityName ?? (demoOnly ? `${CARE_PORTAL_DEMO_FACILITY_NAME} (DEMO)` : undefined)
+    );
     if (mountedRef.current) setReportFacilityLabel(displayFacility);
     setGenerating(true);
     const now = new Date();
@@ -224,6 +247,12 @@ export default function TilsynsrapportModal({
       );
       setReportSource('template');
     };
+
+    if (demoOnly) {
+      applyTemplate();
+      if (mountedRef.current) setGenerating(false);
+      return;
+    }
 
     try {
       const magtanvendelser = indsatsRows.filter(isMagtanvendelse).map((r) => ({
@@ -308,7 +337,7 @@ export default function TilsynsrapportModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div className="fixed inset-0 z-[10060] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full sm:max-w-2xl max-h-[92dvh] flex flex-col bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 shrink-0 gap-2">

@@ -28,14 +28,11 @@ import {
 import { demoRole, readDemoRole, saveDemoRole, type DemoRole } from './demoRoles';
 import DemoWhyBox from '@/components/demo/DemoWhyBox';
 import { CARE_PORTAL_DEMO_FACILITY_NAME } from '@/lib/carePortalDemoBranding';
+import { loadDemoIndsatsRecords } from '@/lib/indsatsRecords';
 import { useDemoGuidedTour } from '@/components/demo/DemoGuidedTourProvider';
 
 const OverrapportModal = dynamic(
   () => import('@/app/care-portal-dashboard/components/OverrapportModal'),
-  { ssr: false }
-);
-const OverrapportPanel = dynamic(
-  () => import('@/app/care-portal-dashboard/components/OverrapportPanel'),
   { ssr: false }
 );
 const IndsatsModal = dynamic(() => import('@/app/care-portal-dashboard/components/IndsatsModal'), {
@@ -49,8 +46,6 @@ const JournalAiDemoModal = dynamic(
   () => import('@/app/care-portal-dashboard/components/JournalAiDemoModal'),
   { ssr: false }
 );
-
-const DEMO_INDSATS_KEY = 'budr_indsats_records_v1';
 
 function demoGreeting(now: Date): string {
   const h = Number(
@@ -88,81 +83,6 @@ function formatDemoLastUpdated(): string {
       minute: '2-digit',
     })
     .replace(',', ' ·');
-}
-
-function seedDemoIndsatsIfEmpty() {
-  try {
-    const existing = localStorage.getItem(DEMO_INDSATS_KEY);
-    if (existing && JSON.parse(existing).length > 0) return;
-    const now = new Date();
-    const d = (offsetDays: number) => {
-      const t = new Date(now);
-      t.setDate(t.getDate() - offsetDays);
-      return t.toISOString();
-    };
-    const records = [
-      {
-        id: 'demo-indsats-1',
-        created_at: d(5),
-        type: '§136_fastholdelse',
-        paragraph: '§136',
-        tidspunkt: d(5),
-        varighed: '4 min',
-        involverede_borgere: 'Sara K.',
-        involverede_personale: 'Lars N., Peter N.',
-        beskrivelse:
-          'Borger forsøgte at forlade bostedet uden afklaring af destination. Fastholdelse var nødvendig af sikkerhedsmæssige årsager.',
-        forudgaaende:
-          'Borger var urolig om aftenen og udtrykte ønske om at gå ud. Personalet forsøgte verbal de-eskalering.',
-        handling:
-          'Kortvarig fastholdelse ved udgangsdøren. Borger beroliget og fulgt tilbage til stuen.',
-        borgerens_reaktion: 'Borger rolignet sig hurtigt og accepterede aftalen om tur næste dag.',
-        opfoelgning: 'Primærperson taler med borger næste dag. Hændelsen indberettes til ledelsen.',
-        underskrift: 'Lars N.',
-      },
-      {
-        id: 'demo-indsats-2',
-        created_at: d(12),
-        type: '§141_personlig_hygiejne',
-        paragraph: '§141',
-        tidspunkt: d(12),
-        varighed: '10 min',
-        involverede_borgere: 'Camilla B.',
-        involverede_personale: 'Hanne B.',
-        beskrivelse:
-          'Borger afslog gentagne gange at vaske sig. Sundhedsmæssig nødvendighed vurderet.',
-        forudgaaende:
-          'Borger har i 3 dage afvist personlig hygiejne trods motivation og tilbud om hjælp.',
-        handling:
-          'Assisteret bad med minimal magtanvendelse. Borger var verbal modstandende men fysisk samarbejdende.',
-        borgerens_reaktion:
-          'Borger roligere efterfølgende. Udtrykte taknemmelighed ved afslutning.',
-        opfoelgning: 'Psykiater orienteres. Ny strategi for hygiejnerutine udarbejdes.',
-        underskrift: 'Hanne B.',
-      },
-      {
-        id: 'demo-indsats-3',
-        created_at: d(2),
-        type: 'observation',
-        paragraph: '',
-        tidspunkt: d(2),
-        varighed: '2 timer',
-        involverede_borgere: 'Thomas B.',
-        involverede_personale: 'Lars N.',
-        beskrivelse:
-          'Borger viste tegn på forøget uro og selvskade-adfærd. Forhøjet observation iværksat.',
-        forudgaaende:
-          'Borger modtog dårlige nyheder fra familie. Personale observerede isolation og selvskade-markeringer.',
-        handling: 'Nærværende observation hvert 15. min. Samtale tilbudt og accepteret.',
-        borgerens_reaktion: 'Borger åbnede sig gradvist. Kriseplanen gennemgået i fællesskab.',
-        opfoelgning: 'Forhøjet opmærksomhed næste 48 timer. Læge kontaktes ved forværring.',
-        underskrift: 'Lars N.',
-      },
-    ];
-    localStorage.setItem(DEMO_INDSATS_KEY, JSON.stringify(records));
-  } catch {
-    /* ignore */
-  }
 }
 
 function FortaelButton() {
@@ -251,7 +171,6 @@ export default function DashboardDemoMain() {
   const [now, setNow] = useState<Date | null>(null);
   useEffect(() => setNow(new Date()), []);
   const [overrapportOpen, setOverrapportOpen] = useState(false);
-  const [overrapportPanelOpen, setOverrapportPanelOpen] = useState(false);
   const [indsatsOpen, setIndsatsOpen] = useState(false);
   const [tilsynsrapportOpen, setTilsynsrapportOpen] = useState(false);
   const [journalOpen, setJournalOpen] = useState(false);
@@ -267,7 +186,7 @@ export default function DashboardDemoMain() {
   const { openFortael } = useDemoFortael();
 
   useEffect(() => {
-    seedDemoIndsatsIfEmpty();
+    loadDemoIndsatsRecords();
   }, []);
 
   useEffect(() => {
@@ -302,7 +221,8 @@ export default function DashboardDemoMain() {
 
   useEffect(() => {
     if (openOverrapport !== '1') return;
-    setOverrapportPanelOpen((open) => (open ? open : true));
+    // Demoen viser altid demoens borgere, aldrig den indloggede brugers egne.
+    setOverrapportOpen(true);
     router.replace('/care-portal-demo', { scroll: false });
   }, [openOverrapport, router]);
 
@@ -504,20 +424,12 @@ export default function DashboardDemoMain() {
       </section>
 
       <JournalAiDemoModal open={journalOpen} onClose={closeJournal} />
-      <OverrapportModal
-        open={overrapportOpen}
-        onClose={() => setOverrapportOpen(false)}
-        preferDemoWhenNoResidents
-      />
-      <OverrapportPanel
-        open={overrapportPanelOpen}
-        onClose={() => setOverrapportPanelOpen(false)}
-      />
+      <OverrapportModal open={overrapportOpen} onClose={() => setOverrapportOpen(false)} demoOnly />
       <IndsatsModal open={indsatsOpen} onClose={() => setIndsatsOpen(false)} useDemoData />
       <TilsynsrapportModal
         open={tilsynsrapportOpen}
         onClose={() => setTilsynsrapportOpen(false)}
-        preferDemoWhenNoResidents
+        demoOnly
         facilityName={`${CARE_PORTAL_DEMO_FACILITY_NAME} (DEMO)`}
       />
     </div>

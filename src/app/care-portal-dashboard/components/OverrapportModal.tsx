@@ -20,12 +20,18 @@ type Props = {
   onClose: () => void;
   /** Kun til /care-portal-demo: fyld med realistiske beboerdata når Supabase mangler eller er tom. */
   preferDemoWhenNoResidents?: boolean;
+  /**
+   * Kun /care-portal-demo: brug altid demoens borgere, også når man er logget ind,
+   * og byg rapporten uden AI, så alle besøgende ser den samme rapport.
+   */
+  demoOnly?: boolean;
 };
 
 export default function OverrapportModal({
   open,
   onClose,
   preferDemoWhenNoResidents = false,
+  demoOnly = false,
 }: Props) {
   const [loading, setLoading] = useState(false);
   const [residents, setResidents] = useState<ResidentSummary[]>([]);
@@ -62,6 +68,16 @@ export default function OverrapportModal({
 
   const fetchData = async () => {
     setLoading(true);
+    if (demoOnly) {
+      const demo = getDemoOverrapportResidents();
+      if (mountedRef.current) {
+        setResidents(demo);
+        setDataSource('demo');
+        void generateReport(demo);
+        setLoading(false);
+      }
+      return;
+    }
     let summaries: ResidentSummary[] = [];
     let source: 'live' | 'demo' = 'live';
 
@@ -150,6 +166,12 @@ export default function OverrapportModal({
       setReportSource('template');
     };
 
+    if (demoOnly) {
+      applyTemplate();
+      if (mountedRef.current) setGenerating(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/portal/ai/overrapport', {
         method: 'POST',
@@ -203,7 +225,7 @@ export default function OverrapportModal({
   const attention = residents.filter(needsOverrapportAttention);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div className="fixed inset-0 z-[10060] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full sm:max-w-2xl max-h-[92dvh] flex flex-col bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
         {/* Header */}

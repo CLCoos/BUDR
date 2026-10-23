@@ -1,63 +1,70 @@
 import type { OverrapportResidentInput } from './composeStructuredReport';
 
 /**
- * Same beboerfortælling som ResidentListDemo, til auto-overrapport uden Supabase.
+ * Demoens beboere til overrapport og tilsynsrapport, uden Supabase.
+ * Samme historie som Vagt-forsiden, Fortæl og forløbssiderne (forloebData.ts),
+ * så rapporterne aldrig siger noget andet end resten af demoen.
+ * Borgerne står kun med initialer (GDPR); `name` er derfor også initialerne.
  * Trafiklys bruger dansk stavemåde som i live data (grøn/rød/gul).
  */
 export function getDemoOverrapportResidents(): OverrapportResidentInput[] {
   return [
     {
-      name: 'Sara K.',
+      name: 'SK',
       initials: 'SK',
-      moodLabel: 'Tung',
-      trafficLight: 'rød',
-      checkinTime: '07.30',
-      notePreview: 'Dårlig nat, opsøgte selv Lys. Følger tryghedsplan — opmærksom på optakt.',
-      pendingMessages: 1,
-    },
-    {
-      name: 'Camilla B.',
-      initials: 'CB',
-      moodLabel: 'Svingende',
-      trafficLight: 'gul',
-      checkinTime: '08.05',
-      notePreview: 'Beder om rolig opfølgning i morgen formiddag.',
-      pendingMessages: 1,
-    },
-    {
-      name: 'Jonas F.',
-      initials: 'JF',
-      moodLabel: 'Usikker',
-      trafficLight: 'gul',
-      checkinTime: '08.20',
-      notePreview: 'Nyindflyttet, ved at finde rytme. Holder ekstra øje.',
+      moodLabel: 'Godt',
+      trafficLight: 'grøn',
+      checkinTime: '07.32',
+      notePreview:
+        'God periode. Sov godt, handlede selv ind i går og glæder sig til ny tur tirsdag kl. 10. Statusudtalelse til kommunen om 6 dage.',
       pendingMessages: 0,
     },
     {
-      name: 'Mikkel T.',
+      name: 'CB',
+      initials: 'CB',
+      moodLabel: 'Træt',
+      trafficLight: 'gul',
+      checkinTime: '08.05',
+      notePreview:
+        'Gul i Lys tre dage i træk. Larm fra ny nabo til kl. 1 i nat. Samtale om søvn kl. 11.',
+      pendingMessages: 1,
+    },
+    {
+      name: 'MT',
       initials: 'MT',
       moodLabel: 'OK',
       trafficLight: 'gul',
       checkinTime: '07.55',
-      notePreview: 'Stabil men lidt lav energi.',
+      notePreview:
+        'Morgendosis kl. 08 er ikke registreret. Afslog aftenmedicin i går. Lægesamtale om aftenmedicin fredag.',
       pendingMessages: 0,
     },
     {
-      name: 'Anders P.',
+      name: 'AP',
       initials: 'AP',
       moodLabel: 'Rolig',
-      trafficLight: 'gul',
+      trafficLight: 'grøn',
       checkinTime: '08.00',
-      notePreview: 'I en rolig fase, ingen særlige tiltag.',
+      notePreview:
+        'Hos egen læge i går. Såret på underbenet er ikke helet, ny creme morgen og aften. Kontrol om 14 dage.',
       pendingMessages: 0,
     },
     {
-      name: 'Mette P.',
+      name: 'JF',
+      initials: 'JF',
+      moodLabel: 'Usikker',
+      trafficLight: 'gul',
+      checkinTime: '08.20',
+      notePreview: 'Nyindflyttet i 212, finder sin rytme. Holder ekstra øje.',
+      pendingMessages: 0,
+    },
+    {
+      name: 'MP',
       initials: 'MP',
       moodLabel: 'Godt',
       trafficLight: 'grøn',
       checkinTime: '07.40',
-      notePreview: 'Velfungerende, hjalp med morgenmad.',
+      notePreview: 'Velfungerende, hjalp med morgenmaden.',
       pendingMessages: 0,
     },
   ];

@@ -55,7 +55,7 @@ function shortResidentLine(r: OverrapportResidentInput): string {
   if (r.pendingMessages > 0)
     bits.push(`${r.pendingMessages} åben${r.pendingMessages > 1 ? 'e' : ''} besked til personalet`);
   if (r.notePreview)
-    bits.push(`notat: «${r.notePreview.slice(0, 120)}${r.notePreview.length > 120 ? '…' : ''}»`);
+    bits.push(`notat: «${r.notePreview.slice(0, 160)}${r.notePreview.length > 160 ? '…' : ''}»`);
   return bits.join(' · ');
 }
 
