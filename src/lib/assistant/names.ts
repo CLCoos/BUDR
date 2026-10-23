@@ -60,6 +60,15 @@ export function restoreName(text: string, firstName: string): string {
   return text.replace(/\bBorgerens\b/g, genitive).replace(/\bBorgeren\b/g, name);
 }
 
+/**
+ * Initialer er 2–4 store bogstaver ("ER", "AF"). De skal matches, som de står.
+ * Uden forskel på store og små bliver "ER" til hvert "er" og "AF" til hvert "af",
+ * så journalen og assistenten sendes videre uden de ord.
+ */
+function isInitialToken(name: string): boolean {
+  return /^\p{Lu}{2,4}$/u.test(name);
+}
+
 /** Erstat navne (længste først) med en neutral betegnelse, før tekst sendes til AI. */
 export function replaceNames(text: string, names: string[], replacement: string): string {
   const unique = [...new Set(names.map((n) => n.trim()).filter((n) => n.length >= 2))].sort(
@@ -67,9 +76,11 @@ export function replaceNames(text: string, names: string[], replacement: string)
   );
   let out = text;
   for (const name of unique) {
-    // Også ejefald ("Miras", "Lars'"), så navnet ikke slipper igennem med et s bagpå.
+    // Også ejefald ("Miras", "Lars'", "ERs"), så navnet ikke slipper igennem med et s bagpå.
+    // Initialer matches kun med store bogstaver; øvrige navne også i små bogstaver.
+    const flags = isInitialToken(name) ? 'gu' : 'giu';
     out = out.replace(
-      new RegExp(`(?<![\\p{L}])${escapeRegExp(name)}(s|')?(?![\\p{L}])`, 'giu'),
+      new RegExp(`(?<![\\p{L}])${escapeRegExp(name)}(s|')?(?![\\p{L}])`, flags),
       (_m, genitive?: string) => (genitive ? `${replacement}s` : replacement)
     );
   }
