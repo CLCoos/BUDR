@@ -118,6 +118,10 @@ describe('navne', () => {
     expect(replaceNames('Lars Hansen og Lars', ['Lars Hansen', 'Lars'], 'Borgeren')).toBe(
       'Borgeren og Borgeren'
     );
+    expect(replaceNames('lars fik creme', ['Lars'], 'Borgeren')).toBe('Borgeren fik creme');
+    expect(replaceNames('Hun er træt. ER sov. ERs medicin.', ['ER'], 'Borger 1')).toBe(
+      'Hun er træt. Borger 1 sov. Borger 1s medicin.'
+    );
     expect(restoreName('Borgeren tog Borgerens medicin.', 'Lars')).toBe("Lars tog Lars' medicin.");
     expect(restoreName('Borgerens dag', 'Mia')).toBe('Mias dag');
   });

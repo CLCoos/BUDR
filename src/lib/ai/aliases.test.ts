@@ -69,4 +69,31 @@ describe('residentAliasMap', () => {
     expect(hidden).not.toMatch(/Kis|Karin|Ole/);
     expect(map.restore(hidden)).toBe('KBJ og KBJ talte med OD.');
   });
+
+  it('lader almindelige ord stå, når initialerne ligner dem', () => {
+    const map = residentAliasMap([
+      {
+        user_id: 'er',
+        first_name: 'Erik',
+        last_name: 'Rasmussen',
+        display_name: 'Erik Rasmussen',
+        nickname: null,
+      },
+      {
+        user_id: 'af',
+        first_name: 'Anna',
+        last_name: 'Fog',
+        display_name: 'Anna Fog',
+        nickname: null,
+      },
+    ]);
+    const hidden = map.hide(
+      'Erik Rasmussen er træt og kom af sted. ERs medicin står. ER og AF sov.'
+    );
+    expect(hidden).toBe(
+      'Borger 1 er træt og kom af sted. Borger 1s medicin står. Borger 1 og Borger 2 sov.'
+    );
+    expect(map.restore(hidden)).toBe('ER er træt og kom af sted. ERs medicin står. ER og AF sov.');
+    expect(map.hide('Hun er træt og kom af sted.')).toBe('Hun er træt og kom af sted.');
+  });
 });
