@@ -21,10 +21,10 @@ const DEADLINES = [
     state: 'Ikke startet',
   },
   {
-    date: 'Om 18 dage',
-    title: 'Indberetning af magtanvendelse',
-    who: 'Sara K. · hændelse for 5 dage siden',
-    state: 'Udfyldt 80 %',
+    date: 'Fredag',
+    title: 'Lægesamtale om aftenmedicin',
+    who: 'MT · kontaktperson Lars N.',
+    state: 'Forberedelse klar',
   },
 ];
 

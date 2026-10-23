@@ -57,7 +57,9 @@ export const INDSATS_TYPE_OPTIONS: {
   { value: 'hændelse', label: 'Hændelsesrapport', paragraph: '', color: '#64748b' },
 ];
 
-export const INDSATS_DEMO_STORAGE_KEY = 'budr_indsats_records_v1';
+/** v2: demoens eksempler følger borgernes historie (ingen magtanvendelser). v1 slettes ved første læsning. */
+export const INDSATS_DEMO_STORAGE_KEY = 'budr_indsats_records_v2';
+const INDSATS_DEMO_LEGACY_KEYS = ['budr_indsats_records_v1'];
 
 export function isIndsatsType(value: unknown): value is IndsatsType {
   return typeof value === 'string' && (INDSATS_TYPES as readonly string[]).includes(value);
@@ -137,18 +139,94 @@ export function parseIndsatsRecord(row: Record<string, unknown>): IndsatsRecord 
   };
 }
 
+/** Tidspunkt `daysAgo` dage før `now`, kl. hh:mm lokal tid, som `datetime-local`-streng. */
+function demoLocalStamp(now: Date, daysAgo: number, hh: number, mm: number): string {
+  const t = new Date(now);
+  t.setDate(t.getDate() - daysAgo);
+  t.setHours(hh, mm, 0, 0);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}T${pad(hh)}:${pad(mm)}`;
+}
+
+/**
+ * Demoens tre indsatsnotater. De følger samme historie som Vagt-forsiden og forløbssiderne
+ * (SK's svære nat for 8 dage siden, CB's urolige aften, MT's afslåede aftenmedicin).
+ * Ingen magtanvendelser: det er det almindelige billede på et §107-bosted.
+ */
+export function buildDemoIndsatsRecords(now: Date = new Date()): IndsatsRecord[] {
+  const rec = (
+    id: string,
+    type: IndsatsType,
+    stamp: string,
+    fields: Omit<IndsatsFormFields, 'type' | 'tidspunkt'>
+  ): IndsatsRecord => ({
+    id,
+    created_at: new Date(stamp).toISOString(),
+    type,
+    paragraph: paragraphForIndsatsType(type),
+    tidspunkt: stamp,
+    ...fields,
+  });
+  return [
+    rec('demo-indsats-mt', 'hændelse', demoLocalStamp(now, 1, 22, 0), {
+      varighed: '10 min',
+      involverede_borgere: 'MT',
+      involverede_personale: 'Jonas N. (nattevagt)',
+      beskrivelse: 'MT afslog sin aftenmedicin kl. 22. Han sagde, at han bliver «tung» af den.',
+      forudgaaende: 'Rolig aften. Tredje afslag om aftenen på to uger, ingen afslag om morgenen.',
+      handling:
+        'Tilbød medicinen igen kl. 22.30 uden pres. MT sagde stadig nej, og det blev respekteret. Afslaget er noteret i medicinlisten.',
+      borgerens_reaktion: 'MT var rolig og sov kl. 23.30.',
+      opfoelgning:
+        'Lægesamtale om aftenmedicinen fredag. Kontaktperson Lars N. forbereder samtalen med MT.',
+      underskrift: 'Jonas N.',
+    }),
+    rec('demo-indsats-cb', 'observation', demoLocalStamp(now, 1, 21, 50), {
+      varighed: '30 min',
+      involverede_borgere: 'CB',
+      involverede_personale: 'Peter N.',
+      beskrivelse: 'Urolig aften. CB kunne ikke falde til ro på grund af larm fra den nye nabo.',
+      forudgaaende: 'CB har været gul i Lys tre dage i træk og sovet dårligt.',
+      handling:
+        'Støttende samtale i fællesstuen med en kop te. Vi talte om, hvad der hjælper hende til at sove.',
+      borgerens_reaktion: 'CB blev roligere og sov kl. 23.',
+      opfoelgning: 'Samtale om søvn i morgen kl. 11. Tal med naboen om støj efter kl. 22.',
+      underskrift: 'Peter N.',
+    }),
+    rec('demo-indsats-sk', 'hændelse', demoLocalStamp(now, 8, 2, 14), {
+      varighed: '45 min',
+      involverede_borgere: 'SK',
+      involverede_personale: 'Jonas N. (nattevagt)',
+      beskrivelse: 'SK skrev til Lys kl. 02.14, at hun ikke kunne sove og havde det svært.',
+      forudgaaende:
+        'Dagen efter mors besøg. SK har tidligere haft svære dage 1-3 dage efter besøg.',
+      handling:
+        'Nattevagten bankede på og tilbød at sidde hos hende. Tryghedsplanen blev brugt: varm drik, lys tændt og en rolig snak.',
+      borgerens_reaktion: 'SK faldt til ro og sov kl. 03.',
+      opfoelgning:
+        'Kontaktperson Peter N. talte med SK dagen efter. Fast aftale dagen efter mors næste besøg.',
+      underskrift: 'Jonas N.',
+    }),
+  ];
+}
+
 export function loadDemoIndsatsRecords(): IndsatsRecord[] {
   if (typeof window === 'undefined') return [];
   try {
+    for (const key of INDSATS_DEMO_LEGACY_KEYS) window.localStorage.removeItem(key);
     const raw = window.localStorage.getItem(INDSATS_DEMO_STORAGE_KEY);
-    if (!raw) return [];
+    if (!raw) {
+      const seeded = buildDemoIndsatsRecords();
+      saveDemoIndsatsRecords(seeded);
+      return seeded;
+    }
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
     return parsed
       .map((row) => parseIndsatsRecord((row ?? {}) as Record<string, unknown>))
       .filter((row): row is IndsatsRecord => row !== null);
   } catch {
-    return [];
+    return buildDemoIndsatsRecords();
   }
 }
 
