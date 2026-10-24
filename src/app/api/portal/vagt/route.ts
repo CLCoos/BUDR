@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireStaff } from '@/app/api/portal/documents/_auth';
-import { residentLabel } from '@/lib/assistant/names';
+import { residentFullName, residentLabel } from '@/lib/assistant/names';
 import { loadResidents, loadStaffName } from '@/lib/assistant/server';
 import { shiftYmd } from '@/lib/assistant/actions';
 import { copenhagenStartOfDateUtcIso, copenhagenYmd } from '@/lib/copenhagenDay';
@@ -136,6 +136,8 @@ export async function GET() {
     shiftName: SHIFT_NAMES[shift],
     today,
     residentsTotal: residents.length,
+    // Fulde navne vises kun ved hover på initialerne (personalet ser dem også på borgerens side).
+    residentFullNames: Object.fromEntries(residents.map((r) => [r.user_id, residentFullName(r)])),
     handovers: handovers.slice(0, 12).map((h) => ({
       residentId: h.resident_id,
       name: label(h.resident_id),

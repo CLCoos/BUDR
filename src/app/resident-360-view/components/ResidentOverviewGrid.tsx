@@ -148,7 +148,7 @@ export default function ResidentOverviewGrid({ residents, orgId }: Props) {
     const ql = search.trim().toLowerCase();
     const base = sortedBase.filter((r) => {
       const matchSearch =
-        residentNameRoomInitialsMatch(r.name, r.room, r.initials, search) ||
+        residentNameRoomInitialsMatch(r.fullName ?? r.name, r.room, r.initials, search) ||
         (ql.length > 0 && r.house.toLowerCase().includes(ql));
       const matchFilter =
         filter === 'all'

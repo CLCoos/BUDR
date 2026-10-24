@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { Check, ClipboardCopy, Loader2, RefreshCw } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { cardStyle, ghostButton, primaryButton } from '@/components/documents/shared';
-import { residentLabel, type ResidentNameRow } from '@/lib/assistant/names';
+import { residentFullName, residentLabel, type ResidentNameRow } from '@/lib/assistant/names';
+import ResidentInitials from '@/components/residents/ResidentInitials';
 import {
   fagsystemDateTime,
   formatNoteForFagsystem,
@@ -43,6 +43,7 @@ export default function FagsystemClient() {
   const [me, setMe] = useState<Me | null>(null);
   const [notes, setNotes] = useState<NoteRow[]>([]);
   const [names, setNames] = useState<Record<string, string>>({});
+  const [fullNames, setFullNames] = useState<Record<string, string>>({});
   const [transfers, setTransfers] = useState<Map<string, FagsystemTransfer>>(new Map());
   const [tracking, setTracking] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -104,11 +105,9 @@ export default function FagsystemClient() {
     }
     const list = (notesRes.data ?? []) as NoteRow[];
     setNotes(list);
-    setNames(
-      Object.fromEntries(
-        ((residentsRes.data ?? []) as ResidentNameRow[]).map((r) => [r.user_id, residentLabel(r)])
-      )
-    );
+    const residentRows = (residentsRes.data ?? []) as ResidentNameRow[];
+    setNames(Object.fromEntries(residentRows.map((r) => [r.user_id, residentLabel(r)])));
+    setFullNames(Object.fromEntries(residentRows.map((r) => [r.user_id, residentFullName(r)])));
     const t = await loadTransfers(
       supabase,
       list.map((n) => n.id)
@@ -323,13 +322,13 @@ export default function FagsystemClient() {
                 style={{ borderColor: 'var(--cp-border)' }}
               >
                 <div className="min-w-0">
-                  <Link
+                  <ResidentInitials
+                    initials={g.name}
+                    fullName={fullNames[g.residentId]}
                     href={`/resident-360-view/${g.residentId}`}
-                    className="text-base font-semibold hover:underline"
+                    className="text-base font-semibold"
                     style={{ color: 'var(--cp-text)' }}
-                  >
-                    {g.name}
-                  </Link>
+                  />
                   <p className="text-xs" style={{ color: 'var(--cp-muted)' }}>
                     {g.notes.length} {g.notes.length === 1 ? 'notat' : 'notater'}
                     {missing.length > 0 && missing.length < g.notes.length

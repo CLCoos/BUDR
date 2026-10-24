@@ -6,12 +6,15 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronRight, FileText, Search, X } from 'lucide-react';
 import { CARE_DEMO_RESIDENT_PROFILES, careDemoProfileById } from '@/lib/careDemoResidents';
 import { HAVEN_ENABLED } from '@/lib/featureFlags';
+import ResidentInitials from '@/components/residents/ResidentInitials';
 
 type TrafficUi = 'groen' | 'gul' | 'roed';
 
 type Row = {
   id: string;
+  /** Initialer; det fulde navn ses kun ved hover. */
   name: string;
+  fullName: string;
   initials: string;
   room: string;
   trafficLight: TrafficUi | null;
@@ -19,38 +22,49 @@ type Row = {
   notePreview: string;
 };
 
-const TRAFFIC_CYCLE: (TrafficUi | null)[] = [
-  'groen',
-  'gul',
-  'roed',
-  'groen',
-  null,
-  'gul',
-  'groen',
-  'roed',
-  'groen',
-  'gul',
-  'groen',
-  null,
-];
+/** Samme historie som forsiden og borgerens forløb (forloebData.ts). */
+const STORY: Record<string, { traffic: TrafficUi; checkinToday: boolean; note: string }> = {
+  'res-sara': {
+    traffic: 'groen',
+    checkinToday: true,
+    note: 'God periode. Handlede selv ind i går.',
+  },
+  'res-mikkel': {
+    traffic: 'gul',
+    checkinToday: true,
+    note: 'Morgendosis kl. 08 er ikke registreret. Afslog aftenmedicin i går.',
+  },
+  'res-anders': {
+    traffic: 'groen',
+    checkinToday: true,
+    note: 'Hos egen læge i går. Ny creme til såret, kontrol om 14 dage.',
+  },
+  'res-mette': {
+    traffic: 'groen',
+    checkinToday: true,
+    note: 'Velfungerende, hjalp med morgenmaden.',
+  },
+  'res-camilla': {
+    traffic: 'gul',
+    checkinToday: true,
+    note: 'Gul i Lys tre dage. Sov først kl. 02. Samtale om søvn kl. 11.',
+  },
+  'res-jonas': {
+    traffic: 'gul',
+    checkinToday: false,
+    note: 'Nyindflyttet i 212, finder sin rytme.',
+  },
+};
 
-const NOTE_SNIPPETS = [
-  'Ingen særlige bemærkninger.',
-  'Kriseplan gennemgået i nat. Sover uroligt.',
-  'God deltagelse i fælles aktivitet.',
-  'Let angst før gruppe — deltog efter tilvænning.',
-  'Besøg hos familie — forventet retur senere.',
-  'Check-in via Lys — god stemning.',
-];
-
-const SEED: Row[] = CARE_DEMO_RESIDENT_PROFILES.map((r, i) => ({
+const SEED: Row[] = CARE_DEMO_RESIDENT_PROFILES.map((r) => ({
   id: r.id,
-  name: r.displayName,
+  name: r.initials,
+  fullName: r.displayName,
   initials: r.initials,
   room: r.room,
-  trafficLight: TRAFFIC_CYCLE[i % TRAFFIC_CYCLE.length],
-  checkinToday: i % 3 !== 0,
-  notePreview: NOTE_SNIPPETS[i % NOTE_SNIPPETS.length],
+  trafficLight: STORY[r.id]?.traffic ?? null,
+  checkinToday: STORY[r.id]?.checkinToday ?? false,
+  notePreview: STORY[r.id]?.note ?? 'Ingen særlige bemærkninger.',
 }));
 
 const DOT: Record<TrafficUi, string> = {
@@ -137,7 +151,10 @@ export default function ResidentsDemoGrid({
   const filtered = useMemo(() => {
     return SEED.filter((r) => {
       const q = search.toLowerCase();
-      const match = r.name.toLowerCase().includes(q) || r.room.toLowerCase().includes(q);
+      const match =
+        r.name.toLowerCase().includes(q) ||
+        r.fullName.toLowerCase().includes(q) ||
+        r.room.toLowerCase().includes(q);
       const f =
         filter === 'alle' ? true : filter === 'ingen' ? !r.trafficLight : r.trafficLight === filter;
       return match && f;
@@ -194,7 +211,11 @@ export default function ResidentsDemoGrid({
                   Fra dokumentsøgning · demo
                 </p>
                 <h2 className="text-base font-semibold" style={{ color: 'var(--cp-text)' }}>
-                  {focusProfile.displayName}
+                  <ResidentInitials
+                    initials={focusProfile.initials}
+                    fullName={focusProfile.displayName}
+                    href={residentHrefFor(focusProfile.id)}
+                  />
                 </h2>
                 <p className="text-sm" style={{ color: 'var(--cp-green)' }}>
                   Fane: {tabTitle}
@@ -314,9 +335,12 @@ export default function ResidentsDemoGrid({
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                    <span className="font-medium" style={{ color: 'var(--cp-text)' }}>
-                      {r.name}
-                    </span>
+                    <ResidentInitials
+                      initials={r.name}
+                      fullName={r.fullName}
+                      className="font-medium"
+                      style={{ color: 'var(--cp-text)' }}
+                    />
                     <span className="text-xs" style={{ color: 'var(--cp-muted)' }}>
                       værelse {r.room}
                     </span>

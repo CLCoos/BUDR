@@ -1,3 +1,5 @@
+import { initialsOfName } from '@/lib/residents/formatName';
+
 /** Navne på borgere: find dem i fri tekst, og sæt navnet tilbage efter AI har skrevet "Borgeren". */
 
 export type ResidentNameRow = {
@@ -14,13 +16,23 @@ export function residentNames(r: ResidentNameRow): string[] {
     .filter((n) => n.length >= 2);
 }
 
-export function residentLabel(r: ResidentNameRow): string {
+/** Det fulde navn: kun til hover og borgerens egen side. */
+export function residentFullName(r: ResidentNameRow): string {
   return (
+    [r.first_name, r.last_name]
+      .map((n) => (n ?? '').trim())
+      .filter(Boolean)
+      .join(' ') ||
     r.display_name?.trim() ||
-    [r.first_name, r.last_name].filter(Boolean).join(' ').trim() ||
     r.nickname?.trim() ||
     'Borger'
   );
+}
+
+/** Sådan står borgeren i portalen og i AI-svar: initialer (GDPR). */
+export function residentLabel(r: ResidentNameRow): string {
+  const full = residentFullName(r);
+  return full === 'Borger' ? full : initialsOfName(full);
 }
 
 function escapeRegExp(s: string): string {

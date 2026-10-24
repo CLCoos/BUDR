@@ -1,5 +1,6 @@
 'use client';
 
+import { initialsOfName } from '@/lib/residents/formatName';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { CalendarDays, Clock, Loader2, MapPin, Plus, User } from 'lucide-react';
 import { toast } from 'sonner';
@@ -202,7 +203,7 @@ function residentOptionFromRow(row: {
   const id = String(row.user_id ?? '');
   if (!isResidentUuidForCloud(id)) return null;
   const od = (row.onboarding_data ?? {}) as Record<string, unknown>;
-  const name = String(row.display_name ?? '').trim() || '—';
+  const name = initialsOfName(String(row.display_name ?? ''));
   const rawIni = od.avatar_initials;
   const initials =
     typeof rawIni === 'string' && rawIni.trim().length > 0

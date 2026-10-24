@@ -1,5 +1,6 @@
 'use client';
 
+import { initialsOfName } from '@/lib/residents/formatName';
 import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FileText, Search, User, X } from 'lucide-react';
@@ -51,6 +52,8 @@ interface MockDoc {
 interface MockResident {
   id: string;
   name: string;
+  /** Kun til søgning. */
+  fullName?: string;
   initials: string;
   room: string;
   /** Til afdelingsopdeling af søgeresultater (demo + live). */
@@ -61,7 +64,7 @@ interface MockResident {
 const MOCK_RESIDENTS: MockResident[] = [
   {
     id: 'res-sara',
-    name: 'Sara K.',
+    name: 'SK',
     initials: 'SK',
     room: '104',
     house: careDemoProfileById('res-sara')?.house ?? 'A',
@@ -75,7 +78,7 @@ const MOCK_RESIDENTS: MockResident[] = [
   },
   {
     id: 'res-mikkel',
-    name: 'Mikkel T.',
+    name: 'MT',
     initials: 'MT',
     room: '103',
     house: careDemoProfileById('res-mikkel')?.house ?? 'A',
@@ -87,7 +90,7 @@ const MOCK_RESIDENTS: MockResident[] = [
   },
   {
     id: 'res-anders',
-    name: 'Anders P.',
+    name: 'AP',
     initials: 'AP',
     room: '109',
     house: careDemoProfileById('res-anders')?.house ?? 'A',
@@ -99,7 +102,7 @@ const MOCK_RESIDENTS: MockResident[] = [
   },
   {
     id: 'res-mette',
-    name: 'Mette P.',
+    name: 'MP',
     initials: 'MP',
     room: '205',
     house: careDemoProfileById('res-mette')?.house ?? 'B',
@@ -111,7 +114,7 @@ const MOCK_RESIDENTS: MockResident[] = [
   },
   {
     id: 'res-camilla',
-    name: 'Camilla B.',
+    name: 'CB',
     initials: 'CB',
     room: '211',
     house: careDemoProfileById('res-camilla')?.house ?? 'B',
@@ -123,7 +126,7 @@ const MOCK_RESIDENTS: MockResident[] = [
   },
   {
     id: 'res-jonas',
-    name: 'Jonas F.',
+    name: 'JF',
     initials: 'JF',
     room: '312',
     house: careDemoProfileById('res-jonas')?.house ?? 'C',
@@ -228,17 +231,19 @@ function DokumentSøgningInner({
         const id = String(row.user_id ?? '');
         if (!isResidentUuidForCloud(id)) continue;
         const od = (row.onboarding_data ?? {}) as Record<string, unknown>;
-        const name = String(row.display_name ?? '').trim() || '—';
+        const fullName = String(row.display_name ?? '').trim() || '—';
+        const name = initialsOfName(fullName);
         const rawIni = od.avatar_initials;
         const initials =
           typeof rawIni === 'string' && rawIni.trim().length > 0
             ? rawIni.trim().toUpperCase().slice(0, 4)
-            : name.slice(0, 2).toUpperCase();
+            : name;
         const rawRoom = od.room;
         const room = typeof rawRoom === 'string' && rawRoom.trim() ? rawRoom.trim() : '—';
         mapped.push({
           id,
           name,
+          fullName,
           initials,
           room,
           house: onboardingHouseToCareHouse(od.house),
@@ -278,7 +283,7 @@ function DokumentSøgningInner({
   const matchedResidents = useMemo(() => {
     if (q.length < 1) return [];
     const filtered = residentsForSearch.filter((r) =>
-      residentNameRoomInitialsMatch(r.name, r.room, r.initials, q)
+      residentNameRoomInitialsMatch(r.fullName ?? r.name, r.room, r.initials, q)
     );
     return sortResidentsBySearchRelevance(filtered, q);
   }, [q, residentsForSearch]);

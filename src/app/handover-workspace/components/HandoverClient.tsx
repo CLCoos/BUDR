@@ -9,7 +9,6 @@ import { parseStaffOrgId, resolveStaffOrgResidents } from '@/lib/staffOrgScope';
 import { loadShifts } from '@/lib/demoShiftPlan';
 import { CARE_DEMO_RESIDENT_PROFILES } from '@/lib/careDemoResidents';
 import { getResidentDemoDetail } from '@/lib/careDemoResidentDetail';
-import { useCurrentOrg } from '@/lib/org/useCurrentOrg';
 import { copenhagenStartOfTodayUtcIso } from '@/lib/copenhagenDay';
 import {
   applyStoredNotes,
@@ -22,6 +21,7 @@ import {
 } from '@/lib/handoverNotes';
 import {
   formatResidentName,
+  fullResidentName,
   getInitials,
   type ResidentNameFields,
 } from '@/lib/residents/formatName';
@@ -46,20 +46,16 @@ export type ShiftLabel = 'dag' | 'aften' | 'nat' | 'doegnnotat';
 
 export interface HandoverEntry {
   residentId: string;
+  /** Initialer (GDPR); det fulde navn ses kun ved hover. */
   residentName: string;
+  residentFullName?: string;
+  residentHref?: string;
   initials: string;
   flagColor: FlagColor;
   note: string;
   shiftLabel: ShiftLabel;
   previousNote?: string;
   previousShift?: string;
-}
-
-/** Kort visningsnavn til handover-kort (fx "Sara K."). */
-function demoHandoverShortName(displayName: string): string {
-  const parts = displayName.trim().split(/\s+/);
-  if (parts.length < 2) return displayName;
-  return `${parts[0]} ${parts[parts.length - 1]!.charAt(0)}.`;
 }
 
 function demoTrafficToFlag(traffic: 'groen' | 'gul' | 'roed' | null | undefined): FlagColor {
@@ -69,21 +65,40 @@ function demoTrafficToFlag(traffic: 'groen' | 'gul' | 'roed' | null | undefined)
   return null;
 }
 
+/** Samme historie som forsiden og borgerens forløb: SK, AP og MP grønne; MT, CB og JF gule. */
 const DEMO_HANDOVER_PREVIOUS: Partial<
-  Record<string, Pick<HandoverEntry, 'previousNote' | 'previousShift'>>
+  Record<string, Pick<HandoverEntry, 'previousNote' | 'previousShift' | 'flagColor'>>
 > = {
   'res-sara': {
-    previousNote:
-      'Sara vågen og urolig i nat. Talte med Lys kl. 02:10. Faldt til ro ca. 03:00. Ingen yderligere tiltag.',
-    previousShift: 'Nattevagt · Hanne B.',
+    flagColor: 'groen',
+    previousNote: 'Rolig nat. SK sov igennem og var glad ved morgenmaden.',
+    previousShift: 'Nattevagt · Jonas N.',
   },
   'res-camilla': {
-    previousNote: 'Kort uro efter misforståelse — rolig samtale hjalp. Ingen eskalering.',
-    previousShift: 'Aftenvagt · Dagvagt',
+    flagColor: 'gul',
+    previousNote: 'Larm fra ny nabo til kl. 1. CB sov først igen kl. 02. Samtale om søvn kl. 11.',
+    previousShift: 'Nattevagt · Jonas N.',
   },
   'res-mikkel': {
-    previousNote: 'Rolig aften på værelset. Spiste aftensmad. Ingen uro observeret.',
-    previousShift: 'Aftenvagt · Line',
+    flagColor: 'gul',
+    previousNote: 'MT afslog aftenmedicin kl. 22. Rolig på værelset bagefter.',
+    previousShift: 'Aftenvagt · Lars N.',
+  },
+  'res-anders': {
+    flagColor: 'groen',
+    previousNote: 'AP var hos egen læge. Ny creme til såret, kontrol om 14 dage.',
+    previousShift: 'Dagvagt · Lars N.',
+  },
+  'res-mette': {
+    flagColor: 'groen',
+    previousNote: 'MP hjalp med morgenmaden. God stemning.',
+    previousShift: 'Dagvagt · Hanne B.',
+  },
+  'res-jonas': {
+    flagColor: 'gul',
+    previousNote:
+      'JF er ny i 212 og finder sin rytme. Kort gåtur i går, spurgte til fællesaktiviteter.',
+    previousShift: 'Aftenvagt · Peter N.',
   },
 };
 
@@ -94,9 +109,11 @@ function buildDemoHandoverEntries(shiftLabel: ShiftLabel): HandoverEntry[] {
     const lastJournal = detail?.journal.find((j) => j.status !== 'kladde');
     return {
       residentId: profile.id,
-      residentName: demoHandoverShortName(profile.displayName),
+      residentName: profile.initials,
+      residentFullName: profile.displayName,
+      residentHref: `/care-portal-demo/residents/${profile.id}`,
       initials: profile.initials,
-      flagColor: demoTrafficToFlag(detail?.traffic),
+      flagColor: prev?.flagColor ?? demoTrafficToFlag(detail?.traffic),
       note: '',
       shiftLabel,
       previousNote: prev?.previousNote ?? lastJournal?.excerpt,
@@ -149,8 +166,6 @@ export default function HandoverClient({
   carePortalDark = true,
   useDemoData = false,
 }: HandoverClientProps) {
-  const org = useCurrentOrg();
-  const nameDisplayMode = org?.resident_name_display_mode ?? 'first_name_initial';
   const [entries, setEntries] = useState<HandoverEntry[]>([]);
   const [liveListLoading, setLiveListLoading] = useState(!useDemoData);
   const [liveOrgId, setLiveOrgId] = useState<string | null>(null);
@@ -332,10 +347,12 @@ export default function HandoverClient({
           last_name: (r.last_name as string | null) ?? null,
           display_name: (r.display_name as string | null) ?? null,
         };
-        const name = formatResidentName(resident, nameDisplayMode);
+        const name = formatResidentName(resident);
         return {
           residentId: r.user_id as string,
           residentName: name,
+          residentFullName: fullResidentName(resident),
+          residentHref: `/resident-360-view/${r.user_id as string}`,
           initials:
             typeof od.avatar_initials === 'string' && od.avatar_initials.trim()
               ? od.avatar_initials.toUpperCase()
@@ -359,7 +376,7 @@ export default function HandoverClient({
     return () => {
       cancelled = true;
     };
-  }, [useDemoData, currentShift, nameDisplayMode]);
+  }, [useDemoData, currentShift]);
 
   const updateEntry = (residentId: string, updates: Partial<HandoverEntry>) => {
     setEntries((prev) => prev.map((e) => (e.residentId === residentId ? { ...e, ...updates } : e)));

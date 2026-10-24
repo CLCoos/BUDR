@@ -10,10 +10,16 @@ import {
   type FagsystemNote,
 } from '@/lib/fagsystem/format';
 import { copyText } from '@/lib/fagsystem/client';
+import ResidentInitials from '@/components/residents/ResidentInitials';
 
 /** Demo af «Til fagsystem»: fiktive godkendte notater, kopiering virker, markeringer er lokale. */
 
 const NAMES: Record<string, string> = {
+  'res-sara': 'SK',
+  'res-anders': 'AP',
+  'res-camilla': 'CB',
+};
+const FULL_NAMES: Record<string, string> = {
   'res-sara': 'Sara Kristensen',
   'res-anders': 'Anders Pedersen',
   'res-camilla': 'Camilla Birk',
@@ -34,7 +40,7 @@ const NOTES: FagsystemNote[] = [
     category: 'Sundhed',
     created_at: daysAgo(1, 10, 20),
     entry_text:
-      'Anders var hos egen læge. Såret på underbenet er ikke helet, og lægen har udskrevet en ny creme. Kontrol om 14 dage.',
+      'AP var hos egen læge. Såret på underbenet er ikke helet, og lægen har udskrevet en ny creme. Kontrol om 14 dage.',
   },
   {
     id: 'n2',
@@ -43,7 +49,7 @@ const NOTES: FagsystemNote[] = [
     category: 'Pædagogisk',
     created_at: daysAgo(1, 14, 5),
     entry_text:
-      'Sara og jeg handlede ind efter liste (delmål 1). Hun klarede det selv og var stolt bagefter.',
+      'SK og jeg handlede ind efter liste (delmål 1). Hun klarede det selv og var stolt bagefter.',
   },
   {
     id: 'n3',
@@ -51,7 +57,8 @@ const NOTES: FagsystemNote[] = [
     staff_name: 'Lars N.',
     category: 'Døgnnotat',
     created_at: daysAgo(2, 19, 40),
-    entry_text: 'Camilla meldte gul i Lys. Vi tog en snak, og hun faldt til ro. Sov kl. 23.',
+    entry_text:
+      'CB meldte gul i Lys. Larm fra naboen om aftenen. Vi tog en snak og en kop te, og hun faldt til ro.',
   },
   {
     id: 'n4',
@@ -59,7 +66,7 @@ const NOTES: FagsystemNote[] = [
     staff_name: 'Lars N.',
     category: 'Døgnnotat',
     created_at: daysAgo(3, 20, 0),
-    entry_text: 'Rolig aften. Sara spiste med i fællesskabet og så film.',
+    entry_text: 'Rolig aften. SK spiste med i fællesskabet og så film.',
   },
 ];
 
@@ -185,7 +192,11 @@ export default function DemoFagsystemClient() {
             style={{ borderColor: 'var(--cp-border)' }}
           >
             <h2 className="m-0 text-base font-semibold" style={{ color: 'var(--cp-text)' }}>
-              {g.name}
+              <ResidentInitials
+                initials={g.name}
+                fullName={FULL_NAMES[g.residentId]}
+                href={`/care-portal-demo/residents/${g.residentId}`}
+              />
             </h2>
             <span className="text-xs" style={{ color: 'var(--cp-muted)' }}>
               {g.notes.length} {g.notes.length === 1 ? 'notat' : 'notater'}

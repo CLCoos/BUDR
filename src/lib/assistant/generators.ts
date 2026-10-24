@@ -73,8 +73,9 @@ export function isHealthAppointment(p: Pick<PlannerRow, 'category' | 'title'>): 
   return p.category === 'laege' || HEALTH_RE.test(p.title);
 }
 
+/** Borgeren i forslagets tekst: initialer, som alle andre steder i portalen (GDPR). */
 export function firstName(r: ResidentNameRow): string {
-  return r.first_name?.trim() || r.nickname?.trim() || residentLabel(r).split(' ')[0] || 'Borgeren';
+  return residentLabel(r);
 }
 
 /** "Lægetid" → "lægetid", men "EKG" og "Tandlæge Hansen" røres kun i første bogstav når det er sikkert. */

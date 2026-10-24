@@ -248,25 +248,27 @@ export default function DashboardDemoMain() {
               · Opdateret {lastUpdated.split('·')[1]?.trim() ?? lastUpdated}
             </span>
           </p>
-          <h1
-            className="m-0"
-            style={{
-              fontSize: 'clamp(26px, 3.2vw, 34px)',
-              fontWeight: 600,
-              letterSpacing: '-0.02em',
-              lineHeight: 1.15,
-              color: 'var(--cp-text)',
-            }}
-          >
-            {now ? demoGreeting(now) : 'Velkommen'}, {profile.person}.
-          </h1>
+          <div className="flex flex-wrap items-center justify-between gap-x-3.5 gap-y-2 sm:justify-start">
+            <h1
+              className="m-0"
+              style={{
+                fontSize: 'clamp(26px, 3.2vw, 34px)',
+                fontWeight: 600,
+                letterSpacing: '-0.02em',
+                lineHeight: 1.15,
+                color: 'var(--cp-text)',
+              }}
+            >
+              {now ? demoGreeting(now) : 'Velkommen'}, {profile.person}.
+            </h1>
+            <DemoRoleSwitch role={role} onChange={changeRole} />
+          </div>
           <p className="max-w-[56ch] text-[15px]" style={{ color: 'var(--cp-muted)' }}>
             {profile.intro}
           </p>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-          <DemoRoleSwitch role={role} onChange={changeRole} />
+        <div className="hidden flex-col gap-3 sm:flex sm:flex-row sm:items-end">
           <div className="flex items-center gap-2">
             {role !== 'vikar' && (
               <div className="hidden sm:block">
@@ -303,6 +305,24 @@ export default function DashboardDemoMain() {
         )}
 
         {moment === 'hjem' && <DemoGaaHjem person={profile.person} onFortael={openFortael} />}
+
+        <DemoWhyBox
+          title="Hvorfor godkender man alt, AI skriver?"
+          storageKey="budr_demo_why_ai_godkendelse"
+          className="-mt-2"
+        >
+          <p className="m-0">
+            Andre systemer kan lade AI skrive direkte ind i journalen. I BUDR er AI et{' '}
+            <strong style={{ color: 'var(--cp-text)' }}>hjælpeværktøj</strong>: udkast og forslag.
+            Intet går ud til teamet som endelig journal, før personalet godkender. Fagligt ansvar
+            ligger hos jer, ikke i modellen.
+          </p>
+          <p className="m-0 mt-3">
+            Varsler samler signaler (humør, beskeder, mønstre), så vagten kan prioritere. Kriseflow
+            understøtter <strong style={{ color: 'var(--cp-text)' }}>strukturerede trin</strong> og
+            dokumentation. Det erstatter ikke 112, lægevurdering eller jeres egne procedurer.
+          </p>
+        </DemoWhyBox>
       </div>
 
       {role === 'leder' && (
@@ -363,26 +383,6 @@ export default function DashboardDemoMain() {
           </div>
         </div>
       </details>
-
-      <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <DemoWhyBox
-          title="Hvorfor AI-udkast og godkendelse?"
-          storageKey="budr_demo_why_ai_godkendelse"
-        >
-          Andre systemer kan lade AI skrive direkte ind i journalen. I BUDR er AI et{' '}
-          <strong style={{ color: 'var(--cp-text)' }}>hjælpeværktøj</strong>: udkast og forslag.
-          Intet går ud til teamet som endelig journal, før personalet godkender. Fagligt ansvar
-          ligger hos jer, ikke i modellen.
-        </DemoWhyBox>
-        <DemoWhyBox
-          title="Hvorfor advarsler og krisehåndtering?"
-          storageKey="budr_demo_why_advarsler"
-        >
-          Varsler samler signaler (humør, beskeder, mønstre), så vagten kan prioritere. Kriseflow
-          understøtter <strong style={{ color: 'var(--cp-text)' }}>strukturerede trin</strong> og
-          dokumentation. Det erstatter ikke 112, lægevurdering eller jeres egne procedurer.
-        </DemoWhyBox>
-      </div>
 
       <section
         id="demo-tour-cta"

@@ -1,5 +1,6 @@
 'use client';
 
+import { initialsOfName } from '@/lib/residents/formatName';
 import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
@@ -182,7 +183,7 @@ export default function JournalOverblikWidget() {
         Object.fromEntries(
           (resData ?? []).map((r: { user_id: string; display_name: string }) => [
             r.user_id,
-            r.display_name,
+            initialsOfName(r.display_name),
           ])
         )
       );

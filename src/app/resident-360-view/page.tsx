@@ -6,14 +6,13 @@ import ResidentOverviewGrid from './components/ResidentOverviewGrid';
 import { createServerSupabaseClient, getServerAuthUser } from '@/lib/supabase/server';
 import { preloadPortalShell } from '@/lib/portalAuth';
 import { parseStaffOrgId } from '@/lib/staffOrgScope';
-import { formatResidentName, getInitials, type NameDisplayMode } from '@/lib/residents/formatName';
+import { formatResidentName, fullResidentName, getInitials } from '@/lib/residents/formatName';
 import { copenhagenStartOfTodayUtcIso, copenhagenYmd } from '@/lib/copenhagenDay';
 import { DB_TO_UI, type ResidentItem, type TrafficDb } from './residentOverviewTypes';
 
 async function fetchResidentsOverview(
   supabase: SupabaseClient,
-  orgId: string,
-  mode: NameDisplayMode
+  orgId: string
 ): Promise<ResidentItem[]> {
   const now = new Date();
   const todayStart = copenhagenStartOfTodayUtcIso(now);
@@ -74,7 +73,8 @@ async function fetchResidentsOverview(
 
     return {
       id: r.user_id,
-      name: formatResidentName(r, mode),
+      name: formatResidentName(r),
+      fullName: fullResidentName(r),
       initials:
         typeof od.avatar_initials === 'string' && od.avatar_initials.trim()
           ? od.avatar_initials.toUpperCase()
@@ -102,18 +102,7 @@ export default async function Resident360ViewPage() {
   const orgId = parseStaffOrgId(user.user_metadata?.org_id);
   if (!orgId) redirect('/care-portal-dashboard/settings');
 
-  const { data: org } = await supabase
-    .from('organisations')
-    .select('resident_name_display_mode')
-    .eq('id', orgId)
-    .maybeSingle();
-  const mode: NameDisplayMode =
-    org?.resident_name_display_mode === 'full_name' ||
-    org?.resident_name_display_mode === 'initials_only'
-      ? org.resident_name_display_mode
-      : 'first_name_initial';
-
-  const residents = await fetchResidentsOverview(supabase, orgId, mode);
+  const residents = await fetchResidentsOverview(supabase, orgId);
 
   return (
     <PortalShell>

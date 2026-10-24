@@ -1,4 +1,5 @@
 'use client';
+import ResidentInitials from '@/components/residents/ResidentInitials';
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Sparkles, Mic, Square, Loader2 } from 'lucide-react';
 import { HandoverEntry, FlagColor } from './HandoverClient';
@@ -164,12 +165,13 @@ export default function ResidentHandoverCard({ entry, onUpdate, carePortalDark =
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span
+            <ResidentInitials
+              initials={entry.residentName}
+              fullName={entry.residentFullName}
+              href={entry.residentHref}
               className="text-sm font-semibold"
               style={{ color: pd ? 'var(--cp-text)' : '#1f2937' }}
-            >
-              {entry.residentName}
-            </span>
+            />
             {fc && (
               <span
                 className="text-xs px-2 py-0.5 rounded font-medium"

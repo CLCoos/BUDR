@@ -1,5 +1,6 @@
 'use client';
 
+import ResidentInitials from '@/components/residents/ResidentInitials';
 import React, { useMemo, useState } from 'react';
 import { Check, ClipboardCopy, FileText, Lock, Sparkles } from 'lucide-react';
 import { copyText } from '@/lib/fagsystem/client';
@@ -22,21 +23,21 @@ const INITIAL: Section[] = [
     id: 'formaal',
     title: 'Indsatsens formål',
     ai: false,
-    text: 'Sara skal opnå større selvstændighed i hverdagen, så hun på sigt kan flytte i egen bolig med støtte (§107, midlertidigt botilbud).',
+    text: 'SK skal opnå større selvstændighed i hverdagen, så hun på sigt kan flytte i egen bolig med støtte (§107, midlertidigt botilbud).',
     sources: ['VUM-bestilling'],
   },
   {
     id: 'borger',
     title: 'Borgerens egen vurdering',
     ai: true,
-    text: 'Sara fortæller, at hun har fået mere ro i hverdagen og glæder sig til at gå i svømmehallen om torsdagen. Hun vil gerne øve sig i at lave aftensmad selv to gange om ugen.',
+    text: 'SK fortæller, at hun har fået mere ro i hverdagen og glæder sig til at gå i svømmehallen om torsdagen. Hun vil gerne øve sig i at lave aftensmad selv to gange om ugen.',
     sources: ['3 notater', 'Lys-dagbog 12.10'],
   },
   {
     id: 'funktion',
     title: 'Fysisk og psykisk funktion',
     ai: true,
-    text: 'Sara har haft en stabil døgnrytme og har taget sin medicin hver dag de sidste 8 uger. Hun har haft to dage med gult trafiklys efter besøg hos familien, hvor en samtale med kontaktpersonen hjalp.',
+    text: 'SK har haft en stabil døgnrytme og har taget sin medicin hver dag de sidste 8 uger. Hun har haft to dage med gult trafiklys efter besøg hos familien, hvor en samtale med kontaktpersonen hjalp.',
     sources: ['Medicinliste', 'Trafiklys 8 uger', '5 notater'],
   },
   {
@@ -50,7 +51,7 @@ const INITIAL: Section[] = [
     id: 'faglig',
     title: 'Faglig vurdering og anbefaling',
     ai: false,
-    text: 'Vi vurderer, at Sara er klar til at øve mere selvstændig madlavning med støtte to gange om ugen. Vi anbefaler, at indsatsen fortsætter uændret i 6 måneder.',
+    text: 'Vi vurderer, at SK er klar til at øve mere selvstændig madlavning med støtte to gange om ugen. Vi anbefaler, at indsatsen fortsætter uændret i 6 måneder.',
     sources: [],
   },
 ];
@@ -112,7 +113,12 @@ export default function DemoDocumentClient() {
     <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-6 p-4 pb-24 sm:p-6 lg:p-8">
       <header className="flex flex-col gap-1.5">
         <p className="text-[13px]" style={{ color: 'var(--cp-muted)' }}>
-          Sara Kristensen · til kommunen · frist om 6 dage
+          <ResidentInitials
+            initials="SK"
+            fullName="Sara Kristensen"
+            href="/care-portal-demo/residents/res-sara"
+          />{' '}
+          · til kommunen · frist om 6 dage
         </p>
         <h1
           className="m-0"

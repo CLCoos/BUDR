@@ -27,7 +27,7 @@ import type { DailyPlan, PendingProposal } from './components/DagsPlanPortal';
 import type { MedDefinition } from './components/types';
 import type { ResidentExportInput } from '@/lib/residentExport/types';
 import { copenhagenStartOfTodayUtcIso, copenhagenYmd } from '@/lib/copenhagenDay';
-import { formatResidentName, getInitials } from '@/lib/residents/formatName';
+import { fullResidentName, getInitials } from '@/lib/residents/formatName';
 import {
   getRecoveryProfile,
   computeRecoveryProfileCompletion,
@@ -400,14 +400,12 @@ async function fetchResidentData(supabase: SupabaseClient, residentId: string) {
   return {
     resident: {
       id: r.user_id as string,
-      name: formatResidentName(
-        {
-          first_name: (r.first_name as string | null) ?? null,
-          last_name: (r.last_name as string | null) ?? null,
-          display_name: (r.display_name as string | null) ?? null,
-        },
-        'full_name'
-      ),
+      // Borgerens egen side viser det fulde navn (og CPR); alle andre steder står initialer.
+      name: fullResidentName({
+        first_name: (r.first_name as string | null) ?? null,
+        last_name: (r.last_name as string | null) ?? null,
+        display_name: (r.display_name as string | null) ?? null,
+      }),
       initials:
         typeof od.avatar_initials === 'string' && od.avatar_initials.trim()
           ? od.avatar_initials.toUpperCase()

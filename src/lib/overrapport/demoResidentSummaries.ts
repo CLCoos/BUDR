@@ -12,6 +12,9 @@ export function getDemoOverrapportResidents(): OverrapportResidentInput[] {
     {
       name: 'SK',
       initials: 'SK',
+      id: 'res-sara',
+      fullName: 'Sara Kristensen',
+      href: '/care-portal-demo/residents/res-sara',
       moodLabel: 'Godt',
       trafficLight: 'grøn',
       checkinTime: '07.32',
@@ -22,6 +25,10 @@ export function getDemoOverrapportResidents(): OverrapportResidentInput[] {
     {
       name: 'CB',
       initials: 'CB',
+      id: 'res-camilla',
+      fullName: 'Camilla Birk',
+      href: '/care-portal-demo/residents/res-camilla',
+      tag: { tone: 'today', label: 'I dag · Søvn' },
       moodLabel: 'Træt',
       trafficLight: 'gul',
       checkinTime: '08.05',
@@ -32,6 +39,10 @@ export function getDemoOverrapportResidents(): OverrapportResidentInput[] {
     {
       name: 'MT',
       initials: 'MT',
+      id: 'res-mikkel',
+      fullName: 'Mikkel Thomsen',
+      href: '/care-portal-demo/residents/res-mikkel',
+      tag: { tone: 'now', label: 'Nu · Medicin' },
       moodLabel: 'OK',
       trafficLight: 'gul',
       checkinTime: '07.55',
@@ -42,6 +53,9 @@ export function getDemoOverrapportResidents(): OverrapportResidentInput[] {
     {
       name: 'AP',
       initials: 'AP',
+      id: 'res-anders',
+      fullName: 'Anders Pedersen',
+      href: '/care-portal-demo/residents/res-anders',
       moodLabel: 'Rolig',
       trafficLight: 'grøn',
       checkinTime: '08.00',
@@ -52,6 +66,10 @@ export function getDemoOverrapportResidents(): OverrapportResidentInput[] {
     {
       name: 'JF',
       initials: 'JF',
+      id: 'res-jonas',
+      fullName: 'Jonas Friis',
+      href: '/care-portal-demo/residents/res-jonas',
+      tag: { tone: 'today', label: 'I dag · Ny beboer' },
       moodLabel: 'Usikker',
       trafficLight: 'gul',
       checkinTime: '08.20',
@@ -61,6 +79,9 @@ export function getDemoOverrapportResidents(): OverrapportResidentInput[] {
     {
       name: 'MP',
       initials: 'MP',
+      id: 'res-mette',
+      fullName: 'Mette Poulsen',
+      href: '/care-portal-demo/residents/res-mette',
       moodLabel: 'Godt',
       trafficLight: 'grøn',
       checkinTime: '07.40',

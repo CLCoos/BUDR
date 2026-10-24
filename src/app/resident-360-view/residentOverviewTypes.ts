@@ -11,7 +11,10 @@ export const DB_TO_UI: Record<TrafficDb, TrafficUi> = {
 
 export type ResidentItem = {
   id: string;
+  /** Initialer: det, der vises i lister. */
   name: string;
+  /** Det fulde navn, kun til hover og søgning. */
+  fullName?: string;
   initials: string;
   room: string;
   /** Afdeling/hus fra onboarding_data (fx Hus A, TLS) */

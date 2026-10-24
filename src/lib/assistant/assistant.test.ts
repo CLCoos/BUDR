@@ -191,7 +191,7 @@ describe('appointmentFollowUps', () => {
       dedupe_key: `planner:p1:${STAFF}`,
     });
     expect(out[0]!.title).toBe(
-      'Lars havde lægetid i dag kl. 09.45. Skal jeg skrive det i sundhedsjournalen?'
+      'LH havde lægetid i dag kl. 09.45. Skal jeg skrive det i sundhedsjournalen?'
     );
     expect(out[0]!.actions[0]).toMatchObject({ type: 'journal_note', category: 'Sundhed' });
   });

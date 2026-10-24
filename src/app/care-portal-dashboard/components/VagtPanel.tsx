@@ -14,6 +14,10 @@ import {
   Mic,
 } from 'lucide-react';
 import { api } from '@/components/documents/shared';
+import ResidentInitials from '@/components/residents/ResidentInitials';
+import MomentTabs from '@/components/vagt/MomentTabs';
+import StatusTag from '@/components/ui/StatusTag';
+import { initialsOfName } from '@/lib/residents/formatName';
 import { useFortael } from '@/components/fortael/Fortael';
 import { defaultMoment, type ShiftNow, type VagtMoment } from '@/lib/vagt';
 
@@ -23,6 +27,7 @@ type Vagt = {
   shiftName: string;
   today: string;
   residentsTotal: number;
+  residentFullNames?: Record<string, string>;
   handovers: {
     residentId: string;
     name: string | null;
@@ -100,8 +105,43 @@ function clock(iso: string): string {
 }
 
 function initials(name: string | null): string {
-  const parts = (name ?? 'B').split(/\s+/).filter(Boolean);
-  return `${parts[0]?.[0] ?? ''}${parts[1]?.[0] ?? ''}`.toUpperCase() || 'B';
+  return name?.trim() ? initialsOfName(name) : 'B';
+}
+
+/** Borgerens initialer; hover viser det fulde navn, og et klik åbner borgerens side. */
+function Who({
+  v,
+  id,
+  name,
+  link = true,
+  className,
+}: {
+  v: Vagt;
+  id: string | null;
+  name: string | null;
+  link?: boolean;
+  className?: string;
+}) {
+  if (!name) return null;
+  return (
+    <ResidentInitials
+      initials={name}
+      fullName={id ? v.residentFullNames?.[id] : null}
+      href={link && id ? residentHref(id) : null}
+      className={className}
+    />
+  );
+}
+
+function joinWho(v: Vagt, id: string | null, name: string | null, rest: (string | null)[]) {
+  const tail = rest.filter(Boolean).join(' · ');
+  return (
+    <>
+      <Who v={v} id={id} name={name} />
+      {name && tail ? ' · ' : ''}
+      {tail}
+    </>
+  );
 }
 
 function residentHref(id: string | null): string {
@@ -124,59 +164,13 @@ function Empty({ children }: { children: React.ReactNode }) {
   );
 }
 
-function MomentSwitch({
-  moment,
-  onChange,
-}: {
-  moment: VagtMoment;
-  onChange: (m: VagtMoment) => void;
-}) {
-  const items: { id: VagtMoment; label: string; hint: string }[] = [
-    { id: 'moed', label: 'Mød ind', hint: 'Siden sidst' },
-    { id: 'nu', label: 'Nu', hint: 'Det, der skal ske' },
-    { id: 'hjem', label: 'Gå hjem', hint: 'Før du går' },
-  ];
-  return (
-    <div
-      role="tablist"
-      aria-label="Vagtens øjeblikke"
-      className="grid grid-cols-3 gap-1 rounded-2xl border p-1"
-      style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
-    >
-      {items.map((it) => {
-        const on = it.id === moment;
-        return (
-          <button
-            key={it.id}
-            type="button"
-            role="tab"
-            aria-selected={on}
-            onClick={() => onChange(it.id)}
-            className="flex min-h-[52px] flex-col items-center justify-center rounded-xl px-2 transition-colors"
-            style={{
-              backgroundColor: on ? 'var(--cp-ink)' : 'transparent',
-              color: on ? '#fff' : 'var(--cp-text)',
-            }}
-          >
-            <span className="text-[15px] font-semibold">{it.label}</span>
-            <span
-              className="text-[11px]"
-              style={{ color: on ? 'var(--cp-ink-accent)' : 'var(--cp-muted)' }}
-            >
-              {it.hint}
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 /** Beskeder fra borgerne i Lys. «Set» giver borgeren en kvittering i Lys. */
 function ResidentMessages({
+  v,
   messages,
   onSeen,
 }: {
+  v: Vagt;
   messages: Vagt['residentMessages'];
   onSeen: (id: string) => void;
 }) {
@@ -218,13 +212,7 @@ function ResidentMessages({
             style={{ borderColor: 'var(--cp-border)' }}
           >
             <span className="min-w-0 flex-1">
-              <Link
-                href={residentHref(m.residentId)}
-                className="text-[15px] font-semibold hover:underline"
-                style={text}
-              >
-                {m.name}
-              </Link>
+              <Who v={v} id={m.residentId} name={m.name} className="text-[15px] font-semibold" />
               <span className="ml-2 text-xs" style={muted}>
                 kl. {clock(m.at)}
               </span>
@@ -278,13 +266,12 @@ function MoedInd({ v, onReady }: { v: Vagt; onReady: () => void }) {
                       style={{ backgroundColor: tone.fg }}
                       aria-hidden
                     />
-                    <Link
-                      href={residentHref(h.residentId)}
-                      className="text-[15px] font-semibold hover:underline"
-                      style={text}
-                    >
-                      {h.name}
-                    </Link>
+                    <Who
+                      v={v}
+                      id={h.residentId}
+                      name={h.name}
+                      className="text-[15px] font-semibold"
+                    />
                     <span className="text-xs" style={muted}>
                       fra {SHIFT_DA[h.shiftLabel] ?? h.shiftLabel}
                     </span>
@@ -335,7 +322,7 @@ function MoedInd({ v, onReady }: { v: Vagt; onReady: () => void }) {
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block text-[15px] font-semibold" style={text}>
-                          {c.name}
+                          <Who v={v} id={c.residentId} name={c.name} link={false} />
                         </span>
                         <span className="block text-sm" style={muted}>
                           {c.traffic === 'rød' ? 'Rød' : 'Gul'} i Lys kl. {clock(c.at)}
@@ -398,7 +385,7 @@ function Appointments({ v, compact = false }: { v: Vagt; compact?: boolean }) {
               <span className="min-w-0 text-[15px]" style={text}>
                 {a.title}
                 <span className="block text-sm" style={muted}>
-                  {[a.name, a.location].filter(Boolean).join(' · ')}
+                  {joinWho(v, a.residentId, a.name, [a.location])}
                 </span>
               </span>
             </li>
@@ -427,35 +414,42 @@ function Nu({ v, assistant }: { v: Vagt; assistant: React.ReactNode }) {
     <div className="flex flex-col gap-6">
       {(firstTask || nextAppointment) && (
         <section
-          className="rounded-2xl p-5"
-          style={{ backgroundColor: 'var(--cp-ink)', color: '#fff' }}
+          className="flex flex-col gap-4 rounded-2xl border p-5 sm:px-7 sm:py-6 md:flex-row md:items-center md:justify-between md:gap-8"
+          style={panel}
           aria-labelledby="nu-naeste"
         >
-          <p
-            className="text-[11px] font-semibold uppercase tracking-[0.08em]"
-            style={{ color: 'var(--cp-ink-accent)' }}
-          >
-            Det næste
-          </p>
-          <h2 id="nu-naeste" className="mt-1 text-xl font-semibold leading-snug">
-            {firstTask ? firstTask.title : nextAppointment!.title}
-          </h2>
-          <p className="mt-1 text-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>
-            {firstTask
-              ? [firstTask.name, firstTask.overdue ? 'frist overskredet' : 'frist i dag']
-                  .filter(Boolean)
-                  .join(' · ')
-              : [`kl. ${clock(nextAppointment!.at)}`, nextAppointment!.name]
-                  .filter(Boolean)
-                  .join(' · ')}
-          </p>
+          <div className="flex min-w-0 flex-col gap-2">
+            <StatusTag tone={firstTask?.overdue ? 'now' : 'today'}>
+              {firstTask
+                ? firstTask.overdue
+                  ? 'Nu · Frist overskredet'
+                  : 'I dag · Opgave'
+                : `I dag · kl. ${clock(nextAppointment!.at)}`}
+            </StatusTag>
+            <h2
+              id="nu-naeste"
+              className="m-0 text-xl font-semibold leading-snug sm:text-2xl"
+              style={text}
+            >
+              {firstTask ? firstTask.title : nextAppointment!.title}
+            </h2>
+            <p className="m-0 text-[15px] sm:text-base" style={muted}>
+              {firstTask
+                ? joinWho(v, firstTask.residentId, firstTask.name, [
+                    firstTask.overdue ? 'frist overskredet' : 'frist i dag',
+                  ])
+                : joinWho(v, nextAppointment!.residentId, nextAppointment!.name, [
+                    nextAppointment!.location,
+                  ])}
+            </p>
+          </div>
           {(firstTask?.residentId ?? nextAppointment?.residentId) && (
             <Link
               href={residentHref(firstTask?.residentId ?? nextAppointment?.residentId ?? null)}
-              className="mt-4 inline-flex min-h-[44px] items-center gap-2 rounded-xl px-4 text-sm font-semibold"
-              style={{ backgroundColor: 'var(--cp-ink-accent)', color: 'var(--cp-ink)' }}
+              className="inline-flex min-h-[52px] shrink-0 items-center justify-center gap-2 rounded-xl px-6 text-base font-semibold"
+              style={{ backgroundColor: 'var(--cp-green)', color: 'var(--cp-on-green)' }}
             >
-              Åbn borgeren <ArrowRight size={16} aria-hidden />
+              Åbn borgeren <ArrowRight size={18} aria-hidden />
             </Link>
           )}
         </section>
@@ -494,9 +488,10 @@ function Nu({ v, assistant }: { v: Vagt; assistant: React.ReactNode }) {
                     className="text-sm"
                     style={{ color: t.overdue ? 'var(--cp-red)' : 'var(--cp-muted)' }}
                   >
-                    {[t.name, t.overdue ? 'Overskredet' : 'I dag', t.assignedTo]
-                      .filter(Boolean)
-                      .join(' · ')}
+                    {joinWho(v, t.residentId, t.name, [
+                      t.overdue ? 'Overskredet' : 'I dag',
+                      t.assignedTo,
+                    ])}
                   </p>
                 </li>
               ))}
@@ -676,10 +671,11 @@ export default function VagtPanel({ assistant }: { assistant: React.ReactNode })
         <p className="text-sm" style={muted}>
           {v.shiftName}
         </p>
-        <MomentSwitch moment={moment} onChange={setMoment} />
+        <MomentTabs moment={moment} onChange={setMoment} />
       </div>
       {v.residentMessages.length > 0 && (
         <ResidentMessages
+          v={v}
           messages={v.residentMessages}
           onSeen={(id) =>
             setV((prev) =>

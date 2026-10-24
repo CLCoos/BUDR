@@ -4,19 +4,19 @@ import React from 'react';
 
 type Props = {
   body: string;
-  /** Tailwind klasse til punktfarve, fx bg-[#0F6E56] */
+  /** Tailwind klasse til punktfarve. */
   bulletColorClass?: string;
 };
 
 export default function FormattedNumberedReportBody({
   body,
-  bulletColorClass = 'bg-[#0F6E56]',
+  bulletColorClass = 'bg-[var(--cp-green)]',
 }: Props) {
   const trimmed = body.trim();
   if (!trimmed) return null;
   const blocks = trimmed.split(/\n\n+/);
   return (
-    <div className="space-y-3 text-[15px] leading-[1.55] text-gray-700">
+    <div className="space-y-3 text-[15px] leading-[1.55]" style={{ color: 'var(--cp-text)' }}>
       {blocks.map((block, i) => {
         const lines = block
           .split('\n')
@@ -44,7 +44,7 @@ export default function FormattedNumberedReportBody({
           );
         }
         return (
-          <p key={i} className="text-[15px] leading-[1.55] text-gray-700">
+          <p key={i} className="whitespace-pre-line text-[15px] leading-[1.55]">
             {block}
           </p>
         );

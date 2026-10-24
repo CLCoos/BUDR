@@ -1,7 +1,10 @@
 'use client';
 
+import { initialsOfName } from '@/lib/residents/formatName';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { X, Copy, Check, Printer, ClipboardList, Pencil, LayoutList } from 'lucide-react';
+import { Copy, Check } from 'lucide-react';
+import ReportSheet, { ReportActions, ReportSectionLabel } from '@/components/reports/ReportSheet';
+import StatusTag from '@/components/ui/StatusTag';
 import { createClient } from '@/lib/supabase/client';
 import { parseStaffOrgId } from '@/lib/staffOrgScope';
 import {
@@ -35,11 +38,7 @@ type Props = {
 };
 
 const SECTION_HINTS: Record<string, string> = {
-  '1': 'Grunddata og datagrundlag',
-  '2': 'Trafiklys og status pr. borger',
-  '3': '§ 136 / § 141 fra indsatslog',
-  '4': 'Indsatsnotater i perioden',
-  '5': 'Faglig vurdering — tilpas før deling',
+  '5': 'Den faglige vurdering skal tilpasses, før rapporten deles.',
 };
 
 function toIndsatsLite(rows: IndsatsRecord[]): TilsynsIndsatsRecord[] {
@@ -93,8 +92,6 @@ export default function TilsynsrapportModal({
 
   const parsedDoc = useMemo(() => parseOverrapportDocument(report), [report]);
   const canParseSections = parsedDoc.sections.length > 0;
-  const showFormattedView = canParseSections && viewMode === 'read' && !edited;
-  const showSourceEditor = !canParseSections || viewMode === 'edit' || edited;
 
   useEffect(() => {
     mountedRef.current = true;
@@ -180,7 +177,7 @@ export default function TilsynsrapportModal({
           for (const r of careResidents) {
             const checkin = checkins?.find((c) => c.resident_id === r.user_id);
             residents.push({
-              name: r.display_name,
+              name: initialsOfName(r.display_name),
               trafficLight: checkin?.traffic_light ?? null,
               moodLabel: moodLabelFromCheckin(checkin),
               note: checkin?.note ?? null,
@@ -336,202 +333,146 @@ export default function TilsynsrapportModal({
     else trafficCounts.ingen++;
   }
 
+  const meta = [
+    new Date().toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' }),
+    reportFacilityLabel !== 'Organisation' ? reportFacilityLabel : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  const summary = loading
+    ? null
+    : [
+        `${residentsSnapshot.length} borger${residentsSnapshot.length === 1 ? '' : 'e'}`,
+        trafficCounts.rød > 0 ? `${trafficCounts.rød} røde` : null,
+        trafficCounts.gul > 0 ? `${trafficCounts.gul} gule` : null,
+        magtCount === 0
+          ? 'ingen magtanvendelser'
+          : `${magtCount} magtanvendelse${magtCount === 1 ? '' : 'r'}`,
+        `${indsatsSnapshot.length} indsatsnotat${indsatsSnapshot.length === 1 ? '' : 'er'}`,
+      ]
+        .filter(Boolean)
+        .join(' · ');
+
   return (
-    <div className="fixed inset-0 z-[10060] flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full sm:max-w-2xl max-h-[92dvh] flex flex-col bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 shrink-0 gap-2">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="h-9 w-9 rounded-xl bg-[#E8EDF5] flex items-center justify-center shrink-0">
-              <ClipboardList className="h-5 w-5 text-[#2c5282]" />
-            </div>
-            <div className="min-w-0">
-              <h2 className="text-lg font-semibold tracking-tight text-gray-900">Tilsynsrapport</h2>
-              <p className="text-xs text-gray-500 mt-0.5 leading-snug">
-                {reportSource === 'ai'
-                  ? 'AI-udkast til tilsynsbrug — gennemlæs og tilpas'
-                  : 'Struktureret udkast ud fra portaldata og indsatslog'}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1 shrink-0">
-            {report && (
-              <button
-                type="button"
-                onClick={() => setViewMode((v) => (v === 'read' ? 'edit' : 'read'))}
-                className="h-9 px-3 rounded-xl text-xs font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 flex items-center gap-1.5"
-              >
-                {viewMode === 'read' ? (
-                  <>
-                    <Pencil className="h-3.5 w-3.5" />
-                    Rediger tekst
-                  </>
-                ) : (
-                  <>
-                    <LayoutList className="h-3.5 w-3.5" />
-                    Vis oversigt
-                  </>
-                )}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={onClose}
-              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-100"
-            >
-              <X className="h-4 w-4 text-gray-500" />
-            </button>
-          </div>
+    <ReportSheet
+      open={open}
+      onClose={onClose}
+      title="Tilsynsrapport"
+      meta={meta}
+      summary={summary}
+      backLabel="Tilbage"
+      footer={
+        report ? (
+          <ReportActions
+            primary={{
+              label: copied ? 'Kopieret' : 'Kopiér rapport',
+              icon: copied ? <Check size={18} aria-hidden /> : <Copy size={18} aria-hidden />,
+              onClick: handleCopy,
+            }}
+            secondary={{
+              label: viewMode === 'edit' ? 'Vis rapport' : 'Ret tekst',
+              onClick: () => setViewMode((v) => (v === 'read' ? 'edit' : 'read')),
+            }}
+            tertiary={[
+              { label: 'Udskriv', onClick: handlePrint },
+              ...(demoOnly
+                ? []
+                : [
+                    {
+                      label: generating ? 'Skriver…' : 'Nyt udkast',
+                      disabled: generating,
+                      onClick: () => {
+                        setEdited(false);
+                        setViewMode('read');
+                        void generateReport(residentsSnapshot, indsatsSnapshot, dataSource);
+                      },
+                    },
+                  ]),
+            ]}
+          />
+        ) : null
+      }
+    >
+      {(loading || generating) && !report && (
+        <p className="py-16 text-center text-[15px]" style={{ color: 'var(--cp-muted)' }}>
+          Henter data og indsatsnotater og skriver udkastet …
+        </p>
+      )}
+
+      {indsatsError && (
+        <p
+          className="m-0 mt-5 flex flex-wrap items-center gap-2 text-sm"
+          style={{ color: 'var(--cp-text)' }}
+        >
+          <StatusTag tone="now">Nu · Tjek</StatusTag>
+          Indsatsnotaterne kunne ikke hentes. Tjek magtanvendelser, før rapporten deles.
+        </p>
+      )}
+
+      {report && viewMode === 'edit' && (
+        <div className="pt-5">
+          <label className="mb-2 block text-sm" style={{ color: 'var(--cp-muted)' }}>
+            Det er denne tekst, der kopieres og udskrives.
+          </label>
+          <textarea
+            value={report}
+            onChange={(e) => {
+              setReport(e.target.value);
+              setEdited(true);
+            }}
+            rows={22}
+            className="min-h-[360px] w-full resize-y rounded-xl border px-4 py-3.5 text-[15px] leading-relaxed outline-none focus:border-[var(--cp-green)]"
+            style={{
+              borderColor: 'var(--cp-border2)',
+              backgroundColor: 'var(--cp-input-bg)',
+              color: 'var(--cp-text)',
+            }}
+          />
         </div>
+      )}
 
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-          {!loading && (
-            <div className="flex flex-wrap gap-2">
-              {dataSource === 'demo' && (
-                <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-800">
-                  Demo-data
-                </span>
-              )}
-              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
-                {residentsSnapshot.length} borger{residentsSnapshot.length === 1 ? '' : 'e'} i
-                grundlag
-              </span>
-              <span className="rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-medium text-emerald-800">
-                {trafficCounts.grøn} grøn / {trafficCounts.gul} gul / {trafficCounts.rød} rød
-              </span>
-              <span className="rounded-full bg-slate-50 border border-slate-200 px-3 py-1 text-xs font-medium text-slate-700">
-                {indsatsSnapshot.length} indsatsnotater
-                {dataSource === 'demo' ? ' (demo)' : ' (seneste 12 mdr.)'}
-              </span>
-              {indsatsError && (
-                <span className="rounded-full bg-red-50 border border-red-200 px-3 py-1 text-xs font-medium text-red-800">
-                  Indsatsloggen kunne ikke hentes. Tjek magtanvendelser, før rapporten deles.
-                </span>
-              )}
-              {magtCount > 0 && (
-                <span className="rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-medium text-amber-800">
-                  {magtCount} § 136/141
-                </span>
-              )}
-            </div>
+      {report && viewMode === 'read' && (
+        <>
+          {reportSource === 'ai' && (
+            <p className="m-0 mt-5 text-sm" style={{ color: 'var(--cp-muted)' }}>
+              AI har skrevet udkastet ud fra portalens data. Læs det igennem og tilpas den faglige
+              vurdering, før det deles.
+            </p>
           )}
-
-          {(loading || generating) && !report && (
-            <div className="flex flex-col items-center py-16 gap-3 text-gray-400">
-              <div className="flex gap-1.5">
-                {[0, 150, 300].map((d) => (
-                  <span
-                    key={d}
-                    className="w-2 h-2 bg-[#2c5282] rounded-full animate-bounce"
-                    style={{ animationDelay: `${d}ms` }}
-                  />
-                ))}
-              </div>
-              <p className="text-sm">Henter data og bygger tilsynsudkast…</p>
-            </div>
+          {edited && (
+            <p className="m-0 mt-5 text-sm" style={{ color: 'var(--cp-amber)' }}>
+              Du har rettet teksten. Det er din version, der kopieres.
+            </p>
           )}
-
-          {report && showFormattedView && (
-            <div className="space-y-4">
-              {parsedDoc.headline && (
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide border-b border-gray-100 pb-3">
-                  {parsedDoc.headline}
-                </p>
-              )}
-              <div className="space-y-4">
-                {parsedDoc.sections.map((sec, si) => {
-                  const sub = SECTION_HINTS[sec.index] ?? null;
-                  return (
-                    <article
-                      key={`${sec.index}-${si}-${sec.title}`}
-                      className="rounded-2xl border border-gray-100 bg-gradient-to-b from-slate-50/90 to-white px-4 py-4 sm:px-5 shadow-sm"
-                    >
-                      <div className="flex items-start gap-3 mb-3">
-                        <span
-                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#2c5282] text-xs font-bold text-white"
-                          aria-hidden
-                        >
-                          {sec.index}
-                        </span>
-                        <div className="min-w-0 pt-0.5">
-                          <h3 className="text-sm font-semibold text-gray-900 leading-tight">
-                            {sec.title}
-                          </h3>
-                          {sub ? (
-                            <p className="text-[11px] text-gray-500 mt-1 leading-snug">{sub}</p>
-                          ) : null}
-                        </div>
-                      </div>
-                      <FormattedNumberedReportBody
-                        body={sec.body}
-                        bulletColorClass="bg-[#2c5282]"
-                      />
-                    </article>
-                  );
-                })}
-              </div>
+          {canParseSections ? (
+            <>
+              {parsedDoc.sections.map((sec, si) => (
+                <section key={`${sec.index}-${si}-${sec.title}`}>
+                  <ReportSectionLabel first={si === 0}>{sec.title}</ReportSectionLabel>
+                  {SECTION_HINTS[sec.index] && (
+                    <p className="m-0 mb-2 text-[13px]" style={{ color: 'var(--cp-muted)' }}>
+                      {SECTION_HINTS[sec.index]}
+                    </p>
+                  )}
+                  <FormattedNumberedReportBody body={sec.body} />
+                </section>
+              ))}
               {parsedDoc.footnote && (
-                <p className="text-[11px] text-gray-400 leading-relaxed border-t border-gray-100 pt-4">
+                <p
+                  className="m-0 mt-8 border-t pt-4 text-[13px] leading-relaxed"
+                  style={{ borderColor: 'var(--cp-border)', color: 'var(--cp-muted)' }}
+                >
                   {parsedDoc.footnote}
                 </p>
               )}
+            </>
+          ) : (
+            <div className="pt-5">
+              <FormattedNumberedReportBody body={report} />
             </div>
           )}
-
-          {report && showSourceEditor && (
-            <div className="space-y-3">
-              {edited && canParseSections && (
-                <p className="text-xs text-amber-700 font-medium">
-                  Teksten er ændret — vælg &quot;Vis oversigt&quot; efter regenerering for kort
-                  layout.
-                </p>
-              )}
-              <textarea
-                value={report}
-                onChange={(e) => {
-                  setReport(e.target.value);
-                  setEdited(true);
-                }}
-                rows={viewMode === 'edit' ? 20 : 16}
-                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3.5 text-sm leading-relaxed resize-y min-h-[220px] outline-none focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]/20 focus:bg-white transition-colors"
-              />
-            </div>
-          )}
-        </div>
-
-        {report && (
-          <div className="flex flex-wrap gap-2 px-6 py-4 border-t border-gray-100 shrink-0">
-            <button
-              type="button"
-              onClick={() => {
-                setEdited(false);
-                setViewMode('read');
-                void generateReport(residentsSnapshot, indsatsSnapshot, dataSource);
-              }}
-              disabled={generating}
-              className="rounded-xl px-4 py-2.5 text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40"
-            >
-              {generating ? 'Genererer…' : 'Regenerer'}
-            </button>
-            <button
-              type="button"
-              onClick={handlePrint}
-              className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
-            >
-              <Printer className="h-4 w-4" />
-              Udskriv
-            </button>
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="ml-auto flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white bg-[#2c5282] hover:bg-[#244468] transition-colors"
-            >
-              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              {copied ? 'Kopieret!' : 'Kopiér rapport'}
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
+        </>
+      )}
+    </ReportSheet>
   );
 }

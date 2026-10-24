@@ -1,4 +1,5 @@
 'use client';
+import ResidentInitials from '@/components/residents/ResidentInitials';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -45,6 +46,7 @@ function isRedCheckin(row: CheckinRow): boolean {
 interface Resident {
   id: string;
   name: string;
+  fullName?: string;
   initials: string;
   room: string;
   house: CareHouse;
@@ -145,7 +147,7 @@ export default function ResidentList({
   compact?: boolean;
   onNewJournal?: (residentId: string) => void;
 }) {
-  const { formatName, getInitials } = useNameDisplay();
+  const { formatName, getInitials, fullName } = useNameDisplay();
   const { department } = useCarePortalDepartment();
   const router = useRouter();
   const [residents, setResidents] = useState<Resident[]>([]);
@@ -266,6 +268,7 @@ export default function ResidentList({
         const base: Resident = {
           id: r.user_id,
           name: renderedName,
+          fullName: fullName(r),
           initials:
             typeof od.avatar_initials === 'string' && od.avatar_initials.trim().length > 0
               ? od.avatar_initials.trim().toUpperCase().slice(0, 4)
@@ -310,7 +313,7 @@ export default function ResidentList({
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [handleRealtimeInsert, formatName, getInitials]);
+  }, [handleRealtimeInsert, formatName, getInitials, fullName]);
 
   // ── Filter + search ────────────────────────────────────────
 
@@ -322,7 +325,12 @@ export default function ResidentList({
   const filtered = useMemo(() => {
     const q = search.trim();
     const base = residentsInDept.filter((r) => {
-      const matchSearch = residentNameRoomInitialsMatch(r.name, r.room, r.initials, search);
+      const matchSearch = residentNameRoomInitialsMatch(
+        r.fullName ?? r.name,
+        r.room,
+        r.initials,
+        search
+      );
       const matchFilter =
         filter === 'all'
           ? true
@@ -508,12 +516,12 @@ export default function ResidentList({
                           {r.initials}
                         </div>
                         <div className="flex items-center gap-2">
-                          <span
+                          <ResidentInitials
+                            initials={r.name}
+                            fullName={r.fullName}
                             className="font-medium"
                             style={{ color: 'var(--cp-text)', fontSize: 12 }}
-                          >
-                            {r.name}
-                          </span>
+                          />
                           {r.pendingProposals > 0 && (
                             <span
                               className="flex items-center gap-1 text-xs font-medium px-1.5 py-0.5 rounded-full whitespace-nowrap"

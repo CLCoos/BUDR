@@ -35,7 +35,7 @@ const STEPS: Step[] = [
   {
     num: 3,
     label: 'Borgerens forløb',
-    sub: 'Se Sara K.s side med hendes egne ord, mål og frister.',
+    sub: 'Se SK’s side med hendes egne ord, mål og frister.',
     href: '/care-portal-demo/residents/res-sara',
   },
   {

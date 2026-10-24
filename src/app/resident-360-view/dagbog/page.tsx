@@ -1,4 +1,5 @@
 import React from 'react';
+import { initialsOfName } from '@/lib/residents/formatName';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import PortalShell from '@/components/PortalShell';
@@ -90,9 +91,9 @@ export default async function DagensDagbogPage() {
   const meta = new Map<string, { name: string; house: string; initials: string }>();
   for (const r of resData ?? []) {
     const od = (r.onboarding_data ?? {}) as Record<string, string>;
-    const initials = od.avatar_initials ?? r.display_name.slice(0, 3);
+    const initials = od.avatar_initials ?? initialsOfName(r.display_name);
     meta.set(r.user_id, {
-      name: r.display_name,
+      name: initialsOfName(r.display_name),
       house: od.house ?? '—',
       initials,
     });

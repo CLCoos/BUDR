@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Check, ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
 import type { DemoRole } from './demoRoles';
+import StatusTag, { type StatusTone } from '@/components/ui/StatusTag';
 
 /**
  * Demo af «Assistentens forslag»: samme udseende som i portalen, men med faste eksempler.
@@ -31,14 +32,15 @@ type DemoSuggestion = {
   roles: DemoRole[];
 };
 
-const TONE: Record<Tone, { label: string; bg: string; fg: string }> = {
-  frist: { label: 'Frist', bg: 'var(--cp-amber-dim)', fg: 'var(--cp-amber)' },
-  medicin: { label: 'Medicin', bg: 'var(--cp-red)', fg: 'var(--cp-bg2)' },
-  trafiklys: { label: 'Trafiklys', bg: 'var(--cp-red-dim)', fg: 'var(--cp-red)' },
-  opfoelgning: { label: 'Opfølgning', bg: 'var(--cp-blue-dim)', fg: 'var(--cp-blue)' },
-  fagsystem: { label: 'Fagsystem', bg: 'var(--cp-bg3)', fg: 'var(--cp-muted)' },
-  vagtplan: { label: 'Vagtplan', bg: 'var(--cp-blue-dim)', fg: 'var(--cp-blue)' },
-  godtatvide: { label: 'Godt at vide', bg: 'var(--cp-green-dim)', fg: 'var(--cp-green)' },
+/** Én farveregel: rød = nu, gul = i dag, grå = information. */
+const TONE: Record<Tone, { label: string; tone: StatusTone }> = {
+  frist: { label: 'I dag · Frist', tone: 'today' },
+  medicin: { label: 'Nu · Medicin', tone: 'now' },
+  trafiklys: { label: 'I dag · Trafiklys', tone: 'today' },
+  opfoelgning: { label: 'I dag · Opfølgning', tone: 'today' },
+  fagsystem: { label: 'Fagsystem', tone: 'info' },
+  vagtplan: { label: 'Vagtplan', tone: 'info' },
+  godtatvide: { label: 'Godt at vide', tone: 'info' },
 };
 
 const SUGGESTIONS: DemoSuggestion[] = [
@@ -175,12 +177,7 @@ export default function DemoAssistant({ role }: { role: DemoRole }) {
               style={{ borderColor: 'var(--cp-border)' }}
             >
               <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className="rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.06em]"
-                  style={{ backgroundColor: tone.bg, color: tone.fg }}
-                >
-                  {tone.label}
-                </span>
+                <StatusTag tone={tone.tone}>{tone.label}</StatusTag>
                 <span className="text-xs" style={{ color: 'var(--cp-muted)' }}>
                   {s.context}
                 </span>
