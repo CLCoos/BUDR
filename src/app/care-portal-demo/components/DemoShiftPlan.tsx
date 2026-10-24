@@ -1,5 +1,6 @@
 'use client';
 
+import ResidentInitials from '@/components/residents/ResidentInitials';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Check, Phone } from 'lucide-react';
@@ -321,9 +322,9 @@ export function DemoMomentSwitch({
 const panel = { backgroundColor: 'var(--cp-card-bg)', borderColor: 'var(--cp-border)' } as const;
 
 const NIGHT_NOTES = [
-  'Camilla blev vækket af larm fra naboen og faldt først i søvn igen kl. 02. Hun fik en kop te.',
-  'Mikkel afslog aftenmedicin kl. 22. Det er noteret, lægen er ikke kontaktet.',
-  'Sara havde en rolig nat og glæder sig til at handle ind.',
+  'CB blev vækket af larm fra naboen og faldt først i søvn igen kl. 02. Hun fik en kop te.',
+  'MT afslog aftenmedicin kl. 22. Det er noteret, lægen er ikke kontaktet.',
+  'SK havde en rolig nat og glæder sig til at handle ind.',
 ];
 
 const NEEDS_YOU = [
@@ -425,7 +426,7 @@ export function DemoMoedInd({ onReady }: { onReady: () => void }) {
                       className="block text-[15px] font-semibold"
                       style={{ color: 'var(--cp-text)' }}
                     >
-                      {r.name}
+                      <ResidentInitials initials={r.initials} fullName={r.name} />
                     </span>
                     <span className="block text-sm" style={{ color: 'var(--cp-text)' }}>
                       {r.why}
@@ -463,7 +464,7 @@ export function DemoMoedInd({ onReady }: { onReady: () => void }) {
 }
 
 const HANDOVER =
-  'Rolig dag i Hus B. Sara handlede selv ind efter liste og var stolt bagefter; ny tur tirsdag kl. 10. Camilla er stadig træt, samtale om søvn holdt kl. 11, hun vil prøve at slukke skærmen kl. 22. Mikkel fik morgendosis kl. 08.20 med morgenmaden. Middagsmedicin givet til alle 3. Aftenvagten: hold øje med Camillas søvn, og husk Mikkels aftenmedicin kl. 22.';
+  'Rolig dag i Hus B. SK handlede selv ind efter liste og var stolt bagefter; ny tur tirsdag kl. 10. CB er stadig træt, samtale om søvn holdt kl. 11, hun vil prøve at slukke skærmen kl. 22. MT fik morgendosis kl. 08.20 med morgenmaden. Middagsmedicin givet til alle 3. Aftenvagten: hold øje med CB’s søvn, og husk MT’s aftenmedicin kl. 22.';
 
 export function DemoGaaHjem({ person, onFortael }: { person: string; onFortael: () => void }) {
   const [text, setText] = useState(HANDOVER);
@@ -572,7 +573,7 @@ export function DemoGaaHjem({ person, onFortael }: { person: string; onFortael: 
                 aria-hidden
               />
               <span>
-                Du har ikke skrevet om Anders i dag.{' '}
+                Du har ikke skrevet om AP i dag.{' '}
                 <button
                   type="button"
                   onClick={onFortael}

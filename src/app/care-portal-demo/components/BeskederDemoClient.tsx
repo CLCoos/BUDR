@@ -1,5 +1,6 @@
 'use client';
 
+import ResidentInitials from '@/components/residents/ResidentInitials';
 import React, { useMemo, useState } from 'react';
 import { HeartHandshake, House, MessageCircle, Plus, Send, Users, X } from 'lucide-react';
 
@@ -13,6 +14,8 @@ type Thread = {
   scope: Scope;
   house?: HouseKey;
   title: string;
+  /** Lys-tråde: borgeren bag initialerne (hover viser navn og link). */
+  resident?: { initials: string; fullName: string; href: string };
   participants: string[];
   lastTime: string;
   unread?: number;
@@ -31,23 +34,23 @@ const THREADS_SEED: Thread[] = [
     id: 'team-vagtleder',
     tab: 'intern',
     scope: 'team',
-    title: 'Vagtleder - Mikkel H.',
-    participants: ['Mikkel H.', 'Christian C.', 'Sosu-team'],
-    lastTime: 'I dag 08:12',
+    title: 'Vagtleder · Peter N.',
+    participants: ['Peter N.', 'Lars N.', 'Hanne B.'],
+    lastTime: 'I dag 08.12',
     unread: 1,
-    preview: 'Husk faellesmoede kl. 13 - kort status paa medicinaendringer.',
+    preview: 'Husk fællesmøde kl. 13, kort status på medicinændringer.',
     messages: [
       {
         id: 'm1',
-        author: 'Mikkel H.',
-        at: 'I dag 08:12',
-        text: 'Husk faellesmoede kl. 13. Vi tager kort status paa medicinaendringer og aftenvagt-overlevering.',
+        author: 'Peter N.',
+        at: 'I dag 08.12',
+        text: 'Husk fællesmøde kl. 13. Vi tager kort status på medicinændringer og overleveringen til aftenvagten.',
       },
       {
         id: 'm2',
         author: 'Dig',
-        at: 'I dag 08:20',
-        text: 'Jeg er med. Jeg tager opdatering paa Hus B med.',
+        at: 'I dag 08.20',
+        text: 'Jeg er med. Jeg tager status på Hus B med.',
         mine: true,
       },
     ],
@@ -57,22 +60,22 @@ const THREADS_SEED: Thread[] = [
     tab: 'intern',
     scope: 'house',
     house: 'B',
-    title: 'Hus B - Faelleskanal',
+    title: 'Hus B · fælleskanal',
     participants: ['Team Hus B'],
-    lastTime: 'I dag 07:55',
-    preview: 'Praktisk besked til alle i Hus B om medicinrunde og aftensmad.',
+    lastTime: 'I dag 07.55',
+    preview: 'Medicinrunden starter kl. 17.30 i dag på grund af lægebesøg.',
     messages: [
       {
         id: 'm1',
         author: 'Administration',
-        at: 'I dag 07:55',
-        text: 'Til alle i Hus B: medicinrunden starter 17:30 i dag pga. laegebesoeg. Noter afvigelser i journal samme aften.',
+        at: 'I dag 07.55',
+        text: 'Til alle i Hus B: medicinrunden starter kl. 17.30 i dag på grund af lægebesøg. Skriv afvigelser samme aften.',
       },
       {
         id: 'm2',
         author: 'Hanne B.',
-        at: 'I dag 08:03',
-        text: 'Jeg tager vaerelse B-03 og B-05. Hvem tager B-01/B-02?',
+        at: 'I dag 08.03',
+        text: 'Jeg tager 205 og 211. Hvem tager 212?',
       },
     ],
   },
@@ -82,57 +85,68 @@ const THREADS_SEED: Thread[] = [
     scope: 'team',
     title: 'Administration',
     participants: ['Administration', 'Alt personale'],
-    lastTime: 'I gaar',
-    preview: 'Nye retningslinjer for dokumentation i CosDoc er lagt i den delte mappe.',
+    lastTime: 'I går',
+    preview: 'Nye retningslinjer for dokumentation ligger i den delte mappe.',
     messages: [
       {
         id: 'm1',
         author: 'Administration',
-        at: 'I gaar 15:22',
-        text: 'Nye retningslinjer for dokumentation i CosDoc er lagt i den delte mappe. Gennemlaes inden naeste vagt.',
+        at: 'I går 15.22',
+        text: 'Nye retningslinjer for dokumentation ligger i den delte mappe. Læs dem inden næste vagt.',
       },
     ],
   },
   {
-    id: 'lys-finn',
+    id: 'lys-cb',
     tab: 'lys',
-    scope: 'team',
-    title: 'Lys: Sara K.',
-    participants: ['Sara K.', 'Kontaktpersoner'],
-    lastTime: 'I dag 07:45',
+    scope: 'house',
+    house: 'B',
+    title: 'Lys: CB',
+    resident: {
+      initials: 'CB',
+      fullName: 'Camilla Birk',
+      href: '/care-portal-demo/residents/res-camilla',
+    },
+    participants: ['CB', 'Kontaktpersoner'],
+    lastTime: 'I dag 07.45',
     unread: 1,
-    preview: 'Jeg fik de der tanker igen i nat. Men jeg sagde det til Lys med det samme.',
+    preview: 'Naboen larmede igen i nat. Kan vi tale om det i dag?',
     messages: [
       {
         id: 'm1',
         author: 'Lys signal',
-        at: 'I dag 07:45',
-        text: 'Sara K. ønsker kontakt med Lars N. Tema: uro i nattetimerne, men hun greb selv ind.',
+        at: 'I dag 07.45',
+        text: 'CB vil gerne tale med Lars N. om søvnen. Naboen larmede til kl. 1, og hun sov først igen kl. 02.',
       },
       {
         id: 'm2',
         author: 'Dig',
-        at: 'I dag 08:05',
-        text: 'Jeg tager første opfølgning nu og skriver kort note i overblikket bagefter.',
+        at: 'I dag 08.05',
+        text: 'Samtalen er sat til kl. 11. Jeg skriver et kort notat bagefter.',
         mine: true,
       },
     ],
   },
   {
-    id: 'lys-kirsten',
+    id: 'lys-jf',
     tab: 'lys',
     scope: 'house',
     house: 'B',
-    title: 'Lys: Camilla B. (Hus B)',
-    participants: ['Camilla B.', 'Team Hus B'],
-    lastTime: 'I går 21:10',
-    preview: 'Kort stemningscheck 4/10. Ønsker ikke samtale i dag, blot kvittering.',
+    title: 'Lys: JF',
+    resident: {
+      initials: 'JF',
+      fullName: 'Jonas Friis',
+      href: '/care-portal-demo/residents/res-jonas',
+    },
+    participants: ['JF', 'Team Hus B'],
+    lastTime: 'I går 21.10',
+    preview: 'Stemning 6/10. Vil gerne med på gåturen i morgen.',
     messages: [
       {
         id: 'm1',
         author: 'Lys signal',
-        at: 'I går 21:10',
-        text: 'Camilla B. kvitterer for dagen og beder om rolig opfølgning i morgen formiddag.',
+        at: 'I går 21.10',
+        text: 'JF kvitterer for dagen og vil gerne med på gåturen i morgen formiddag.',
       },
     ],
   },
@@ -334,13 +348,24 @@ export default function BeskederDemoClient() {
         >
           {!active ? (
             <div className="p-6 text-sm" style={{ color: 'var(--cp-muted)' }}>
-              Ingen traade i denne kategori.
+              Ingen tråde i denne kategori.
             </div>
           ) : (
             <>
               <div className="border-b px-4 py-3" style={{ borderColor: 'var(--cp-border)' }}>
                 <h2 className="text-base font-semibold" style={{ color: 'var(--cp-text)' }}>
-                  {active.title}
+                  {active.resident ? (
+                    <>
+                      Lys:{' '}
+                      <ResidentInitials
+                        initials={active.resident.initials}
+                        fullName={active.resident.fullName}
+                        href={active.resident.href}
+                      />
+                    </>
+                  ) : (
+                    active.title
+                  )}
                 </h2>
                 <p className="mt-1 text-xs" style={{ color: 'var(--cp-muted)' }}>
                   {channelBadge(active)} · Deltagere: {active.participants.join(', ')}

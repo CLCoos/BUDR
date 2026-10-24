@@ -80,6 +80,18 @@ const DEMO_HANDOVER_PREVIOUS: Partial<
     previousNote: 'MT afslog aftenmedicin kl. 22. Rolig på værelset bagefter.',
     previousShift: 'Aftenvagt · Lars N.',
   },
+  'res-anders': {
+    previousNote: 'AP var hos egen læge. Ny creme til såret, kontrol om 14 dage.',
+    previousShift: 'Dagvagt · Lars N.',
+  },
+  'res-mette': {
+    previousNote: 'MP hjalp med morgenmaden. God stemning.',
+    previousShift: 'Dagvagt · Hanne B.',
+  },
+  'res-jonas': {
+    previousNote: 'JF er ny i 212 og finder sin rytme. Kort gåtur i går, spurgte til fællesaktiviteter.',
+    previousShift: 'Aftenvagt · Peter N.',
+  },
 };
 
 function buildDemoHandoverEntries(shiftLabel: ShiftLabel): HandoverEntry[] {

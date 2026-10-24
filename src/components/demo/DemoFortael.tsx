@@ -13,20 +13,22 @@ const FortaelContext = createContext<Ctx>({ openFortael: () => {} });
 export const useDemoFortael = () => useContext(FortaelContext);
 
 const EXAMPLE =
-  'Sara og jeg var ude og handle efter hendes liste. Hun klarede kassen selv og var stolt bagefter. Hun spurgte, om vi kan gøre det igen på tirsdag.';
+  'SK og jeg var ude og handle efter hendes liste. Hun klarede kassen selv og var stolt bagefter. Hun spurgte, om vi kan gøre det igen på tirsdag.';
 
 type Proposal = { id: string; title: string; detail: string };
 
 function proposalsFor(text: string): { resident: string; items: Proposal[] } {
   const t = text.toLowerCase();
-  const resident = t.includes('camilla')
-    ? 'Camilla Birk'
-    : t.includes('anders')
-      ? 'Anders Pedersen'
-      : t.includes('mikkel')
-        ? 'Mikkel Thomsen'
-        : 'Sara Kristensen';
-  const first = resident.split(' ')[0];
+  // Initialer på skærmen (GDPR); medarbejderen må gerne sige fornavnet.
+  const has = (first: string, ini: string) => t.includes(first) || new RegExp(`\\b${ini}\\b`).test(t);
+  const resident = has('camilla', 'cb')
+    ? 'CB'
+    : has('anders', 'ap')
+      ? 'AP'
+      : has('mikkel', 'mt')
+        ? 'MT'
+        : 'SK';
+  const first = resident;
   const items: Proposal[] = [
     {
       id: 'notat',
@@ -45,7 +47,7 @@ function proposalsFor(text: string): { resident: string; items: Proposal[] } {
     items.push({
       id: 'aftale',
       title: 'Aftale tirsdag kl. 10',
-      detail: `I kalenderen og i ${first}s Lys-app`,
+      detail: `I kalenderen og i ${first}’s Lys-app`,
     });
   }
   items.push({
@@ -125,7 +127,7 @@ function FortaelSheet({ onClose }: { onClose: () => void }) {
               {phase === 'skriv'
                 ? 'Fortæl'
                 : phase === 'forslag'
-                  ? `Du fortalte om ${result.resident.split(' ')[0]}`
+                  ? `Du fortalte om ${result.resident}`
                   : 'Gemt'}
             </h2>
             <p className="text-xs" style={{ color: 'var(--cp-muted)' }}>
@@ -173,7 +175,7 @@ function FortaelSheet({ onClose }: { onClose: () => void }) {
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   rows={5}
-                  placeholder="Eller skriv her, fx «Sara og jeg var ude og handle …»"
+                  placeholder="Eller skriv her, fx «SK og jeg var ude og handle …»"
                   className="w-full resize-none rounded-2xl border px-4 py-3 text-[15px] leading-relaxed outline-none focus:ring-2"
                   style={{
                     borderColor: 'var(--cp-border2)',
@@ -254,7 +256,7 @@ function FortaelSheet({ onClose }: { onClose: () => void }) {
               </p>
               <p className="max-w-[40ch] text-sm" style={{ color: 'var(--cp-muted)' }}>
                 Notatet ligger klar til fagsystemet i morgen, og det bliver en kilde i{' '}
-                {result.resident.split(' ')[0]}s næste statusudtalelse.
+                {result.resident}’s næste statusudtalelse.
               </p>
             </div>
           )}
