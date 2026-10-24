@@ -1,5 +1,6 @@
 'use client';
 
+import { initialsOfName } from '@/lib/residents/formatName';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { createPortal } from 'react-dom';
@@ -178,7 +179,7 @@ export default function HurtigJournalModal({
           .filter((r) => isResidentUuid(r.user_id))
           .map((r) => ({
             id: r.user_id as string,
-            name: String(r.display_name ?? '').trim() || '—',
+            name: initialsOfName(String(r.display_name ?? '')),
           }))
       );
       setResidentsSource('live');

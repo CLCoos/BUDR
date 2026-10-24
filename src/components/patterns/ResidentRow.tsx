@@ -14,6 +14,7 @@ import {
 import { TrafficDot, type TrafficValue } from '@/components/ui/TrafficDot';
 import type { ResidentItem, TrafficUi } from '@/app/resident-360-view/residentOverviewTypes';
 import { cn } from '@/lib/cn';
+import ResidentInitials from '@/components/residents/ResidentInitials';
 import styles from './ResidentRow.module.css';
 
 export type ResidentQuickAction = 'note' | 'medication' | 'check-in' | 'open360';
@@ -119,7 +120,11 @@ export function ResidentRow({
             </div>
             <div className={styles.nameBlock}>
               <div className={styles.nameLine}>
-                <span className={styles.name}>{resident.name}</span>
+                <ResidentInitials
+                  initials={resident.name}
+                  fullName={resident.fullName}
+                  className={styles.name}
+                />
                 {resident.pendingProposals > 0 ? (
                   <span className={styles.pendingBadge} title="Afventende forslag">
                     <Clock size={11} aria-hidden />

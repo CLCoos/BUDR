@@ -14,6 +14,8 @@ import {
   Mic,
 } from 'lucide-react';
 import { api } from '@/components/documents/shared';
+import ResidentInitials from '@/components/residents/ResidentInitials';
+import { initialsOfName } from '@/lib/residents/formatName';
 import { useFortael } from '@/components/fortael/Fortael';
 import { defaultMoment, type ShiftNow, type VagtMoment } from '@/lib/vagt';
 
@@ -23,6 +25,7 @@ type Vagt = {
   shiftName: string;
   today: string;
   residentsTotal: number;
+  residentFullNames?: Record<string, string>;
   handovers: {
     residentId: string;
     name: string | null;
@@ -100,8 +103,43 @@ function clock(iso: string): string {
 }
 
 function initials(name: string | null): string {
-  const parts = (name ?? 'B').split(/\s+/).filter(Boolean);
-  return `${parts[0]?.[0] ?? ''}${parts[1]?.[0] ?? ''}`.toUpperCase() || 'B';
+  return name?.trim() ? initialsOfName(name) : 'B';
+}
+
+/** Borgerens initialer; hover viser det fulde navn, og et klik åbner borgerens side. */
+function Who({
+  v,
+  id,
+  name,
+  link = true,
+  className,
+}: {
+  v: Vagt;
+  id: string | null;
+  name: string | null;
+  link?: boolean;
+  className?: string;
+}) {
+  if (!name) return null;
+  return (
+    <ResidentInitials
+      initials={name}
+      fullName={id ? v.residentFullNames?.[id] : null}
+      href={link && id ? residentHref(id) : null}
+      className={className}
+    />
+  );
+}
+
+function joinWho(v: Vagt, id: string | null, name: string | null, rest: (string | null)[]) {
+  const tail = rest.filter(Boolean).join(' · ');
+  return (
+    <>
+      <Who v={v} id={id} name={name} />
+      {name && tail ? ' · ' : ''}
+      {tail}
+    </>
+  );
 }
 
 function residentHref(id: string | null): string {
@@ -174,9 +212,11 @@ function MomentSwitch({
 
 /** Beskeder fra borgerne i Lys. «Set» giver borgeren en kvittering i Lys. */
 function ResidentMessages({
+  v,
   messages,
   onSeen,
 }: {
+  v: Vagt;
   messages: Vagt['residentMessages'];
   onSeen: (id: string) => void;
 }) {
@@ -218,13 +258,7 @@ function ResidentMessages({
             style={{ borderColor: 'var(--cp-border)' }}
           >
             <span className="min-w-0 flex-1">
-              <Link
-                href={residentHref(m.residentId)}
-                className="text-[15px] font-semibold hover:underline"
-                style={text}
-              >
-                {m.name}
-              </Link>
+              <Who v={v} id={m.residentId} name={m.name} className="text-[15px] font-semibold" />
               <span className="ml-2 text-xs" style={muted}>
                 kl. {clock(m.at)}
               </span>
@@ -278,13 +312,12 @@ function MoedInd({ v, onReady }: { v: Vagt; onReady: () => void }) {
                       style={{ backgroundColor: tone.fg }}
                       aria-hidden
                     />
-                    <Link
-                      href={residentHref(h.residentId)}
-                      className="text-[15px] font-semibold hover:underline"
-                      style={text}
-                    >
-                      {h.name}
-                    </Link>
+                    <Who
+                      v={v}
+                      id={h.residentId}
+                      name={h.name}
+                      className="text-[15px] font-semibold"
+                    />
                     <span className="text-xs" style={muted}>
                       fra {SHIFT_DA[h.shiftLabel] ?? h.shiftLabel}
                     </span>
@@ -335,7 +368,7 @@ function MoedInd({ v, onReady }: { v: Vagt; onReady: () => void }) {
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block text-[15px] font-semibold" style={text}>
-                          {c.name}
+                          <Who v={v} id={c.residentId} name={c.name} link={false} />
                         </span>
                         <span className="block text-sm" style={muted}>
                           {c.traffic === 'rød' ? 'Rød' : 'Gul'} i Lys kl. {clock(c.at)}
@@ -398,7 +431,7 @@ function Appointments({ v, compact = false }: { v: Vagt; compact?: boolean }) {
               <span className="min-w-0 text-[15px]" style={text}>
                 {a.title}
                 <span className="block text-sm" style={muted}>
-                  {[a.name, a.location].filter(Boolean).join(' · ')}
+                  {joinWho(v, a.residentId, a.name, [a.location])}
                 </span>
               </span>
             </li>
@@ -494,9 +527,10 @@ function Nu({ v, assistant }: { v: Vagt; assistant: React.ReactNode }) {
                     className="text-sm"
                     style={{ color: t.overdue ? 'var(--cp-red)' : 'var(--cp-muted)' }}
                   >
-                    {[t.name, t.overdue ? 'Overskredet' : 'I dag', t.assignedTo]
-                      .filter(Boolean)
-                      .join(' · ')}
+                    {joinWho(v, t.residentId, t.name, [
+                      t.overdue ? 'Overskredet' : 'I dag',
+                      t.assignedTo,
+                    ])}
                   </p>
                 </li>
               ))}
@@ -680,6 +714,7 @@ export default function VagtPanel({ assistant }: { assistant: React.ReactNode })
       </div>
       {v.residentMessages.length > 0 && (
         <ResidentMessages
+          v={v}
           messages={v.residentMessages}
           onSeen={(id) =>
             setV((prev) =>

@@ -21,7 +21,7 @@ export const CARE_DEMO_RESIDENT_PROFILES: CareDemoResidentProfile[] = [
   { id: 'res-anders', displayName: 'Anders Pedersen', initials: 'AP', house: 'A', room: '109' },
   { id: 'res-mette', displayName: 'Mette Poulsen', initials: 'MP', house: 'B', room: '205' },
   { id: 'res-camilla', displayName: 'Camilla Birk', initials: 'CB', house: 'B', room: '211' },
-  { id: 'res-jonas', displayName: 'Jonas Friis', initials: 'JF', house: 'C', room: '312' },
+  { id: 'res-jonas', displayName: 'Jonas Friis', initials: 'JF', house: 'B', room: '212' },
 ];
 
 export function careDemoProfileById(id: string): CareDemoResidentProfile | undefined {

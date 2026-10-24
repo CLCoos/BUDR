@@ -1,5 +1,6 @@
 'use client';
 
+import { initialsOfName } from '@/lib/residents/formatName';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
@@ -208,7 +209,7 @@ export default function BekymringsnotatWidget({ demoMode = false }: Props) {
     }
 
     const resList = (resRows ?? []) as { user_id: string; display_name: string }[];
-    setResidents(resList.map((r) => ({ id: r.user_id, name: r.display_name })));
+    setResidents(resList.map((r) => ({ id: r.user_id, name: initialsOfName(r.display_name) })));
 
     const { data: noteRows, error: nErr } = await supabase
       .from('care_concern_notes')
@@ -225,7 +226,9 @@ export default function BekymringsnotatWidget({ demoMode = false }: Props) {
       );
       setNotes([]);
     } else {
-      const nameBy = Object.fromEntries(resList.map((r) => [r.user_id, r.display_name]));
+      const nameBy = Object.fromEntries(
+        resList.map((r) => [r.user_id, initialsOfName(r.display_name)])
+      );
       const mapped: Bekymringsnotat[] = (noteRows ?? []).map(
         (row: {
           id: string;

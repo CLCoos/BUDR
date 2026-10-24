@@ -1,5 +1,6 @@
 'use client';
 
+import { initialsOfName } from '@/lib/residents/formatName';
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Edit3, CheckCircle, Users, BookOpen, Activity, ClipboardList } from 'lucide-react';
@@ -196,7 +197,7 @@ export default function OverrapportPanel({ open, onClose }: Props) {
         nameMap = Object.fromEntries(
           (residents ?? []).map((r: { user_id: string; display_name: string }) => [
             r.user_id,
-            r.display_name,
+            initialsOfName(r.display_name),
           ])
         );
       }
@@ -247,7 +248,7 @@ export default function OverrapportPanel({ open, onClose }: Props) {
           .select('user_id, display_name')
           .in('user_id', missingIds);
         (planResidents ?? []).forEach((r: { user_id: string; display_name: string }) => {
-          planNameMap[r.user_id] = r.display_name;
+          planNameMap[r.user_id] = initialsOfName(r.display_name);
         });
       }
 

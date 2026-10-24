@@ -1,5 +1,6 @@
 'use client';
 
+import { initialsOfName } from '@/lib/residents/formatName';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { X, Copy, Check, FileText, Pencil, LayoutList } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
@@ -111,13 +112,10 @@ export default function OverrapportModal({
             const checkin = checkins?.find((c) => c.resident_id === r.user_id);
             const pending = proposals?.filter((p) => p.resident_id === r.user_id).length ?? 0;
             return {
-              name: r.display_name,
-              initials: r.display_name
-                .split(' ')
-                .map((n: string) => n[0])
-                .join('')
-                .slice(0, 2)
-                .toUpperCase(),
+              id: r.user_id,
+              name: initialsOfName(r.display_name),
+              fullName: r.display_name,
+              initials: initialsOfName(r.display_name),
               moodLabel: moodLabelFromCheckin(checkin),
               trafficLight: checkin?.traffic_light ?? null,
               checkinTime: checkin?.created_at

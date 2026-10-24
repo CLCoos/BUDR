@@ -5,7 +5,6 @@ import { Loader2, UserPlus, CheckCircle2, Copy } from 'lucide-react';
 import { PERMISSIONS, type Permission } from '@/lib/permissions';
 import MarketingCopyCmsCard from './MarketingCopyCmsCard';
 import MarketingSectionsCmsCard from './MarketingSectionsCmsCard';
-import type { NameDisplayMode } from '@/lib/residents/formatName';
 import {
   DEFAULT_FEMALE_VOICE_ID,
   isKnownElevenLabsVoiceId,
@@ -102,7 +101,6 @@ type Props = {
   initialRoles: OrgRole[];
   canManageRoles: boolean;
   canInviteStaff: boolean;
-  initialResidentNameDisplayMode: NameDisplayMode;
   initialLysDefaultVoiceId: string | null;
 };
 
@@ -114,7 +112,6 @@ export default function SettingsClient({
   initialRoles,
   canManageRoles,
   canInviteStaff,
-  initialResidentNameDisplayMode,
   initialLysDefaultVoiceId,
 }: Props) {
   const showVoiceTelemetry =
@@ -134,10 +131,6 @@ export default function SettingsClient({
   const [editingRoleName, setEditingRoleName] = useState('');
   const [editingPermissions, setEditingPermissions] = useState<Permission[]>([]);
   const [savingRoleId, setSavingRoleId] = useState<string | null>(null);
-  const [residentNameDisplayMode, setResidentNameDisplayMode] = useState<NameDisplayMode>(
-    initialResidentNameDisplayMode
-  );
-  const [savingNameMode, setSavingNameMode] = useState(false);
   const [lysOrgVoiceId, setLysOrgVoiceId] = useState(
     initialLysDefaultVoiceId && isKnownElevenLabsVoiceId(initialLysDefaultVoiceId)
       ? initialLysDefaultVoiceId
@@ -299,25 +292,6 @@ export default function SettingsClient({
     }
     setRoles((prev) => prev.filter((r) => r.id !== role.id));
     setSelectedRoleId((prev) => (prev === role.id ? (initialRoles[0]?.id ?? '') : prev));
-  };
-
-  const saveResidentNameMode = async (mode: NameDisplayMode) => {
-    setResidentNameDisplayMode(mode);
-    setSavingNameMode(true);
-    try {
-      const res = await fetch('/api/portal/resident-name-display-mode', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ mode }),
-      });
-      if (!res.ok) {
-        setRoleError('Kunne ikke gemme visning af beboernavne.');
-        setResidentNameDisplayMode(initialResidentNameDisplayMode);
-      }
-    } finally {
-      setSavingNameMode(false);
-    }
   };
 
   const permissionMatchesSearch = (perm: Permission) => {
@@ -771,41 +745,11 @@ export default function SettingsClient({
         <h2 className="text-sm font-semibold" style={{ color: 'var(--cp-text)' }}>
           Visning af beboere
         </h2>
-        {!canManageRoles ? (
-          <p className="text-xs" style={{ color: 'var(--cp-muted)' }}>
-            Kun ledelse kan ændre navneformat.
-          </p>
-        ) : (
-          <p className="text-xs leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
-            Vælg hvordan beboernavne vises i portalen (lister, widgets og lignende).
-          </p>
-        )}
-        {canManageRoles && (
-          <div className="space-y-2">
-            {(
-              [
-                ['first_name_initial', 'Fornavn + initial (Christian C.)'],
-                ['full_name', 'Fulde navne (Christian Cloos)'],
-                ['initials_only', 'Kun initialer (CJT)'],
-              ] as Array<[NameDisplayMode, string]>
-            ).map(([mode, label]) => (
-              <label
-                key={mode}
-                className="flex cursor-pointer items-center gap-2 text-sm"
-                style={{ color: 'var(--cp-text)' }}
-              >
-                <input
-                  type="radio"
-                  name="resident_name_mode"
-                  checked={residentNameDisplayMode === mode}
-                  disabled={savingNameMode}
-                  onChange={() => void saveResidentNameMode(mode)}
-                />
-                <span>{label}</span>
-              </label>
-            ))}
-          </div>
-        )}
+        <p className="text-xs leading-relaxed" style={{ color: 'var(--cp-muted)' }}>
+          Beboere står altid med initialer i lister, rapporter og på forsiden. Peg på initialerne
+          med musen for at se det fulde navn og åbne borgerens side. Fulde navn og CPR står på
+          borgerens egen side.
+        </p>
       </section>
 
       <section

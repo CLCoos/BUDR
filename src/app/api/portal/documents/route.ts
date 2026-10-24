@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { initialsOfName } from '@/lib/residents/formatName';
 import { PERMISSIONS } from '@/lib/permissions';
 import {
   getDocumentType,
@@ -44,10 +45,12 @@ export async function GET(req: NextRequest) {
       : { data: [] };
     const names: Record<string, string> = {};
     for (const r of residents ?? []) {
-      names[r.user_id as string] =
+      // Initialer i lister (GDPR); det fulde navn står kun på borgerens egen side.
+      const full =
+        [r.first_name, r.last_name].filter(Boolean).join(' ').trim() ||
         (r.display_name as string | null)?.trim() ||
-        [r.first_name, r.last_name].filter(Boolean).join(' ') ||
-        'Borger';
+        '';
+      names[r.user_id as string] = full ? initialsOfName(full) : 'Borger';
     }
     return NextResponse.json({ documents: data ?? [], residentNames: names, canApprove, me });
   }

@@ -1,5 +1,6 @@
 'use client';
 
+import { initialsOfName } from '@/lib/residents/formatName';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { X, Copy, Check, Printer, ClipboardList, Pencil, LayoutList } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
@@ -180,7 +181,7 @@ export default function TilsynsrapportModal({
           for (const r of careResidents) {
             const checkin = checkins?.find((c) => c.resident_id === r.user_id);
             residents.push({
-              name: r.display_name,
+              name: initialsOfName(r.display_name),
               trafficLight: checkin?.traffic_light ?? null,
               moodLabel: moodLabelFromCheckin(checkin),
               note: checkin?.note ?? null,

@@ -2,7 +2,8 @@
 
 import React, { useMemo } from 'react';
 import Link from 'next/link';
-import { formatResidentName, type NameDisplayMode } from '@/lib/residents/formatName';
+import { formatResidentName, fullResidentName } from '@/lib/residents/formatName';
+import ResidentInitials from '@/components/residents/ResidentInitials';
 
 type ResidentRow = {
   user_id: string;
@@ -14,23 +15,23 @@ type ResidentRow = {
 
 type Props = {
   residents: ResidentRow[];
-  residentNameDisplayMode: NameDisplayMode;
 };
 
 /**
  * Leder-oversigt over beboere. Borgere logger ind med et engangslink, som udstedes
  * fra 360° → «Aktive enheder» (PIN-login er ikke i brug).
  */
-export default function ResidentsOpsClient({ residents, residentNameDisplayMode }: Props) {
+export default function ResidentsOpsClient({ residents }: Props) {
   const sorted = useMemo(
     () =>
       [...residents]
         .map((resident) => ({
           ...resident,
-          formatted_name: formatResidentName(resident, residentNameDisplayMode),
+          formatted_name: formatResidentName(resident),
+          full_name: fullResidentName(resident),
         }))
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
-    [residents, residentNameDisplayMode]
+    [residents]
   );
 
   return (
@@ -72,7 +73,12 @@ export default function ResidentsOpsClient({ residents, residentNameDisplayMode 
                 style={{ borderColor: 'var(--cp-border)' }}
               >
                 <td className="px-4 py-3" style={{ color: 'var(--cp-text)' }}>
-                  {resident.formatted_name}
+                  <ResidentInitials
+                    initials={resident.formatted_name}
+                    fullName={resident.full_name}
+                    href={`/resident-360-view/${resident.user_id}`}
+                    className="font-semibold"
+                  />
                 </td>
                 <td className="px-4 py-3" style={{ color: 'var(--cp-muted)' }}>
                   {new Date(resident.created_at).toLocaleDateString('da-DK')}

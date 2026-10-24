@@ -1,3 +1,7 @@
+/**
+ * Borgere vises altid med initialer i portalen (GDPR, Christian 2026-10-23).
+ * Det fulde navn ses kun ved hover på initialerne og på borgerens egen side.
+ */
 export type NameDisplayMode = 'first_name_initial' | 'full_name' | 'initials_only';
 
 export interface ResidentNameFields {
@@ -10,37 +14,33 @@ function clean(value: string | null | undefined): string {
   return typeof value === 'string' ? value.trim() : '';
 }
 
-function fallbackName(displayName: string | null): string {
-  const name = clean(displayName);
-  return name || '—';
+/** Initialer af et navn: forbogstavet i hvert ord ("Sara Kristensen" → "SK"). Initialer bevares. */
+export function initialsOfName(name: string): string {
+  const t = name.trim();
+  if (!t) return '—';
+  if (/^[\p{Lu}]{2,4}\.?$/u.test(t)) return t.replace(/\.$/, '');
+  const words = t
+    .replace(/\./g, ' ')
+    .split(/[\s-]+/)
+    .filter(Boolean);
+  if (words.length === 1) return words[0]!.slice(0, 2).toUpperCase();
+  return words
+    .map((w) => w[0]!.toUpperCase())
+    .join('')
+    .slice(0, 4);
+}
+
+/** Det fulde navn, til hover og til borgerens egen side. */
+export function fullResidentName(resident: ResidentNameFields): string {
+  const full = [clean(resident.first_name), clean(resident.last_name)].filter(Boolean).join(' ');
+  return full || clean(resident.display_name) || '—';
 }
 
 export function getInitials(resident: ResidentNameFields): string {
-  const first = clean(resident.first_name);
-  const last = clean(resident.last_name);
-  if (first && last) {
-    const firstInitial = first.slice(0, 1).toUpperCase();
-    const lastInitials = last.slice(0, 2).toUpperCase();
-    return `${firstInitial}${lastInitials}`;
-  }
-  return fallbackName(resident.display_name).slice(0, 3).toUpperCase();
+  return initialsOfName(fullResidentName(resident));
 }
 
-export function formatResidentName(
-  resident: ResidentNameFields,
-  mode: NameDisplayMode = 'first_name_initial'
-): string {
-  const first = clean(resident.first_name);
-  const last = clean(resident.last_name);
-  if (!first || !last) return fallbackName(resident.display_name);
-
-  switch (mode) {
-    case 'full_name':
-      return `${first} ${last}`;
-    case 'initials_only':
-      return getInitials(resident);
-    case 'first_name_initial':
-    default:
-      return `${first} ${last.slice(0, 1)}.`;
-  }
+/** Navnet, som det vises i lister og kort: altid initialer. */
+export function formatResidentName(resident: ResidentNameFields, _mode?: NameDisplayMode): string {
+  return getInitials(resident);
 }
