@@ -64,12 +64,16 @@ function trafficWord(tl: string | null): string {
   return tl;
 }
 
+/** Én kort linje pr. borger: «SK (grøn, godt): God periode …». */
 function shortResidentLine(r: TilsynsResidentRow): string {
-  const bits = [initialerAfNavn(r.name)];
-  bits.push(r.moodLabel ? `stemning: ${r.moodLabel}` : 'stemning: ikke registreret');
-  bits.push(`${trafficWord(r.trafficLight)} trafiklys`);
-  if (r.note) bits.push(`note: «${r.note.slice(0, 160)}${r.note.length > 160 ? '…' : ''}»`);
-  return bits.join(' · ');
+  const status = [
+    r.trafficLight ? trafficWord(r.trafficLight).replace(/t$/, '') : 'intet trafiklys',
+    r.moodLabel ? r.moodLabel.toLowerCase() : null,
+  ]
+    .filter(Boolean)
+    .join(', ');
+  const note = r.note ? ` ${r.note.slice(0, 160)}${r.note.length > 160 ? '…' : ''}` : '';
+  return `${initialerAfNavn(r.name)} (${status}):${note || ' ingen note.'}`;
 }
 
 export function composeStructuredTilsynsrapport(

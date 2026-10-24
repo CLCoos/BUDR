@@ -19,6 +19,40 @@ export interface OverrapportResidentInput {
   checkinTime: string | null;
   notePreview: string | null;
   pendingMessages: number;
+  /** Kun til skærmen (hover og link). Sendes aldrig til AI. */
+  id?: string;
+  fullName?: string;
+  href?: string;
+  /** Mærket på rækken; ellers udledes det af trafiklys og stemning. */
+  tag?: OverrapportTag;
+}
+
+export type OverrapportTag = { tone: 'now' | 'today' | 'info'; label: string };
+
+/** Mærket på en borgers række: rød er noget, der skal gøres nu; gul følges op i dag. */
+export function overrapportTag(r: OverrapportResidentInput): OverrapportTag | null {
+  if (r.tag) return r.tag;
+  const tl = normalizeTraffic(r.trafficLight);
+  if (tl === 'rød') return { tone: 'now', label: 'Nu · Rød i Lys' };
+  if (tl === 'gul') return { tone: 'today', label: 'I dag · Gul i Lys' };
+  if (moodLabelNeedsAttention(r.moodLabel)) return { tone: 'today', label: 'I dag · Stemning' };
+  if (r.pendingMessages > 0) return { tone: 'today', label: 'I dag · Besked' };
+  return null;
+}
+
+/** Det, AI'en må se: initialer og dagens data, aldrig fulde navne eller links. */
+export function overrapportForAi(rows: OverrapportResidentInput[]) {
+  return rows.map(
+    ({ name, initials, moodLabel, trafficLight, checkinTime, notePreview, pendingMessages }) => ({
+      name,
+      initials,
+      moodLabel,
+      trafficLight,
+      checkinTime,
+      notePreview,
+      pendingMessages,
+    })
+  );
 }
 
 function normalizeTraffic(t: string | null): 'rød' | 'gul' | 'grøn' | null {

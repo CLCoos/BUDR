@@ -2,12 +2,19 @@
 
 import { initialsOfName } from '@/lib/residents/formatName';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { X, Copy, Check, FileText, Pencil, LayoutList } from 'lucide-react';
+import { Copy, Check } from 'lucide-react';
+import ReportSheet, { ReportActions, ReportSectionLabel } from '@/components/reports/ReportSheet';
+import StatusTag from '@/components/ui/StatusTag';
+import ResidentInitials from '@/components/residents/ResidentInitials';
+import { CARE_PORTAL_DEMO_FACILITY_NAME } from '@/lib/carePortalDemoBranding';
 import { createClient } from '@/lib/supabase/client';
 import {
   composeStructuredOverrapport,
   needsOverrapportAttention,
+  overrapportForAi,
+  overrapportTag,
   type OverrapportResidentInput,
+  type OverrapportTag,
 } from '@/lib/overrapport/composeStructuredReport';
 import { getDemoOverrapportResidents } from '@/lib/overrapport/demoResidentSummaries';
 import { parseOverrapportDocument } from '@/lib/overrapport/parseOverrapportSections';
@@ -46,9 +53,6 @@ export default function OverrapportModal({
   const mountedRef = useRef(true);
 
   const parsedDoc = useMemo(() => parseOverrapportDocument(report), [report]);
-  const canParseSections = parsedDoc.sections.length > 0;
-  const showFormattedView = canParseSections && viewMode === 'read' && !edited;
-  const showSourceEditor = !canParseSections || viewMode === 'edit' || edited;
 
   useEffect(() => {
     mountedRef.current = true;
@@ -115,6 +119,7 @@ export default function OverrapportModal({
               id: r.user_id,
               name: initialsOfName(r.display_name),
               fullName: r.display_name,
+              href: `/resident-360-view/${r.user_id}`,
               initials: initialsOfName(r.display_name),
               moodLabel: moodLabelFromCheckin(checkin),
               trafficLight: checkin?.traffic_light ?? null,
@@ -174,7 +179,7 @@ export default function OverrapportModal({
       const res = await fetch('/api/portal/ai/overrapport', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ residents: data, dateStr, timeStr }),
+        body: JSON.stringify({ residents: overrapportForAi(data), dateStr, timeStr }),
       });
 
       const d = res.ok ? ((await res.json()) as { text?: string }) : {};
@@ -220,203 +225,220 @@ export default function OverrapportModal({
   if (!open) return null;
 
   const noCheckins = residents.filter((r) => !r.checkinTime).length;
-  const attention = residents.filter(needsOverrapportAttention);
+  const attention = residents
+    .filter((r) => needsOverrapportAttention(r) || r.tag)
+    .sort((a, b) => toneRank(overrapportTag(a)) - toneRank(overrapportTag(b)));
+  const calm = residents.filter((r) => !attention.includes(r));
+  const nextShift = parsedDoc.sections.find((sec) => sec.index === '4');
+  const now = new Date();
+  const timeLabel = now
+    .toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' })
+    .replace(':', '.');
+  const meta = [
+    capitalize(now.toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long' })),
+    `kl. ${timeLabel}`,
+    dataSource === 'demo' ? CARE_PORTAL_DEMO_FACILITY_NAME : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  const summary =
+    residents.length === 0
+      ? null
+      : [
+          `${residents.length} borgere`,
+          attention.length > 0
+            ? `${attention.length} kræver opmærksomhed`
+            : 'ingen kræver ekstra opmærksomhed',
+          noCheckins > 0 ? `${noCheckins} uden check-in` : 'alle har tjekket ind',
+        ].join(' · ');
 
   return (
-    <div className="fixed inset-0 z-[10060] flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full sm:max-w-2xl max-h-[92dvh] flex flex-col bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-[#E1F5EE] flex items-center justify-center">
-              <FileText className="h-5 w-5 text-[#0F6E56]" />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold tracking-tight text-gray-900">Overrapport</h2>
-              <p className="text-xs text-gray-500 mt-0.5 leading-snug">
-                {reportSource === 'ai'
-                  ? 'AI-udkast ud fra dagens data — gennemlæs før brug'
-                  : 'Struktureret udkast ud fra dagens data — klar til gennemgang'}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1 shrink-0">
-            {report && (
-              <button
-                type="button"
-                onClick={() => setViewMode((v) => (v === 'read' ? 'edit' : 'read'))}
-                className="h-9 px-3 rounded-xl text-xs font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 flex items-center gap-1.5"
-              >
-                {viewMode === 'read' ? (
-                  <>
-                    <Pencil className="h-3.5 w-3.5" />
-                    Rediger tekst
-                  </>
-                ) : (
-                  <>
-                    <LayoutList className="h-3.5 w-3.5" />
-                    Vis oversigt
-                  </>
-                )}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={onClose}
-              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-100"
-            >
-              <X className="h-4 w-4 text-gray-500" />
-            </button>
-          </div>
-        </div>
+    <ReportSheet
+      open={open}
+      onClose={onClose}
+      title="Overrapport"
+      meta={meta}
+      metaMobile={`Kl. ${timeLabel}`}
+      summary={summary}
+      backLabel="Vagt"
+      footer={
+        report ? (
+          <ReportActions
+            primary={{
+              label: copied ? 'Kopieret' : 'Kopiér rapport',
+              icon: copied ? <Check size={18} aria-hidden /> : <Copy size={18} aria-hidden />,
+              onClick: handleCopy,
+            }}
+            secondary={{
+              label: viewMode === 'edit' ? 'Vis rapport' : 'Ret tekst',
+              onClick: () => setViewMode((v) => (v === 'read' ? 'edit' : 'read')),
+            }}
+            tertiary={[
+              { label: 'Udskriv', onClick: handlePrint },
+              ...(demoOnly
+                ? []
+                : [
+                    {
+                      label: generating ? 'Skriver…' : 'Nyt udkast',
+                      disabled: generating,
+                      onClick: () => {
+                        setEdited(false);
+                        setViewMode('read');
+                        void generateReport(residents);
+                      },
+                    },
+                  ]),
+            ]}
+          />
+        ) : null
+      }
+    >
+      {(generating || loading) && !report && (
+        <p className="py-16 text-center text-[15px]" style={{ color: 'var(--cp-muted)' }}>
+          Henter dagens data og skriver rapporten …
+        </p>
+      )}
 
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-          {/* Data summary chips */}
-          {!loading && residents.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {dataSource === 'demo' && (
-                <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-800">
-                  Demo-data
-                </span>
-              )}
-              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
-                {residents.length} borgere
+      {report && viewMode === 'edit' && (
+        <div className="pt-5">
+          <label className="mb-2 block text-sm" style={{ color: 'var(--cp-muted)' }}>
+            Det er denne tekst, der kopieres og udskrives.
+          </label>
+          <textarea
+            value={report}
+            onChange={(e) => {
+              setReport(e.target.value);
+              setEdited(true);
+            }}
+            rows={20}
+            className="min-h-[320px] w-full resize-y rounded-xl border px-4 py-3.5 text-[15px] leading-relaxed outline-none focus:border-[var(--cp-green)]"
+            style={{
+              borderColor: 'var(--cp-border2)',
+              backgroundColor: 'var(--cp-input-bg)',
+              color: 'var(--cp-text)',
+            }}
+          />
+        </div>
+      )}
+
+      {report && viewMode === 'read' && (
+        <>
+          {reportSource === 'ai' && (
+            <p className="m-0 mt-5 text-sm" style={{ color: 'var(--cp-muted)' }}>
+              AI har skrevet teksten ud fra dagens data. Læs den igennem, før du kopierer.
+            </p>
+          )}
+          {edited && (
+            <p className="m-0 mt-5 text-sm" style={{ color: 'var(--cp-amber)' }}>
+              Du har rettet teksten. Det er din version, der kopieres.
+            </p>
+          )}
+          {attention.length > 0 && (
+            <>
+              <ReportSectionLabel first>Kræver opmærksomhed</ReportSectionLabel>
+              {attention.map((r) => (
+                <ReportResidentRow key={r.id ?? r.initials} r={r} attention />
+              ))}
+            </>
+          )}
+          {calm.length > 0 && (
+            <>
+              <ReportSectionLabel first={attention.length === 0}>Rolig dag</ReportSectionLabel>
+              {calm.map((r) => (
+                <ReportResidentRow key={r.id ?? r.initials} r={r} />
+              ))}
+            </>
+          )}
+          {residents.length === 0 && (
+            <p className="mt-6 text-[15px]" style={{ color: 'var(--cp-muted)' }}>
+              Der er ingen borgere at skrive om endnu.
+            </p>
+          )}
+          {nextShift && nextShift.body.trim() && (
+            <>
+              <ReportSectionLabel>Til næste vagt</ReportSectionLabel>
+              <div className="pt-2">
+                <FormattedNumberedReportBody body={nextShift.body} />
+              </div>
+            </>
+          )}
+        </>
+      )}
+    </ReportSheet>
+  );
+}
+
+function capitalize(s: string): string {
+  return s ? s[0]!.toUpperCase() + s.slice(1) : s;
+}
+
+function toneRank(tag: OverrapportTag | null): number {
+  return tag?.tone === 'now' ? 0 : tag?.tone === 'today' ? 1 : 2;
+}
+
+/** Én borger = én række: initialer, mærke og ét notat. Ingen boks i boksen. */
+function ReportResidentRow({ r, attention = false }: { r: ResidentSummary; attention?: boolean }) {
+  const tag = overrapportTag(r);
+  const note =
+    r.notePreview?.trim() ||
+    (r.checkinTime
+      ? `Tjekkede ind kl. ${r.checkinTime.replace(':', '.')}.`
+      : 'Ingen check-in i dag.');
+  const avatar = (
+    <span
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold sm:h-10 sm:w-10 sm:text-sm"
+      style={
+        attention
+          ? { backgroundColor: 'var(--cp-amber-dim)', color: 'var(--cp-amber)' }
+          : { backgroundColor: 'var(--cp-green-dim)', color: 'var(--cp-green)' }
+      }
+      aria-hidden
+    >
+      {r.initials}
+    </span>
+  );
+  return (
+    <div
+      className={`grid grid-cols-[36px_minmax(0,1fr)] gap-3 border-b last:border-b-0 sm:grid-cols-[40px_minmax(0,1fr)] sm:gap-3.5 ${
+        attention ? 'py-3.5 sm:py-4' : 'items-center py-3'
+      }`}
+      style={{ borderColor: 'var(--cp-bg3)' }}
+    >
+      {avatar}
+      <div className="flex min-w-0 flex-col gap-1">
+        {attention && (
+          <div className="flex flex-wrap items-center gap-2">
+            <ResidentInitials
+              initials={r.initials}
+              fullName={r.fullName}
+              href={r.href}
+              className="text-base font-semibold"
+              style={{ color: 'var(--cp-text)' }}
+            />
+            {tag && <StatusTag tone={tag.tone}>{tag.label}</StatusTag>}
+            {r.pendingMessages > 0 && (
+              <span className="text-[13px]" style={{ color: 'var(--cp-muted)' }}>
+                {r.pendingMessages === 1
+                  ? '1 besked til jer'
+                  : `${r.pendingMessages} beskeder til jer`}
               </span>
-              {attention.length > 0 && (
-                <span className="rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-medium text-amber-700">
-                  {attention.length} kræver opmærksomhed
-                </span>
-              )}
-              {noCheckins > 0 && (
-                <span className="rounded-full bg-red-50 border border-red-200 px-3 py-1 text-xs font-medium text-red-700">
-                  {noCheckins} uden check-in
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* Report textarea */}
-          {(generating || loading) && !report && (
-            <div className="flex flex-col items-center py-12 gap-3 text-gray-400">
-              <div className="flex gap-1.5">
-                {[0, 150, 300].map((d) => (
-                  <span
-                    key={d}
-                    className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
-                    style={{ animationDelay: `${d}ms` }}
-                  />
-                ))}
-              </div>
-              <p className="text-sm">Henter borgerdata og genererer rapport…</p>
-            </div>
-          )}
-
-          {report && showFormattedView && (
-            <div className="space-y-4">
-              {parsedDoc.headline && (
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide border-b border-gray-100 pb-3">
-                  {parsedDoc.headline}
-                </p>
-              )}
-              <div className="space-y-4">
-                {parsedDoc.sections.map((sec, si) => {
-                  const sub =
-                    (
-                      {
-                        '1': 'Overblik på få sekunder',
-                        '2': 'Hvor personalet bør prioritere',
-                        '3': 'Korte linjer — resten af gruppen',
-                        '4': 'Det næste hold skal vide',
-                      } as Record<string, string>
-                    )[sec.index] ?? null;
-                  return (
-                    <article
-                      key={`${sec.index}-${si}-${sec.title}`}
-                      className="rounded-2xl border border-gray-100 bg-gradient-to-b from-gray-50/80 to-white px-4 py-4 sm:px-5 shadow-sm"
-                    >
-                      <div className="flex items-start gap-3 mb-3">
-                        <span
-                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#0F1B2D] text-xs font-bold text-white"
-                          aria-hidden
-                        >
-                          {sec.index}
-                        </span>
-                        <div className="min-w-0 pt-0.5">
-                          <h3 className="text-sm font-semibold text-gray-900 leading-tight">
-                            {sec.title}
-                          </h3>
-                          {sub ? (
-                            <p className="text-[11px] text-gray-500 mt-1 leading-snug">{sub}</p>
-                          ) : null}
-                        </div>
-                      </div>
-                      <FormattedNumberedReportBody body={sec.body} />
-                    </article>
-                  );
-                })}
-              </div>
-              {parsedDoc.footnote && (
-                <p className="text-[11px] text-gray-400 leading-relaxed border-t border-gray-100 pt-4">
-                  {parsedDoc.footnote}
-                </p>
-              )}
-            </div>
-          )}
-
-          {report && showSourceEditor && (
-            <div className="space-y-3">
-              {edited && canParseSections && (
-                <p className="text-xs text-amber-700 font-medium">
-                  Teksten er ændret — vælg &quot;Vis oversigt&quot; efter regenerering for igen at
-                  se kort layout.
-                </p>
-              )}
-              <textarea
-                value={report}
-                onChange={(e) => {
-                  setReport(e.target.value);
-                  setEdited(true);
-                }}
-                rows={viewMode === 'edit' ? 18 : 14}
-                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3.5 text-sm leading-relaxed resize-y min-h-[200px] outline-none focus:border-[#0F6E56] focus:ring-1 focus:ring-[#0F6E56]/20 focus:bg-white transition-colors"
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Footer actions */}
-        {report && (
-          <div className="flex gap-2 px-6 py-4 border-t border-gray-100">
-            <button
-              type="button"
-              onClick={() => {
-                setEdited(false);
-                setViewMode('read');
-                void generateReport(residents);
-              }}
-              disabled={generating}
-              className="rounded-xl px-4 py-2.5 text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40"
-            >
-              {generating ? 'Genererer…' : 'Regenerer'}
-            </button>
-            <button
-              type="button"
-              onClick={handlePrint}
-              className="rounded-xl px-4 py-2.5 text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
-            >
-              Udskriv
-            </button>
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="ml-auto flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white bg-[#0F6E56] hover:bg-[#0d5c49] transition-colors"
-            >
-              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              {copied ? 'Kopieret!' : 'Kopiér rapport'}
-            </button>
+            )}
           </div>
         )}
+        <p className="m-0 text-[15px] leading-[1.5]" style={{ color: 'var(--cp-muted)' }}>
+          {!attention && (
+            <>
+              <ResidentInitials
+                initials={r.initials}
+                fullName={r.fullName}
+                href={r.href}
+                className="font-semibold"
+                style={{ color: 'var(--cp-text)' }}
+              />{' '}
+            </>
+          )}
+          {note}
+        </p>
       </div>
     </div>
   );
