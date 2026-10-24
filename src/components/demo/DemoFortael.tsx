@@ -20,7 +20,8 @@ type Proposal = { id: string; title: string; detail: string };
 function proposalsFor(text: string): { resident: string; items: Proposal[] } {
   const t = text.toLowerCase();
   // Initialer på skærmen (GDPR); medarbejderen må gerne sige fornavnet.
-  const has = (first: string, ini: string) => t.includes(first) || new RegExp(`\\b${ini}\\b`).test(t);
+  const has = (first: string, ini: string) =>
+    t.includes(first) || new RegExp(`\\b${ini}\\b`).test(t);
   const resident = has('camilla', 'cb')
     ? 'CB'
     : has('anders', 'ap')

@@ -24,7 +24,11 @@ type Row = {
 
 /** Samme historie som forsiden og borgerens forløb (forloebData.ts). */
 const STORY: Record<string, { traffic: TrafficUi; checkinToday: boolean; note: string }> = {
-  'res-sara': { traffic: 'groen', checkinToday: true, note: 'God periode. Handlede selv ind i går.' },
+  'res-sara': {
+    traffic: 'groen',
+    checkinToday: true,
+    note: 'God periode. Handlede selv ind i går.',
+  },
   'res-mikkel': {
     traffic: 'gul',
     checkinToday: true,
@@ -35,7 +39,11 @@ const STORY: Record<string, { traffic: TrafficUi; checkinToday: boolean; note: s
     checkinToday: true,
     note: 'Hos egen læge i går. Ny creme til såret, kontrol om 14 dage.',
   },
-  'res-mette': { traffic: 'groen', checkinToday: true, note: 'Velfungerende, hjalp med morgenmaden.' },
+  'res-mette': {
+    traffic: 'groen',
+    checkinToday: true,
+    note: 'Velfungerende, hjalp med morgenmaden.',
+  },
   'res-camilla': {
     traffic: 'gul',
     checkinToday: true,

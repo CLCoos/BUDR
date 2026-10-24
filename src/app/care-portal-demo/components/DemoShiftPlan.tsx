@@ -1,13 +1,16 @@
 'use client';
 
 import ResidentInitials from '@/components/residents/ResidentInitials';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Check, Phone } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown, Phone } from 'lucide-react';
+import MomentTabs from '@/components/vagt/MomentTabs';
+import StatusTag, { type StatusTone } from '@/components/ui/StatusTag';
 import { DEMO_ROLES, type DemoRole, type DemoRoleProfile } from './demoRoles';
 
 /** Rollevælger, «Næste opgave» og «Din vagt» på demo-forsiden. Alt er lokalt. */
 
+/** Rollen som én lille knap ved hilsenen («Medarbejder ▾»), så den næste opgave kommer højere op. */
 export function DemoRoleSwitch({
   role,
   onChange,
@@ -15,37 +18,76 @@ export function DemoRoleSwitch({
   role: DemoRole;
   onChange: (r: DemoRole) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const current = DEMO_ROLES.find((r) => r.id === role) ?? DEMO_ROLES[0]!;
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: PointerEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    window.addEventListener('pointerdown', onDown);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
   return (
-    <div className="flex min-w-0 flex-col gap-1.5">
-      <span className="text-xs font-medium" style={{ color: 'var(--cp-muted)' }}>
-        Se forsiden som
-      </span>
-      <div
-        role="radiogroup"
-        aria-label="Se forsiden som"
-        className="grid grid-cols-2 gap-1 rounded-xl border p-1 sm:flex"
-        style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
+    <div ref={ref} className="relative shrink-0">
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={`Se forsiden som ${current.label.toLowerCase()}. Skift rolle`}
+        onClick={() => setOpen((o) => !o)}
+        className="inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors hover:bg-[var(--cp-bg3)]"
+        style={{
+          borderColor: 'var(--cp-border2)',
+          backgroundColor: 'var(--cp-card-bg)',
+          color: 'var(--cp-text)',
+        }}
       >
-        {DEMO_ROLES.map((r) => {
-          const on = r.id === role;
-          return (
-            <button
-              key={r.id}
-              type="button"
-              role="radio"
-              aria-checked={on}
-              onClick={() => onChange(r.id)}
-              className="min-h-[40px] whitespace-nowrap rounded-lg px-3 text-[13px] font-medium transition-colors"
-              style={{
-                backgroundColor: on ? 'var(--cp-ink)' : 'transparent',
-                color: on ? '#fff' : 'var(--cp-muted)',
-              }}
-            >
-              {r.label}
-            </button>
-          );
-        })}
-      </div>
+        {current.label}
+        <ChevronDown size={15} style={{ color: 'var(--cp-muted)' }} aria-hidden />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          aria-label="Se forsiden som"
+          className="absolute left-0 top-[calc(100%+6px)] z-30 w-60 overflow-hidden rounded-xl border py-1 shadow-lg sm:left-auto sm:right-0"
+          style={{ backgroundColor: 'var(--cp-card-bg)', borderColor: 'var(--cp-border)' }}
+        >
+          <p className="m-0 px-3.5 pb-1 pt-2 text-[13px]" style={{ color: 'var(--cp-muted)' }}>
+            Se forsiden som
+          </p>
+          {DEMO_ROLES.map((r) => {
+            const on = r.id === role;
+            return (
+              <button
+                key={r.id}
+                type="button"
+                role="menuitemradio"
+                aria-checked={on}
+                onClick={() => {
+                  onChange(r.id);
+                  setOpen(false);
+                }}
+                className="flex min-h-[44px] w-full items-center justify-between px-3.5 text-left text-[15px] transition-colors hover:bg-[var(--cp-bg3)]"
+                style={{ color: 'var(--cp-text)', fontWeight: on ? 600 : 400 }}
+              >
+                {r.label}
+                {on && <Check size={16} style={{ color: 'var(--cp-green)' }} aria-hidden />}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -61,44 +103,26 @@ export function DemoNextTask({ profile }: { profile: DemoRoleProfile }) {
   const [done, setDone] = useState(false);
   useEffect(() => setDone(false), [profile.id]);
   const n = profile.next;
-  const tone = TONE[n.tone];
+  const tone: StatusTone = n.tone === 'red' ? 'now' : n.tone === 'amber' ? 'today' : 'info';
 
   return (
     <section
       aria-labelledby="demo-next-title"
-      className="relative overflow-hidden rounded-2xl border p-5 sm:p-6"
+      className="rounded-2xl border p-5 sm:px-7 sm:py-6"
       style={{ backgroundColor: 'var(--cp-card-bg)', borderColor: 'var(--cp-border)' }}
     >
-      <span
-        aria-hidden
-        className="absolute inset-y-0 left-0 w-1"
-        style={{ backgroundColor: tone.fg }}
-      />
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between md:gap-8">
-        <div className="min-w-0">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span
-              className="text-[11px] font-semibold uppercase tracking-[0.08em]"
-              style={{ color: 'var(--cp-muted)' }}
-            >
-              Din næste opgave
-            </span>
-            <span
-              className="rounded-md px-2 py-0.5 text-[11px] font-semibold"
-              style={{ backgroundColor: tone.bg, color: tone.fg }}
-            >
-              {n.tag}
-            </span>
-          </div>
+        <div className="flex min-w-0 flex-col gap-2">
+          <StatusTag tone={tone}>{tone === 'now' ? `Nu · ${n.tag}` : n.tag}</StatusTag>
           <h2
             id="demo-next-title"
-            className="m-0 text-lg font-semibold leading-snug sm:text-xl"
+            className="m-0 text-xl font-semibold leading-snug sm:text-2xl"
             style={{ color: 'var(--cp-text)', letterSpacing: '-0.01em' }}
           >
             {n.title}
           </h2>
           <p
-            className="mt-1.5 max-w-[60ch] text-sm leading-relaxed"
+            className="m-0 max-w-[60ch] text-[15px] leading-relaxed sm:text-base"
             style={{ color: 'var(--cp-muted)' }}
           >
             {n.body}
@@ -137,12 +161,8 @@ export function DemoNextTask({ profile }: { profile: DemoRoleProfile }) {
           {n.secondary && !done && (
             <button
               type="button"
-              className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl border px-5 text-[15px] font-medium"
-              style={{
-                borderColor: 'var(--cp-border2)',
-                backgroundColor: 'var(--cp-bg2)',
-                color: 'var(--cp-text)',
-              }}
+              className="inline-flex min-h-[44px] items-center justify-center gap-2 px-3 text-[15px] font-medium"
+              style={{ color: 'var(--cp-green)' }}
             >
               <Phone size={16} aria-hidden />
               {n.secondary}
@@ -278,45 +298,7 @@ export function DemoMomentSwitch({
   moment: ShiftMoment;
   onChange: (m: ShiftMoment) => void;
 }) {
-  const items: { id: ShiftMoment; label: string; hint: string }[] = [
-    { id: 'moed', label: 'Mød ind', hint: '2 min overblik' },
-    { id: 'nu', label: 'Nu', hint: 'Det, der skal ske' },
-    { id: 'hjem', label: 'Gå hjem', hint: 'Overlevering' },
-  ];
-  return (
-    <div
-      role="tablist"
-      aria-label="Vagtens øjeblikke"
-      className="grid grid-cols-3 gap-1 rounded-2xl border p-1"
-      style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
-    >
-      {items.map((it) => {
-        const on = it.id === moment;
-        return (
-          <button
-            key={it.id}
-            type="button"
-            role="tab"
-            aria-selected={on}
-            onClick={() => onChange(it.id)}
-            className="flex min-h-[52px] flex-col items-center justify-center rounded-xl px-2 transition-colors"
-            style={{
-              backgroundColor: on ? 'var(--cp-ink)' : 'transparent',
-              color: on ? '#fff' : 'var(--cp-text)',
-            }}
-          >
-            <span className="text-[15px] font-semibold">{it.label}</span>
-            <span
-              className="text-[11px]"
-              style={{ color: on ? 'var(--cp-ink-accent)' : 'var(--cp-muted)' }}
-            >
-              {it.hint}
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
+  return <MomentTabs moment={moment} onChange={onChange} />;
 }
 
 const panel = { backgroundColor: 'var(--cp-card-bg)', borderColor: 'var(--cp-border)' } as const;

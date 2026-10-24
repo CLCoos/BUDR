@@ -1,18 +1,22 @@
 'use client';
 
-import React, { useCallback, useId, useState } from 'react';
-import { ChevronDown, Lightbulb } from 'lucide-react';
+import React, { useCallback, useEffect, useId, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 
 type Props = {
   title: string;
   children: React.ReactNode;
-  /** Unik nøgle til localStorage (kollapset tilstand) */
+  /** Unik nøgle til localStorage (husker om linjen er foldet ud). */
   storageKey: string;
   className?: string;
-  /** Overskrift på toggle-knap (standard: Care Portal --cp-text) */
+  /** Farve på linket (standard: Care Portal --cp-green). */
   headingColor?: string;
 };
 
+/**
+ * «Hvorfor …?» som én stille linje, der folder sig ud ved tryk.
+ * Starter lukket, så forklaringerne ikke fylder midt i arbejdet.
+ */
 export default function DemoWhyBox({
   title,
   children,
@@ -21,14 +25,15 @@ export default function DemoWhyBox({
   headingColor,
 }: Props) {
   const panelId = useId();
-  const [open, setOpen] = useState(() => {
-    if (typeof window === 'undefined') return true;
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
     try {
-      return window.localStorage.getItem(storageKey) !== '0';
+      if (window.localStorage.getItem(storageKey) === '1') setOpen(true);
     } catch {
-      return true;
+      /* ignore */
     }
-  });
+  }, [storageKey]);
 
   const toggle = useCallback(() => {
     setOpen((prev) => {
@@ -43,29 +48,19 @@ export default function DemoWhyBox({
   }, [storageKey]);
 
   return (
-    <div
-      className={`rounded-xl border ${className}`}
-      style={{
-        borderColor: 'rgba(139, 132, 232, 0.35)',
-        backgroundColor: 'rgba(139, 132, 232, 0.08)',
-      }}
-    >
+    <div className={className}>
       <button
         type="button"
         id={`${panelId}-btn`}
         aria-expanded={open}
         aria-controls={panelId}
         onClick={toggle}
-        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors"
-        style={{ color: headingColor ?? 'var(--cp-text)' }}
+        className="inline-flex min-h-[44px] items-center gap-1 text-left text-[15px] hover:underline"
+        style={{ color: headingColor ?? 'var(--cp-green)' }}
       >
-        <span className="flex min-w-0 items-center gap-2">
-          <Lightbulb className="h-4 w-4 shrink-0 text-[#c4bffc]" aria-hidden />
-          <span className="text-sm font-semibold leading-snug">{title}</span>
-        </span>
+        {title}
         <ChevronDown
           className={`h-4 w-4 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
-          style={{ color: 'var(--cp-muted)' }}
           aria-hidden
         />
       </button>
@@ -74,10 +69,10 @@ export default function DemoWhyBox({
           id={panelId}
           role="region"
           aria-labelledby={`${panelId}-btn`}
-          className="border-t px-4 pb-4 pt-0 text-sm leading-relaxed"
-          style={{ borderColor: 'rgba(139, 132, 232, 0.25)', color: 'var(--cp-muted)' }}
+          className="mt-1 max-w-[68ch] text-[15px] leading-relaxed"
+          style={{ color: 'var(--cp-muted)' }}
         >
-          <div className="pt-3">{children}</div>
+          {children}
         </div>
       ) : null}
     </div>

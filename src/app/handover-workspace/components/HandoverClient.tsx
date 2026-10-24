@@ -65,31 +65,39 @@ function demoTrafficToFlag(traffic: 'groen' | 'gul' | 'roed' | null | undefined)
   return null;
 }
 
+/** Samme historie som forsiden og borgerens forløb: SK, AP og MP grønne; MT, CB og JF gule. */
 const DEMO_HANDOVER_PREVIOUS: Partial<
-  Record<string, Pick<HandoverEntry, 'previousNote' | 'previousShift'>>
+  Record<string, Pick<HandoverEntry, 'previousNote' | 'previousShift' | 'flagColor'>>
 > = {
   'res-sara': {
+    flagColor: 'groen',
     previousNote: 'Rolig nat. SK sov igennem og var glad ved morgenmaden.',
     previousShift: 'Nattevagt · Jonas N.',
   },
   'res-camilla': {
+    flagColor: 'gul',
     previousNote: 'Larm fra ny nabo til kl. 1. CB sov først igen kl. 02. Samtale om søvn kl. 11.',
     previousShift: 'Nattevagt · Jonas N.',
   },
   'res-mikkel': {
+    flagColor: 'gul',
     previousNote: 'MT afslog aftenmedicin kl. 22. Rolig på værelset bagefter.',
     previousShift: 'Aftenvagt · Lars N.',
   },
   'res-anders': {
+    flagColor: 'groen',
     previousNote: 'AP var hos egen læge. Ny creme til såret, kontrol om 14 dage.',
     previousShift: 'Dagvagt · Lars N.',
   },
   'res-mette': {
+    flagColor: 'groen',
     previousNote: 'MP hjalp med morgenmaden. God stemning.',
     previousShift: 'Dagvagt · Hanne B.',
   },
   'res-jonas': {
-    previousNote: 'JF er ny i 212 og finder sin rytme. Kort gåtur i går, spurgte til fællesaktiviteter.',
+    flagColor: 'gul',
+    previousNote:
+      'JF er ny i 212 og finder sin rytme. Kort gåtur i går, spurgte til fællesaktiviteter.',
     previousShift: 'Aftenvagt · Peter N.',
   },
 };
@@ -105,7 +113,7 @@ function buildDemoHandoverEntries(shiftLabel: ShiftLabel): HandoverEntry[] {
       residentFullName: profile.displayName,
       residentHref: `/care-portal-demo/residents/${profile.id}`,
       initials: profile.initials,
-      flagColor: demoTrafficToFlag(detail?.traffic),
+      flagColor: prev?.flagColor ?? demoTrafficToFlag(detail?.traffic),
       note: '',
       shiftLabel,
       previousNote: prev?.previousNote ?? lastJournal?.excerpt,

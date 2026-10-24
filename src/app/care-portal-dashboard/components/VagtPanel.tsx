@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { api } from '@/components/documents/shared';
 import ResidentInitials from '@/components/residents/ResidentInitials';
+import MomentTabs from '@/components/vagt/MomentTabs';
+import StatusTag from '@/components/ui/StatusTag';
 import { initialsOfName } from '@/lib/residents/formatName';
 import { useFortael } from '@/components/fortael/Fortael';
 import { defaultMoment, type ShiftNow, type VagtMoment } from '@/lib/vagt';
@@ -159,54 +161,6 @@ function Empty({ children }: { children: React.ReactNode }) {
     <p className="px-5 py-4 text-sm" style={muted}>
       {children}
     </p>
-  );
-}
-
-function MomentSwitch({
-  moment,
-  onChange,
-}: {
-  moment: VagtMoment;
-  onChange: (m: VagtMoment) => void;
-}) {
-  const items: { id: VagtMoment; label: string; hint: string }[] = [
-    { id: 'moed', label: 'Mød ind', hint: 'Siden sidst' },
-    { id: 'nu', label: 'Nu', hint: 'Det, der skal ske' },
-    { id: 'hjem', label: 'Gå hjem', hint: 'Før du går' },
-  ];
-  return (
-    <div
-      role="tablist"
-      aria-label="Vagtens øjeblikke"
-      className="grid grid-cols-3 gap-1 rounded-2xl border p-1"
-      style={{ borderColor: 'var(--cp-border)', backgroundColor: 'var(--cp-bg2)' }}
-    >
-      {items.map((it) => {
-        const on = it.id === moment;
-        return (
-          <button
-            key={it.id}
-            type="button"
-            role="tab"
-            aria-selected={on}
-            onClick={() => onChange(it.id)}
-            className="flex min-h-[52px] flex-col items-center justify-center rounded-xl px-2 transition-colors"
-            style={{
-              backgroundColor: on ? 'var(--cp-ink)' : 'transparent',
-              color: on ? '#fff' : 'var(--cp-text)',
-            }}
-          >
-            <span className="text-[15px] font-semibold">{it.label}</span>
-            <span
-              className="text-[11px]"
-              style={{ color: on ? 'var(--cp-ink-accent)' : 'var(--cp-muted)' }}
-            >
-              {it.hint}
-            </span>
-          </button>
-        );
-      })}
-    </div>
   );
 }
 
@@ -460,35 +414,42 @@ function Nu({ v, assistant }: { v: Vagt; assistant: React.ReactNode }) {
     <div className="flex flex-col gap-6">
       {(firstTask || nextAppointment) && (
         <section
-          className="rounded-2xl p-5"
-          style={{ backgroundColor: 'var(--cp-ink)', color: '#fff' }}
+          className="flex flex-col gap-4 rounded-2xl border p-5 sm:px-7 sm:py-6 md:flex-row md:items-center md:justify-between md:gap-8"
+          style={panel}
           aria-labelledby="nu-naeste"
         >
-          <p
-            className="text-[11px] font-semibold uppercase tracking-[0.08em]"
-            style={{ color: 'var(--cp-ink-accent)' }}
-          >
-            Det næste
-          </p>
-          <h2 id="nu-naeste" className="mt-1 text-xl font-semibold leading-snug">
-            {firstTask ? firstTask.title : nextAppointment!.title}
-          </h2>
-          <p className="mt-1 text-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>
-            {firstTask
-              ? [firstTask.name, firstTask.overdue ? 'frist overskredet' : 'frist i dag']
-                  .filter(Boolean)
-                  .join(' · ')
-              : [`kl. ${clock(nextAppointment!.at)}`, nextAppointment!.name]
-                  .filter(Boolean)
-                  .join(' · ')}
-          </p>
+          <div className="flex min-w-0 flex-col gap-2">
+            <StatusTag tone={firstTask?.overdue ? 'now' : 'today'}>
+              {firstTask
+                ? firstTask.overdue
+                  ? 'Nu · Frist overskredet'
+                  : 'I dag · Opgave'
+                : `I dag · kl. ${clock(nextAppointment!.at)}`}
+            </StatusTag>
+            <h2
+              id="nu-naeste"
+              className="m-0 text-xl font-semibold leading-snug sm:text-2xl"
+              style={text}
+            >
+              {firstTask ? firstTask.title : nextAppointment!.title}
+            </h2>
+            <p className="m-0 text-[15px] sm:text-base" style={muted}>
+              {firstTask
+                ? joinWho(v, firstTask.residentId, firstTask.name, [
+                    firstTask.overdue ? 'frist overskredet' : 'frist i dag',
+                  ])
+                : joinWho(v, nextAppointment!.residentId, nextAppointment!.name, [
+                    nextAppointment!.location,
+                  ])}
+            </p>
+          </div>
           {(firstTask?.residentId ?? nextAppointment?.residentId) && (
             <Link
               href={residentHref(firstTask?.residentId ?? nextAppointment?.residentId ?? null)}
-              className="mt-4 inline-flex min-h-[44px] items-center gap-2 rounded-xl px-4 text-sm font-semibold"
-              style={{ backgroundColor: 'var(--cp-ink-accent)', color: 'var(--cp-ink)' }}
+              className="inline-flex min-h-[52px] shrink-0 items-center justify-center gap-2 rounded-xl px-6 text-base font-semibold"
+              style={{ backgroundColor: 'var(--cp-green)', color: 'var(--cp-on-green)' }}
             >
-              Åbn borgeren <ArrowRight size={16} aria-hidden />
+              Åbn borgeren <ArrowRight size={18} aria-hidden />
             </Link>
           )}
         </section>
@@ -710,7 +671,7 @@ export default function VagtPanel({ assistant }: { assistant: React.ReactNode })
         <p className="text-sm" style={muted}>
           {v.shiftName}
         </p>
-        <MomentSwitch moment={moment} onChange={setMoment} />
+        <MomentTabs moment={moment} onChange={setMoment} />
       </div>
       {v.residentMessages.length > 0 && (
         <ResidentMessages

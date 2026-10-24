@@ -325,7 +325,12 @@ export default function ResidentList({
   const filtered = useMemo(() => {
     const q = search.trim();
     const base = residentsInDept.filter((r) => {
-      const matchSearch = residentNameRoomInitialsMatch(r.fullName ?? r.name, r.room, r.initials, search);
+      const matchSearch = residentNameRoomInitialsMatch(
+        r.fullName ?? r.name,
+        r.room,
+        r.initials,
+        search
+      );
       const matchFilter =
         filter === 'all'
           ? true
